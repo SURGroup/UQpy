@@ -2088,7 +2088,150 @@ class DiffusionMaps:
         normalized_kernel = d_alpha.dot(kernel_mat.dot(d_alpha))
 
         return normalized_kernel
+    
+    def parsimonious(self,num_eigenvectors=None,visualization=False):
+        """
+        This method implements an algorithm to the embedding using eigenvectors associated with unique eigendirections. 
+        
+        **Input:**
+        
+        * **num_eigenvectors** (`int`):
+            An integer for the number of eigenvectors to be tested.
+            
+        * **get_error** (`Boolean`):
+            A boolean declaring whether to return a graphic to visualize the residuals of each eigenvector.
+            
+        **Output/Returns:**
+        * **index** (`ndarray`):
+            The eigenvectors indices.
+            
+        * **residuals** (`ndarray`):
+            Residuals used to identify the most parsimonious low-dimensional representation.
+            
+        """
+        
+        evecs = self.evecs
+        n_evecs = self.n_evecs
+        
+        if num_eigenvectors is None:
+            num_eigenvectors = n_evecs
+        elif num_eigenvectors > n_evecs:
+            raise ValueError('UQpy: num_eigenvectors cannot be larger than n_evecs.')
+            
+        eigvec = np.asarray(evecs)
+        eigvec = eigvec[:,0:num_eigenvectors]
 
+        residuals = np.zeros(num_eigenvectors)
+        residuals[0] = np.nan  
+        
+        # residual 1 for the first eigenvector.
+        residuals[1] = 1.0
+
+        # Get the residuals of each eigenvector.
+        for i in range(2, num_eigenvectors):
+            residuals[i] = self._get_residual(fmat=eigvec[:, 1:i], f=eigvec[:, i])
+
+        # Get the index of the eigenvalues associated with each residual. 
+        index=np.argsort(residuals)[::-1][:len(self.evals)]
+        
+        # Plot the graphic
+        if visualization:
+            
+            data_x = np.arange(1,len(residuals)).tolist()
+            data_hight = self.evals[1:num_eigenvectors]
+            data_color = residuals[1:]
+
+            data_color = [x / max(data_color) for x in data_color]
+
+            fig, ax = plt.subplots(figsize=(15, 4))
+
+            my_cmap = plt.cm.get_cmap('Purples')
+            colors = my_cmap(data_color)
+            rects = ax.bar(data_x, data_hight, color=colors)
+
+            sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(0,max(data_color)))
+            sm.set_array([])
+
+            cbar = plt.colorbar(sm)
+            cbar.set_label('Residual', rotation=270,labelpad=25)
+
+            plt.xticks(data_x)    
+            plt.ylabel("Eigenvalue(k)")
+            plt.xlabel("k")
+
+            plt.show()
+        
+        return index, residuals
+    
+    @staticmethod
+    def _get_residual(fmat, f):
+        """
+        
+        Get the residuals for each eigenvector.
+        
+        **Input:**
+        * **fmat** (`ndarray`):
+            Matrix with eigenvectors for the linear system.
+            
+        * **f** (`ndarray`):
+            Eigenvector in the right-hand side of the linear system.
+            
+        **Output/Returns:**
+        * **residuals** (`ndarray`):
+            Residuals used to identify the most parsimonious low-dimensional representation
+            for a given combination of eigenvectors.
+            
+        """
+        
+        # Number of samples.
+        nsamples = np.shape(fmat)[0]
+
+        # Distance matrix to compute the Gaussian kernel.
+        distance_matrix = sd.squareform(sd.pdist(fmat))
+
+        # m=3 is suggested on Nadler et al. 2008.
+        m=3
+        
+        # Compute an appropriate value for epsilon. 
+        #epsilon = np.median(abs(np.square(distance_matrix.flatten())))/m
+        epsilon = (np.median(distance_matrix.flatten())/m)**2
+
+        # Gaussian kernel. It is implemented here because of the factor m and the 
+        # shape of the argument of the exponential is the one suggested on 
+        # Nadler et al. 2008.
+        kernel_matrix = np.exp(-np.square(distance_matrix) / epsilon)
+
+        # Matrix to store the coefficients from the linear system.
+        coeffs = np.zeros((nsamples, nsamples))
+        
+        vec_1 = np.ones((nsamples, 1))
+
+        for i in range(nsamples):  
+            # Weighted least squares: 
+    
+            # Stack arrays in sequence horizontally.
+            #        [1| x x x ... x]
+            #        [      ...     ]
+            # matx = [1| 0 0 0 ... 0]
+            #        [      ...     ]
+            #        [1| x x x ... x]
+            matx = np.hstack([vec_1, fmat - fmat[i, :]])
+            
+            # matx.T*Kernel
+            matx_k = matx.T * kernel_matrix[i, :]
+
+            # matx.T*Kernel*matx
+            wdata = matx_k.dot(matx)
+            u, _, _, _ = np.linalg.lstsq(wdata, matx_k, rcond=1e-6)
+
+            coeffs[i, :] = u[0, :]
+
+        estimated_f = coeffs.dot(f)
+ 
+        # normalized leave-one-out cross-validation error.
+        residual = np.sqrt(np.sum(np.square((f - estimated_f)))/ np.sum(np.square(f)))
+
+        return residual
 
 ########################################################################################################################
 ########################################################################################################################
