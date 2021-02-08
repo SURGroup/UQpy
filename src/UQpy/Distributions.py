@@ -181,7 +181,7 @@ class Distribution:
             Generated iid samples, `ndarray` of shape `(npoints, dimension)`.
 
     **moments** *(moments2return='mvsk')*
-        Computes the mean 'number_of_variables', variance/covariance ('v'), skewness ('s') and/or kurtosis ('k') of the distribution.
+        Computes the mean 'm', variance/covariance ('v'), skewness ('s') and/or kurtosis ('k') of the distribution.
 
         For a univariate distribution, mean, variance, skewness and kurtosis are returned. For a multivariate
         distribution, the mean vector, covariance and vectors of marginal skewness and marginal kurtosis are returned.
@@ -816,16 +816,16 @@ class Binomial(DistributionDiscrete1D):
     """
     Binomial distribution having probability mass function:
 
-    .. math:: f(x) = {number_of_dimensions \choose x} p^x(1-p)^{number_of_dimensions-x}
+    .. math:: f(x) = {n \choose x} p^x(1-p)^{n-x}
 
-    for :math:`x\inumber_of_dimensions\{0, 1, 2, ..., number_of_dimensions\}`.
+    for :math:`x\in\{0, 1, 2, ..., n\}`.
 
     In this standard form `(loc=0)`. Use `loc` to shift the distribution. Specifically, this is equivalent to computing
     :math:`f(y)` where :math:`y=x-loc`.
 
     **Inputs:**
 
-    * **number_of_dimensions** (`int`):
+    * **n** (`int`):
         number of trials, integer >= 0
     * **p** (`float`):
         success probability for each trial, real number in [0, 1]
@@ -837,7 +837,7 @@ class Binomial(DistributionDiscrete1D):
     * ``cdf``, ``pmf``, ``log_pmf``, ``icdf``, ``rvs, moments``.
     """
     def __init__(self, n, p, loc=0.):
-        super().__init__(n=n, p=p, loc=loc, order_params=('number_of_dimensions', 'p', 'loc'))
+        super().__init__(n=n, p=p, loc=loc, order_params=('n', 'p', 'loc'))
         self._construct_from_scipy(scipy_name=stats.binom)
 
 
@@ -947,27 +947,27 @@ class MVNormal(DistributionND):
         return {'mean': mle_mu, 'cov': mle_cov}
 
     def moments(self, moments2return='mv'):
-        if moments2return == 'number_of_variables':
+        if moments2return == 'm':
             return self.get_params()['mean']
         elif moments2return == 'v':
             return self.get_params()['cov']
         elif moments2return == 'mv':
             return self.get_params()['mean'], self.get_params()['cov']
         else:
-            raise ValueError('UQpy: moments2return must be "number_of_variables", "v" or "mv".')
+            raise ValueError('UQpy: moments2return must be "m", "v" or "mv".')
 
 
 class Multinomial(DistributionND):
     """
     Multinomial distribution having probability mass function
 
-    .. math:: f(x) = \dfrac{number_of_dimensions!}{x_1!\dots x_k!}p_1^{x_1}\dots p_k^{x_k}
+    .. math:: f(x) = \dfrac{n!}{x_1!\dots x_k!}p_1^{x_1}\dots p_k^{x_k}
 
-    for :math:`x=\{x_1,\dots,x_k\}` where each :math:`x_i` is a non-negative integer and :math:`\sum_i x_i = number_of_dimensions`.
+    for :math:`x=\{x_1,\dots,x_k\}` where each :math:`x_i` is a non-negative integer and :math:`\sum_i x_i = n`.
 
     **Inputs:**
 
-    * **number_of_dimensions** (`int`):
+    * **n** (`int`):
         number of trials
     * **p** (`array_like`):
         probability of a trial falling into each category; should sum to 1
@@ -994,24 +994,24 @@ class Multinomial(DistributionND):
             size=nsamples, random_state=random_state, **self.params).reshape((nsamples, -1))
 
     def moments(self, moments2return='mv'):
-        if moments2return == 'number_of_variables':
-            mean = self.get_params()['number_of_dimensions'] * np.array(self.get_params()['p'])
+        if moments2return == 'm':
+            mean = self.get_params()['n'] * np.array(self.get_params()['p'])
             return mean
         elif moments2return == 'v':
-            n, p = self.get_params()['number_of_dimensions'], np.array(self.get_params()['p'])
+            n, p = self.get_params()['n'], np.array(self.get_params()['p'])
             d = len(p)
             cov = - n * np.tile(p[np.newaxis, :], [d, 1]) * np.tile(p[:, np.newaxis], [1, d])
             np.fill_diagonal(cov, n * p * (1. - p))
             return cov
         elif moments2return == 'mv':
-            n, p = self.get_params()['number_of_dimensions'], np.array(self.get_params()['p'])
+            n, p = self.get_params()['n'], np.array(self.get_params()['p'])
             d = len(p)
             cov = - n * np.tile(p[np.newaxis, :], [d, 1]) * np.tile(p[:, np.newaxis], [1, d])
             np.fill_diagonal(cov, n * p * (1. - p))
             mean = n * p
             return mean, cov
         else:
-            raise ValueError('UQpy: moments2return must be "number_of_variables", "v" or "mv".')
+            raise ValueError('UQpy: moments2return must be "m", "v" or "mv".')
 
 
 class JointInd(DistributionND):
@@ -1514,8 +1514,7 @@ class Frank(Copula):
 
     **Input:**
 
-    * **theta** (`float`):
-        Parameter of the copula, real number in correlation_function\{0}.
+    * **theta** (`float`):R\{0}.
 
     This copula possesses the following methods:
 
@@ -1526,7 +1525,7 @@ class Frank(Copula):
     def __init__(self, theta):
         # Check the input copula_params
         if theta is not None and ((not isinstance(theta, (float, int))) or (theta == 0.)):
-            raise ValueError('Input theta should be a float in correlation_function\{0}.')
+            raise ValueError('Input theta should be a float in R\{0}.')
         super().__init__(theta=theta)
 
     def evaluate_cdf(self, unif):
