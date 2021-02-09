@@ -1,0 +1,154 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+
+variables:
+  pythonVersion: 3.7
+  srcDirectory: src
+  MajorVersion: 1
+  MinorVersion: 0
+  InitialReleaseTagNumber: 1
+  IncrementReleaseTagNumber: $[counter(variables['InitialReleaseTagNumber'], 0)]
+  shouldRunSonarcloud: $[or(eq(variables['Build.SourceBranch'], 'refs/heads/main'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'))]
+
+trigger:
+  - master
+  - Development
+  - feature/*
+  - bugfix/*
+  - hotfix/*
+
+pr:
+  branches:
+    include:
+    - master
+    - Development
+
+pool:
+  vmImage: "ubuntu-latest"
+
+steps:
+  - task: UsePythonVersion@0
+    displayName: "Use Python $(pythonVersion)"
+    inputs:
+      versionSpec: "$(pythonVersion)"
+
+  - task: gitversion/setup@0
+    # condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    displayName: Setup GitVersion
+    inputs:
+      versionSpec: '5.x'
+
+  - task: gitversion/execute@0
+    # condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    displayName: Calculate GitVersion
+    inputs:
+      useConfigFile: true
+      configFilePath: 'GitVersion.yml'
+  
+  - powershell: |
+      echo "Current version: $(GitVersion.SemVer)"
+    displayName: Shows currently compiling version
+    # condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+#  - task: SonarCloudPrepare@1
+#    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/#master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], #'PullRequest'))
+#    inputs:
+#      SonarCloud: 'dimtsap.UQpy'
+#      organization: 'dimtsap-github'
+#      scannerMode: 'CLI'
+#      configMode: 'manual'
+#      cliProjectKey: 'sonar.uqpy'
+#      cliProjectName: 'sonar.uqpy'
+#      cliSources: '.'
+#      extraProperties: |
+#        sonar.exclusions=**/example/**
+#        sonar.python.coverage.reportPaths=./coverage.xml
+  
+  - script: pip install -r requirements.txt
+    displayName: Install project dependencies
+
+  - script: |
+      pylint --ignored-modules=numpy,scipy,matplotlib,sklearn --disable=E0202 --disable=R,C,W  src/UQpy
+    displayName: "Running Pylint"
+
+  - script: |
+      python -m pytest tests/*.py --cov=src --cov-report=xml --cov-report=html
+    workingDirectory: $(Build.SourcesDirectory)
+    displayName: 'Test with pytest'
+  
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFiles: '**/test-*.xml'
+      testRunTitle: 'Publish test results for Python $(python.version)'
+
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: Cobertura
+      summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+      reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
+      additionalCodeCoverageFiles: '$(System.DefaultWorkingDirectory)/ **'
+
+#  - task: SonarCloudAnalyze@1
+#    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/#master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], #'PullRequest'))
+
+#  - task: SonarCloudPublish@1
+#    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/#master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], #'PullRequest'))
+#    inputs:
+#      pollingTimeoutSec: '300'
+  
+#  - script: |
+#      python setup.py $(GitVersion.SemVer) sdist bdist_wheel
+#    displayName: Artifact creation
+#    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  
+#  - task: CopyFiles@2
+#    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+#    inputs:
+#      SourceFolder: 'dist'
+#      Contents: '**'
+#      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+  
+#  - task: PublishBuildArtifacts@1
+#    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+#    inputs:
+#      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+#      ArtifactName: 'dist'
+#      publishLocation: 'Container'
+  
+#  - script: |
+#      twine upload --repository-url https://test.pypi.org/legacy/ dist/* --username "$(TESTPYPIU)" #--password "$(TESTPYPIP)"
+#    displayName: Upload to Test PyPi
+#    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+#  - task: GitHubRelease@1
+#    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+#    inputs:
+#      gitHubConnection: 'github.com_dimtsap'
+#      repositoryName: '$(Build.Repository.Name)'
+#      action: 'create'
+#      target: '$(Build.SourceVersion)'
+#      tagSource: 'userSpecifiedTag'
+#      tag: 'v$(GitVersion.SemVer)'
+#      changeLogCompareToRelease: 'lastFullRelease'
+#      changeLogType: 'commitBased'
+
+  # - bash: echo "##vso[task.prependpath]$CONDA/bin"
+  #   displayName: Add conda to PATH
+  
+  # - bash: conda create --yes --quiet --name myEnvironment
+  #   displayName: Create Anaconda environment
+  
+  # - bash: |
+  #     source activate myEnvironment
+  #     conda install --yes --quiet --name conda-build
+  #   displayName: Install Anaconda packages
+  
+  # - bash: |
+  #     conda skeleton pypi testDimtsap
+  #     cd testDimtsap
+  #   displayName: Install Anaconda packages
+

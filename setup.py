@@ -1,10 +1,12 @@
 #!/usr/bin/env python
-
+import sys
+version = sys.argv[1]
+del sys.argv[1]
 from setuptools import setup, find_packages
 
 setup(
     name='UQpy',
-    version="3.0.3",
+    version=version,
     url='https://github.com/SURGroup/UQpy',
     description="UQpy is a general purpose toolbox for Uncertainty Quantification",
     author="Michael D. Shields, Dimitris G. Giovanis, Audrey Olivier, Aakash Bangalore-Satish, Mohit Chauhan, "
