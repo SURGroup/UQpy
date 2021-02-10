@@ -1112,6 +1112,7 @@ class VoronoiStrata(Strata):
         w = np.zeros((tess.nsimplex, 1))
         cent = np.zeros((tess.nsimplex, dimension))
         for i in range(tess.nsimplex):
+            #pylint: disable=E1136
             ch = ConvexHull(tess.points[tess.simplices[i]])
             w[i] = ch.volume
             cent[i, :] = np.mean(tess.points[tess.simplices[i]], axis=0)
@@ -1214,6 +1215,7 @@ class DelaunayStrata(Strata):
         self.volume = np.zeros([0])
         count = 0
         for sim in self.delaunay.simplices:  # extract simplices from Delaunay triangulation
+            # pylint: disable=E1136
             cent, vol = self.compute_delaunay_centroid_volume(self.delaunay.points[sim])
             self.centroids = np.vstack([self.centroids, cent])
             self.volume = np.hstack([self.volume, np.array([vol])])
