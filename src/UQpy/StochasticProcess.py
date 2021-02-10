@@ -18,7 +18,7 @@ from scipy.linalg import sqrtm
 
 from UQpy.Distributions import *
 from UQpy.Utilities import *
-
+from scipy.stats import norm
 
 # TODO: add non-stationary-methods for all the classes
 
