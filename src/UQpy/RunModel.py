@@ -770,12 +770,12 @@ class RunModel:
         # If running on SLURM cluster
         if self.cluster:
             self.srun_string = "srun -N" + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive "
-            self.model_command_string = (self.parallel_string + "'(cd run_{1}_" + " && " + self.srun_string
+            self.model_command_string = (self.parallel_string + "'(cd run_{1}" + " && " + self.srun_string
                                          + " " + self.python_command + " -u " + str(self.model_script) +
                                          " {1})'  ::: {" + str(self.nexist) + ".." +
                                          str(self.nexist + self.nsim - 1) + "}")
         else:  # If running locally
-            self.model_command_string = (self.parallel_string + " 'cd run_{1}_" + " && " +
+            self.model_command_string = (self.parallel_string + " 'cd run_{1}" + " && " +
                                          self.python_command + " -u " +
                                          str(self.model_script) + "' {1}  ::: {" + str(self.nexist) + ".." +
                                          str(self.nexist + self.nsim - 1) + "}")
