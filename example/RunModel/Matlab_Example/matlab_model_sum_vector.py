@@ -3,12 +3,12 @@ import os
 
 
 def matlab(index):
-    command1 = "cp ./InputFiles/sum_vector_" + str(index) + ".number_of_variables ."
+    command1 = "cp ./InputFiles/sum_vector_" + str(index) + ".m ."
     # The user will need to modify command2 to point to the Matlab application on their system.
     command2 = "/Applications/MATLAB_R2018a.app/bin/matlab " \
-               "-nosplash -nojvm -nodisplay -nodesktop -r 'run sum_vector_" + str(index) + ".number_of_variables; exit'"
+               "-nosplash -nojvm -nodisplay -nodesktop -r 'run sum_vector_" + str(index) + ".m; exit'"
     command3 = "mv ./OutputFiles/oupt.out ./OutputFiles/oupt_" + str(index) + ".out"
-    command4 = "rm sum_vector_" + str(index) + ".number_of_variables"
+    command4 = "rm sum_vector_" + str(index) + ".m"
     os.system(command1)
     os.system(command2)
     os.system(command3)
