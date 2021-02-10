@@ -87,7 +87,7 @@ To execute ``RunModel``, the working directory must contain the necessary files 
 .. image:: _static/Runmodel_directory_1.png
    :width: 300
 
-To avoid cluttering the working directory with outputs, ``RunModel`` creates a directory for each execution of the model and saves the output generated during the  model execution within the corresponding directory. ``RunModel`` generates the directory name for the sample as `run_n_timestamp`, where `n` is the python index of the run and `timestamp` corresponds to the time at the beginning of the first simulation of the parallel job. This is illustrated in the figure below.
+To avoid cluttering the working directory with outputs, ``RunModel`` creates a directory for each execution of the model and saves the output generated during the  model execution within the corresponding directory. ``RunModel`` generates the directory name for the sample as `run_n`, where `n` is the python index of the run and `timestamp` corresponds to the time at the beginning of the first simulation of the parallel job. This is illustrated in the figure below.
 
 .. image:: _static/Runmodel_directory_2.png
    :width: 300
