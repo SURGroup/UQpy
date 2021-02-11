@@ -18,9 +18,11 @@
 """
 ``RunModel`` is the core module for ``UQpy`` to execute computational models
 
-``RunModel`` contains a single class, also called ``RunModel`` that is used to execute computational models at specified
-sample points. ``RunModel`` may be used to execute Python models or third-party software models and is capable of
-running models serially or in parallel on both local machines or HPC clusters.
+``RunModel`` contains a two classes, one that is also called ``RunModel`` that is used to execute computational models
+at specified sample points. ``RunModel`` may be used to execute Python models or third-party software models and
+is capable of running models serially or in parallel on both local machines or HPC clusters. The second class is the
+``HMS`` class, which is a class for running hierarchical multiscale (HMS) models. ``HMS`` remains in development and is
+not currently publicly distributed.
 
 The module currently contains the following classes:
 
@@ -1023,21 +1025,20 @@ class RunModel:
                 shutil.copytree(full_file_name, new_dir_name)
 
 
-
 import hms
 
 
 class HMS:
     """
-    Run a hierarchical multiscale (HMS) model
+    Run a hierarchical multiscale (HMS) model.
 
-    This class leverages the hierarchical multiscale (HMS) framework established by the Army Research Laboratory for
-    evaluation of large multi-scale problems.
+    This class leverages the hierarchical multiscale framework established by the Army Research Laboratory for
+    evaluation of large multi-scale problems. The framework is described in references [3]_.
 
     **Input:**
 
     * **exec_prefix** ('str')
-        String containing any commands that preceed a call to the executable that runs the simulation
+        String containing any commands that precede a call to the executable that runs the simulation
 
         Examples of this may include, e.g. 'mpirun -np 1 -machinefile machinefile', and other similar commands
 
@@ -1047,19 +1048,19 @@ class HMS:
         If the executable exists in the user's PATH, this can just be a direct call to this executable (e.g. 'python'.
         If the executable does not exist in the user's PATH, this must be the full path to the executable file.
 
-    * **resource_type** ('str')
+    * **resourceType** ('str')
         Type of computational resources being used by the model.
 
         Options: 'CPU'
 
-    * **resource_amount** ('int')
+    * **resourceAmount** ('int')
         Number of CPUs or other resources allocated to each individual model evaluation.
 
-    * **hms_point_file_name** ('str')
+    * **hms_pointFileName** ('str')
         This is the template input file. It follows all the same formatting as the ``RunModel'' input template file
         specified by 'input_template'. See the ``RunModel'' class.
 
-    * **hms_config_file** ('str')
+    * **hms_configFile** ('str')
         Provides the path to the HMS configuration file. For details of the HMS configuration file, see HMS
         documentation.
 
@@ -1070,53 +1071,46 @@ class HMS:
         Number of CPUs used for running the upper-scale model.
     """
 
-    def __init__(self, exec_prefix, exec_path, resource_type, resource_amount, hms_point_file_name, hms_config_file,
+    def __init__(self, exec_prefix, exec_path, resourceType, resourceAmount, hms_pointFileName, hms_configFile,
                  mpi_rank=0, ncpus_upper=1):
 
-        # Initialize variables
-        self.hms_pointFileName = hms_point_file_name
-        self.hms_configFile = hms_config_file
+        self.hms_pointFileName = hms_pointFileName
+        self.hms_configFile = hms_configFile
         self.exec_prefix = exec_prefix
         self.exec_path = exec_path
-        self.resourceAmount = resource_amount
+        self.resourceAmount = resourceAmount
         self.mpi_rank = mpi_rank
         self.ncpus_upper = ncpus_upper
-
-        # Current implementation of HMS utilizes only CPU resources
-        if resource_type == 'cpu' or 'CPU':
-            self.resourceType = hms.CPU
-        else:
-            raise TypeError('\nUQpy: HMS currently only supports CPU computing.\n')
-
         self.hms_inputFilter = None
         self.hms_outputFilter = None
         self.hms_argument = None
         self.hms_modelPackage = None
         self.hms_returnPackage = None
 
-        self.qoi_list = []
-
-        # Initialize the Broker
         self.communicator = hms.BrokerLauncher().launch(self.hms_configFile, self.mpi_rank, self.ncpus_upper)
 
-        # Current implementation of HMS does not allow multiple brokers
         if len(self.communicator) > 1:
             raise TypeError('\nUQpy: Only one HMS broker is supported.\n')
         else:
             self.communicator = self.communicator[0]
 
+        if resourceType == 'cpu' or 'CPU':
+            self.resourceType = hms.CPU
+        else:
+            raise TypeError('\nUQpy: HMS currently only supports CPU computing.\n')
 
-        # Initialize the HMS model
         self.model = hms.Model(exec_prefix, exec_path, hms.StringVector([self.hms_pointFileName]), self.resourceType,
                                self.resourceAmount)
 
-    def run(self, hms_input_filter=None, hms_output_filter=None, hms_argument=None):
+        self.qoi_list = []
+
+    def run(self, hms_inputFilter, hms_outputFilter, hms_argument):
         """
         Run a single HMS model evaluation
 
         **Input:**
 
-        * **hms_input_filter** ('object' of ``InputFilter'' class)
+        * **hms_inputFilter** ('object' of ``InputFilter'' class)
             HMS requires a Python InputFilter class that is customized to the specific model. The InputFilter is used
             to process model arguments and write individual input files for each indexed model evaluation.
 
@@ -1124,7 +1118,7 @@ class HMS:
             conventions. This template InputFilter requires only a small number of fields to be edited to customize
             the InputFilter for a specific application.
 
-        * **hms_output_filter** ('object' of ``OutputFilter'' class)
+        * **hms_outputFilter** ('object' of ``OutputFilter'' class)
             HMS requires a Python OutputFilter class that is customized to the specific model. The OutputFilter is used
             to process model output files and return the values of model quantities of interest.
 
@@ -1142,25 +1136,17 @@ class HMS:
 
         """
 
-        self.hms_inputFilter = hms_input_filter
-        if self.hms_inputFilter is None:
-            raise TypeError('\nUQpy: The user must specify an HMS Input Filter.\n')
+        print('From inside RunModel')
+        print(os.getcwd())
 
-        self.hms_outputFilter = hms_output_filter
-        if self.hms_inputFilter is None:
-            raise TypeError('\nUQpy: The user must specify an HMS Output Filter.\n')
-
+        self.hms_inputFilter = hms_inputFilter
+        self.hms_outputFilter = hms_outputFilter
         self.hms_argument = hms_argument
-        if self.hms_argument is None:
-            raise TypeError('\nUQpy: The user must specify an HMS Argument.\n')
-
-        # Define the HMS Model Package
         self.hms_modelPackage = hms.ModelPackage(self.model, self.hms_inputFilter, self.hms_outputFilter,
                                                  self.hms_argument)
 
         self.qoi_list.extend([None])
 
-        # Send the model out for evaluation
         self.communicator.send(self.hms_modelPackage)
 
     def receive(self):
@@ -1176,10 +1162,8 @@ class HMS:
             OutputFilter.
 
         """
-        # Receive results from the model
         self.hms_returnPackage = self.communicator.receive()
 
-        # Assign the returned values to the UQpy qoi_list for further processing.
         for modelPackage in self.hms_returnPackage:
             index = modelPackage.getArgument().index
             self.qoi_list[index] = modelPackage.getValue().value

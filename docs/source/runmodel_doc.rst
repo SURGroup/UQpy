@@ -296,6 +296,19 @@ RunModel Class
 .. autoclass:: UQpy.RunModel.RunModel
 	:members:
 
+Hierarchical Multiscale Modeling (HMS)
+=======================================
+
+Hierarchical Multiscale (HMS) modeling is under active development. The computational framework is being developed at the Army Research Lab and has been published in [3]_. It is not currently supported for public release and is therefore not fully documented here at this time. Descriptions of the class inputs and attributes are provided below for internal UQpy developer reference.
+	
+HMS Class
+---------
+
+.. autoclass:: UQpy.RunModel.HMS
+	:members:
+
 .. [1] Tange, Ole. (2018). GNU Parallel 2018, `https://doi.org/10.5281/zenodo.1146014 <https://doi.org/10.5281/zenodo.1146014>`_
 
 .. [2] Olivier, A., Aakash, B.S., Chauhan, M., Vandanapu, L., Giovanis, D.G., and Shields, M.D. (In Review) "UQpy: A general purpose Python package and development environment for uncertainty quantification." `Journal of Computational Science`.
+
+.. [3] Knap, J., Spear, C., Leiter, K., Becker, R., and Powell, D. (2016). "A computational framework for scale-bridging in multi-scale simulations." International Journal for Numerical Methods in Engineering. 108: 1649-1666.
