@@ -75,6 +75,7 @@ steps:
     displayName: "Running Pylint"
 
   - script: |
+      echo "##vso[task.setvariable variable=PATH]${​​​​​​​​PATH}​​​​​​​​:$(Build.SourcesDirectory)/src/UQpy"
       python -m pytest tests/*.py --cov=src --cov-report=xml --cov-report=html
     workingDirectory: $(Build.SourcesDirectory)
     displayName: 'Test with pytest'
