@@ -519,10 +519,9 @@ class RunModel:
             print('\nUQpy: Performing serial execution of the third-party model.\n')
 
         # Loop over the number of simulations, executing the model once per loop
-        ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%p")
         for i in range(self.nexist, self.nexist + self.nsim):
             # Create a directory for each model run
-            work_dir = os.path.join(self.model_dir, "run_" + str(i) + '_' + ts)
+            work_dir = os.path.join(self.model_dir, "run_" + str(i))
             self._copy_files(work_dir=work_dir)
 
             # Change current working directory to model run directory
@@ -567,21 +566,19 @@ class RunModel:
             # Call the input function
             print('\nUQpy: Creating inputs for parallel execution of the third-party model.\n')
 
-        ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%p")
-
         # Create all input files for the parallel execution and place them in the proper directories
         for i in range(self.nexist, self.nexist + self.nsim):
             # Create a directory for each model run
-            work_dir = os.path.join(self.model_dir, "run_" + str(i) + '_' + ts)
+            work_dir = os.path.join(self.model_dir, "run_" + str(i))
             self._copy_files(work_dir=work_dir)
 
-        self._input_parallel(ts)
+        self._input_parallel()
 
         # Execute the model
         if self.verbose:
             print('\nUQpy: Executing the third-party model in parallel.\n')
 
-        self._execute_parallel(ts)
+        self._execute_parallel()
 
         # Call the output function
         if self.verbose:
@@ -589,7 +586,7 @@ class RunModel:
 
         for i in range(self.nexist, self.nexist + self.nsim):
             # Change current working directory to model run directory
-            work_dir = os.path.join(self.model_dir, "run_" + str(i) + '_' + ts)
+            work_dir = os.path.join(self.model_dir, "run_" + str(i))
             if self.verbose:
                 print('\nUQpy: Changing to the following directory for output processing:\n' + work_dir)
             os.chdir(work_dir)
@@ -733,19 +730,14 @@ class RunModel:
         else:
             self.qoi_list[index] = self.model_output
 
-    def _input_parallel(self, timestamp):
+    def _input_parallel(self):
         """
         Create all the input files required
-
-        ** Input: **
-
-        :param timestamp: Timestamp which is appended to the name of the input file
-        :type timestamp: str
         """
         # Loop over the number of samples and create input files in a folder in current directory
         for i in range(self.nsim):
             new_text = self._find_and_replace_var_names_with_values(index=i + self.nexist)
-            folder_to_write = 'run_' + str(i+self.nexist) + '_' + timestamp + '/InputFiles'
+            folder_to_write = 'run_' + str(i+self.nexist) + '/InputFiles'
             # Write the new text to the input file
             self._create_input_files(file_name=self.input_template, num=i+self.nexist, text=new_text,
                                      new_folder=folder_to_write)
@@ -753,7 +745,7 @@ class RunModel:
                 print('\nUQpy: Created input files for run ' + str(i) + ' in the directory: \n' +
                       os.path.join(self.model_dir, folder_to_write))
 
-    def _execute_parallel(self, timestamp):
+    def _execute_parallel(self):
         """
         Build the command string and execute the model in parallel using subprocess and gnu parallel
 
@@ -778,12 +770,12 @@ class RunModel:
         # If running on SLURM cluster
         if self.cluster:
             self.srun_string = "srun -N" + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive "
-            self.model_command_string = (self.parallel_string + "'(cd run_{1}_" + timestamp + " && " + self.srun_string
+            self.model_command_string = (self.parallel_string + "'(cd run_{1}" + " && " + self.srun_string
                                          + " " + self.python_command + " -u " + str(self.model_script) +
                                          " {1})'  ::: {" + str(self.nexist) + ".." +
                                          str(self.nexist + self.nsim - 1) + "}")
         else:  # If running locally
-            self.model_command_string = (self.parallel_string + " 'cd run_{1}_" + timestamp + " && " +
+            self.model_command_string = (self.parallel_string + " 'cd run_{1}" + " && " +
                                          self.python_command + " -u " +
                                          str(self.model_script) + "' {1}  ::: {" + str(self.nexist) + ".." +
                                          str(self.nexist + self.nsim - 1) + "}")
