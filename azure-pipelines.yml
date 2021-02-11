@@ -74,9 +74,22 @@ steps:
       pylint --ignored-modules=numpy,scipy,matplotlib,sklearn --disable=E0202 --disable=R,C,W  src/UQpy
     displayName: "Running Pylint"
 
-  - script: |
+  #- script: |
       #echo "##vso[task.setvariable variable=PATH]${​​​​​​​​PATH}​​​​​​​​:$(Build.SourcesDirectory)/src/UQpy"
-      python -m pytest -v tests/*.py --cov=src --cov-report=xml --cov-report=html
+      #python -m pytest -v tests/*.py --cov=src --cov-report=xml --cov-report=html
+    #workingDirectory: $(Build.SourcesDirectory)
+    #displayName: 'Test with pytest'
+  
+  - script: |
+      pip install pytest
+      pip install pytest-cov
+      pip install pytest pytest-azurepipelines
+      pip install numpy
+      pip install matplotlib
+      pip install -U scikit-learn
+      echo "##vso[task.setvariable variable=PATH]${PATH}:$(Build.SourcesDirectory)/src/UQpy"
+      # python -m pytest tests/ --import-mode=importlib --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+      pytest tests/*.py --cov-config .coveragerc --import-mode=importlib --doctest-modules --junitxml=junit/test-results.xml --cov=src --cov-report=xml --cov-report=html
     workingDirectory: $(Build.SourcesDirectory)
     displayName: 'Test with pytest'
   
