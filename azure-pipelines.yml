@@ -116,19 +116,20 @@ steps:
       pollingTimeoutSec: '300'
   
   - script: |
-      python setup.py $(GitVersion.SemVer) sdist bdist_wheel
+      #python setup.py $(GitVersion.SemVer) sdist bdist_wheel
+      python setup.py 100.0.1 sdist bdist_wheel
     displayName: Artifact creation
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    #condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
   
   - task: CopyFiles@2
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    #condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
     inputs:
       SourceFolder: 'dist'
       Contents: '**'
       TargetFolder: '$(Build.ArtifactStagingDirectory)'
   
   - task: PublishBuildArtifacts@1
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    #condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)'
       ArtifactName: 'dist'
@@ -137,7 +138,7 @@ steps:
   - script: |
       twine upload --repository-url https://test.pypi.org/legacy/ dist/* --username "$(TESTPYPIU)" #--password "$(TESTPYPIP)"
     displayName: Upload to Test PyPi
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    #condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
 #  - task: GitHubRelease@1
 #    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
