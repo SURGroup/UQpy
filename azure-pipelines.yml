@@ -66,6 +66,7 @@ steps:
       extraProperties: |
         sonar.exclusions=**/example/**
         sonar.python.coverage.reportPaths=./coverage.xml
+        sonar.branch.name=feature/CI
   
   - script: pip install -r requirements.txt
     displayName: Install project dependencies
