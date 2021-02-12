@@ -60,7 +60,7 @@ steps:
       organization: 'jhusurg'
       scannerMode: 'CLI'
       configMode: 'manual'
-      cliProjectKey: 'uqpy'
+      cliProjectKey: 'SURGroup_UQpy'
       cliProjectName: 'UQpy'
       cliSources: '.'
       extraProperties: |
