@@ -53,19 +53,19 @@ steps:
     displayName: Shows currently compiling version
     # condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
-#  - task: SonarCloudPrepare@1
-#    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/#master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], #'PullRequest'))
-#    inputs:
-#      SonarCloud: 'dimtsap.UQpy'
-#      organization: 'dimtsap-github'
-#      scannerMode: 'CLI'
-#      configMode: 'manual'
-#      cliProjectKey: 'sonar.uqpy'
-#      cliProjectName: 'sonar.uqpy'
-#      cliSources: '.'
-#      extraProperties: |
-#        sonar.exclusions=**/example/**
-#        sonar.python.coverage.reportPaths=./coverage.xml
+  - task: SonarCloudPrepare@1
+    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/#master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], #'PullRequest'))
+    inputs:
+      SonarCloud: 'SonarCloud.UQpy'
+      organization: 'jhusurg'
+      scannerMode: 'CLI'
+      configMode: 'manual'
+      cliProjectKey: 'uqpy'
+      cliProjectName: 'UQpy'
+      cliSources: '.'
+      extraProperties: |
+        sonar.exclusions=**/example/**
+        sonar.python.coverage.reportPaths=./coverage.xml
   
   - script: pip install -r requirements.txt
     displayName: Install project dependencies
@@ -106,13 +106,13 @@ steps:
       reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
       additionalCodeCoverageFiles: '$(System.DefaultWorkingDirectory)/ **'
 
-#  - task: SonarCloudAnalyze@1
-#    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/#master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], #'PullRequest'))
+  - task: SonarCloudAnalyze@1
+    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/#master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], #'PullRequest'))
 
-#  - task: SonarCloudPublish@1
-#    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/#master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], #'PullRequest'))
-#    inputs:
-#      pollingTimeoutSec: '300'
+  - task: SonarCloudPublish@1
+    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/#master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], #'PullRequest'))
+    inputs:
+      pollingTimeoutSec: '300'
   
 #  - script: |
 #      python setup.py $(GitVersion.SemVer) sdist bdist_wheel
