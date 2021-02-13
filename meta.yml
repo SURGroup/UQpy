@@ -1,6 +1,6 @@
 package:
   name: testuqpy
-  version: {{ version }}
+  version: 100.0.1
   
 build:
   noarch: python
