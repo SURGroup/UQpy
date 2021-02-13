@@ -136,7 +136,7 @@ steps:
       publishLocation: 'Container'
   
   - script: |
-      twine upload --repository-url https://test.pypi.org/legacy/ dist/* --username "$(TESTPYPIU)" #--password "$(TESTPYPIP)"
+      twine upload --repository-url https://test.pypi.org/legacy/ dist/* --username "$(TESTPYPIU)" --password "$(TESTPYPIP)"
     displayName: Upload to Test PyPi
     #condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
