@@ -116,20 +116,19 @@ steps:
       pollingTimeoutSec: '300'
   
   - script: |
-      #python setup.py $(GitVersion.SemVer) sdist bdist_wheel
-      python setup.py 100.0.1 sdist bdist_wheel
+      python setup.py $(GitVersion.SemVer) sdist bdist_wheel
     displayName: Artifact creation
-    #condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
   
   - task: CopyFiles@2
-    #condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
     inputs:
       SourceFolder: 'dist'
       Contents: '**'
       TargetFolder: '$(Build.ArtifactStagingDirectory)'
   
   - task: PublishBuildArtifacts@1
-    #condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)'
       ArtifactName: 'dist'
@@ -138,7 +137,7 @@ steps:
   - script: |
       twine upload --repository-url https://test.pypi.org/legacy/ dist/* --username "$(TESTPYPIU)" --password "$(TESTPYPIP)"
     displayName: Upload to Test PyPi
-    #condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
 #  - task: GitHubRelease@1
 #    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
@@ -152,19 +151,25 @@ steps:
 #      changeLogCompareToRelease: 'lastFullRelease'
 #      changeLogType: 'commitBased'
 
-  # - bash: echo "##vso[task.prependpath]$CONDA/bin"
-  #   displayName: Add conda to PATH
+  - bash: echo "##vso[task.prependpath]$CONDA/bin"
+    displayName: Add conda to PATH
   
-  # - bash: conda create --yes --quiet --name myEnvironment
-  #   displayName: Create Anaconda environment
+  - bash: conda create --yes --quiet --name myEnvironment
+    displayName: Create Anaconda environment
   
-  # - bash: |
-  #     source activate myEnvironment
-  #     conda install --yes --quiet --name conda-build
-  #   displayName: Install Anaconda packages
-  
-  # - bash: |
-  #     conda skeleton pypi testDimtsap
-  #     cd testDimtsap
-  #   displayName: Install Anaconda packages
+  - bash: |
+      source activate myEnvironment
+      conda install --yes --quiet --name myEnvironment python=$(pythonVersion) conda-build anaconda-client
+    displayName: Install Anaconda packages
 
+  - bash: |
+      source activate myEnvironment
+      #conda build . recipe --variants "{'version': ['$(GitVersion.SemVer)']}"
+      conda build . recipe --variants "{'version': ['100.0.1']}" 
+    displayName: Build noarch conda packages
+
+  - bash: |
+      source activate myEnvironment
+      anaconda login --username $(ANACONDAUSER) --password $(ANACONDAPW)
+      anaconda upload /usr/share/miniconda/envs/myEnvironment/conda-bld/noarch/*.tar.bz2
+    displayName: Upload conda packages
