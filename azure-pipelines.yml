@@ -165,7 +165,8 @@ steps:
   - bash: |
       source activate myEnvironment
       #conda build . recipe --variants "{'version': ['$(GitVersion.SemVer)']}"
-      conda build . recipe --variants "{'version': ['100.0.1']}" 
+      #conda build . recipe --variants "{'version': ['100.0.1']}" 
+      conda build .
     displayName: Build noarch conda packages
 
   - bash: |
