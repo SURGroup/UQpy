@@ -68,7 +68,9 @@ steps:
         sonar.python.coverage.reportPaths=./coverage.xml
         sonar.branch.name=feature/CI
   
-  - script: pip install -r requirements.txt
+  - script: |
+      pip install -r requirements.txt
+      pip install -e .
     displayName: Install project dependencies
 
   - script: |
