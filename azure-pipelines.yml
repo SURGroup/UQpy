@@ -75,11 +75,11 @@ steps:
       pylint --ignored-modules=numpy,scipy,matplotlib,sklearn --disable=E0202 --disable=R,C,W  src/UQpy
     displayName: "Running Pylint"
 
-  #- script: |
-      #echo "##vso[task.setvariable variable=PATH]${​​​​​​​​PATH}​​​​​​​​:$(Build.SourcesDirectory)/src/UQpy"
-      #python -m pytest -v tests/*.py --cov=src --cov-report=xml --cov-report=html
-    #workingDirectory: $(Build.SourcesDirectory)
-    #displayName: 'Test with pytest'
+  - script: |
+      echo "##vso[task.setvariable variable=PATH]${​​​​​​​​PATH}​​​​​​​​:$(Build.SourcesDirectory)/src/UQpy"
+      python -m pytest -v tests/*.py --cov=src --cov-report=xml --cov-report=html
+    workingDirectory: $(Build.SourcesDirectory)
+    displayName: 'Test with pytest'
   
   #- script: |
   #    pip install pytest
