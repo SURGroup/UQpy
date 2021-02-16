@@ -151,26 +151,26 @@ steps:
 #      changeLogCompareToRelease: 'lastFullRelease'
 #      changeLogType: 'commitBased'
 
-  - bash: echo "##vso[task.prependpath]$CONDA/bin"
-    displayName: Add conda to PATH
+  #- bash: echo "##vso[task.prependpath]$CONDA/bin"
+    #displayName: Add conda to PATH
   
-  - bash: conda create --yes --quiet --name myEnvironment
-    displayName: Create Anaconda environment
+  #- bash: conda create --yes --quiet --name myEnvironment
+    #displayName: Create Anaconda environment
   
-  - bash: |
-      source activate myEnvironment
-      conda install --yes --quiet --name myEnvironment python=$(pythonVersion) conda-build anaconda-client
-    displayName: Install Anaconda packages
+  #- bash: |
+      #source activate myEnvironment
+      #conda install --yes --quiet --name myEnvironment python=$(pythonVersion) conda-build anaconda-client
+    #displayName: Install Anaconda packages
 
-  - bash: |
-      source activate myEnvironment
+  #- bash: |
+      #source activate myEnvironment
       #conda build . recipe --variants "{'version': ['$(GitVersion.SemVer)']}"
       #conda build . recipe --variants "{'version': ['100.0.1']}" 
-      conda build .
-    displayName: Build noarch conda packages
+      #conda build .
+    #displayName: Build noarch conda packages
 
-  - bash: |
-      source activate myEnvironment
-      anaconda login --username $(ANACONDAUSER) --password $(ANACONDAPW)
-      anaconda upload /usr/share/miniconda/envs/myEnvironment/conda-bld/noarch/*.tar.bz2
-    displayName: Upload conda packages
+  #- bash: |
+      #source activate myEnvironment
+      #anaconda login --username $(ANACONDAUSER) --password $(ANACONDAPW)
+      #anaconda upload /usr/share/miniconda/envs/myEnvironment/conda-bld/noarch/*.tar.bz2
+    #displayName: Upload conda packages
