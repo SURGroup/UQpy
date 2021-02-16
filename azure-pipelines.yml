@@ -27,7 +27,7 @@ pr:
     - Development
 
 pool:
-  vmImage: "MacOS-latest"
+  vmImage: "Ubuntu-latest"
 
 steps:
   - task: UsePythonVersion@0
@@ -70,7 +70,6 @@ steps:
   
   - script: |
       pip install -r requirements.txt
-      pip install -e .
     displayName: Install project dependencies
 
   - script: |
