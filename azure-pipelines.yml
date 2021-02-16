@@ -27,7 +27,7 @@ pr:
     - Development
 
 pool:
-  vmImage: "macOS-latest"
+  vmImage: "ubuntu-latest"
 
 steps:
   - task: UsePythonVersion@0
@@ -70,6 +70,11 @@ steps:
   
   - script: pip install -r requirements.txt
     displayName: Install project dependencies
+  
+  - script: |    
+      pip install pytest pytest-azurepipelines    
+      pytest  
+    displayName: 'pytest'
 
   - script: |
       pylint --ignored-modules=numpy,scipy,matplotlib,sklearn --disable=E0202 --disable=R,C,W  src/UQpy
