@@ -27,7 +27,7 @@ pr:
     - Development
 
 pool:
-  vmImage: "ubuntu-latest"
+  vmImage: "MacOS-latest"
 
 steps:
   - task: UsePythonVersion@0
