@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../../src/UQpy/')
-from ../../src/UQpy.Distributions import *
-from ../../src/UQpy.Surrogates import *
+from UQpy.Distributions import *
+from UQpy.Surrogates import *
 import numpy as np
 
 np.random.seed(1)
