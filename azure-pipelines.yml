@@ -65,7 +65,7 @@ steps:
       cliSources: '.'
       extraProperties: |
         sonar.exclusions=**/example/**
-        sonar.python.coverage.reportPaths=coverage.xml
+        sonar.python.coverage.reportPaths=./coverage.xml
         sonar.branch.name=feature/CI
   
   - script: |
@@ -84,9 +84,9 @@ steps:
 
   - script: |
       pip install pytest pytest-cov
-      #echo "##vso[task.setvariable variable=PATH]${​​​​​​​​PATH}​​​​​​​​:$(Build.SourcesDirectory)/src/UQpy"
       #python -m pytest tests/*.py --cov=src --cov-report=xml --cov-report=html
-      pytest tests/ --cov-config .coveragerc --doctest-modules --junitxml=junit/test-results.xml --cov=src --cov-report=xml --cov-report=html
+      #pytest tests/ --cov-config .coveragerc --doctest-modules --junitxml=junit/test-results.xml --cov=src --cov-report=xml --cov-report=html
+      pytest tests/*.py --cov-config .coveragerc --import-mode=importlib --doctest-modules --junitxml=junit/test-results.xml --cov=src --cov-report=xml --cov-report=html
     workingDirectory: $(Build.SourcesDirectory)
     displayName: 'Test with pytest'
   
