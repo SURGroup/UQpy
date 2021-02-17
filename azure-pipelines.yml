@@ -69,8 +69,13 @@ steps:
         sonar.branch.name=feature/CI
   
   - script: |
-      pip install -r requirements.txt
-    displayName: Install project dependencies
+      python -m pip install --upgrade pip
+      pip install pytest pytest-azurepipelines
+      pip install -e .
+    displayName: "Install project dependencies"
+  #- script: |
+  #    pip install -r requirements.txt
+  #  displayName: Install project dependencies
 
   - script: |
       pylint --ignored-modules=numpy,scipy,matplotlib,sklearn --disable=E0202 --disable=R,C,W  src/UQpy
