@@ -65,7 +65,7 @@ steps:
       cliSources: '.'
       extraProperties: |
         sonar.exclusions=**/example/**
-        sonar.python.coverage.reportPaths=./coverage.xml
+        sonar.python.coverage.reportPaths=coverage.xml
         sonar.branch.name=feature/CI
   
   - script: |
