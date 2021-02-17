@@ -72,18 +72,19 @@ steps:
       python -m pip install --upgrade pip
       pip install pytest pytest-azurepipelines
       python setup.py $(GitVersion.SemVer) install
-#      pip install -e .
     displayName: "Install project dependencies"
+    
   #- script: |
   #    pip install -r requirements.txt
   #  displayName: Install project dependencies
 
   - script: |
+      pip install pylint
       pylint --ignored-modules=numpy,scipy,matplotlib,sklearn --disable=E0202 --disable=R,C,W  src/UQpy
     displayName: "Running Pylint"
 
   - script: |
-      #pip install pytest pytest-azurepipelines  
+      pip install pytest pytest-cov pytest-azurepipelines  
       #echo "##vso[task.setvariable variable=PATH]${​​​​​​​​PATH}​​​​​​​​:$(Build.SourcesDirectory)/src/UQpy"
       python -m pytest tests/*.py --cov=src --cov-report=xml --cov-report=html
     workingDirectory: $(Build.SourcesDirectory)
