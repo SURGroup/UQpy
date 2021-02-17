@@ -68,11 +68,6 @@ steps:
         sonar.python.coverage.reportPaths=./coverage.xml
         sonar.branch.name=feature/CI
   
-  #- script: |
-  #    python -m pip install --upgrade pip
-  #    python setup.py $(GitVersion.SemVer) install
-  #  displayName: "Install project dependencies"
-    
   - script: |
       pip install -r requirements.txt
     displayName: Install project dependencies
@@ -84,26 +79,10 @@ steps:
 
   - script: |
       pip install pytest pytest-cov
-      #python -m pytest tests/*.py --cov=src --cov-report=xml --cov-report=html
-      #pytest tests/ --cov-config .coveragerc --doctest-modules --junitxml=junit/test-results.xml --cov=src --cov-report=xml --cov-report=html
-      #echo "##vso[task.setvariable variable=PATH]${PATH}:$(Build.SourcesDirectory)/src/UQpy"
       PYTHONPATH=src pytest tests/*.py --cov-config .coveragerc --import-mode=importlib --doctest-modules --junitxml=junit/test-results.xml --cov=UQpy --cov-report=xml --cov-report=html
     workingDirectory: $(Build.SourcesDirectory)
     displayName: 'Test with pytest'
-  
-  #- script: |
-  #    pip install pytest
-  #    pip install pytest-cov
-  #    pip install pytest pytest-azurepipelines
-  #    pip install numpy
-  #    pip install matplotlib
-  #    pip install -U scikit-learn
-  #    echo "##vso[task.setvariable variable=PATH]${PATH}:$(Build.SourcesDirectory)/src/UQpy"
-  #    # python -m pytest tests/ --import-mode=importlib --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
-  #    pytest tests/*.py --cov-config .coveragerc --import-mode=importlib --doctest-modules --junitxml=junit/test-results.xml --cov=src --cov-report=xml --cov-report=html
-  #  workingDirectory: $(Build.SourcesDirectory)
-  #  displayName: 'Test with pytest'
-  
+    
   - task: PublishTestResults@2
     condition: succeededOrFailed()
     inputs:
@@ -149,38 +128,14 @@ steps:
     displayName: Upload to Test PyPi
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
-#  - task: GitHubRelease@1
-#    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-#    inputs:
-#      gitHubConnection: 'github.com_dimtsap'
-#      repositoryName: '$(Build.Repository.Name)'
-#      action: 'create'
-#      target: '$(Build.SourceVersion)'
-#      tagSource: 'userSpecifiedTag'
-#      tag: 'v$(GitVersion.SemVer)'
-#      changeLogCompareToRelease: 'lastFullRelease'
-#      changeLogType: 'commitBased'
-
-  #- bash: echo "##vso[task.prependpath]$CONDA/bin"
-    #displayName: Add conda to PATH
-  
-  #- bash: conda create --yes --quiet --name myEnvironment
-    #displayName: Create Anaconda environment
-  
-  #- bash: |
-      #source activate myEnvironment
-      #conda install --yes --quiet --name myEnvironment python=$(pythonVersion) conda-build anaconda-client
-    #displayName: Install Anaconda packages
-
-  #- bash: |
-      #source activate myEnvironment
-      #conda build . recipe --variants "{'version': ['$(GitVersion.SemVer)']}"
-      #conda build . recipe --variants "{'version': ['100.0.1']}" 
-      #conda build .
-    #displayName: Build noarch conda packages
-
-  #- bash: |
-      #source activate myEnvironment
-      #anaconda login --username $(ANACONDAUSER) --password $(ANACONDAPW)
-      #anaconda upload /usr/share/miniconda/envs/myEnvironment/conda-bld/noarch/*.tar.bz2
-    #displayName: Upload conda packages
+  - task: GitHubRelease@1
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    inputs:
+      gitHubConnection: 'github.com_dimtsap'
+      repositoryName: '$(Build.Repository.Name)'
+      action: 'create'
+      target: '$(Build.SourceVersion)'
+      tagSource: 'userSpecifiedTag'
+      tag: 'v$(GitVersion.SemVer)'
+      changeLogCompareToRelease: 'lastFullRelease'
+      changeLogType: 'commitBased'
