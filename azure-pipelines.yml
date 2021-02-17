@@ -109,11 +109,17 @@ steps:
       testResultsFiles: '**/test-*.xml'
       testRunTitle: 'Publish test results for Python $(python.version)'
 
+  #- task: PublishCodeCoverageResults@1
+  #  inputs:
+  #    codeCoverageTool: Cobertura
+  #    summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+  #    reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
+  #    additionalCodeCoverageFiles: '$(System.DefaultWorkingDirectory)/ **'
   - task: PublishCodeCoverageResults@1
     inputs:
       codeCoverageTool: Cobertura
-      summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-      reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
+      summaryFileLocation: './coverage.xml'
+      reportDirectory: './htmlcov'
       additionalCodeCoverageFiles: '$(System.DefaultWorkingDirectory)/ **'
 
   - task: SonarCloudAnalyze@1
