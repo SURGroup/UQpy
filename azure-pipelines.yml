@@ -71,7 +71,7 @@ steps:
   - script: |
       python -m pip install --upgrade pip
       pip install pytest pytest-azurepipelines
-      python setup.py install
+      python setup.py $(GitVersion.SemVer) install
 #      pip install -e .
     displayName: "Install project dependencies"
   #- script: |
