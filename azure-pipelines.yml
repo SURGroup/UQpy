@@ -86,7 +86,8 @@ steps:
   - script: |
       pip install pytest pytest-cov pytest-azurepipelines  
       #echo "##vso[task.setvariable variable=PATH]${​​​​​​​​PATH}​​​​​​​​:$(Build.SourcesDirectory)/src/UQpy"
-      python -m pytest tests/*.py --cov=src --cov-report=xml --cov-report=html
+      #python -m pytest tests/*.py --cov=src --cov-report=xml --cov-report=html
+      pytest tests/ --cov-config .coveragerc --doctest-modules --junitxml=junit/test-results.xml --cov=src --cov-report=xml --cov-report=html
     workingDirectory: $(Build.SourcesDirectory)
     displayName: 'Test with pytest'
   
