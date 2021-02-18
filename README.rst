@@ -1,3 +1,14 @@
+|AzurePipelines| |PyPIdownloads| |PyPI| |Conda| |CondaForge| |LatestRelease| |Binder|
+
+.. |PyPIdownloads| image:: https://img.shields.io/pypi/dm/UQpy?style=plastic   :alt: PyPI - Downloads
+.. |PyPI| image:: https://img.shields.io/pypi/v/UQpy?style=plastic   :alt: PyPI
+.. |Conda| image:: https://img.shields.io/conda/dn/conda-forge/UQpy?style=plastic   :alt: Conda
+.. |CondaForge| image:: https://img.shields.io/conda/v/conda-forge/UQpy?style=plastic   :alt: Conda
+.. |LatestRelease| image:: https://img.shields.io/github/downloads/SURGroup/UQpy/latest/total?style=plastic   :alt: GitHub Releases (by Release)
+.. |Binder| image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/SURGroup/UQpy/master
+.. |AzurePipelines| image:: https://img.shields.io/azure-devops/build/UQpy/UQpy/1   :alt: Azure DevOps builds
+
 
 *******************************************
 Uncertainty Quantification with python (UQpy)
@@ -83,17 +94,9 @@ Help and Support
 
 For assistance with the UQpy software package, please raise an issue on the Github Issues page. Please use the appropriate labels to indicate which module you are specifically inquiring about.
 
-.. image:: https://img.shields.io/pypi/dm/UQpy?style=plastic   :alt: PyPI - Downloads
-.. image:: https://img.shields.io/conda/dn/conda-forge/UQpy?style=plastic   :alt: Conda
-.. image:: https://img.shields.io/github/downloads/SURGroup/UQpy/V3.0.4/total?style=plastic   :alt: GitHub Releases (by Release)
-
-.. image:: https://img.shields.io/pypi/v/UQpy?style=plastic   :alt: PyPI
-.. image:: https://img.shields.io/conda/v/conda-forge/UQpy?style=plastic   :alt: Conda
-
 .. |logo| image:: logo.jpg
     :scale: 25 %
     :target: https://gihub.com/SURGroup/UQpy
     
     
-.. image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/SURGroup/UQpy/master
+
