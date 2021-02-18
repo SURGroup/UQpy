@@ -64,7 +64,7 @@ steps:
       cliProjectName: 'UQpy'
       cliSources: '.'
       extraProperties: |
-        sonar.exclusions=**/example/**
+        sonar.exclusions=**/example/**, **/tests/**
         sonar.python.coverage.reportPaths=./coverage.xml
      
   - script: |
