@@ -15,6 +15,7 @@ The module currently contains the following classes:
 import itertools
 
 from scipy.linalg import sqrtm
+from scipy.stats import norm
 
 from UQpy.Distributions import *
 from UQpy.Utilities import *
@@ -373,26 +374,26 @@ class BSRM:
         if self.verbose:
             print('UQpy: Stochastic Process: Computing the partial bicoherence values.')
         self.bc2 = np.zeros_like(self.b_real)
-        self.pure_power_sepctrum = np.zeros_like(self.power_spectrum)
+        self.pure_power_spectrum = np.zeros_like(self.power_spectrum)
         self.sum_bc2 = np.zeros_like(self.power_spectrum)
 
         if self.number_of_dimensions == 1:
-            self.pure_power_sepctrum[0] = self.power_spectrum[0]
-            self.pure_power_sepctrum[1] = self.power_spectrum[1]
+            self.pure_power_spectrum[0] = self.power_spectrum[0]
+            self.pure_power_spectrum[1] = self.power_spectrum[1]
 
         if self.number_of_dimensions == 2:
-            self.pure_power_sepctrum[0, :] = self.power_spectrum[0, :]
-            self.pure_power_sepctrum[1, :] = self.power_spectrum[1, :]
-            self.pure_power_sepctrum[:, 0] = self.power_spectrum[:, 0]
-            self.pure_power_sepctrum[:, 1] = self.power_spectrum[:, 1]
+            self.pure_power_spectrum[0, :] = self.power_spectrum[0, :]
+            self.pure_power_spectrum[1, :] = self.power_spectrum[1, :]
+            self.pure_power_spectrum[:, 0] = self.power_spectrum[:, 0]
+            self.pure_power_spectrum[:, 1] = self.power_spectrum[:, 1]
 
         if self.number_of_dimensions == 3:
-            self.pure_power_sepctrum[0, :, :] = self.power_spectrum[0, :, :]
-            self.pure_power_sepctrum[1, :, :] = self.power_spectrum[1, :, :]
-            self.pure_power_sepctrum[:, 0, :] = self.power_spectrum[:, 0, :]
-            self.pure_power_sepctrum[:, 1, :] = self.power_spectrum[:, 1, :]
-            self.pure_power_sepctrum[:, :, 0] = self.power_spectrum[:, :, 0]
-            self.pure_power_sepctrum[:, 0, 1] = self.power_spectrum[:, :, 1]
+            self.pure_power_spectrum[0, :, :] = self.power_spectrum[0, :, :]
+            self.pure_power_spectrum[1, :, :] = self.power_spectrum[1, :, :]
+            self.pure_power_spectrum[:, 0, :] = self.power_spectrum[:, 0, :]
+            self.pure_power_spectrum[:, 1, :] = self.power_spectrum[:, 1, :]
+            self.pure_power_spectrum[:, :, 0] = self.power_spectrum[:, :, 0]
+            self.pure_power_spectrum[:, 0, 1] = self.power_spectrum[:, :, 1]
 
         self.ranges = [range(self.number_frequency_intervals[i]) for i in range(self.number_of_dimensions)]
 
@@ -401,10 +402,10 @@ class BSRM:
             for j in itertools.product(*[range(np.int32(k)) for k in np.ceil((wk + 1) / 2)]):
                 wj = np.array(j)
                 wi = wk - wj
-                if self.b_ampl[(*wi, *wj)] > 0 and self.pure_power_sepctrum[(*wi, *[])] * \
-                        self.pure_power_sepctrum[(*wj, *[])] != 0:
+                if self.b_ampl[(*wi, *wj)] > 0 and self.pure_power_spectrum[(*wi, *[])] * \
+                        self.pure_power_spectrum[(*wj, *[])] != 0:
                     self.bc2[(*wi, *wj)] = self.b_ampl[(*wi, *wj)] ** 2 / (
-                            self.pure_power_sepctrum[(*wi, *[])] * self.pure_power_sepctrum[(*wj, *[])] *
+                            self.pure_power_spectrum[(*wi, *[])] * self.pure_power_spectrum[(*wj, *[])] *
                             self.power_spectrum[(*wk, *[])]) * self.frequency_interval ** self.number_of_dimensions
                     self.sum_bc2[(*wk, *[])] = self.sum_bc2[(*wk, *[])] + self.bc2[(*wi, *wj)]
                 else:
@@ -417,7 +418,7 @@ class BSRM:
                     wi = wk - wj
                     self.bc2[(*wi, *wj)] = self.bc2[(*wi, *wj)] / self.sum_bc2[(*wk, *[])]
                 self.sum_bc2[(*wk, *[])] = 1
-            self.pure_power_sepctrum[(*wk, *[])] = self.power_spectrum[(*wk, *[])] * (1 - self.sum_bc2[(*wk, *[])])
+            self.pure_power_spectrum[(*wk, *[])] = self.power_spectrum[(*wk, *[])] * (1 - self.sum_bc2[(*wk, *[])])
 
     def _simulate_bsrm_uni(self, phi):
         coeff = np.sqrt((2 ** (
@@ -425,6 +426,7 @@ class BSRM:
                         self.frequency_interval ** self.number_of_dimensions)
         phi_e = np.exp(phi * 1.0j)
         biphase_e = np.exp(self.biphase * 1.0j)
+        self._compute_bicoherence_uni()
         b = np.sqrt(1 - self.sum_bc2) * phi_e
         bc = np.sqrt(self.bc2)
 
