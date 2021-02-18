@@ -53,17 +53,11 @@ From PyPI
 
                         pip install UQpy
 
-In order to uninstall it
-
-            * ::
-
-                        pip uninstall UQpy
-
 Using Conda
 
             * ::
 
-                        conda install --channel  ``SURG_JHU``  uqpy
+                        conda install -c conda-forge uqpy
 
 Clone your fork of the UQpy repo from your GitHub account to your local disk (to get the latest version): 
 
@@ -71,15 +65,17 @@ Clone your fork of the UQpy repo from your GitHub account to your local disk (to
 
                         git clone https://github.com/SURGroup/UQpy.git
                         cd UQpy/
-                        python setup.py install  (user installation)
-                        python setup.py develop (developer installation)
+                        python setup.py {version} install  (user installation)
+                        python setup.py {version} develop (developer installation)
+
+You will need to replace {version} with the latest version.
 
 Referencing UQpy
 =================
 
 If you are using this software in a work that will be published, please cite this paper:
 
-Olivier, A., Giovanis, D.G., Aakash, B.S., Chauhan, M., Vandanapu, L., and Shields, M.D. (2020). "UQpy: A general purpose Python package and development environment for uncertainty quantification". Journal of Computational Science.
+Olivier, A., Giovanis, D.G., Aakash, B.S., Chauhan, M., Vandanapu, L., and Shields, M.D. (2020). "UQpy: A general purpose Python package and development environment for uncertainty quantification". Journal of Computational Science, DOI:  10.1016/j.jocs.2020.101204.
 
 
 Help and Support

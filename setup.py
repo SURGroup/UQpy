@@ -5,7 +5,7 @@ del sys.argv[1]
 from setuptools import setup, find_packages
 
 setup(
-    name='testUQpy',
+    name='UQpy',
     version=version,
     url='https://github.com/SURGroup/UQpy',
     description="UQpy is a general purpose toolbox for Uncertainty Quantification",
