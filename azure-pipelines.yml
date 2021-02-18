@@ -81,7 +81,7 @@ steps:
       #python -m pytest tests/*.py --cov=src --cov-report=xml --cov-report=html
       #pytest tests/ --cov-config .coveragerc --doctest-modules --junitxml=junit/test-results.xml --cov=src --cov-report=xml --cov-report=html
       #echo "##vso[task.setvariable variable=PATH]${PATH}:$(Build.SourcesDirectory)/src/UQpy"
-      PYTHONPATH=src pytest tests/*.py --cov-config .coveragerc --import-mode=importlib --doctest-modules --junitxml=junit/test-results.xml --cov=UQpy --cov-report=xml --cov-report=html
+      PYTHONPATH=src pytest tests/*.py --cov-config .coveragerc --import-mode=importlib --doctest-modules --junitxml=junit/test-results.xml --cov=src --cov-report=xml --cov-report=html
     workingDirectory: $(Build.SourcesDirectory)
     displayName: 'Test with pytest'
  
