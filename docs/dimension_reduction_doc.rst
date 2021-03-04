@@ -93,6 +93,17 @@ Therefore, the transition probability :math:`M_{i,j} = p(x_j,t|x_i)` can be obta
 
 From the eigendecomposition of :math:`M`, one can obtain the eigenvectors :math:`(\psi_0, \psi_1, \dots, \psi_N)` and their respective eigenvalues :math:`(\lambda_0, \lambda_1, \dots, \lambda_N)`. However, only :math:`k` eigenvectors and eigenvalues suffice. Thus, the diffusion coordinates are given by :math:`\Psi_i = \lambda_i \psi_i` with :math:`i=1,\dots,k`. 
 
+A conventional approach used to select the eigendirections (eigenvectors) embedding high-dimensional data into a low-dimensional Euclidean space is based on the magnitude of the corresponding eigenvalues. However, the existence of repeated eigendirections can mask the identification of the true low-dimensional intrinsic structure of high-dimensional data. To circumvent this limitation, an algorithm based on local linear regression can be used to identify the eigenvectors corresponding to repeated eigendirections [13]_. In this regard, given the eigenvectors :math:`(\psi_1, \psi_1, \dots, \psi_N)` one can automatically find the ones embedding the high-dimensional data into a low-dimensional space by fitting a functional form :math:`f(\psi_1, \psi_2, \dots, \psi_{k-1})` to :math:`\psi_{k}` such that
+
+.. math:: \psi_{k} \approx \alpha_k(i) + \beta^T_k(i)\Psi_{k-1}(i)
+
+where :math:`\Psi_{k-1}(i) = [\psi_1(i) \dots, \psi_{k-1}(i)]^T`, :math:`\alpha_k(i) \in \mathbb{R}`, and :math:`\beta_k(i) \in \mathbb{R}^{k-1}`. At each point :math:`\Psi_{k-1}(i)` one can solve the following optimization problem to find :math:`\alpha_k(i)` and :math:`\beta_k(i)`
+
+.. math:: \hat{\alpha}_k(i), \hat{\beta}_k(i) = \underset{\alpha,\beta}{\arg\min} \sum_{j \neq i} K(\Psi_{k-1}(i),\Psi_{k-1}(j))(\psi_k(j) - (\alpha + \beta^T\Psi_{k-1}(j)))^2.
+:math:`K(\cdot,\cdot)` is an appropriate kernel (i.e., Gaussian kernel). The residual of the local linear fit is then given by 
+
+.. math:: r_k = \sqrt{\frac{\sum^n_{i=1}(\psi_k(i)-(\hat{\alpha}_k(i) + \hat{\beta}_k(i)^T\Psi_{k-1}(i)))^2}{\sum^n_{I=1}(\psi_k(i))^2}}.
+
 
 Diffusion Maps Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -281,6 +292,8 @@ One can use the following command to instantiate the class ``HOSVD``
 .. [11] D. Giovanis, M. Shields. Variance‐based simplex stochastic collocation with model order reduction for high‐dimensional systems. International Journal for Numerical Methods in Engineering, 2019, 117(11), 1079-1116.
 
 .. [12] L. De Lathauwer, B. De Moor, J. Vandewalle. A multilinear singular value decomposition. SIAM journal on Matrix Analysis and Applications, 2000, 21(4), 1253-1278.
+
+.. [13] C. J. Dsilva, R. Talmon, R. R. Coifman, I. G. Kevrekidis. Parsimonious Representation of Nonlinear Dynamical Systems Through Manifold Learning: A Chemotaxis Case Study. 2015, arXiv:1505.06118.
 
 .. toctree::
     :maxdepth: 2
