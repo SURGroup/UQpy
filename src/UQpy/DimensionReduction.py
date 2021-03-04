@@ -2091,7 +2091,9 @@ class DiffusionMaps:
     
     def parsimonious(self,num_eigenvectors=None,visualization=False):
         """
-        This method implements an algorithm to the embedding using eigenvectors associated with unique eigendirections. 
+        
+        This method iplements an algorithm based on local linear regression can be used to identify the eigenvectors 
+        corresponding to repeated eigendirections. 
         
         **Input:**
         
@@ -2103,7 +2105,7 @@ class DiffusionMaps:
             
         **Output/Returns:**
         * **index** (`ndarray`):
-            The eigenvectors indices.
+            The eigenvectors indices from the largest to the smallest residual.
             
         * **residuals** (`ndarray`):
             Residuals used to identify the most parsimonious low-dimensional representation.
@@ -2170,6 +2172,7 @@ class DiffusionMaps:
         Get the residuals for each eigenvector.
         
         **Input:**
+        
         * **fmat** (`ndarray`):
             Matrix with eigenvectors for the linear system.
             
