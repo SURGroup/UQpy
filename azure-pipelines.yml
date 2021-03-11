@@ -130,15 +130,44 @@ steps:
     displayName: Upload to Test PyPi
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
-#  - task: GitHubRelease@1
-#    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-#    inputs:
-#      gitHubConnection: 'SURGroup'
-#      repositoryName: '$(Build.Repository.Name)'
-#      action: 'create'
-#      target: '$(Build.SourceVersion)'
-#      tagSource: 'userSpecifiedTag'
-#      tag: 'v$(GitVersion.SemVer)'
-#      changeLogCompareToRelease: 'lastFullRelease'
-#      changeLogType: 'commitBased'
+  - task: GitHubRelease@1
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    inputs:
+      gitHubConnection: 'SURGroup'
+      repositoryName: '$(Build.Repository.Name)'
+      action: 'create'
+      target: '$(Build.SourceVersion)'
+      tagSource: 'userSpecifiedTag'
+      tag: 'v$(GitVersion.SemVer)'
+      changeLogCompareToRelease: 'lastFullRelease'
+      changeLogType: 'commitBased'
+
+  - bash: echo "##vso[task.prependpath]$CONDA/bin"
+    displayName: Add conda to PATH
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+  - bash: conda create --yes --quiet --name myEnvironment
+    displayName: Create Anaconda environment
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+  - bash: |
+      source activate myEnvironment
+      conda install --yes --quiet --name myEnvironment python=$(pythonVersion) conda-build anaconda-client
+    displayName: Install Anaconda packages
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+  - bash: |
+      source activate myEnvironment
+      conda build . recipe --variants "{'version': ['$(GitVersion.SemVer)']}"
+    displayName: Build Noarch conda packages
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+  - bash: |
+      source activate myEnvironment
+      anaconda login --username $(ANACONDAUSER) --password $(ANACONDAPW)
+      anaconda upload /usr/share/miniconda/envs/myEnvironment/conda-bld/noarch/*.tar.bz2
+    displayName: Upload conda packages
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+
 
