@@ -130,17 +130,17 @@ steps:
     displayName: Upload to Test PyPi
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
-  - task: GitHubRelease@1
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-    inputs:
-      gitHubConnection: 'SURGroup'
-      repositoryName: '$(Build.Repository.Name)'
-      action: 'create'
-      target: '$(Build.SourceVersion)'
-      tagSource: 'userSpecifiedTag'
-      tag: 'v$(GitVersion.SemVer)'
-      changeLogCompareToRelease: 'lastFullRelease'
-      changeLogType: 'commitBased'
+#  - task: GitHubRelease@1
+#    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+#    inputs:
+#      gitHubConnection: 'SURGroup'
+#      repositoryName: '$(Build.Repository.Name)'
+#      action: 'create'
+#      target: '$(Build.SourceVersion)'
+#      tagSource: 'userSpecifiedTag'
+#      tag: 'v$(GitVersion.SemVer)'
+#      changeLogCompareToRelease: 'lastFullRelease'
+#      changeLogType: 'commitBased'
 
   - bash: echo "##vso[task.prependpath]$CONDA/bin"
     displayName: Add conda to PATH
