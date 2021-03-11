@@ -133,7 +133,7 @@ steps:
 #  - task: GitHubRelease@1
 #    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 #    inputs:
-#      gitHubConnection: 'github.com_dimtsap'
+#      gitHubConnection: 'SURGroup'
 #      repositoryName: '$(Build.Repository.Name)'
 #      action: 'create'
 #      target: '$(Build.SourceVersion)'
