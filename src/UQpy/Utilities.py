@@ -18,7 +18,7 @@
 import numpy as np
 import scipy.stats as stats
 
-from UQpy.RunModel import RunModel
+from . RunModel import RunModel
 
 
 def svd(matrix, rank=None, tol=None):
