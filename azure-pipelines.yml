@@ -64,9 +64,8 @@ steps:
       cliProjectName: 'UQpy'
       cliSources: '.'
       extraProperties: |
-        sonar.exclusions=**/example/**
+        sonar.exclusions=**/example/**, **/tests/**
         sonar.python.coverage.reportPaths=./coverage.xml
-        sonar.branch.name=feature/CI
      
   - script: |
       pip install -r requirements.txt
@@ -82,7 +81,7 @@ steps:
       #python -m pytest tests/*.py --cov=src --cov-report=xml --cov-report=html
       #pytest tests/ --cov-config .coveragerc --doctest-modules --junitxml=junit/test-results.xml --cov=src --cov-report=xml --cov-report=html
       #echo "##vso[task.setvariable variable=PATH]${PATH}:$(Build.SourcesDirectory)/src/UQpy"
-      PYTHONPATH=src pytest tests/*.py --cov-config .coveragerc --import-mode=importlib --doctest-modules --junitxml=junit/test-results.xml --cov=UQpy --cov-report=xml --cov-report=html
+      PYTHONPATH=src pytest tests/*.py --cov-config=.coveragerc --import-mode=importlib --doctest-modules --junitxml=junit/test-results.xml --cov=src --cov-report=xml --cov-report=html
     workingDirectory: $(Build.SourcesDirectory)
     displayName: 'Test with pytest'
  
@@ -134,7 +133,7 @@ steps:
 #  - task: GitHubRelease@1
 #    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 #    inputs:
-#      gitHubConnection: 'github.com_dimtsap'
+#      gitHubConnection: 'SURGroup'
 #      repositoryName: '$(Build.Repository.Name)'
 #      action: 'create'
 #      target: '$(Build.SourceVersion)'
@@ -142,4 +141,33 @@ steps:
 #      tag: 'v$(GitVersion.SemVer)'
 #      changeLogCompareToRelease: 'lastFullRelease'
 #      changeLogType: 'commitBased'
+
+  - bash: echo "##vso[task.prependpath]$CONDA/bin"
+    displayName: Add conda to PATH
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+  - bash: conda create --yes --quiet --name myEnvironment
+    displayName: Create Anaconda environment
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+  - bash: |
+      source activate myEnvironment
+      conda install --yes --quiet --name myEnvironment python=$(pythonVersion) conda-build anaconda-client
+    displayName: Install Anaconda packages
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+  - bash: |
+      source activate myEnvironment
+      conda build . recipe --variants "{'version': ['$(GitVersion.SemVer)']}"
+    displayName: Build Noarch conda packages
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+  - bash: |
+      source activate myEnvironment
+      anaconda login --username $(ANACONDAUSER) --password $(ANACONDAPW)
+      anaconda upload /usr/share/miniconda/envs/myEnvironment/conda-bld/noarch/*.tar.bz2
+    displayName: Upload conda packages
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+
 
