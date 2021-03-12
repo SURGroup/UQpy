@@ -1,3 +1,5 @@
+import numpy as np
+
 def inverse_wiener_khinchin_transform(correlation_function, frequency, time):
     """
     A function to transform the autocorrelation function to a power spectrum by the Inverse Wiener Khinchin

@@ -60,7 +60,6 @@ class VoronoiRSS(RSS):
         # Extract the boundary vertices and use them in the Delaunay triangulation / mesh generation
         self._add_boundary_points_and_construct_delaunay()
 
-        dy_dx_old = 0
         self.mesh.old_vertices = self.mesh.vertices
 
         # Primary loop for adding samples and performing refinement.

@@ -1,3 +1,5 @@
+import numpy as np
+
 def scaling_correlation_function(correlation_function):
     """
     A function to scale a correlation function such that correlation at 0 lag is equal to 1

@@ -4,6 +4,7 @@ import itertools
 from scipy.linalg import sqrtm
 from ..Utilities import *
 from .baseclass import inverse_wiener_khinchin_transform, wiener_khinchin_transform, scaling_correlation_function
+from scipy.stats import norm
 
 ########################################################################################################################
 ########################################################################################################################

@@ -214,6 +214,7 @@ class VoronoiStrata(Strata):
         w = np.zeros((tess.nsimplex, 1))
         cent = np.zeros((tess.nsimplex, dimension))
         for i in range(tess.nsimplex):
+            # pylint: disable=E1136
             ch = ConvexHull(tess.points[tess.simplices[i]])
             w[i] = ch.volume
             cent[i, :] = np.mean(tess.points[tess.simplices[i]], axis=0)

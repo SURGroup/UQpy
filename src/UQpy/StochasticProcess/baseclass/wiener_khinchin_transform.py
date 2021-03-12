@@ -1,3 +1,5 @@
+import numpy as np
+
 def wiener_khinchin_transform(power_spectrum, frequency, time):
     """
     A function to transform the power spectrum to a correlation function by the Wiener Khinchin transformation

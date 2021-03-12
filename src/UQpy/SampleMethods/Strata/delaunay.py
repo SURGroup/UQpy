@@ -1,6 +1,7 @@
 from ..baseclass import Strata
 from ...Distributions import *
 import numpy as np
+import scipy.stats as stats
 
 class DelaunayStrata(Strata):
     """
@@ -94,6 +95,7 @@ class DelaunayStrata(Strata):
         self.volume = np.zeros([0])
         count = 0
         for sim in self.delaunay.simplices:  # extract simplices from Delaunay triangulation
+            # pylint: disable=E1136
             cent, vol = self.compute_delaunay_centroid_volume(self.delaunay.points[sim])
             self.centroids = np.vstack([self.centroids, cent])
             self.volume = np.hstack([self.volume, np.array([vol])])
