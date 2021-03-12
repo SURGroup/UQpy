@@ -1289,9 +1289,9 @@ class Grassmann:
                 avg.append(avg_gamma)
                 l0 = l
                 l1 = 0.5 * (1 + np.sqrt(1 + 4 * l * l))
-                ls = (l0 - 1) / l1
+                ls = (1-l0) / l1
                 step = (1 - ls) * avg[itera + 1] + ls * avg[itera]
-                L = l1
+                l = copy.copy(l1)
             else:
                 step = alpha * avg_gamma
 

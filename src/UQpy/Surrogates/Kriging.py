@@ -1,6 +1,374 @@
+# UQpy is distributed under the MIT license.
+#
+# Copyright (C) 2018  -- Michael D. Shields
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+# documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+# persons to whom the Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+# Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+"""This module contains functionality for all the surrogate methods supported in UQpy.
+
+The module currently contains the following classes:
+
+- ``SROM``: Class to estimate a discrete approximation for a continuous random variable using Stochastic Reduced Order
+            Model.
+- ``Kriging``: Class to generate an approximate surrogate model using Kriging.
+
+- ``PCE``: Class to generate an approximate surrogate model using Polynomial Chaos Expansion.
+"""
+
 import numpy as np
 import scipy.stats as stats
+from UQpy.Distributions import Normal, Uniform, Lognormal, Rayleigh, JointInd
+import scipy.integrate as integrate
+import scipy.special as special
+import itertools, math
+import warnings
+warnings.filterwarnings("ignore")
 from UQpy.Distributions import DistributionContinuous1D
+
+
+########################################################################################################################
+########################################################################################################################
+#                                         Stochastic Reduced Order Model  (SROM)                                       #
+########################################################################################################################
+########################################################################################################################
+
+
+class SROM:
+
+    """
+    Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random
+    quantity.
+
+    **Inputs:**
+
+    * **samples** (`ndarray`):
+        An array/list of samples corresponding to the points at which the SROM is defined.
+
+    * **target_dist_object** ((list of) ``Distribution`` object(s)):
+        A list of distribution objects for each random variable.
+
+    * **moments** (`list` of `float`):
+        A list containing first and second order moment about origin of all random variables.
+
+    * **weights_errors** (`list` of `float`):
+        A list of weights associated with the error in distribution, moments and correlation.
+
+        This corresponds to a list of the values :math:`a_{u}` in the objective function above.
+
+        Default: weights_errors = [1, 0.2, 0]
+
+    * **properties** (`list` of `booleans`):
+        A list of booleans declaring the properties to be matched in the reduced order model.
+
+        `properties[0] = True` matches the marginal distributions
+
+        `properties[1] = True` matches the mean values
+
+        `properties[2] = True` matches the mean square
+
+        `properties[3] = True` matches the correlation
+
+    * **weights_distribution** (`ndarray` or `list` of `float`):
+        A list or array containing weights associated with matching the distribution at each sample value.
+
+        `weights_distribution` is an array or list of shape `(m, d)` where each weight corresponds to the weight
+        :math:`w_F(x_{k,i}; i)` assigned for matching the distribution of component `i` at sample point
+        :math:`x_{k,i}`.
+
+        If `weights_distribution` is `(1, d)`, it is assumed that each sample sample is equally weighted according
+        to the corresponding weight for its distribution.
+
+        Default: `weights_distribution` = An array of shape `(m, d)` with all elements equal to 1.
+
+    * **weights_moments** (`ndarray` or `list` of `float`):
+        An list or array containing weights associated with matching the moments about the origin for each
+        component.
+
+        `weights_moments` is a list or array of shape `(2, d), where each weight corresponds to the weight
+        :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component `i`.
+
+        If `weights_moments` is `(1, d)`, it is assumed that moments of all order are equally weighted.
+
+        Default: `weights_moments` = [[1/(moment[0][i]^2)], [1/(moment[1][i]^2)]] for i = 1, 2, ..., d.
+
+    * **weights_correlation** (`ndarray` or `list` of `float`):
+        A list or array containing weights associated with matching the correlation of the random variables.
+
+        `weights_correlation` is a list or array of shape `(d, d)` where each weight corresponds to the weight
+        :math:`w_R(i, j)` assigned for matching the correlation between component `i` and component `j`
+
+        Default: `weights_correlation` = `(d, d)` array with all elements equal to 1.
+
+    * **correlation** (`ndarray` or `list of floats`):
+        Correlation matrix between random variables.
+
+    **Attribute:**
+
+    * **sample_weights** (`ndarray`):
+        The probability weights defining discrete approximation of continuous random variables.
+
+    **Methods:**
+
+    """
+
+    def __init__(self, samples, target_dist_object, moments=None, weights_errors=None, weights_distribution=None,
+                 weights_moments=None, weights_correlation=None, properties=None, correlation=None, verbose=False):
+
+        self.target_dist_object = target_dist_object
+        self.correlation = correlation
+        self.moments = moments
+
+        self.weights_distribution = weights_distribution
+        self.weights_moments = weights_moments
+        self.weights_correlation = weights_correlation
+        self.weights_errors = weights_errors
+
+        self.properties = properties
+        self.verbose = verbose
+        self.sample_weights = None
+
+        if isinstance(samples, list):
+            self.samples = np.array(samples)
+            self.nsamples = self.samples.shape[0]
+            self.dimension = self.samples.shape[1]
+        elif isinstance(samples, np.ndarray):
+            self.dimension = samples.shape[1]
+            self.samples = samples
+            self.nsamples = samples.shape[0]
+        else:
+            raise NotImplementedError("UQpy: 'samples' sholud be a list or numpy array")
+
+        if self.target_dist_object is None:
+            raise NotImplementedError("UQpy: Target Distribution is not defined.")
+
+        if isinstance(self.target_dist_object, list):
+            for i in range(len(self.target_dist_object)):
+                if not isinstance(self.target_dist_object[i], DistributionContinuous1D):
+                    raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
+
+        if self.properties is not None:
+            self.run()
+        else:
+            print('UQpy: No properties list provided, execute the SROM by calling run method and specifying a '
+                  'properties list')
+
+    def run(self, weights_errors=None, weights_distribution=None, weights_moments=None, weights_correlation=None,
+            properties=None):
+        """
+        Execute the stochastic reduced order model in the ``SROM`` class.
+
+        The ``run`` method is the function that computes the probability weights corresponding to the sample. If
+        `properties` is provided, the ``run`` method is automatically called when the ``SROM`` object is defined. The
+        user may also call the ``run`` method directly to generate samples. The ``run`` method of the ``SROM`` class can
+        be invoked many times with different weights parameters and each time computed probability weights are
+        overwritten.
+
+        **Inputs:**
+
+        * **weights_errors** (`list` of `float`):
+            A list of weights associated with the error in distribution, moments and correlation.
+
+            This corresponds to a list of the values :math:`a_{u}` in the objective function above.
+
+            Default: weights_errors = [1, 0.2, 0]
+
+        * **properties** (`list` of `booleans`):
+            A list of booleans declaring the properties to be matched in the reduced order model.
+
+            `properties[0] = True` matches the marginal distributions
+
+            `properties[1] = True` matches the mean values
+
+            `properties[2] = True` matches the mean square
+
+            `properties[3] = True` matches the correlation
+
+        * **weights_distribution** (`ndarray` or `list` of `float`):
+            A list or array containing weights associated with matching the distribution at each sample value.
+
+            `weights_distribution` is an array or list of shape `(m, d)` where each weight corresponds to the weight
+            :math:`w_F(x_{k,i}; i)` assigned for matching the distribution of component `i` at sample point
+            :math:`x_{k,i}`.
+
+            If `weights_distribution` is `(1, d)`, it is assumed that each sample sample is equally weighted according
+            to the corresponding weight for its distribution.
+
+            Default: `weights_distribution` = An array of shape `(m, d)` with all elements equal to 1.
+
+        * **weights_moments** (`ndarray` or `list` of `float`):
+            An list or array containing weights associated with matching the moments about the origin for each
+            component.
+
+            `weights_moments` is a list or array of shape `(2, d), where each weight corresponds to the weight
+            :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component `i`.
+
+            If `weights_moments` is `(1, d)`, it is assumed that moments of all order are equally weighted.
+
+            Default: `weights_moments` = [[1/(moment[0][i]^2)], [1/(moment[1][i]^2)]] for i = 1, 2, ..., d.
+
+        * **weights_correlation** (`ndarray` or `list` of `float`):
+            A list or array containing weights associated with matching the correlation of the random variables.
+
+            `weights_correlation` is a list or array of shape `(d, d)` where each weight corresponds to the weight
+            :math:`w_R(i, j)` assigned for matching the correlation between component `i` and component `j`
+
+            Default: `weights_correlation` = `(d, d)` array with all elements equal to 1.
+
+        """
+        from scipy import optimize
+        self.weights_distribution = weights_distribution
+        self.weights_moments = weights_moments
+        self.weights_correlation = weights_correlation
+        self.weights_errors = weights_errors
+        self.properties = properties
+
+        # Check properties to match
+        if self.properties is None:
+            self.properties = [True, True, True, False]
+
+        self._init_srom()
+
+        if self.verbose:
+            print('UQpy: Performing SROM...')
+
+        def f(p0, samples, wd, wm, wc, mar, n, d, m, alpha, prop, correlation):
+            e1 = 0.
+            e2 = 0.
+            e22 = 0.
+            e3 = 0.
+            com = np.append(samples, np.atleast_2d(p0).T, 1)
+            for j in range(d):
+                srt = com[np.argsort(com[:, j].flatten())]
+                s = srt[:, j]
+                a = srt[:, d]
+                a0 = np.cumsum(a)
+                marginal = mar[j].cdf
+
+                if prop[0] is True:
+                    for i in range(n):
+                        e1 += wd[i, j] * (a0[i] - marginal(s[i])) ** 2
+
+                if prop[1] is True:
+                    e2 += wm[0, j] * (np.sum(p0 * samples[:, j]) - m[0, j]) ** 2
+
+                if prop[2] is True:
+                    e22 += wm[1, j] * (
+                            np.sum(np.array(p0) * (samples[:, j] * samples[:, j])) - m[1, j]) ** 2
+
+                if prop[3] is True:
+                    for k in range(d):
+                        if k > j:
+                            r = correlation[j, k] * np.sqrt((m[1, j] - m[0, j] ** 2) * (m[1, k] - m[0, k] ** 2)) + \
+                                m[0, j] * m[0, k]
+                            e3 += wc[k, j] * (np.sum(p0 * (samples[:, j] * samples[:, k])) - r) ** 2
+
+            return alpha[0] * e1 + alpha[1] * (e2 + e22) + alpha[2] * e3
+
+        def constraint(x):
+            return np.sum(x) - 1
+
+        cons = {'type': 'eq', 'fun': constraint}
+
+        p_ = optimize.minimize(f, np.zeros(self.nsamples),
+                               args=(self.samples, self.weights_distribution, self.weights_moments,
+                                     self.weights_correlation, self.target_dist_object, self.nsamples, self.dimension,
+                                     self.moments, self.weights_errors, self.properties, self.correlation),
+                               constraints=cons, method='SLSQP', bounds=[[0, 1]]*self.nsamples)
+
+        self.sample_weights = p_.x
+        if self.verbose:
+            print('UQpy: SROM completed!')
+
+    def _init_srom(self):
+        """
+        Initialization and preliminary error checks.
+        """
+        if isinstance(self.moments, list):
+            self.moments = np.array(self.moments)
+
+        if isinstance(self.correlation, list):
+            self.correlation = np.array(self.correlation)
+
+        # Check moments and correlation
+        if self.properties[1] is True or self.properties[2] is True or self.properties[3] is True:
+            if self.moments is None:
+                raise NotImplementedError("UQpy: 'moments' are required")
+        # Both moments are required, if correlation property is required to be match
+        if self.properties[3] is True:
+            if self.moments.shape != (2, self.dimension):
+                raise NotImplementedError("UQpy: Shape of 'moments' is not correct")
+            if self.correlation is None:
+                self.correlation = np.identity(self.dimension)
+        # moments.shape[0] should be 1 or 2
+        if self.moments.shape != (1, self.dimension) and self.moments.shape != (2, self.dimension):
+            raise NotImplementedError("UQpy: Shape of 'moments' is not correct")
+        # If both the moments are to be included in objective function, then moments.shape[0] should be 2
+        if self.properties[1] is True and self.properties[2] is True:
+            if self.moments.shape != (2, self.dimension):
+                raise NotImplementedError("UQpy: Shape of 'moments' is not correct")
+        # If only second order moment is to be included in objective function and moments.shape[0] is 1. Then
+        # self.moments is converted shape = (2, self.dimension) where is second row contain second order moments.
+        if self.properties[1] is False and self.properties[2] is True:
+            if self.moments.shape == (1, self.dimension):
+                temp = np.ones(shape=(1, self.dimension))
+                self.moments = np.concatenate((temp, self.moments))
+
+        # Check weights corresponding to errors
+        if self.weights_errors is None:
+            self.weights_errors = [1, 0.2, 0]
+        elif isinstance(self.weights_errors, list):
+            self.weights_errors = np.array(self.weights_errors).astype(np.float64)
+        elif not isinstance(self.weights_errors, np.ndarray):
+            raise NotImplementedError("UQpy: weights_errors attribute should be a list or numpy array")
+
+        # Check weights corresponding to distribution
+        if self.weights_distribution is None:
+            self.weights_distribution = np.ones(shape=(self.samples.shape[0], self.dimension))
+        elif isinstance(self.weights_distribution, list):
+            self.weights_distribution = np.array(self.weights_distribution)
+        elif not isinstance(self.weights_distribution, np.ndarray):
+            raise NotImplementedError("UQpy: weights_distribution attribute should be a list or numpy array")
+
+        if self.weights_distribution.shape == (1, self.dimension):
+            self.weights_distribution = self.weights_distribution * np.ones(shape=(self.samples.shape[0],
+                                                                                   self.dimension))
+        elif self.weights_distribution.shape != (self.samples.shape[0], self.dimension):
+            raise NotImplementedError("UQpy: Size of 'weights for distribution' is not correct")
+
+        # Check weights corresponding to moments and it's default list
+        if self.weights_moments is None:
+            self.weights_moments = np.reciprocal(np.square(self.moments))
+        elif isinstance(self.weights_moments, list):
+            self.weights_moments = np.array(self.weights_moments)
+        elif not isinstance(self.weights_moments, np.ndarray):
+            raise NotImplementedError("UQpy: weights_moments attribute should be a list or numpy array")
+
+        if self.weights_moments.shape == (1, self.dimension):
+            self.weights_moments = self.weights_moments * np.ones(shape=(2, self.dimension))
+        elif self.weights_moments.shape != (2, self.dimension):
+            raise NotImplementedError("UQpy: Size of 'weights for moments' is not correct")
+
+        # Check weights corresponding to correlation and it's default list
+        if self.weights_correlation is None:
+            self.weights_correlation = np.ones(shape=(self.dimension, self.dimension))
+        elif isinstance(self.weights_correlation, list):
+            self.weights_correlation = np.array(self.weights_correlation)
+        elif not isinstance(self.weights_correlation, np.ndarray):
+            raise NotImplementedError("UQpy: weights_correlation attribute should be a list or numpy array")
+
+        if self.weights_correlation.shape != (self.dimension, self.dimension):
+            raise NotImplementedError("UQpy: Size of 'weights for correlation' is not correct")
 
 
 ########################################################################################################################
@@ -604,3 +972,731 @@ class Kriging:
                     return rx, drdx
                 return rx
         return c
+
+
+##############################################################################
+##############################################################################
+#                   Polynomial Chaos Expansion (PCE)                         #
+##############################################################################
+##############################################################################
+
+
+class PCE:
+    """
+    Constructs a surrogate model based on the Polynomial Chaos Expansion (PCE)
+    method.
+
+    **Inputs:**
+
+    * **method** (class):
+        object for the method used for the calculation of the PCE coefficients.
+
+    **Methods:**
+
+    """
+
+    def __init__(self, method, verbose=False):
+        self.method = method
+        self.verbose = verbose
+        self.C = None
+        self.b = None
+
+    def fit(self, x, y):
+        """
+        Fit the surrogate model using the training samples and the
+        corresponding model values. This method calls the 'run' method of the
+        input method class.
+
+        **Inputs:**
+
+        * **x** (`ndarray`):
+            `ndarray` containing the training points.
+
+        * **y** (`ndarray`):
+            `ndarray` containing the model evaluations at the training points.
+
+        **Output/Return:**
+
+        The ``fit`` method has no returns and it creates an `ndarray` with the
+        PCE coefficients.
+        """
+
+        if self.verbose:
+            print('UQpy: Running PCE.fit')
+
+        if type(self.method) == PolyChaosLstsq:
+            self.C = self.method.run(x, y)
+
+        elif type(self.method) == PolyChaosLasso or \
+                type(self.method) == PolyChaosRidge:
+            self.C, self.b = self.method.run(x, y)
+
+        if self.verbose:
+            print('UQpy: PCE fit complete.')
+
+    def predict(self, x_test):
+
+        """
+        Predict the model response at new points.
+        This method evaluates the PCE model at new sample points.
+
+        **Inputs:**
+
+        * **x_test** (`ndarray`):
+            Points at which to predict the model response.
+
+        **Outputs:**
+
+        * **y** (`ndarray`):
+            Predicted values at the new points.
+
+        """
+
+        a = self.method.poly_object.evaluate(x_test)
+
+        if type(self.method) == PolyChaosLstsq:
+            y = a.dot(self.C)
+
+        elif type(self.method) == PolyChaosLasso or \
+                type(self.method) == PolyChaosRidge:
+            y = a.dot(self.C) + self.b
+
+        return y
+
+
+class PolyChaosLstsq:
+    """
+    Class to calculate the PCE coefficients via the least-squares solution to
+    the linear matrix equation. The equation may be under-, well-, or
+    over-determined.
+
+    **Inputs:**
+
+    * **poly_object** ('class'):
+        Object from the 'Polynomial' class
+
+    **Methods:**
+
+    """
+
+    def __init__(self, poly_object, verbose=False):
+        self.poly_object = poly_object
+        self.verbose = verbose
+
+    def run(self, x, y):
+        """
+        Least squares solution to compute the PCE coefficients.
+
+        **Inputs:**
+
+        * **x** (`ndarray`):
+            `ndarray` containing the training points (samples).
+
+        * **y** (`ndarray`):
+            `ndarray` containing the model evaluations (labels) at the
+            training points.
+
+        **Outputs:**
+
+        * **c_** (`ndarray`):
+            Returns the PCE coefficients.
+
+        """
+        a = self.poly_object.evaluate(x)
+        c_, res, rank, sing = np.linalg.lstsq(a, y)
+        if c_.ndim == 1:
+            c_ = c_.reshape(-1, 1)
+
+        return c_
+
+
+class PolyChaosLasso:
+    """
+    Class to calculate the PCE coefficients with the Least Absolute Shrinkage
+    and Selection Operator (LASSO) method.
+
+    **Inputs:**
+
+    * **poly_object** ('class'):
+        Object from the 'Polynomial' class
+
+    **Methods:**
+
+    """
+
+    def __init__(self, poly_object, learning_rate=0.01, iterations=1000,
+                 penalty=1, verbose=False):
+        self.poly_object = poly_object
+        self.learning_rate = learning_rate
+        self.iterations = iterations
+        self.penalty = penalty
+        self.verbose = verbose
+
+    def run(self, x, y):
+        """
+        Implements the LASSO method to compute the PCE coefficients.
+
+        **Inputs:**
+
+        * **poly_object** (`object`):
+            Polynomial object.
+
+        * **learning_rate** (`float`):
+            Size of steps for the gradient descent.
+
+        * **iterations** (`int`):
+            Number of iterations of the optimization algorithm.
+
+        * **penalty** (`float`):
+            Penalty parameter controls the strength of regularization. When it
+            is close to zero, then the Lasso regression converges to the linear
+            regression, while when it goes to infinity, PCE coefficients
+            converge to zero.
+
+        **Outputs:**
+
+        * **w** (`ndarray`):
+            Returns the weights (PCE coefficients) of the regressor.
+
+        * **b** (`float`):
+            Returns the bias of the regressor.
+        """
+
+        xx = self.poly_object.evaluate(x)
+        m, n = xx.shape
+
+        if y.ndim == 1 or y.shape[1] == 1:
+            y = y.reshape(-1, 1)
+            w = np.zeros(n).reshape(-1, 1)
+            dw = np.zeros(n).reshape(-1, 1)
+            b = 0
+
+            for _ in range(self.iterations):
+                y_pred = (xx.dot(w) + b)
+
+                for i in range(n):
+                    if w[i] > 0:
+                        dw[i] = (-(2 * (xx.T[i, :]).dot(y - y_pred)) + self.penalty) / m
+                    else:
+                        dw[i] = (-(2 * (xx.T[i, :]).dot(y - y_pred)) - self.penalty) / m
+
+                db = - 2 * np.sum(y - y_pred) / m
+
+                w = w - self.learning_rate * dw
+                b = b - self.learning_rate * db
+
+        else:
+            n_out_dim = y.shape[1]
+            w = np.zeros((n, n_out_dim))
+            b = np.zeros(n_out_dim).reshape(1, -1)
+
+            for _ in range(self.iterations):
+                y_pred = (xx.dot(w) + b)
+
+                dw = (-(2 * xx.T.dot(y - y_pred)) - self.penalty) / m
+                db = - 2 * np.sum((y - y_pred), axis=0).reshape(1, -1) / m
+
+                w = w - self.learning_rate * dw
+                b = b - self.learning_rate * db
+
+        return w, b
+
+
+class PolyChaosRidge:
+    """
+     Class to calculate the PCE coefficients with the Ridge regression method.
+
+     **Inputs:**
+
+     * **poly_object** ('class'):
+        Object from the 'Polynomial' class
+
+     **Methods:**
+     """
+
+    def __init__(self, poly_object, learning_rate=0.01, iterations=1000,
+                 penalty=1, verbose=False):
+        self.poly_object = poly_object
+        self.learning_rate = learning_rate
+        self.iterations = iterations
+        self.penalty = penalty
+        self.verbose = verbose
+
+    def run(self, x, y):
+        """
+        Implements the LASSO method to compute the PCE coefficients.
+
+        **Inputs:**
+
+        * **poly_object** (`object`):
+            Polynomial object.
+
+        * **learning_rate** (`float`):
+            Size of steps for the gradient descent.
+
+        * **iterations** (`int`):
+            Number of iterations of the optimization algorithm.
+
+        * **penalty** (`float`):
+            Penalty parameter controls the strength of regularization. When it
+            is close to zero, then the ridge regression converges to the linear
+            regression, while when it goes to infinity, PCE coefficients
+            converge to zero.
+
+        **Outputs:**
+
+        * **w** (`ndarray`):
+            Returns the weights (PCE coefficients) of the regressor.
+
+        * **b** (`float`):
+            Returns the bias of the regressor.
+
+        """
+
+        xx = self.poly_object.evaluate(x)
+        m, n = xx.shape
+
+        if y.ndim == 1 or y.shape[1] == 1:
+            y = y.reshape(-1, 1)
+            w = np.zeros(n).reshape(-1, 1)
+            b = 0
+
+            for _ in range(self.iterations):
+                y_pred = (xx.dot(w) + b).reshape(-1, 1)
+
+                dw = (-(2 * xx.T.dot(y - y_pred)) + (2 * self.penalty * w)) / m
+                db = - 2 * np.sum(y - y_pred) / m
+
+                w = w - self.learning_rate * dw
+                b = b - self.learning_rate * db
+
+        else:
+            n_out_dim = y.shape[1]
+            w = np.zeros((n, n_out_dim))
+            b = np.zeros(n_out_dim).reshape(1, -1)
+
+            for _ in range(self.iterations):
+                y_pred = (xx.dot(w) + b)
+
+                dw = (-(2 * xx.T.dot(y - y_pred)) + (2 * self.penalty * w)) / m
+                db = - 2 * np.sum((y - y_pred), axis=0).reshape(1, -1) / m
+
+                w = w - self.learning_rate * dw
+                b = b - self.learning_rate * db
+
+        return w, b
+
+
+class Polynomials:
+    """
+    Class for polynomials used for the PCE method.
+
+    **Inputs:**
+
+    * **dist_object** ('class'):
+        Object from a distribution class.
+
+    * **degree** ('int'):
+        Maximum degree of the polynomials.
+
+    **Methods:**
+    """
+
+    def __init__(self, dist_object, degree):
+        self.dist_object = dist_object
+        self.degree = degree + 1
+
+    @staticmethod
+    def standardize_normal(x, mean, std):
+        """
+        Static method: Standardize data based on the standard normal
+        distribution N(0,1).
+
+        **Input:**
+
+        * **x** (`ndarray`)
+            Input data generated from a normal distribution.
+
+        * **mean** (`list`)
+            Mean value of the original normal distribution.
+
+        * **std** (`list`)
+            Standard deviation of the original normal distribution.
+
+        **Output/Returns:**
+
+        `ndarray`
+            Standardized data.
+
+        """
+        return (x - mean) / std
+
+    @staticmethod
+    def standardize_uniform(x, m, scale):
+        """
+        Static method: Standardize data based on the uniform distribution
+        U(-1,1).
+
+        **Input:**
+
+        * **x** (`ndarray`)
+            Input data generated from a normal distribution.
+
+        * **m** (`float`)
+            Mean value of the original uniform distribution.
+
+        * **b** (`list`)
+            Scale of the original uniform distribution.
+
+        **Output/Returns:**
+
+        `ndarray`
+            Standardized data.
+
+        """
+        return (x - m) / (scale / 2)
+
+    @staticmethod
+    def normalized(degree, x, a, b, pdf_st, p):
+        """
+        Static method: Calculates design matrix and normalized polynomials.
+
+        **Input:**
+
+        * **x** (`ndarray`)
+            Input samples.
+
+        * **a** (`float`)
+            Left bound of the support the distribution.
+
+        * **b** (`floar`)
+            Right bound of the support of the distribution.
+
+        * **pdf_st** (`function`)
+            Pdf function generated from UQpy distribution object.
+
+        * **p** (`list`)
+            List containing the orthogonal polynomials generated with scipy.
+
+        **Output/Returns:**
+
+        * **a** (`ndarray`)
+            Returns the design matrix
+
+        * **pol_normed** (`ndarray`)
+            Returns the normalized polynomials.
+
+        """
+
+        pol_normed = []
+        m = np.zeros((degree, degree))
+        for i in range(degree):
+            for j in range(degree):
+                int_res = integrate.quad(lambda k: p[i](k) * p[j](k) * pdf_st(k),
+                                         a, b, epsabs=1e-15, epsrel=1e-15)
+                m[i, j] = int_res[0]
+            pol_normed.append(p[i] / np.sqrt(m[i, i]))
+
+        a = np.zeros((x.shape[0], degree))
+        for i in range(x.shape[0]):
+            for j in range(degree):
+                a[i, j] = pol_normed[j](x[i])
+
+        return a, pol_normed
+
+    def get_mean(self):
+        """
+        Returns a `float` with the mean of the UQpy distribution object.
+        """
+        m = self.dist_object.moments(moments2return='m')
+        return m
+
+    def get_std(self):
+        """
+        Returns a `float` with the variance of the UQpy distribution object.
+        """
+        s = np.sqrt(self.dist_object.moments(moments2return='v'))
+        return s
+
+    def location(self):
+        """
+        Returns a `float` with the location of the UQpy distribution object.
+        """
+        m = self.dist_object.__dict__['params']['loc']
+        return m
+
+    def scale(self):
+        """
+        Returns a `float` with the scale of the UQpy distribution object.
+        """
+        s = self.dist_object.__dict__['params']['scale']
+        return s
+
+    def evaluate(self, x):
+        """
+        Calculates the design matrix. Rows represent the input samples and
+        columns the multiplied polynomials whose degree must not exceed the
+        maximum degree of polynomials.
+
+        **Inputs:**
+
+        * **x** (`ndarray`):
+            `ndarray` containing the samples.
+
+        **Outputs:**
+
+        * **design** (`ndarray`):
+            Returns an array with the design matrix.
+        """
+
+        if not type(self.dist_object) == JointInd:
+            if type(self.dist_object) == Normal:
+                return Hermite(self.degree, self.dist_object).get_polys(x)[0]
+                # design matrix (data x polynomials)
+
+            if type(self.dist_object) == Uniform:
+                return Legendre(self.degree, self.dist_object).get_polys(x)[0]
+
+            else:
+                raise TypeError('Warning: This distribution is not supported.')
+
+        else:
+
+            a = []
+            for i in range(len(self.dist_object.marginals)):
+
+                if isinstance(self.dist_object.marginals[i], Normal):
+                    a.append(Hermite(self.degree,
+                                     self.dist_object.marginals[i]).get_polys(x[:, i])[0])
+
+                elif isinstance(self.dist_object.marginals[i], Uniform):
+                    a.append(Legendre(self.degree,
+                                      self.dist_object.marginals[i]).get_polys(x[:, i])[0])
+
+                else:
+                    raise TypeError('Warning: This distribution is not supported.')
+
+            # Compute all possible valid combinations
+            m = len(a)  # number of variables
+            p = self.degree  # maximum polynomial order
+
+            p_ = np.arange(0, p, 1).tolist()
+            res = list(itertools.product(p_, repeat=m))
+            # sum of poly orders
+            sum_ = [int(math.fsum(res[i])) for i in range(len(res))]
+            indices = sorted(range(len(sum_)), key=lambda k: sum_[k])
+            res_new = [res[indices[i]] for i in range(len(res))]
+            comb = [(0,) * m]
+
+            for i in range(m):
+                t = [0] * m
+                t[i] = 1
+                comb.append(tuple(t))
+
+            for i in range(len(res_new)):
+                if 1 < int(math.fsum(res_new[i])) <= p - 1:
+                    rev = res_new[i][::-1]
+                    comb.append(rev)
+
+            design = np.ones((x.shape[0], len(comb)))
+            for i in range(len(comb)):
+                for j in range(m):
+                    h = [a[j][k][comb[i][j]] for k in range(x.shape[0])]
+                    design[:, i] *= h
+
+            return design
+
+
+class Hermite(Polynomials):
+    """
+    Class of univariate polynomials appropriate for data generated from a
+    normal distribution.
+
+    **Inputs:**
+
+    * **degree** ('int'):
+        Maximum degree of the polynomials.
+
+    * **dist_object** ('class'):
+        Distribution object of the generated samples.
+
+    **Methods:**
+    """
+
+    def __init__(self, degree, dist_object):
+        super().__init__(dist_object, degree)
+        self.degree = degree
+        self.pdf = self.dist_object.pdf
+
+    def get_polys(self, x):
+        """
+        Calculates the normalized Hermite polynomials evaluated at sample points.
+
+        **Inputs:**
+
+        * **x** (`ndarray`):
+            `ndarray` containing the samples.
+
+        **Outputs:**
+
+        (`list`):
+            Returns a list of 'ndarrays' with the design matrix and the
+            normalized polynomials.
+        """
+        a, b = -np.inf, np.inf
+        mean_ = Polynomials.get_mean(self)
+        std_ = Polynomials.get_std(self)
+        x_ = Polynomials.standardize_normal(x, mean_, std_)
+
+        norm = Normal(0, 1)
+        pdf_st = norm.pdf
+
+        p = []
+        for i in range(self.degree):
+            p.append(special.hermitenorm(i, monic=False))
+
+        return Polynomials.normalized(self.degree, x_, a, b, pdf_st, p)
+
+
+class Legendre(Polynomials):
+    """
+    Class of univariate polynomials appropriate for data generated from a
+    uniform distribution.
+
+    **Inputs:**
+
+    * **degree** ('int'):
+        Maximum degree of the polynomials.
+
+    * **dist_object** ('class'):
+        Distribution object of the generated samples.
+
+    **Methods:**
+    """
+
+    def __init__(self, degree, dist_object):
+        super().__init__(dist_object, degree)
+        self.degree = degree
+        self.pdf = self.dist_object.pdf
+
+    def get_polys(self, x):
+        """
+        Calculates the normalized Legendre polynomials evaluated at sample points.
+
+        **Inputs:**
+
+        * **x** (`ndarray`):
+            `ndarray` containing the samples.
+
+        * **y** (`ndarray`):
+            `ndarray` containing the samples.
+
+        **Outputs:**
+
+        (`list`):
+            Returns a list of 'ndarrays' with the design matrix and the
+            normalized polynomials.
+
+        """
+        a, b = -1, 1
+        m, scale = Polynomials.get_mean(self), Polynomials.scale(self)
+        x_ = Polynomials.standardize_uniform(x, m, scale)
+
+        uni = Uniform(a, b - a)
+        pdf_st = uni.pdf
+
+        p = []
+        for i in range(self.degree):
+            p.append(special.legendre(i, monic=False))
+
+        return Polynomials.normalized(self.degree, x_, a, b, pdf_st, p)
+
+
+class ErrorEstimation:
+    """
+    Class for estimating the error of a PCE surrogate, based on a validation
+    dataset.
+
+    **Inputs:**
+
+    * **surr_object** ('class'):
+        Object that defines the surrogate model.
+
+    **Methods:**
+    """
+
+    def __init__(self, surr_object):
+        self.surr_object = surr_object
+
+    def validation(self, x, y):
+        """
+        Returns the validation error.
+
+        **Inputs:**
+
+        * **x** (`ndarray`):
+            `ndarray` containing the samples of the validation dataset.
+
+        * **y** (`ndarray`):
+            `ndarray` containing model evaluations for the validation dataset.
+
+        **Outputs:**
+
+        * **eps_val** (`float`)
+            Validation error.
+
+        """
+        if y.ndim == 1 or y.shape[1] == 1:
+            y = y.reshape(-1, 1)
+
+        y_val = self.surr_object.predict(x)
+
+        n_samples = x.shape[0]
+        mu_yval = (1 / n_samples) * np.sum(y, axis=0)
+        eps_val = (n_samples - 1) / n_samples * (
+                (np.sum((y - y_val) ** 2, axis=0)) / (np.sum((y - mu_yval) ** 2, axis=0)))
+
+        if y.ndim == 1 or y.shape[1] == 1:
+            eps_val = float(eps_val)
+
+        return np.round(eps_val, 7)
+
+
+class MomentEstimation:
+    """
+    Class for estimating the moments of the PCE surrogate.
+
+    **Inputs:**
+
+    * **surr_object** ('class'):
+        Object that defines the surrogate model.
+
+    **Methods:**
+    """
+
+    def __init__(self, surr_object):
+        self.surr_object = surr_object
+
+    def get(self):
+        """
+        Returns the first two moments of the PCE surrogate which are directly
+        estimated from the PCE coefficients.
+
+        **Outputs:**
+
+        * **mean, variance** (`tuple`)
+            Returns the mean and variance.
+
+        """
+        if self.surr_object.b is not None:
+            mean = self.surr_object.C[0, :] + np.squeeze(self.surr_object.b)
+        else:
+            mean = self.surr_object.C[0, :]
+
+        variance = np.sum(self.surr_object.C[1:] ** 2, axis=0)
+
+        if self.surr_object.C.ndim == 1 or self.surr_object.C.shape[1] == 1:
+            variance = float(variance)
+            mean = float(mean)
+
+        return np.round(mean, 4), np.round(variance, 4)
