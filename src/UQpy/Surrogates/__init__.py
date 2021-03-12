@@ -24,10 +24,20 @@ The module currently contains the following classes:
             Model.
 - ``Kriging``: Class to generate an approximate surrogate model using Kriging.
 
+- ``PCE``: Class to generate an approximate surrogate model using Polynomial chaos.
+
 """
 
 from .SROM import SROM
 from .Kriging import Kriging
+
+
+from .pce import *
+from .baseclass import *
+
+from . import (
+    baseclass, pce
+)
 
 
 
