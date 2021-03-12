@@ -1,0 +1,12 @@
+numpy == 1.19.4
+scipy == 1.5.4
+matplotlib == 3.3.3
+scikit-learn == 0.23.2
+fire == 0.3.1
+pytest == 6.1.2
+coverage == 5.3
+pytest-cov == 2.10.1
+pylint == 2.6.0
+wheel == 0.36.2
+pytest-azurepipelines == 0.8.0
+twine == 3.3.0
