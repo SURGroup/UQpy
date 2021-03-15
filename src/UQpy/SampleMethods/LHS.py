@@ -1,4 +1,4 @@
-from ..Distributions import *
+from UQpy.Distributions import *
 import numpy as np
 from scipy.spatial.distance import pdist
 import scipy.stats as stats

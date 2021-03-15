@@ -1,9 +1,9 @@
 import numpy as np
-from ..Distributions import *
-from .. RunModel import RunModel
-from .baseclass import TaylorSeries
+from UQpy.Distributions import *
+from UQpy.RunModel import RunModel
+from .TaylorSeries import TaylorSeries
 from .FORM import FORM
-from ..Transformations import  *
+from UQpy.Transformations import  *
 import scipy.stats as stats
 
 ########################################################################################################################

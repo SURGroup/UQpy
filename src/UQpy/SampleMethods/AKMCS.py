@@ -1,4 +1,4 @@
-from ..Distributions import *
+from UQpy.Distributions import *
 from .LHS import LHS
 import scipy.stats as stats
 import numpy as np

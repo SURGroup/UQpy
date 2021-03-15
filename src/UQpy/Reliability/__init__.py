@@ -25,9 +25,12 @@ The module currently contains the following classes:
 
 """
 
-from .FORM import FORM
-from .SORM import SORM
 from .SubsetSimulation import SubsetSimulation
+from . TaylorSeries import *
+
+from . import (
+    TaylorSeries
+)
 
 
 

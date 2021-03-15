@@ -1,5 +1,5 @@
 import numpy as np
-from ...Distributions import Distribution
+from UQpy.Distributions import Distribution
 
 class MCMC:
     """

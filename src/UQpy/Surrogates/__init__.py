@@ -28,15 +28,12 @@ The module currently contains the following classes:
 
 """
 
-from .SROM import SROM
-from .Kriging import Kriging
-
-
-from .pce import *
-from .baseclass import *
+from .PCE import *
+from .SROM import *
+from .Kriging import *
 
 from . import (
-    baseclass, pce
+    PCE, SROM, Kriging
 )
 
 

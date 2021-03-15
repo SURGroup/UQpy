@@ -1,5 +1,5 @@
-from ..baseclass import MCMC
-from ...Distributions import *
+from .mcmc import MCMC
+from UQpy.Distributions import *
 import numpy as np
 
 class MH(MCMC):

@@ -1,4 +1,4 @@
-from ..baseclass import STS
+from .sts import STS
 from ..Strata import RectangularStrata
 import numpy as np
 import scipy.stats as stats

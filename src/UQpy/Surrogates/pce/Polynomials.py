@@ -1,6 +1,8 @@
 import numpy as np
-from ... Distributions import *
-from .. pce.polynomials import *
+import scipy.integrate as integrate
+import math
+import itertools
+from ...Distributions import *
 
 class Polynomials:
     """
@@ -166,10 +168,12 @@ class Polynomials:
 
         if not type(self.dist_object) == JointInd:
             if type(self.dist_object) == Normal:
+                from .polynomials.Hermite import Hermite
                 return Hermite(self.degree, self.dist_object).get_polys(x)[0]
                 # design matrix (data x polynomials)
 
             if type(self.dist_object) == Uniform:
+                from .polynomials.Legendre import Legendre
                 return Legendre(self.degree, self.dist_object).get_polys(x)[0]
 
             else:
@@ -181,10 +185,12 @@ class Polynomials:
             for i in range(len(self.dist_object.marginals)):
 
                 if isinstance(self.dist_object.marginals[i], Normal):
+                    from .polynomials.Hermite import Hermite
                     a.append(Hermite(self.degree,
                                      self.dist_object.marginals[i]).get_polys(x[:, i])[0])
 
                 elif isinstance(self.dist_object.marginals[i], Uniform):
+                    from .polynomials.Legendre import Legendre
                     a.append(Legendre(self.degree,
                                       self.dist_object.marginals[i]).get_polys(x[:, i])[0])
 

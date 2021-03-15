@@ -1,4 +1,4 @@
-from ..baseclass import RSS
+from .rss import RSS
 import scipy.stats as stats
 import numpy as np
 from ..Strata import VoronoiStrata, DelaunayStrata

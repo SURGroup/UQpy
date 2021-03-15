@@ -1,5 +1,5 @@
-from ..baseclass import Strata
-from ...Distributions import *
+from .strata import Strata
+from UQpy.Distributions import *
 import numpy as np
 
 class RectangularStrata(Strata):

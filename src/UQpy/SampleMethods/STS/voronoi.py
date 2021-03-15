@@ -1,4 +1,4 @@
-from ..baseclass import STS
+from .sts import STS
 import scipy.stats as stats
 import numpy as np
 from ..Strata import VoronoiStrata

@@ -22,8 +22,8 @@ The module currently contains the following classes:
 - ``Morris``: Class to compute sensitivity indices based on the Morris method.
 """
 
-from ..Distributions import *
-from ..RunModel import RunModel
+from UQpy.Distributions import *
+from UQpy.RunModel import RunModel
 import numpy as np
 
 class Morris:

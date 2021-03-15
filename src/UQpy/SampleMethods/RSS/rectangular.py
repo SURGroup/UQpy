@@ -1,4 +1,4 @@
-from ..baseclass import RSS
+from .rss import RSS
 from ..STS import RectangularSTS
 import numpy as np
 import scipy.stats as stats

@@ -1,4 +1,4 @@
-from ..Distributions import *
+from UQpy.Distributions import *
 import numpy as np
 
 ########################################################################################################################

@@ -42,8 +42,7 @@ from .RSS import *
 from .STS import *
 from .MCMC import *
 from .Strata import *
-from .baseclass import *
 
 from . import (
-    baseclass, MCMC, RSS, STS, Strata
+    MCMC, RSS, STS, Strata
 )

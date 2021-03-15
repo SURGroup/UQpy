@@ -1,5 +1,7 @@
-from ... baseclass import Polynomials
+from ..Polynomials import Polynomials
 import numpy as np
+from ....Distributions import Normal
+import scipy.special as special
 
 class Hermite(Polynomials):
     """
