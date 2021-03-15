@@ -1,13 +1,8 @@
-from .ErrorEstimation import ErrorEstimation
-from .MomentEstimation import MomentEstimation
-from .PCE import PCE
-from .PolyChaosLasso import PolyChaosLasso
-from .PolyChaosLstsq import PolyChaosLstsq
-from .PolyChaosRidge import PolyChaosRidge
-
-from . polynomials import *
+from UQpy.Surrogates.pce.ErrorEstimation import ErrorEstimation
+from UQpy.Surrogates.pce.MomentEstimation import MomentEstimation
+from UQpy.Surrogates.pce.PCE import PCE
+from UQpy.Surrogates.pce.PolyChaosLasso import PolyChaosLasso
+from UQpy.Surrogates.pce.PolyChaosLstsq import PolyChaosLstsq
+from UQpy.Surrogates.pce.PolyChaosRidge import PolyChaosRidge
 
 
-from . import (
-    polynomials
-)

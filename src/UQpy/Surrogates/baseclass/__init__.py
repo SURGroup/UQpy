@@ -1,2 +1,2 @@
 """Collection of baseclasses"""
-from .Polynomials import Polynomials
+from UQpy.Surrogates.baseclass.Polynomials import Polynomials

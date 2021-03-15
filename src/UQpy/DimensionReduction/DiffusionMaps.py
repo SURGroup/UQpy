@@ -4,7 +4,7 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import normalize
-from ..Utilities import *
+from UQpy.Utilities import *
 import functools
 from .Grassmann import Grassmann
 

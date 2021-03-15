@@ -28,12 +28,12 @@ The module currently contains the following classes:
 
 """
 
-from .SROM import SROM
-from .Kriging import Kriging
+from UQpy.Surrogates.SROM import SROM
+from UQpy.Surrogates.Kriging import Kriging
 
 
-from .pce import *
-from .baseclass import *
+from UQpy.Surrogates.pce import *
+from UQpy.Surrogates.baseclass import *
 
 from . import (
     baseclass, pce

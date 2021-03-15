@@ -1,6 +1,8 @@
 import numpy as np
-from ... Distributions import *
-from .. pce.polynomials import *
+from UQpy.Distributions import *
+import scipy.special as special
+import scipy.integrate as integrate
+import itertools, math
 
 class Polynomials:
     """
@@ -163,7 +165,6 @@ class Polynomials:
         * **design** (`ndarray`):
             Returns an array with the design matrix.
         """
-
         if not type(self.dist_object) == JointInd:
             if type(self.dist_object) == Normal:
                 return Hermite(self.degree, self.dist_object).get_polys(x)[0]
@@ -220,3 +221,107 @@ class Polynomials:
                     design[:, i] *= h
 
             return design
+
+
+class Hermite(Polynomials):
+    """
+    Class of univariate polynomials appropriate for data generated from a
+    normal distribution.
+
+    **Inputs:**
+
+    * **degree** ('int'):
+        Maximum degree of the polynomials.
+
+    * **dist_object** ('class'):
+        Distribution object of the generated samples.
+
+    **Methods:**
+    """
+
+    def __init__(self, degree, dist_object):
+        super().__init__(dist_object, degree)
+        self.degree = degree
+        self.pdf = self.dist_object.pdf
+
+    def get_polys(self, x):
+        """
+        Calculates the normalized Hermite polynomials evaluated at sample points.
+
+        **Inputs:**
+
+        * **x** (`ndarray`):
+            `ndarray` containing the samples.
+
+        **Outputs:**
+
+        (`list`):
+            Returns a list of 'ndarrays' with the design matrix and the
+            normalized polynomials.
+        """
+        a, b = -np.inf, np.inf
+        mean_ = Polynomials.get_mean(self)
+        std_ = Polynomials.get_std(self)
+        x_ = Polynomials.standardize_normal(x, mean_, std_)
+
+        norm = Normal(0, 1)
+        pdf_st = norm.pdf
+
+        p = []
+        for i in range(self.degree):
+            p.append(special.hermitenorm(i, monic=False))
+
+        return Polynomials.normalized(self.degree, x_, a, b, pdf_st, p)
+
+"""
+    Class of univariate polynomials appropriate for data generated from a
+    uniform distribution.
+
+    **Inputs:**
+
+    * **degree** ('int'):
+        Maximum degree of the polynomials.
+
+    * **dist_object** ('class'):
+        Distribution object of the generated samples.
+
+    **Methods:**
+    """
+class Legendre(Polynomials):
+
+    def __init__(self, degree, dist_object):
+        super().__init__(dist_object, degree)
+        self.degree = degree
+        self.pdf = self.dist_object.pdf
+
+    def get_polys(self, x):
+        """
+        Calculates the normalized Legendre polynomials evaluated at sample points.
+
+        **Inputs:**
+
+        * **x** (`ndarray`):
+            `ndarray` containing the samples.
+
+        * **y** (`ndarray`):
+            `ndarray` containing the samples.
+
+        **Outputs:**
+
+        (`list`):
+            Returns a list of 'ndarrays' with the design matrix and the
+            normalized polynomials.
+
+        """
+        a, b = -1, 1
+        m, scale = Polynomials.get_mean(self), Polynomials.scale(self)
+        x_ = Polynomials.standardize_uniform(x, m, scale)
+
+        uni = Uniform(a, b - a)
+        pdf_st = uni.pdf
+
+        p = []
+        for i in range(self.degree):
+            p.append(special.legendre(i, monic=False))
+
+        return Polynomials.normalized(self.degree, x_, a, b, pdf_st, p)
