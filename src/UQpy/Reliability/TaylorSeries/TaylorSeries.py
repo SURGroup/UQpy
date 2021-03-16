@@ -10,72 +10,45 @@ from UQpy.Transformations import *
 class TaylorSeries:
     """
     Perform First and Second Order Reliability (FORM/SORM) methods.
-
     This is the parent class to all Taylor series expansion algorithms.
-
     **Input:**
-
     * **dist_object** ((list of ) ``Distribution`` object(s)):
         Marginal probability distributions of each random variable. Must be an object of type
         ``DistributionContinuous1D`` or ``JointInd``.
-
     * **runmodel_object** (``RunModel`` object):
         The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).
-
     * **form_object** (``FORM`` object):
         It should be of type ``FORM`` (see ``FORM`` class). Used to calculate SORM correction.
-
     * **corr_z** or **corr_x** (`ndarray`):
         Covariance matrix
-
         If `corr_x` is provided, it is the correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
-
         If `corr_z` is provided, it is the correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal random
         vector **Z** .
-
          Default: `corr_z` is specified as the identity matrix.
-
     * **seed_u** or **seed_x** (`ndarray`):
         The initial starting point for the `Hasofer-Lind` algorithm.
-
         Either `seed_u` or `seed_x` must be provided.
-
         If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
-
         If `seed_x` is provided, it should be a point in the parameter space of **X**.
-
         Default: `seed_u = (0, 0, ..., 0)`
-
     * **tol1** (`float`):
          Convergence threshold for criterion `e1` of the `HLRF` algorithm.
-
          Default: 1.0e-3
-
     * **tol2** (`float`):
          Convergence threshold for criterion `e2` of the `HLRF` algorithm.
-
          Default: 1.0e-3
-
     * **tol3** (`float`):
          Convergence threshold for criterion `e3` of the  `HLRF` algorithm.
-
          Default: 1.0e-3
-
     * **n_iter** (`int`):
          Maximum number of iterations for the `HLRF` algorithm.
-
          Default: 100
-
     * **df_step** ('float'):
          Finite difference step in standard normal space.
-
          Default: 0.01 (see `derivatives` class)
-
     * **verbose** (`Boolean`):
         A boolean declaring whether to write text to the terminal.
-
     **Methods:**
-
     """
 
     def __init__(self, dist_object, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u,  n_iter, tol1, tol2,
@@ -123,58 +96,39 @@ class TaylorSeries:
         """
         A method to estimate the derivatives (1st-order, 2nd-order, mixed) of a function using a central difference
         scheme after transformation to the standard normal space.
-
         This is a static method of the ``FORM`` class.
-
         **Inputs:**
-
         * **point_u** (`ndarray`):
             Point in the uncorrelated standard normal space at which to evaluate the gradient with shape
             `samples.shape=(1, dimension)`.
-
             Either `point_u` or `point_x` must be specified. If `point_u` is specified, the derivatives are computed
             directly.
-
         * **point_x** (`ndarray`):
             Point in the parameter space at which to evaluate the model with shape
             `samples.shape=(1, dimension)`.
-
             Either `point_u` or `point_x` must be specified. If `point_x` is specified, the variable is transformed to
             standard normal using the ``Nataf`` transformation and derivatives are computed.
-
         * **runmodel_object** (``RunModel`` object):
             The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).
-
         * **nataf_object** (``Nataf`` object):
             An object of the ``Nataf`` class (see ``Nataf`` class).
-
         * **order** (`str`):
             Order of the derivative. Available options: 'first', 'second', 'mixed'.
-
             Default: 'first'.
-
         * **point_qoi** (`float`):
             Value of the model evaluated at ``point_u``. Used only for second derivatives.
-
         * **df_step** (`float`):
             Finite difference step in standard normal space.
-
             Default: 0.01
-
         * **verbose** (Boolean):
             A boolean declaring whether to write text to the terminal.
-
         **Output/Returns:**
-
         * **du_dj** (`ndarray`):
             Vector of first-order derivatives (if order = 'first').
-
         * **d2u_dj** (`ndarray`):
             Vector of second-order derivatives (if order = 'second').
-
         * **d2u_dij** (`ndarray`):
             Vector of mixed derivatives (if order = 'mixed').
-
         """
 
         list_of_samples = list()

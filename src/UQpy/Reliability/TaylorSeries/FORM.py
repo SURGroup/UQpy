@@ -6,66 +6,44 @@ from UQpy.Reliability.TaylorSeries.TaylorSeries import TaylorSeries
 
 
 ########################################################################################################################
-########################################################################################################################
-#                                        First order reliability method
-########################################################################################################################
 class FORM(TaylorSeries):
     """
     A class perform the First Order Reliability Method. The ``run`` method of the ``FORM`` class can be invoked many
     times and each time the results are appended to the existing ones.
-
     This is a child class of the ``TaylorSeries`` class.
-
     **Input:**
-
     See ``TaylorSeries`` class.
-
     **Attributes:**
-
     * **Pf_form** (`float`):
         First-order probability of failure estimate.
-
     * **beta_form** (`float`):
         Hasofer-Lind reliability index.
-
     * **DesignPoint_U** (`ndarray`):
         Design point in the uncorrelated standard normal space **U**.
-
     * **DesignPoint_X** (`ndarray`):
         Design point in the parameter space **X**.
-
     * **alpha** (`ndarray`):
         Direction cosine.
-
     * **form_iterations** (`int`):
         Number of model evaluations.
-
     * **u_record** (`list`):
         Record of all iteration points in the standard normal space **U**.
-
     * **x_record** (`list`):
         Record of all iteration points in the parameter space **X**.
-
     * **beta_record** (`list`):
         Record of all Hasofer-Lind reliability index values.
-
     * **dg_u_record** (`list`):
         Record of the model's gradient  in the standard normal space.
-
     * **alpha_record** (`list`):
         Record of the alpha (directional cosine).
-
     * **g_record** (`list`):
         Record of the performance function.
-
     * **error_record** (`list`):
         Record of the error defined by criteria `e1, e2, e3`.
-
     **Methods:**
-
      """
 
-    def __init__(self, dist_object, runmodel_object, form_object=None, seed_x=None, seed_u=None, df_step=None,
+    def __init__(self, dist_object, runmodel_object, form_object=None, seed_x=None, seed_u=None, df_step=0.01,
                  corr_x=None, corr_z=None, n_iter=100, tol1=None, tol2=None, tol3=None, verbose=False):
 
         super().__init__(dist_object, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u, n_iter, tol1, tol2,
@@ -76,8 +54,6 @@ class FORM(TaylorSeries):
         if df_step is not None:
             if not isinstance(df_step, (float, int)):
                 raise ValueError('UQpy: df_step must be of type float or integer.')
-        else:
-            df_step = 0.01
 
         # Initialize output
         self.beta_form = None
@@ -116,11 +92,8 @@ class FORM(TaylorSeries):
     def run(self, seed_x=None, seed_u=None):
         """
         Run FORM
-
         This is an instance method that runs FORM.
-
         **Input:**
-
         * **seed_u** or **seed_x** (`ndarray`):
             See ``TaylorSeries`` parent class.
         """

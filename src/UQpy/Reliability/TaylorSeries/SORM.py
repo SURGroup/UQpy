@@ -5,33 +5,20 @@ from UQpy.Reliability.TaylorSeries.FORM import FORM
 from UQpy.Reliability.TaylorSeries.TaylorSeries import TaylorSeries
 
 
-########################################################################################################################
-########################################################################################################################
-#                                        Second order reliability method
-########################################################################################################################
 class SORM(TaylorSeries):
     """
     A class to perform the Second Order Reliability Method. This class is used to correct the estimated FORM probability
      using second-order information.
-
     ``SORM`` is a child class of the ``TaylorSeries`` class.
-
     **Input:**
-
     The ``SORM`` class requires an object of type ``FORM`` as input.
-
     **Output/Returns:**
-
     The ``SORM`` class has the same outputs as the ``FORM`` class plus
-
     * **Pf_sorm** (`float`):
         Second-order probability of failure estimate.
-
     * **beta_sorm** (`float`):
         Second-order reliability index.
-
     **Methods:**
-
     """
 
     def __init__(self, form_object, dist_object=None, seed_u=None, seed_x=None, runmodel_object=None, def_step=None,
@@ -68,15 +55,12 @@ class SORM(TaylorSeries):
 
         """
         Run SORM
-
         This is an instance method that runs SORM.
-
         """
 
         if self.verbose:
             print('UQpy: Calculating SORM correction...')
-            
-        self.df_step = self.form_object.df_step
+
         self.beta_form = self.form_object.beta_form[-1]
         self.nataf_object = self.form_object.nataf_object
         self.DesignPoint_U = self.form_object.DesignPoint_U[-1]
@@ -124,10 +108,10 @@ class SORM(TaylorSeries):
         matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(dg_u_record[-1])
         kappa = np.linalg.eig(matrix_b[:self.dimension-1, :self.dimension-1])
         if self.call is None:
-            self.Pf_sorm = [stats.norm.cdf(-1 * self.beta_form) * np.prod(1 / (1 + self.beta_form * kappa[0]) ** 0.5)]
+            self.Pf_sorm = [stats.norm.cdf(-self.beta_form) * np.prod(1 / (1 + self.beta_form * kappa[0]) ** 0.5)]
             self.beta_sorm = [-stats.norm.ppf(self.Pf_sorm)]
         else:
-            self.Pf_sorm = self.Pf_sorm + [stats.norm.cdf(-1 * self.beta_form) * np.prod(1 / (1 + self.beta_form *
+            self.Pf_sorm = self.Pf_sorm + [stats.norm.cdf(-self.beta_form) * np.prod(1 / (1 + self.beta_form *
                                                                                           kappa[0]) ** 0.5)]
             self.beta_sorm = self.beta_sorm + [-stats.norm.ppf(self.Pf_sorm)]
 
