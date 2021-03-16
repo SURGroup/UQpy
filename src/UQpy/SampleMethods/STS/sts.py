@@ -58,6 +58,7 @@ class STS:
 
     **Methods:**
     """
+
     def __init__(self, dist_object, strata_object, nsamples_per_stratum=None, nsamples=None, random_state=None,
                  verbose=False):
 
