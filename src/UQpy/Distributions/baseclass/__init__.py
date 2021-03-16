@@ -1,7 +1,7 @@
 """Collection of baseclasses."""
-from .Distribution import Distribution
-from .DistributionContinuous1D import DistributionContinuous1D
-from .DistributionDiscrete1D import DistributionDiscrete1D
-from .DistributionND import DistributionND
-from .Copula import Copula
+from UQpy.Distributions.baseclass.Distribution import Distribution
+from UQpy.Distributions.baseclass.DistributionContinuous1D import DistributionContinuous1D
+from UQpy.Distributions.baseclass.DistributionDiscrete1D import DistributionDiscrete1D
+from UQpy.Distributions.baseclass.DistributionND import DistributionND
+from UQpy.Distributions.baseclass.Copula import Copula
 

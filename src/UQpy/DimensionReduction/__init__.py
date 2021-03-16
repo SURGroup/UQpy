@@ -33,11 +33,11 @@ The module currently contains the following classes:
 
 """
 
-from .DiffusionMaps import DiffusionMaps
-from .Grassmann import Grassmann
-from .DirectPOD import DirectPOD
-from .SnapshotPOD import SnapshotPOD
-from .HOSVD import HOSVD
+from UQpy.DimensionReduction.DiffusionMaps import DiffusionMaps
+from UQpy.DimensionReduction.Grassmann import Grassmann
+from UQpy.DimensionReduction.DirectPOD import DirectPOD
+from UQpy.DimensionReduction.SnapshotPOD import SnapshotPOD
+from UQpy.DimensionReduction.HOSVD import HOSVD
 
 
 

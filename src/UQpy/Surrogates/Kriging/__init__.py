@@ -1,2 +1,2 @@
-from .Kriging import Kriging
+from UQpy.Surrogates.Kriging.Kriging import Kriging
 

@@ -1,5 +1,5 @@
-from .rss import RSS
-from ..STS import RectangularSTS
+from UQpy.SampleMethods.RSS.rss import RSS
+from UQpy.SampleMethods.STS import RectangularSTS
 import numpy as np
 import scipy.stats as stats
 import copy

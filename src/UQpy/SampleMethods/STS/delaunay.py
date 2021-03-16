@@ -1,8 +1,9 @@
-from .sts import STS
-import scipy.stats as stats
 import numpy as np
-from ..Strata import DelaunayStrata
-from ..Simplex import Simplex
+
+from UQpy.SampleMethods.STS.sts import STS
+from UQpy.SampleMethods.Simplex import Simplex
+from UQpy.SampleMethods.Strata import DelaunayStrata
+
 
 class DelaunaySTS(STS):
     """

@@ -1,10 +1,8 @@
 import numpy as np
 
-from ..Distributions import Distribution, Normal, MVNormal
-from ..RunModel import RunModel
-from ..SampleMethods import MCMC, IS
-from .InferenceModel import InferenceModel
-from .BayesParameterEstimation import BayesParameterEstimation
+from UQpy.Inference.BayesParameterEstimation import BayesParameterEstimation
+from UQpy.Inference.InferenceModel import InferenceModel
+
 
 ########################################################################################################################
 ########################################################################################################################

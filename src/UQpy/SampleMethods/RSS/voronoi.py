@@ -1,8 +1,9 @@
-from .rss import RSS
-import scipy.stats as stats
 import numpy as np
-from ..Strata import VoronoiStrata, DelaunayStrata
-from ..Simplex import Simplex
+
+from UQpy.SampleMethods.RSS.rss import RSS
+from UQpy.SampleMethods.Simplex import Simplex
+from UQpy.SampleMethods.Strata import VoronoiStrata, DelaunayStrata
+
 
 class VoronoiRSS(RSS):
     """

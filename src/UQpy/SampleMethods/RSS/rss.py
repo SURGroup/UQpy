@@ -1,5 +1,5 @@
 import numpy as np
-from ...Utilities import gradient
+from UQpy.Utilities import gradient
 
 class RSS:
     """

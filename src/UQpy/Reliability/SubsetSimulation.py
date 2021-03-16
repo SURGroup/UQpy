@@ -1,9 +1,10 @@
-import numpy as np
-from ..Distributions import *
-from .. RunModel import RunModel
-from .. SampleMethods import  *
 import warnings
 from inspect import isclass
+
+import numpy as np
+
+from UQpy.RunModel import RunModel
+from UQpy.SampleMethods import *
 
 
 ########################################################################################################################

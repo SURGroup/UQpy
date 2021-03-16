@@ -1,7 +1,8 @@
-from .strata import Strata
-from UQpy.Distributions import *
 import numpy as np
 import scipy.stats as stats
+
+from UQpy.SampleMethods.Strata.strata import Strata
+
 
 class VoronoiStrata(Strata):
     """

@@ -28,13 +28,13 @@ The module currently contains the following classes:
 
 import numpy as np
 import scipy.stats as stats
-from UQpy.Distributions import Normal, Uniform, Lognormal, Rayleigh, JointInd
+from UQpy.Distributions import Normal, Uniform, DistributionContinuous1D, JointInd
 import scipy.integrate as integrate
 import scipy.special as special
 import itertools, math
 import warnings
+
 warnings.filterwarnings("ignore")
-from UQpy.Distributions import DistributionContinuous1D
 
 
 ########################################################################################################################
@@ -45,7 +45,6 @@ from UQpy.Distributions import DistributionContinuous1D
 
 
 class SROM:
-
     """
     Stochastic Reduced Order Model(SROM) provide a low-dimensional, discrete approximation of a given random
     quantity.
@@ -284,7 +283,7 @@ class SROM:
                                args=(self.samples, self.weights_distribution, self.weights_moments,
                                      self.weights_correlation, self.target_dist_object, self.nsamples, self.dimension,
                                      self.moments, self.weights_errors, self.properties, self.correlation),
-                               constraints=cons, method='SLSQP', bounds=[[0, 1]]*self.nsamples)
+                               constraints=cons, method='SLSQP', bounds=[[0, 1]] * self.nsamples)
 
         self.sample_weights = p_.x
         if self.verbose:
@@ -475,7 +474,7 @@ class Kriging:
             raise NotImplementedError("UQpy: corr_model_params is not defined.")
 
         if self.bounds is None:
-            self.bounds = [[0.001, 10**7]]*self.corr_model_params.shape[0]
+            self.bounds = [[0.001, 10 ** 7]] * self.corr_model_params.shape[0]
 
         if self.optimizer is None:
             from scipy.optimize import fmin_l_bfgs_b
@@ -543,7 +542,7 @@ class Kriging:
             n = s.shape[1]
             r__, dr_ = cm(x=s, s=s, params=p0, dt=True)
             try:
-                cc = cholesky(r__ + 2**(-52) * np.eye(m), lower=True)
+                cc = cholesky(r__ + 2 ** (-52) * np.eye(m), lower=True)
             except np.linalg.LinAlgError:
                 return np.inf, np.zeros(n)
 
@@ -572,7 +571,7 @@ class Kriging:
             for out_dim in range(y.shape[1]):
                 sigma_[out_dim] = (1 / m) * (np.linalg.norm(y__[:, out_dim] - np.matmul(f__, beta_[:, out_dim])) ** 2)
                 # Objective function:= log(det(sigma**2 * R)) + constant
-                ll = ll + (np.log(np.linalg.det(sigma_[out_dim] * r__)) + m * (np.log(2 * np.pi) + 1))/2
+                ll = ll + (np.log(np.linalg.det(sigma_[out_dim] * r__)) + m * (np.log(2 * np.pi) + 1)) / 2
 
             # Gradient of loglikelihood
             # Reference: C. E. Rasmussen & C. K. I. Williams, Gaussian Processes for Machine Learning, the MIT Press,
@@ -607,8 +606,8 @@ class Kriging:
         if self.normalize:
             self.sample_mean, self.sample_std = np.mean(self.samples, 0), np.std(self.samples, 0)
             self.value_mean, self.value_std = np.mean(self.values, 0), np.std(self.values, 0)
-            s_ = (self.samples - self.sample_mean)/self.sample_std
-            y_ = (self.values - self.value_mean)/self.value_std
+            s_ = (self.samples - self.sample_mean) / self.sample_std
+            y_ = (self.values - self.value_mean) / self.value_std
         else:
             s_ = self.samples
             y_ = self.values
@@ -637,11 +636,11 @@ class Kriging:
         # Updated Correlation matrix corresponding to MLE estimates of hyperparameters
         self.R = self.corr_model(x=s_, s=s_, params=self.corr_model_params)
         # Compute the regression coefficient (solving this linear equation: F * beta = Y)
-        c = np.linalg.cholesky(self.R)                   # Eq: 3.8, DACE
+        c = np.linalg.cholesky(self.R)  # Eq: 3.8, DACE
         c_inv = np.linalg.inv(c)
         f_dash = np.linalg.solve(c, self.F)
         y_dash = np.linalg.solve(c, y_)
-        q_, g_ = np.linalg.qr(f_dash)                 # Eq: 3.11, DACE
+        q_, g_ = np.linalg.qr(f_dash)  # Eq: 3.11, DACE
         # Check if F is a full rank matrix
         if np.linalg.matrix_rank(g_) != min(np.size(self.F, 0), np.size(self.F, 1)):
             raise NotImplementedError("Chosen regression functions are not sufficiently linearly independent")
@@ -687,7 +686,7 @@ class Kriging:
         """
         x_ = np.atleast_2d(x)
         if self.normalize:
-            x_ = (x_ - self.sample_mean)/self.sample_std
+            x_ = (x_ - self.sample_mean) / self.sample_std
             s_ = (self.samples - self.sample_mean) / self.sample_std
         else:
             s_ = self.samples
@@ -741,7 +740,7 @@ class Kriging:
         rx, drdx = self.corr_model(x=x_, s=s_, params=self.corr_model_params, dx=True)
         y_grad = np.einsum('ikj,jm->ik', jf, self.beta) + np.einsum('ijk,jm->ki', drdx.T, self.gamma)
         if self.normalize:
-            y_grad = y_grad * self.value_std/self.sample_std
+            y_grad = y_grad * self.value_std / self.sample_std
         if x_.shape[1] == 1:
             y_grad = y_grad.flatten()
         return y_grad

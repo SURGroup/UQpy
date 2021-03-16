@@ -1,8 +1,6 @@
 from types import MethodType
 import numpy as np
-import scipy.stats as stats
-
-from ..baseclass import DistributionContinuous1D, DistributionND, DistributionDiscrete1D
+from UQpy.Distributions.baseclass import DistributionContinuous1D, DistributionND, DistributionDiscrete1D
 
 
 ########################################################################################################################

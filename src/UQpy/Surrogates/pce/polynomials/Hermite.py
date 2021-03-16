@@ -1,6 +1,6 @@
-from ..Polynomials import Polynomials
+from UQpy.Surrogates.pce.Polynomials import Polynomials
 import numpy as np
-from ....Distributions import Normal
+from UQpy.Distributions import Normal
 import scipy.special as special
 
 class Hermite(Polynomials):

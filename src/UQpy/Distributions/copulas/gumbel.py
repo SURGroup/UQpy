@@ -1,6 +1,6 @@
-from ..baseclass import Copula
-from ..baseclass import DistributionContinuous1D, DistributionND, DistributionDiscrete1D
-import numpy as np
+from UQpy.Distributions.baseclass import Copula
+from UQpy.Distributions.baseclass import DistributionContinuous1D
+from numpy import prod, log, ones, exp
 
 class Gumbel(Copula):
     """
@@ -31,12 +31,12 @@ class Gumbel(Copula):
         if unif.shape[1] > 2:
             raise ValueError('Maximum dimension for the Gumbel Copula is 2.')
         if self.params['theta'] == 1:
-            return np.prod(unif, axis=1)
+            return prod(unif, axis=1)
 
         u = unif[:, 0]
         v = unif[:, 1]
         theta = self.params['theta']
-        cdf_val = np.exp(-((-np.log(u)) ** theta + (-np.log(v)) ** theta) ** (1 / theta))
+        cdf_val = exp(-((-log(u)) ** theta + (-log(v)) ** theta) ** (1 / theta))
 
         return cdf_val
 
@@ -44,16 +44,16 @@ class Gumbel(Copula):
         if unif.shape[1] > 2:
             raise ValueError('Maximum dimension for the Gumbel Copula is 2.')
         if self.params['theta'] == 1:
-            return np.ones(unif.shape[0])
+            return ones(unif.shape[0])
 
         u = unif[:, 0]
         v = unif[:, 1]
         theta = self.params['theta']
-        c = np.exp(-((-np.log(u)) ** theta + (-np.log(v)) ** theta) ** (1 / theta))
+        c = exp(-((-log(u)) ** theta + (-log(v)) ** theta) ** (1 / theta))
 
-        pdf_val = c * 1 / u * 1 / v * ((-np.log(u)) ** theta + (-np.log(v)) ** theta) ** (-2 + 2 / theta) \
-             * (np.log(u) * np.log(v)) ** (theta - 1) * \
-             (1 + (theta - 1) * ((-np.log(u)) ** theta + (-np.log(v)) ** theta) ** (-1 / theta))
+        pdf_val = c * 1 / u * 1 / v * ((-log(u)) ** theta + (-log(v)) ** theta) ** (-2 + 2 / theta) \
+                  * (log(u) * log(v)) ** (theta - 1) * \
+                  (1 + (theta - 1) * ((-log(u)) ** theta + (-log(v)) ** theta) ** (-1 / theta))
         return pdf_val
 
     def check_marginals(self, marginals):

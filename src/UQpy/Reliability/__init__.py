@@ -25,8 +25,8 @@ The module currently contains the following classes:
 
 """
 
-from .SubsetSimulation import SubsetSimulation
-from . TaylorSeries import *
+from UQpy.Reliability.SubsetSimulation import SubsetSimulation
+from UQpy.Reliability.TaylorSeries import *
 
 from . import (
     TaylorSeries

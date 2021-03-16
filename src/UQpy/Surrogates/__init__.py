@@ -28,9 +28,9 @@ The module currently contains the following classes:
 
 """
 
-from .PCE import *
-from .SROM import *
-from .Kriging import *
+from UQpy.Surrogates.pce import *
+from UQpy.Surrogates.SROM import *
+from UQpy.Surrogates.Kriging import *
 
 from . import (
     PCE, SROM, Kriging

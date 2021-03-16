@@ -1,9 +1,7 @@
 import sys
 sys.path.append('../../src/UQpy/')
 from UQpy.Distributions import Uniform
-import UQpy.Surrogates
 from UQpy.Surrogates import *
-from UQpy.Surrogates.baseclass.Polynomials import Legendre
 import numpy as np
 
 np.random.seed(1)

@@ -1,6 +1,7 @@
-from ..baseclass import Copula
-from ..baseclass import DistributionContinuous1D, DistributionND, DistributionDiscrete1D
 import numpy as np
+
+from UQpy.Distributions.baseclass import Copula
+from UQpy.Distributions.baseclass import DistributionContinuous1D
 
 class Frank(Copula):
     """

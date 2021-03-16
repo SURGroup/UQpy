@@ -6,14 +6,14 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import normalize
 from UQpy.Utilities import *
 import functools
-from .Grassmann import Grassmann
+from UQpy.DimensionReduction.Grassmann import Grassmann
 
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsl
 import scipy.spatial.distance as sd
 from scipy.interpolate import LinearNDInterpolator
-from ..Utilities import _nn_coord
-from ..Surrogates import Kriging
+from UQpy.Utilities import _nn_coord
+from UQpy.Surrogates.Kriging import Kriging
 
 ########################################################################################################################
 ########################################################################################################################

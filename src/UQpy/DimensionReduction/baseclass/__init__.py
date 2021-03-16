@@ -1,3 +1,3 @@
 """Collection of baseclasses"""
-from .POD import POD
+from UQpy.DimensionReduction.baseclass.POD import POD
 

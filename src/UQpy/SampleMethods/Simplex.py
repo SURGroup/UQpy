@@ -1,4 +1,3 @@
-from UQpy.Distributions import *
 import numpy as np
 import scipy.stats as stats
 

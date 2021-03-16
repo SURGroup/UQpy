@@ -1,5 +1,5 @@
-from .sts import STS
-from ..Strata import RectangularStrata
+from UQpy.SampleMethods.STS.sts import STS
+from UQpy.SampleMethods.Strata import RectangularStrata
 import numpy as np
 import scipy.stats as stats
 

@@ -1,4 +1,4 @@
-from .mcmc import MCMC
+from UQpy.SampleMethods.MCMC.mcmc import MCMC
 from UQpy.Distributions import *
 import numpy as np
 

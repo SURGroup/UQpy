@@ -1,7 +1,7 @@
 import numpy as np
 from UQpy.Distributions import *
 from UQpy.RunModel import RunModel
-from UQpy.Transformations import  *
+from UQpy.Transformations import *
 
 ########################################################################################################################
 ########################################################################################################################

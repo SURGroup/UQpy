@@ -32,11 +32,11 @@ The module currently contains the following classes:
 
 """
 
-from .SRM import SRM
-from .BSRM import BSRM
-from .KLE import KLE
-from .Translation import Translation
-from .InverseTranslation import InverseTranslation
+from UQpy.StochasticProcess.SRM import SRM
+from UQpy.StochasticProcess.BSRM import BSRM
+from UQpy.StochasticProcess.KLE import KLE
+from UQpy.StochasticProcess.Translation import Translation
+from UQpy.StochasticProcess.InverseTranslation import InverseTranslation
 
 from .supportive import *
 

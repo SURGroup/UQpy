@@ -1,10 +1,7 @@
 import numpy as np
 
-from ..Distributions import Distribution, Normal, MVNormal
-from ..RunModel import RunModel
-from ..SampleMethods import MCMC, IS
-from .InferenceModel import InferenceModel
-from .MLEstimation import MLEstimation
+from UQpy.Inference.InferenceModel import InferenceModel
+from UQpy.Inference.MLEstimation import MLEstimation
 
 ########################################################################################################################
 ########################################################################################################################

@@ -1,8 +1,6 @@
-from types import MethodType
-import numpy as np
 import scipy.stats as stats
+from UQpy.Distributions.baseclass import DistributionContinuous1D
 
-from ..baseclass import DistributionContinuous1D
 
 class TruncNorm(DistributionContinuous1D):
     """

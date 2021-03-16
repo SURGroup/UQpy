@@ -1,5 +1,5 @@
-from ..baseclass import Copula
-from ..baseclass import DistributionContinuous1D, DistributionND, DistributionDiscrete1D
+from UQpy.Distributions.baseclass import Copula
+from UQpy.Distributions.baseclass import DistributionContinuous1D, DistributionND, DistributionDiscrete1D
 import numpy as np
 
 class Clayton(Copula):

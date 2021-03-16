@@ -32,16 +32,16 @@ The module currently contains the following classes:
 
 """
 
-from .MCS import MCS
-from .LHS import LHS
-from .IS import IS
-from .AKMCS import AKMCS
-from .Simplex import Simplex
+from UQpy.SampleMethods.MCS import MCS
+from UQpy.SampleMethods.LHS import LHS
+from UQpy.SampleMethods.IS import IS
+from UQpy.SampleMethods.AKMCS import AKMCS
+from UQpy.SampleMethods.Simplex import Simplex
 
-from .RSS import *
-from .STS import *
-from .MCMC import *
-from .Strata import *
+from UQpy.SampleMethods.RSS import *
+from UQpy.SampleMethods.STS import *
+from UQpy.SampleMethods.MCMC import *
+from UQpy.SampleMethods.Strata import *
 
 from . import (
     MCMC, RSS, STS, Strata

@@ -1,8 +1,5 @@
-from types import MethodType
-import numpy as np
 import scipy.stats as stats
-
-from ..baseclass import DistributionDiscrete1D
+from UQpy.Distributions.baseclass import DistributionDiscrete1D
 
 class Binomial(DistributionDiscrete1D):
     """

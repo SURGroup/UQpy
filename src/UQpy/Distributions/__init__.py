@@ -36,9 +36,9 @@ classes:
 
 # pylint: disable=wildcard-import
 
-from .baseclass import *
-from .copulas import *
-from .collection import *
+from UQpy.Distributions.baseclass import *
+from UQpy.Distributions.copulas import *
+from UQpy.Distributions.collection import *
 
 from . import (
     baseclass, copulas, collection

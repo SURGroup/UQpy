@@ -1,8 +1,5 @@
-from types import MethodType
-import numpy as np
 import scipy.stats as stats
-
-from ..baseclass import DistributionContinuous1D
+from UQpy.Distributions.baseclass import DistributionContinuous1D
 
 class GenExtreme(DistributionContinuous1D):
     """

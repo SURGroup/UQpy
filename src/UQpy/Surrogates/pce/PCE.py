@@ -1,7 +1,7 @@
-import numpy as np
-from .PolyChaosLstsq import PolyChaosLstsq
-from .PolyChaosRidge import PolyChaosRidge
-from .PolyChaosLasso import PolyChaosLasso
+from UQpy.Surrogates.pce.PolyChaosLstsq import PolyChaosLstsq
+from UQpy.Surrogates.pce.PolyChaosRidge import PolyChaosRidge
+from UQpy.Surrogates.pce.PolyChaosLasso import PolyChaosLasso
+
 
 class PCE:
     """

@@ -1,8 +1,6 @@
-from types import MethodType
 import numpy as np
 import scipy.stats as stats
-
-from .Distribution import Distribution
+from UQpy.Distributions.baseclass.Distribution import Distribution
 
 ########################################################################################################################
 #        Univariate Discrete Distributions

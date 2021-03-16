@@ -28,15 +28,15 @@ following classes:
 * ``BayesModelSelection``: Estimate model posterior probabilities.
 """
 
-from .BayesModelSelection import BayesModelSelection
-from .InferenceModel import InferenceModel
-from .InfoModelSelection import InfoModelSelection
-from .BayesParameterEstimation import BayesParameterEstimation
-from .MLEstimation import MLEstimation
+from UQpy.Inference.BayesModelSelection import BayesModelSelection
+from UQpy.Inference.InferenceModel import InferenceModel
+from UQpy.Inference.InfoModelSelection import InfoModelSelection
+from UQpy.Inference.BayesParameterEstimation import BayesParameterEstimation
+from UQpy.Inference.MLEstimation import MLEstimation
 
-from .BayesModelSelection import *
-from .InferenceModel import *
-from .InfoModelSelection import *
-from .BayesParameterEstimation import *
-from .MLEstimation import *
+from UQpy.Inference.BayesModelSelection import *
+from UQpy.Inference.InferenceModel import *
+from UQpy.Inference.InfoModelSelection import *
+from UQpy.Inference.BayesParameterEstimation import *
+from UQpy.Inference.MLEstimation import *
 

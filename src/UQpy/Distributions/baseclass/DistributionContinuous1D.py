@@ -1,8 +1,7 @@
-from types import MethodType
 import numpy as np
 import scipy.stats as stats
+from UQpy.Distributions.baseclass.Distribution import Distribution
 
-from .Distribution import Distribution
 
 class DistributionContinuous1D(Distribution):
     """

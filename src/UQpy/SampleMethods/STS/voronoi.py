@@ -1,8 +1,8 @@
-from .sts import STS
-import scipy.stats as stats
 import numpy as np
-from ..Strata import VoronoiStrata
-from ..Simplex import Simplex
+
+from UQpy.SampleMethods.STS.sts import STS
+from UQpy.SampleMethods.Simplex import Simplex
+from UQpy.SampleMethods.Strata import VoronoiStrata
 
 
 class VoronoiSTS(STS):

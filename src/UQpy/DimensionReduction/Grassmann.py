@@ -3,7 +3,7 @@ import itertools
 
 import numpy as np
 from sklearn.preprocessing import normalize
-from ..Utilities import *
+from UQpy.Utilities import *
 import functools
 
 import scipy.sparse as sps
@@ -11,7 +11,7 @@ import scipy.sparse.linalg as spsl
 import scipy.spatial.distance as sd
 from scipy.interpolate import LinearNDInterpolator
 
-from ..Surrogates import Kriging
+from UQpy.Surrogates import Kriging
 
 
 ########################################################################################################################

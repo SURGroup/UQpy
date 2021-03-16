@@ -1,7 +1,8 @@
-from ..Polynomials import Polynomials
-import numpy as np
-from UQpy.Distributions import Uniform
 import scipy.special as special
+
+from UQpy.Distributions import Uniform
+from UQpy.Surrogates.pce.Polynomials import Polynomials
+
 
 class Legendre(Polynomials):
     """

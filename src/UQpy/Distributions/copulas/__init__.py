@@ -1,3 +1,3 @@
-from .gumbel import Gumbel
-from .clayton import Clayton
-from .frank import Frank
+from UQpy.Distributions.copulas.gumbel import Gumbel
+from UQpy.Distributions.copulas.clayton import Clayton
+from UQpy.Distributions.copulas.frank import Frank

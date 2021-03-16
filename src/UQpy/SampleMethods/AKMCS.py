@@ -1,7 +1,8 @@
-from UQpy.Distributions import *
-from .LHS import LHS
-import scipy.stats as stats
 import numpy as np
+import scipy.stats as stats
+
+from UQpy.SampleMethods.LHS import LHS
+
 
 ########################################################################################################################
 #                                  Adaptive Kriging-Monte Carlo Simulation (AK-MCS)

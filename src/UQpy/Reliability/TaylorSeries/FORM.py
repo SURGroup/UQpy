@@ -1,9 +1,9 @@
 import numpy as np
-from UQpy.Distributions import *
-from UQpy.RunModel import RunModel
-from .TaylorSeries import TaylorSeries
-from UQpy.Transformations import  *
 import scipy.stats as stats
+
+from UQpy.Transformations import *
+from UQpy.Reliability.TaylorSeries.TaylorSeries import TaylorSeries
+
 
 ########################################################################################################################
 ########################################################################################################################

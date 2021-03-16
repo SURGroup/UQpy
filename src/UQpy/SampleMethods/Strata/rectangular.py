@@ -1,6 +1,7 @@
-from .strata import Strata
-from UQpy.Distributions import *
 import numpy as np
+
+from UQpy.SampleMethods.Strata.strata import Strata
+
 
 class RectangularStrata(Strata):
     """

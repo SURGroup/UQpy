@@ -1,8 +1,6 @@
-from types import MethodType
 import numpy as np
 import scipy.stats as stats
-
-from ..baseclass import DistributionND
+from UQpy.Distributions.baseclass import DistributionND
 
 class Multinomial(DistributionND):
     """

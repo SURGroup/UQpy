@@ -25,10 +25,9 @@ The module currently contains the following classes:
 
 """
 
-from .Morris import Morris
+from UQpy.Sensitivity.Morris import Morris
 
-from .Morris import *
-
+from UQpy.Sensitivity.Morris import *
 
 from . import (
     Morris
