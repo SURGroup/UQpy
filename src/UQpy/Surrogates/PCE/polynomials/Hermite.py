@@ -1,4 +1,4 @@
-from UQpy.Surrogates.pce.Polynomials import Polynomials
+from UQpy.Surrogates.PCE.Polynomials import Polynomials
 import numpy as np
 from UQpy.Distributions import Normal
 import scipy.special as special
