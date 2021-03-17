@@ -132,9 +132,7 @@ class AKMCS:
             if self.dimension != self.samples.shape[1]:
                 raise NotImplementedError("UQpy Error: Dimension of samples and distribution are inconsistent.")
 
-        if type(self.learning_function).__name__ == 'function':
-            self.learning_function = self.learning_function
-        elif self.learning_function not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
+        if self.learning_function not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
             raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
         elif self.learning_function == 'EIGF':
             self.learning_function = self.eigf
