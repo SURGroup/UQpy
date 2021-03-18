@@ -108,10 +108,10 @@ class SORM(TaylorSeries):
         matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(dg_u_record[-1])
         kappa = np.linalg.eig(matrix_b[:self.dimension-1, :self.dimension-1])
         if self.call is None:
-            self.Pf_sorm = [stats.norm.cdf(-self.beta_form) * np.prod(1 / (1 + self.beta_form * kappa[0]) ** 0.5)]
+            self.Pf_sorm = [stats.norm.cdf(-1*self.beta_form) * np.prod(1 / (1 + self.beta_form * kappa[0]) ** 0.5)]
             self.beta_sorm = [-stats.norm.ppf(self.Pf_sorm)]
         else:
-            self.Pf_sorm = self.Pf_sorm + [stats.norm.cdf(-self.beta_form) * np.prod(1 / (1 + self.beta_form *
+            self.Pf_sorm = self.Pf_sorm + [stats.norm.cdf(-1*self.beta_form) * np.prod(1 / (1 + self.beta_form *
                                                                                           kappa[0]) ** 0.5)]
             self.beta_sorm = self.beta_sorm + [-stats.norm.ppf(self.Pf_sorm)]
 
