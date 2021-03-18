@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../../src/UQpy/')
+sys.path.append('../../../src/UQpy/')
 from UQpy.Distributions import Uniform
 from UQpy.Surrogates import *
 import numpy as np
