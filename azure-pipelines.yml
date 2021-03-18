@@ -25,6 +25,7 @@ pr:
     include:
     - master
     - Development
+    - feature/Restructuring
 
 pool:
   vmImage: "Ubuntu-latest"
