@@ -55,7 +55,7 @@ steps:
     # condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
   - task: SonarCloudPrepare@1
-    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/feature/CI'))
+    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/feature/Restructuring'))
     inputs:
       SonarCloud: 'SonarCloud.UQpy'
       organization: 'jhusurg'
@@ -97,10 +97,10 @@ steps:
       additionalCodeCoverageFiles: '$(System.DefaultWorkingDirectory)/ **'
 
   - task: SonarCloudAnalyze@1
-    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'),eq(variables['Build.SourceBranch'], 'refs/heads/feature/CI'))
+    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'),eq(variables['Build.SourceBranch'], 'refs/heads/feature/Restructuring'))
 
   - task: SonarCloudPublish@1
-    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'),eq(variables['Build.SourceBranch'], 'refs/heads/feature/CI'))
+    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'),eq(variables['Build.SourceBranch'], 'refs/heads/feature/Restructuring'))
     inputs:
       pollingTimeoutSec: '300'
   
