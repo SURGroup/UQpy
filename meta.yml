@@ -1,0 +1,20 @@
+package:
+  name: uqpy
+  version: {{ version }}
+
+build:
+  noarch: python
+  number: 0
+
+requirements:
+  host:
+    - python
+    - pip
+  run:
+    - python
+
+about:
+  home: https://github.com/SURGroup/UQpy
+  license: MIT
+  summary: UQpy is a general purpose Python toolbox for modeling uncertainty in physical and mathematical systems.
+  doc_url: https://uqpyproject.readthedocs.io

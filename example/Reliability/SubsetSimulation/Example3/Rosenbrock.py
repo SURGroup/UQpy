@@ -1,5 +1,5 @@
 from UQpy.Distributions import DistributionND
-
+import numpy as np
 
 class Rosenbrock(DistributionND):
     def __init__(self, p=20.):

@@ -1,0 +1,171 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+
+variables:
+  pythonVersion: 3.7
+  srcDirectory: src
+  MajorVersion: 1
+  MinorVersion: 0
+  InitialReleaseTagNumber: 1
+  IncrementReleaseTagNumber: $[counter(variables['InitialReleaseTagNumber'], 0)]
+  shouldRunSonarcloud: $[or(eq(variables['Build.SourceBranch'], 'refs/heads/main'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'))]
+
+trigger:
+  - master
+  - Development
+  - feature/*
+  - bugfix/*
+  - hotfix/*
+
+pr:
+  branches:
+    include:
+    - master
+    - Development
+    - feature/Restructuring
+
+pool:
+  vmImage: "macOS-latest"
+
+steps:
+  - task: UsePythonVersion@0
+    displayName: "Use Python $(pythonVersion)"
+    inputs:
+      versionSpec: "$(pythonVersion)"
+
+  - task: gitversion/setup@0
+    # condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    displayName: Setup GitVersion
+    inputs:
+      versionSpec: '5.x'
+
+  - task: gitversion/execute@0
+    # condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    displayName: Calculate GitVersion
+    inputs:
+      useConfigFile: true
+      configFilePath: 'GitVersion.yml'
+  
+  - powershell: |
+      echo "Current version: $(GitVersion.SemVer)"
+    displayName: Shows currently compiling version
+    # condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+  - task: SonarCloudPrepare@1
+    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/feature/Restructuring'))
+    inputs:
+      SonarCloud: 'SonarCloud.UQpy'
+      organization: 'jhusurg'
+      scannerMode: 'CLI'
+      configMode: 'manual'
+      cliProjectKey: 'SURGroup_UQpy'
+      cliProjectName: 'UQpy'
+      cliSources: '.'
+      extraProperties: |
+        sonar.exclusions=**/example/**, **/tests/**
+        sonar.python.coverage.reportPaths=./coverage.xml
+     
+  - script: |
+      pip install -r requirements.txt
+    displayName: Install project dependencies
+
+  - script: |
+      pip install pylint
+      pylint --ignored-modules=numpy,scipy,matplotlib,sklearn --disable=E0202 --disable=R,C,W  src/UQpy
+    displayName: "Running Pylint"
+
+  - script: |
+      pip install pytest pytest-cov
+      PYTHONPATH=src pytest tests/*.py --cov=src tests/ --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
+    workingDirectory: $(Build.SourcesDirectory)
+    displayName: 'Test with pytest'
+ 
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFiles: '**/test-*.xml'
+      testRunTitle: 'Publish test results for Python $(python.version)'
+
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: Cobertura
+      summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+      reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
+      additionalCodeCoverageFiles: '$(System.DefaultWorkingDirectory)/ **'
+
+  - task: SonarCloudAnalyze@1
+    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'),eq(variables['Build.SourceBranch'], 'refs/heads/feature/Restructuring'))
+
+  - task: SonarCloudPublish@1
+    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'),eq(variables['Build.SourceBranch'], 'refs/heads/feature/Restructuring'))
+    inputs:
+      pollingTimeoutSec: '300'
+  
+  - script: |
+      python setup.py $(GitVersion.SemVer) sdist bdist_wheel
+    displayName: Artifact creation
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  
+  - task: CopyFiles@2
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    inputs:
+      SourceFolder: 'dist'
+      Contents: '**'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+  
+  - task: PublishBuildArtifacts@1
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'dist'
+      publishLocation: 'Container'
+  
+  - script: |
+      twine upload --repository-url https://test.pypi.org/legacy/ dist/* --username "$(TESTPYPIU)" --password "$(TESTPYPIP)"
+    displayName: Upload to Test PyPi
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+  - task: GitHubRelease@1
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    inputs:
+      gitHubConnection: 'GitHub_OAuth'
+      repositoryName: '$(Build.Repository.Name)'
+      action: 'create'
+      target: '$(Build.SourceVersion)'
+      tagSource: 'userSpecifiedTag'
+      tag: 'v$(GitVersion.SemVer)'
+      changeLogCompareToRelease: 'lastFullRelease'
+      changeLogType: 'commitBased'
+
+  - bash: echo "##vso[task.prependpath]$CONDA/bin"
+    displayName: Add conda to PATH
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+  - bash: conda create --yes --quiet --name myEnvironment
+    displayName: Create Anaconda environment
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+  - bash: |
+      source activate myEnvironment
+      conda install --yes --quiet --name myEnvironment python=$(pythonVersion) conda-build anaconda-client
+    displayName: Install Anaconda packages
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+  - bash: |
+      source activate myEnvironment
+      conda build . recipe --variants "{'version': ['$(GitVersion.SemVer)']}"
+    displayName: Build Noarch conda packages
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+  - bash: |
+      source activate myEnvironment
+      anaconda login --username $(ANACONDAUSER) --password $(ANACONDAPW)
+      anaconda upload /usr/share/miniconda/envs/myEnvironment/conda-bld/noarch/*.tar.bz2
+    displayName: Upload conda packages
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+
+
