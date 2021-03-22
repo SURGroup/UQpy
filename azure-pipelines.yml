@@ -28,7 +28,7 @@ pr:
     - feature/Restructuring
 
 pool:
-  vmImage: "Ubuntu-latest"
+  vmImage: "macOS-latest"
 
 steps:
   - task: UsePythonVersion@0
