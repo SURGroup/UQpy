@@ -7,12 +7,7 @@
 variables:
   pythonVersion: 3.7
   srcDirectory: src
-  MajorVersion: 1
-  MinorVersion: 0
-  InitialReleaseTagNumber: 1
-  IncrementReleaseTagNumber: $[counter(variables['InitialReleaseTagNumber'], 0)]
-  shouldRunSonarcloud: $[or(eq(variables['Build.SourceBranch'], 'refs/heads/main'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'))]
-
+  
 trigger:
   - master
   - Development
@@ -25,7 +20,6 @@ pr:
     include:
     - master
     - Development
-    - feature/Restructuring
 
 pool:
   vmImage: "macOS-latest"
@@ -55,7 +49,7 @@ steps:
     # condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
   - task: SonarCloudPrepare@1
-    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/feature/Restructuring'))
+    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'))
     inputs:
       SonarCloud: 'SonarCloud.UQpy'
       organization: 'jhusurg'
@@ -97,10 +91,10 @@ steps:
       additionalCodeCoverageFiles: '$(System.DefaultWorkingDirectory)/ **'
 
   - task: SonarCloudAnalyze@1
-    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'),eq(variables['Build.SourceBranch'], 'refs/heads/feature/Restructuring'))
+    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'))
 
   - task: SonarCloudPublish@1
-    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'),eq(variables['Build.SourceBranch'], 'refs/heads/feature/Restructuring'))
+    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'))
     inputs:
       pollingTimeoutSec: '300'
   
@@ -124,8 +118,8 @@ steps:
       publishLocation: 'Container'
   
   - script: |
-      twine upload --repository-url https://test.pypi.org/legacy/ dist/* --username "$(TESTPYPIU)" --password "$(TESTPYPIP)"
-    displayName: Upload to Test PyPi
+      twine upload --repository-url https://upload.pypi.org/legacy/ dist/* --username "$(TESTPYPIU)" --password "$(TESTPYPIP)"
+    displayName: Upload to PyPi
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
   - task: GitHubRelease@1
@@ -142,6 +136,10 @@ steps:
 
   - bash: echo "##vso[task.prependpath]$CONDA/bin"
     displayName: Add conda to PATH
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    
+  - bash: sudo chown -R $USER $CONDA
+    displayName: Take ownership of conda installation
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
   - bash: conda create --yes --quiet --name myEnvironment
@@ -163,7 +161,7 @@ steps:
   - bash: |
       source activate myEnvironment
       anaconda login --username $(ANACONDAUSER) --password $(ANACONDAPW)
-      anaconda upload /usr/share/miniconda/envs/myEnvironment/conda-bld/noarch/*.tar.bz2
+      anaconda upload /usr/local/miniconda/envs/myEnvironment/conda-bld/noarch/*.tar.bz2
     displayName: Upload conda packages
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
