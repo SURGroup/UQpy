@@ -1,3 +1,14 @@
+|AzurePipelines| |PyPIdownloads| |PyPI| |Conda| |CondaForge| |LatestRelease| |Binder|
+
+.. |PyPIdownloads| image:: https://img.shields.io/pypi/dm/UQpy?style=plastic   :alt: PyPI - Downloads
+.. |PyPI| image:: https://img.shields.io/pypi/v/UQpy?style=plastic   :alt: PyPI
+.. |Conda| image:: https://img.shields.io/conda/dn/conda-forge/UQpy?style=plastic   :alt: Conda
+.. |CondaForge| image:: https://img.shields.io/conda/v/conda-forge/UQpy?style=plastic   :alt: Conda
+.. |LatestRelease| image:: https://img.shields.io/github/downloads/SURGroup/UQpy/latest/total?style=plastic   :alt: GitHub Releases (by Release)
+.. |Binder| image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/SURGroup/UQpy/master
+.. |AzurePipelines| image:: https://img.shields.io/azure-devops/build/UQpy/UQpy/1   :alt: Azure DevOps builds
+
 
 *******************************************
 Uncertainty Quantification with python (UQpy)
@@ -9,7 +20,6 @@ Uncertainty Quantification with python (UQpy)
 
 :Authors: Michael D. Shields, Dimitris G. Giovanis, Audrey Olivier, Aakash Bangalore Satish, Mohit Singh Chauhan, Lohit Vandanapu, Ketson RM dos Santos, Katiana Kontolati
 :Contact: UQpy.info@gmail.com
-:Version: 3.0.4
 
 
 Description
@@ -53,17 +63,11 @@ From PyPI
 
                         pip install UQpy
 
-In order to uninstall it
-
-            * ::
-
-                        pip uninstall UQpy
-
 Using Conda
 
             * ::
 
-                        conda install --channel  ``SURG_JHU``  uqpy
+                        conda install -c conda-forge uqpy
 
 Clone your fork of the UQpy repo from your GitHub account to your local disk (to get the latest version): 
 
@@ -71,15 +75,17 @@ Clone your fork of the UQpy repo from your GitHub account to your local disk (to
 
                         git clone https://github.com/SURGroup/UQpy.git
                         cd UQpy/
-                        python setup.py install  (user installation)
-                        python setup.py develop (developer installation)
+                        python setup.py {version} install  (user installation)
+                        python setup.py {version} develop (developer installation)
+
+You will need to replace {version} with the latest version.
 
 Referencing UQpy
 =================
 
 If you are using this software in a work that will be published, please cite this paper:
 
-Olivier, A., Giovanis, D.G., Aakash, B.S., Chauhan, M., Vandanapu, L., and Shields, M.D. (2020). "UQpy: A general purpose Python package and development environment for uncertainty quantification". Journal of Computational Science.
+Olivier, A., Giovanis, D.G., Aakash, B.S., Chauhan, M., Vandanapu, L., and Shields, M.D. (2020). "UQpy: A general purpose Python package and development environment for uncertainty quantification". Journal of Computational Science, DOI:  10.1016/j.jocs.2020.101204.
 
 
 Help and Support
@@ -87,17 +93,9 @@ Help and Support
 
 For assistance with the UQpy software package, please raise an issue on the Github Issues page. Please use the appropriate labels to indicate which module you are specifically inquiring about.
 
-.. image:: https://img.shields.io/pypi/dm/UQpy?style=plastic   :alt: PyPI - Downloads
-.. image:: https://img.shields.io/conda/dn/conda-forge/UQpy?style=plastic   :alt: Conda
-.. image:: https://img.shields.io/github/downloads/SURGroup/UQpy/V3.0.4/total?style=plastic   :alt: GitHub Releases (by Release)
-
-.. image:: https://img.shields.io/pypi/v/UQpy?style=plastic   :alt: PyPI
-.. image:: https://img.shields.io/conda/v/conda-forge/UQpy?style=plastic   :alt: Conda
-
 .. |logo| image:: logo.jpg
     :scale: 25 %
     :target: https://gihub.com/SURGroup/UQpy
     
     
-.. image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/SURGroup/UQpy/master
+
