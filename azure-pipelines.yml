@@ -7,12 +7,7 @@
 variables:
   pythonVersion: 3.7
   srcDirectory: src
-  MajorVersion: 1
-  MinorVersion: 0
-  InitialReleaseTagNumber: 1
-  IncrementReleaseTagNumber: $[counter(variables['InitialReleaseTagNumber'], 0)]
-  shouldRunSonarcloud: $[or(eq(variables['Build.SourceBranch'], 'refs/heads/main'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'))]
-
+  
 trigger:
   - master
   - Development
@@ -166,7 +161,7 @@ steps:
   - bash: |
       source activate myEnvironment
       anaconda login --username $(ANACONDAUSER) --password $(ANACONDAPW)
-      anaconda upload /usr/share/miniconda/envs/myEnvironment/conda-bld/noarch/*.tar.bz2
+      anaconda upload /usr/local/miniconda/envs/myEnvironment/conda-bld/noarch/*.tar.bz2
     displayName: Upload conda packages
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
