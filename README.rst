@@ -1,4 +1,4 @@
-|AzurePipelines| |PyPIdownloads| |PyPI| |Conda| |CondaForge| |LatestRelease| |Binder|
+|PyPIdownloads| |PyPI| |Conda| |CondaForge| |LatestRelease| |Binder|
 
 .. |PyPIdownloads| image:: https://img.shields.io/pypi/dm/UQpy?style=plastic   :alt: PyPI - Downloads
 .. |PyPI| image:: https://img.shields.io/pypi/v/UQpy?style=plastic   :alt: PyPI
@@ -7,7 +7,7 @@
 .. |LatestRelease| image:: https://img.shields.io/github/downloads/SURGroup/UQpy/latest/total?style=plastic   :alt: GitHub Releases (by Release)
 .. |Binder| image:: https://mybinder.org/badge_logo.svg
  :target: https://mybinder.org/v2/gh/SURGroup/UQpy/master
-.. |AzurePipelines| image:: https://img.shields.io/azure-devops/build/UQpy/UQpy/1   :alt: Azure DevOps builds
+.. image:: https://img.shields.io/azure-devops/build/UQpy/5ce1851f-e51f-4e18-9eca-91c3ad9f9900/1   :alt: Azure DevOps builds
 
 
 *******************************************
