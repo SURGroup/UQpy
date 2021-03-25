@@ -3,8 +3,6 @@ import sys
 version = sys.argv[1]
 del sys.argv[1]
 from setuptools import setup, find_packages
-if not version:
-    version='3.0.0'
 
 setup(
     name='UQpy',
