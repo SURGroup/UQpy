@@ -1,14 +1,13 @@
-|AzurePipelines| |PyPIdownloads| |PyPI| |Conda| |CondaForge| |LatestRelease| |Binder|
+|AzureDevops| |PyPIdownloads| |PyPI| |CondaSURG| |CondaPlatforms| |GithubRelease| |Binder|
 
+.. |CondaSURG| image:: https://img.shields.io/conda/vn/SURG_JHU/uqpy?style=plastic   :alt: Conda (channel only)
+.. |CondaPlatforms| image:: https://img.shields.io/conda/pn/SURG_JHU/uqpy?style=plastic   :alt: Conda
+.. |GithubRelease| image:: https://img.shields.io/github/v/release/SURGroup/UQpy?style=plastic   :alt: GitHub release (latest by date)
+.. |AzureDevops| image:: https://img.shields.io/azure-devops/build/UQpy/5ce1851f-e51f-4e18-9eca-91c3ad9f9900/1?style=plastic   :alt: Azure DevOps builds
 .. |PyPIdownloads| image:: https://img.shields.io/pypi/dm/UQpy?style=plastic   :alt: PyPI - Downloads
 .. |PyPI| image:: https://img.shields.io/pypi/v/UQpy?style=plastic   :alt: PyPI
-.. |Conda| image:: https://img.shields.io/conda/dn/conda-forge/UQpy?style=plastic   :alt: Conda
-.. |CondaForge| image:: https://img.shields.io/conda/v/conda-forge/UQpy?style=plastic   :alt: Conda
-.. |LatestRelease| image:: https://img.shields.io/github/downloads/SURGroup/UQpy/latest/total?style=plastic   :alt: GitHub Releases (by Release)
 .. |Binder| image:: https://mybinder.org/badge_logo.svg
  :target: https://mybinder.org/v2/gh/SURGroup/UQpy/master
- 
-.. |AzurePipelines| image:: https://img.shields.io/azure-devops/build/UQpy/5ce1851f-e51f-4e18-9eca-91c3ad9f9900/1/master   :alt: Azure DevOps builds (branch)
 
 
 *******************************************
@@ -69,6 +68,7 @@ Using Conda
             * ::
 
                         conda install -c conda-forge uqpy
+                        conda install -c surg_jhu uqpy (latest version)
 
 Clone your fork of the UQpy repo from your GitHub account to your local disk (to get the latest version): 
 
