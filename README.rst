@@ -1,5 +1,6 @@
-|AzureDevops| |PyPIdownloads| |PyPI| |CondaSURG| |CondaPlatforms| |GithubRelease| |Binder|
+|AzureDevops| |PyPIdownloads| |PyPI| |CondaSURG| |CondaPlatforms| |GithubRelease| |Binder| |Docs|
 
+.. |Docs| image:: https://img.shields.io/readthedocs/uqpy?style=plastic  :alt: Read the Docs
 .. |CondaSURG| image:: https://img.shields.io/conda/vn/SURG_JHU/uqpy?style=plastic   :alt: Conda (channel only)
 .. |CondaPlatforms| image:: https://img.shields.io/conda/pn/SURG_JHU/uqpy?style=plastic   :alt: Conda
 .. |GithubRelease| image:: https://img.shields.io/github/v/release/SURGroup/UQpy?style=plastic   :alt: GitHub release (latest by date)
