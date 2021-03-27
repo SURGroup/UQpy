@@ -2,6 +2,7 @@
 #        Copulas
 ########################################################################################################################
 
+
 class Copula:
     """
     Define a copula for a multivariate distribution whose dependence structure is defined with a copula.
@@ -59,17 +60,7 @@ class Copula:
         * (`tuple`):
             Values of the copula pdf term, ndarray of shape `(npoints, )`.
 
-    """
-    def __init__(self, order_params=None, **kwargs):
-        self.params = kwargs
-        self.order_params = order_params
-        if self.order_params is None:
-            self.order_params = tuple(kwargs.keys())
-        if len(self.order_params) != len(self.params):
-            raise ValueError('Inconsistent dimensions between order_params tuple and params dictionary.')
-
-    def check_marginals(self, marginals):
-        """
+    **check_marginals** *(marginals)*
         Perform some checks on the marginals, raise errors if necessary.
 
         As an example, Archimedian copula are only defined for bi-variate continuous distributions, thus this method
@@ -84,9 +75,14 @@ class Copula:
         **Output/Returns:**
 
         No outputs, this code raises errors if necessary.
-
-        """
-        pass
+    """
+    def __init__(self, order_params=None, **kwargs):
+        self.params = kwargs
+        self.order_params = order_params
+        if self.order_params is None:
+            self.order_params = tuple(kwargs.keys())
+        if len(self.order_params) != len(self.params):
+            raise ValueError('Inconsistent dimensions between order_params tuple and params dictionary.')
 
     def get_params(self):
         return self.params

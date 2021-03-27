@@ -143,6 +143,23 @@ def test_mvnormal_8():
 
 
 # Check copulas
+unif = np.array([0.4, 0.9]).reshape((1, 2))
+
+
+def test_clayton():
+    assert np.round(Clayton(theta=2.).evaluate_cdf(unif=unif), 3) == 0.393
+
+
+def test_frank():
+    assert np.round(Frank(theta=2.).evaluate_cdf(unif=unif), 3) == 0.379
+
+
+def test_gumbel_1():
+    assert np.round(Gumbel(theta=2.).evaluate_cdf(unif=unif), 3) == 0.398
+
+
+def test_gumbel_2():
+    assert np.round(Gumbel(theta=2.).evaluate_pdf(unif=unif), 3) == 0.261
 
 
 # Check JointInd and JointCopula

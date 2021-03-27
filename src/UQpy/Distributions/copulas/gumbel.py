@@ -2,6 +2,7 @@ from UQpy.Distributions.baseclass import Copula
 from UQpy.Distributions.baseclass import DistributionContinuous1D
 from numpy import prod, log, ones, exp
 
+
 class Gumbel(Copula):
     """
     Gumbel copula having cumulative distribution function
@@ -30,8 +31,8 @@ class Gumbel(Copula):
     def evaluate_cdf(self, unif):
         if unif.shape[1] > 2:
             raise ValueError('Maximum dimension for the Gumbel Copula is 2.')
-        if self.params['theta'] == 1:
-            return prod(unif, axis=1)
+        #if self.params['theta'] == 1:
+        #    return prod(unif, axis=1)
 
         u = unif[:, 0]
         v = unif[:, 1]
@@ -43,8 +44,9 @@ class Gumbel(Copula):
     def evaluate_pdf(self, unif):
         if unif.shape[1] > 2:
             raise ValueError('Maximum dimension for the Gumbel Copula is 2.')
-        if self.params['theta'] == 1:
-            return ones(unif.shape[0])
+
+        #if self.params['theta'] == 1:
+        #    return ones(unif.shape[0])
 
         u = unif[:, 0]
         v = unif[:, 1]
@@ -56,7 +58,8 @@ class Gumbel(Copula):
                   (1 + (theta - 1) * ((-log(u)) ** theta + (-log(v)) ** theta) ** (-1 / theta))
         return pdf_val
 
-    def check_marginals(self, marginals):
+    @staticmethod
+    def check_marginals(marginals):
         """
         Check that marginals contains 2 continuous univariate distributions.
         """
@@ -64,7 +67,3 @@ class Gumbel(Copula):
             raise ValueError('Maximum dimension for the Gumbel Copula is 2.')
         if not all(isinstance(m, DistributionContinuous1D) for m in marginals):
             raise ValueError('Marginals should be 1d continuous distributions.')
-
-
-
-

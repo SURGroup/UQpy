@@ -75,3 +75,9 @@ def test_discrete_moments():
 
 
 # Test functions for Copula
+
+
+def test_update_params_copula():
+    copula = Gumbel(theta=2.)
+    copula.update_params(theta=1.)
+    assert copula.get_params()['theta'] == 1.
