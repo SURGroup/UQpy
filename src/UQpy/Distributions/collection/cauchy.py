@@ -1,6 +1,7 @@
 import scipy.stats as stats
 from UQpy.Distributions.baseclass import DistributionContinuous1D
 
+
 class Cauchy(DistributionContinuous1D):
     """
     Cauchy distribution having probability density function
