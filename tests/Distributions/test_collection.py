@@ -163,3 +163,68 @@ def test_gumbel_2():
 
 
 # Check JointInd and JointCopula
+
+marginals = [Normal(loc=2., scale=2.), Lognormal(s=1., loc=0., scale=np.exp(1))]
+dist_joint = JointInd(marginals=marginals)
+dist_joint_copula = JointCopula(marginals=marginals, copula=Gumbel(theta=2.))
+
+
+def test_joint_ind_1():
+    marginals_ = [Normal(loc=2., scale=2.), Lognormal(s=1., loc=0., scale=np.exp(1))]
+    dist_joint_ = JointInd(marginals=marginals_)
+    dist_joint_.update_params(loc_0=3.)
+    assert dist_joint_.get_params()['loc_0'] == 3.
+
+
+def test_joint_ind_2():
+    samples = dist_joint.rvs(nsamples=1, random_state=123)
+    assert np.all(np.round(samples, 3) == [[-0.171, 0.918]])
+
+
+def test_joint_ind_3():
+    x = np.array([0.5, 0.5]).reshape((1, 2))
+    assert np.round(dist_joint.pdf(x=x), 3) == 0.029
+
+
+def test_joint_ind_4():
+    x = np.array([0.5, 0.5]).reshape((1, 2))
+    assert np.round(dist_joint.log_pdf(x=x), 3) == -3.553
+
+
+def test_joint_ind_5():
+    x = np.array([0.5, 0.5]).reshape((1, 2))
+    assert np.round(dist_joint.cdf(x=x), 3) == 0.010
+
+
+def test_joint_ind_6():
+    assert np.all(np.round(dist_joint.moments(moments2return='m'), 3) == [2., 4.482])
+
+
+def test_joint_ind_7():
+    marginals_ = [Normal(loc=None, scale=2.), Lognormal(s=1., loc=0., scale=np.exp(1))]
+    dist_joint_ = JointInd(marginals=marginals_)
+    data = np.array([[-0.17126121, 0.91793325], [3.99469089, 7.36946747], [2.565957, 3.60736828]])
+    mle_fit = dist_joint_.fit(data=data)
+    assert np.round(mle_fit['loc_0'], 3) == 2.130
+
+
+def test_joint_copula_1():
+    marginals_ = [Normal(loc=2., scale=2.), Lognormal(s=1., loc=0., scale=np.exp(1))]
+    dist_joint_ = JointCopula(marginals=marginals_, copula=Gumbel(theta=3.))
+    dist_joint_.update_params(theta_c=2.)
+    assert dist_joint_.get_params()['theta_c'] == 2.
+
+
+def test_joint_copula_3():
+    x = np.array([0.5, 0.5]).reshape((1, 2))
+    assert np.round(dist_joint_copula.pdf(x=x), 3) == 0.045
+
+
+def test_joint_copula_4():
+    x = np.array([0.5, 0.5]).reshape((1, 2))
+    assert np.round(dist_joint_copula.log_pdf(x=x), 3) == -3.092
+
+
+def test_joint_copula_5():
+    x = np.array([0.5, 0.5]).reshape((1, 2))
+    assert np.round(dist_joint_copula.cdf(x=x), 3) == 0.032

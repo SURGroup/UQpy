@@ -96,7 +96,10 @@ class JointInd(DistributionND):
                 # Compute ml estimates of independent marginal parameters
                 mle_all = {}
                 for ind_m, marg in enumerate(dist.marginals):
-                    mle_i = marg.fit(data[:, ind_m])
+                    if any(param_value is None for param_value in marg.get_params().values()):
+                        mle_i = marg.fit(data[:, ind_m])
+                    else:
+                        mle_i = marg.get_params().copy()
                     mle_all.update({key+'_'+str(ind_m): val for key, val in mle_i.items()})
                 return mle_all
             self.fit = MethodType(joint_fit, self)
