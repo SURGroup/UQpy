@@ -1,13 +1,14 @@
 import scipy.stats as stats
 from UQpy.Distributions.baseclass import DistributionContinuous1D
 
+
 class Beta(DistributionContinuous1D):
     """
     Beta distribution having probability density function
 
-    .. math:: f(x|a,b) = \dfrac{\Gamma(a+b)x^{a-1}(1-x)^{b-1}}{\Gamma(a)\Gamma(b)}
+    .. math:: f(x|a,b) = \dfrac{ \Gamma(a+b)x^{a-1}(1-x)^{b-1}}{\Gamma(a) \Gamma(b)}
 
-    for :math:`0\le x\ge 0`, :math:`a>0, b>0`. Here :math:`\Gamma(a)` refers to the Gamma function.
+    for :math:`0 \le x \ge 0`, :math:`a > 0, b > 0`. Here :math:` \Gamma(a)` refers to the Gamma function.
 
     In this standard form `(loc=0, scale=1)`, the distribution is defined over the interval (0, 1). Use `loc` and
     `scale` to shift the distribution to interval `(loc, loc + scale)`. Specifically, this is equivalent to computing

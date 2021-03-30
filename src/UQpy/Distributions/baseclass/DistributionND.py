@@ -5,6 +5,7 @@ from .Distribution import Distribution
 #        Multivariate Continuous Distributions
 ########################################################################################################################
 
+
 class DistributionND(Distribution):
     """
     Parent class for multivariate probability distributions.

@@ -1,6 +1,7 @@
 import scipy.stats as stats
 from UQpy.Distributions.baseclass import DistributionContinuous1D
 
+
 class GenExtreme(DistributionContinuous1D):
     """
     Generalized Extreme Value distribution having probability density function:
@@ -32,4 +33,3 @@ class GenExtreme(DistributionContinuous1D):
     def __init__(self, c, loc=0., scale=1.):
         super().__init__(c=c, loc=loc, scale=scale, order_params=('c', 'loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.genextreme)
-

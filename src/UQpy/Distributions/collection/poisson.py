@@ -1,6 +1,7 @@
 import scipy.stats as stats
 from UQpy.Distributions.baseclass import DistributionDiscrete1D
 
+
 class Poisson(DistributionDiscrete1D):
     """
     Poisson distribution having probability mass function:
@@ -26,7 +27,3 @@ class Poisson(DistributionDiscrete1D):
     def __init__(self, mu, loc=0.):
         super().__init__(mu=mu, loc=loc, order_params=('mu', 'loc'))
         self._construct_from_scipy(scipy_name=stats.poisson)
-
-
-
-
