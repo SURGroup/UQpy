@@ -1,6 +1,7 @@
 import scipy.stats as stats
 from UQpy.Distributions.baseclass import DistributionContinuous1D
 
+
 class InvGauss(DistributionContinuous1D):
     """
     Inverse Gaussian distribution having probability density function
@@ -28,4 +29,3 @@ class InvGauss(DistributionContinuous1D):
     def __init__(self, mu, loc=0., scale=1.):
         super().__init__(mu=mu, loc=loc, scale=scale, order_params=('mu', 'loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.invgauss)
-

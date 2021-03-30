@@ -1,6 +1,7 @@
 import scipy.stats as stats
 from UQpy.Distributions.baseclass import DistributionContinuous1D
 
+
 class Lognormal(DistributionContinuous1D):
     """
     Lognormal distribution having probability density function

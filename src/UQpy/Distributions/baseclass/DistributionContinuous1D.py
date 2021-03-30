@@ -6,8 +6,6 @@ from UQpy.Distributions.baseclass.Distribution import Distribution
 class DistributionContinuous1D(Distribution):
     """
     Parent class for univariate continuous probability distributions.
-
-
     """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
