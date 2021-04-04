@@ -1,6 +1,7 @@
 import scipy.stats as stats
 from UQpy.Distributions.baseclass import DistributionContinuous1D
 
+
 class Pareto(DistributionContinuous1D):
     """
     Pareto distribution having probability density function
@@ -28,5 +29,3 @@ class Pareto(DistributionContinuous1D):
     def __init__(self, b, loc=0., scale=1.):
         super().__init__(b=b, loc=loc, scale=scale, order_params=('b', 'loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.pareto)
-
-

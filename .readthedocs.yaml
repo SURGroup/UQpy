@@ -8,6 +8,5 @@ build:
 python:
   version: 3.7
   install:
-      - method: pip
-        path: docs
+    - requirements: docs/requirements.txt
   system_packages: true

@@ -1,6 +1,7 @@
 import scipy.stats as stats
 from UQpy.Distributions.baseclass import DistributionContinuous1D
 
+
 class Gamma(DistributionContinuous1D):
     """
     Gamma distribution having probability density function:

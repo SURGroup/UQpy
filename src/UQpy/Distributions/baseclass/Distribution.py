@@ -2,6 +2,7 @@
 #        Define the probability distribution of the random parameters
 ########################################################################################################################
 
+
 class Distribution:
     """
     A parent class to all ``Distribution`` classes.
@@ -135,7 +136,7 @@ class Distribution:
             Generated iid samples, `ndarray` of shape `(npoints, dimension)`.
 
     **moments** *(moments2return='mvsk')*
-        Computes the mean 'number_of_variables', variance/covariance ('v'), skewness ('s') and/or kurtosis ('k') of the distribution.
+        Computes the mean ('m'), variance/covariance ('v'), skewness ('s') and/or kurtosis ('k') of the distribution.
 
         For a univariate distribution, mean, variance, skewness and kurtosis are returned. For a multivariate
         distribution, the mean vector, covariance and vectors of marginal skewness and marginal kurtosis are returned.

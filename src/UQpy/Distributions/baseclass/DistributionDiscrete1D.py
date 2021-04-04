@@ -6,6 +6,7 @@ from UQpy.Distributions.baseclass.Distribution import Distribution
 #        Univariate Discrete Distributions
 ########################################################################################################################
 
+
 class DistributionDiscrete1D(Distribution):
     """
     Parent class for univariate discrete distributions.
@@ -25,9 +26,9 @@ class DistributionDiscrete1D(Distribution):
         return x.reshape((-1, ))
 
     def _construct_from_scipy(self, scipy_name=stats.rv_discrete):
-        self.cdf = lambda x: scipy_name.cdf(x=self._check_x_dimension(x), **self.params)
-        self.pmf = lambda x: scipy_name.pmf(x=self._check_x_dimension(x), **self.params)
-        self.log_pmf = lambda x: scipy_name.logpmf(x=self._check_x_dimension(x), **self.params)
+        self.cdf = lambda x: scipy_name.cdf(k=self._check_x_dimension(x), **self.params)
+        self.pmf = lambda x: scipy_name.pmf(k=self._check_x_dimension(x), **self.params)
+        self.log_pmf = lambda x: scipy_name.logpmf(k=self._check_x_dimension(x), **self.params)
         self.icdf = lambda x: scipy_name.ppf(q=self._check_x_dimension(x), **self.params)
         self.moments = lambda moments2return='mvsk': scipy_name.stats(moments=moments2return, **self.params)
         self.rvs = lambda nsamples=1, random_state=None: scipy_name.rvs(
