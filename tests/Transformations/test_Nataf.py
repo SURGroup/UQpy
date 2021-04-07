@@ -70,7 +70,7 @@ def test_corr_x4():
     dist2 = Uniform(loc=0.0, scale=1.0)
     rx = np.array([[1.0, 0.8], [0.8, 1.0]])
     ntf_obj = Nataf(dist_object=[dist1, dist2], corr_x=rx)
-    assert (ntf_obj.corr_z == [[1., 0.8134732861515996], [0.8134732861515996, 1.]]).all()
+    np.testing.assert_allclose(ntf_obj.corr_z,[[1., 0.8134732861515996], [0.8134732861515996, 1.]], rtol=1e-09)
 
 
 def test_corr_z1():
@@ -110,7 +110,7 @@ def test_h():
     dist2 = Normal(loc=0.0, scale=1.0)
     rz = np.array([[1.0, 0.8], [0.8, 1.0]])
     ntf_obj = Nataf(dist_object=[dist1, dist2], corr_z=rz)
-    assert (ntf_obj.H == [[1., 0.], [0.8, 0.6]]).all()
+    np.testing.assert_allclose(ntf_obj.H, [[1., 0.], [0.8, 0.6]], rtol=1e-09)
 
 
 def test_samples_x():
