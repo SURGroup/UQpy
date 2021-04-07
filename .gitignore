@@ -240,3 +240,4 @@ examples/
 
 # End of https://www.gitignore.io/api/osx,matlab,python,pycharm
 logo/
+/tests/Transformations/test-output.xml
