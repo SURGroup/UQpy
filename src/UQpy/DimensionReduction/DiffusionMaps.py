@@ -2,7 +2,6 @@ import copy
 import itertools
 
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.preprocessing import normalize
 from UQpy.Utilities import *
 import functools
