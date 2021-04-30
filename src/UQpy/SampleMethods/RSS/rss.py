@@ -1,6 +1,7 @@
 import numpy as np
 from UQpy.Utilities import gradient
 
+
 class RSS:
     """
     Parent class for Refined Stratified Sampling [10]_, [11]_.
@@ -100,8 +101,21 @@ class RSS:
 
         **Methods:**
         """
-    def __init__(self, sample_object=None, runmodel_object=None, krig_object=None, local=False, max_train_size=None,
-                 step_size=0.005, qoi_name=None, n_add=1, nsamples=None, random_state=None, verbose=False):
+
+    def __init__(
+        self,
+        sample_object=None,
+        runmodel_object=None,
+        krig_object=None,
+        local=False,
+        max_train_size=None,
+        step_size=0.005,
+        qoi_name=None,
+        n_add=1,
+        nsamples=None,
+        random_state=None,
+        verbose=False,
+    ):
 
         # Initialize attributes that are common to all approaches
         self.sample_object = sample_object
@@ -119,30 +133,36 @@ class RSS:
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            raise TypeError(
+                "UQpy: random_state must be None, an int or an np.random.RandomState object."
+            )
 
         if self.runmodel_object is not None:
-            if type(self.runmodel_object).__name__ not in ['RunModel']:
-                raise NotImplementedError("UQpy Error: runmodel_object must be an object of the RunModel class.")
+            if type(self.runmodel_object).__name__ not in ["RunModel"]:
+                raise NotImplementedError(
+                    "UQpy Error: runmodel_object must be an object of the RunModel class."
+                )
 
         if runmodel_object is not None:
             self.local = local
             self.max_train_size = max_train_size
             if krig_object is not None:
-                if hasattr(krig_object, 'fit') and hasattr(krig_object, 'predict'):
+                if hasattr(krig_object, "fit") and hasattr(krig_object, "predict"):
                     self.krig_object = krig_object
                 else:
-                    raise NotImplementedError("UQpy Error: krig_object must have 'fit' and 'predict' methods.")
+                    raise NotImplementedError(
+                        "UQpy Error: krig_object must have 'fit' and 'predict' methods."
+                    )
             self.qoi_name = qoi_name
             self.step_size = step_size
             if self.verbose:
-                print('UQpy: GE-RSS - Running the initial sample set.')
+                print("UQpy: GE-RSS - Running the initial sample set.")
             self.runmodel_object.run(samples=self.samples)
             if self.verbose:
-                print('UQpy: GE-RSS - A RSS class object has been initiated.')
+                print("UQpy: GE-RSS - A RSS class object has been initiated.")
         else:
             if self.verbose:
-                print('UQpy: RSS - A RSS class object has been initiated.')
+                print("UQpy: RSS - A RSS class object has been initiated.")
 
         if self.nsamples is not None:
             if isinstance(self.nsamples, int) and self.nsamples > 0:
@@ -182,8 +202,10 @@ class RSS:
             raise RuntimeError("UQpy: nsamples must be a positive integer.")
 
         if self.nsamples <= self.samples.shape[0]:
-            raise NotImplementedError('UQpy Error: The number of requested samples must be larger than the existing '
-                                      'sample set.')
+            raise NotImplementedError(
+                "UQpy Error: The number of requested samples must be larger than the existing "
+                "sample set."
+            )
 
         self.run_rss()
 
@@ -213,9 +235,12 @@ class RSS:
             tck = self.krig_object.predict
         else:
             from scipy.interpolate import LinearNDInterpolator
+
             tck = LinearNDInterpolator(x, y, fill_value=0).__call__
 
-        gr = gradient(point=xt, runmodel_object=tck, order='first', df_step=self.step_size)
+        gr = gradient(
+            point=xt, runmodel_object=tck, order="first", df_step=self.step_size
+        )
         return gr
 
     def update_samples(self, new_point):
@@ -235,7 +260,9 @@ class RSS:
             strata_metric[t] = 0
             p_left -= t.shape[0]
 
-        tmp = self.random_state.choice(np.where(strata_metric == strata_metric.max())[0], p_left, replace=False)
+        tmp = self.random_state.choice(
+            np.where(strata_metric == strata_metric.max())[0], p_left, replace=False
+        )
         bin2break_ = np.hstack([bin2break_, tmp])
         bin2break_ = list(map(int, bin2break_))
         return bin2break_

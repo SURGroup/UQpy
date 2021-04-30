@@ -56,7 +56,11 @@ class POD:
             data = np.copy(data_)
 
         d0, d1, d2 = [0, 2, 1], [1, 2, 0], [2, 0, 1]
-        z0, z1, z2 = np.transpose(data, d0), np.transpose(data, d1), np.transpose(data, d2)
+        z0, z1, z2 = (
+            np.transpose(data, d0),
+            np.transpose(data, d1),
+            np.transpose(data, d2),
+        )
 
         m0 = z0.reshape(data.shape[0], data.shape[2] * data.shape[1])
         m1 = z1.reshape(data.shape[1], data.shape[2] * data.shape[0])

@@ -20,6 +20,7 @@ from UQpy.Surrogates.Kriging import Kriging
 ########################################################################################################################
 ########################################################################################################################
 
+
 class DiffusionMaps:
     """
     Perform the diffusion maps on the input data to reveal its lower dimensional embedded geometry.
@@ -93,7 +94,15 @@ class DiffusionMaps:
 
     """
 
-    def __init__(self, alpha=0.5, n_evecs=2, sparse=False, k_neighbors=1, kernel_object=None, kernel_grassmann=None):
+    def __init__(
+        self,
+        alpha=0.5,
+        n_evecs=2,
+        sparse=False,
+        k_neighbors=1,
+        kernel_object=None,
+        kernel_grassmann=None,
+    ):
 
         self.alpha = alpha
         self.n_evecs = n_evecs
@@ -109,25 +118,29 @@ class DiffusionMaps:
             if callable(kernel_object) or isinstance(kernel_object, Grassmann):
                 self.kernel_object = kernel_object
             else:
-                raise TypeError('UQpy: Either a callable kernel or a Grassmann class object must be provided.')
+                raise TypeError(
+                    "UQpy: Either a callable kernel or a Grassmann class object must be provided."
+                )
 
         if alpha < 0 or alpha > 1:
-            raise ValueError('UQpy: `alpha` must be a value between 0 and 1.')
+            raise ValueError("UQpy: `alpha` must be a value between 0 and 1.")
 
         if isinstance(n_evecs, int):
             if n_evecs < 1:
-                raise ValueError('UQpy: `n_evecs` must be larger than or equal to one.')
+                raise ValueError("UQpy: `n_evecs` must be larger than or equal to one.")
         else:
-            raise TypeError('UQpy: `n_evecs` must be integer.')
+            raise TypeError("UQpy: `n_evecs` must be integer.")
 
         if not isinstance(sparse, bool):
-            raise TypeError('UQpy: `sparse` must be a boolean variable.')
+            raise TypeError("UQpy: `sparse` must be a boolean variable.")
         elif sparse is True:
             if isinstance(k_neighbors, int):
                 if k_neighbors < 1:
-                    raise ValueError('UQpy: `k_neighbors` must be larger than or equal to one.')
+                    raise ValueError(
+                        "UQpy: `k_neighbors` must be larger than or equal to one."
+                    )
             else:
-                raise TypeError('UQpy: `k_neighbors` must be integer.')
+                raise TypeError("UQpy: `k_neighbors` must be integer.")
 
     def mapping(self, data=None, epsilon=None):
 
@@ -173,32 +186,35 @@ class DiffusionMaps:
         k_neighbors = self.k_neighbors
 
         if data is None and not isinstance(self.kernel_object, Grassmann):
-            raise TypeError('UQpy: Data cannot be NoneType.')
+            raise TypeError("UQpy: Data cannot be NoneType.")
 
         if isinstance(self.kernel_object, Grassmann):
 
             if self.kernel_grassmann is None:
-                raise ValueError('UQpy: kernel_grassmann is not provided.')
+                raise ValueError("UQpy: kernel_grassmann is not provided.")
 
-            if self.kernel_grassmann == 'left':
+            if self.kernel_grassmann == "left":
                 kernel_matrix = self.kernel_object.kernel(self.kernel_object.psi)
-            elif self.kernel_grassmann == 'right':
+            elif self.kernel_grassmann == "right":
                 kernel_matrix = self.kernel_object.kernel(self.kernel_object.phi)
-            elif self.kernel_grassmann == 'sum':
+            elif self.kernel_grassmann == "sum":
                 kernel_psi, kernel_phi = self.kernel_object.kernel()
                 kernel_matrix = kernel_psi + kernel_phi
-            elif self.kernel_grassmann == 'prod':
+            elif self.kernel_grassmann == "prod":
                 kernel_psi, kernel_phi = self.kernel_object.kernel()
                 kernel_matrix = kernel_psi * kernel_phi
             else:
-                raise ValueError('UQpy: the provided kernel_grassmann is not valid.')
+                raise ValueError("UQpy: the provided kernel_grassmann is not valid.")
 
         elif self.kernel_object == DiffusionMaps.gaussian_kernel:
             kernel_matrix = self.kernel_object(self, data=data, epsilon=epsilon)
-        elif callable(self.kernel_object) and self.kernel_object != DiffusionMaps.gaussian_kernel:
+        elif (
+            callable(self.kernel_object)
+            and self.kernel_object != DiffusionMaps.gaussian_kernel
+        ):
             kernel_matrix = self.kernel_object(data=data)
         else:
-            raise TypeError('UQpy: Not valid type for kernel_object')
+            raise TypeError("UQpy: Not valid type for kernel_object")
 
         n = np.shape(kernel_matrix)[0]
         if sparse:
@@ -212,7 +228,9 @@ class DiffusionMaps:
 
         d_star, d_star_inv = self.__d_matrix(l_star, 1.0)
         if sparse:
-            d_star_invd = sps.spdiags(d_star_inv, 0, d_star_inv.shape[0], d_star_inv.shape[0])
+            d_star_invd = sps.spdiags(
+                d_star_inv, 0, d_star_inv.shape[0], d_star_inv.shape[0]
+            )
         else:
             d_star_invd = np.diag(d_star_inv)
 
@@ -220,7 +238,7 @@ class DiffusionMaps:
 
         # Find the eigenvalues and eigenvectors of Ps.
         if sparse:
-            evals, evecs = spsl.eigs(transition_matrix, k=(n_evecs + 1), which='LR')
+            evals, evecs = spsl.eigs(transition_matrix, k=(n_evecs + 1), which="LR")
         else:
             evals, evecs = np.linalg.eig(transition_matrix)
 
@@ -276,7 +294,7 @@ class DiffusionMaps:
         # Compute the pairwise distances.
         if len(np.shape(data)) == 2:
             # Set of 1-D arrays
-            distance_pairs = sd.pdist(data, 'euclidean')
+            distance_pairs = sd.pdist(data, "euclidean")
         elif len(np.shape(data)) == 3:
             # Set of 2-D arrays
             # Check arguments: verify the consistency of input arguments.
@@ -292,11 +310,13 @@ class DiffusionMaps:
                 x0 = data[ii]
                 x1 = data[jj]
 
-                distance = np.linalg.norm(x0 - x1, 'fro')
+                distance = np.linalg.norm(x0 - x1, "fro")
 
                 distance_pairs.append(distance)
         else:
-            raise TypeError('UQpy: The size of the input data is not consistent with this method.')
+            raise TypeError(
+                "UQpy: The size of the input data is not consistent with this method."
+            )
 
         if epsilon is None:
             # Compute a suitable episilon when it is not provided by the user.
@@ -340,7 +360,9 @@ class DiffusionMaps:
             idx = _nn_coord(vec, k_neighbors)
             kernel_matrix[i, idx] = 0
             if sum(kernel_matrix[i, :]) <= 0:
-                raise ValueError('UQpy: Consider increasing `k_neighbors` to have a connected graph.')
+                raise ValueError(
+                    "UQpy: Consider increasing `k_neighbors` to have a connected graph."
+                )
 
         sparse_kernel_matrix = sps.csc_matrix(kernel_matrix)
 

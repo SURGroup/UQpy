@@ -21,15 +21,30 @@ class DelaunaySTS(STS):
     **Methods:**
 
     """
-    def __init__(self, dist_object, strata_object, nsamples_per_stratum=1, nsamples=None, random_state=None,
-                 verbose=False):
+
+    def __init__(
+        self,
+        dist_object,
+        strata_object,
+        nsamples_per_stratum=1,
+        nsamples=None,
+        random_state=None,
+        verbose=False,
+    ):
 
         if not isinstance(strata_object, DelaunayStrata):
-            raise NotImplementedError("UQpy: strata_object must be an object of DelaunayStrata class")
+            raise NotImplementedError(
+                "UQpy: strata_object must be an object of DelaunayStrata class"
+            )
 
-        super().__init__(dist_object=dist_object, strata_object=strata_object,
-                         nsamples_per_stratum=nsamples_per_stratum, nsamples=nsamples, random_state=random_state,
-                         verbose=verbose)
+        super().__init__(
+            dist_object=dist_object,
+            strata_object=strata_object,
+            nsamples_per_stratum=nsamples_per_stratum,
+            nsamples=nsamples,
+            random_state=random_state,
+            verbose=verbose,
+        )
 
     def create_samplesu01(self, nsamples_per_stratum=None, nsamples=None):
         """
@@ -40,15 +55,25 @@ class DelaunaySTS(STS):
 
         samples_in_strata, weights = [], []
         count = 0
-        for simplex in self.strata_object.delaunay.simplices:  # extract simplices from Delaunay triangulation
-            samples_temp = Simplex(nodes=self.strata_object.delaunay.points[simplex],
-                                   nsamples=int(self.nsamples_per_stratum[count]), random_state=self.random_state)
+        for (
+            simplex
+        ) in (
+            self.strata_object.delaunay.simplices
+        ):  # extract simplices from Delaunay triangulation
+            samples_temp = Simplex(
+                nodes=self.strata_object.delaunay.points[simplex],
+                nsamples=int(self.nsamples_per_stratum[count]),
+                random_state=self.random_state,
+            )
             samples_in_strata.append(samples_temp.samples)
             if int(self.nsamples_per_stratum[count]) != 0:
                 weights.extend(
-                    [self.strata_object.volume[count] / self.nsamples_per_stratum[count]] * int(
-                        self.nsamples_per_stratum[
-                            count]))
+                    [
+                        self.strata_object.volume[count]
+                        / self.nsamples_per_stratum[count]
+                    ]
+                    * int(self.nsamples_per_stratum[count])
+                )
             else:
                 weights.extend([0] * int(self.nsamples_per_stratum[count]))
             count = count + 1

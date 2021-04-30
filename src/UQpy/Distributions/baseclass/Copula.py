@@ -76,13 +76,16 @@ class Copula:
 
         No outputs, this code raises errors if necessary.
     """
+
     def __init__(self, order_params=None, **kwargs):
         self.params = kwargs
         self.order_params = order_params
         if self.order_params is None:
             self.order_params = tuple(kwargs.keys())
         if len(self.order_params) != len(self.params):
-            raise ValueError('Inconsistent dimensions between order_params tuple and params dictionary.')
+            raise ValueError(
+                "Inconsistent dimensions between order_params tuple and params dictionary."
+            )
 
     def get_params(self):
         return self.params
@@ -90,5 +93,5 @@ class Copula:
     def update_params(self, **kwargs):
         for key in kwargs.keys():
             if key not in self.params.keys():
-                raise ValueError('Wrong parameter name.')
+                raise ValueError("Wrong parameter name.")
             self.params[key] = kwargs[key]

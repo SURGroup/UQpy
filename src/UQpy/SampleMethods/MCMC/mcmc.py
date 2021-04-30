@@ -1,6 +1,7 @@
 import numpy as np
 from UQpy.Distributions import Distribution
 
+
 class MCMC:
     """
     Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
@@ -99,29 +100,49 @@ class MCMC:
 
     **Methods:**
     """
+
     # Last Modified: 10/05/20 by Audrey Olivier
 
-    def __init__(self, dimension=None, pdf_target=None, log_pdf_target=None, args_target=None, seed=None, nburn=0,
-                 jump=1, nchains=None, save_log_pdf=False, verbose=False, concat_chains=True, random_state=None):
+    def __init__(
+        self,
+        dimension=None,
+        pdf_target=None,
+        log_pdf_target=None,
+        args_target=None,
+        seed=None,
+        nburn=0,
+        jump=1,
+        nchains=None,
+        save_log_pdf=False,
+        verbose=False,
+        concat_chains=True,
+        random_state=None,
+    ):
 
         if not (isinstance(nburn, int) and nburn >= 0):
-            raise TypeError('UQpy: nburn should be an integer >= 0')
+            raise TypeError("UQpy: nburn should be an integer >= 0")
         if not (isinstance(jump, int) and jump >= 1):
-            raise TypeError('UQpy: jump should be an integer >= 1')
+            raise TypeError("UQpy: jump should be an integer >= 1")
         self.nburn, self.jump = nburn, jump
         self.seed = self._preprocess_seed(seed=seed, dim=dimension, nchains=nchains)
         self.nchains, self.dimension = self.seed.shape
 
         # Check target pdf
-        self.evaluate_log_target, self.evaluate_log_target_marginals = self._preprocess_target(
-            pdf_=pdf_target, log_pdf_=log_pdf_target, args=args_target)
+        (
+            self.evaluate_log_target,
+            self.evaluate_log_target_marginals,
+        ) = self._preprocess_target(
+            pdf_=pdf_target, log_pdf_=log_pdf_target, args=args_target
+        )
         self.save_log_pdf = save_log_pdf
         self.concat_chains = concat_chains
         self.random_state = random_state
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            raise TypeError(
+                "UQpy: random_state must be None, an int or an np.random.RandomState object."
+            )
         self.verbose = verbose
 
         self.log_pdf_target = log_pdf_target
@@ -131,9 +152,11 @@ class MCMC:
         # Initialize a few more variables
         self.samples = None
         self.log_pdf_values = None
-        self.acceptance_rate = [0.] * self.nchains
+        self.acceptance_rate = [0.0] * self.nchains
         self.nsamples, self.nsamples_per_chain = 0, 0
-        self.niterations = 0  # total nb of iterations, grows if you call run several times
+        self.niterations = (
+            0  # total nb of iterations, grows if you call run several times
+        )
 
     def run(self, nsamples=None, nsamples_per_chain=None):
         """
@@ -155,29 +178,42 @@ class MCMC:
 
         """
         # Initialize the runs: allocate space for the new samples and log pdf values
-        final_nsamples, final_nsamples_per_chain, current_state, current_log_pdf = self._initialize_samples(
-            nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
+        (
+            final_nsamples,
+            final_nsamples_per_chain,
+            current_state,
+            current_log_pdf,
+        ) = self._initialize_samples(
+            nsamples=nsamples, nsamples_per_chain=nsamples_per_chain
+        )
 
         if self.verbose:
-            print('UQpy: Running MCMC...')
+            print("UQpy: Running MCMC...")
 
         # Run nsims iterations of the MCMC algorithm, starting at current_state
         while self.nsamples_per_chain < final_nsamples_per_chain:
             # update the total number of iterations
             self.niterations += 1
             # run iteration
-            current_state, current_log_pdf = self.run_one_iteration(current_state, current_log_pdf)
+            current_state, current_log_pdf = self.run_one_iteration(
+                current_state, current_log_pdf
+            )
             # Update the chain, only if burn-in is over and the sample is not being jumped over
             # also increase the current number of samples and samples_per_chain
-            if self.niterations > self.nburn and (self.niterations - self.nburn) % self.jump == 0:
+            if (
+                self.niterations > self.nburn
+                and (self.niterations - self.nburn) % self.jump == 0
+            ):
                 self.samples[self.nsamples_per_chain, :, :] = current_state.copy()
                 if self.save_log_pdf:
-                    self.log_pdf_values[self.nsamples_per_chain, :] = current_log_pdf.copy()
+                    self.log_pdf_values[
+                        self.nsamples_per_chain, :
+                    ] = current_log_pdf.copy()
                 self.nsamples_per_chain += 1
                 self.nsamples += self.nchains
 
         if self.verbose:
-            print('UQpy: MCMC run successfully !')
+            print("UQpy: MCMC run successfully !")
 
         # Concatenate chains maybe
         if self.concat_chains:
@@ -224,9 +260,9 @@ class MCMC:
         No input / output.
 
         """
-        self.samples = self.samples.reshape((-1, self.dimension), order='C')
+        self.samples = self.samples.reshape((-1, self.dimension), order="C")
         if self.save_log_pdf:
-            self.log_pdf_values = self.log_pdf_values.reshape((-1, ), order='C')
+            self.log_pdf_values = self.log_pdf_values.reshape((-1,), order="C")
         return None
 
     def _unconcatenate_chains(self):
@@ -239,9 +275,13 @@ class MCMC:
         No input / output.
 
         """
-        self.samples = self.samples.reshape((-1, self.nchains, self.dimension), order='C')
+        self.samples = self.samples.reshape(
+            (-1, self.nchains, self.dimension), order="C"
+        )
         if self.save_log_pdf:
-            self.log_pdf_values = self.log_pdf_values.reshape((-1, self.nchains), order='C')
+            self.log_pdf_values = self.log_pdf_values.reshape(
+                (-1, self.nchains), order="C"
+            )
         return None
 
     def _initialize_samples(self, nsamples, nsamples_per_chain):
@@ -265,26 +305,31 @@ class MCMC:
 
         """
         if ((nsamples is not None) and (nsamples_per_chain is not None)) or (
-                nsamples is None and nsamples_per_chain is None):
-            raise ValueError('UQpy: Either nsamples or nsamples_per_chain must be provided (not both)')
+            nsamples is None and nsamples_per_chain is None
+        ):
+            raise ValueError(
+                "UQpy: Either nsamples or nsamples_per_chain must be provided (not both)"
+            )
         if nsamples_per_chain is not None:
             if not (isinstance(nsamples_per_chain, int) and nsamples_per_chain >= 0):
-                raise TypeError('UQpy: nsamples_per_chain must be an integer >= 0.')
+                raise TypeError("UQpy: nsamples_per_chain must be an integer >= 0.")
             nsamples = int(nsamples_per_chain * self.nchains)
         else:
             if not (isinstance(nsamples, int) and nsamples >= 0):
-                raise TypeError('UQpy: nsamples must be an integer >= 0.')
+                raise TypeError("UQpy: nsamples must be an integer >= 0.")
             nsamples_per_chain = int(np.ceil(nsamples / self.nchains))
             nsamples = int(nsamples_per_chain * self.nchains)
 
-        if self.samples is None:    # very first call of run, set current_state as the seed and initialize self.samples
+        if (
+            self.samples is None
+        ):  # very first call of run, set current_state as the seed and initialize self.samples
             self.samples = np.zeros((nsamples_per_chain, self.nchains, self.dimension))
             if self.save_log_pdf:
                 self.log_pdf_values = np.zeros((nsamples_per_chain, self.nchains))
             current_state = np.zeros_like(self.seed)
             np.copyto(current_state, self.seed)
             current_log_pdf = self.evaluate_log_target(current_state)
-            if self.nburn == 0:    # if nburn is 0, save the seed, run one iteration less 
+            if self.nburn == 0:  # if nburn is 0, save the seed, run one iteration less
                 self.samples[0, :, :] = current_state
                 if self.save_log_pdf:
                     self.log_pdf_values[0, :] = current_log_pdf
@@ -292,16 +337,23 @@ class MCMC:
                 self.nsamples += self.nchains
             final_nsamples, final_nsamples_per_chain = nsamples, nsamples_per_chain
 
-        else:    # fetch previous samples to start the new run, current state is last saved sample
-            if len(self.samples.shape) == 2:   # the chains were previously concatenated
+        else:  # fetch previous samples to start the new run, current state is last saved sample
+            if len(self.samples.shape) == 2:  # the chains were previously concatenated
                 self._unconcatenate_chains()
             current_state = self.samples[-1]
             current_log_pdf = self.evaluate_log_target(current_state)
             self.samples = np.concatenate(
-                [self.samples, np.zeros((nsamples_per_chain, self.nchains, self.dimension))], axis=0)
+                [
+                    self.samples,
+                    np.zeros((nsamples_per_chain, self.nchains, self.dimension)),
+                ],
+                axis=0,
+            )
             if self.save_log_pdf:
                 self.log_pdf_values = np.concatenate(
-                    [self.log_pdf_values, np.zeros((nsamples_per_chain, self.nchains))], axis=0)
+                    [self.log_pdf_values, np.zeros((nsamples_per_chain, self.nchains))],
+                    axis=0,
+                )
             final_nsamples = nsamples + self.nsamples
             final_nsamples_per_chain = nsamples_per_chain + self.nsamples_per_chain
 
@@ -319,8 +371,10 @@ class MCMC:
           separately).
 
         """
-        self.acceptance_rate = [na / self.niterations + (self.niterations - 1) / self.niterations * a
-                                for (na, a) in zip(new_accept, self.acceptance_rate)]
+        self.acceptance_rate = [
+            na / self.niterations + (self.niterations - 1) / self.niterations * a
+            for (na, a) in zip(new_accept, self.acceptance_rate)
+        ]
 
     @staticmethod
     def _preprocess_target(log_pdf_, pdf_, args):
@@ -350,45 +404,77 @@ class MCMC:
             if callable(log_pdf_):
                 if args is None:
                     args = ()
-                evaluate_log_pdf = (lambda x: log_pdf_(x, *args))
+                evaluate_log_pdf = lambda x: log_pdf_(x, *args)
                 evaluate_log_pdf_marginals = None
             elif isinstance(log_pdf_, list) and (all(callable(p) for p in log_pdf_)):
                 if args is None:
                     args = [()] * len(log_pdf_)
                 if not (isinstance(args, list) and len(args) == len(log_pdf_)):
-                    raise ValueError('UQpy: When log_pdf_target is a list, args should be a list (of tuples) of same '
-                                     'length.')
+                    raise ValueError(
+                        "UQpy: When log_pdf_target is a list, args should be a list (of tuples) of same "
+                        "length."
+                    )
                 evaluate_log_pdf_marginals = list(
-                    map(lambda i: lambda x: log_pdf_[i](x, *args[i]), range(len(log_pdf_))))
-                evaluate_log_pdf = (lambda x: np.sum(
-                    [log_pdf_[i](x[:, i, np.newaxis], *args[i]) for i in range(len(log_pdf_))]))
+                    map(
+                        lambda i: lambda x: log_pdf_[i](x, *args[i]),
+                        range(len(log_pdf_)),
+                    )
+                )
+                evaluate_log_pdf = lambda x: np.sum(
+                    [
+                        log_pdf_[i](x[:, i, np.newaxis], *args[i])
+                        for i in range(len(log_pdf_))
+                    ]
+                )
             else:
-                raise TypeError('UQpy: log_pdf_target must be a callable or list of callables')
+                raise TypeError(
+                    "UQpy: log_pdf_target must be a callable or list of callables"
+                )
         # pdf is provided
         elif pdf_ is not None:
             if callable(pdf_):
                 if args is None:
                     args = ()
-                evaluate_log_pdf = (lambda x: np.log(np.maximum(pdf_(x, *args), 10 ** (-320) * np.ones((x.shape[0],)))))
+                evaluate_log_pdf = lambda x: np.log(
+                    np.maximum(pdf_(x, *args), 10 ** (-320) * np.ones((x.shape[0],)))
+                )
                 evaluate_log_pdf_marginals = None
             elif isinstance(pdf_, (list, tuple)) and (all(callable(p) for p in pdf_)):
                 if args is None:
                     args = [()] * len(pdf_)
                 if not (isinstance(args, (list, tuple)) and len(args) == len(pdf_)):
-                    raise ValueError('UQpy: When pdf_target is given as a list, args should also be a list of same '
-                                     'length.')
+                    raise ValueError(
+                        "UQpy: When pdf_target is given as a list, args should also be a list of same "
+                        "length."
+                    )
                 evaluate_log_pdf_marginals = list(
-                    map(lambda i: lambda x: np.log(np.maximum(pdf_[i](x, *args[i]),
-                                                              10 ** (-320) * np.ones((x.shape[0],)))),
-                        range(len(pdf_))
-                        ))
-                evaluate_log_pdf = (lambda x: np.sum(
-                    [np.log(np.maximum(pdf_[i](x[:, i, np.newaxis], *args[i]), 10**(-320)*np.ones((x.shape[0],))))
-                     for i in range(len(log_pdf_))]))
+                    map(
+                        lambda i: lambda x: np.log(
+                            np.maximum(
+                                pdf_[i](x, *args[i]),
+                                10 ** (-320) * np.ones((x.shape[0],)),
+                            )
+                        ),
+                        range(len(pdf_)),
+                    )
+                )
+                evaluate_log_pdf = lambda x: np.sum(
+                    [
+                        np.log(
+                            np.maximum(
+                                pdf_[i](x[:, i, np.newaxis], *args[i]),
+                                10 ** (-320) * np.ones((x.shape[0],)),
+                            )
+                        )
+                        for i in range(len(log_pdf_))
+                    ]
+                )
             else:
-                raise TypeError('UQpy: pdf_target must be a callable or list of callables')
+                raise TypeError(
+                    "UQpy: pdf_target must be a callable or list of callables"
+                )
         else:
-            raise ValueError('UQpy: log_pdf_target or pdf_target should be provided.')
+            raise ValueError("UQpy: log_pdf_target or pdf_target should be provided.")
         return evaluate_log_pdf, evaluate_log_pdf_marginals
 
     @staticmethod
@@ -411,18 +497,24 @@ class MCMC:
         """
         if seed is None:
             if dim is None or nchains is None:
-                raise ValueError('UQpy: Either `seed` or `dimension` and `nchains` must be provided.')
+                raise ValueError(
+                    "UQpy: Either `seed` or `dimension` and `nchains` must be provided."
+                )
             seed = np.zeros((nchains, dim))
         else:
             seed = np.atleast_1d(seed)
             if len(seed.shape) == 1:
                 seed = np.reshape(seed, (1, -1))
             elif len(seed.shape) > 2:
-                raise ValueError('UQpy: Input seed should be an array of shape (dimension, ) or (nchains, dimension).')
+                raise ValueError(
+                    "UQpy: Input seed should be an array of shape (dimension, ) or (nchains, dimension)."
+                )
             if dim is not None and seed.shape[1] != dim:
-                raise ValueError('UQpy: Wrong dimensions between seed and dimension.')
+                raise ValueError("UQpy: Wrong dimensions between seed and dimension.")
             if nchains is not None and seed.shape[0] != nchains:
-                raise ValueError('UQpy: The number of chains and the seed shape are inconsistent.')
+                raise ValueError(
+                    "UQpy: The number of chains and the seed shape are inconsistent."
+                )
         return seed
 
     @staticmethod
@@ -440,12 +532,14 @@ class MCMC:
 
         """
         if not isinstance(proposal, Distribution):
-            raise TypeError('UQpy: Proposal should be a Distribution object')
-        if not hasattr(proposal, 'rvs'):
-            raise AttributeError('UQpy: The proposal should have an rvs method')
-        if not hasattr(proposal, 'log_pdf'):
-            if not hasattr(proposal, 'pdf'):
-                raise AttributeError('UQpy: The proposal should have a log_pdf or pdf method')
-            proposal.log_pdf = lambda x: np.log(np.maximum(proposal.pdf(x), 10 ** (-320) * np.ones((x.shape[0],))))
-
-
+            raise TypeError("UQpy: Proposal should be a Distribution object")
+        if not hasattr(proposal, "rvs"):
+            raise AttributeError("UQpy: The proposal should have an rvs method")
+        if not hasattr(proposal, "log_pdf"):
+            if not hasattr(proposal, "pdf"):
+                raise AttributeError(
+                    "UQpy: The proposal should have a log_pdf or pdf method"
+                )
+            proposal.log_pdf = lambda x: np.log(
+                np.maximum(proposal.pdf(x), 10 ** (-320) * np.ones((x.shape[0],)))
+            )

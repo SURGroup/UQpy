@@ -26,6 +26,7 @@ class Binomial(DistributionDiscrete1D):
 
     * ``cdf``, ``pmf``, ``log_pmf``, ``icdf``, ``rvs``, ``moments``.
     """
-    def __init__(self, n, p, loc=0.):
-        super().__init__(n=n, p=p, loc=loc, order_params=('n', 'p', 'loc'))
+
+    def __init__(self, n, p, loc=0.0):
+        super().__init__(n=n, p=p, loc=loc, order_params=("n", "p", "loc"))
         self._construct_from_scipy(scipy_name=stats.binom)

@@ -112,8 +112,13 @@ class Polynomials:
         m = np.zeros((degree, degree))
         for i in range(degree):
             for j in range(degree):
-                int_res = integrate.quad(lambda k: p[i](k) * p[j](k) * pdf_st(k),
-                                         a, b, epsabs=1e-15, epsrel=1e-15)
+                int_res = integrate.quad(
+                    lambda k: p[i](k) * p[j](k) * pdf_st(k),
+                    a,
+                    b,
+                    epsabs=1e-15,
+                    epsrel=1e-15,
+                )
                 m[i, j] = int_res[0]
             pol_normed.append(p[i] / np.sqrt(m[i, i]))
 
@@ -128,28 +133,28 @@ class Polynomials:
         """
         Returns a `float` with the mean of the UQpy distribution object.
         """
-        m = self.dist_object.moments(moments2return='m')
+        m = self.dist_object.moments(moments2return="m")
         return m
 
     def get_std(self):
         """
         Returns a `float` with the variance of the UQpy distribution object.
         """
-        s = np.sqrt(self.dist_object.moments(moments2return='v'))
+        s = np.sqrt(self.dist_object.moments(moments2return="v"))
         return s
 
     def location(self):
         """
         Returns a `float` with the location of the UQpy distribution object.
         """
-        m = self.dist_object.__dict__['params']['loc']
+        m = self.dist_object.__dict__["params"]["loc"]
         return m
 
     def scale(self):
         """
         Returns a `float` with the scale of the UQpy distribution object.
         """
-        s = self.dist_object.__dict__['params']['scale']
+        s = self.dist_object.__dict__["params"]["scale"]
         return s
 
     def evaluate(self, x):
@@ -171,15 +176,17 @@ class Polynomials:
         if not type(self.dist_object) == JointInd:
             if type(self.dist_object) == Normal:
                 from .polynomials.Hermite import Hermite
+
                 return Hermite(self.degree, self.dist_object).get_polys(x)[0]
                 # design matrix (data x polynomials)
 
             if type(self.dist_object) == Uniform:
                 from .polynomials.Legendre import Legendre
+
                 return Legendre(self.degree, self.dist_object).get_polys(x)[0]
 
             else:
-                raise TypeError('Warning: This distribution is not supported.')
+                raise TypeError("Warning: This distribution is not supported.")
 
         else:
 
@@ -188,16 +195,24 @@ class Polynomials:
 
                 if isinstance(self.dist_object.marginals[i], Normal):
                     from .polynomials.Hermite import Hermite
-                    a.append(Hermite(self.degree,
-                                     self.dist_object.marginals[i]).get_polys(x[:, i])[0])
+
+                    a.append(
+                        Hermite(self.degree, self.dist_object.marginals[i]).get_polys(
+                            x[:, i]
+                        )[0]
+                    )
 
                 elif isinstance(self.dist_object.marginals[i], Uniform):
                     from .polynomials.Legendre import Legendre
-                    a.append(Legendre(self.degree,
-                                      self.dist_object.marginals[i]).get_polys(x[:, i])[0])
+
+                    a.append(
+                        Legendre(self.degree, self.dist_object.marginals[i]).get_polys(
+                            x[:, i]
+                        )[0]
+                    )
 
                 else:
-                    raise TypeError('Warning: This distribution is not supported.')
+                    raise TypeError("Warning: This distribution is not supported.")
 
             # Compute all possible valid combinations
             m = len(a)  # number of variables

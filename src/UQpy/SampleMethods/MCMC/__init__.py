@@ -4,6 +4,3 @@ from UQpy.SampleMethods.MCMC.Stretch import Stretch
 from UQpy.SampleMethods.MCMC.DRAM import DRAM
 from UQpy.SampleMethods.MCMC.DREAM import DREAM
 from UQpy.SampleMethods.MCMC.mcmc import MCMC
-
-
-

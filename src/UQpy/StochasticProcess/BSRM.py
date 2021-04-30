@@ -8,6 +8,7 @@ from UQpy.Utilities import *
 #                                        Bi-spectral Representation Method
 ########################################################################################################################
 
+
 class BSRM:
     """
     A class to simulate non-Gaussian stochastic processes from a given power spectrum and bispectrum based on the 3-rd
@@ -106,8 +107,19 @@ class BSRM:
     **Methods**
     """
 
-    def __init__(self, nsamples, power_spectrum, bispectrum, time_interval, frequency_interval, number_time_intervals,
-                 number_frequency_intervals, case='uni', random_state=None, verbose=False):
+    def __init__(
+        self,
+        nsamples,
+        power_spectrum,
+        bispectrum,
+        time_interval,
+        frequency_interval,
+        number_time_intervals,
+        number_frequency_intervals,
+        case="uni",
+        random_state=None,
+        verbose=False,
+    ):
         self.nsamples = nsamples
         self.number_frequency_intervals = np.array(number_frequency_intervals)
         self.number_time_intervals = np.array(number_time_intervals)
@@ -118,15 +130,19 @@ class BSRM:
         self.bispectrum = bispectrum
 
         # Error checks
-        t_u = 2 * np.pi / (2 * self.number_frequency_intervals * self.frequency_interval)
+        t_u = (
+            2 * np.pi / (2 * self.number_frequency_intervals * self.frequency_interval)
+        )
         if (self.time_interval > t_u).any():
-            raise RuntimeError('UQpy: Aliasing might occur during execution')
+            raise RuntimeError("UQpy: Aliasing might occur during execution")
 
         self.random_state = random_state
         if isinstance(self.random_state, int):
             np.random.seed(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            raise TypeError(
+                "UQpy: random_state must be None, an int or an np.random.RandomState object."
+            )
 
         self.b_ampl = np.absolute(bispectrum)
         self.b_real = np.real(bispectrum)
@@ -141,17 +157,17 @@ class BSRM:
         self.verbose = verbose
 
         if self.number_of_dimensions == len(self.power_spectrum.shape):
-            self.case = 'uni'
+            self.case = "uni"
         else:
             self.number_of_variables = self.power_spectrum.shape[0]
-            self.case = 'multi'
+            self.case = "multi"
 
         if self.nsamples is not None:
             self.run(nsamples=self.nsamples)
 
     def _compute_bicoherence_uni(self):
         if self.verbose:
-            print('UQpy: Stochastic Process: Computing the partial bicoherence values.')
+            print("UQpy: Stochastic Process: Computing the partial bicoherence values.")
         self.bc2 = np.zeros_like(self.b_real)
         self.pure_power_sepctrum = np.zeros_like(self.power_spectrum)
         self.sum_bc2 = np.zeros_like(self.power_spectrum)
@@ -174,52 +190,86 @@ class BSRM:
             self.pure_power_sepctrum[:, :, 0] = self.power_spectrum[:, :, 0]
             self.pure_power_sepctrum[:, 0, 1] = self.power_spectrum[:, :, 1]
 
-        self.ranges = [range(self.number_frequency_intervals[i]) for i in range(self.number_of_dimensions)]
+        self.ranges = [
+            range(self.number_frequency_intervals[i])
+            for i in range(self.number_of_dimensions)
+        ]
 
         for i in itertools.product(*self.ranges):
             wk = np.array(i)
-            for j in itertools.product(*[range(np.int32(k)) for k in np.ceil((wk + 1) / 2)]):
+            for j in itertools.product(
+                *[range(np.int32(k)) for k in np.ceil((wk + 1) / 2)]
+            ):
                 wj = np.array(j)
                 wi = wk - wj
-                if self.b_ampl[(*wi, *wj)] > 0 and self.pure_power_sepctrum[(*wi, *[])] * \
-                        self.pure_power_sepctrum[(*wj, *[])] != 0:
-                    self.bc2[(*wi, *wj)] = self.b_ampl[(*wi, *wj)] ** 2 / (
-                            self.pure_power_sepctrum[(*wi, *[])] * self.pure_power_sepctrum[(*wj, *[])] *
-                            self.power_spectrum[(*wk, *[])]) * self.frequency_interval ** self.number_of_dimensions
-                    self.sum_bc2[(*wk, *[])] = self.sum_bc2[(*wk, *[])] + self.bc2[(*wi, *wj)]
+                if (
+                    self.b_ampl[(*wi, *wj)] > 0
+                    and self.pure_power_sepctrum[(*wi, *[])]
+                    * self.pure_power_sepctrum[(*wj, *[])]
+                    != 0
+                ):
+                    self.bc2[(*wi, *wj)] = (
+                        self.b_ampl[(*wi, *wj)] ** 2
+                        / (
+                            self.pure_power_sepctrum[(*wi, *[])]
+                            * self.pure_power_sepctrum[(*wj, *[])]
+                            * self.power_spectrum[(*wk, *[])]
+                        )
+                        * self.frequency_interval ** self.number_of_dimensions
+                    )
+                    self.sum_bc2[(*wk, *[])] = (
+                        self.sum_bc2[(*wk, *[])] + self.bc2[(*wi, *wj)]
+                    )
                 else:
                     self.bc2[(*wi, *wj)] = 0
             if self.sum_bc2[(*wk, *[])] > 1:
-                print('UQpy: Stochastic Process: Results may not be as expected as sum of partial bicoherences is '
-                      'greater than 1')
-                for j in itertools.product(*[range(k) for k in np.ceil((wk + 1) / 2, dtype=np.int32)]):
+                print(
+                    "UQpy: Stochastic Process: Results may not be as expected as sum of partial bicoherences is "
+                    "greater than 1"
+                )
+                for j in itertools.product(
+                    *[range(k) for k in np.ceil((wk + 1) / 2, dtype=np.int32)]
+                ):
                     wj = np.array(j)
                     wi = wk - wj
-                    self.bc2[(*wi, *wj)] = self.bc2[(*wi, *wj)] / self.sum_bc2[(*wk, *[])]
+                    self.bc2[(*wi, *wj)] = (
+                        self.bc2[(*wi, *wj)] / self.sum_bc2[(*wk, *[])]
+                    )
                 self.sum_bc2[(*wk, *[])] = 1
-            self.pure_power_sepctrum[(*wk, *[])] = self.power_spectrum[(*wk, *[])] * (1 - self.sum_bc2[(*wk, *[])])
+            self.pure_power_sepctrum[(*wk, *[])] = self.power_spectrum[(*wk, *[])] * (
+                1 - self.sum_bc2[(*wk, *[])]
+            )
 
     def _simulate_bsrm_uni(self, phi):
-        coeff = np.sqrt((2 ** (
-                self.number_of_dimensions + 1)) * self.power_spectrum *
-                        self.frequency_interval ** self.number_of_dimensions)
+        coeff = np.sqrt(
+            (2 ** (self.number_of_dimensions + 1))
+            * self.power_spectrum
+            * self.frequency_interval ** self.number_of_dimensions
+        )
         phi_e = np.exp(phi * 1.0j)
         biphase_e = np.exp(self.biphase * 1.0j)
         b = np.sqrt(1 - self.sum_bc2) * phi_e
         bc = np.sqrt(self.bc2)
 
-        phi_e = np.einsum('i...->...i', phi_e)
-        b = np.einsum('i...->...i', b)
+        phi_e = np.einsum("i...->...i", phi_e)
+        b = np.einsum("i...->...i", b)
 
         for i in itertools.product(*self.ranges):
             wk = np.array(i)
-            for j in itertools.product(*[range(np.int32(k)) for k in np.ceil((wk + 1) / 2)]):
+            for j in itertools.product(
+                *[range(np.int32(k)) for k in np.ceil((wk + 1) / 2)]
+            ):
                 wj = np.array(j)
                 wi = wk - wj
-                b[(*wk, *[])] = b[(*wk, *[])] + bc[(*wi, *wj)] * biphase_e[(*wi, *wj)] * phi_e[(*wi, *[])] * \
-                                phi_e[(*wj, *[])]
+                b[(*wk, *[])] = (
+                    b[(*wk, *[])]
+                    + bc[(*wi, *wj)]
+                    * biphase_e[(*wi, *wj)]
+                    * phi_e[(*wi, *[])]
+                    * phi_e[(*wj, *[])]
+                )
 
-        b = np.einsum('...i->i...', b)
+        b = np.einsum("...i->i...", b)
         b = b * coeff
         b[np.isnan(b)] = 0
         samples = np.fft.fftn(b, self.number_time_intervals)
@@ -251,23 +301,37 @@ class BSRM:
         """
 
         if nsamples is None:
-            raise ValueError('UQpy: Stochastic Process: Number of samples must be defined.')
+            raise ValueError(
+                "UQpy: Stochastic Process: Number of samples must be defined."
+            )
         if not isinstance(nsamples, int):
-            raise ValueError('UQpy: Stochastic Process: nsamples should be an integer.')
+            raise ValueError("UQpy: Stochastic Process: nsamples should be an integer.")
 
         if self.verbose:
-            print('UQpy: Stochastic Process: Running 3rd-order Spectral Representation Method.')
+            print(
+                "UQpy: Stochastic Process: Running 3rd-order Spectral Representation Method."
+            )
 
         samples = None
         phi = None
 
-        if self.case == 'uni':
+        if self.case == "uni":
             if self.verbose:
-                print('UQpy: Stochastic Process: Starting simulation of uni-variate Stochastic Processes.')
-                print('UQpy: The number of dimensions is :', self.number_of_dimensions)
-            phi = np.random.uniform(
-                size=np.append(self.nsamples, np.ones(self.number_of_dimensions, dtype=np.int32)
-                               * self.number_frequency_intervals)) * 2 * np.pi
+                print(
+                    "UQpy: Stochastic Process: Starting simulation of uni-variate Stochastic Processes."
+                )
+                print("UQpy: The number of dimensions is :", self.number_of_dimensions)
+            phi = (
+                np.random.uniform(
+                    size=np.append(
+                        self.nsamples,
+                        np.ones(self.number_of_dimensions, dtype=np.int32)
+                        * self.number_frequency_intervals,
+                    )
+                )
+                * 2
+                * np.pi
+            )
             samples = self._simulate_bsrm_uni(phi)
 
         if self.samples is None:
@@ -278,4 +342,6 @@ class BSRM:
             self.phi = np.concatenate((self.phi, phi), axis=0)
 
         if self.verbose:
-            print('UQpy: Stochastic Process: 3rd-order Spectral Representation Method Complete.')
+            print(
+                "UQpy: Stochastic Process: 3rd-order Spectral Representation Method Complete."
+            )

@@ -39,4 +39,3 @@ from UQpy.Inference.InferenceModel import *
 from UQpy.Inference.InfoModelSelection import *
 from UQpy.Inference.BayesParameterEstimation import *
 from UQpy.Inference.MLEstimation import *
-

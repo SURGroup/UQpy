@@ -8,6 +8,7 @@ from UQpy.Utilities import *
 #                                       Karhunen-Loeve Expansion
 ########################################################################################################################
 
+
 class KLE:
     """
     A class to simulate stochastic processes from a given auto-correlation function based on the Karhunen-Loeve
@@ -52,7 +53,15 @@ class KLE:
 
     # TODO: Test this for non-stationary processes.
 
-    def __init__(self, nsamples, correlation_function, time_interval, threshold=None, random_state=None, verbose=False):
+    def __init__(
+        self,
+        nsamples,
+        correlation_function,
+        time_interval,
+        threshold=None,
+        random_state=None,
+        verbose=False,
+    ):
         self.correlation_function = correlation_function
         self.time_interval = time_interval
         if threshold:
@@ -64,7 +73,9 @@ class KLE:
         if isinstance(self.random_state, int):
             np.random.seed(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            raise TypeError(
+                "UQpy: random_state must be None, an int or an np.random.RandomState object."
+            )
 
         self.verbose = verbose
         self.nsamples = nsamples
@@ -79,7 +90,10 @@ class KLE:
         lam, phi = np.linalg.eig(self.correlation_function)
         lam = np.diag(lam)
         lam = lam.astype(np.float64)
-        samples = np.dot(phi[:, :self.number_eigen_values], np.dot(sqrtm(lam[:self.number_eigen_values]), xi))
+        samples = np.dot(
+            phi[:, : self.number_eigen_values],
+            np.dot(sqrtm(lam[: self.number_eigen_values]), xi),
+        )
         samples = np.real(samples)
         samples = samples.T
         samples = samples[:, np.newaxis]
@@ -110,15 +124,19 @@ class KLE:
         """
 
         if nsamples is None:
-            raise ValueError('UQpy: Stochastic Process: Number of samples must be defined.')
+            raise ValueError(
+                "UQpy: Stochastic Process: Number of samples must be defined."
+            )
         if not isinstance(nsamples, int):
-            raise ValueError('UQpy: Stochastic Process: nsamples should be an integer.')
+            raise ValueError("UQpy: Stochastic Process: nsamples should be an integer.")
 
         if self.verbose:
-            print('UQpy: Stochastic Process: Running Karhunen Loeve Expansion.')
+            print("UQpy: Stochastic Process: Running Karhunen Loeve Expansion.")
 
         if self.verbose:
-            print('UQpy: Stochastic Process: Starting simulation of Stochastic Processes.')
+            print(
+                "UQpy: Stochastic Process: Starting simulation of Stochastic Processes."
+            )
         xi = np.random.normal(size=(self.number_eigen_values, self.nsamples))
         samples = self._simulate(xi)
 
@@ -130,4 +148,4 @@ class KLE:
             self.xi = np.concatenate((self.xi, xi), axis=0)
 
         if self.verbose:
-            print('UQpy: Stochastic Process: Karhunen-Loeve Expansion Complete.')
+            print("UQpy: Stochastic Process: Karhunen-Loeve Expansion Complete.")

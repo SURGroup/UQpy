@@ -44,18 +44,24 @@ class Simplex:
         self.nsamples = nsamples
 
         if self.nodes.shape[0] != self.nodes.shape[1] + 1:
-            raise NotImplementedError("UQpy: Size of simplex (nodes) is not consistent.")
+            raise NotImplementedError(
+                "UQpy: Size of simplex (nodes) is not consistent."
+            )
 
         self.random_state = random_state
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            raise TypeError(
+                "UQpy: random_state must be None, an int or an np.random.RandomState object."
+            )
 
         if nsamples is not None:
-            if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
-                raise NotImplementedError("UQpy: Number of samples to be generated 'nsamples' should be a positive "
-                                          "integer.")
+            if self.nsamples <= 0 or type(self.nsamples).__name__ != "int":
+                raise NotImplementedError(
+                    "UQpy: Number of samples to be generated 'nsamples' should be a positive "
+                    "integer."
+                )
             self.samples = self.run(nsamples=nsamples)
 
     def run(self, nsamples):
@@ -94,12 +100,16 @@ class Simplex:
                         ai = self.nodes[k, j] - self.nodes[k - 1, j]
                         b_.append(ai)
                     ad[j] = np.hstack((self.nodes[0, j], b_))
-                    r[j] = stats.uniform.rvs(loc=0, scale=1, random_state=self.random_state) ** (1 / (dimension - j))
+                    r[j] = stats.uniform.rvs(
+                        loc=0, scale=1, random_state=self.random_state
+                    ) ** (1 / (dimension - j))
                 d = np.cumprod(r)
                 r_ = np.hstack((1, d))
                 sample[i, :] = np.dot(ad, r_)
         else:
             a = min(self.nodes)
             b = max(self.nodes)
-            sample = a + (b - a) * stats.uniform.rvs(size=[self.nsamples, dimension], random_state=self.random_state)
+            sample = a + (b - a) * stats.uniform.rvs(
+                size=[self.nsamples, dimension], random_state=self.random_state
+            )
         return sample

@@ -3,6 +3,7 @@ from UQpy.SampleMethods.Strata import RectangularStrata
 import numpy as np
 import scipy.stats as stats
 
+
 class RectangularSTS(STS):
     """
     Executes Stratified Sampling using Rectangular Stratification.
@@ -27,26 +28,46 @@ class RectangularSTS(STS):
     **Methods:**
 
     """
-    def __init__(self, dist_object, strata_object, nsamples_per_stratum=None, nsamples=None, sts_criterion="random",
-                 verbose=False, random_state=None):
+
+    def __init__(
+        self,
+        dist_object,
+        strata_object,
+        nsamples_per_stratum=None,
+        nsamples=None,
+        sts_criterion="random",
+        verbose=False,
+        random_state=None,
+    ):
         if not isinstance(strata_object, RectangularStrata):
-            raise NotImplementedError("UQpy: strata_object must be an object of RectangularStrata class")
+            raise NotImplementedError(
+                "UQpy: strata_object must be an object of RectangularStrata class"
+            )
 
         self.sts_criterion = sts_criterion
-        if self.sts_criterion not in ['random', 'centered']:
-            raise NotImplementedError("UQpy: Supported sts_criteria: 'random', 'centered'")
+        if self.sts_criterion not in ["random", "centered"]:
+            raise NotImplementedError(
+                "UQpy: Supported sts_criteria: 'random', 'centered'"
+            )
         if nsamples is not None:
-            if self.sts_criterion == 'centered':
+            if self.sts_criterion == "centered":
                 if nsamples != len(strata_object.volume):
-                    raise ValueError("UQpy: 'nsamples' attribute is not consistent with number of seeds for 'centered' "
-                                     "sampling")
+                    raise ValueError(
+                        "UQpy: 'nsamples' attribute is not consistent with number of seeds for 'centered' "
+                        "sampling"
+                    )
         if nsamples_per_stratum is not None:
             if self.sts_criterion == "centered":
                 nsamples_per_stratum = [1] * strata_object.widths.shape[0]
 
-        super().__init__(dist_object=dist_object, strata_object=strata_object,
-                         nsamples_per_stratum=nsamples_per_stratum, nsamples=nsamples, random_state=random_state,
-                         verbose=verbose)
+        super().__init__(
+            dist_object=dist_object,
+            strata_object=strata_object,
+            nsamples_per_stratum=nsamples_per_stratum,
+            nsamples=nsamples,
+            random_state=random_state,
+            verbose=verbose,
+        )
 
     def create_samplesu01(self, nsamples_per_stratum=None, nsamples=None):
         """
@@ -58,20 +79,29 @@ class RectangularSTS(STS):
         samples_in_strata, weights = [], []
 
         for i in range(self.strata_object.seeds.shape[0]):
-            samples_temp = np.zeros([int(self.nsamples_per_stratum[i]), self.strata_object.seeds.shape[1]])
+            samples_temp = np.zeros(
+                [int(self.nsamples_per_stratum[i]), self.strata_object.seeds.shape[1]]
+            )
             for j in range(self.strata_object.seeds.shape[1]):
                 if self.sts_criterion == "random":
-                    samples_temp[:, j] = stats.uniform.rvs(loc=self.strata_object.seeds[i, j],
-                                                           scale=self.strata_object.widths[i, j],
-                                                           random_state=self.random_state,
-                                                           size=int(self.nsamples_per_stratum[i]))
+                    samples_temp[:, j] = stats.uniform.rvs(
+                        loc=self.strata_object.seeds[i, j],
+                        scale=self.strata_object.widths[i, j],
+                        random_state=self.random_state,
+                        size=int(self.nsamples_per_stratum[i]),
+                    )
                 else:
-                    samples_temp[:, j] = self.strata_object.seeds[i, j] + self.strata_object.widths[i, j] / 2.
+                    samples_temp[:, j] = (
+                        self.strata_object.seeds[i, j]
+                        + self.strata_object.widths[i, j] / 2.0
+                    )
             samples_in_strata.append(samples_temp)
 
             if int(self.nsamples_per_stratum[i]) != 0:
                 weights.extend(
-                    [self.strata_object.volume[i] / self.nsamples_per_stratum[i]] * int(self.nsamples_per_stratum[i]))
+                    [self.strata_object.volume[i] / self.nsamples_per_stratum[i]]
+                    * int(self.nsamples_per_stratum[i])
+                )
             else:
                 weights.extend([0] * int(self.nsamples_per_stratum[i]))
 

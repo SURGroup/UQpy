@@ -1,4 +1,6 @@
 import numpy as np
+
+
 class PolyChaosLstsq:
     """
     Class to calculate the PCE coefficients via the least-squares solution to

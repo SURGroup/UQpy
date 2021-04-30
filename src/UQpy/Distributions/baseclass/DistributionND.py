@@ -11,6 +11,7 @@ class DistributionND(Distribution):
     Parent class for multivariate probability distributions.
 
     """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -21,7 +22,7 @@ class DistributionND(Distribution):
         """
         x = np.array(x)
         if len(x.shape) != 2:
-            raise ValueError('Wrong dimension in x.')
+            raise ValueError("Wrong dimension in x.")
         if (d is not None) and (x.shape[1] != d):
-            raise ValueError('Wrong dimension in x.')
+            raise ValueError("Wrong dimension in x.")
         return x

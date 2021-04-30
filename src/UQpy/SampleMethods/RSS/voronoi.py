@@ -25,19 +25,41 @@ class VoronoiRSS(RSS):
     **Methods:**
     """
 
-    def __init__(self, sample_object=None, runmodel_object=None, krig_object=None, local=False, max_train_size=None,
-                 step_size=0.005, qoi_name=None, n_add=1, nsamples=None, random_state=None, verbose=False):
+    def __init__(
+        self,
+        sample_object=None,
+        runmodel_object=None,
+        krig_object=None,
+        local=False,
+        max_train_size=None,
+        step_size=0.005,
+        qoi_name=None,
+        n_add=1,
+        nsamples=None,
+        random_state=None,
+        verbose=False,
+    ):
 
-        if hasattr(sample_object, 'samplesU01'):
+        if hasattr(sample_object, "samplesU01"):
             self.strata_object = VoronoiStrata(seeds=sample_object.samplesU01)
 
         self.mesh = None
         self.mesh_vertices, self.vertices_in_U01 = [], []
         self.points_to_samplesU01, self.points = [], []
 
-        super().__init__(sample_object=sample_object, runmodel_object=runmodel_object, krig_object=krig_object,
-                         local=local, max_train_size=max_train_size, step_size=step_size, qoi_name=qoi_name,
-                         n_add=n_add, nsamples=nsamples, random_state=random_state, verbose=verbose)
+        super().__init__(
+            sample_object=sample_object,
+            runmodel_object=runmodel_object,
+            krig_object=krig_object,
+            local=local,
+            max_train_size=max_train_size,
+            step_size=step_size,
+            qoi_name=qoi_name,
+            n_add=n_add,
+            nsamples=nsamples,
+            random_state=random_state,
+            verbose=verbose,
+        )
 
     def run_rss(self):
         """
@@ -65,19 +87,29 @@ class VoronoiRSS(RSS):
 
         # Primary loop for adding samples and performing refinement.
         for i in range(self.samples.shape[0], self.nsamples, self.n_add):
-            p = min(self.n_add, self.nsamples - i)  # Number of points to add in this iteration
+            p = min(
+                self.n_add, self.nsamples - i
+            )  # Number of points to add in this iteration
 
             # Compute the centroids and the volumes of each simplex cell in the mesh
             self.mesh.centroids = np.zeros([self.mesh.nsimplex, self.dimension])
             self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
             from scipy.spatial import qhull, ConvexHull
+
             for j in range(self.mesh.nsimplex):
                 try:
                     ConvexHull(self.points[self.mesh.vertices[j]])
-                    self.mesh.centroids[j, :], self.mesh.volumes[j] = \
-                        DelaunayStrata.compute_delaunay_centroid_volume(self.points[self.mesh.vertices[j]])
+                    (
+                        self.mesh.centroids[j, :],
+                        self.mesh.volumes[j],
+                    ) = DelaunayStrata.compute_delaunay_centroid_volume(
+                        self.points[self.mesh.vertices[j]]
+                    )
                 except qhull.QhullError:
-                    self.mesh.centroids[j, :], self.mesh.volumes[j] = np.mean(self.points[self.mesh.vertices[j]]), 0
+                    self.mesh.centroids[j, :], self.mesh.volumes[j] = (
+                        np.mean(self.points[self.mesh.vertices[j]]),
+                        0,
+                    )
 
             # If the quantity of interest is a dictionary, convert it to a list
             qoi = [None] * len(self.runmodel_object.qoi_list)
@@ -93,17 +125,25 @@ class VoronoiRSS(RSS):
             # --------------------------------
 
             # Compute the gradients at the existing sample points
-            if self.max_train_size is None or len(self.training_points) <= self.max_train_size or \
-                    i == self.samples.shape[0]:
+            if (
+                self.max_train_size is None
+                or len(self.training_points) <= self.max_train_size
+                or i == self.samples.shape[0]
+            ):
                 # Use the entire sample set to train the surrogate model (more expensive option)
-                dy_dx = self.estimate_gradient(np.atleast_2d(self.training_points), qoi, self.mesh.centroids)
+                dy_dx = self.estimate_gradient(
+                    np.atleast_2d(self.training_points), qoi, self.mesh.centroids
+                )
             else:
                 # Use only max_train_size points to train the surrogate model (more economical option)
                 # Build a mapping from the new vertex indices to the old vertex indices.
                 self.mesh.new_vertices, self.mesh.new_indices = [], []
-                self.mesh.new_to_old = np.zeros([self.mesh.vertices.shape[0], ]) * np.nan
+                self.mesh.new_to_old = np.zeros([self.mesh.vertices.shape[0],]) * np.nan
                 j, k = 0, 0
-                while j < self.mesh.vertices.shape[0] and k < self.mesh.old_vertices.shape[0]:
+                while (
+                    j < self.mesh.vertices.shape[0]
+                    and k < self.mesh.old_vertices.shape[0]
+                ):
 
                     if np.all(self.mesh.vertices[j, :] == self.mesh.old_vertices[k, :]):
                         self.mesh.new_to_old[j] = int(k)
@@ -119,22 +159,32 @@ class VoronoiRSS(RSS):
 
                 # Find the nearest neighbors to the most recently added point
                 from sklearn.neighbors import NearestNeighbors
+
                 knn = NearestNeighbors(n_neighbors=self.max_train_size)
                 knn.fit(np.atleast_2d(self.samplesU01))
-                neighbors = knn.kneighbors(np.atleast_2d(self.samplesU01[-1]), return_distance=False)
+                neighbors = knn.kneighbors(
+                    np.atleast_2d(self.samplesU01[-1]), return_distance=False
+                )
 
                 # For every simplex, check if at least dimension-1 vertices are in the neighbor set.
                 # Only update the gradient in simplices that meet this criterion.
                 update_list = []
                 for j in range(self.mesh.vertices.shape[0]):
-                    self.vertices_in_U01 = self.points_to_samplesU01[self.mesh.vertices[j]]
+                    self.vertices_in_U01 = self.points_to_samplesU01[
+                        self.mesh.vertices[j]
+                    ]
                     self.vertices_in_U01[np.isnan(self.vertices_in_U01)] = 10 ** 18
                     v_set = set(self.vertices_in_U01)
                     v_list = list(self.vertices_in_U01)
                     if len(v_set) != len(v_list):
                         continue
                     else:
-                        if all(np.isin(self.vertices_in_U01, np.hstack([neighbors, np.atleast_2d(10 ** 18)]))):
+                        if all(
+                            np.isin(
+                                self.vertices_in_U01,
+                                np.hstack([neighbors, np.atleast_2d(10 ** 18)]),
+                            )
+                        ):
                             update_list.append(j)
 
                 update_array = np.asarray(update_list)
@@ -150,9 +200,11 @@ class VoronoiRSS(RSS):
                         dy_dx[j, :] = dy_dx_old[int(self.mesh.new_to_old[j]), :]
 
                 # For those simplices that will be updated, compute the new gradient
-                dy_dx[update_array, :] = self.estimate_gradient(np.squeeze(self.samplesU01[neighbors]),
-                                                                np.atleast_2d(np.array(qoi)[neighbors]),
-                                                                self.mesh.centroids[update_array])
+                dy_dx[update_array, :] = self.estimate_gradient(
+                    np.squeeze(self.samplesU01[neighbors]),
+                    np.atleast_2d(np.array(qoi)[neighbors]),
+                    self.mesh.centroids[update_array],
+                )
 
             # Determine the simplex to break and draw a new sample
 
@@ -165,9 +217,14 @@ class VoronoiRSS(RSS):
             for j in range(self.mesh.nsimplex):
                 for k in range(self.dimension):
                     std = np.std(self.points[self.mesh.vertices[j]][:, k])
-                    var[j, k] = (self.mesh.volumes[j] * math.factorial(self.dimension) /
-                                 math.factorial(self.dimension + 2)) * (self.dimension * std ** 2)
-                s[j] = np.sum(dy_dx[j, :] * var[j, :] * dy_dx[j, :]) * (self.mesh.volumes[j] ** 2)
+                    var[j, k] = (
+                        self.mesh.volumes[j]
+                        * math.factorial(self.dimension)
+                        / math.factorial(self.dimension + 2)
+                    ) * (self.dimension * std ** 2)
+                s[j] = np.sum(dy_dx[j, :] * var[j, :] * dy_dx[j, :]) * (
+                    self.mesh.volumes[j] ** 2
+                )
             dy_dx_old = dy_dx
 
             # 'p' is number of samples to be added in the current iteration
@@ -194,7 +251,7 @@ class VoronoiRSS(RSS):
             # -------------------------------
             # 4. Execute model at new samples
             # -------------------------------
-            self.runmodel_object.run(samples=self.samples[-self.n_add:])
+            self.runmodel_object.run(samples=self.samples[-self.n_add :])
 
             if self.verbose:
                 print("Iteration:", i)
@@ -209,7 +266,9 @@ class VoronoiRSS(RSS):
 
         # Primary loop for adding samples and performing refinement.
         for i in range(self.samples.shape[0], self.nsamples, self.n_add):
-            p = min(self.n_add, self.nsamples - i)  # Number of points to add in this iteration
+            p = min(
+                self.n_add, self.nsamples - i
+            )  # Number of points to add in this iteration
 
             # ################################
             # --------------------------------
@@ -220,13 +279,21 @@ class VoronoiRSS(RSS):
             self.mesh.centroids = np.zeros([self.mesh.nsimplex, self.dimension])
             self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
             from scipy.spatial import qhull, ConvexHull
+
             for j in range(self.mesh.nsimplex):
                 try:
                     ConvexHull(self.points[self.mesh.vertices[j]])
-                    self.mesh.centroids[j, :], self.mesh.volumes[j] = \
-                        DelaunayStrata.compute_delaunay_centroid_volume(self.points[self.mesh.vertices[j]])
+                    (
+                        self.mesh.centroids[j, :],
+                        self.mesh.volumes[j],
+                    ) = DelaunayStrata.compute_delaunay_centroid_volume(
+                        self.points[self.mesh.vertices[j]]
+                    )
                 except qhull.QhullError:
-                    self.mesh.centroids[j, :], self.mesh.volumes[j] = np.mean(self.points[self.mesh.vertices[j]]), 0
+                    self.mesh.centroids[j, :], self.mesh.volumes[j] = (
+                        np.mean(self.points[self.mesh.vertices[j]]),
+                        0,
+                    )
 
             # Determine the simplex to break and draw a new sample
             s = np.zeros(self.mesh.nsimplex)
@@ -275,14 +342,23 @@ class VoronoiRSS(RSS):
 
         """
         import itertools
+
         tmp_vertices = self.points[self.mesh.simplices[int(bin_), :]]
-        col_one = np.array(list(itertools.combinations(np.arange(self.dimension + 1), self.dimension)))
-        self.mesh.sub_simplex = np.zeros_like(tmp_vertices)  # node: an array containing mid-point of edges
+        col_one = np.array(
+            list(itertools.combinations(np.arange(self.dimension + 1), self.dimension))
+        )
+        self.mesh.sub_simplex = np.zeros_like(
+            tmp_vertices
+        )  # node: an array containing mid-point of edges
         for m in range(self.dimension + 1):
-            self.mesh.sub_simplex[m, :] = np.sum(tmp_vertices[col_one[m] - 1, :], 0) / self.dimension
+            self.mesh.sub_simplex[m, :] = (
+                np.sum(tmp_vertices[col_one[m] - 1, :], 0) / self.dimension
+            )
 
         # Using the Simplex class to generate a new sample in the sub-simplex
-        new = Simplex(nodes=self.mesh.sub_simplex, nsamples=1, random_state=self.random_state).samples
+        new = Simplex(
+            nodes=self.mesh.sub_simplex, nsamples=1, random_state=self.random_state
+        ).samples
         return new
 
     def _update_strata(self, new_point):
@@ -298,16 +374,21 @@ class VoronoiRSS(RSS):
         i_ = self.samples.shape[0]
         p_ = new_point.shape[0]
         # Update the matrices to have recognize the new point
-        self.points_to_samplesU01 = np.hstack([self.points_to_samplesU01, np.arange(i_, i_ + p_)])
+        self.points_to_samplesU01 = np.hstack(
+            [self.points_to_samplesU01, np.arange(i_, i_ + p_)]
+        )
         self.mesh.old_vertices = self.mesh.vertices
 
         # Update the Delaunay triangulation mesh to include the new point.
         self.mesh.add_points(new_point)
-        self.points = getattr(self.mesh, 'points')
+        self.points = getattr(self.mesh, "points")
         self.mesh_vertices = np.vstack([self.mesh_vertices, new_point])
 
         # Compute the strata weights.
-        self.strata_object.voronoi, bounded_regions = VoronoiStrata.voronoi_unit_hypercube(self.samplesU01)
+        (
+            self.strata_object.voronoi,
+            bounded_regions,
+        ) = VoronoiStrata.voronoi_unit_hypercube(self.samplesU01)
 
         self.strata_object.centroids = []
         self.strata_object.volume = []
@@ -327,14 +408,29 @@ class VoronoiRSS(RSS):
         self.mesh_vertices = self.training_points.copy()
         self.points_to_samplesU01 = np.arange(0, self.training_points.shape[0])
         for i in range(np.shape(self.strata_object.voronoi.vertices)[0]):
-            if any(np.logical_and(self.strata_object.voronoi.vertices[i, :] >= -1e-10,
-                                  self.strata_object.voronoi.vertices[i, :] <= 1e-10)) or \
-                    any(np.logical_and(self.strata_object.voronoi.vertices[i, :] >= 1 - 1e-10,
-                                       self.strata_object.voronoi.vertices[i, :] <= 1 + 1e-10)):
+            if any(
+                np.logical_and(
+                    self.strata_object.voronoi.vertices[i, :] >= -1e-10,
+                    self.strata_object.voronoi.vertices[i, :] <= 1e-10,
+                )
+            ) or any(
+                np.logical_and(
+                    self.strata_object.voronoi.vertices[i, :] >= 1 - 1e-10,
+                    self.strata_object.voronoi.vertices[i, :] <= 1 + 1e-10,
+                )
+            ):
                 self.mesh_vertices = np.vstack(
-                    [self.mesh_vertices, self.strata_object.voronoi.vertices[i, :]])
-                self.points_to_samplesU01 = np.hstack([np.array([-1]), self.points_to_samplesU01, ])
+                    [self.mesh_vertices, self.strata_object.voronoi.vertices[i, :]]
+                )
+                self.points_to_samplesU01 = np.hstack(
+                    [np.array([-1]), self.points_to_samplesU01,]
+                )
 
         # Define the simplex mesh to be used for gradient estimation and sampling
-        self.mesh = Delaunay(self.mesh_vertices, furthest_site=False, incremental=True, qhull_options=None)
-        self.points = getattr(self.mesh, 'points')
+        self.mesh = Delaunay(
+            self.mesh_vertices,
+            furthest_site=False,
+            incremental=True,
+            qhull_options=None,
+        )
+        self.points = getattr(self.mesh, "points")

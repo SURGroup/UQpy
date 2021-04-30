@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class PolyChaosLasso:
     """
     Class to calculate the PCE coefficients with the Least Absolute Shrinkage
@@ -14,8 +15,9 @@ class PolyChaosLasso:
 
     """
 
-    def __init__(self, poly_object, learning_rate=0.01, iterations=1000,
-                 penalty=1, verbose=False):
+    def __init__(
+        self, poly_object, learning_rate=0.01, iterations=1000, penalty=1, verbose=False
+    ):
         self.poly_object = poly_object
         self.learning_rate = learning_rate
         self.iterations = iterations
@@ -62,7 +64,7 @@ class PolyChaosLasso:
             b = 0
 
             for _ in range(self.iterations):
-                y_pred = (xx.dot(w) + b)
+                y_pred = xx.dot(w) + b
 
                 for i in range(n):
                     if w[i] > 0:
@@ -70,7 +72,7 @@ class PolyChaosLasso:
                     else:
                         dw[i] = (-(2 * (xx.T[i, :]).dot(y - y_pred)) - self.penalty) / m
 
-                db = - 2 * np.sum(y - y_pred) / m
+                db = -2 * np.sum(y - y_pred) / m
 
                 w = w - self.learning_rate * dw
                 b = b - self.learning_rate * db
@@ -81,10 +83,10 @@ class PolyChaosLasso:
             b = np.zeros(n_out_dim).reshape(1, -1)
 
             for _ in range(self.iterations):
-                y_pred = (xx.dot(w) + b)
+                y_pred = xx.dot(w) + b
 
                 dw = (-(2 * xx.T.dot(y - y_pred)) - self.penalty) / m
-                db = - 2 * np.sum((y - y_pred), axis=0).reshape(1, -1) / m
+                db = -2 * np.sum((y - y_pred), axis=0).reshape(1, -1) / m
 
                 w = w - self.learning_rate * dw
                 b = b - self.learning_rate * db

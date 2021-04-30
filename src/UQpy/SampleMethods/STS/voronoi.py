@@ -21,15 +21,30 @@ class VoronoiSTS(STS):
     **Methods:**
 
     """
-    def __init__(self, dist_object, strata_object, nsamples_per_stratum=None, nsamples=None, random_state=None,
-                 verbose=False):
+
+    def __init__(
+        self,
+        dist_object,
+        strata_object,
+        nsamples_per_stratum=None,
+        nsamples=None,
+        random_state=None,
+        verbose=False,
+    ):
         # Check strata_object
         if not isinstance(strata_object, VoronoiStrata):
-            raise NotImplementedError("UQpy: strata_object must be an object of VoronoiStrata class")
+            raise NotImplementedError(
+                "UQpy: strata_object must be an object of VoronoiStrata class"
+            )
 
-        super().__init__(dist_object=dist_object, strata_object=strata_object,
-                         nsamples_per_stratum=nsamples_per_stratum, nsamples=nsamples, random_state=random_state,
-                         verbose=verbose)
+        super().__init__(
+            dist_object=dist_object,
+            strata_object=strata_object,
+            nsamples_per_stratum=nsamples_per_stratum,
+            nsamples=nsamples,
+            random_state=random_state,
+            verbose=verbose,
+        )
 
     def create_samplesu01(self, nsamples_per_stratum=None, nsamples=None):
         """
@@ -40,7 +55,9 @@ class VoronoiSTS(STS):
         from scipy.spatial import Delaunay, ConvexHull
 
         samples_in_strata, weights = list(), list()
-        for j in range(len(self.strata_object.vertices)):  # For each bounded region (Voronoi stratification)
+        for j in range(
+            len(self.strata_object.vertices)
+        ):  # For each bounded region (Voronoi stratification)
             vertices = self.strata_object.vertices[j][:-1, :]
             seed = self.strata_object.seeds[j, :].reshape(1, -1)
             seed_and_vertices = np.concatenate([vertices, seed])
@@ -60,14 +77,19 @@ class VoronoiSTS(STS):
             for k in range(int(self.nsamples_per_stratum[j])):
                 simplex = self.random_state.choice(a, p=temp_prob)
 
-                new_samples = Simplex(nodes=seed_and_vertices[delaunay_obj.vertices[simplex]], nsamples=1,
-                                      random_state=self.random_state).samples
+                new_samples = Simplex(
+                    nodes=seed_and_vertices[delaunay_obj.vertices[simplex]],
+                    nsamples=1,
+                    random_state=self.random_state,
+                ).samples
 
                 samples_in_strata.append(new_samples)
 
             if int(self.nsamples_per_stratum[j]) != 0:
                 weights.extend(
-                    [self.strata_object.volume[j] / self.nsamples_per_stratum[j]] * int(self.nsamples_per_stratum[j]))
+                    [self.strata_object.volume[j] / self.nsamples_per_stratum[j]]
+                    * int(self.nsamples_per_stratum[j])
+                )
             else:
                 weights.extend([0] * int(self.nsamples_per_stratum[j]))
 

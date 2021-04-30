@@ -3,6 +3,7 @@ import numpy as np
 from UQpy.Distributions import Normal
 import scipy.special as special
 
+
 class Hermite(Polynomials):
     """
     Class of univariate polynomials appropriate for data generated from a

@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def wiener_khinchin_transform(power_spectrum, frequency, time):
     """
     A function to transform the power spectrum to a correlation function by the Wiener Khinchin transformation
@@ -27,10 +28,12 @@ def wiener_khinchin_transform(power_spectrum, frequency, time):
     """
     frequency_interval = frequency[1] - frequency[0]
     fac = np.ones(len(frequency))
-    fac[1: len(frequency) - 1: 2] = 4
-    fac[2: len(frequency) - 2: 2] = 2
+    fac[1 : len(frequency) - 1 : 2] = 4
+    fac[2 : len(frequency) - 2 : 2] = 2
     fac = fac * frequency_interval / 3
     correlation_function = np.zeros(len(time))
     for i in range(len(time)):
-        correlation_function[i] = 2 * np.dot(fac, power_spectrum * np.cos(frequency * time[i]))
+        correlation_function[i] = 2 * np.dot(
+            fac, power_spectrum * np.cos(frequency * time[i])
+        )
     return correlation_function

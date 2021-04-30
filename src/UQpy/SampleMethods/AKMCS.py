@@ -2,10 +2,12 @@ import numpy as np
 import scipy.stats as stats
 
 from UQpy.SampleMethods.LHS import LHS
+
 ########################################################################################################################
 ########################################################################################################################
 #                                  Adaptive Kriging-Monte Carlo Simulation (AK-MCS)
 ########################################################################################################################
+
 
 class AKMCS:
     """
@@ -99,8 +101,21 @@ class AKMCS:
 
     """
 
-    def __init__(self, dist_object, runmodel_object, krig_object, samples=None, nsamples=None, nlearn=None,
-                 qoi_name=None, learning_function='U', n_add=1, random_state=None, verbose=False, **kwargs):
+    def __init__(
+        self,
+        dist_object,
+        runmodel_object,
+        krig_object,
+        samples=None,
+        nsamples=None,
+        nlearn=None,
+        qoi_name=None,
+        learning_function="U",
+        n_add=1,
+        random_state=None,
+        verbose=False,
+        **kwargs
+    ):
 
         # Initialize the internal variables of the class.
         self.runmodel_object = runmodel_object
@@ -130,31 +145,35 @@ class AKMCS:
 
         if samples is not None:
             if self.dimension != self.samples.shape[1]:
-                raise NotImplementedError("UQpy Error: Dimension of samples and distribution are inconsistent.")
+                raise NotImplementedError(
+                    "UQpy Error: Dimension of samples and distribution are inconsistent."
+                )
 
-        if self.learning_function not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
-            raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
-        elif self.learning_function == 'EIGF':
+        if self.learning_function not in ["EFF", "U", "Weighted-U", "EIF", "EIGF"]:
+            raise NotImplementedError(
+                "UQpy Error: The provided learning function is not recognized."
+            )
+        elif self.learning_function == "EIGF":
             self.learning_function = self.eigf
-        elif self.learning_function == 'EIF':
-            if 'eif_stop' not in self.kwargs:
-                self.kwargs['eif_stop'] = 0.01
+        elif self.learning_function == "EIF":
+            if "eif_stop" not in self.kwargs:
+                self.kwargs["eif_stop"] = 0.01
             self.learning_function = self.eif
-        elif self.learning_function == 'U':
-            if 'u_stop' not in self.kwargs:
-                self.kwargs['u_stop'] = 2
+        elif self.learning_function == "U":
+            if "u_stop" not in self.kwargs:
+                self.kwargs["u_stop"] = 2
             self.learning_function = self.u
-        elif self.learning_function == 'Weighted-U':
-            if 'u_stop' not in self.kwargs:
-                self.kwargs['u_stop'] = 2
+        elif self.learning_function == "Weighted-U":
+            if "u_stop" not in self.kwargs:
+                self.kwargs["u_stop"] = 2
             self.learning_function = self.weighted_u
         else:
-            if 'a' not in self.kwargs:
-                self.kwargs['a'] = 0
-            if 'epsilon' not in self.kwargs:
-                self.kwargs['epsilon'] = 2
-            if 'eff_stop' not in self.kwargs:
-                self.kwargs['u_stop'] = 0.001
+            if "a" not in self.kwargs:
+                self.kwargs["a"] = 0
+            if "epsilon" not in self.kwargs:
+                self.kwargs["epsilon"] = 2
+            if "eff_stop" not in self.kwargs:
+                self.kwargs["u_stop"] = 0.001
             self.learning_function = self.eff
 
         from UQpy.Distributions import DistributionContinuous1D, JointInd
@@ -162,37 +181,49 @@ class AKMCS:
         if isinstance(dist_object, list):
             for i in range(len(dist_object)):
                 if not isinstance(dist_object[i], DistributionContinuous1D):
-                    raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
+                    raise TypeError(
+                        "UQpy: A DistributionContinuous1D object must be provided."
+                    )
         else:
             if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
-                raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
+                raise TypeError(
+                    "UQpy: A DistributionContinuous1D or JointInd object must be provided."
+                )
 
         self.random_state = random_state
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            raise TypeError(
+                "UQpy: random_state must be None, an int or an np.random.RandomState object."
+            )
 
-        if hasattr(krig_object, 'fit') and hasattr(krig_object, 'predict'):
+        if hasattr(krig_object, "fit") and hasattr(krig_object, "predict"):
             self.krig_object = krig_object
         else:
-            raise NotImplementedError("UQpy: krig_object must have 'fit' and 'predict' methods.")
+            raise NotImplementedError(
+                "UQpy: krig_object must have 'fit' and 'predict' methods."
+            )
 
         if self.verbose:
-            print('UQpy: AKMCS - Running the initial sample set using RunModel.')
+            print("UQpy: AKMCS - Running the initial sample set using RunModel.")
 
         # Evaluate model at the training points
         if len(self.runmodel_object.qoi_list) == 0 and samples is not None:
             self.runmodel_object.run(samples=self.samples, append_samples=False)
         if samples is not None:
             if len(self.runmodel_object.qoi_list) != self.samples.shape[0]:
-                raise NotImplementedError("UQpy: There should be no model evaluation or Number of samples and model "
-                                          "evaluation in RunModel object should be same.")
+                raise NotImplementedError(
+                    "UQpy: There should be no model evaluation or Number of samples and model "
+                    "evaluation in RunModel object should be same."
+                )
 
         if self.nsamples is not None:
-            if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
-                raise NotImplementedError("UQpy: Number of samples to be generated 'nsamples' should be a positive "
-                                          "integer.")
+            if self.nsamples <= 0 or type(self.nsamples).__name__ != "int":
+                raise NotImplementedError(
+                    "UQpy: Number of samples to be generated 'nsamples' should be a positive "
+                    "integer."
+                )
 
             if samples is not None:
                 self.run(nsamples=self.nsamples)
@@ -250,21 +281,30 @@ class AKMCS:
                 self.runmodel_object.qoi_list = []
 
             if self.verbose:
-                print('UQpy: AKMCS - Evaluating the model at the sample set using RunModel.')
+                print(
+                    "UQpy: AKMCS - Evaluating the model at the sample set using RunModel."
+                )
 
             self.runmodel_object.run(samples=samples, append_samples=append_samples)
         else:
             if len(self.samples.shape) == 0:
                 if self.nstart is None:
-                    raise NotImplementedError("UQpy: User should provide either 'samples' or 'nstart' value.")
+                    raise NotImplementedError(
+                        "UQpy: User should provide either 'samples' or 'nstart' value."
+                    )
                 if self.verbose:
-                    print('UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling.')
-                self.samples = LHS(dist_object=self.dist_object, nsamples=self.nstart,
-                                   random_state=self.random_state).samples
+                    print(
+                        "UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling."
+                    )
+                self.samples = LHS(
+                    dist_object=self.dist_object,
+                    nsamples=self.nstart,
+                    random_state=self.random_state,
+                ).samples
                 self.runmodel_object.run(samples=self.samples)
 
         if self.verbose:
-            print('UQpy: Performing AK-MCS design...')
+            print("UQpy: Performing AK-MCS design...")
 
         # If the quantity of interest is a dictionary, convert it to a list
         self.qoi = [None] * len(self.runmodel_object.qoi_list)
@@ -289,18 +329,34 @@ class AKMCS:
             # Initialize the population of samples at which to evaluate the learning function and from which to draw
             # in the sampling.
 
-            lhs = LHS(dist_object=self.dist_object, nsamples=self.nlearn, random_state=self.random_state)
+            lhs = LHS(
+                dist_object=self.dist_object,
+                nsamples=self.nlearn,
+                random_state=self.random_state,
+            )
             self.learning_set = lhs.samples.copy()
 
             # Find all of the points in the population that have not already been integrated into the training set
-            rest_pop = np.array([x for x in self.learning_set.tolist() if x not in self.samples.tolist()])
+            rest_pop = np.array(
+                [
+                    x
+                    for x in self.learning_set.tolist()
+                    if x not in self.samples.tolist()
+                ]
+            )
 
             # Apply the learning function to identify the new point to run the model.
 
             # new_point, lf, ind = self.learning_function(self.krig_model, rest_pop, **kwargs)
-            new_point, lf, ind = self.learning_function(self.krig_model, rest_pop, n_add=self.n_add,
-                                                        parameters=self.kwargs, samples=self.samples, qoi=self.qoi,
-                                                        dist_object=self.dist_object)
+            new_point, lf, ind = self.learning_function(
+                self.krig_model,
+                rest_pop,
+                n_add=self.n_add,
+                parameters=self.kwargs,
+                samples=self.samples,
+                qoi=self.qoi,
+                dist_object=self.dist_object,
+            )
 
             # Add the new points to the training set and to the sample set.
             self.samples = np.vstack([self.samples, np.atleast_2d(new_point)])
@@ -329,7 +385,7 @@ class AKMCS:
                 print("Iteration:", i)
 
         if self.verbose:
-            print('UQpy: AKMCS complete')
+            print("UQpy: AKMCS complete")
 
     # ------------------
     # LEARNING FUNCTIONS
@@ -381,9 +437,9 @@ class AKMCS:
             EIGF learning function evaluated at the new sample points.
 
         """
-        samples = kwargs['samples']
-        qoi = kwargs['qoi']
-        n_add = kwargs['n_add']
+        samples = kwargs["samples"]
+        qoi = kwargs["qoi"]
+        n_add = kwargs["n_add"]
 
         g, sig = surr(pop, True)
 
@@ -394,6 +450,7 @@ class AKMCS:
         # Evaluation of the learning function
         # First, find the nearest neighbor in the training set for each point in the population.
         from sklearn.neighbors import NearestNeighbors
+
         knn = NearestNeighbors(n_neighbors=1)
         knn.fit(np.atleast_2d(samples))
         neighbors = knn.kneighbors(np.atleast_2d(pop), return_distance=False)
@@ -403,7 +460,7 @@ class AKMCS:
 
         # Compute the learning function at every point in the population.
         u = np.square(g - qoi_array) + np.square(sig)
-        rows = u[:, 0].argsort()[(np.size(g) - n_add):]
+        rows = u[:, 0].argsort()[(np.size(g) - n_add) :]
 
         indicator = False
         new_samples = pop[rows, :]
@@ -458,8 +515,8 @@ class AKMCS:
             U learning function evaluated at the new sample points.
 
         """
-        n_add = kwargs['n_add']
-        parameters = kwargs['parameters']
+        n_add = kwargs["n_add"]
+        parameters = kwargs["parameters"]
 
         g, sig = surr(pop, True)
 
@@ -471,7 +528,7 @@ class AKMCS:
         rows = u[:, 0].argsort()[:n_add]
 
         indicator = False
-        if min(u[:, 0]) >= parameters['u_stop']:
+        if min(u[:, 0]) >= parameters["u_stop"]:
             indicator = True
 
         new_samples = pop[rows, :]
@@ -524,10 +581,10 @@ class AKMCS:
             `indicator = True` specifies that the stopping criterion has been met and the AKMCS.run method stops.
 
         """
-        n_add = kwargs['n_add']
-        parameters = kwargs['parameters']
-        samples = kwargs['samples']
-        dist_object = kwargs['dist_object']
+        n_add = kwargs["n_add"]
+        parameters = kwargs["parameters"]
+        samples = kwargs["samples"]
+        dist_object = kwargs["dist_object"]
 
         g, sig = surr(pop, True)
 
@@ -536,7 +593,10 @@ class AKMCS:
         sig = sig.reshape([pop.shape[0], 1])
 
         u = abs(g) / sig
-        p1, p2 = np.ones([pop.shape[0], pop.shape[1]]), np.ones([samples.shape[0], pop.shape[1]])
+        p1, p2 = (
+            np.ones([pop.shape[0], pop.shape[1]]),
+            np.ones([samples.shape[0], pop.shape[1]]),
+        )
         for j in range(samples.shape[1]):
             p1[:, j] = dist_object[j].pdf(np.atleast_2d(pop[:, j]).T)
             p2[:, j] = dist_object[j].pdf(np.atleast_2d(samples[:, j]).T)
@@ -547,7 +607,7 @@ class AKMCS:
         rows = u_[:, 0].argsort()[:n_add]
 
         indicator = False
-        if min(u[:, 0]) >= parameters['weighted_u_stop']:
+        if min(u[:, 0]) >= parameters["weighted_u_stop"]:
             indicator = True
 
         new_samples = pop[rows, :]
@@ -601,8 +661,8 @@ class AKMCS:
             EFF learning function evaluated at the new sample points.
 
         """
-        n_add = kwargs['n_add']
-        parameters = kwargs['parameters']
+        n_add = kwargs["n_add"]
+        parameters = kwargs["parameters"]
 
         g, sig = surr(pop, True)
 
@@ -611,17 +671,19 @@ class AKMCS:
         sig = sig.reshape([pop.shape[0], 1])
         # Reliability threshold: a_ = 0
         # EGRA method: epsilon = 2*sigma(x)
-        a_, ep = parameters['eff_a'], parameters['eff_epsilon']*sig
+        a_, ep = parameters["eff_a"], parameters["eff_epsilon"] * sig
         t1 = (a_ - g) / sig
         t2 = (a_ - ep - g) / sig
         t3 = (a_ + ep - g) / sig
-        eff = (g - a_) * (2 * stats.norm.cdf(t1) - stats.norm.cdf(t2) - stats.norm.cdf(t3))
+        eff = (g - a_) * (
+            2 * stats.norm.cdf(t1) - stats.norm.cdf(t2) - stats.norm.cdf(t3)
+        )
         eff += -sig * (2 * stats.norm.pdf(t1) - stats.norm.pdf(t2) - stats.norm.pdf(t3))
         eff += ep * (stats.norm.cdf(t3) - stats.norm.cdf(t2))
         rows = eff[:, 0].argsort()[-n_add:]
 
         indicator = False
-        if max(eff[:, 0]) <= parameters['eff_stop']:
+        if max(eff[:, 0]) <= parameters["eff_stop"]:
             indicator = True
 
         new_samples = pop[rows, :]
@@ -675,9 +737,9 @@ class AKMCS:
         * **eif_lf** (`ndarray`)
             EIF learning function evaluated at the new sample points.
         """
-        n_add = kwargs['n_add']
-        parameters = kwargs['parameters']
-        qoi = kwargs['qoi']
+        n_add = kwargs["n_add"]
+        parameters = kwargs["parameters"]
+        qoi = kwargs["qoi"]
 
         g, sig = surr(pop, True)
 
@@ -686,11 +748,13 @@ class AKMCS:
         sig = sig.reshape([pop.shape[0], 1])
 
         fm = min(qoi)
-        eif = (fm - g) * stats.norm.cdf((fm - g) / sig) + sig * stats.norm.pdf((fm - g) / sig)
-        rows = eif[:, 0].argsort()[(np.size(g) - n_add):]
+        eif = (fm - g) * stats.norm.cdf((fm - g) / sig) + sig * stats.norm.pdf(
+            (fm - g) / sig
+        )
+        rows = eif[:, 0].argsort()[(np.size(g) - n_add) :]
 
         indicator = False
-        if max(eif[:, 0]) / abs(fm) <= parameters['eif_stop']:
+        if max(eif[:, 0]) / abs(fm) <= parameters["eif_stop"]:
             indicator = True
 
         new_samples = pop[rows, :]

@@ -86,8 +86,19 @@ class SROM:
 
     """
 
-    def __init__(self, samples, target_dist_object, moments=None, weights_errors=None, weights_distribution=None,
-                 weights_moments=None, weights_correlation=None, properties=None, correlation=None, verbose=False):
+    def __init__(
+        self,
+        samples,
+        target_dist_object,
+        moments=None,
+        weights_errors=None,
+        weights_distribution=None,
+        weights_moments=None,
+        weights_correlation=None,
+        properties=None,
+        correlation=None,
+        verbose=False,
+    ):
 
         self.target_dist_object = target_dist_object
         self.correlation = correlation
@@ -119,16 +130,26 @@ class SROM:
         if isinstance(self.target_dist_object, list):
             for i in range(len(self.target_dist_object)):
                 if not isinstance(self.target_dist_object[i], DistributionContinuous1D):
-                    raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
+                    raise TypeError(
+                        "UQpy: A DistributionContinuous1D object must be provided."
+                    )
 
         if self.properties is not None:
             self.run()
         else:
-            print('UQpy: No properties list provided, execute the SROM by calling run method and specifying a '
-                  'properties list')
+            print(
+                "UQpy: No properties list provided, execute the SROM by calling run method and specifying a "
+                "properties list"
+            )
 
-    def run(self, weights_errors=None, weights_distribution=None, weights_moments=None, weights_correlation=None,
-            properties=None):
+    def run(
+        self,
+        weights_errors=None,
+        weights_distribution=None,
+        weights_moments=None,
+        weights_correlation=None,
+        properties=None,
+    ):
         """
         Execute the stochastic reduced order model in the ``SROM`` class.
 
@@ -191,6 +212,7 @@ class SROM:
 
         """
         from scipy import optimize
+
         self.weights_distribution = weights_distribution
         self.weights_moments = weights_moments
         self.weights_correlation = weights_correlation
@@ -204,13 +226,13 @@ class SROM:
         self._init_srom()
 
         if self.verbose:
-            print('UQpy: Performing SROM...')
+            print("UQpy: Performing SROM...")
 
         def f(p0, samples, wd, wm, wc, mar, n, d, m, alpha, prop, correlation):
-            e1 = 0.
-            e2 = 0.
-            e22 = 0.
-            e3 = 0.
+            e1 = 0.0
+            e2 = 0.0
+            e22 = 0.0
+            e3 = 0.0
             com = np.append(samples, np.atleast_2d(p0).T, 1)
             for j in range(d):
                 srt = com[np.argsort(com[:, j].flatten())]
@@ -227,32 +249,62 @@ class SROM:
                     e2 += wm[0, j] * (np.sum(p0 * samples[:, j]) - m[0, j]) ** 2
 
                 if prop[2] is True:
-                    e22 += wm[1, j] * (
-                            np.sum(np.array(p0) * (samples[:, j] * samples[:, j])) - m[1, j]) ** 2
+                    e22 += (
+                        wm[1, j]
+                        * (
+                            np.sum(np.array(p0) * (samples[:, j] * samples[:, j]))
+                            - m[1, j]
+                        )
+                        ** 2
+                    )
 
                 if prop[3] is True:
                     for k in range(d):
                         if k > j:
-                            r = correlation[j, k] * np.sqrt((m[1, j] - m[0, j] ** 2) * (m[1, k] - m[0, k] ** 2)) + \
-                                m[0, j] * m[0, k]
-                            e3 += wc[k, j] * (np.sum(p0 * (samples[:, j] * samples[:, k])) - r) ** 2
+                            r = (
+                                correlation[j, k]
+                                * np.sqrt(
+                                    (m[1, j] - m[0, j] ** 2) * (m[1, k] - m[0, k] ** 2)
+                                )
+                                + m[0, j] * m[0, k]
+                            )
+                            e3 += (
+                                wc[k, j]
+                                * (np.sum(p0 * (samples[:, j] * samples[:, k])) - r)
+                                ** 2
+                            )
 
             return alpha[0] * e1 + alpha[1] * (e2 + e22) + alpha[2] * e3
 
         def constraint(x):
             return np.sum(x) - 1
 
-        cons = {'type': 'eq', 'fun': constraint}
+        cons = {"type": "eq", "fun": constraint}
 
-        p_ = optimize.minimize(f, np.zeros(self.nsamples),
-                               args=(self.samples, self.weights_distribution, self.weights_moments,
-                                     self.weights_correlation, self.target_dist_object, self.nsamples, self.dimension,
-                                     self.moments, self.weights_errors, self.properties, self.correlation),
-                               constraints=cons, method='SLSQP', bounds=[[0, 1]]*self.nsamples)
+        p_ = optimize.minimize(
+            f,
+            np.zeros(self.nsamples),
+            args=(
+                self.samples,
+                self.weights_distribution,
+                self.weights_moments,
+                self.weights_correlation,
+                self.target_dist_object,
+                self.nsamples,
+                self.dimension,
+                self.moments,
+                self.weights_errors,
+                self.properties,
+                self.correlation,
+            ),
+            constraints=cons,
+            method="SLSQP",
+            bounds=[[0, 1]] * self.nsamples,
+        )
 
         self.sample_weights = p_.x
         if self.verbose:
-            print('UQpy: SROM completed!')
+            print("UQpy: SROM completed!")
 
     def _init_srom(self):
         """
@@ -265,7 +317,11 @@ class SROM:
             self.correlation = np.array(self.correlation)
 
         # Check moments and correlation
-        if self.properties[1] is True or self.properties[2] is True or self.properties[3] is True:
+        if (
+            self.properties[1] is True
+            or self.properties[2] is True
+            or self.properties[3] is True
+        ):
             if self.moments is None:
                 raise NotImplementedError("UQpy: 'moments' are required")
         # Both moments are required, if correlation property is required to be match
@@ -275,7 +331,10 @@ class SROM:
             if self.correlation is None:
                 self.correlation = np.identity(self.dimension)
         # moments.shape[0] should be 1 or 2
-        if self.moments.shape != (1, self.dimension) and self.moments.shape != (2, self.dimension):
+        if self.moments.shape != (1, self.dimension) and self.moments.shape != (
+            2,
+            self.dimension,
+        ):
             raise NotImplementedError("UQpy: Shape of 'moments' is not correct")
         # If both the moments are to be included in objective function, then moments.shape[0] should be 2
         if self.properties[1] is True and self.properties[2] is True:
@@ -294,21 +353,30 @@ class SROM:
         elif isinstance(self.weights_errors, list):
             self.weights_errors = np.array(self.weights_errors).astype(np.float64)
         elif not isinstance(self.weights_errors, np.ndarray):
-            raise NotImplementedError("UQpy: weights_errors attribute should be a list or numpy array")
+            raise NotImplementedError(
+                "UQpy: weights_errors attribute should be a list or numpy array"
+            )
 
         # Check weights corresponding to distribution
         if self.weights_distribution is None:
-            self.weights_distribution = np.ones(shape=(self.samples.shape[0], self.dimension))
+            self.weights_distribution = np.ones(
+                shape=(self.samples.shape[0], self.dimension)
+            )
         elif isinstance(self.weights_distribution, list):
             self.weights_distribution = np.array(self.weights_distribution)
         elif not isinstance(self.weights_distribution, np.ndarray):
-            raise NotImplementedError("UQpy: weights_distribution attribute should be a list or numpy array")
+            raise NotImplementedError(
+                "UQpy: weights_distribution attribute should be a list or numpy array"
+            )
 
         if self.weights_distribution.shape == (1, self.dimension):
-            self.weights_distribution = self.weights_distribution * np.ones(shape=(self.samples.shape[0],
-                                                                                   self.dimension))
+            self.weights_distribution = self.weights_distribution * np.ones(
+                shape=(self.samples.shape[0], self.dimension)
+            )
         elif self.weights_distribution.shape != (self.samples.shape[0], self.dimension):
-            raise NotImplementedError("UQpy: Size of 'weights for distribution' is not correct")
+            raise NotImplementedError(
+                "UQpy: Size of 'weights for distribution' is not correct"
+            )
 
         # Check weights corresponding to moments and it's default list
         if self.weights_moments is None:
@@ -316,12 +384,18 @@ class SROM:
         elif isinstance(self.weights_moments, list):
             self.weights_moments = np.array(self.weights_moments)
         elif not isinstance(self.weights_moments, np.ndarray):
-            raise NotImplementedError("UQpy: weights_moments attribute should be a list or numpy array")
+            raise NotImplementedError(
+                "UQpy: weights_moments attribute should be a list or numpy array"
+            )
 
         if self.weights_moments.shape == (1, self.dimension):
-            self.weights_moments = self.weights_moments * np.ones(shape=(2, self.dimension))
+            self.weights_moments = self.weights_moments * np.ones(
+                shape=(2, self.dimension)
+            )
         elif self.weights_moments.shape != (2, self.dimension):
-            raise NotImplementedError("UQpy: Size of 'weights for moments' is not correct")
+            raise NotImplementedError(
+                "UQpy: Size of 'weights for moments' is not correct"
+            )
 
         # Check weights corresponding to correlation and it's default list
         if self.weights_correlation is None:
@@ -329,7 +403,11 @@ class SROM:
         elif isinstance(self.weights_correlation, list):
             self.weights_correlation = np.array(self.weights_correlation)
         elif not isinstance(self.weights_correlation, np.ndarray):
-            raise NotImplementedError("UQpy: weights_correlation attribute should be a list or numpy array")
+            raise NotImplementedError(
+                "UQpy: weights_correlation attribute should be a list or numpy array"
+            )
 
         if self.weights_correlation.shape != (self.dimension, self.dimension):
-            raise NotImplementedError("UQpy: Size of 'weights for correlation' is not correct")
+            raise NotImplementedError(
+                "UQpy: Size of 'weights for correlation' is not correct"
+            )

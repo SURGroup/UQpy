@@ -43,17 +43,44 @@ class FORM(TaylorSeries):
     **Methods:**
      """
 
-    def __init__(self, dist_object, runmodel_object, form_object=None, seed_x=None, seed_u=None, df_step=0.01,
-                 corr_x=None, corr_z=None, n_iter=100, tol1=None, tol2=None, tol3=None, verbose=False):
+    def __init__(
+        self,
+        dist_object,
+        runmodel_object,
+        form_object=None,
+        seed_x=None,
+        seed_u=None,
+        df_step=0.01,
+        corr_x=None,
+        corr_z=None,
+        n_iter=100,
+        tol1=None,
+        tol2=None,
+        tol3=None,
+        verbose=False,
+    ):
 
-        super().__init__(dist_object, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u, n_iter, tol1, tol2,
-                         tol3, df_step, verbose)
+        super().__init__(
+            dist_object,
+            runmodel_object,
+            form_object,
+            corr_x,
+            corr_z,
+            seed_x,
+            seed_u,
+            n_iter,
+            tol1,
+            tol2,
+            tol3,
+            df_step,
+            verbose,
+        )
 
         self.verbose = verbose
 
         if df_step is not None:
             if not isinstance(df_step, (float, int)):
-                raise ValueError('UQpy: df_step must be of type float or integer.')
+                raise ValueError("UQpy: df_step must be of type float or integer.")
 
         # Initialize output
         self.beta_form = None
@@ -98,19 +125,21 @@ class FORM(TaylorSeries):
             See ``TaylorSeries`` parent class.
         """
         if self.verbose:
-            print('UQpy: Running FORM...')
+            print("UQpy: Running FORM...")
         if seed_u is None and seed_x is None:
             seed = np.zeros(self.dimension)
         elif seed_u is None and seed_x is not None:
             from UQpy.Transformations import Nataf
+
             self.nataf_object.run(samples_x=seed_x.reshape(1, -1), jacobian=False)
             seed_z = self.nataf_object.samples_z
             from UQpy.Transformations import Decorrelate
+
             seed = Decorrelate(seed_z, self.nataf_object.corr_z)
         elif seed_u is not None and seed_x is None:
             seed = np.squeeze(seed_u)
         else:
-            raise ValueError('UQpy: Only one seed (seed_x or seed_u) must be provided')
+            raise ValueError("UQpy: Only one seed (seed_x or seed_u) must be provided")
 
         u_record = list()
         x_record = list()
@@ -128,18 +157,24 @@ class FORM(TaylorSeries):
 
         while not conv_flag:
             if self.verbose:
-                print('Number of iteration:', k)
+                print("Number of iteration:", k)
             # FORM always starts from the standard normal space
             if k == 0:
                 if seed_x is not None:
                     x = seed_x
                 else:
-                    seed_z = Correlate(seed.reshape(1, -1), self.nataf_object.corr_z).samples_z
-                    self.nataf_object.run(samples_z=seed_z.reshape(1, -1), jacobian=True)
+                    seed_z = Correlate(
+                        seed.reshape(1, -1), self.nataf_object.corr_z
+                    ).samples_z
+                    self.nataf_object.run(
+                        samples_z=seed_z.reshape(1, -1), jacobian=True
+                    )
                     x = self.nataf_object.samples_x
                     self.jzx = self.nataf_object.jxz
             else:
-                z = Correlate(u[k, :].reshape(1, -1), self.nataf_object.corr_z).samples_z
+                z = Correlate(
+                    u[k, :].reshape(1, -1), self.nataf_object.corr_z
+                ).samples_z
                 self.nataf_object.run(samples_z=z, jacobian=True)
                 x = self.nataf_object.samples_x
                 self.jzx = self.nataf_object.jxz
@@ -148,35 +183,45 @@ class FORM(TaylorSeries):
             u_record.append(u)
             x_record.append(x)
             if self.verbose:
-                print('Design point Y: {0}'.format(u[k, :]))
-                print('Design point X: {0}'.format(self.x))
-                print('Jacobian Jzx: {0}'.format(self.jzx))
+                print("Design point Y: {0}".format(u[k, :]))
+                print("Design point X: {0}".format(self.x))
+                print("Jacobian Jzx: {0}".format(self.jzx))
 
             # 2. evaluate Limit State Function and the gradient at point u_k and direction cosines
-            dg_u, qoi = self.derivatives(point_u=u[k, :], point_x=self.x, runmodel_object=self.runmodel_object,
-                                         nataf_object=self.nataf_object, df_step=self.df_step, order='first',
-                                         verbose=self.verbose)
+            dg_u, qoi = self.derivatives(
+                point_u=u[k, :],
+                point_x=self.x,
+                runmodel_object=self.runmodel_object,
+                nataf_object=self.nataf_object,
+                df_step=self.df_step,
+                order="first",
+                verbose=self.verbose,
+            )
             g_record.append(qoi)
 
             dg_u_record[k + 1, :] = dg_u
             norm_grad = np.linalg.norm(dg_u_record[k + 1, :])
             alpha = dg_u / norm_grad
             if self.verbose:
-                print('Directional cosines (alpha): {0}'.format(alpha))
-                print('Gradient (dg_y): {0}'.format(dg_u_record[k + 1, :]))
-                print('norm dg_y:', norm_grad)
+                print("Directional cosines (alpha): {0}".format(alpha))
+                print("Gradient (dg_y): {0}".format(dg_u_record[k + 1, :]))
+                print("norm dg_y:", norm_grad)
 
             self.alpha = alpha.squeeze()
             alpha_record.append(self.alpha)
             beta[k] = -np.inner(u[k, :].T, self.alpha)
             beta[k + 1] = beta[k] + qoi / norm_grad
             if self.verbose:
-                print('Beta: {0}'.format(beta[k]))
-                print('Pf: {0}'.format(stats.norm.cdf(-beta[k])))
+                print("Beta: {0}".format(beta[k]))
+                print("Pf: {0}".format(stats.norm.cdf(-beta[k])))
 
             u[k + 1, :] = -beta[k + 1] * self.alpha
 
-            if (self.tol1 is not None) and (self.tol2 is not None) and (self.tol3 is not None):
+            if (
+                (self.tol1 is not None)
+                and (self.tol2 is not None)
+                and (self.tol3 is not None)
+            ):
                 error1 = np.linalg.norm(u[k + 1, :] - u[k, :])
                 error2 = np.linalg.norm(beta[k + 1] - beta[k])
                 error3 = np.linalg.norm(dg_u_record[k + 1, :] - dg_u_record[k, :])
@@ -196,7 +241,9 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
-            elif (self.tol1 is not None) and (self.tol2 is None) and (self.tol3 is None):
+            elif (
+                (self.tol1 is not None) and (self.tol2 is None) and (self.tol3 is None)
+            ):
                 error1 = np.linalg.norm(u[k + 1, :] - u[k, :])
                 error_record.append(error1)
                 if error1 <= self.tol1:
@@ -204,7 +251,9 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
-            elif (self.tol1 is None) and (self.tol2 is not None) and (self.tol3 is None):
+            elif (
+                (self.tol1 is None) and (self.tol2 is not None) and (self.tol3 is None)
+            ):
                 error2 = np.linalg.norm(beta[k + 1] - beta[k])
                 error_record.append(error2)
                 if error2 <= self.tol2:
@@ -212,7 +261,9 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
-            elif (self.tol1 is None) and (self.tol2 is None) and (self.tol3 is not None):
+            elif (
+                (self.tol1 is None) and (self.tol2 is None) and (self.tol3 is not None)
+            ):
                 error3 = np.linalg.norm(dg_u_record[k + 1, :] - dg_u_record[k, :])
                 error_record.append(error3)
                 if error3 < self.tol3:
@@ -220,7 +271,11 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
-            elif (self.tol1 is not None) and (self.tol2 is not None) and (self.tol3 is None):
+            elif (
+                (self.tol1 is not None)
+                and (self.tol2 is not None)
+                and (self.tol3 is None)
+            ):
                 error1 = np.linalg.norm(u[k + 1, :] - u[k, :])
                 error2 = np.linalg.norm(beta[k + 1] - beta[k])
                 error_record.append([error1, error2])
@@ -229,7 +284,11 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
-            elif (self.tol1 is not None) and (self.tol2 is None) and (self.tol3 is not None):
+            elif (
+                (self.tol1 is not None)
+                and (self.tol2 is None)
+                and (self.tol3 is not None)
+            ):
                 error1 = np.linalg.norm(u[k + 1, :] - u[k, :])
                 error3 = np.linalg.norm(dg_u_record[k + 1, :] - dg_u_record[k, :])
                 error_record.append([error1, error3])
@@ -238,7 +297,11 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
-            elif (self.tol1 is None) and (self.tol2 is not None) and (self.tol3 is not None):
+            elif (
+                (self.tol1 is None)
+                and (self.tol2 is not None)
+                and (self.tol3 is not None)
+            ):
                 error2 = np.linalg.norm(beta[k + 1] - beta[k])
                 error3 = np.linalg.norm(dg_u_record[k + 1, :] - dg_u_record[k, :])
                 error_record.append([error2, error3])
@@ -248,13 +311,17 @@ class FORM(TaylorSeries):
                     k = k + 1
 
             if self.verbose:
-                print('Error:', error_record[-1])
+                print("Error:", error_record[-1])
 
             if conv_flag is True or k > self.n_iter:
                 break
 
         if k > self.n_iter:
-            print('UQpy: Maximum number of iterations {0} was reached before convergence.'.format(self.n_iter))
+            print(
+                "UQpy: Maximum number of iterations {0} was reached before convergence.".format(
+                    self.n_iter
+                )
+            )
             self.error_record = error_record
             self.u_record = [u_record]
             self.x_record = [x_record]

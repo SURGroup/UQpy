@@ -140,7 +140,7 @@ def nearest_pd(input_matrix):
     k = 1
     while not _is_pd(pd_matrix):
         min_eig = np.min(np.real(np.linalg.eigvals(pd_matrix)))
-        pd_matrix += np.eye(input_matrix.shape[0]) * (-min_eig * k**2 + spacing)
+        pd_matrix += np.eye(input_matrix.shape[0]) * (-min_eig * k ** 2 + spacing)
         k += 1
 
     return pd_matrix
@@ -159,17 +159,17 @@ def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=Non
     Method needed by ``RunModel`` to execute a python model in parallel
     """
     _ = sample
-    exec('from ' + model_script[:-3] + ' import ' + model_object_name)
+    exec("from " + model_script[:-3] + " import " + model_object_name)
 
     if dict_kwargs is None:
-        par_res = eval(model_object_name + '(sample)')
+        par_res = eval(model_object_name + "(sample)")
     else:
-        par_res = eval(model_object_name + '(sample, **dict_kwargs)')
+        par_res = eval(model_object_name + "(sample, **dict_kwargs)")
 
     return par_res
 
 
-def gradient(runmodel_object=None, point=None, order='first', df_step=None):
+def gradient(runmodel_object=None, point=None, order="first", df_step=None):
     """
     This method estimates the gradients (1st, 2nd, mixed) of a function using a finite difference scheme in the
     standard normal space. First order gradients are calculated using central finite differences.
@@ -217,7 +217,9 @@ def gradient(runmodel_object=None, point=None, order='first', df_step=None):
             df_step = [df_step[0]] * dimension
 
     if not callable(runmodel_object) and not isinstance(runmodel_object, RunModel):
-        raise RuntimeError('A RunModel object or callable function must be provided as model.')
+        raise RuntimeError(
+            "A RunModel object or callable function must be provided as model."
+        )
 
     def func(m):
         def func_eval(x):
@@ -231,7 +233,7 @@ def gradient(runmodel_object=None, point=None, order='first', df_step=None):
 
     f_eval = func(m=runmodel_object)
 
-    if order.lower() == 'first':
+    if order.lower() == "first":
         du_dj = np.zeros([point.shape[0], dimension])
 
         for ii in range(dimension):
@@ -244,11 +246,11 @@ def gradient(runmodel_object=None, point=None, order='first', df_step=None):
             qoi_plus = f_eval(u_i1_j)
             qoi_minus = f_eval(u_1i_j)
 
-            du_dj[:, ii] = ((qoi_plus - qoi_minus) / (2 * eps_i))
+            du_dj[:, ii] = (qoi_plus - qoi_minus) / (2 * eps_i)
 
         return du_dj
 
-    elif order.lower() == 'second':
+    elif order.lower() == "second":
         # print('Calculating second order derivatives..')
         d2u_dj = np.zeros([point.shape[0], dimension])
         for ii in range(dimension):
@@ -261,13 +263,16 @@ def gradient(runmodel_object=None, point=None, order='first', df_step=None):
             qoi = f_eval(point)
             qoi_minus = f_eval(u_1i_j)
 
-            d2u_dj[:, ii] = ((qoi_plus - 2 * qoi + qoi_minus) / (df_step[ii] * df_step[ii]))
+            d2u_dj[:, ii] = (qoi_plus - 2 * qoi + qoi_minus) / (
+                df_step[ii] * df_step[ii]
+            )
 
         return d2u_dj
 
-    elif order.lower() == 'mixed':
+    elif order.lower() == "mixed":
 
         import itertools
+
         range_ = list(range(dimension))
         d2u_dij = np.zeros([point.shape[0], int(dimension * (dimension - 1) / 2)])
         count = 0
@@ -292,21 +297,26 @@ def gradient(runmodel_object=None, point=None, order='first', df_step=None):
             u_1i_1j[:, i[0]] -= eps_i1_0
             u_1i_1j[:, i[1]] -= eps_i1_1
 
-            print('hi')
+            print("hi")
             qoi_0 = f_eval(u_i1_j1)
             qoi_1 = f_eval(u_i1_1j)
             qoi_2 = f_eval(u_1i_j1)
             qoi_3 = f_eval(u_1i_1j)
 
-            d2u_dij[:, count] = ((qoi_0 + qoi_3 - qoi_1 - qoi_2) / (4 * eps_i1_0 * eps_i1_1))
+            d2u_dij[:, count] = (qoi_0 + qoi_3 - qoi_1 - qoi_2) / (
+                4 * eps_i1_0 * eps_i1_1
+            )
 
             count += 1
         return d2u_dij
 
 
 def _bi_variate_normal_pdf(x1, x2, rho):
-    return (1 / (2 * np.pi * np.sqrt(1-rho**2)) *
-            np.exp(-1/(2*(1-rho**2)) * (x1**2 - 2 * rho * x1 * x2 + x2**2)))
+    return (
+        1
+        / (2 * np.pi * np.sqrt(1 - rho ** 2))
+        * np.exp(-1 / (2 * (1 - rho ** 2)) * (x1 ** 2 - 2 * rho * x1 * x2 + x2 ** 2))
+    )
 
 
 # def estimate_psd(samples, nt, t):
@@ -335,6 +345,7 @@ def _bi_variate_normal_pdf(x1, x2, rho):
 #
 #     return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
 
+
 def _get_a_plus(a):
     eig_val, eig_vec = np.linalg.eig(a)
     q = np.matrix(eig_vec)
@@ -344,7 +355,7 @@ def _get_a_plus(a):
 
 
 def _get_ps(a, w=None):
-    w05 = np.matrix(w ** .5)
+    w05 = np.matrix(w ** 0.5)
 
     return w05.I * _get_a_plus(w05 * a * w05) * w05.I
 
@@ -356,7 +367,7 @@ def _get_pu(a, w=None):
 
 
 def _nn_coord(x, k):
-    
+
     """
     Select k elements close to x.
 
@@ -376,23 +387,23 @@ def _nn_coord(x, k):
     :return idx: Indices of the closer points.
     :rtype  idx: int
     """
-        
+
     if isinstance(x, list):
         x = np.array(x)
-        
+
     dim = np.shape(x)
-    
+
     if len(dim) is not 1:
-        raise ValueError('k MUST be a vector.')
-    
+        raise ValueError("k MUST be a vector.")
+
     if not isinstance(k, int):
-        raise TypeError('k MUST be integer.')
+        raise TypeError("k MUST be integer.")
 
     if k < 1:
-        raise ValueError('k MUST be larger than or equal to 1.')
-    
+        raise ValueError("k MUST be larger than or equal to 1.")
+
     # idx = x.argsort()[::-1][:k]
-    idx = x.argsort()[:len(x)-k]
+    idx = x.argsort()[: len(x) - k]
     # idx = idx[0:k]
     # idx = idx[k+1:]
     return idx
@@ -423,11 +434,11 @@ def correlation_distortion(dist_object, rho):
     zmax = 8
     zmin = -zmax
     points, weights = np.polynomial.legendre.leggauss(n)
-    points = - (0.5 * (points + 1) * (zmax - zmin) + zmin)
+    points = -(0.5 * (points + 1) * (zmax - zmin) + zmin)
     weights = weights * (0.5 * (zmax - zmin))
 
     xi = np.tile(points, [n, 1])
-    xi = xi.flatten(order='F')
+    xi = xi.flatten(order="F")
     eta = np.tile(points, n)
 
     first = np.tile(weights, n)
@@ -441,5 +452,7 @@ def correlation_distortion(dist_object, rho):
     coef = tmp_f_xi * tmp_f_eta * w2d
     phi2 = _bi_variate_normal_pdf(xi, eta, rho)
     rho_non = np.sum(coef * phi2)
-    rho_non = (rho_non - dist_object.moments(moments2return='m') ** 2) / dist_object.moments(moments2return='v')
+    rho_non = (
+        rho_non - dist_object.moments(moments2return="m") ** 2
+    ) / dist_object.moments(moments2return="v")
     return rho_non

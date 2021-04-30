@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class STS:
     """
     Parent class for Stratified Sampling ([9]_).
@@ -59,8 +60,15 @@ class STS:
     **Methods:**
     """
 
-    def __init__(self, dist_object, strata_object, nsamples_per_stratum=None, nsamples=None, random_state=None,
-                 verbose=False):
+    def __init__(
+        self,
+        dist_object,
+        strata_object,
+        nsamples_per_stratum=None,
+        nsamples=None,
+        random_state=None,
+        verbose=False,
+    ):
 
         self.verbose = verbose
         self.weights = None
@@ -76,11 +84,15 @@ class STS:
             self.dimension = len(dist_object)
             for i in range(len(dist_object)):
                 if not isinstance(dist_object[i], DistributionContinuous1D):
-                    raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
+                    raise TypeError(
+                        "UQpy: A DistributionContinuous1D object must be provided."
+                    )
         else:
             self.dimension = 1
             if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
-                raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
+                raise TypeError(
+                    "UQpy: A DistributionContinuous1D or JointInd object must be provided."
+                )
 
         self.dist_object = dist_object
 
@@ -88,7 +100,9 @@ class STS:
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            raise TypeError(
+                "UQpy: random_state must be None, an int or an np.random.RandomState object."
+            )
         if self.random_state is None:
             self.random_state = self.strata_object.random_state
 
@@ -97,7 +111,9 @@ class STS:
 
         # If nsamples_per_stratum or nsamples is provided, execute run method
         if self.nsamples_per_stratum is not None or self.nsamples is not None:
-            self.run(nsamples_per_stratum=self.nsamples_per_stratum, nsamples=self.nsamples)
+            self.run(
+                nsamples_per_stratum=self.nsamples_per_stratum, nsamples=self.nsamples
+            )
 
     def transform_samples(self, samples01):
         """
@@ -182,18 +198,28 @@ class STS:
                 raise RuntimeError("UQpy: 'nsamples' must be an integer.")
             else:
                 if isinstance(self.nsamples_per_stratum, (int, list)):
-                    print("UQpy: STS class is executing proportional sampling, thus ignoring "
-                          "'nsamples_per_stratum'.")
-            self.nsamples_per_stratum = (self.strata_object.volume * self.nsamples).round()
+                    print(
+                        "UQpy: STS class is executing proportional sampling, thus ignoring "
+                        "'nsamples_per_stratum'."
+                    )
+            self.nsamples_per_stratum = (
+                self.strata_object.volume * self.nsamples
+            ).round()
 
         if self.nsamples_per_stratum is not None:
             if isinstance(self.nsamples_per_stratum, int):
-                self.nsamples_per_stratum = [self.nsamples_per_stratum] * self.strata_object.volume.shape[0]
+                self.nsamples_per_stratum = [
+                    self.nsamples_per_stratum
+                ] * self.strata_object.volume.shape[0]
             elif isinstance(self.nsamples_per_stratum, list):
                 if len(self.nsamples_per_stratum) != self.strata_object.volume.shape[0]:
-                    raise ValueError("UQpy: Length of 'nsamples_per_stratum' must match the number of strata.")
+                    raise ValueError(
+                        "UQpy: Length of 'nsamples_per_stratum' must match the number of strata."
+                    )
             elif self.nsamples is None:
-                raise ValueError("UQpy: 'nsamples_per_stratum' must be an integer or a list.")
+                raise ValueError(
+                    "UQpy: 'nsamples_per_stratum' must be an integer or a list."
+                )
         else:
             self.nsamples_per_stratum = [1] * self.strata_object.volume.shape[0]
 

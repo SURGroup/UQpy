@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class ErrorEstimation:
     """
     Class for estimating the error of a PCE surrogate, based on a validation
@@ -41,8 +42,14 @@ class ErrorEstimation:
 
         n_samples = x.shape[0]
         mu_yval = (1 / n_samples) * np.sum(y, axis=0)
-        eps_val = (n_samples - 1) / n_samples * (
-                (np.sum((y - y_val) ** 2, axis=0)) / (np.sum((y - mu_yval) ** 2, axis=0)))
+        eps_val = (
+            (n_samples - 1)
+            / n_samples
+            * (
+                (np.sum((y - y_val) ** 2, axis=0))
+                / (np.sum((y - mu_yval) ** 2, axis=0))
+            )
+        )
 
         if y.ndim == 1 or y.shape[1] == 1:
             eps_val = float(eps_val)

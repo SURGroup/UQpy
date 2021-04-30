@@ -44,17 +44,16 @@ class PCE:
         """
 
         if self.verbose:
-            print('UQpy: Running PCE.fit')
+            print("UQpy: Running PCE.fit")
 
         if type(self.method) == PolyChaosLstsq:
             self.C = self.method.run(x, y)
 
-        elif type(self.method) == PolyChaosLasso or \
-                type(self.method) == PolyChaosRidge:
+        elif type(self.method) == PolyChaosLasso or type(self.method) == PolyChaosRidge:
             self.C, self.b = self.method.run(x, y)
 
         if self.verbose:
-            print('UQpy: PCE fit complete.')
+            print("UQpy: PCE fit complete.")
 
     def predict(self, x_test):
 
@@ -79,8 +78,7 @@ class PCE:
         if type(self.method) == PolyChaosLstsq:
             y = a.dot(self.C)
 
-        elif type(self.method) == PolyChaosLasso or \
-                type(self.method) == PolyChaosRidge:
+        elif type(self.method) == PolyChaosLasso or type(self.method) == PolyChaosRidge:
             y = a.dot(self.C) + self.b
 
         return y

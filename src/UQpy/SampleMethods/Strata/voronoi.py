@@ -75,7 +75,15 @@ class VoronoiStrata(Strata):
     **Methods:**
     """
 
-    def __init__(self, seeds=None, nseeds=None, dimension=None, niters=1, random_state=None, verbose=False):
+    def __init__(
+        self,
+        seeds=None,
+        nseeds=None,
+        dimension=None,
+        niters=1,
+        random_state=None,
+        verbose=False,
+    ):
         super().__init__(random_state=random_state, seeds=seeds, verbose=verbose)
 
         self.nseeds = nseeds
@@ -86,7 +94,9 @@ class VoronoiStrata(Strata):
 
         if self.seeds is not None:
             if self.nseeds is not None or self.dimension is not None:
-                print("UQpy: Ignoring 'nseeds' and 'dimension' attributes because 'seeds' are provided")
+                print(
+                    "UQpy: Ignoring 'nseeds' and 'dimension' attributes because 'seeds' are provided"
+                )
             self.dimension = self.seeds.shape[1]
 
         self.stratify()
@@ -96,11 +106,13 @@ class VoronoiStrata(Strata):
         Performs the Voronoi stratification.
         """
         if self.verbose:
-            print('UQpy: Creating Voronoi stratification ...')
+            print("UQpy: Creating Voronoi stratification ...")
 
         initial_seeds = self.seeds
         if self.seeds is None:
-            initial_seeds = stats.uniform.rvs(size=[self.nseeds, self.dimension], random_state=self.random_state)
+            initial_seeds = stats.uniform.rvs(
+                size=[self.nseeds, self.dimension], random_state=self.random_state
+            )
 
         if self.niters == 0:
             self.voronoi, bounded_regions = self.voronoi_unit_hypercube(initial_seeds)
@@ -116,7 +128,9 @@ class VoronoiStrata(Strata):
             self.volume = np.asarray(vol)
         else:
             for i in range(self.niters):
-                self.voronoi, bounded_regions = self.voronoi_unit_hypercube(initial_seeds)
+                self.voronoi, bounded_regions = self.voronoi_unit_hypercube(
+                    initial_seeds
+                )
 
                 cent, vol = [], []
                 for region in bounded_regions:
@@ -132,7 +146,7 @@ class VoronoiStrata(Strata):
         self.seeds = initial_seeds
 
         if self.verbose:
-            print('UQpy: Voronoi stratification created.')
+            print("UQpy: Voronoi stratification created.")
 
     @staticmethod
     def voronoi_unit_hypercube(seeds):
@@ -164,16 +178,34 @@ class VoronoiStrata(Strata):
         for i in range(dimension):
             seeds_del = np.delete(bounded_points, i, 1)
             if i == 0:
-                points_temp1 = np.hstack([np.atleast_2d(-bounded_points[:, i]).T, seeds_del])
-                points_temp2 = np.hstack([np.atleast_2d(2 - bounded_points[:, i]).T, seeds_del])
+                points_temp1 = np.hstack(
+                    [np.atleast_2d(-bounded_points[:, i]).T, seeds_del]
+                )
+                points_temp2 = np.hstack(
+                    [np.atleast_2d(2 - bounded_points[:, i]).T, seeds_del]
+                )
             elif i == dimension - 1:
-                points_temp1 = np.hstack([seeds_del, np.atleast_2d(-bounded_points[:, i]).T])
-                points_temp2 = np.hstack([seeds_del, np.atleast_2d(2 - bounded_points[:, i]).T])
+                points_temp1 = np.hstack(
+                    [seeds_del, np.atleast_2d(-bounded_points[:, i]).T]
+                )
+                points_temp2 = np.hstack(
+                    [seeds_del, np.atleast_2d(2 - bounded_points[:, i]).T]
+                )
             else:
                 points_temp1 = np.hstack(
-                    [seeds_del[:, :i], np.atleast_2d(-bounded_points[:, i]).T, seeds_del[:, i:]])
+                    [
+                        seeds_del[:, :i],
+                        np.atleast_2d(-bounded_points[:, i]).T,
+                        seeds_del[:, i:],
+                    ]
+                )
                 points_temp2 = np.hstack(
-                    [seeds_del[:, :i], np.atleast_2d(2 - bounded_points[:, i]).T, seeds_del[:, i:]])
+                    [
+                        seeds_del[:, :i],
+                        np.atleast_2d(2 - bounded_points[:, i]).T,
+                        seeds_del[:, i:],
+                    ]
+                )
             seeds = np.append(seeds, points_temp1, axis=0)
             seeds = np.append(seeds, points_temp2, axis=0)
 

@@ -11,12 +11,15 @@ polys = Polynomials(dist_object=dist, degree=max_degree)
 def func(x):
     return x * np.sin(x) / 10
 
+
 x = dist.rvs(n_samples)
 y = func(x)
+
 
 def poly_func(x):
     p = polys.evaluate(x)
     return p
+
 
 def pce_model(polys, x, y):
     lstsq = PolyChaosLstsq(poly_object=polys)
@@ -24,12 +27,14 @@ def pce_model(polys, x, y):
     pce.fit(x, y)
     return pce
 
+
 def pce_predict(x, c):
     x_ = poly_func(x)
     return x_.dot(c)
 
 
 # Unit tests
+
 
 def test_1():
     """

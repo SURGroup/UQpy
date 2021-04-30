@@ -8,6 +8,7 @@ from UQpy.Inference.MLEstimation import MLEstimation
 #                                  Model Selection Using Information Theoretic Criteria
 ########################################################################################################################
 
+
 class InfoModelSelection:
     """
     Perform model selection using information theoretic criteria.
@@ -73,44 +74,71 @@ class InfoModelSelection:
     **Methods:**
 
     """
+
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
-    def __init__(self, candidate_models, data, criterion='AIC', random_state=None, verbose=False, nopt=None, x0=None,
-                 **kwargs):
+    def __init__(
+        self,
+        candidate_models,
+        data,
+        criterion="AIC",
+        random_state=None,
+        verbose=False,
+        nopt=None,
+        x0=None,
+        **kwargs
+    ):
 
         # Check inputs
         # candidate_models is a list of InferenceModel objects
-        if not isinstance(candidate_models, (list, tuple)) or not all(isinstance(model, InferenceModel)
-                                                                      for model in candidate_models):
-            raise TypeError('UQpy: Input candidate_models must be a list of InferenceModel objects.')
+        if not isinstance(candidate_models, (list, tuple)) or not all(
+            isinstance(model, InferenceModel) for model in candidate_models
+        ):
+            raise TypeError(
+                "UQpy: Input candidate_models must be a list of InferenceModel objects."
+            )
         self.nmodels = len(candidate_models)
         self.candidate_models = candidate_models
         self.data = data
-        if criterion not in ['AIC', 'BIC', 'AICc']:
-            raise ValueError('UQpy: Criterion should be AIC (default), BIC or AICc')
+        if criterion not in ["AIC", "BIC", "AICc"]:
+            raise ValueError("UQpy: Criterion should be AIC (default), BIC or AICc")
         self.criterion = criterion
         self.random_state = random_state
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            raise TypeError(
+                "UQpy: random_state must be None, an int or an np.random.RandomState object."
+            )
         self.verbose = verbose
 
         # Instantiate the ML estimators
-        if not all(isinstance(value, (list, tuple)) for (key, value) in kwargs.items()) or \
-                not all(len(value) == len(candidate_models) for (key, value) in kwargs.items()):
-            raise TypeError('UQpy: Extra inputs to model selection must be lists of length len(candidate_models)')
+        if not all(
+            isinstance(value, (list, tuple)) for (key, value) in kwargs.items()
+        ) or not all(
+            len(value) == len(candidate_models) for (key, value) in kwargs.items()
+        ):
+            raise TypeError(
+                "UQpy: Extra inputs to model selection must be lists of length len(candidate_models)"
+            )
         self.ml_estimators = []
         for i, inference_model in enumerate(self.candidate_models):
             kwargs_i = dict([(key, value[i]) for (key, value) in kwargs.items()])
-            ml_estimator = MLEstimation(inference_model=inference_model, data=self.data, verbose=self.verbose,
-                                        random_state=self.random_state, x0=None, nopt=None, **kwargs_i)
+            ml_estimator = MLEstimation(
+                inference_model=inference_model,
+                data=self.data,
+                verbose=self.verbose,
+                random_state=self.random_state,
+                x0=None,
+                nopt=None,
+                **kwargs_i
+            )
             self.ml_estimators.append(ml_estimator)
 
         # Initialize the outputs
-        self.criterion_values = [None, ] * self.nmodels
-        self.penalty_terms = [None, ] * self.nmodels
-        self.probabilities = [None, ] * self.nmodels
+        self.criterion_values = [None,] * self.nmodels
+        self.penalty_terms = [None,] * self.nmodels
+        self.probabilities = [None,] * self.nmodels
 
         # Run the model selection procedure
         if (nopt is not None) or (x0 is not None):
@@ -138,21 +166,30 @@ class InfoModelSelection:
         if isinstance(nopt, int) or nopt is None:
             nopt = [nopt] * self.nmodels
         if not (isinstance(nopt, list) and len(nopt) == self.nmodels):
-            raise ValueError('UQpy: nopt should be an int or list of length nmodels')
+            raise ValueError("UQpy: nopt should be an int or list of length nmodels")
         if x0 is None:
             x0 = [None] * self.nmodels
         if not (isinstance(x0, list) and len(x0) == self.nmodels):
-            raise ValueError('UQpy: x0 should be a list of length nmodels (or None).')
+            raise ValueError("UQpy: x0 should be a list of length nmodels (or None).")
 
         # Loop over all the models
-        for i, (inference_model, ml_estimator) in enumerate(zip(self.candidate_models, self.ml_estimators)):
+        for i, (inference_model, ml_estimator) in enumerate(
+            zip(self.candidate_models, self.ml_estimators)
+        ):
             # First evaluate ML estimate for all models, do several iterations if demanded
             ml_estimator.run(nopt=nopt[i], x0=x0[i])
 
             # Then minimize the criterion
-            self.criterion_values[i], self.penalty_terms[i] = self._compute_info_criterion(
-                criterion=self.criterion, data=self.data, inference_model=inference_model,
-                max_log_like=ml_estimator.max_log_like, return_penalty=True)
+            (
+                self.criterion_values[i],
+                self.penalty_terms[i],
+            ) = self._compute_info_criterion(
+                criterion=self.criterion,
+                data=self.data,
+                inference_model=inference_model,
+                max_log_like=ml_estimator.max_log_like,
+                return_penalty=True,
+            )
 
         # Compute probabilities from criterion values
         self.probabilities = self._compute_probabilities(self.criterion_values)
@@ -177,7 +214,9 @@ class InfoModelSelection:
         self.probabilities = [self.probabilities[i] for i in sort_idx]
 
     @staticmethod
-    def _compute_info_criterion(criterion, data, inference_model, max_log_like, return_penalty=False):
+    def _compute_info_criterion(
+        criterion, data, inference_model, max_log_like, return_penalty=False
+    ):
         """
         Compute the criterion value for a given model, given a max_log_likelihood value.
 
@@ -215,14 +254,16 @@ class InfoModelSelection:
 
         n_params = inference_model.nparams
         ndata = len(data)
-        if criterion == 'BIC':
+        if criterion == "BIC":
             penalty_term = np.log(ndata) * n_params
-        elif criterion == 'AICc':
-            penalty_term = 2 * n_params + (2 * n_params ** 2 + 2 * n_params) / (ndata - n_params - 1)
-        elif criterion == 'AIC':  # default
+        elif criterion == "AICc":
+            penalty_term = 2 * n_params + (2 * n_params ** 2 + 2 * n_params) / (
+                ndata - n_params - 1
+            )
+        elif criterion == "AIC":  # default
             penalty_term = 2 * n_params
         else:
-            raise ValueError('UQpy: Criterion should be AIC (default), BIC or AICc')
+            raise ValueError("UQpy: Criterion should be AIC (default), BIC or AICc")
         if return_penalty:
             return -2 * max_log_like + penalty_term, penalty_term
         return -2 * max_log_like + penalty_term
@@ -250,8 +291,3 @@ class InfoModelSelection:
         delta = np.array(criterion_values) - min(criterion_values)
         prob = np.exp(-delta / 2)
         return prob / np.sum(prob)
-
-
-
-
-

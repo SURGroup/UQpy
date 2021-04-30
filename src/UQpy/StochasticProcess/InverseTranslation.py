@@ -1,12 +1,16 @@
 from UQpy.Distributions import *
 from UQpy.Utilities import *
-from UQpy.StochasticProcess.supportive import inverse_wiener_khinchin_transform, wiener_khinchin_transform
+from UQpy.StochasticProcess.supportive import (
+    inverse_wiener_khinchin_transform,
+    wiener_khinchin_transform,
+)
 
 
 ########################################################################################################################
 ########################################################################################################################
 #                                      Inverse Translation method
 ########################################################################################################################
+
 
 class InverseTranslation:
     """
@@ -63,40 +67,62 @@ class InverseTranslation:
 
     """
 
-    def __init__(self, dist_object, time_interval, frequency_interval, number_time_intervals,
-                 number_frequency_intervals, correlation_function_non_gaussian=None,
-                 power_spectrum_non_gaussian=None, samples_non_gaussian=None):
+    def __init__(
+        self,
+        dist_object,
+        time_interval,
+        frequency_interval,
+        number_time_intervals,
+        number_frequency_intervals,
+        correlation_function_non_gaussian=None,
+        power_spectrum_non_gaussian=None,
+        samples_non_gaussian=None,
+    ):
         self.dist_object = dist_object
         self.frequency = np.arange(0, number_frequency_intervals) * frequency_interval
         self.time = np.arange(0, number_time_intervals) * time_interval
-        if correlation_function_non_gaussian is None and power_spectrum_non_gaussian is None:
-            print('Either the Power Spectrum or the Autocorrelation function should be specified')
+        if (
+            correlation_function_non_gaussian is None
+            and power_spectrum_non_gaussian is None
+        ):
+            print(
+                "Either the Power Spectrum or the Autocorrelation function should be specified"
+            )
         if correlation_function_non_gaussian is None:
             self.power_spectrum_non_gaussian = power_spectrum_non_gaussian
-            self.correlation_function_non_gaussian = wiener_khinchin_transform(power_spectrum_non_gaussian,
-                                                                               self.frequency, self.time)
+            self.correlation_function_non_gaussian = wiener_khinchin_transform(
+                power_spectrum_non_gaussian, self.frequency, self.time
+            )
         elif power_spectrum_non_gaussian is None:
             self.correlation_function_non_gaussian = correlation_function_non_gaussian
-            self.power_spectrum_non_gaussian = inverse_wiener_khinchin_transform(correlation_function_non_gaussian,
-                                                                                 self.frequency, self.time)
+            self.power_spectrum_non_gaussian = inverse_wiener_khinchin_transform(
+                correlation_function_non_gaussian, self.frequency, self.time
+            )
         self.num = self.correlation_function_non_gaussian.shape[0]
         self.dim = len(self.correlation_function_non_gaussian.shape)
         if samples_non_gaussian is not None:
             self.samples_shape = samples_non_gaussian.shape
             self.samples_non_gaussian = samples_non_gaussian.flatten()[:, np.newaxis]
-            self.samples_gaussian = self._inverse_translate_non_gaussian_samples().reshape(self.samples_shape)
+            self.samples_gaussian = self._inverse_translate_non_gaussian_samples().reshape(
+                self.samples_shape
+            )
         self.power_spectrum_gaussian = self._itam_power_spectrum()
-        self.auto_correlation_function_gaussian = wiener_khinchin_transform(self.power_spectrum_gaussian,
-                                                                            self.frequency, self.time)
-        self.correlation_function_gaussian = self.auto_correlation_function_gaussian / \
-                                             self.auto_correlation_function_gaussian[0]
+        self.auto_correlation_function_gaussian = wiener_khinchin_transform(
+            self.power_spectrum_gaussian, self.frequency, self.time
+        )
+        self.correlation_function_gaussian = (
+            self.auto_correlation_function_gaussian
+            / self.auto_correlation_function_gaussian[0]
+        )
 
     def _inverse_translate_non_gaussian_samples(self):
-        if hasattr(self.dist_object, 'cdf'):
-            non_gaussian_cdf = getattr(self.dist_object, 'cdf')
+        if hasattr(self.dist_object, "cdf"):
+            non_gaussian_cdf = getattr(self.dist_object, "cdf")
             samples_cdf = non_gaussian_cdf(self.samples_non_gaussian)
         else:
-            raise AttributeError('UQpy: The marginal dist_object needs to have an inverse cdf defined.')
+            raise AttributeError(
+                "UQpy: The marginal dist_object needs to have an inverse cdf defined."
+            )
         samples_g = Normal(loc=0.0, scale=1.0).icdf(samples_cdf)
         return samples_g
 
@@ -111,11 +137,16 @@ class InverseTranslation:
         s_ng_iterate = np.zeros_like(target_s)
 
         for _ in range(max_iter):
-            r_g_iterate = wiener_khinchin_transform(s_g_iterate, self.frequency, self.time)
+            r_g_iterate = wiener_khinchin_transform(
+                s_g_iterate, self.frequency, self.time
+            )
             for i in range(len(target_r)):
-                r_ng_iterate[i] = correlation_distortion(dist_object=self.dist_object,
-                                                         rho=r_g_iterate[i] / r_g_iterate[0])
-            s_ng_iterate = inverse_wiener_khinchin_transform(r_ng_iterate, self.frequency, self.time)
+                r_ng_iterate[i] = correlation_distortion(
+                    dist_object=self.dist_object, rho=r_g_iterate[i] / r_g_iterate[0]
+                )
+            s_ng_iterate = inverse_wiener_khinchin_transform(
+                r_ng_iterate, self.frequency, self.time
+            )
 
             err1 = np.sum((target_s - s_ng_iterate) ** 2)
             err2 = np.sum(target_s ** 2)

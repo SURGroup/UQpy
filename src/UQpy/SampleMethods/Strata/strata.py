@@ -45,7 +45,9 @@ class Strata:
         elif self.random_state is None:
             self.random_state = np.random.RandomState()
         elif not isinstance(self.random_state, np.random.RandomState):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            raise TypeError(
+                "UQpy: random_state must be None, an int or an np.random.RandomState object."
+            )
 
     def stratify(self):
 

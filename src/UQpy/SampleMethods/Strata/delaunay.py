@@ -60,7 +60,9 @@ class DelaunayStrata(Strata):
         **Methods:**
         """
 
-    def __init__(self, seeds=None, nseeds=None, dimension=None, random_state=None, verbose=False):
+    def __init__(
+        self, seeds=None, nseeds=None, dimension=None, random_state=None, verbose=False
+    ):
         super().__init__(random_state=random_state, seeds=seeds, verbose=verbose)
 
         self.nseeds = nseeds
@@ -70,7 +72,9 @@ class DelaunayStrata(Strata):
 
         if self.seeds is not None:
             if self.nseeds is not None or self.dimension is not None:
-                print("UQpy: Ignoring 'nseeds' and 'dimension' attributes because 'seeds' are provided")
+                print(
+                    "UQpy: Ignoring 'nseeds' and 'dimension' attributes because 'seeds' are provided"
+                )
             self.nseeds, self.dimension = self.seeds.shape[0], self.seeds.shape[1]
 
         self.stratify()
@@ -80,14 +84,18 @@ class DelaunayStrata(Strata):
         from scipy.spatial import Delaunay
 
         if self.verbose:
-            print('UQpy: Creating Delaaunay stratification ...')
+            print("UQpy: Creating Delaaunay stratification ...")
 
         initial_seeds = self.seeds
         if self.seeds is None:
-            initial_seeds = stats.uniform.rvs(size=[self.nseeds, self.dimension], random_state=self.random_state)
+            initial_seeds = stats.uniform.rvs(
+                size=[self.nseeds, self.dimension], random_state=self.random_state
+            )
 
         # Modify seeds to include corner points of (0,1) space
-        corners = list(itertools.product(*zip([0]*self.dimension, [1]*self.dimension)))
+        corners = list(
+            itertools.product(*zip([0] * self.dimension, [1] * self.dimension))
+        )
         initial_seeds = np.vstack([initial_seeds, corners])
         initial_seeds = np.unique([tuple(row) for row in initial_seeds], axis=0)
 
@@ -95,7 +103,9 @@ class DelaunayStrata(Strata):
         self.centroids = np.zeros([0, self.dimension])
         self.volume = np.zeros([0])
         count = 0
-        for sim in self.delaunay.simplices:  # extract simplices from Delaunay triangulation
+        for (
+            sim
+        ) in self.delaunay.simplices:  # extract simplices from Delaunay triangulation
             # pylint: disable=E1136
             cent, vol = self.compute_delaunay_centroid_volume(self.delaunay.points[sim])
             self.centroids = np.vstack([self.centroids, cent])
@@ -103,7 +113,7 @@ class DelaunayStrata(Strata):
             count = count + 1
 
         if self.verbose:
-            print('UQpy: Delaunay stratification created.')
+            print("UQpy: Delaunay stratification created.")
 
     @staticmethod
     def compute_delaunay_centroid_volume(vertices):

@@ -78,8 +78,17 @@ class SubsetSimulation:
     **Methods:**
     """
 
-    def __init__(self, runmodel_object, mcmc_class=MMH, samples_init=None, p_cond=0.1, nsamples_per_ss=1000,
-                 max_level=10, verbose=False, **mcmc_kwargs):
+    def __init__(
+        self,
+        runmodel_object,
+        mcmc_class=MMH,
+        samples_init=None,
+        p_cond=0.1,
+        nsamples_per_ss=1000,
+        max_level=10,
+        verbose=False,
+        **mcmc_kwargs
+    ):
 
         # Store the MCMC object to create a new object of this type for each subset
         self.mcmc_kwargs = mcmc_kwargs
@@ -96,14 +105,17 @@ class SubsetSimulation:
         # Check that a RunModel object is being passed in.
         if not isinstance(self.runmodel_object, RunModel):
             raise AttributeError(
-                'UQpy: Subset simulation requires the user to pass a RunModel object')
+                "UQpy: Subset simulation requires the user to pass a RunModel object"
+            )
 
-        if 'random_state' in self.mcmc_kwargs:
-            self.random_state = self.mcmc_kwargs['random_state']
+        if "random_state" in self.mcmc_kwargs:
+            self.random_state = self.mcmc_kwargs["random_state"]
             if isinstance(self.random_state, int):
                 self.random_state = np.random.RandomState(self.random_state)
             elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+                raise TypeError(
+                    "UQpy: random_state must be None, an int or an np.random.RandomState object."
+                )
         else:
             self.random_state = None
 
@@ -120,12 +132,15 @@ class SubsetSimulation:
         self.g_level = list()
 
         if self.verbose:
-            print('UQpy: Running Subset Simulation with MCMC of type: ' + str(type(mcmc_object)))
+            print(
+                "UQpy: Running Subset Simulation with MCMC of type: "
+                + str(type(mcmc_object))
+            )
 
         [self.pf, self.cov1, self.cov2] = self.run()
 
         if self.verbose:
-            print('UQpy: Subset Simulation Complete!')
+            print("UQpy: Subset Simulation Complete!")
 
     # -----------------------------------------------------------------------------------------------------------------------
     # The run function executes the chosen subset simulation algorithm
@@ -157,11 +172,13 @@ class SubsetSimulation:
         # Generate the initial samples - Level 0
         # Here we need to make sure that we have good initial samples from the target joint density.
         if self.samples_init is None:
-            warnings.warn('UQpy: You have not provided initial samples.\n Subset simulation is highly sensitive to the '
-                          'initial sample set. It is recommended that the user either:\n'
-                          '- Provide an initial set of samples (samples_init) known to follow the distribution; or\n'
-                          '- Provide a robust MCMC object that will draw independent initial samples from the '
-                          'distribution.')
+            warnings.warn(
+                "UQpy: You have not provided initial samples.\n Subset simulation is highly sensitive to the "
+                "initial sample set. It is recommended that the user either:\n"
+                "- Provide an initial set of samples (samples_init) known to follow the distribution; or\n"
+                "- Provide a robust MCMC object that will draw independent initial samples from the "
+                "distribution."
+            )
             self.mcmc_objects[0].run(nsamples=self.nsamples_per_ss)
             self.samples.append(self.mcmc_objects[0].samples)
         else:
@@ -180,7 +197,7 @@ class SubsetSimulation:
         d22.append(d2 ** 2)
 
         if self.verbose:
-            print('UQpy: Subset Simulation, conditional level 0 complete.')
+            print("UQpy: Subset Simulation, conditional level 0 complete.")
 
         while self.g_level[step] > 0 and step < self.max_level:
 
@@ -196,8 +213,8 @@ class SubsetSimulation:
             # Unpack the attributes
 
             # Initialize a new MCMC object for each conditional level
-            self.mcmc_kwargs['seed'] = np.atleast_2d(self.samples[step][:n_keep, :])
-            self.mcmc_kwargs['random_state'] = self.random_state
+            self.mcmc_kwargs["seed"] = np.atleast_2d(self.samples[step][:n_keep, :])
+            self.mcmc_kwargs["random_state"] = self.random_state
             new_mcmc_object = self.mcmc_class(**self.mcmc_kwargs)
             self.mcmc_objects.append(new_mcmc_object)
 
@@ -207,21 +224,28 @@ class SubsetSimulation:
                 n_prop = self.nsamples_per_ss // self.mcmc_objects[step].nchains
             else:
                 raise AttributeError(
-                    'UQpy: The number of samples per subset (nsamples_per_ss) must be an integer multiple of '
-                    'the number of MCMC chains.')
+                    "UQpy: The number of samples per subset (nsamples_per_ss) must be an integer multiple of "
+                    "the number of MCMC chains."
+                )
 
             # Propagate each chain n_prop times and evaluate the model to accept or reject.
             for i in range(n_prop - 1):
 
                 # Propagate each chain
                 if i == 0:
-                    self.mcmc_objects[step].run(nsamples=2 * self.mcmc_objects[step].nchains)
+                    self.mcmc_objects[step].run(
+                        nsamples=2 * self.mcmc_objects[step].nchains
+                    )
                 else:
-                    self.mcmc_objects[step].run(nsamples=self.mcmc_objects[step].nchains)
+                    self.mcmc_objects[step].run(
+                        nsamples=self.mcmc_objects[step].nchains
+                    )
 
                 # Decide whether a new simulation is needed for each proposed state
-                a = self.mcmc_objects[step].samples[i * n_keep:(i + 1) * n_keep, :]
-                b = self.mcmc_objects[step].samples[(i + 1) * n_keep:(i + 2) * n_keep, :]
+                a = self.mcmc_objects[step].samples[i * n_keep : (i + 1) * n_keep, :]
+                b = self.mcmc_objects[step].samples[
+                    (i + 1) * n_keep : (i + 2) * n_keep, :
+                ]
                 test1 = np.equal(a, b)
                 test = np.logical_and(test1[:, 0], test1[:, 1])
 
@@ -231,17 +255,22 @@ class SubsetSimulation:
                 ind_true = [i for i, val in enumerate(test) if val]
 
                 # Do not run the model for those samples where the MCMC state remains unchanged.
-                self.samples[step][[x + (i + 1) * n_keep for x in ind_true], :] = \
-                    self.mcmc_objects[step].samples[ind_true, :]
-                self.g[step][[x + (i + 1) * n_keep for x in ind_true]] = self.g[step][ind_true]
+                self.samples[step][
+                    [x + (i + 1) * n_keep for x in ind_true], :
+                ] = self.mcmc_objects[step].samples[ind_true, :]
+                self.g[step][[x + (i + 1) * n_keep for x in ind_true]] = self.g[step][
+                    ind_true
+                ]
 
                 # Run the model at each of the new sample points
-                x_run = self.mcmc_objects[step].samples[[x + (i + 1) * n_keep for x in ind_false], :]
+                x_run = self.mcmc_objects[step].samples[
+                    [x + (i + 1) * n_keep for x in ind_false], :
+                ]
                 if x_run.size != 0:
                     self.runmodel_object.run(samples=x_run)
 
                     # Temporarily save the latest model runs
-                    g_temp = np.asarray(self.runmodel_object.qoi_list[-len(x_run):])
+                    g_temp = np.asarray(self.runmodel_object.qoi_list[-len(x_run) :])
 
                     # Accept the states with g <= g_level
                     ind_accept = np.where(g_temp <= self.g_level[step - 1])[0]
@@ -252,9 +281,12 @@ class SubsetSimulation:
                     # Reject the states with g > g_level
                     ind_reject = np.where(g_temp > self.g_level[step - 1])[0]
                     for ii in ind_reject:
-                        self.samples[step][(i + 1) * n_keep + ind_false[ii]] = \
-                            self.samples[step][i * n_keep + ind_false[ii]]
-                        self.g[step][(i + 1) * n_keep + ind_false[ii]] = self.g[step][i * n_keep + ind_false[ii]]
+                        self.samples[step][
+                            (i + 1) * n_keep + ind_false[ii]
+                        ] = self.samples[step][i * n_keep + ind_false[ii]]
+                        self.g[step][(i + 1) * n_keep + ind_false[ii]] = self.g[step][
+                            i * n_keep + ind_false[ii]
+                        ]
 
             g_ind = np.argsort(self.g[step])
             self.g_level.append(self.g[step][g_ind[n_keep]])
@@ -265,7 +297,11 @@ class SubsetSimulation:
             d22.append(d2 ** 2)
 
             if self.verbose:
-                print('UQpy: Subset Simulation, conditional level ' + str(step) + ' complete.')
+                print(
+                    "UQpy: Subset Simulation, conditional level "
+                    + str(step)
+                    + " complete."
+                )
 
         n_fail = len([value for value in self.g[step] if value < 0])
 
@@ -290,28 +326,39 @@ class SubsetSimulation:
 
         # Check that an MCMC class is being passed in.
         if not isclass(self.mcmc_class):
-            raise ValueError('UQpy: mcmc_class must be a child class of MCMC. Note it is not an instance of the class.')
+            raise ValueError(
+                "UQpy: mcmc_class must be a child class of MCMC. Note it is not an instance of the class."
+            )
         if not issubclass(self.mcmc_class, MCMC):
-            raise ValueError('UQpy: mcmc_class must be a child class of MCMC.')
+            raise ValueError("UQpy: mcmc_class must be a child class of MCMC.")
 
         # Check that a RunModel object is being passed in.
         if not isinstance(self.runmodel_object, RunModel):
             raise AttributeError(
-                'UQpy: Subset simulation requires the user to pass a RunModel object')
+                "UQpy: Subset simulation requires the user to pass a RunModel object"
+            )
 
         # Check that a valid conditional probability is specified.
-        if type(self.p_cond).__name__ != 'float':
-            raise AttributeError('UQpy: Invalid conditional probability. p_cond must be of float type.')
-        elif self.p_cond <= 0. or self.p_cond >= 1.:
-            raise AttributeError('UQpy: Invalid conditional probability. p_cond must be in (0, 1).')
+        if type(self.p_cond).__name__ != "float":
+            raise AttributeError(
+                "UQpy: Invalid conditional probability. p_cond must be of float type."
+            )
+        elif self.p_cond <= 0.0 or self.p_cond >= 1.0:
+            raise AttributeError(
+                "UQpy: Invalid conditional probability. p_cond must be in (0, 1)."
+            )
 
         # Check that the number of samples per subset is properly defined.
-        if type(self.nsamples_per_ss).__name__ != 'int':
-            raise AttributeError('UQpy: Number of samples per subset (nsamples_per_ss) must be integer valued.')
+        if type(self.nsamples_per_ss).__name__ != "int":
+            raise AttributeError(
+                "UQpy: Number of samples per subset (nsamples_per_ss) must be integer valued."
+            )
 
         # Check that max_level is an integer
-        if type(self.max_level).__name__ != 'int':
-            raise AttributeError('UQpy: The maximum subset level (max_level) must be integer valued.')
+        if type(self.max_level).__name__ != "int":
+            raise AttributeError(
+                "UQpy: The maximum subset level (max_level) must be integer valued."
+            )
 
     def _cov_sus(self, step):
 
@@ -350,8 +397,13 @@ class SubsetSimulation:
             g_temp = np.reshape(self.g[step], (n_s, n_c))
             beta_hat = self._corr_factor_beta(g_temp, step)
 
-            d1 = np.sqrt(((1 - self.p_cond) / (self.p_cond * self.nsamples_per_ss)) * (1 + gamma))
-            d2 = np.sqrt(((1 - self.p_cond) / (self.p_cond * self.nsamples_per_ss)) * (1 + gamma + beta_hat))
+            d1 = np.sqrt(
+                ((1 - self.p_cond) / (self.p_cond * self.nsamples_per_ss)) * (1 + gamma)
+            )
+            d2 = np.sqrt(
+                ((1 - self.p_cond) / (self.p_cond * self.nsamples_per_ss))
+                * (1 + gamma + beta_hat)
+            )
 
             return d1, d2
 
@@ -437,7 +489,9 @@ class SubsetSimulation:
 
         factor = 0
         for i in range(np.shape(g)[0] - 1):
-            factor = factor + (1 - (i + 1) * np.shape(g)[0] / np.shape(g)[1]) * (1 - ar_mean)
+            factor = factor + (1 - (i + 1) * np.shape(g)[0] / np.shape(g)[1]) * (
+                1 - ar_mean
+            )
         factor = factor * 2 + 1
 
         beta = beta / np.shape(g)[1] * factor

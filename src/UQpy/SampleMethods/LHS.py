@@ -60,8 +60,15 @@ class LHS:
 
     """
 
-    def __init__(self, dist_object, nsamples, criterion=None, random_state=None, verbose=False,
-                 **kwargs):
+    def __init__(
+        self,
+        dist_object,
+        nsamples,
+        criterion=None,
+        random_state=None,
+        verbose=False,
+        **kwargs
+    ):
 
         # Check if a Distribution object is provided.
         from UQpy.Distributions import DistributionContinuous1D, JointInd
@@ -69,10 +76,14 @@ class LHS:
         if isinstance(dist_object, list):
             for i in range(len(dist_object)):
                 if not isinstance(dist_object[i], DistributionContinuous1D):
-                    raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
+                    raise TypeError(
+                        "UQpy: A DistributionContinuous1D object must be provided."
+                    )
         else:
             if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
-                raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
+                raise TypeError(
+                    "UQpy: A DistributionContinuous1D or JointInd object must be provided."
+                )
 
         self.dist_object = dist_object
         self.kwargs = kwargs
@@ -81,12 +92,16 @@ class LHS:
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            raise TypeError(
+                "UQpy: random_state must be None, an int or an np.random.RandomState object."
+            )
 
         if isinstance(criterion, str):
-            if criterion not in ['random', 'centered', 'maximin', 'correlate']:
-                raise NotImplementedError("Exit code: Supported lhs criteria: 'random', 'centered', 'maximin', "
-                                          "'correlate'.")
+            if criterion not in ["random", "centered", "maximin", "correlate"]:
+                raise NotImplementedError(
+                    "Exit code: Supported lhs criteria: 'random', 'centered', 'maximin', "
+                    "'correlate'."
+                )
             else:
                 self.criterion = criterion
         else:
@@ -95,7 +110,7 @@ class LHS:
         if isinstance(nsamples, int):
             self.nsamples = nsamples
         else:
-            raise ValueError('UQpy: number of samples must be specified.')
+            raise ValueError("UQpy: number of samples must be specified.")
 
         # Set printing options
         self.verbose = verbose
@@ -141,49 +156,55 @@ class LHS:
             self.nsamples = nsamples
 
         if self.verbose:
-            print('UQpy: Running Latin Hypercube sampling...')
+            print("UQpy: Running Latin Hypercube sampling...")
 
         cut = np.linspace(0, 1, self.nsamples + 1)
-        a = cut[:self.nsamples]
-        b = cut[1:self.nsamples + 1]
+        a = cut[: self.nsamples]
+        b = cut[1 : self.nsamples + 1]
 
         u = np.zeros(shape=(self.samples.shape[0], self.samples.shape[1]))
         samples = np.zeros_like(u)
         for i in range(self.samples.shape[1]):
-            u[:, i] = stats.uniform.rvs(size=self.samples.shape[0], random_state=self.random_state)
+            u[:, i] = stats.uniform.rvs(
+                size=self.samples.shape[0], random_state=self.random_state
+            )
             samples[:, i] = u[:, i] * (b - a) + a
 
-        if self.criterion == 'random' or self.criterion is None:
+        if self.criterion == "random" or self.criterion is None:
             u_lhs = self.random(samples, random_state=self.random_state)
-        elif self.criterion == 'centered':
+        elif self.criterion == "centered":
             u_lhs = self.centered(samples, random_state=self.random_state, a=a, b=b)
-        elif self.criterion == 'maximin':
+        elif self.criterion == "maximin":
             u_lhs = self.max_min(samples, random_state=self.random_state, **self.kwargs)
-        elif self.criterion == 'correlate':
-            u_lhs = self.correlate(samples, random_state=self.random_state, **self.kwargs)
+        elif self.criterion == "correlate":
+            u_lhs = self.correlate(
+                samples, random_state=self.random_state, **self.kwargs
+            )
         elif callable(self.criterion):
-            u_lhs = self.criterion(samples, random_state=self.random_state, **self.kwargs)
+            u_lhs = self.criterion(
+                samples, random_state=self.random_state, **self.kwargs
+            )
         else:
-            raise ValueError('UQpy: A valid criterion is required.')
+            raise ValueError("UQpy: A valid criterion is required.")
 
         self.samplesU01 = u_lhs
 
         if isinstance(self.dist_object, list):
             for j in range(len(self.dist_object)):
-                if hasattr(self.dist_object[j], 'icdf'):
+                if hasattr(self.dist_object[j], "icdf"):
                     self.samples[:, j] = self.dist_object[j].icdf(u_lhs[:, j])
 
         elif isinstance(self.dist_object, JointInd):
-            if all(hasattr(m, 'icdf') for m in self.dist_object.marginals):
+            if all(hasattr(m, "icdf") for m in self.dist_object.marginals):
                 for j in range(len(self.dist_object.marginals)):
                     self.samples[:, j] = self.dist_object.marginals[j].icdf(u_lhs[:, j])
 
         elif isinstance(self.dist_object, DistributionContinuous1D):
-            if hasattr(self.dist_object, 'icdf'):
+            if hasattr(self.dist_object, "icdf"):
                 self.samples = self.dist_object.icdf(u_lhs)
 
         if self.verbose:
-            print('Successful execution of LHS design.')
+            print("Successful execution of LHS design.")
 
     @staticmethod
     def random(samples, random_state=None):
@@ -218,7 +239,7 @@ class LHS:
 
         return lhs_samples
 
-    def max_min(self, samples, random_state=None, iterations=100, metric='euclidean'):
+    def max_min(self, samples, random_state=None, iterations=100, metric="euclidean"):
         """
         Method for generating a Latin hypercube design that aims to maximize the minimum sample distance.
 
@@ -248,19 +269,42 @@ class LHS:
         """
 
         if isinstance(metric, str):
-            if metric not in ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice',
-                              'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis', 'matching', 'minkowski',
-                              'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath',
-                              'sqeuclidean']:
-                raise NotImplementedError("UQpy Exit code: Please provide a string corresponding to a distance metric"
-                                          "supported by scipy.spatial.distance or provide a method to compute a user-"
-                                          "defined distance.")
+            if metric not in [
+                "braycurtis",
+                "canberra",
+                "chebyshev",
+                "cityblock",
+                "correlation",
+                "cosine",
+                "dice",
+                "euclidean",
+                "hamming",
+                "jaccard",
+                "kulsinski",
+                "mahalanobis",
+                "matching",
+                "minkowski",
+                "rogerstanimoto",
+                "russellrao",
+                "seuclidean",
+                "sokalmichener",
+                "sokalsneath",
+                "sqeuclidean",
+            ]:
+                raise NotImplementedError(
+                    "UQpy Exit code: Please provide a string corresponding to a distance metric"
+                    "supported by scipy.spatial.distance or provide a method to compute a user-"
+                    "defined distance."
+                )
 
         if not isinstance(iterations, int):
-            raise ValueError('UQpy: number of iterations must be an integer.')
+            raise ValueError("UQpy: number of iterations must be an integer.")
 
         if isinstance(metric, str):
-            def d_func(x): return pdist(x, metric=metric)
+
+            def d_func(x):
+                return pdist(x, metric=metric)
+
         elif callable(metric):
             d_func = metric
         else:
@@ -279,7 +323,7 @@ class LHS:
             i = i + 1
 
         if self.verbose:
-            print('UQpy: Achieved maximum distance of ', max_min_dist)
+            print("UQpy: Achieved maximum distance of ", max_min_dist)
 
         return lhs_samples
 
@@ -306,7 +350,7 @@ class LHS:
         """
 
         if not isinstance(iterations, int):
-            raise ValueError('UQpy: number of iterations must be an integer.')
+            raise ValueError("UQpy: number of iterations must be an integer.")
 
         i = 0
         lhs_samples = LHS.random(samples, random_state)
@@ -324,7 +368,7 @@ class LHS:
                 lhs_samples = copy.deepcopy(samples_try)
             i = i + 1
         if self.verbose:
-            print('UQpy: Achieved minimum correlation of ', min_corr)
+            print("UQpy: Achieved minimum correlation of ", min_corr)
 
         return lhs_samples
 

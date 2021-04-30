@@ -42,6 +42,7 @@ warnings.filterwarnings("ignore")
 ########################################################################################################################
 ########################################################################################################################
 
+
 class Kriging:
     """
     Kriging generates an Gaussian process regression-based surrogate model to predict the model output at new sample
@@ -104,8 +105,20 @@ class Kriging:
 
     """
 
-    def __init__(self, reg_model='Linear', corr_model='Exponential', bounds=None, op=True, nopt=1, normalize=True,
-                 verbose=False, corr_model_params=None, optimizer=None, random_state=None, **kwargs_optimizer):
+    def __init__(
+        self,
+        reg_model="Linear",
+        corr_model="Exponential",
+        bounds=None,
+        op=True,
+        nopt=1,
+        normalize=True,
+        verbose=False,
+        corr_model_params=None,
+        optimizer=None,
+        random_state=None,
+        **kwargs_optimizer
+    ):
 
         self.reg_model = reg_model
         self.corr_model = corr_model
@@ -144,22 +157,33 @@ class Kriging:
 
         if self.optimizer is None:
             from scipy.optimize import fmin_l_bfgs_b
-            self.optimizer = fmin_l_bfgs_b
-            self.kwargs_optimizer = {'bounds': self.bounds}
-        elif not callable(self.optimizer):
-            raise TypeError('UQpy: Input optimizer should be None (set to scipy.optimize.minimize) or a callable.')
 
-        if type(self.reg_model).__name__ == 'function':
-            self.rmodel = 'User defined'
-        elif self.reg_model in ['Constant', 'Linear', 'Quadratic']:
+            self.optimizer = fmin_l_bfgs_b
+            self.kwargs_optimizer = {"bounds": self.bounds}
+        elif not callable(self.optimizer):
+            raise TypeError(
+                "UQpy: Input optimizer should be None (set to scipy.optimize.minimize) or a callable."
+            )
+
+        if type(self.reg_model).__name__ == "function":
+            self.rmodel = "User defined"
+        elif self.reg_model in ["Constant", "Linear", "Quadratic"]:
             self.rmodel = self.reg_model
             self.reg_model = self._regress()
         else:
             raise NotImplementedError("UQpy: Doesn't recognize the Regression model.")
 
-        if type(self.corr_model).__name__ == 'function':
-            self.cmodel = 'User defined'
-        elif self.corr_model in ['Exponential', 'Gaussian', 'Linear', 'Spherical', 'Cubic', 'Spline', 'Other']:
+        if type(self.corr_model).__name__ == "function":
+            self.cmodel = "User defined"
+        elif self.corr_model in [
+            "Exponential",
+            "Gaussian",
+            "Linear",
+            "Spherical",
+            "Cubic",
+            "Spline",
+            "Other",
+        ]:
             self.cmodel = self.corr_model
             self.corr_model: callable = self._corr()
         else:
@@ -168,7 +192,9 @@ class Kriging:
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            raise TypeError(
+                "UQpy: random_state must be None, an int or an np.random.RandomState object."
+            )
 
     def fit(self, samples, values, nopt=None, corr_model_params=None):
         """
@@ -196,7 +222,7 @@ class Kriging:
         from scipy.linalg import cholesky
 
         if self.verbose:
-            print('UQpy: Running Kriging.fit')
+            print("UQpy: Running Kriging.fit")
 
         def log_likelihood(p0, cm, s, f, y):
             # Return the log-likelihood function and it's gradient. Gradient is calculate using Central Difference
@@ -221,7 +247,9 @@ class Kriging:
 
             # Check if F is a full rank matrix
             if np.linalg.matrix_rank(g__) != min(np.size(f__, 0), np.size(f__, 1)):
-                raise NotImplementedError("Chosen regression functions are not sufficiently linearly independent")
+                raise NotImplementedError(
+                    "Chosen regression functions are not sufficiently linearly independent"
+                )
 
             # Design parameters
             beta_ = np.linalg.solve(g__, np.matmul(np.transpose(q__), y__))
@@ -231,9 +259,19 @@ class Kriging:
 
             ll = 0
             for out_dim in range(y.shape[1]):
-                sigma_[out_dim] = (1 / m) * (np.linalg.norm(y__[:, out_dim] - np.matmul(f__, beta_[:, out_dim])) ** 2)
+                sigma_[out_dim] = (1 / m) * (
+                    np.linalg.norm(y__[:, out_dim] - np.matmul(f__, beta_[:, out_dim]))
+                    ** 2
+                )
                 # Objective function:= log(det(sigma**2 * R)) + constant
-                ll = ll + (np.log(np.linalg.det(sigma_[out_dim] * r__)) + m * (np.log(2 * np.pi) + 1)) / 2
+                ll = (
+                    ll
+                    + (
+                        np.log(np.linalg.det(sigma_[out_dim] * r__))
+                        + m * (np.log(2 * np.pi) + 1)
+                    )
+                    / 2
+                )
 
             # Gradient of loglikelihood
             # Reference: C. E. Rasmussen & C. K. I. Williams, Gaussian Processes for Machine Learning, the MIT Press,
@@ -248,7 +286,9 @@ class Kriging:
                     alpha = gamma / sigma_[out_dim]
                     tmp1 = np.matmul(alpha, alpha.T) - r_inv / sigma_[out_dim]
                     cov_der = sigma_[out_dim] * dr_[:, :, in_dim] + tmp * r__ / m
-                    grad_mle[in_dim] = grad_mle[in_dim] - 0.5 * np.trace(np.matmul(tmp1, cov_der))
+                    grad_mle[in_dim] = grad_mle[in_dim] - 0.5 * np.trace(
+                        np.matmul(tmp1, cov_der)
+                    )
 
             return ll, grad_mle
 
@@ -266,8 +306,14 @@ class Kriging:
 
         # Normalizing the data
         if self.normalize:
-            self.sample_mean, self.sample_std = np.mean(self.samples, 0), np.std(self.samples, 0)
-            self.value_mean, self.value_std = np.mean(self.values, 0), np.std(self.values, 0)
+            self.sample_mean, self.sample_std = (
+                np.mean(self.samples, 0),
+                np.std(self.samples, 0),
+            )
+            self.value_mean, self.value_std = (
+                np.mean(self.values, 0),
+                np.std(self.values, 0),
+            )
             s_ = (self.samples - self.sample_mean) / self.sample_std
             y_ = (self.values - self.value_mean) / self.value_std
         else:
@@ -279,19 +325,32 @@ class Kriging:
         # Maximum Likelihood Estimation : Solving optimization problem to calculate hyperparameters
         if self.op:
             starting_point = self.corr_model_params
-            minimizer, fun_value = np.zeros([self.nopt, input_dim]), np.zeros([self.nopt, 1])
+            minimizer, fun_value = (
+                np.zeros([self.nopt, input_dim]),
+                np.zeros([self.nopt, 1]),
+            )
             for i__ in range(self.nopt):
-                p_ = self.optimizer(log_likelihood, starting_point, args=(self.corr_model, s_, self.F, y_),
-                                    **self.kwargs_optimizer)
+                p_ = self.optimizer(
+                    log_likelihood,
+                    starting_point,
+                    args=(self.corr_model, s_, self.F, y_),
+                    **self.kwargs_optimizer
+                )
                 minimizer[i__, :] = p_[0]
                 fun_value[i__, 0] = p_[1]
                 # Generating new starting points using log-uniform distribution
                 if i__ != self.nopt - 1:
-                    starting_point = stats.reciprocal.rvs([j[0] for j in self.bounds], [j[1] for j in self.bounds], 1,
-                                                          random_state=self.random_state)
+                    starting_point = stats.reciprocal.rvs(
+                        [j[0] for j in self.bounds],
+                        [j[1] for j in self.bounds],
+                        1,
+                        random_state=self.random_state,
+                    )
             if min(fun_value) == np.inf:
-                raise NotImplementedError("Maximum likelihood estimator failed: Choose different starting point or "
-                                          "increase nopt")
+                raise NotImplementedError(
+                    "Maximum likelihood estimator failed: Choose different starting point or "
+                    "increase nopt"
+                )
             t = np.argmin(fun_value)
             self.corr_model_params = minimizer[t, :]
 
@@ -305,7 +364,9 @@ class Kriging:
         q_, g_ = np.linalg.qr(f_dash)  # Eq: 3.11, DACE
         # Check if F is a full rank matrix
         if np.linalg.matrix_rank(g_) != min(np.size(self.F, 0), np.size(self.F, 1)):
-            raise NotImplementedError("Chosen regression functions are not sufficiently linearly independent")
+            raise NotImplementedError(
+                "Chosen regression functions are not sufficiently linearly independent"
+            )
         # Design parameters (beta: regression coefficient)
         self.beta = np.linalg.solve(g_, np.matmul(np.transpose(q_), y_dash))
 
@@ -315,12 +376,14 @@ class Kriging:
         # Computing the process variance (Eq: 3.13, DACE)
         self.err_var = np.zeros(output_dim)
         for i in range(output_dim):
-            self.err_var[i] = (1 / nsamples) * (np.linalg.norm(y_dash[:, i] - np.matmul(f_dash, self.beta[:, i])) ** 2)
+            self.err_var[i] = (1 / nsamples) * (
+                np.linalg.norm(y_dash[:, i] - np.matmul(f_dash, self.beta[:, i])) ** 2
+            )
 
         self.F_dash, self.C_inv, self.G = f_dash, c_inv, g_
 
         if self.verbose:
-            print('UQpy: Kriging fit complete.')
+            print("UQpy: Kriging fit complete.")
 
     def predict(self, x, return_std=False):
         """
@@ -354,7 +417,9 @@ class Kriging:
             s_ = self.samples
         fx, jf = self.reg_model(x_)
         rx = self.corr_model(x=x_, s=s_, params=self.corr_model_params)
-        y = np.einsum('ij,jk->ik', fx, self.beta) + np.einsum('ij,jk->ik', rx, self.gamma)
+        y = np.einsum("ij,jk->ik", fx, self.beta) + np.einsum(
+            "ij,jk->ik", rx, self.gamma
+        )
         if self.normalize:
             y = self.value_mean + y * self.value_std
         if x_.shape[1] == 1:
@@ -400,7 +465,9 @@ class Kriging:
 
         fx, jf = self.reg_model(x_)
         rx, drdx = self.corr_model(x=x_, s=s_, params=self.corr_model_params, dx=True)
-        y_grad = np.einsum('ikj,jm->ik', jf, self.beta) + np.einsum('ijk,jm->ki', drdx.T, self.gamma)
+        y_grad = np.einsum("ikj,jm->ik", jf, self.beta) + np.einsum(
+            "ijk,jm->ki", drdx.T, self.gamma
+        )
         if self.normalize:
             y_grad = y_grad * self.value_std / self.sample_std
         if x_.shape[1] == 1:
@@ -409,26 +476,40 @@ class Kriging:
 
     # Defining Regression model (Linear)
     def _regress(self):
-        if self.reg_model == 'Constant':
+        if self.reg_model == "Constant":
+
             def r(s):
                 s = np.atleast_2d(s)
                 fx = np.ones([np.size(s, 0), 1])
                 jf = np.zeros([np.size(s, 0), np.size(s, 1), 1])
                 return fx, jf
-        elif self.reg_model == 'Linear':
+
+        elif self.reg_model == "Linear":
+
             def r(s):
                 s = np.atleast_2d(s)
                 fx = np.concatenate((np.ones([np.size(s, 0), 1]), s), 1)
                 jf_b = np.zeros([np.size(s, 0), np.size(s, 1), np.size(s, 1)])
-                np.einsum('jii->ji', jf_b)[:] = 1
-                jf = np.concatenate((np.zeros([np.size(s, 0), np.size(s, 1), 1]), jf_b), 2)
+                np.einsum("jii->ji", jf_b)[:] = 1
+                jf = np.concatenate(
+                    (np.zeros([np.size(s, 0), np.size(s, 1), 1]), jf_b), 2
+                )
                 return fx, jf
+
         else:
+
             def r(s):
                 s = np.atleast_2d(s)
-                fx = np.zeros([np.size(s, 0), int((np.size(s, 1) + 1) * (np.size(s, 1) + 2) / 2)])
+                fx = np.zeros(
+                    [np.size(s, 0), int((np.size(s, 1) + 1) * (np.size(s, 1) + 2) / 2)]
+                )
                 jf = np.zeros(
-                    [np.size(s, 0), np.size(s, 1), int((np.size(s, 1) + 1) * (np.size(s, 1) + 2) / 2)])
+                    [
+                        np.size(s, 0),
+                        np.size(s, 1),
+                        int((np.size(s, 1) + 1) * (np.size(s, 1) + 2) / 2),
+                    ]
+                )
                 for i in range(np.size(s, 0)):
                     temp = np.hstack((1, s[i, :]))
                     for j in range(np.size(s, 1)):
@@ -445,7 +526,9 @@ class Kriging:
                             h_ = tmp[:, j::]
                         else:
                             h_ = np.hstack((h_, tmp[:, j::]))
-                    jf[i, :, :] = np.hstack((np.zeros([np.size(s, 1), 1]), np.eye(np.size(s, 1)), h_))
+                    jf[i, :, :] = np.hstack(
+                        (np.zeros([np.size(s, 1), 1]), np.eye(np.size(s, 1)), h_)
+                    )
                 return fx, jf
 
         return r
@@ -455,9 +538,9 @@ class Kriging:
         def check_samples_and_return_stack(x, s):
             x_, s_ = np.atleast_2d(x), np.atleast_2d(s)
             # Create stack matrix, where each block is x_i with all s
-            stack = np.tile(np.swapaxes(np.atleast_3d(x_), 1, 2), (1, np.size(s_, 0), 1)) - np.tile(s_, (
-                np.size(x_, 0),
-                1, 1))
+            stack = np.tile(
+                np.swapaxes(np.atleast_3d(x_), 1, 2), (1, np.size(s_, 0), 1)
+            ) - np.tile(s_, (np.size(x_, 0), 1, 1))
             return stack
 
         def derivatives(x_, s_, params):
@@ -481,29 +564,47 @@ class Kriging:
             dx_derivs_ = indices.astype(bool).astype(int) * params * np.sign(stack)
             return zeta_matrix_, dtheta_derivs_, dx_derivs_
 
-        if self.corr_model == 'Exponential':
+        if self.corr_model == "Exponential":
+
             def c(x, s, params, dt=False, dx=False):
                 stack = check_samples_and_return_stack(x, s)
                 rx = np.exp(np.sum(-params * abs(stack), axis=2))
                 if dt:
-                    drdt = - abs(stack) * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
+                    drdt = -abs(stack) * np.transpose(
+                        np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0)
+                    )
                     return rx, drdt
                 if dx:
-                    drdx = - params * np.sign(stack) * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
+                    drdx = (
+                        -params
+                        * np.sign(stack)
+                        * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
+                    )
                     return rx, drdx
                 return rx
-        elif self.corr_model == 'Gaussian':
+
+        elif self.corr_model == "Gaussian":
+
             def c(x, s, params, dt=False, dx=False):
                 stack = check_samples_and_return_stack(x, s)
                 rx = np.exp(np.sum(-params * (stack ** 2), axis=2))
                 if dt:
-                    drdt = -(stack ** 2) * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
+                    drdt = -(stack ** 2) * np.transpose(
+                        np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0)
+                    )
                     return rx, drdt
                 if dx:
-                    drdx = - 2 * params * stack * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
+                    drdx = (
+                        -2
+                        * params
+                        * stack
+                        * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
+                    )
                     return rx, drdx
                 return rx
-        elif self.corr_model == 'Linear':
+
+        elif self.corr_model == "Linear":
+
             def c(x, s, params, dt=False, dx=False):
                 stack = check_samples_and_return_stack(x, s)
                 # Taking stack and turning each d value into 1-theta*dij
@@ -535,9 +636,13 @@ class Kriging:
                         drdx = drdx * np.roll(max_matrix, i + 1, axis=2)
                     return rx, drdx
                 return rx
-        elif self.corr_model == 'Spherical':
+
+        elif self.corr_model == "Spherical":
+
             def c(x, s, params, dt=False, dx=False):
-                zeta_matrix, dtheta_derivs, dx_derivs = derivatives(x_=x, s_=s, params=params)
+                zeta_matrix, dtheta_derivs, dx_derivs = derivatives(
+                    x_=x, s_=s, params=params
+                )
                 # Initial matrices containing derivates for all values in array. Note since
                 # dtheta_s and dx_s already accounted for where derivative should be zero, all
                 # that must be done is multiplying the |dij| or thetaj matrix on top of a
@@ -558,9 +663,13 @@ class Kriging:
                         drdx = drdx * np.roll(zeta_function, i + 1, axis=2)
                     return rx, drdx
                 return rx
-        elif self.corr_model == 'Cubic':
+
+        elif self.corr_model == "Cubic":
+
             def c(x, s, params, dt=False, dx=False):
-                zeta_matrix, dtheta_derivs, dx_derivs = derivatives(x_=x, s_=s, params=params)
+                zeta_matrix, dtheta_derivs, dx_derivs = derivatives(
+                    x_=x, s_=s, params=params
+                )
                 # Initial matrices containing derivates for all values in array. Note since
                 # dtheta_s and dx_s already accounted for where derivative should be zero, all
                 # that must be done is multiplying the |dij| or thetaj matrix on top of a
@@ -581,7 +690,9 @@ class Kriging:
                         drdx = drdx * np.roll(zeta_function_cubic, i + 1, axis=2)
                     return rx, drdx
                 return rx
+
         else:
+
             def c(x, s, params, dt=False, dx=False):
                 # x_, s_ = np.atleast_2d(x_), np.atleast_2d(s_)
                 # # Create stack matrix, where each block is x_i with all s
@@ -597,8 +708,12 @@ class Kriging:
                 dx_derivs = np.sign(stack) * params
 
                 # Initialize empty sigma and dsigma matrices
-                sigma = np.ones((zeta_matrix.shape[0], zeta_matrix.shape[1], zeta_matrix.shape[2]))
-                dsigma = np.ones((zeta_matrix.shape[0], zeta_matrix.shape[1], zeta_matrix.shape[2]))
+                sigma = np.ones(
+                    (zeta_matrix.shape[0], zeta_matrix.shape[1], zeta_matrix.shape[2])
+                )
+                dsigma = np.ones(
+                    (zeta_matrix.shape[0], zeta_matrix.shape[1], zeta_matrix.shape[2])
+                )
 
                 # Loop over cases to create zeta_matrix and subsequent dR matrices
                 for i in range(zeta_matrix.shape[0]):
@@ -632,4 +747,5 @@ class Kriging:
                         drdx = drdx * np.roll(sigma, i + 1, axis=2)
                     return rx, drdx
                 return rx
+
         return c

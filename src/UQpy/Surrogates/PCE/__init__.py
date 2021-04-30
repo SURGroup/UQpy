@@ -6,4 +6,3 @@ from UQpy.Surrogates.PCE.PolyChaosLasso import PolyChaosLasso
 from UQpy.Surrogates.PCE.PolyChaosLstsq import PolyChaosLstsq
 from UQpy.Surrogates.PCE.PolyChaosRidge import PolyChaosRidge
 from UQpy.Surrogates.PCE.polynomials import *
-

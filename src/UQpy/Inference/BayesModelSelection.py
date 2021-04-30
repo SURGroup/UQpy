@@ -75,16 +75,28 @@ class BayesModelSelection:
     **Methods:**
 
     """
+
     # Authors: Audrey Olivier, Yuchen Zhou
     # Last modified: 01/24/2020 by Audrey Olivier
-    def __init__(self, candidate_models, data, prior_probabilities=None, method_evidence_computation='harmonic_mean',
-                 random_state=None, verbose=False, nsamples=None, nsamples_per_chain=None, **kwargs):
+    def __init__(
+        self,
+        candidate_models,
+        data,
+        prior_probabilities=None,
+        method_evidence_computation="harmonic_mean",
+        random_state=None,
+        verbose=False,
+        nsamples=None,
+        nsamples_per_chain=None,
+        **kwargs
+    ):
 
         # Check inputs: candidate_models is a list of instances of Model, data must be provided, and input arguments
         # for MCMC must be provided as a list of length len(candidate_models)
-        if (not isinstance(candidate_models, list)) or (not all(isinstance(model, InferenceModel)
-                                                                for model in candidate_models)):
-            raise TypeError('UQpy: A list InferenceModel objects must be provided.')
+        if (not isinstance(candidate_models, list)) or (
+            not all(isinstance(model, InferenceModel) for model in candidate_models)
+        ):
+            raise TypeError("UQpy: A list InferenceModel objects must be provided.")
         self.candidate_models = candidate_models
         self.nmodels = len(candidate_models)
         self.data = data
@@ -93,30 +105,45 @@ class BayesModelSelection:
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            raise TypeError(
+                "UQpy: random_state must be None, an int or an np.random.RandomState object."
+            )
         self.verbose = verbose
 
         if prior_probabilities is None:
-            self.prior_probabilities = [1. / len(candidate_models) for _ in candidate_models]
+            self.prior_probabilities = [
+                1.0 / len(candidate_models) for _ in candidate_models
+            ]
         else:
             self.prior_probabilities = prior_probabilities
 
         # Instantiate the Bayesian parameter estimators (without running them)
         self.bayes_estimators = []
-        if not all(isinstance(value, (list, tuple)) for (key, value) in kwargs.items()) or not all(
-                len(value) == len(candidate_models) for (key, value) in kwargs.items()):
-            raise TypeError('UQpy: Extra inputs to model selection must be lists of length len(candidate_models)')
+        if not all(
+            isinstance(value, (list, tuple)) for (key, value) in kwargs.items()
+        ) or not all(
+            len(value) == len(candidate_models) for (key, value) in kwargs.items()
+        ):
+            raise TypeError(
+                "UQpy: Extra inputs to model selection must be lists of length len(candidate_models)"
+            )
         for i, inference_model in enumerate(self.candidate_models):
             kwargs_i = dict([(key, value[i]) for (key, value) in kwargs.items()])
-            kwargs_i.update({'concat_chains': True, 'save_log_pdf': True})
+            kwargs_i.update({"concat_chains": True, "save_log_pdf": True})
             bayes_estimator = BayesParameterEstimation(
-                inference_model=inference_model, data=self.data, verbose=self.verbose,
-                random_state=self.random_state, nsamples=None, nsamples_per_chain=None, **kwargs_i)
+                inference_model=inference_model,
+                data=self.data,
+                verbose=self.verbose,
+                random_state=self.random_state,
+                nsamples=None,
+                nsamples_per_chain=None,
+                **kwargs_i
+            )
             self.bayes_estimators.append(bayes_estimator)
 
         # Initialize the outputs
-        self.evidences = [0.] * self.nmodels
-        self.probabilities = [0.] * self.nmodels
+        self.evidences = [0.0] * self.nmodels
+        self.probabilities = [0.0] * self.nmodels
 
         # Run the model selection procedure
         if nsamples is not None or nsamples_per_chain is not None:
@@ -142,36 +169,48 @@ class BayesModelSelection:
 
         """
 
-        if nsamples is not None and not (isinstance(nsamples, list) and len(nsamples) == self.nmodels
-                                         and all(isinstance(n, int) for n in nsamples)):
-            raise ValueError('UQpy: nsamples should be a list of integers')
-        if nsamples_per_chain is not None and not (isinstance(nsamples_per_chain, list)
-                                                   and len(nsamples_per_chain) == self.nmodels
-                                                   and all(isinstance(n, int) for n in nsamples_per_chain)):
-            raise ValueError('UQpy: nsamples_per_chain should be a list of integers')
+        if nsamples is not None and not (
+            isinstance(nsamples, list)
+            and len(nsamples) == self.nmodels
+            and all(isinstance(n, int) for n in nsamples)
+        ):
+            raise ValueError("UQpy: nsamples should be a list of integers")
+        if nsamples_per_chain is not None and not (
+            isinstance(nsamples_per_chain, list)
+            and len(nsamples_per_chain) == self.nmodels
+            and all(isinstance(n, int) for n in nsamples_per_chain)
+        ):
+            raise ValueError("UQpy: nsamples_per_chain should be a list of integers")
         if self.verbose:
-            print('UQpy: Running Bayesian Model Selection.')
+            print("UQpy: Running Bayesian Model Selection.")
         # Perform MCMC for all candidate models
-        for i, (inference_model, bayes_estimator) in enumerate(zip(self.candidate_models, self.bayes_estimators)):
+        for i, (inference_model, bayes_estimator) in enumerate(
+            zip(self.candidate_models, self.bayes_estimators)
+        ):
             if self.verbose:
-                print('UQpy: Running MCMC for model '+inference_model.name)
+                print("UQpy: Running MCMC for model " + inference_model.name)
             if nsamples is not None:
                 bayes_estimator.run(nsamples=nsamples[i])
             elif nsamples_per_chain is not None:
                 bayes_estimator.run(nsamples_per_chain=nsamples_per_chain[i])
             else:
-                raise ValueError('UQpy: ither nsamples or nsamples_per_chain should be non None')
+                raise ValueError(
+                    "UQpy: ither nsamples or nsamples_per_chain should be non None"
+                )
             self.evidences[i] = self._estimate_evidence(
                 method_evidence_computation=self.method_evidence_computation,
-                inference_model=inference_model, posterior_samples=bayes_estimator.sampler.samples,
-                log_posterior_values=bayes_estimator.sampler.log_pdf_values)
+                inference_model=inference_model,
+                posterior_samples=bayes_estimator.sampler.samples,
+                log_posterior_values=bayes_estimator.sampler.log_pdf_values,
+            )
 
         # Compute posterior probabilities
         self.probabilities = self._compute_posterior_probabilities(
-            prior_probabilities=self.prior_probabilities, evidence_values=self.evidences)
+            prior_probabilities=self.prior_probabilities, evidence_values=self.evidences
+        )
 
         if self.verbose:
-            print('UQpy: Bayesian Model Selection analysis completed!')
+            print("UQpy: Bayesian Model Selection analysis completed!")
 
     def sort_models(self):
         """
@@ -192,7 +231,12 @@ class BayesModelSelection:
         self.evidences = [self.evidences[i] for i in sort_idx]
 
     @staticmethod
-    def _estimate_evidence(method_evidence_computation, inference_model, posterior_samples, log_posterior_values):
+    def _estimate_evidence(
+        method_evidence_computation,
+        inference_model,
+        posterior_samples,
+        log_posterior_values,
+    ):
         """
         Compute the model evidence, given samples from the parameter posterior pdf.
 
@@ -220,13 +264,18 @@ class BayesModelSelection:
         :rtype evidence: float
 
         """
-        if method_evidence_computation.lower() == 'harmonic_mean':
+        if method_evidence_computation.lower() == "harmonic_mean":
             # samples[int(0.5 * len(samples)):]
-            log_likelihood_values = log_posterior_values - inference_model.prior.log_pdf(x=posterior_samples)
-            temp = np.mean(1./np.exp(log_likelihood_values))
+            log_likelihood_values = (
+                log_posterior_values
+                - inference_model.prior.log_pdf(x=posterior_samples)
+            )
+            temp = np.mean(1.0 / np.exp(log_likelihood_values))
         else:
-            raise ValueError('UQpy: Only the harmonic mean method is currently supported')
-        return 1./temp
+            raise ValueError(
+                "UQpy: Only the harmonic mean method is currently supported"
+            )
+        return 1.0 / temp
 
     @staticmethod
     def _compute_posterior_probabilities(prior_probabilities, evidence_values):
@@ -250,10 +299,8 @@ class BayesModelSelection:
         :rtype probabilities: list (length nmodels) of floats
 
         """
-        scaled_evidences = [evi * prior_prob for (evi, prior_prob) in zip(evidence_values, prior_probabilities)]
+        scaled_evidences = [
+            evi * prior_prob
+            for (evi, prior_prob) in zip(evidence_values, prior_probabilities)
+        ]
         return scaled_evidences / np.sum(scaled_evidences)
-
-
-
-
-

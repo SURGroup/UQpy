@@ -8,6 +8,7 @@ from UQpy.RunModel import RunModel
 #                            Define the model - probability model or python model
 ########################################################################################################################
 
+
 class InferenceModel:
     """
     Define a probabilistic model for inference.
@@ -53,19 +54,29 @@ class InferenceModel:
     **Methods:**
 
     """
+
     # Last Modified: 05/13/2020 by Audrey Olivier
 
-    def __init__(self, nparams, runmodel_object=None, log_likelihood=None, dist_object=None, name='',
-                 error_covariance=1.0, prior=None, verbose=False, **kwargs_likelihood
-                 ):
+    def __init__(
+        self,
+        nparams,
+        runmodel_object=None,
+        log_likelihood=None,
+        dist_object=None,
+        name="",
+        error_covariance=1.0,
+        prior=None,
+        verbose=False,
+        **kwargs_likelihood
+    ):
 
         # Initialize some parameters
         self.nparams = nparams
         if not isinstance(self.nparams, int) or self.nparams <= 0:
-            raise TypeError('Input nparams must be an integer > 0.')
+            raise TypeError("Input nparams must be an integer > 0.")
         self.name = name
         if not isinstance(self.name, str):
-            raise TypeError('Input name must be a string.')
+            raise TypeError("Input name must be a string.")
         self.verbose = verbose
 
         self.runmodel_object = runmodel_object
@@ -74,36 +85,60 @@ class InferenceModel:
         self.dist_object = dist_object
         self.kwargs_likelihood = kwargs_likelihood
         # Perform checks on inputs runmodel_object, log_likelihood, distribution_object that define the inference model
-        if (self.runmodel_object is None) and (self.log_likelihood is None) and (self.dist_object is None):
-            raise ValueError('UQpy: One of runmodel_object, log_likelihood or dist_object inputs must be provided.')
-        if self.runmodel_object is not None and (not isinstance(self.runmodel_object, RunModel)):
-            raise TypeError('UQpy: Input runmodel_object should be an object of class RunModel.')
+        if (
+            (self.runmodel_object is None)
+            and (self.log_likelihood is None)
+            and (self.dist_object is None)
+        ):
+            raise ValueError(
+                "UQpy: One of runmodel_object, log_likelihood or dist_object inputs must be provided."
+            )
+        if self.runmodel_object is not None and (
+            not isinstance(self.runmodel_object, RunModel)
+        ):
+            raise TypeError(
+                "UQpy: Input runmodel_object should be an object of class RunModel."
+            )
         if (self.log_likelihood is not None) and (not callable(self.log_likelihood)):
-            raise TypeError('UQpy: Input log_likelihood should be a callable.')
+            raise TypeError("UQpy: Input log_likelihood should be a callable.")
         if self.dist_object is not None:
             if (self.runmodel_object is not None) or (self.log_likelihood is not None):
-                raise ValueError('UQpy: Input dist_object cannot be provided concurrently with log_likelihood '
-                                 'or runmodel_object.')
+                raise ValueError(
+                    "UQpy: Input dist_object cannot be provided concurrently with log_likelihood "
+                    "or runmodel_object."
+                )
             if not isinstance(self.dist_object, Distribution):
-                raise TypeError('UQpy: Input dist_object should be an object of class Distribution.')
-            if not hasattr(self.dist_object, 'log_pdf'):
-                if not hasattr(self.dist_object, 'pdf'):
-                    raise AttributeError('UQpy: dist_object should have a log_pdf or pdf method.')
+                raise TypeError(
+                    "UQpy: Input dist_object should be an object of class Distribution."
+                )
+            if not hasattr(self.dist_object, "log_pdf"):
+                if not hasattr(self.dist_object, "pdf"):
+                    raise AttributeError(
+                        "UQpy: dist_object should have a log_pdf or pdf method."
+                    )
                 self.dist_object.log_pdf = lambda x: np.log(self.dist_object.pdf(x))
             # Check which parameters need to be updated (i.e., those set as None)
             init_params = self.dist_object.get_params()
-            self.list_params = [key for key in self.dist_object.order_params if init_params[key] is None]
+            self.list_params = [
+                key for key in self.dist_object.order_params if init_params[key] is None
+            ]
             if len(self.list_params) != self.nparams:
-                raise TypeError('UQpy: Incorrect dimensions between nparams and number of inputs set to None.')
+                raise TypeError(
+                    "UQpy: Incorrect dimensions between nparams and number of inputs set to None."
+                )
 
         # Define prior if it is given
         self.prior = prior
         if self.prior is not None:
             if not isinstance(self.prior, Distribution):
-                raise TypeError('UQpy: Input prior should be an object of class Distribution.')
-            if not hasattr(self.prior, 'log_pdf'):
-                if not hasattr(self.prior, 'pdf'):
-                    raise AttributeError('UQpy: Input prior should have a log_pdf or pdf method.')
+                raise TypeError(
+                    "UQpy: Input prior should be an object of class Distribution."
+                )
+            if not hasattr(self.prior, "log_pdf"):
+                if not hasattr(self.prior, "pdf"):
+                    raise AttributeError(
+                        "UQpy: Input prior should have a log_pdf or pdf method."
+                    )
                 self.prior.log_pdf = lambda x: np.log(self.prior.pdf(x))
 
     def evaluate_log_likelihood(self, params, data):
@@ -137,9 +172,11 @@ class InferenceModel:
         if not isinstance(params, np.ndarray):
             params = np.array(params)
         if len(params.shape) != 2:
-            raise TypeError('UQpy: input params should be a nested list or 2d ndarray of shape (nsamples, dimension).')
+            raise TypeError(
+                "UQpy: input params should be a nested list or 2d ndarray of shape (nsamples, dimension)."
+            )
         if params.shape[1] != self.nparams:
-            raise ValueError('UQpy: Wrong dimensions in params.')
+            raise ValueError("UQpy: Wrong dimensions in params.")
 
         # Case 1 - Forward model is given by RunModel
         if self.runmodel_object is not None:
@@ -149,35 +186,54 @@ class InferenceModel:
             # Case 1.a: Gaussian error model
             if self.log_likelihood is None:
                 if isinstance(self.error_covariance, (float, int)):
-                    norm = Normal(loc=0., scale=np.sqrt(self.error_covariance))
+                    norm = Normal(loc=0.0, scale=np.sqrt(self.error_covariance))
                     log_like_values = np.array(
-                        [np.sum([norm.log_pdf(data_i-outpt_i) for data_i, outpt_i in zip(data, outpt)])
-                         for outpt in model_outputs]
+                        [
+                            np.sum(
+                                [
+                                    norm.log_pdf(data_i - outpt_i)
+                                    for data_i, outpt_i in zip(data, outpt)
+                                ]
+                            )
+                            for outpt in model_outputs
+                        ]
                     )
                 else:
                     mvnorm = MVNormal(data, cov=self.error_covariance)
                     log_like_values = np.array(
-                        [mvnorm.log_pdf(x=np.array(outpt).reshape((-1,))) for outpt in model_outputs]
+                        [
+                            mvnorm.log_pdf(x=np.array(outpt).reshape((-1,)))
+                            for outpt in model_outputs
+                        ]
                     )
 
             # Case 1.b: likelihood is user-defined
             else:
                 log_like_values = self.log_likelihood(
-                    data=data, model_outputs=model_outputs, params=params, **self.kwargs_likelihood
+                    data=data,
+                    model_outputs=model_outputs,
+                    params=params,
+                    **self.kwargs_likelihood
                 )
                 if not isinstance(log_like_values, np.ndarray):
                     log_like_values = np.array(log_like_values)
                 if log_like_values.shape != (params.shape[0],):
-                    raise ValueError('UQpy: Likelihood function should output a (nsamples, ) ndarray of likelihood '
-                                     'values.')
+                    raise ValueError(
+                        "UQpy: Likelihood function should output a (nsamples, ) ndarray of likelihood "
+                        "values."
+                    )
 
         # Case 2 - Log likelihood is user defined
         elif self.log_likelihood is not None:
-            log_like_values = self.log_likelihood(data=data, params=params, **self.kwargs_likelihood)
+            log_like_values = self.log_likelihood(
+                data=data, params=params, **self.kwargs_likelihood
+            )
             if not isinstance(log_like_values, np.ndarray):
                 log_like_values = np.array(log_like_values)
             if log_like_values.shape != (params.shape[0],):
-                raise ValueError('UQpy: Likelihood function should output a (nsamples, ) ndarray of likelihood values.')
+                raise ValueError(
+                    "UQpy: Likelihood function should output a (nsamples, ) ndarray of likelihood values."
+                )
 
         # Case 3 - Learn parameters of a probability distribution pi. Data consists in iid sampled from pi.
         else:
@@ -221,4 +277,3 @@ class InferenceModel:
         log_prior_eval = self.prior.log_pdf(x=params)
 
         return log_likelihood_eval + log_prior_eval
-
