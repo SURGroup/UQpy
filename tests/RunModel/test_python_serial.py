@@ -54,8 +54,8 @@ def test_python_parallel():
 
 # def test_third_party_serial():
 #     names = ['var1', 'var11', 'var111']
-#     m = RunModel(ntasks=1, model_script='matlab_model_sum_scalar.py',
-#                  input_template='sum_scalar.m', var_names=names, model_object_name="matlab",
+#     m = RunModel(ntasks=1, model_script='third_party_script.py',
+#                  input_template='python_model_third_party.py', var_names=names, model_object_name="python",
 #                  output_script='process_matlab_output.py', output_object_name='read_output',
 #                  resume=False, model_dir='Matlab_Model', fmt="{:>10.4f}", verbose=True)
 #     m.run(x_mcs.samples)
