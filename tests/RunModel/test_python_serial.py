@@ -4,16 +4,15 @@ from UQpy.Distributions import Normal
 import pytest
 import shutil
 import os
+from pathlib import Path
 
-# sys.path.append()
 
 d = Normal(loc=0, scale=1)
 x_mcs = MCS(dist_object=[d, d, d], nsamples=5, random_state=1234)
-# copy the model file to the parent directory
-# shutil.copy2('python_model.py', )
 
 
 def test_div_zero():
+    print(os.getcwd())
     with pytest.raises(TypeError):
         RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs', fmt=20, delete_files=True)
 
@@ -38,18 +37,34 @@ def test_samples():
         RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs', samples="samples_string", delete_files=True)
 
 
-def test_serial_input():
-    m11 = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs', model_dir='temp',
-                   verbose=True)
-    m11.run(samples=x_mcs.samples, )
-    assert (m11.qoi_list, [2.5086338287600496, 0.6605587413536298, 1.7495075921211787, -2.3182103441722544, -3.297351053358514])
+def test_python_serial_workflow_class():
+    shutil.copy2(os.getcwd() + '/python_model.py', str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
+    model_python_serial_class = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs', verbose=True)
+    model_python_serial_class.run(samples=x_mcs.samples)
+    assert model_python_serial_class.qoi_list == [2.5086338287600496, 0.6605587413536298, 1.7495075921211787, -2.3182103441722544, -3.297351053358514]
 
 
-def test_python_parallel():
-    m11 = RunModel(ntasks=3, model_script='python_model.py', model_object_name='SumRVs', model_dir='temp',
-                   verbose=True)
-    m11.run(samples=x_mcs.samples, )
-    assert(m11.qoi_list, [2.5086338287600496, 0.6605587413536298, 1.7495075921211787, -2.3182103441722544, -3.297351053358514])
+def test_python_serial_workflow_function():
+    shutil.copy2(os.getcwd() + '/python_model.py', str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
+    model_python_serial_function = RunModel(ntasks=1, model_script='python_model.py', model_object_name='sum_rvs', verbose=True)
+    model_python_serial_function.run(samples=x_mcs.samples)
+    assert model_python_serial_function.qoi_list == [2.5086338287600496, 0.6605587413536298, 1.7495075921211787, -2.3182103441722544, -3.297351053358514]
+
+
+def test_python_parallel_workflow_class():
+    shutil.copy2(os.getcwd() + '/python_model.py', str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
+    model_python_parallel_class = RunModel(ntasks=3, model_script='python_model.py', model_object_name='SumRVs', verbose=True)
+    model_python_parallel_class.run(samples=x_mcs.samples)
+    os.remove(str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
+    assert model_python_parallel_class.qoi_list == [2.5086338287600496, 0.6605587413536298, 1.7495075921211787, -2.3182103441722544, -3.297351053358514]
+
+
+def test_python_parallel_workflow_function():
+    shutil.copy2(os.getcwd() + '/python_model.py', str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
+    model_python_parallel_function = RunModel(ntasks=3, model_script='python_model.py', model_object_name='SumRVs', verbose=True)
+    model_python_parallel_function.run(samples=x_mcs.samples)
+    os.remove(str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
+    assert model_python_parallel_function.qoi_list == [2.5086338287600496, 0.6605587413536298, 1.7495075921211787, -2.3182103441722544, -3.297351053358514]
 
 
 # def test_third_party_serial():
