@@ -38,32 +38,32 @@ def test_samples():
 
 
 def test_python_serial_workflow_class():
-    shutil.copy2(os.getcwd() + '/python_model.py', str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
+    # shutil.copy2(os.getcwd() + '/python_model.py', str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
     model_python_serial_class = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs', verbose=True)
     model_python_serial_class.run(samples=x_mcs.samples)
     assert model_python_serial_class.qoi_list == [2.5086338287600496, 0.6605587413536298, 1.7495075921211787, -2.3182103441722544, -3.297351053358514]
 
 
 def test_python_serial_workflow_function():
-    shutil.copy2(os.getcwd() + '/python_model.py', str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
+    # shutil.copy2(os.getcwd() + '/python_model.py', str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
     model_python_serial_function = RunModel(ntasks=1, model_script='python_model.py', model_object_name='sum_rvs', verbose=True)
     model_python_serial_function.run(samples=x_mcs.samples)
     assert model_python_serial_function.qoi_list == [2.5086338287600496, 0.6605587413536298, 1.7495075921211787, -2.3182103441722544, -3.297351053358514]
 
 
 def test_python_parallel_workflow_class():
-    shutil.copy2(os.getcwd() + '/python_model.py', str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
+    # shutil.copy2(os.getcwd() + '/python_model.py', str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
     model_python_parallel_class = RunModel(ntasks=3, model_script='python_model.py', model_object_name='SumRVs', verbose=True)
     model_python_parallel_class.run(samples=x_mcs.samples)
-    os.remove(str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
+    # os.remove(str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
     assert model_python_parallel_class.qoi_list == [2.5086338287600496, 0.6605587413536298, 1.7495075921211787, -2.3182103441722544, -3.297351053358514]
 
 
 def test_python_parallel_workflow_function():
-    shutil.copy2(os.getcwd() + '/python_model.py', str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
+    # shutil.copy2(os.getcwd() + '/python_model.py', str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
     model_python_parallel_function = RunModel(ntasks=3, model_script='python_model.py', model_object_name='SumRVs', verbose=True)
     model_python_parallel_function.run(samples=x_mcs.samples)
-    os.remove(str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
+    # os.remove(str(Path(os.getcwd()).parent.parent.absolute()) + '/python_model.py')
     assert model_python_parallel_function.qoi_list == [2.5086338287600496, 0.6605587413536298, 1.7495075921211787, -2.3182103441722544, -3.297351053358514]
 
 
