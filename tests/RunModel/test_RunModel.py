@@ -2,13 +2,13 @@ from UQpy.SampleMethods import MCS
 from UQpy.RunModel import RunModel
 from UQpy.Distributions import Normal
 import pytest
-import shutil
 import os
-from pathlib import Path
 import numpy as np
+
 
 d = Normal(loc=0, scale=1)
 x_mcs = MCS(dist_object=[d, d, d], nsamples=5, random_state=1234)
+x_mcs_new = MCS(dist_object=[d, d, d], nsamples=5, random_state=2345)
 verbose_parameter = True
 os.chdir('./tests/RunModel')
 
@@ -71,7 +71,6 @@ def test_append_samples_true():
     model_python_serial_class = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs',
                                          vec=False, verbose=verbose_parameter, samples=x_mcs.samples)
     assert np.allclose(np.array(model_python_serial_class.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
-    x_mcs_new = MCS(dist_object=[d, d, d], nsamples=5, random_state=2345)
     model_python_serial_class.run(x_mcs_new.samples, append_samples=True)
     assert np.allclose(np.array(model_python_serial_class.qoi_list).flatten(),
                        np.sum(np.vstack((x_mcs.samples, x_mcs_new.samples)), axis=1))
@@ -81,7 +80,6 @@ def test_append_samples_false():
     model_python_serial_class = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs',
                                          vec=False, verbose=verbose_parameter, samples=x_mcs.samples)
     assert np.allclose(np.array(model_python_serial_class.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
-    x_mcs_new = MCS(dist_object=[d, d, d], nsamples=5, random_state=2345)
     model_python_serial_class.run(x_mcs_new.samples, append_samples=False)
     assert np.allclose(np.array(model_python_serial_class.qoi_list).flatten(), np.sum(x_mcs_new.samples, axis=1))
 
@@ -206,4 +204,10 @@ def test_python_serial_workflow_function_wrong_object_name():
     with pytest.raises(ValueError):
         model = RunModel(ntasks=1, model_script='python_model.py', vec=False, verbose=verbose_parameter,
                          model_object_name="random_model_name")
+        model.run(x_mcs.samples)
+
+
+def test_python_serial_workflow_function_no_objects():
+    with pytest.raises(ValueError):
+        model = RunModel(ntasks=1, model_script='python_model_blank.py', vec=False, verbose=verbose_parameter)
         model.run(x_mcs.samples)
