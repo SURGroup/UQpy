@@ -12,6 +12,9 @@ d = Normal(loc=0, scale=1)
 x_mcs = MCS(dist_object=[d, d, d], nsamples=5, random_state=1234)
 temp = False
 
+print(os.getcwd())
+os.chdir('./tests/RunModel')
+
 
 def test_div_zero():
     print(os.getcwd())
@@ -84,6 +87,9 @@ def test_python_parallel_workflow_function():
 
 
 def test_third_party_serial():
+    import os
+    print(os.getcwd())
+    print(os.listdir())
     names = ['var1', 'var11', 'var111']
     m = RunModel(ntasks=1, model_script='python_model_sum_scalar.py',
                  input_template='sum_scalar.py', var_names=names, model_object_name="matlab",
@@ -94,6 +100,9 @@ def test_third_party_serial():
 
 
 def test_third_party_parallel():
+    import os
+    print(os.getcwd())
+    print(os.listdir())
     names = ['var1', 'var11', 'var111']
     m = RunModel(ntasks=3, model_script='python_model_sum_scalar.py',
                  input_template='sum_scalar.py', var_names=names, model_object_name="matlab",
