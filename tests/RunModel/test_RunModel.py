@@ -100,6 +100,20 @@ def test_python_serial_workflow_function():
     assert np.allclose(np.array(model_python_serial_function.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
 
 
+def test_python_serial_workflow_function_no_object_name():
+    model_python_serial_function = RunModel(ntasks=1, model_script='python_model_function.py', vec=False,
+                                            verbose=verbose_parameter)
+    model_python_serial_function.run(samples=x_mcs.samples)
+    assert np.allclose(np.array(model_python_serial_function.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
+
+
+def test_python_serial_workflow_class_no_object_name():
+    model_python_serial_function = RunModel(ntasks=1, model_script='python_model_class.py', vec=False,
+                                            verbose=verbose_parameter)
+    model_python_serial_function.run(samples=x_mcs.samples)
+    assert np.allclose(np.array(model_python_serial_function.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
+
+
 def test_python_parallel_workflow_class():
     model_python_parallel_class = RunModel(ntasks=3, model_script='python_model.py', model_object_name='SumRVs',
                                            verbose=verbose_parameter)
@@ -118,8 +132,36 @@ def test_third_party_serial():
     names = ['var1', 'var11', 'var111']
     m = RunModel(ntasks=1, model_script='python_model_sum_scalar.py',
                  input_template='sum_scalar.py', var_names=names, model_object_name="matlab",
-                 output_script='process_matlab_output.py', output_object_name='read_output',
+                 output_script='process_third_party_output.py', output_object_name='read_output',
                  resume=False, fmt="{:>10.4f}", verbose=verbose_parameter, delete_files=True)
+    m.run(x_mcs.samples)
+    assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
+
+
+def test_third_party_serial_output_class():
+    names = ['var1', 'var11', 'var111']
+    m = RunModel(ntasks=1, model_script='python_model_sum_scalar.py',
+                 input_template='sum_scalar.py', var_names=names, model_object_name="matlab",
+                 output_script='process_third_party_output_class.py', output_object_name='ReadOutput',
+                 resume=False, fmt="{:>10.4f}", verbose=verbose_parameter, delete_files=True)
+    m.run(x_mcs.samples)
+    assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
+
+
+def test_third_party_serial_no_output_class():
+    names = ['var1', 'var11', 'var111']
+    m = RunModel(ntasks=1, model_script='python_model_sum_scalar.py', input_template='sum_scalar.py', var_names=names,
+                 model_object_name="matlab", output_script='process_third_party_output_class.py', resume=False,
+                 fmt="{:>10.4f}", verbose=verbose_parameter, delete_files=True)
+    m.run(x_mcs.samples)
+    assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
+
+
+def test_third_party_serial_no_output_function():
+    names = ['var1', 'var11', 'var111']
+    m = RunModel(ntasks=1, model_script='python_model_sum_scalar.py', input_template='sum_scalar.py', var_names=names,
+                 model_object_name="matlab", output_script='process_third_party_output.py', resume=False,
+                 fmt="{:>10.4f}", verbose=verbose_parameter, delete_files=True)
     m.run(x_mcs.samples)
     assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
 
@@ -128,7 +170,7 @@ def test_third_party_parallel():
     names = ['var1', 'var11', 'var111']
     m = RunModel(ntasks=3, model_script='python_model_sum_scalar.py',
                  input_template='sum_scalar.py', var_names=names, model_object_name="matlab",
-                 output_script='process_matlab_output.py', output_object_name='read_output',
+                 output_script='process_third_party_output.py', output_object_name='read_output',
                  resume=False, fmt="{:>10.4f}", verbose=verbose_parameter, delete_files=True)
     m.run(x_mcs.samples)
     assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
@@ -137,12 +179,12 @@ def test_third_party_parallel():
 def test_third_party_default_var_names():
     model_third_party_default_names = RunModel(ntasks=1, model_script='python_model_sum_scalar_default.py',
                                                input_template='sum_scalar_default.py', model_object_name="python",
-                                               output_script='process_matlab_output.py',
+                                               output_script='process_third_party_output.py',
                                                output_object_name='read_output',
                                                resume=False, fmt="{:>10.4f}", verbose=verbose_parameter,
                                                delete_files=True, samples=x_mcs.samples)
-    assert np.allclose(np.array(model_third_party_default_names.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
-
+    assert np.allclose(np.array(model_third_party_default_names.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1),
+                       atol=1e-4)
 
 
 def test_third_party_var_names():
@@ -150,5 +192,18 @@ def test_third_party_var_names():
     with pytest.raises(ValueError):
         RunModel(ntasks=1, model_script='python_model_sum_scalar.py',
                  input_template='sum_scalar.py', var_names=names, model_object_name="matlab",
-                 output_script='process_matlab_output.py', output_object_name='read_output',
+                 output_script='process_third_party_output.py', output_object_name='read_output',
                  resume=False, fmt="{:>10.4f}", verbose=verbose_parameter, delete_files=True, samples=x_mcs.samples)
+
+
+def test_python_serial_workflow_function_object_name_error():
+    with pytest.raises(ValueError):
+        model = RunModel(ntasks=1, model_script='python_model.py', vec=False, verbose=verbose_parameter)
+        model.run(x_mcs.samples)
+
+
+def test_python_serial_workflow_function_wrong_object_name():
+    with pytest.raises(ValueError):
+        model = RunModel(ntasks=1, model_script='python_model.py', vec=False, verbose=verbose_parameter,
+                         model_object_name="random_model_name")
+        model.run(x_mcs.samples)
