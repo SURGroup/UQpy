@@ -460,6 +460,9 @@ class RunModel:
 
         # Check if there is a template input file or not and execute the appropriate function
         if self.input_template is not None:  # If there is a template input file
+            print("User requested print statement")
+            print(os.getcwd())
+            print(os.listdir())
             print(os.path.isfile(self.input_template))
             print(os.access(self.input_template, os.R_OK))
             # Check if it is a file and is readable
