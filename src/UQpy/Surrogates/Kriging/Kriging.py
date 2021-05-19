@@ -296,7 +296,7 @@ class Kriging:
             self.corr_model_params = minimizer[t, :]
 
         # Updated Correlation matrix corresponding to MLE estimates of hyperparameters
-        self.R = self.corr_model(x=s_, s=s_, params=self.corr_model_params)
+        self.R = self.corr_model(x=s_, s=s_, params=self.corr_model_params) + 2 ** (-52) * np.eye(s_.shape[0])
         # Compute the regression coefficient (solving this linear equation: F * beta = Y)
         c = np.linalg.cholesky(self.R)  # Eq: 3.8, DACE
         c_inv = np.linalg.inv(c)
