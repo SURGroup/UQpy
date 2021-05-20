@@ -191,14 +191,17 @@ class SROM:
 
         """
         from scipy import optimize
-        self.weights_distribution = weights_distribution
-        self.weights_moments = weights_moments
-        self.weights_correlation = weights_correlation
-        self.weights_errors = weights_errors
-        self.properties = properties
-
-        # Check properties to match
-        if self.properties is None:
+        if weights_distribution is not None:
+            self.weights_distribution = weights_distribution
+        if weights_moments is not None:
+            self.weights_moments = weights_moments
+        if weights_correlation is not None:
+            self.weights_correlation = weights_correlation
+        if weights_errors is not None:
+            self.weights_errors = weights_errors
+        if properties is not None:
+            self.properties = properties
+        else:
             self.properties = [True, True, True, False]
 
         self._init_srom()
