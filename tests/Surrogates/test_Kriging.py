@@ -16,18 +16,18 @@ krig2.fit(samples=samples, values=values)
 
 
 def test_fit():
-    tmp1 = np.round(krig.corr_model_params, 3) == np.array([3.])
-    tmp2 = np.round(krig2.corr_model_params, 3) == np.array([1.459])
+    tmp1 = np.round(krig.corr_model_params, 3) == np.array([1.883])
+    tmp2 = np.round(krig2.corr_model_params, 3) == np.array([0.866])
     assert tmp1 and tmp2
 
 
 def test_predict():
-    assert (np.round(krig.predict([[1], [np.pi/2], [np.pi]], True), 3) == np.array([[0.55,  0.001, -1.],
-                                                                                   [0.043,  0.01,  0.]])).all()
+    assert (np.round(krig.predict([[1], [np.pi/2], [np.pi]], True), 3) == np.array([[0.54,  -0., -1.],
+                                                                                   [0.017,  0.005,  0.]])).all()
 
 
 def test_jacobian():
-    assert (np.round(krig.jacobian([[np.pi], [np.pi/2]]), 3) == np.array([0., -1.009])).all()
+    assert (np.round(krig.jacobian([[np.pi], [np.pi/2]]), 3) == np.array([0., -1.])).all()
 
 
 def test_regress():
