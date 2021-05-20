@@ -7,11 +7,11 @@ dist = Uniform(loc=0, scale=5)
 samples = MCS(dist_object=dist, nsamples=20, random_state=0).samples
 values = np.cos(samples)
 krig = Kriging(reg_model='Linear', corr_model='Gaussian', corr_model_params=[1], bounds=[[0.01, 5]],
-               n_opt=2, random_state=1)
+               nopt=5, random_state=1)
 krig.fit(samples=samples, values=values)
 
 krig2 = Kriging(reg_model='Constant', corr_model='Gaussian', corr_model_params=[1], bounds=[[0.01, 5]],
-                n_opt=20, normalize=False, random_state=2)
+                nopt=20, normalize=False, random_state=2)
 krig2.fit(samples=samples, values=values)
 
 
@@ -30,7 +30,7 @@ def test_jacobian():
     assert (np.round(krig.jacobian([[np.pi], [np.pi/2]]), 3) == np.array([0., -1.009])).all()
 
 
-def test__regress1():
+def test_regress():
     krig.reg_model = 'Constant'
     tmp = krig._regress()([[0], [1]])
     tmp_test1 = (tmp[0] == np.array([[1.], [1.]])).all() and (tmp[1] == np.array([[[0.]], [[0.]]])).all()
@@ -51,7 +51,7 @@ def test__regress1():
     assert tmp_test1 and tmp_test2 and tmp_test3
 
 
-def test__corr():
+def test_corr():
     krig.corr_model = 'Exponential'
     rx_exponential = (np.round(krig._corr()([[0], [1], [2]], [[2]], np.array([1])), 3) == np.array([[0.135], [0.368],
                                                                                                     [1.]])).all()
