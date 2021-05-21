@@ -25,3 +25,14 @@ def test_run2():
     tmp = np.round(y.sample_weights, 3) == np.array([0.051, 0.023, 0.084, 0.05, 0.108, 0.071, 0.054, 0.061, 0.006,
                                                      0.065, 0.079, 0.138, 0.032, 0.046, 0.039, 0.092])
     assert tmp.all()
+
+
+def test_run3():
+    y = SROM(samples=x.samples.tolist(), target_dist_object=marginals, moments=[[6., 6.], [54., 54.]],
+             weights_errors=np.array([1, 0.2, 0.1]), properties=[True, True, True, True],
+             weights_distribution=np.ones(shape=(x.samples.shape[0], x.samples.shape[1])).tolist(),
+             weights_moments=np.reciprocal(np.square([[6., 6.], [54., 54.]])).tolist(),
+             weights_correlation=np.identity(x.samples.shape[1]).tolist())
+    tmp = np.round(y.sample_weights, 3) == np.array([0.051, 0.023, 0.084, 0.05, 0.108, 0.071, 0.054, 0.061, 0.006,
+                                                     0.065, 0.079, 0.138, 0.032, 0.046, 0.039, 0.092])
+    assert tmp.all()
