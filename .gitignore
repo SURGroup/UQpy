@@ -241,3 +241,8 @@ examples/
 # End of https://www.gitignore.io/api/osx,matlab,python,pycharm
 logo/
 /tests/Transformations/test-output.xml
+/.
+/process_matlab_output.py
+/python_model.py
+/python_model_third_party.py
+/third_party_script.py
