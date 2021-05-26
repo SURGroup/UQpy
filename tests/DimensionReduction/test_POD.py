@@ -1,4 +1,5 @@
 from UQpy.DimensionReduction import DirectPOD, SnapshotPOD, HOSVD
+from UQpy.DimensionReduction.baseclass import POD
 import numpy as np
 
 # Define a dataset to test DirectPOD, SnapshotPOD and HOSVD methods
@@ -16,6 +17,13 @@ Data[:, :, 2] = [
 [-0.3698,  0.0151],
 [2.3753,  4.7146]]
 
+def test_DirectPOD_listData():
+    list_data=list(Data)
+    pod_dir = DirectPOD(input_sol=list_data, verbose=True)
+    pod_output=pod_dir.run()
+    actual_result=pod_output[0][0][1][1]
+    expected_result=0.3054
+    assert expected_result==round(actual_result,6)
 
 def test_DirectPOD():
     pod_dir = DirectPOD(input_sol=Data, modes=1, verbose=False)
@@ -26,6 +34,20 @@ def test_SnapshotPOD():
     pod_snap = SnapshotPOD(input_sol=Data, modes=1, verbose=False)
     assert round(pod_snap.run()[0][0][1][1], 6) == -0.181528
 
+def test_SnapshotPOD_listData():
+    list_data=list(Data)
+    pod_dir = SnapshotPOD(input_sol=list_data, verbose=True)
+    pod_output=pod_dir.run()
+    actual_result=pod_output[0][0][1][1]
+    expected_result=0.3054
+    assert expected_result==round(actual_result,6)
+
+def test_POD_unfold():
+    list_data = list(Data)
+    pod_output=POD.unfold(list_data)
+    actual_result = pod_output[0][0][1]
+    expected_result = 6.7121
+    assert expected_result==round(actual_result,6)
 
 def test_HOSVD():
     hosvd = HOSVD(input_sol=Data, reconstr_perc=90, verbose=False)
