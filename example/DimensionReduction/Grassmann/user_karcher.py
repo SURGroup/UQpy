@@ -1,5 +1,5 @@
 import numpy as np
-from UQpy.DimensionReduction import Grassmann
+from UQpy.dimension_reduction import GrassmannManifold
 
 def my_karcher(data_points, distance_fun, kwargs):
 
@@ -43,7 +43,7 @@ def my_karcher(data_points, distance_fun, kwargs):
 
         fmean = []
         for i in range(n_mat):
-            fmean.append(Grassmann.frechet_variance(data_points[i], data_points, distance_fun))
+            fmean.append(GrassmannManifold.frechet_variance(data_points[i], data_points, distance_fun))
 
         index_0 = fmean.index(min(fmean))
 
@@ -60,11 +60,11 @@ def my_karcher(data_points, distance_fun, kwargs):
             for i in range(len(indices)):
                 alpha = 0.5 / k
                 idx = indices[i]
-                _gamma = Grassmann.log_map(points_grassmann=[data_points[idx]], ref=np.asarray(mean_element))
+                _gamma = GrassmannManifold.log_map(points_grassmann=[data_points[idx]], ref=np.asarray(mean_element))
 
                 step = 2 * alpha * _gamma[0]
 
-                X = Grassmann.exp_map(points_tangent=[step], ref=np.asarray(mean_element))
+                X = GrassmannManifold.exp_map(points_tangent=[step], ref=np.asarray(mean_element))
 
                 _gamma = []
                 mean_element = X[0]

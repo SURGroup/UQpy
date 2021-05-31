@@ -1,6 +1,6 @@
 # Test the Correlation module
 
-from UQpy.Transformations import Decorrelate
+from UQpy.transformations import Decorrelate
 import numpy as np
 import pytest
 

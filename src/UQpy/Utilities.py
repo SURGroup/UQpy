@@ -401,7 +401,7 @@ def _nn_coord(x, k):
 def correlation_distortion(dist_object, rho):
     """
         This method computes the corelation distortion from Gaussian distribution to any other distribution defined in
-        UQpy.Distributions
+        UQpy.distributions
 
         **Inputs:**
 

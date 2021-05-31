@@ -1,6 +1,6 @@
-from UQpy.SampleMethods import MCS
+from UQpy.sample_methods import MCS
 from UQpy.RunModel import RunModel
-from UQpy.Distributions import Normal
+from UQpy.distributions import Normal
 import pytest
 import os
 import numpy as np

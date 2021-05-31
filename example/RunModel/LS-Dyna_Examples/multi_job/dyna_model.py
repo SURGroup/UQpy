@@ -1,6 +1,6 @@
-from UQpy.Distributions import Uniform
+from UQpy.distributions import Uniform
 from UQpy.RunModel import RunModel
-from UQpy.SampleMethods import MCS
+from UQpy.sample_methods import MCS
 
 # Define the distribution objects
 d1 = Uniform(loc=0.02, scale=0.06)

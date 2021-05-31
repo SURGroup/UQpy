@@ -1,5 +1,5 @@
-from UQpy.Distributions import Uniform
-from UQpy.Surrogates import *
+from UQpy.distributions import Uniform
+from UQpy.surrogates import *
 import numpy as np
 
 np.random.seed(1)
@@ -19,8 +19,8 @@ def poly_func(x):
     return p
 
 def pce_model(polys, x, y):
-    lstsq = PolyChaosLstsq(poly_object=polys)
-    pce = PCE(method=lstsq)
+    lstsq = LeastSquareRegression(poly_object=polys)
+    pce = pce(method=lstsq)
     pce.fit(x, y)
     return pce
 
@@ -40,14 +40,14 @@ def test_1():
 
 def test_2():
     """
-    Test PCE class coefficients
+    Test polynomial_chaos class coefficients
     """
     assert round(float(pce_model(polys, x, y).C[1]), 3) == 0.328
 
 
 def test_3():
     """
-    Test PCE class prediction
+    Test polynomial_chaos class prediction
     """
     model = pce_model(polys, x, y)
     assert round(float(pce_predict(x, model.C)[1]), 3) == 0.338

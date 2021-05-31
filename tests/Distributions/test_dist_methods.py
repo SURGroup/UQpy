@@ -1,4 +1,4 @@
-from UQpy.Distributions import *
+from UQpy.distributions import *
 import numpy as np
 
 # Test all functions for one type of continuous distribution: uniform

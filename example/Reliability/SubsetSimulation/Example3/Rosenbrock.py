@@ -1,4 +1,4 @@
-from UQpy.Distributions import DistributionND
+from UQpy.distributions import DistributionND
 import numpy as np
 
 class Rosenbrock(DistributionND):

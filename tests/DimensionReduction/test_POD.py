@@ -1,5 +1,5 @@
-from UQpy.DimensionReduction import DirectPOD, SnapshotPOD, HOSVD
-from UQpy.DimensionReduction.baseclass import POD
+from UQpy.dimension_reduction import DirectPOD, SnapshotPOD, HigherOrderSVD
+from UQpy.dimension_reduction.baseclass import POD
 import numpy as np
 
 # Define a dataset to test DirectPOD, SnapshotPOD and HOSVD methods
@@ -50,7 +50,7 @@ def test_POD_unfold():
     assert expected_result==round(actual_result,6)
 
 def test_HOSVD():
-    hosvd = HOSVD(input_sol=Data, reconstr_perc=90, verbose=False)
+    hosvd = HigherOrderSVD(input_sol=Data, reconstr_perc=90, verbose=False)
     assert round(hosvd.run(get_error=True)[0][0][1][1], 6) == 0.714928
 
 
@@ -83,28 +83,28 @@ def test_DirectPOD_both_modes_and_reconstr_error():
 
 
 def test_HOSVD_modes_less_than_zero():
-    hosvd = HOSVD(input_sol=Data, modes=-1, verbose=False)
+    hosvd = HigherOrderSVD(input_sol=Data, modes=-1, verbose=False)
     a, b = hosvd.run()
     assert a == []
     assert b == []
 
 
 def test_HOSVD_mode_non_integer():
-    hosvd = HOSVD(input_sol=Data, modes=1.5, verbose=False)
+    hosvd = HigherOrderSVD(input_sol=Data, modes=1.5, verbose=False)
     a, b = hosvd.run()
     assert a == []
     assert b == []
 
 
 def test_HOSVD_reconstr_perc_less_than_zero():
-    hosvd = HOSVD(input_sol=Data, reconstr_perc=-1, verbose=False)
+    hosvd = HigherOrderSVD(input_sol=Data, reconstr_perc=-1, verbose=False)
     a, b = hosvd.run()
     assert a == []
     assert b == []
 
 
 def test_HOSVD_both_modes_and_reconstr_error():
-    hosvd = HOSVD(input_sol=Data, modes=1, reconstr_perc=50, verbose=False)
+    hosvd = HigherOrderSVD(input_sol=Data, modes=1, reconstr_perc=50, verbose=False)
     a, b = hosvd.run()
     assert a == []
     assert b == []

@@ -1,6 +1,6 @@
 # Test all distributions available in UQpy, using the cdf method or pdf method for multivariate distributions
 
-from UQpy.Distributions import *
+from UQpy.distributions import *
 import numpy as np
 
 
@@ -25,11 +25,11 @@ def test_gamma():
 
 
 def test_gen_extreme():
-    assert GenExtreme(c=2.).cdf(x=0.8) == 1.
+    assert GeneralizedExtreme(c=2.).cdf(x=0.8) == 1.
 
 
 def test_inverse_gauss():
-    assert np.round(InvGauss(mu=2.).cdf(x=0.8), 3) == 0.411
+    assert np.round(InverseGauss(mu=2.).cdf(x=0.8), 3) == 0.411
 
 
 def test_laplace():
@@ -69,7 +69,7 @@ def test_rayleigh():
 
 
 def test_truncated_normal():
-    assert np.round(TruncNorm(a=-1., b=1.).cdf(x=0.8), 3) == 0.922
+    assert np.round(TruncatedNormal(a=-1., b=1.).cdf(x=0.8), 3) == 0.922
 
 
 # For multinomial, mvnormal, more tests are needed
@@ -105,40 +105,40 @@ def test_multinomial_6():
 
 
 def test_mvnormal_1():
-    assert np.round(MVNormal(mean=[1., 2.], cov=3.).cdf(x=[0.8, 0.8]), 3) == 0.111
+    assert np.round(MultivariateNormal(mean=[1., 2.], cov=3.).cdf(x=[0.8, 0.8]), 3) == 0.111
 
 
 def test_mvnormal_2():
-    assert np.round(MVNormal(mean=[1., 2.], cov=3.).pdf(x=[0.8, 0.8]), 3) == 0.041
+    assert np.round(MultivariateNormal(mean=[1., 2.], cov=3.).pdf(x=[0.8, 0.8]), 3) == 0.041
 
 
 def test_mvnormal_3():
-    assert np.round(MVNormal(mean=[1., 2.], cov=3.).log_pdf(x=[0.8, 0.8]), 3) == -3.183
+    assert np.round(MultivariateNormal(mean=[1., 2.], cov=3.).log_pdf(x=[0.8, 0.8]), 3) == -3.183
 
 
 def test_mvnormal_4():
     data = np.array([[0., 0.9], [0.1, 1.], [-0.1, 1.1]])
     true_mean = np.array([0., 1.])
     true_cov = np.array([[0.010, -0.005], [-0.005, 0.010]])
-    dict_fit = MVNormal(mean=None, cov=None).fit(data=data)
+    dict_fit = MultivariateNormal(mean=None, cov=None).fit(data=data)
     assert np.all(dict_fit['mean'] == true_mean) and np.all(np.round(dict_fit['cov'], 3) == true_cov)
 
 
 def test_mvnormal_5():
-    samples = MVNormal(mean=[1., 2.], cov=1.).rvs(nsamples=3, random_state=123)
+    samples = MultivariateNormal(mean=[1., 2.], cov=1.).rvs(nsamples=3, random_state=123)
     assert np.all(np.round(samples, 3) == np.array([[-0.086, 2.997], [1.283, 0.494], [0.421, 3.651]]))
 
 
 def test_mvnormal_6():
-    assert np.all(MVNormal(mean=[1., 2.], cov=3.).moments(moments2return='m') == [1., 2.])
+    assert np.all(MultivariateNormal(mean=[1., 2.], cov=3.).moments(moments2return='m') == [1., 2.])
 
 
 def test_mvnormal_7():
-    assert np.all(MVNormal(mean=[1., 2.], cov=3.).moments(moments2return='v') == 3.)
+    assert np.all(MultivariateNormal(mean=[1., 2.], cov=3.).moments(moments2return='v') == 3.)
 
 
 def test_mvnormal_8():
-    moments = MVNormal(mean=[1., 2.], cov=3.).moments(moments2return='mv')
+    moments = MultivariateNormal(mean=[1., 2.], cov=3.).moments(moments2return='mv')
     assert np.all(moments[0] == [1., 2.]) and moments[1] == 3.
 
 
@@ -165,13 +165,13 @@ def test_gumbel_2():
 # Check JointInd and JointCopula
 
 marginals = [Normal(loc=2., scale=2.), Lognormal(s=1., loc=0., scale=np.exp(1))]
-dist_joint = JointInd(marginals=marginals)
+dist_joint = JointIndependent(marginals=marginals)
 dist_joint_copula = JointCopula(marginals=marginals, copula=Gumbel(theta=2.))
 
 
 def test_joint_ind_1():
     marginals_ = [Normal(loc=2., scale=2.), Lognormal(s=1., loc=0., scale=np.exp(1))]
-    dist_joint_ = JointInd(marginals=marginals_)
+    dist_joint_ = JointIndependent(marginals=marginals_)
     dist_joint_.update_params(loc_0=3.)
     assert dist_joint_.get_params()['loc_0'] == 3.
 
@@ -202,7 +202,7 @@ def test_joint_ind_6():
 
 def test_joint_ind_7():
     marginals_ = [Normal(loc=None, scale=2.), Lognormal(s=1., loc=0., scale=np.exp(1))]
-    dist_joint_ = JointInd(marginals=marginals_)
+    dist_joint_ = JointIndependent(marginals=marginals_)
     data = np.array([[-0.17126121, 0.91793325], [3.99469089, 7.36946747], [2.565957, 3.60736828]])
     mle_fit = dist_joint_.fit(data=data)
     assert np.round(mle_fit['loc_0'], 3) == 2.130

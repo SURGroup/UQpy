@@ -1,8 +1,8 @@
 import numpy as np
 
-from UQpy.Distributions import Uniform
+from UQpy.distributions import Uniform
 from UQpy.RunModel import RunModel
-from UQpy.SampleMethods import MCS
+from UQpy.sample_methods import MCS
 
 dist1 = Uniform(loc=15000, scale=10000)
 dist2 = Uniform(loc=450000, scale=80000)

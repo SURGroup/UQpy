@@ -1,6 +1,6 @@
-from UQpy.Distributions import Uniform
+from UQpy.distributions import Uniform
 from UQpy.RunModel import RunModel
-from UQpy.SampleMethods import MCS
+from UQpy.sample_methods import MCS
 
 ########################################################################################################################
 # This will need to be rewritten when MCS is updated.

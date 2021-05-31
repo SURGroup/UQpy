@@ -5,31 +5,31 @@ Uncertainty Quantification with Python
 
 import pkg_resources
 
-import UQpy.Distributions
-import UQpy.SampleMethods
-import UQpy.DimensionReduction
-import UQpy.Inference
-import UQpy.Reliability
+import UQpy.distributions
+import UQpy.sample_methods
+import UQpy.dimension_reduction
+import UQpy.inference
+import UQpy.reliability
 import UQpy.RunModel
-import UQpy.SampleMethods
-import UQpy.StochasticProcess
-import UQpy.Surrogates
-import UQpy.Sensitivity
-import UQpy.Transformations
+import UQpy.sample_methods
+import UQpy.stochastic_process
+import UQpy.surrogates
+import UQpy.sensitivity
+import UQpy.transformations
 import UQpy.Utilities
 
 
-from UQpy.DimensionReduction import *
-from UQpy.Distributions import *
-from UQpy.Inference import *
-from UQpy.Reliability import *
+from UQpy.dimension_reduction import *
+from UQpy.distributions import *
+from UQpy.inference import *
+from UQpy.reliability import *
 from UQpy.RunModel import *
-from UQpy.SampleMethods import *
-from UQpy.StochasticProcess import *
-from UQpy.Surrogates import *
-from UQpy.Transformations import *
+from UQpy.sample_methods import *
+from UQpy.stochastic_process import *
+from UQpy.surrogates import *
+from UQpy.transformations import *
 from UQpy.Utilities import *
-from UQpy.Sensitivity import *
+from UQpy.sensitivity import *
 
 try:
     __version__ = pkg_resources.get_distribution("UQpy").version

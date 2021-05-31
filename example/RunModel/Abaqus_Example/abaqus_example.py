@@ -1,9 +1,9 @@
 import pickle
 import time
 
-from UQpy.Distributions import Normal, Uniform
+from UQpy.distributions import Normal, Uniform
 from UQpy.RunModel import *
-from UQpy.SampleMethods import MCS
+from UQpy.sample_methods import MCS
 
 calling_directory = os.getcwd()
 t = time.time()
