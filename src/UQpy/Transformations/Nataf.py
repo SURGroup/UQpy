@@ -115,12 +115,21 @@ class Nataf:
 
         if isinstance(dist_object, list):
             self.dimension = len(dist_object)
+            self.dimension = 0
             for i in range(len(dist_object)):
-                if not isinstance(dist_object[i], (DistributionContinuous1D, JointInd)):
-                    raise TypeError('UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object '
-                                    'must be provided.')
+                if isinstance(dist_object[i], DistributionContinuous1D):
+                    self.dimension = self.dimension + 1
+                elif isinstance(dist_object[i], JointInd):
+                    self.dimension = self.dimension + len(dist_object[i].marginals)
+                else:
+                    raise TypeError('UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object must be '
+                                    'provided.')
         else:
-            if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
+            if isinstance(dist_object, DistributionContinuous1D):
+                self.dimension = 1
+            elif isinstance(dist_object, JointInd):
+                self.dimension = len(dist_object.marginals)
+            else:
                 raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
 
         self.dist_object = dist_object

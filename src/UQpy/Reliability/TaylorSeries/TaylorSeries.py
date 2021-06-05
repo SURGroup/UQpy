@@ -2,6 +2,8 @@ import numpy as np
 from UQpy.Distributions import *
 from UQpy.RunModel import RunModel
 from UQpy.Transformations import *
+from typing import Callable
+
 
 ########################################################################################################################
 ########################################################################################################################
@@ -51,14 +53,19 @@ class TaylorSeries:
     **Methods:**
     """
 
-    def __init__(self, dist_object, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u,  n_iter, tol1, tol2,
-                 tol3, df_step, verbose):
+    def __init__(self, dist_object, runmodel_object, form_object=None, seed_x=None, seed_u=None, df_step=0.01,
+                 corr_x=None, corr_z=None, n_iter=100, tol1=1.0e-3, tol2=1.0e-3, tol3=1.0e-3, verbose=False):
 
         if form_object is None:
             if isinstance(dist_object, list):
                 self.dimension = len(dist_object)
+                self.dimension = 0
                 for i in range(len(dist_object)):
-                    if not isinstance(dist_object[i], (DistributionContinuous1D, JointInd)):
+                    if isinstance(dist_object[i], DistributionContinuous1D):
+                        self.dimension = self.dimension + 1
+                    elif isinstance(dist_object[i], JointInd):
+                        self.dimension = self.dimension + len(dist_object[i].marginals)
+                    else:
                         raise TypeError('UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object must be '
                                         'provided.')
             else:
@@ -69,8 +76,9 @@ class TaylorSeries:
                 else:
                     raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
 
-            if not isinstance(runmodel_object, RunModel):
-                raise ValueError('UQpy: A RunModel object is required for the model.')
+            if not isinstance(runmodel_object, RunModel) and not isinstance(runmodel_object, Callable):
+                raise TypeError('UQpy: A  ``RunModel`` or a Callable object must be '
+                                'provided.')
 
             self.nataf_object = Nataf(dist_object=dist_object, corr_z=corr_z, corr_x=corr_x)
 
@@ -91,8 +99,8 @@ class TaylorSeries:
         self.verbose = verbose
 
     @staticmethod
-    def derivatives(point_u, point_x, runmodel_object, nataf_object, order='first', point_qoi=None, df_step=0.01,
-                    verbose=False):
+    def derivatives(point_u=None, point_x=None, runmodel_object=None, nataf_object=None, order='first', point_qoi=None,
+                    df_step=0.01, verbose=False):
         """
         A method to estimate the derivatives (1st-order, 2nd-order, mixed) of a function using a central difference
         scheme after transformation to the standard normal space.
@@ -130,10 +138,26 @@ class TaylorSeries:
         * **d2u_dij** (`ndarray`):
             Vector of mixed derivatives (if order = 'mixed').
         """
+        if nataf_object is None or not isinstance(nataf_object, Nataf):
+            raise TypeError('UQpy: A  ``Nataf`` object must be '
+                            'provided.')
+        if runmodel_object is not None:
+            if not isinstance(runmodel_object, RunModel) and not isinstance(runmodel_object, Callable):
+                raise TypeError('UQpy: A  ``RunModel`` or a Callable object must be '
+                                'provided.')
+        if point_u is None and point_x is None:
+            raise TypeError('UQpy: Either `point_u` or `point_x` must be specified.')
 
         list_of_samples = list()
-        if order.lower() == 'first' or (order.lower() == 'second' and point_qoi is None):
-            list_of_samples.append(point_x.reshape(1, -1))
+        if point_x is not None:
+            if order.lower() == 'first' or (order.lower() == 'second' and point_qoi is None):
+                list_of_samples.append(point_x.reshape(1, -1))
+        else:
+            z_0 = Correlate(point_u.reshape(1, -1), nataf_object.corr_z).samples_z
+            nataf_object.run(samples_z=z_0.reshape(1, -1), jacobian=False)
+            temp_x_0 = nataf_object.samples_x
+            x_0 = temp_x_0
+            list_of_samples.append(x_0)
 
         for ii in range(point_u.shape[0]):
             y_i1_j = point_u.tolist()
@@ -156,20 +180,21 @@ class TaylorSeries:
         array_of_samples = np.array(list_of_samples)
         array_of_samples = array_of_samples.reshape((len(array_of_samples), -1))
 
-        runmodel_object.run(samples=array_of_samples, append_samples=False)
-        if verbose:
-            print('samples to evaluate the model: {0}'.format(array_of_samples))
-            print('model evaluations: {0}'.format(runmodel_object.qoi_list))
+        if isinstance(runmodel_object, RunModel):
+            runmodel_object.run(samples=array_of_samples, append_samples=False)
+            y1 = runmodel_object.qoi_list
+        elif isinstance(runmodel_object, Callable):
+            y1 = runmodel_object(array_of_samples)
 
         if order.lower() == 'first':
             gradient = np.zeros(point_u.shape[0])
 
             for jj in range(point_u.shape[0]):
-                qoi_plus = runmodel_object.qoi_list[2 * jj + 1]
-                qoi_minus = runmodel_object.qoi_list[2 * jj + 2]
+                qoi_plus = y1[2 * jj + 1]
+                qoi_minus = y1[2 * jj + 2]
                 gradient[jj] = ((qoi_plus - qoi_minus) / (2 * df_step))
 
-            return gradient, runmodel_object.qoi_list[0]
+            return gradient, y1[0], array_of_samples
 
         elif order.lower() == 'second':
             if verbose:
@@ -177,11 +202,11 @@ class TaylorSeries:
             d2y_dj = np.zeros([point_u.shape[0]])
 
             if point_qoi is None:
-                qoi = [runmodel_object.qoi_list[0]]
-                output_list = runmodel_object.qoi_list
+                qoi = [y1[0]]
+                output_list = y1
             else:
                 qoi = [point_qoi]
-                output_list = qoi + runmodel_object.qoi_list
+                output_list = qoi + y1
 
             for jj in range(point_u.shape[0]):
                 qoi_plus = output_list[2 * jj + 1]
@@ -236,17 +261,17 @@ class TaylorSeries:
 
             array_of_mixed_points = np.array(list_of_mixed_points)
             array_of_mixed_points = array_of_mixed_points.reshape((len(array_of_mixed_points), -1))
-            runmodel_object.run(samples=array_of_mixed_points, append_samples=False)
-
-            if verbose:
-                print('samples for gradient: {0}'.format(array_of_mixed_points[1:]))
-                print('model evaluations for the gradient: {0}'.format(runmodel_object.qoi_list[1:]))
+            if isinstance(runmodel_object, RunModel):
+                runmodel_object.run(samples=array_of_mixed_points, append_samples=False)
+                y2 = runmodel_object.qoi_list
+            elif isinstance(runmodel_object, Callable):
+                y2 = runmodel_object(array_of_mixed_points)
 
             for j in range(count):
-                qoi_0 = runmodel_object.qoi_list[4 * j]
-                qoi_1 = runmodel_object.qoi_list[4 * j + 1]
-                qoi_2 = runmodel_object.qoi_list[4 * j + 2]
-                qoi_3 = runmodel_object.qoi_list[4 * j + 3]
+                qoi_0 = y2[4 * j]
+                qoi_1 = y2[4 * j + 1]
+                qoi_2 = y2[4 * j + 2]
+                qoi_3 = y2[4 * j + 3]
                 d2y_dij[j] = ((qoi_0 + qoi_3 - qoi_1 - qoi_2) / (4 * df_step * df_step))
 
             hessian = np.diag(d2y_dj)
