@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite errors="0" failures="1" hostname="MacBook-Pro-3.local" name="pytest" skipped="0" tests="1" time="0.621" timestamp="2021-04-15T17:15:49.303427"><testcase classname="tests.Reliability.test_FORM" name="test_seeds" time="0.013"><failure message="AssertionError: &#10;Not equal to tolerance rtol=0.0001, atol=0&#10;&#10;(shapes (1, 101, 2), (2,) mismatch)&#10; x: array([[[ 0.,  0.],&#10;        [-2.,  1.],&#10;        [-2.,  1.],...&#10; y: array([0., 0.])">def test_seeds():
+        dist1 = Normal(loc=200, scale=20)
+        dist2 = Normal(loc=150, scale=10)
+        dist = [dist1, dist2]
+        form_obj = FORM(dist_object=dist, runmodel_object=model_i)
+        form_obj.run()
+        for file_name in glob.glob("Model_Runs_*"):
+            shutil.rmtree(file_name)
+    
+&gt;       np.testing.assert_allclose(form_obj.u_record[0], [0., 0.], rtol=1e-04)
+E       AssertionError: 
+E       Not equal to tolerance rtol=0.0001, atol=0
+E       
+E       (shapes (1, 101, 2), (2,) mismatch)
+E        x: array([[[ 0.,  0.],
+E               [-2.,  1.],
+E               [-2.,  1.],...
+E        y: array([0., 0.])
+
+test_FORM.py:27: AssertionError</failure></testcase></testsuite></testsuites>
