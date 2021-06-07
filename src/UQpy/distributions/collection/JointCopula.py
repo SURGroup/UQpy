@@ -56,7 +56,7 @@ class JointCopula(DistributionND):
                 # Compute cdf of independent marginals
                 unif = np.array([marg.cdf(x[:, ind_m]) for ind_m, marg in enumerate(dist.marginals)]).T
                 # Compute copula
-                cdf_val = dist.copula.evaluate_cdf(unif=unif)
+                cdf_val = dist.copula.evaluate_cdf(uniform_distributions=unif)
                 return cdf_val
             self.cdf = MethodType(joint_cdf, self)
 

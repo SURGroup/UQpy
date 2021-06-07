@@ -1,13 +1,8 @@
 import numpy as np
 
 from UQpy.inference.InferenceModel import InferenceModel
-from UQpy.sample_methods import MarkovChainMonteCarlo, IS
+from UQpy.sample_methods import MarkovChainMonteCarlo, ImportanceSampling
 
-
-########################################################################################################################
-########################################################################################################################
-#                                  Bayesian Parameter estimation
-########################################################################################################################
 
 class BayesParameterEstimation:
     """
@@ -78,7 +73,7 @@ class BayesParameterEstimation:
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
         self.verbose = verbose
 
-        from UQpy.sample_methods import MarkovChainMonteCarlo, IS
+        from UQpy.sample_methods import MarkovChainMonteCarlo, ImportanceSampling
         # markov_chain algorithm
         if issubclass(sampling_class, MarkovChainMonteCarlo):
             # If the seed is not provided, sample one from the prior pdf of the parameters
@@ -89,11 +84,11 @@ class BayesParameterEstimation:
                     kwargs_sampler['seed'] = self.inference_model.prior.rvs(
                         nsamples=kwargs_sampler['nchains'], random_state=self.random_state)
             self.sampler = sampling_class(
-                dimension=self.inference_model.nparams, verbose=self.verbose, random_state=self.random_state,
+                dimension=self.inference_model.parameters_number, verbose=self.verbose, random_state=self.random_state,
                 log_pdf_target=self.inference_model.evaluate_log_posterior, args_target=(self.data, ),
                 nsamples=None, nsamples_per_chain=None, **kwargs_sampler)
 
-        elif issubclass(sampling_class, IS):
+        elif issubclass(sampling_class, ImportanceSampling):
             # Importance distribution is either given by the user, or it is set as the prior of the model
             if 'proposal' not in kwargs_sampler or kwargs_sampler['proposal'] is None:
                 if self.inference_model.prior is None:
@@ -129,9 +124,9 @@ class BayesParameterEstimation:
         """
 
         if isinstance(self.sampler, MarkovChainMonteCarlo):
-            self.sampler.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
+            self.sampler.run(number_of_samples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
-        elif isinstance(self.sampler, IS):
+        elif isinstance(self.sampler, ImportanceSampling):
             if nsamples_per_chain is not None:
                 raise ValueError('UQpy: nsamples_per_chain is not an appropriate input for IS.')
             self.sampler.run(nsamples=nsamples)

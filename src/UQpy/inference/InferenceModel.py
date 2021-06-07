@@ -3,10 +3,6 @@ import numpy as np
 from UQpy.distributions import Distribution, Normal, MultivariateNormal
 from UQpy.RunModel import RunModel
 
-########################################################################################################################
-########################################################################################################################
-#                            Define the model - probability model or python model
-########################################################################################################################
 
 class InferenceModel:
     """
@@ -55,14 +51,13 @@ class InferenceModel:
     """
     # Last Modified: 05/13/2020 by Audrey Olivier
 
-    def __init__(self, nparams, runmodel_object=None, log_likelihood=None, dist_object=None, name='',
-                 error_covariance=1.0, prior=None, verbose=False, **kwargs_likelihood
-                 ):
+    def __init__(self, parameters_number, runmodel_object=None, log_likelihood=None, dist_object=None, name='',
+                 error_covariance=1.0, prior=None, verbose=False, **kwargs_likelihood):
 
         # Initialize some parameters
-        self.nparams = nparams
-        if not isinstance(self.nparams, int) or self.nparams <= 0:
-            raise TypeError('Input nparams must be an integer > 0.')
+        self.parameters_number = parameters_number
+        if not isinstance(self.parameters_number, int) or self.parameters_number <= 0:
+            raise TypeError('Input parameters_number must be an integer > 0.')
         self.name = name
         if not isinstance(self.name, str):
             raise TypeError('Input name must be a string.')
@@ -93,8 +88,8 @@ class InferenceModel:
             # Check which parameters need to be updated (i.e., those set as None)
             init_params = self.dist_object.get_params()
             self.list_params = [key for key in self.dist_object.order_params if init_params[key] is None]
-            if len(self.list_params) != self.nparams:
-                raise TypeError('UQpy: Incorrect dimensions between nparams and number of inputs set to None.')
+            if len(self.list_params) != self.parameters_number:
+                raise TypeError('UQpy: Incorrect dimensions between parameters_number and number of inputs set to None.')
 
         # Define prior if it is given
         self.prior = prior
@@ -133,13 +128,13 @@ class InferenceModel:
 
         """
 
-        # Check params
+        # Check parameter_vector
         if not isinstance(params, np.ndarray):
             params = np.array(params)
         if len(params.shape) != 2:
-            raise TypeError('UQpy: input params should be a nested list or 2d ndarray of shape (nsamples, dimension).')
-        if params.shape[1] != self.nparams:
-            raise ValueError('UQpy: Wrong dimensions in params.')
+            raise TypeError('UQpy: input parameter_vector should be a nested list or 2d ndarray of shape (nsamples, dimension).')
+        if params.shape[1] != self.parameters_number:
+            raise ValueError('UQpy: Wrong dimensions in parameter_vector.')
 
         # Case 1 - Forward model is given by RunModel
         if self.runmodel_object is not None:
@@ -151,20 +146,19 @@ class InferenceModel:
                 if isinstance(self.error_covariance, (float, int)):
                     norm = Normal(loc=0., scale=np.sqrt(self.error_covariance))
                     log_like_values = np.array(
-                        [np.sum([norm.log_pdf(data_i-outpt_i) for data_i, outpt_i in zip(data, outpt)])
-                         for outpt in model_outputs]
+                        [np.sum([norm.log_pdf(data_i-outpt_i) for data_i, outpt_i in zip(data, output)])
+                         for output in model_outputs]
                     )
                 else:
-                    mvnorm = MultivariateNormal(data, cov=self.error_covariance)
+                    multivariate_normal = MultivariateNormal(data, covariance=self.error_covariance)
                     log_like_values = np.array(
-                        [mvnorm.log_pdf(x=np.array(outpt).reshape((-1,))) for outpt in model_outputs]
+                        [multivariate_normal.log_pdf(x=np.array(output).reshape((-1,))) for output in model_outputs]
                     )
 
             # Case 1.b: likelihood is user-defined
             else:
                 log_like_values = self.log_likelihood(
-                    data=data, model_outputs=model_outputs, params=params, **self.kwargs_likelihood
-                )
+                    data=data, model_outputs=model_outputs, params=params, **self.kwargs_likelihood)
                 if not isinstance(log_like_values, np.ndarray):
                     log_like_values = np.array(log_like_values)
                 if log_like_values.shape != (params.shape[0],):
@@ -189,7 +183,7 @@ class InferenceModel:
 
         return log_like_values
 
-    def evaluate_log_posterior(self, params, data):
+    def evaluate_log_posterior(self, parameter_vector, data):
         """
         Evaluate the scaled log posterior `log(p(data|params)p(params))`.
 
@@ -211,14 +205,14 @@ class InferenceModel:
 
         """
         # Compute log likelihood
-        log_likelihood_eval = self.evaluate_log_likelihood(params=params, data=data)
+        log_likelihood_eval = self.evaluate_log_likelihood(params=parameter_vector, data=data)
 
         # If the prior is not provided it is set to an non-informative prior p(theta)=1, log_posterior = log_likelihood
         if self.prior is None:
             return log_likelihood_eval
 
         # Otherwise, use prior provided in the InferenceModel setup
-        log_prior_eval = self.prior.log_pdf(x=params)
+        log_prior_eval = self.prior.log_pdf(x=parameter_vector)
 
         return log_likelihood_eval + log_prior_eval
 

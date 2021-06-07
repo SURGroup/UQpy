@@ -1,7 +1,9 @@
 import numpy as np
 from UQpy.Utilities import gradient
+import abc
 
-class RSS:
+
+class RefinedStratifiedSampling:
     """
     Parent class for Refined Stratified Sampling [10]_, [11]_.
 
@@ -100,20 +102,21 @@ class RSS:
 
         **Methods:**
         """
-    def __init__(self, sample_object=None, runmodel_object=None, krig_object=None, local=False, max_train_size=None,
-                 step_size=0.005, qoi_name=None, n_add=1, nsamples=None, random_state=None, verbose=False):
+    def __init__(self, sample_object=None, runmodel_object=None, kriging=None, update_locally=False,
+                 nearest_points_number=None, step_size=0.005, qoi_name=None, new_iteration_samples=1,
+                 samples_number=None, random_state=None, verbose=False):
 
         # Initialize attributes that are common to all approaches
         self.sample_object = sample_object
         self.runmodel_object = runmodel_object
         self.verbose = verbose
-        self.nsamples = nsamples
+        self.samples_number = samples_number
         self.training_points = self.sample_object.samplesU01
         self.samplesU01 = self.sample_object.samplesU01
         self.samples = self.sample_object.samples
         self.weights = None
         self.dimension = self.samples.shape[1]
-        self.n_add = n_add
+        self.new_iteration_samples = new_iteration_samples
 
         self.random_state = random_state
         if isinstance(self.random_state, int):
@@ -126,11 +129,11 @@ class RSS:
                 raise NotImplementedError("UQpy Error: runmodel_object must be an object of the RunModel class.")
 
         if runmodel_object is not None:
-            self.local = local
-            self.max_train_size = max_train_size
-            if krig_object is not None:
-                if hasattr(krig_object, 'fit') and hasattr(krig_object, 'predict'):
-                    self.krig_object = krig_object
+            self.update_locally = update_locally
+            self.nearest_points_number = nearest_points_number
+            if kriging is not None:
+                if hasattr(kriging, 'fit') and hasattr(kriging, 'predict'):
+                    self.krig_object = kriging
                 else:
                     raise NotImplementedError("UQpy Error: krig_object must have 'fit' and 'predict' methods.")
             self.qoi_name = qoi_name
@@ -144,9 +147,9 @@ class RSS:
             if self.verbose:
                 print('UQpy: refined_stratified - A refined_stratified class object has been initiated.')
 
-        if self.nsamples is not None:
-            if isinstance(self.nsamples, int) and self.nsamples > 0:
-                self.run(nsamples=self.nsamples)
+        if self.samples_number is not None:
+            if isinstance(self.samples_number, int) and self.samples_number > 0:
+                self.run(nsamples=self.samples_number)
             else:
                 raise NotImplementedError("UQpy: nsamples msut be a positive integer.")
 
@@ -177,15 +180,15 @@ class RSS:
         `strata_object` attributes of the ``refined_stratified`` class.
         """
         if isinstance(nsamples, int) and nsamples > 0:
-            self.nsamples = nsamples
+            self.samples_number = nsamples
         else:
             raise RuntimeError("UQpy: nsamples must be a positive integer.")
 
-        if self.nsamples <= self.samples.shape[0]:
+        if self.samples_number <= self.samples.shape[0]:
             raise NotImplementedError('UQpy Error: The number of requested samples must be larger than the existing '
                                       'sample set.')
 
-        self.run_rss()
+        self.run_refined_stratified_sampling()
 
     def estimate_gradient(self, x, y, xt):
         """
@@ -209,7 +212,7 @@ class RSS:
         """
         if self.krig_object is not None:
             self.krig_object.fit(x, y)
-            self.krig_object.nopt = 1
+            self.krig_object.optimizations_number = 1
             tck = self.krig_object.predict
         else:
             from scipy.interpolate import LinearNDInterpolator
@@ -224,7 +227,7 @@ class RSS:
         self.samplesU01 = np.vstack([self.samplesU01, new_point])
         new_point_ = np.zeros_like(new_point)
         for k in range(self.dimension):
-            new_point_[:, k] = self.sample_object.dist_object[k].icdf(new_point[:, k])
+            new_point_[:, k] = self.sample_object.distributions[k].icdf(new_point[:, k])
         self.samples = np.vstack([self.samples, new_point_])
 
     def identify_bins(self, strata_metric, p_):
@@ -240,7 +243,8 @@ class RSS:
         bin2break_ = list(map(int, bin2break_))
         return bin2break_
 
-    def run_rss(self):
+    @abc.abstractmethod
+    def run_refined_stratified_sampling(self):
         """
         This method is overwritten by each subclass in order to perform the refined stratified sampling.
 

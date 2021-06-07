@@ -22,12 +22,12 @@ class Polynomials:
     **Methods:**
     """
 
-    def __init__(self, dist_object, degree):
-        self.dist_object = dist_object
+    def __init__(self, distributions, degree):
+        self.distribution = distributions
         self.degree = degree + 1
 
     @staticmethod
-    def standardize_normal(x, mean, std):
+    def standardize_normal(tensor, mean, std):
         """
         Static method: Standardize data based on the standard normal
         distribution N(0,1).
@@ -49,10 +49,10 @@ class Polynomials:
             Standardized data.
 
         """
-        return (x - mean) / std
+        return (tensor - mean) / std
 
     @staticmethod
-    def standardize_uniform(x, m, scale):
+    def standardize_uniform(tensor, m, scale):
         """
         Static method: Standardize data based on the uniform distribution
         U(-1,1).
@@ -74,10 +74,10 @@ class Polynomials:
             Standardized data.
 
         """
-        return (x - m) / (scale / 2)
+        return (tensor - m) / (scale / 2)
 
     @staticmethod
-    def normalized(degree, x, a, b, pdf_st, p):
+    def normalized(degree, samples, a, b, pdf_st, p):
         """
         Static method: Calculates design matrix and normalized polynomials.
 
@@ -117,10 +117,10 @@ class Polynomials:
                 m[i, j] = int_res[0]
             pol_normed.append(p[i] / np.sqrt(m[i, i]))
 
-        a = np.zeros((x.shape[0], degree))
-        for i in range(x.shape[0]):
+        a = np.zeros((samples.shape[0], degree))
+        for i in range(samples.shape[0]):
             for j in range(degree):
-                a[i, j] = pol_normed[j](x[i])
+                a[i, j] = pol_normed[j](samples[i])
 
         return a, pol_normed
 
@@ -128,28 +128,28 @@ class Polynomials:
         """
         Returns a `float` with the mean of the UQpy distribution object.
         """
-        m = self.dist_object.moments(moments2return='m')
+        m = self.distribution.moments(moments2return='m')
         return m
 
     def get_std(self):
         """
         Returns a `float` with the variance of the UQpy distribution object.
         """
-        s = np.sqrt(self.dist_object.moments(moments2return='v'))
+        s = np.sqrt(self.distribution.moments(moments2return='v'))
         return s
 
     def location(self):
         """
         Returns a `float` with the location of the UQpy distribution object.
         """
-        m = self.dist_object.__dict__['params']['loc']
+        m = self.distribution.__dict__['parameter_vector']['location']
         return m
 
     def scale(self):
         """
         Returns a `float` with the scale of the UQpy distribution object.
         """
-        s = self.dist_object.__dict__['params']['scale']
+        s = self.distribution.__dict__['parameter_vector']['scale']
         return s
 
     def evaluate(self, x):
@@ -168,15 +168,15 @@ class Polynomials:
         * **design** (`ndarray`):
             Returns an array with the design matrix.
         """
-        if not type(self.dist_object) == JointIndependent:
-            if type(self.dist_object) == Normal:
-                from .polynomials.Hermite import Hermite
-                return Hermite(self.degree, self.dist_object).get_polys(x)[0]
-                # design matrix (data x polynomials)
+        if not type(self.distribution) == JointIndependent:
+            if type(self.distribution) == Normal:
+                from UQpy.surrogates.polynomial_chaos.polynomials.Hermite import Hermite
+                return Hermite(self.degree, self.distribution).get_polys(x)[0]
+                # design matrix (second_order_tensor x polynomials)
 
-            if type(self.dist_object) == Uniform:
-                from .polynomials.Legendre import Legendre
-                return Legendre(self.degree, self.dist_object).get_polys(x)[0]
+            if type(self.distribution) == Uniform:
+                from UQpy.surrogates.polynomial_chaos.polynomials.Legendre import Legendre
+                return Legendre(self.degree, self.distribution).get_polys(x)[0]
 
             else:
                 raise TypeError('Warning: This distribution is not supported.')
@@ -184,17 +184,17 @@ class Polynomials:
         else:
 
             a = []
-            for i in range(len(self.dist_object.marginals)):
+            for i in range(len(self.distribution.marginals)):
 
-                if isinstance(self.dist_object.marginals[i], Normal):
-                    from .polynomials.Hermite import Hermite
+                if isinstance(self.distribution.marginals[i], Normal):
+                    from UQpy.surrogates.polynomial_chaos.polynomials.Hermite import Hermite
                     a.append(Hermite(self.degree,
-                                     self.dist_object.marginals[i]).get_polys(x[:, i])[0])
+                                     self.distribution.marginals[i]).get_polys(x[:, i])[0])
 
-                elif isinstance(self.dist_object.marginals[i], Uniform):
-                    from .polynomials.Legendre import Legendre
+                elif isinstance(self.distribution.marginals[i], Uniform):
+                    from UQpy.surrogates.polynomial_chaos.polynomials.Legendre import Legendre
                     a.append(Legendre(self.degree,
-                                      self.dist_object.marginals[i]).get_polys(x[:, i])[0])
+                                      self.distribution.marginals[i]).get_polys(x[:, i])[0])
 
                 else:
                     raise TypeError('Warning: This distribution is not supported.')

@@ -1,11 +1,11 @@
 import numpy as np
 
-from UQpy.sample_methods.refined_stratified.RefinedStratifiedSampling import RSS
-from UQpy.sample_methods.SimplexSampling import Simplex
+from UQpy.sample_methods.refined_stratified.RefinedStratifiedSampling import RefinedStratifiedSampling
+from UQpy.sample_methods.SimplexSampling import SimplexSampling
 from UQpy.sample_methods.strata import VoronoiStrata, DelaunayStrata
 
 
-class VoronoiRSS(RSS):
+class VoronoiRefinedStratifiedSampling(RefinedStratifiedSampling):
     """
     Executes Refined Stratified Sampling using Voronoi Stratification.
 
@@ -25,8 +25,9 @@ class VoronoiRSS(RSS):
     **Methods:**
     """
 
-    def __init__(self, sample_object=None, runmodel_object=None, krig_object=None, local=False, max_train_size=None,
-                 step_size=0.005, qoi_name=None, n_add=1, nsamples=None, random_state=None, verbose=False):
+    def __init__(self, sample_object=None, runmodel_object=None, kriging=None, update_locally=False,
+                 nearest_points_number=None, step_size=0.005, qoi_name=None, new_iteration_samples=1,
+                 samples_number=None, random_state=None, verbose=False):
 
         if hasattr(sample_object, 'samplesU01'):
             self.strata_object = VoronoiStrata(seeds=sample_object.samplesU01)
@@ -35,24 +36,25 @@ class VoronoiRSS(RSS):
         self.mesh_vertices, self.vertices_in_U01 = [], []
         self.points_to_samplesU01, self.points = [], []
 
-        super().__init__(sample_object=sample_object, runmodel_object=runmodel_object, krig_object=krig_object,
-                         local=local, max_train_size=max_train_size, step_size=step_size, qoi_name=qoi_name,
-                         n_add=n_add, nsamples=nsamples, random_state=random_state, verbose=verbose)
+        super().__init__(sample_object=sample_object, runmodel_object=runmodel_object, kriging=kriging,
+                         update_locally=update_locally, nearest_points_number=nearest_points_number,
+                         step_size=step_size, qoi_name=qoi_name, new_iteration_samples=new_iteration_samples,
+                         samples_number=samples_number, random_state=random_state, verbose=verbose)
 
-    def run_rss(self):
+    def run_refined_stratified_sampling(self):
         """
         Overwrites the ``run_rss`` method in the parent class to perform refined stratified sampling with Voronoi
         strata. It is an instance method that does not take any additional input arguments. See
         the ``refined_stratified`` class for additional details.
         """
         if self.runmodel_object is not None:
-            self._gerss()
+            self._generate_gradient_enhanced_samples()
         else:
             self._rss()
 
         self.weights = self.strata_object.volume
 
-    def _gerss(self):
+    def _generate_gradient_enhanced_samples(self):
         """
         This method generates samples using Gradient Enhanced Refined Stratified Sampling.
         """
@@ -64,8 +66,8 @@ class VoronoiRSS(RSS):
         self.mesh.old_vertices = self.mesh.vertices
 
         # Primary loop for adding samples and performing refinement.
-        for i in range(self.samples.shape[0], self.nsamples, self.n_add):
-            p = min(self.n_add, self.nsamples - i)  # Number of points to add in this iteration
+        for i in range(self.samples.shape[0], self.samples_number, self.new_iteration_samples):
+            p = min(self.new_iteration_samples, self.samples_number - i)  # Number of points to add in this iteration
 
             # Compute the centroids and the volumes of each simplex cell in the mesh
             self.mesh.centroids = np.zeros([self.mesh.nsimplex, self.dimension])
@@ -93,7 +95,7 @@ class VoronoiRSS(RSS):
             # --------------------------------
 
             # Compute the gradients at the existing sample points
-            if self.max_train_size is None or len(self.training_points) <= self.max_train_size or \
+            if self.nearest_points_number is None or len(self.training_points) <= self.nearest_points_number or \
                     i == self.samples.shape[0]:
                 # Use the entire sample set to train the surrogate model (more expensive option)
                 dy_dx = self.estimate_gradient(np.atleast_2d(self.training_points), qoi, self.mesh.centroids)
@@ -119,7 +121,7 @@ class VoronoiRSS(RSS):
 
                 # Find the nearest neighbors to the most recently added point
                 from sklearn.neighbors import NearestNeighbors
-                knn = NearestNeighbors(n_neighbors=self.max_train_size)
+                knn = NearestNeighbors(n_neighbors=self.nearest_points_number)
                 knn.fit(np.atleast_2d(self.samplesU01))
                 neighbors = knn.kneighbors(np.atleast_2d(self.samplesU01[-1]), return_distance=False)
 
@@ -194,7 +196,7 @@ class VoronoiRSS(RSS):
             # -------------------------------
             # 4. Execute model at new samples
             # -------------------------------
-            self.runmodel_object.run(samples=self.samples[-self.n_add:])
+            self.runmodel_object.run(samples=self.samples[-self.new_iteration_samples:])
 
             if self.verbose:
                 print("Iteration:", i)
@@ -208,8 +210,8 @@ class VoronoiRSS(RSS):
         self._add_boundary_points_and_construct_delaunay()
 
         # Primary loop for adding samples and performing refinement.
-        for i in range(self.samples.shape[0], self.nsamples, self.n_add):
-            p = min(self.n_add, self.nsamples - i)  # Number of points to add in this iteration
+        for i in range(self.samples.shape[0], self.samples_number, self.new_iteration_samples):
+            p = min(self.new_iteration_samples, self.samples_number - i)  # Number of points to add in this iteration
 
             # ################################
             # --------------------------------
@@ -282,7 +284,7 @@ class VoronoiRSS(RSS):
             self.mesh.sub_simplex[m, :] = np.sum(tmp_vertices[col_one[m] - 1, :], 0) / self.dimension
 
         # Using the Simplex class to generate a new sample in the sub-simplex
-        new = Simplex(nodes=self.mesh.sub_simplex, nsamples=1, random_state=self.random_state).samples
+        new = SimplexSampling(nodes=self.mesh.sub_simplex, samples_number=1, random_state=self.random_state).samples
         return new
 
     def _update_strata(self, new_point):

@@ -30,6 +30,6 @@ class GeneralizedExtreme(DistributionContinuous1D):
 
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
-    def __init__(self, c, loc=0., scale=1.):
-        super().__init__(c=c, loc=loc, scale=scale, order_params=('c', 'loc', 'scale'))
+    def __init__(self, c, location=0., scale=1.):
+        super().__init__(c=c, loc=location, scale=scale, order_params=('c', 'location', 'scale'))
         self._construct_from_scipy(scipy_name=stats.genextreme)

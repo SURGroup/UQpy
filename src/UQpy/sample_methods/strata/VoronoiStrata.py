@@ -75,17 +75,18 @@ class VoronoiStrata(Strata):
     **Methods:**
     """
 
-    def __init__(self, seeds=None, nseeds=None, dimension=None, niters=1, random_state=None, verbose=False):
+    def __init__(self, seeds=None, seeds_number=None, dimension=None, decomposition_iterations=1,
+                 random_state=None, verbose=False):
         super().__init__(random_state=random_state, seeds=seeds, verbose=verbose)
 
-        self.nseeds = nseeds
+        self.seeds_number = seeds_number
         self.dimension = dimension
-        self.niters = niters
+        self.decomposition_iterations = decomposition_iterations
         self.voronoi = None
         self.vertices = []
 
         if self.seeds is not None:
-            if self.nseeds is not None or self.dimension is not None:
+            if self.seeds_number is not None or self.dimension is not None:
                 print("UQpy: Ignoring 'nseeds' and 'dimension' attributes because 'seeds' are provided")
             self.dimension = self.seeds.shape[1]
 
@@ -100,9 +101,9 @@ class VoronoiStrata(Strata):
 
         initial_seeds = self.seeds
         if self.seeds is None:
-            initial_seeds = stats.uniform.rvs(size=[self.nseeds, self.dimension], random_state=self.random_state)
+            initial_seeds = stats.uniform.rvs(size=[self.seeds_number, self.dimension], random_state=self.random_state)
 
-        if self.niters == 0:
+        if self.decomposition_iterations == 0:
             self.voronoi, bounded_regions = self.voronoi_unit_hypercube(initial_seeds)
 
             cent, vol = [], []
@@ -115,7 +116,7 @@ class VoronoiStrata(Strata):
 
             self.volume = np.asarray(vol)
         else:
-            for i in range(self.niters):
+            for i in range(self.decomposition_iterations):
                 self.voronoi, bounded_regions = self.voronoi_unit_hypercube(initial_seeds)
 
                 cent, vol = [], []

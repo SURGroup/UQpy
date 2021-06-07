@@ -1,4 +1,4 @@
-from UQpy.sample_methods import MCS
+from UQpy.sample_methods import MonteCarloSampling
 from UQpy.RunModel import RunModel
 from UQpy.distributions import Normal
 import pytest
@@ -7,8 +7,8 @@ import numpy as np
 
 
 d = Normal(loc=0, scale=1)
-x_mcs = MCS(dist_object=[d, d, d], nsamples=5, random_state=1234)
-x_mcs_new = MCS(dist_object=[d, d, d], nsamples=5, random_state=2345)
+x_mcs = MonteCarloSampling(distributions=[d, d, d], samples_number=5, random_state=1234)
+x_mcs_new = MonteCarloSampling(distributions=[d, d, d], samples_number=5, random_state=2345)
 verbose_parameter = True
 os.chdir('./tests/RunModel')
 

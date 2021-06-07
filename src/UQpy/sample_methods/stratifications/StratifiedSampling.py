@@ -1,6 +1,8 @@
 import numpy as np
+import abc
 
-class STS:
+
+class StratifiedSampling:
     """
     Parent class for Stratified Sampling ([9]_).
 
@@ -59,30 +61,30 @@ class STS:
     **Methods:**
     """
 
-    def __init__(self, dist_object, strata_object, nsamples_per_stratum=None, nsamples=None, random_state=None,
-                 verbose=False):
+    def __init__(self, distributions, strata_object, samples_per_stratum_number=None, samples_number=None,
+                 random_state=None, verbose=False):
 
         self.verbose = verbose
         self.weights = None
         self.strata_object = strata_object
-        self.nsamples_per_stratum = nsamples_per_stratum
-        self.nsamples = nsamples
+        self.samples_per_stratum_number = samples_per_stratum_number
+        self.samples_number = samples_number
         self.samplesU01, self.samples = None, None
 
         # Check if a Distribution object is provided.
         from UQpy.distributions import DistributionContinuous1D, JointIndependent
 
-        if isinstance(dist_object, list):
-            self.dimension = len(dist_object)
-            for i in range(len(dist_object)):
-                if not isinstance(dist_object[i], DistributionContinuous1D):
+        if isinstance(distributions, list):
+            self.dimension = len(distributions)
+            for i in range(len(distributions)):
+                if not isinstance(distributions[i], DistributionContinuous1D):
                     raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
         else:
             self.dimension = 1
-            if not isinstance(dist_object, (DistributionContinuous1D, JointIndependent)):
+            if not isinstance(distributions, (DistributionContinuous1D, JointIndependent)):
                 raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
 
-        self.dist_object = dist_object
+        self.dist_object = distributions
 
         self.random_state = random_state
         if isinstance(self.random_state, int):
@@ -96,8 +98,8 @@ class STS:
             print("UQpy: stratifications object is created")
 
         # If nsamples_per_stratum or nsamples is provided, execute run method
-        if self.nsamples_per_stratum is not None or self.nsamples is not None:
-            self.run(nsamples_per_stratum=self.nsamples_per_stratum, nsamples=self.nsamples)
+        if self.samples_per_stratum_number is not None or self.samples_number is not None:
+            self.run(samples_per_stratum_number=self.samples_per_stratum_number, samples_number=self.samples_number)
 
     def transform_samples(self, samples01):
         """
@@ -120,7 +122,7 @@ class STS:
 
         self.samples = samples_u_to_x
 
-    def run(self, nsamples_per_stratum=None, nsamples=None):
+    def run(self, samples_per_stratum_number=None, samples_number=None):
         """
         Executes stratified sampling.
 
@@ -160,15 +162,15 @@ class STS:
         """
 
         # Check inputs of run methods
-        self.nsamples_per_stratum = nsamples_per_stratum
-        self.nsamples = nsamples
+        self.samples_per_stratum_number = samples_per_stratum_number
+        self.samples_number = samples_number
         self._run_checks()
 
         if self.verbose:
             print("UQpy: Performing Stratified Sampling")
 
         # Call "create_sampleu01" method and generate samples in  the unit hypercube
-        self.create_samplesu01(nsamples_per_stratum, nsamples)
+        self.create_unit_hypercube_samples(samples_per_stratum_number, samples_number)
 
         # Compute inverse cdf of samplesU01
         self.transform_samples(self.samplesU01)
@@ -177,28 +179,29 @@ class STS:
             print("UQpy: Stratified Sampling is completed")
 
     def _run_checks(self):
-        if self.nsamples is not None:
-            if not isinstance(self.nsamples, int):
+        if self.samples_number is not None:
+            if not isinstance(self.samples_number, int):
                 raise RuntimeError("UQpy: 'nsamples' must be an integer.")
             else:
-                if isinstance(self.nsamples_per_stratum, (int, list)):
+                if isinstance(self.samples_per_stratum_number, (int, list)):
                     print("UQpy: stratifications class is executing proportional sampling, thus ignoring "
                           "'nsamples_per_stratum'.")
-            self.nsamples_per_stratum = (self.strata_object.volume * self.nsamples).round()
+            self.samples_per_stratum_number = (self.strata_object.volume * self.samples_number).round()
 
-        if self.nsamples_per_stratum is not None:
-            if isinstance(self.nsamples_per_stratum, int):
-                self.nsamples_per_stratum = [self.nsamples_per_stratum] * self.strata_object.volume.shape[0]
-            elif isinstance(self.nsamples_per_stratum, list):
-                if len(self.nsamples_per_stratum) != self.strata_object.volume.shape[0]:
+        if self.samples_per_stratum_number is not None:
+            if isinstance(self.samples_per_stratum_number, int):
+                self.samples_per_stratum_number = [self.samples_per_stratum_number] * self.strata_object.volume.shape[0]
+            elif isinstance(self.samples_per_stratum_number, list):
+                if len(self.samples_per_stratum_number) != self.strata_object.volume.shape[0]:
                     raise ValueError("UQpy: Length of 'nsamples_per_stratum' must match the number of strata.")
-            elif self.nsamples is None:
+            elif self.samples_number is None:
                 raise ValueError("UQpy: 'nsamples_per_stratum' must be an integer or a list.")
         else:
-            self.nsamples_per_stratum = [1] * self.strata_object.volume.shape[0]
+            self.samples_per_stratum_number = [1] * self.strata_object.volume.shape[0]
 
     # Creating dummy method for create_samplesU01. These methods are overwritten in child classes.
-    def create_samplesu01(self, nsamples_per_stratum, nsamples):
+    @abc.abstractmethod
+    def create_unit_hypercube_samples(self, nsamples_per_stratum, nsamples):
         """
         Executes the specific stratified sampling algorithm. This method is overwritten by each child class of ``stratifications``.
 

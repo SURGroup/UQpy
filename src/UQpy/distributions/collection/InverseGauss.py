@@ -26,6 +26,6 @@ class InverseGauss(DistributionContinuous1D):
 
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
-    def __init__(self, mu, loc=0., scale=1.):
-        super().__init__(mu=mu, loc=loc, scale=scale, order_params=('mu', 'loc', 'scale'))
+    def __init__(self, mu, location=0., scale=1.):
+        super().__init__(mu=mu, loc=location, scale=scale, order_params=('mu', 'location', 'scale'))
         self._construct_from_scipy(scipy_name=stats.invgauss)

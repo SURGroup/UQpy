@@ -60,18 +60,18 @@ class DelaunayStrata(Strata):
         **Methods:**
         """
 
-    def __init__(self, seeds=None, nseeds=None, dimension=None, random_state=None, verbose=False):
+    def __init__(self, seeds=None, seeds_number=None, dimension=None, random_state=None, verbose=False):
         super().__init__(random_state=random_state, seeds=seeds, verbose=verbose)
 
-        self.nseeds = nseeds
+        self.seeds_number = seeds_number
         self.dimension = dimension
         self.delaunay = None
         self.centroids = []
 
         if self.seeds is not None:
-            if self.nseeds is not None or self.dimension is not None:
+            if self.seeds_number is not None or self.dimension is not None:
                 print("UQpy: Ignoring 'nseeds' and 'dimension' attributes because 'seeds' are provided")
-            self.nseeds, self.dimension = self.seeds.shape[0], self.seeds.shape[1]
+            self.seeds_number, self.dimension = self.seeds.shape[0], self.seeds.shape[1]
 
         self.stratify()
 
@@ -84,7 +84,7 @@ class DelaunayStrata(Strata):
 
         initial_seeds = self.seeds
         if self.seeds is None:
-            initial_seeds = stats.uniform.rvs(size=[self.nseeds, self.dimension], random_state=self.random_state)
+            initial_seeds = stats.uniform.rvs(size=[self.seeds_number, self.dimension], random_state=self.random_state)
 
         # Modify seeds to include corner points of (0,1) space
         corners = list(itertools.product(*zip([0]*self.dimension, [1]*self.dimension)))

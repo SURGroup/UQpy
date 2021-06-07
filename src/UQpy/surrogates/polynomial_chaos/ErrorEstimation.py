@@ -14,8 +14,8 @@ class ErrorEstimation:
     **Methods:**
     """
 
-    def __init__(self, surr_object):
-        self.surr_object = surr_object
+    def __init__(self, pce_surrogate):
+        self.pce_surrogate = pce_surrogate
 
     def validation(self, x, y):
         """
@@ -38,7 +38,7 @@ class ErrorEstimation:
         if y.ndim == 1 or y.shape[1] == 1:
             y = y.reshape(-1, 1)
 
-        y_val = self.surr_object.predict(x)
+        y_val = self.pce_surrogate.predict(x)
 
         n_samples = x.shape[0]
         mu_yval = (1 / n_samples) * np.sum(y, axis=0)

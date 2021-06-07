@@ -3,9 +3,9 @@ from UQpy.surrogates import *
 import numpy as np
 
 np.random.seed(1)
-dist = Uniform(loc=0, scale=10)
+dist = Uniform(location=0, scale=10)
 max_degree, n_samples = 2, 10
-polys = Polynomials(dist_object=dist, degree=max_degree)
+polys = Polynomials(distributions=dist, degree=max_degree)
 
 
 def func(x):
@@ -19,7 +19,7 @@ def poly_func(x):
     return p
 
 def pce_model(polys, x, y):
-    lstsq = LeastSquareRegression(poly_object=polys)
+    lstsq = LeastSquareRegression(polynomials=polys)
     pce = pce(method=lstsq)
     pce.fit(x, y)
     return pce
@@ -59,5 +59,5 @@ def test_4():
     """
     x_val = x + np.random.rand(1)
     y_val = func(x_val)
-    error = ErrorEstimation(surr_object=pce_model(polys, x, y))
+    error = ErrorEstimation(pce_surrogate=pce_model(polys, x, y))
     assert round(error.validation(x_val, y_val), 3) == 0.432

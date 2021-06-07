@@ -21,11 +21,11 @@ class SecondOrderReliability(TaylorSeries):
     **Methods:**
     """
 
-    def __init__(self, form_object, dist_object=None, seed_u=None, seed_x=None, runmodel_object=None, def_step=None,
+    def __init__(self, form_object, distributions=None, seed_u=None, seed_x=None, runmodel_object=None, def_step=None,
                  corr_x=None, corr_z=None, n_iter=None, tol1=None, tol2=None, tol3=None, verbose=False):
 
-        super().__init__(dist_object, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u,  n_iter, tol1, tol2,
-                         tol3, def_step, verbose)
+        super().__init__(distributions, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u, n_iter, tol1,
+                         tol2, tol3, def_step, verbose)
 
         self.beta_form = None
         self.DesignPoint_U = None

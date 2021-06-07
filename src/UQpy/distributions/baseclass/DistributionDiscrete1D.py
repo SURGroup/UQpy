@@ -2,10 +2,6 @@ import numpy as np
 import scipy.stats as stats
 from UQpy.distributions.baseclass.Distribution import Distribution
 
-########################################################################################################################
-#        Univariate Discrete distributions
-########################################################################################################################
-
 
 class DistributionDiscrete1D(Distribution):
     """
@@ -23,12 +19,12 @@ class DistributionDiscrete1D(Distribution):
         x = np.atleast_1d(x)
         if len(x.shape) > 2 or (len(x.shape) == 2 and x.shape[1] != 1):
             raise ValueError('Wrong dimension in x.')
-        return x.reshape((-1, ))
+        return x.reshape((-1,))
 
     def _construct_from_scipy(self, scipy_name=stats.rv_discrete):
-        self.cdf = lambda x: scipy_name.cdf(k=self._check_x_dimension(x), **self.params)
         self.pmf = lambda x: scipy_name.pmf(k=self._check_x_dimension(x), **self.params)
         self.log_pmf = lambda x: scipy_name.logpmf(k=self._check_x_dimension(x), **self.params)
+        self.cdf = lambda x: scipy_name.cdf(k=self._check_x_dimension(x), **self.params)
         self.icdf = lambda x: scipy_name.ppf(q=self._check_x_dimension(x), **self.params)
         self.moments = lambda moments2return='mvsk': scipy_name.stats(moments=moments2return, **self.params)
         self.rvs = lambda nsamples=1, random_state=None: scipy_name.rvs(

@@ -1,12 +1,14 @@
 import numpy as np
 from UQpy.distributions import Distribution
 
+
 class MarkovChainMonteCarlo:
     """
     Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
 
-    This is the parent class for all markov_chain algorithms. This parent class only provides the framework for markov_chain and cannot
-    be used directly for sampling. Sampling is done by calling the child class for the specific markov_chain algorithm.
+    This is the parent class for all markov_chain algorithms. This parent class only provides the framework for
+    markov_chain and cannot be used directly for sampling. Sampling is done by calling the child class for the specific
+    markov_chain algorithm.
 
 
     **Inputs:**
@@ -101,22 +103,23 @@ class MarkovChainMonteCarlo:
     """
     # Last Modified: 10/05/20 by Audrey Olivier
 
-    def __init__(self, dimension=None, pdf_target=None, log_pdf_target=None, args_target=None, seed=None, nburn=0,
-                 jump=1, nchains=None, save_log_pdf=False, verbose=False, concat_chains=True, random_state=None):
+    def __init__(self, dimension=None, pdf_target=None, log_pdf_target=None, args_target=None, seed=None,
+                 burn_length=0, jump=1, chains_number=None, save_log_pdf=False, verbose=False, concatenate_chains=True,
+                 random_state=None):
 
-        if not (isinstance(nburn, int) and nburn >= 0):
+        if not (isinstance(burn_length, int) and burn_length >= 0):
             raise TypeError('UQpy: nburn should be an integer >= 0')
         if not (isinstance(jump, int) and jump >= 1):
             raise TypeError('UQpy: jump should be an integer >= 1')
-        self.nburn, self.jump = nburn, jump
-        self.seed = self._preprocess_seed(seed=seed, dim=dimension, nchains=nchains)
-        self.nchains, self.dimension = self.seed.shape
+        self.burn_length, self.jump = burn_length, jump
+        self.seed = self._preprocess_seed(seed=seed, dimensions=dimension, chains_number=chains_number)
+        self.chains_number, self.dimension = self.seed.shape
 
         # Check target pdf
         self.evaluate_log_target, self.evaluate_log_target_marginals = self._preprocess_target(
             pdf_=pdf_target, log_pdf_=log_pdf_target, args=args_target)
         self.save_log_pdf = save_log_pdf
-        self.concat_chains = concat_chains
+        self.concatenate_chains = concatenate_chains
         self.random_state = random_state
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
@@ -131,11 +134,11 @@ class MarkovChainMonteCarlo:
         # Initialize a few more variables
         self.samples = None
         self.log_pdf_values = None
-        self.acceptance_rate = [0.] * self.nchains
-        self.nsamples, self.nsamples_per_chain = 0, 0
-        self.niterations = 0  # total nb of iterations, grows if you call run several times
+        self.acceptance_rate = [0.] * self.chains_number
+        self.samples_number, self.nsamples_per_chain = 0, 0
+        self.iterations_number = 0  # total nb of iterations, grows if you call run several times
 
-    def run(self, nsamples=None, nsamples_per_chain=None):
+    def run(self, number_of_samples=None, nsamples_per_chain=None):
         """
         Run the markov_chain algorithm.
 
@@ -156,7 +159,7 @@ class MarkovChainMonteCarlo:
         """
         # Initialize the runs: allocate space for the new samples and log pdf values
         final_nsamples, final_nsamples_per_chain, current_state, current_log_pdf = self._initialize_samples(
-            nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
+            number_of_samples=number_of_samples, samples_per_chain_number=nsamples_per_chain)
 
         if self.verbose:
             print('UQpy: Running markov_chain...')
@@ -164,23 +167,23 @@ class MarkovChainMonteCarlo:
         # Run nsims iterations of the markov_chain algorithm, starting at current_state
         while self.nsamples_per_chain < final_nsamples_per_chain:
             # update the total number of iterations
-            self.niterations += 1
+            self.iterations_number += 1
             # run iteration
             current_state, current_log_pdf = self.run_one_iteration(current_state, current_log_pdf)
             # Update the chain, only if burn-in is over and the sample is not being jumped over
             # also increase the current number of samples and samples_per_chain
-            if self.niterations > self.nburn and (self.niterations - self.nburn) % self.jump == 0:
+            if self.iterations_number > self.burn_length and (self.iterations_number - self.burn_length) % self.jump == 0:
                 self.samples[self.nsamples_per_chain, :, :] = current_state.copy()
                 if self.save_log_pdf:
                     self.log_pdf_values[self.nsamples_per_chain, :] = current_log_pdf.copy()
                 self.nsamples_per_chain += 1
-                self.nsamples += self.nchains
+                self.samples_number += self.chains_number
 
         if self.verbose:
             print('UQpy: markov_chain run successfully !')
 
         # Concatenate chains maybe
-        if self.concat_chains:
+        if self.concatenate_chains:
             self._concatenate_chains()
 
     def run_one_iteration(self, current_state, current_log_pdf):
@@ -209,11 +212,6 @@ class MarkovChainMonteCarlo:
         """
         return [], []
 
-    ####################################################################################################################
-    # Helper functions that can be used by all algorithms
-    # Methods update_samples, update_accept_ratio and sample_candidate_from_proposal can be called in the run stage.
-    # Methods preprocess_target, preprocess_proposal, check_seed and check_integers can be called in the init stage.
-
     def _concatenate_chains(self):
         """
         Concatenate chains.
@@ -239,12 +237,12 @@ class MarkovChainMonteCarlo:
         No input / output.
 
         """
-        self.samples = self.samples.reshape((-1, self.nchains, self.dimension), order='C')
+        self.samples = self.samples.reshape((-1, self.chains_number, self.dimension), order='C')
         if self.save_log_pdf:
-            self.log_pdf_values = self.log_pdf_values.reshape((-1, self.nchains), order='C')
+            self.log_pdf_values = self.log_pdf_values.reshape((-1, self.chains_number), order='C')
         return None
 
-    def _initialize_samples(self, nsamples, nsamples_per_chain):
+    def _initialize_samples(self, number_of_samples, samples_per_chain_number):
         """
         Initialize necessary attributes and variables before running the chain forward.
 
@@ -264,33 +262,33 @@ class MarkovChainMonteCarlo:
         * current_state (ndarray of shape (nchains, dim)): Current state of the chain to start from.
 
         """
-        if ((nsamples is not None) and (nsamples_per_chain is not None)) or (
-                nsamples is None and nsamples_per_chain is None):
+        if ((number_of_samples is not None) and (samples_per_chain_number is not None)) or (
+                number_of_samples is None and samples_per_chain_number is None):
             raise ValueError('UQpy: Either nsamples or nsamples_per_chain must be provided (not both)')
-        if nsamples_per_chain is not None:
-            if not (isinstance(nsamples_per_chain, int) and nsamples_per_chain >= 0):
+        if samples_per_chain_number is not None:
+            if not (isinstance(samples_per_chain_number, int) and samples_per_chain_number >= 0):
                 raise TypeError('UQpy: nsamples_per_chain must be an integer >= 0.')
-            nsamples = int(nsamples_per_chain * self.nchains)
+            number_of_samples = int(samples_per_chain_number * self.chains_number)
         else:
-            if not (isinstance(nsamples, int) and nsamples >= 0):
+            if not (isinstance(number_of_samples, int) and number_of_samples >= 0):
                 raise TypeError('UQpy: nsamples must be an integer >= 0.')
-            nsamples_per_chain = int(np.ceil(nsamples / self.nchains))
-            nsamples = int(nsamples_per_chain * self.nchains)
+            samples_per_chain_number = int(np.ceil(number_of_samples / self.chains_number))
+            number_of_samples = int(samples_per_chain_number * self.chains_number)
 
         if self.samples is None:    # very first call of run, set current_state as the seed and initialize self.samples
-            self.samples = np.zeros((nsamples_per_chain, self.nchains, self.dimension))
+            self.samples = np.zeros((samples_per_chain_number, self.chains_number, self.dimension))
             if self.save_log_pdf:
-                self.log_pdf_values = np.zeros((nsamples_per_chain, self.nchains))
+                self.log_pdf_values = np.zeros((samples_per_chain_number, self.chains_number))
             current_state = np.zeros_like(self.seed)
             np.copyto(current_state, self.seed)
             current_log_pdf = self.evaluate_log_target(current_state)
-            if self.nburn == 0:    # if nburn is 0, save the seed, run one iteration less 
+            if self.burn_length == 0:    # if nburn is 0, save the seed, run one iteration less
                 self.samples[0, :, :] = current_state
                 if self.save_log_pdf:
                     self.log_pdf_values[0, :] = current_log_pdf
                 self.nsamples_per_chain += 1
-                self.nsamples += self.nchains
-            final_nsamples, final_nsamples_per_chain = nsamples, nsamples_per_chain
+                self.samples_number += self.chains_number
+            final_nsamples, final_nsamples_per_chain = number_of_samples, samples_per_chain_number
 
         else:    # fetch previous samples to start the new run, current state is last saved sample
             if len(self.samples.shape) == 2:   # the chains were previously concatenated
@@ -298,16 +296,16 @@ class MarkovChainMonteCarlo:
             current_state = self.samples[-1]
             current_log_pdf = self.evaluate_log_target(current_state)
             self.samples = np.concatenate(
-                [self.samples, np.zeros((nsamples_per_chain, self.nchains, self.dimension))], axis=0)
+                [self.samples, np.zeros((samples_per_chain_number, self.chains_number, self.dimension))], axis=0)
             if self.save_log_pdf:
                 self.log_pdf_values = np.concatenate(
-                    [self.log_pdf_values, np.zeros((nsamples_per_chain, self.nchains))], axis=0)
-            final_nsamples = nsamples + self.nsamples
-            final_nsamples_per_chain = nsamples_per_chain + self.nsamples_per_chain
+                    [self.log_pdf_values, np.zeros((samples_per_chain_number, self.chains_number))], axis=0)
+            final_nsamples = number_of_samples + self.samples_number
+            final_nsamples_per_chain = samples_per_chain_number + self.nsamples_per_chain
 
         return final_nsamples, final_nsamples_per_chain, current_state, current_log_pdf
 
-    def _update_acceptance_rate(self, new_accept=None):
+    def _update_acceptance_rate(self, chain_state_acceptance=None):
         """
         Update acceptance rate of the chains.
 
@@ -319,8 +317,8 @@ class MarkovChainMonteCarlo:
           separately).
 
         """
-        self.acceptance_rate = [na / self.niterations + (self.niterations - 1) / self.niterations * a
-                                for (na, a) in zip(new_accept, self.acceptance_rate)]
+        self.acceptance_rate = [na / self.iterations_number + (self.iterations_number - 1) / self.iterations_number * a
+                                for (na, a) in zip(chain_state_acceptance, self.acceptance_rate)]
 
     @staticmethod
     def _preprocess_target(log_pdf_, pdf_, args):
@@ -392,7 +390,7 @@ class MarkovChainMonteCarlo:
         return evaluate_log_pdf, evaluate_log_pdf_marginals
 
     @staticmethod
-    def _preprocess_seed(seed, dim, nchains):
+    def _preprocess_seed(seed, dimensions, chains_number):
         """
         Preprocess input seed.
 
@@ -410,23 +408,23 @@ class MarkovChainMonteCarlo:
 
         """
         if seed is None:
-            if dim is None or nchains is None:
+            if dimensions is None or chains_number is None:
                 raise ValueError('UQpy: Either `seed` or `dimension` and `nchains` must be provided.')
-            seed = np.zeros((nchains, dim))
+            seed = np.zeros((chains_number, dimensions))
         else:
             seed = np.atleast_1d(seed)
             if len(seed.shape) == 1:
                 seed = np.reshape(seed, (1, -1))
             elif len(seed.shape) > 2:
                 raise ValueError('UQpy: Input seed should be an array of shape (dimension, ) or (nchains, dimension).')
-            if dim is not None and seed.shape[1] != dim:
+            if dimensions is not None and seed.shape[1] != dimensions:
                 raise ValueError('UQpy: Wrong dimensions between seed and dimension.')
-            if nchains is not None and seed.shape[0] != nchains:
+            if chains_number is not None and seed.shape[0] != chains_number:
                 raise ValueError('UQpy: The number of chains and the seed shape are inconsistent.')
         return seed
 
     @staticmethod
-    def _check_methods_proposal(proposal):
+    def _check_methods_proposal(proposal_distribution):
         """
         Check if proposal has required methods.
 
@@ -439,13 +437,14 @@ class MarkovChainMonteCarlo:
         * proposal (Distribution object): proposal distribution
 
         """
-        if not isinstance(proposal, Distribution):
+        if not isinstance(proposal_distribution, Distribution):
             raise TypeError('UQpy: Proposal should be a Distribution object')
-        if not hasattr(proposal, 'rvs'):
+        if not hasattr(proposal_distribution, 'rvs'):
             raise AttributeError('UQpy: The proposal should have an rvs method')
-        if not hasattr(proposal, 'log_pdf'):
-            if not hasattr(proposal, 'pdf'):
+        if not hasattr(proposal_distribution, 'log_pdf'):
+            if not hasattr(proposal_distribution, 'pdf'):
                 raise AttributeError('UQpy: The proposal should have a log_pdf or pdf method')
-            proposal.log_pdf = lambda x: np.log(np.maximum(proposal.pdf(x), 10 ** (-320) * np.ones((x.shape[0],))))
+            proposal_distribution.log_pdf = lambda x: np.log(np.maximum(proposal_distribution.pdf(x),
+                                                                        10 ** (-320) * np.ones((x.shape[0],))))
 
 

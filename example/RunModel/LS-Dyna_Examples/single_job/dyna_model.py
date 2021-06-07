@@ -1,22 +1,22 @@
 from UQpy.distributions import Uniform
 from UQpy.RunModel import RunModel
-from UQpy.sample_methods import MCS
+from UQpy.sample_methods import MonteCarloSampling
 
 ########################################################################################################################
 # This will need to be rewritten when MCS is updated.
 
 # Define the distribution objects
-d1 = Uniform(loc=0.02, scale=0.06)
-d2 = Uniform(loc=0.02, scale=0.01)
-d3 = Uniform(loc=0.02, scale=0.01)
-d4 = Uniform(loc=0.0025, scale=0.0075)
-d5 = Uniform(loc=0.02, scale=0.06)
-d6 = Uniform(loc=0.02, scale=0.01)
-d7 = Uniform(loc=0.02, scale=0.01)
-d8 = Uniform(loc=0.0025, scale=0.0075)
+d1 = Uniform(location=0.02, scale=0.06)
+d2 = Uniform(location=0.02, scale=0.01)
+d3 = Uniform(location=0.02, scale=0.01)
+d4 = Uniform(location=0.0025, scale=0.0075)
+d5 = Uniform(location=0.02, scale=0.06)
+d6 = Uniform(location=0.02, scale=0.01)
+d7 = Uniform(location=0.02, scale=0.01)
+d8 = Uniform(location=0.0025, scale=0.0075)
 
 # Draw a single sample using MCS
-x = MCS(dist_object=[d1, d2, d3, d4, d5, d6, d7, d8], nsamples=1, random_state=349857)
+x = MonteCarloSampling(distributions=[d1, d2, d3, d4, d5, d6, d7, d8], samples_number=1, random_state=349857)
 
 ########################################################################################################################
 

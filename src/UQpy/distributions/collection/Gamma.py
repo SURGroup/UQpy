@@ -26,6 +26,6 @@ class Gamma(DistributionContinuous1D):
 
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
-    def __init__(self, a, loc=0., scale=1.):
-        super().__init__(a=a, loc=loc, scale=scale, order_params=('a', 'loc', 'scale'))
+    def __init__(self, a, location=0., scale=1.):
+        super().__init__(a=a, loc=location, scale=scale, order_params=('a', 'location', 'scale'))
         self._construct_from_scipy(scipy_name=stats.gamma)

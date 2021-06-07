@@ -1,11 +1,8 @@
 import numpy as np
 import scipy.stats as stats
 
-from UQpy.sample_methods.LatinHypercubeSampling import LHS
-########################################################################################################################
-########################################################################################################################
-#                                  Adaptive kriging-Monte Carlo Simulation (AK-MCS)
-########################################################################################################################
+from UQpy.sample_methods.LatinHypercubeSampling import LatinHypercubeSampling
+
 
 class AKMCS:
     """
@@ -99,21 +96,22 @@ class AKMCS:
 
     """
 
-    def __init__(self, dist_object, runmodel_object, krig_object, samples=None, nsamples=None, nlearn=None,
-                 qoi_name=None, learning_function='U', n_add=1, random_state=None, verbose=False, **kwargs):
+    def __init__(self, distributions, runmodel_object, kriging, samples=None, samples_number=None,
+                 learning_samples_number=None, qoi_name=None, learning_function='U', n_add=1, random_state=None,
+                 verbose=False, **kwargs):
 
         # Initialize the internal variables of the class.
         self.runmodel_object = runmodel_object
         self.samples = np.array(samples)
-        self.nlearn = nlearn
-        self.nstart = None
+        self.learning_samples_number = learning_samples_number
+        self.initial_samples_number = None
         self.verbose = verbose
         self.qoi_name = qoi_name
 
         self.learning_function = learning_function
         self.learning_set = None
-        self.dist_object = dist_object
-        self.nsamples = nsamples
+        self.dist_object = distributions
+        self.samples_number = samples_number
 
         self.moments = None
         self.n_add = n_add
@@ -126,7 +124,7 @@ class AKMCS:
         self.kwargs = kwargs
 
         # Initialize and run preliminary error checks.
-        self.dimension = len(dist_object)
+        self.dimension = len(distributions)
 
         if samples is not None:
             if self.dimension != self.samples.shape[1]:
@@ -135,11 +133,11 @@ class AKMCS:
         if self.learning_function not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
             raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
         elif self.learning_function == 'EIGF':
-            self.learning_function = self.eigf
+            self.learning_function = self.expected_improvement_global_fit
         elif self.learning_function == 'EIF':
             if 'eif_stop' not in self.kwargs:
                 self.kwargs['eif_stop'] = 0.01
-            self.learning_function = self.eif
+            self.learning_function = self.expected_improvement_function
         elif self.learning_function == 'U':
             if 'u_stop' not in self.kwargs:
                 self.kwargs['u_stop'] = 2
@@ -155,16 +153,16 @@ class AKMCS:
                 self.kwargs['epsilon'] = 2
             if 'eff_stop' not in self.kwargs:
                 self.kwargs['u_stop'] = 0.001
-            self.learning_function = self.eff
+            self.learning_function = self.expected_feasiblity_function
 
         from UQpy.distributions import DistributionContinuous1D, JointIndependent
 
-        if isinstance(dist_object, list):
-            for i in range(len(dist_object)):
-                if not isinstance(dist_object[i], DistributionContinuous1D):
+        if isinstance(distributions, list):
+            for i in range(len(distributions)):
+                if not isinstance(distributions[i], DistributionContinuous1D):
                     raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
         else:
-            if not isinstance(dist_object, (DistributionContinuous1D, JointIndependent)):
+            if not isinstance(distributions, (DistributionContinuous1D, JointIndependent)):
                 raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
 
         self.random_state = random_state
@@ -173,8 +171,8 @@ class AKMCS:
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
-        if hasattr(krig_object, 'fit') and hasattr(krig_object, 'predict'):
-            self.krig_object = krig_object
+        if hasattr(kriging, 'fit') and hasattr(kriging, 'predict'):
+            self.krig_object = kriging
         else:
             raise NotImplementedError("UQpy: krig_object must have 'fit' and 'predict' methods.")
 
@@ -189,15 +187,15 @@ class AKMCS:
                 raise NotImplementedError("UQpy: There should be no model evaluation or Number of samples and model "
                                           "evaluation in RunModel object should be same.")
 
-        if self.nsamples is not None:
-            if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
+        if self.samples_number is not None:
+            if self.samples_number <= 0 or type(self.samples_number).__name__ != 'int':
                 raise NotImplementedError("UQpy: Number of samples to be generated 'nsamples' should be a positive "
                                           "integer.")
 
             if samples is not None:
-                self.run(nsamples=self.nsamples)
+                self.run(samples_number=self.samples_number)
 
-    def run(self, nsamples, samples=None, append_samples=True, nstart=None):
+    def run(self, samples_number, samples=None, append_samples=True, initial_samples_number=None):
         """
         Execute the ``AKMCS`` learning iterations.
 
@@ -235,8 +233,8 @@ class AKMCS:
 
         """
 
-        self.nsamples = nsamples
-        self.nstart = nstart
+        self.samples_number = samples_number
+        self.initial_samples_number = initial_samples_number
 
         if samples is not None:
             # New samples are appended to existing samples, if append_samples is TRUE
@@ -255,12 +253,12 @@ class AKMCS:
             self.runmodel_object.run(samples=samples, append_samples=append_samples)
         else:
             if len(self.samples.shape) == 0:
-                if self.nstart is None:
+                if self.initial_samples_number is None:
                     raise NotImplementedError("UQpy: User should provide either 'samples' or 'nstart' value.")
                 if self.verbose:
                     print('UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling.')
-                self.samples = LHS(dist_object=self.dist_object, nsamples=self.nstart,
-                                   random_state=self.random_state).samples
+                self.samples = LatinHypercubeSampling(distributions=self.dist_object, samples_number=self.initial_samples_number,
+                                                      random_state=self.random_state).samples
                 self.runmodel_object.run(samples=self.samples)
 
         if self.verbose:
@@ -285,11 +283,11 @@ class AKMCS:
         # Primary loop for learning and adding samples.
         # ---------------------------------------------
 
-        for i in range(self.samples.shape[0], self.nsamples):
+        for i in range(self.samples.shape[0], self.samples_number):
             # Initialize the population of samples at which to evaluate the learning function and from which to draw
             # in the sampling.
 
-            lhs = LHS(dist_object=self.dist_object, nsamples=self.nlearn, random_state=self.random_state)
+            lhs = LatinHypercubeSampling(distributions=self.dist_object, samples_number=self.learning_samples_number, random_state=self.random_state)
             self.learning_set = lhs.samples.copy()
 
             # Find all of the points in the population that have not already been integrated into the training set
@@ -317,7 +315,7 @@ class AKMCS:
                 self.qoi = self.runmodel_object.qoi_list
 
             # Retrain the surrogate model
-            self.krig_object.fit(self.samples, self.qoi, nopt=1)
+            self.krig_object.fit(self.samples, self.qoi, optimizations_number=1)
             self.krig_model = self.krig_object.predict
 
             # Exit the loop, if error criteria is satisfied
@@ -335,7 +333,7 @@ class AKMCS:
     # LEARNING FUNCTIONS
     # ------------------
     @staticmethod
-    def eigf(surr, pop, **kwargs):
+    def expected_improvement_global_fit(surr, pop, **kwargs):
         """
         Expected Improvement for Global Fit (EIGF) learning function. See [7]_ for a detailed explanation.
 
@@ -555,7 +553,7 @@ class AKMCS:
         return new_samples, w_lf, indicator
 
     @staticmethod
-    def eff(surr, pop, **kwargs):
+    def expected_feasiblity_function(surr, pop, **kwargs):
         """
         Expected Feasibility Function (EFF) for reliability analysis, see [6]_ for a detailed explanation.
 
@@ -629,7 +627,7 @@ class AKMCS:
         return new_samples, eff_lf, indicator
 
     @staticmethod
-    def eif(surr, pop, **kwargs):
+    def expected_improvement_function(surr, pop, **kwargs):
         """
         Expected Improvement Function (EIF) for Efficient Global Optimization (EFO). See [4]_ for a detailed
         explanation.

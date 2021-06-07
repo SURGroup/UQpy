@@ -3,11 +3,6 @@ from UQpy.Utilities import *
 from UQpy.stochastic_process.supportive import inverse_wiener_khinchin_transform, wiener_khinchin_transform
 
 
-########################################################################################################################
-########################################################################################################################
-#                                      Inverse Translation method
-########################################################################################################################
-
 class InverseTranslation:
     """
     A class to perform Iterative Translation Approximation Method to find the underlying  Gaussian Stochastic Processes
@@ -63,10 +58,10 @@ class InverseTranslation:
 
     """
 
-    def __init__(self, dist_object, time_interval, frequency_interval, number_time_intervals,
+    def __init__(self, distributions, time_interval, frequency_interval, number_time_intervals,
                  number_frequency_intervals, correlation_function_non_gaussian=None,
                  power_spectrum_non_gaussian=None, samples_non_gaussian=None):
-        self.dist_object = dist_object
+        self.dist_object = distributions
         self.frequency = np.arange(0, number_frequency_intervals) * frequency_interval
         self.time = np.arange(0, number_time_intervals) * time_interval
         if correlation_function_non_gaussian is None and power_spectrum_non_gaussian is None:

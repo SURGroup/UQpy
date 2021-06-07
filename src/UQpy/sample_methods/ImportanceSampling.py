@@ -1,11 +1,8 @@
 from UQpy.distributions import Distribution
 import numpy as np
-########################################################################################################################
-########################################################################################################################
-#                                        Generating random samples inside a Simplex
-########################################################################################################################
 
-class IS:
+
+class ImportanceSampling:
     """
     Sample from a user-defined target density using importance sampling.
 
@@ -58,7 +55,7 @@ class IS:
     **Methods:**
     """
     # Last Modified: 10/05/2020 by Audrey Olivier
-    def __init__(self, nsamples=None, pdf_target=None, log_pdf_target=None, args_target=None,
+    def __init__(self, samples_number=None, pdf_target=None, log_pdf_target=None, args_target=None,
                  proposal=None, verbose=False, random_state=None):
         # Initialize proposal: it should have an rvs and log pdf or pdf method
         self.proposal = proposal
@@ -89,8 +86,8 @@ class IS:
         self.unweighted_samples = None
 
         # Run IS if nsamples is provided
-        if nsamples is not None and nsamples != 0:
-            self.run(nsamples)
+        if samples_number is not None and samples_number != 0:
+            self.run(samples_number)
 
     def run(self, nsamples):
         """
@@ -163,7 +160,7 @@ class IS:
     #     from .Utilities import resample
     #     return resample(self.samples, self.weights, method=method, size=nsamples)
 
-    def resample(self, method='multinomial', nsamples=None):
+    def resample(self, method='multinomial', samples_number=None):
         """
         Resample to get a set of un-weighted samples that represent the target pdf.
 
@@ -190,10 +187,10 @@ class IS:
 
         """
 
-        if nsamples is None:
-            nsamples = self.samples.shape[0]
+        if samples_number is None:
+            samples_number = self.samples.shape[0]
         if method == 'multinomial':
-            multinomial_run = np.random.multinomial(nsamples, self.weights, size=1)[0]
+            multinomial_run = np.random.multinomial(samples_number, self.weights, size=1)[0]
             idx = list()
             for j in range(self.samples.shape[0]):
                 if multinomial_run[j] > 0:

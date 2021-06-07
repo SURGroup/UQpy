@@ -1,11 +1,11 @@
-from UQpy.sample_methods.refined_stratified.RefinedStratifiedSampling import RSS
+from UQpy.sample_methods.refined_stratified.RefinedStratifiedSampling import RefinedStratifiedSampling
 from UQpy.sample_methods.stratifications import RectangularSTS
 import numpy as np
 import scipy.stats as stats
 import copy
 
 
-class RectangularRSS(RSS):
+class RectangularRefinedStratifiedSampling(RefinedStratifiedSampling):
     """
     Executes Refined Stratified Sampling using Rectangular Stratification.
 
@@ -20,32 +20,34 @@ class RectangularRSS(RSS):
 
     **Methods:**
     """
-    def __init__(self, sample_object=None, runmodel_object=None, krig_object=None, local=False, max_train_size=None,
-                 step_size=0.005, qoi_name=None, n_add=1, nsamples=None, random_state=None, verbose=False):
+    def __init__(self, sample_object=None, runmodel_object=None, kriging=None, update_locally=False,
+                 nearest_points_number=None, step_size=0.005, qoi_name=None, new_iteration_samples=1,
+                 samples_number=None, random_state=None, verbose=False):
 
         if not isinstance(sample_object, RectangularSTS):
             raise NotImplementedError("UQpy Error: sample_object must be an object of the RectangularSTS class.")
 
         self.strata_object = copy.deepcopy(sample_object.strata_object)
 
-        super().__init__(sample_object=sample_object, runmodel_object=runmodel_object, krig_object=krig_object,
-                         local=local, max_train_size=max_train_size, step_size=step_size, qoi_name=qoi_name,
-                         n_add=n_add, nsamples=nsamples, random_state=random_state, verbose=verbose)
+        super().__init__(sample_object=sample_object, runmodel_object=runmodel_object, kriging=kriging,
+                         update_locally=update_locally, nearest_points_number=nearest_points_number,
+                         step_size=step_size, qoi_name=qoi_name, new_iteration_samples=new_iteration_samples,
+                         samples_number=samples_number, random_state=random_state, verbose=verbose)
 
-    def run_rss(self):
+    def run_refined_stratified_sampling(self):
         """
         Overwrites the ``run_rss`` method in the parent class to perform refined stratified sampling with rectangular
         strata. It is an instance method that does not take any additional input arguments. See
         the ``refined_stratified`` class for additional details.
         """
         if self.runmodel_object is not None:
-            self._gerss()
+            self._generate_gradient_enhanced_samples()
         else:
-            self._rss()
+            self._generate_samples()
 
         self.weights = self.strata_object.volume
 
-    def _gerss(self):
+    def _generate_gradient_enhanced_samples(self):
         """
         This method generates samples using Gradient Enhanced Refined Stratified Sampling.
         """
@@ -53,11 +55,11 @@ class RectangularRSS(RSS):
             print('UQpy: Performing GE-refined_stratified with rectangular stratification...')
 
         # Initialize the vector of gradients at each training point
-        dy_dx = np.zeros((self.nsamples, np.size(self.training_points[1])))
+        dy_dx = np.zeros((self.samples_number, np.size(self.training_points[1])))
 
         # Primary loop for adding samples and performing refinement.
-        for i in range(self.samples.shape[0], self.nsamples, self.n_add):
-            p = min(self.n_add, self.nsamples - i)  # Number of points to add in this iteration
+        for i in range(self.samples.shape[0], self.samples_number, self.new_iteration_samples):
+            p = min(self.new_iteration_samples, self.samples_number - i)  # Number of points to add in this iteration
 
             # If the quantity of interest is a dictionary, convert it to a list
             qoi = [None] * len(self.runmodel_object.qoi_list)
@@ -73,8 +75,8 @@ class RectangularRSS(RSS):
             # --------------------------------
 
             # Compute the gradients at the existing sample points
-            if self.max_train_size is None or len(
-                    self.training_points) <= self.max_train_size or i == self.samples.shape[0]:
+            if self.nearest_points_number is None or len(
+                    self.training_points) <= self.nearest_points_number or i == self.samples.shape[0]:
                 # Use the entire sample set to train the surrogate model (more expensive option)
                 dy_dx[:i] = self.estimate_gradient(np.atleast_2d(self.training_points),
                                                    np.atleast_2d(np.array(qoi)),
@@ -84,7 +86,7 @@ class RectangularRSS(RSS):
                 # Use only max_train_size points to train the surrogate model (more economical option)
                 # Find the nearest neighbors to the most recently added point
                 from sklearn.neighbors import NearestNeighbors
-                knn = NearestNeighbors(n_neighbors=self.max_train_size)
+                knn = NearestNeighbors(n_neighbors=self.nearest_points_number)
                 knn.fit(np.atleast_2d(self.training_points))
                 neighbors = knn.kneighbors(np.atleast_2d(self.training_points[-1]), return_distance=False)
 
@@ -130,12 +132,12 @@ class RectangularRSS(RSS):
             # -------------------------------
             # 4. Execute model at new samples
             # -------------------------------
-            self.runmodel_object.run(samples=np.atleast_2d(self.samples[-self.n_add:]), append_samples=True)
+            self.runmodel_object.run(samples=np.atleast_2d(self.samples[-self.new_iteration_samples:]), append_samples=True)
 
             if self.verbose:
                 print("Iteration:", i)
 
-    def _rss(self):
+    def _generate_samples(self):
         """
         This method generates samples using Refined Stratified Sampling.
         """
@@ -144,8 +146,8 @@ class RectangularRSS(RSS):
             print('UQpy: Performing refined_stratified with rectangular stratification...')
 
         # Primary loop for adding samples and performing refinement.
-        for i in range(self.samples.shape[0], self.nsamples, self.n_add):
-            p = min(self.n_add, self.nsamples - i)  # Number of points to add in this iteration
+        for i in range(self.samples.shape[0], self.samples_number, self.new_iteration_samples):
+            p = min(self.new_iteration_samples, self.samples_number - i)  # Number of points to add in this iteration
             # ################################
             # --------------------------------
             # 1. Determine the strata to break

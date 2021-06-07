@@ -24,13 +24,14 @@ class MetropolisHastings(MarkovChainMonteCarlo):
     **Methods:**
 
     """
-    def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
-                 seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
-                 nchains=None, proposal=None, proposal_is_symmetric=False, verbose=False, random_state=None):
+    def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, burn_length=0, jump=1, dimension=None,
+                 seed=None, save_log_pdf=False, concatenate_chains=True, samples_number=None, samples_per_chain_number=None,
+                 chains_number=None, proposal=None, proposal_is_symmetric=False, verbose=False, random_state=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
-                         dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose, random_state=random_state, nchains=nchains)
+                         dimension=dimension, seed=seed, burn_length=burn_length, jump=jump, save_log_pdf=save_log_pdf,
+                         concatenate_chains=concatenate_chains, verbose=verbose, random_state=random_state,
+                         chains_number=chains_number)
 
         # Initialize algorithm specific inputs
         self.proposal = proposal
@@ -49,15 +50,15 @@ class MetropolisHastings(MarkovChainMonteCarlo):
             print('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
 
         # If nsamples is provided, run the algorithm
-        if (nsamples is not None) or (nsamples_per_chain is not None):
-            self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
+        if (samples_number is not None) or (samples_per_chain_number is not None):
+            self.run(number_of_samples=samples_number, nsamples_per_chain=samples_per_chain_number)
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
         Run one iteration of the markov_chain chain for MH algorithm, starting at current state - see ``markov_chain`` class.
         """
         # Sample candidate
-        candidate = current_state + self.proposal.rvs(nsamples=self.nchains, random_state=self.random_state)
+        candidate = current_state + self.proposal.rvs(nsamples=self.chains_number, random_state=self.random_state)
 
         # Compute log_pdf_target of candidate sample
         log_p_candidate = self.evaluate_log_target(candidate)
@@ -71,8 +72,8 @@ class MetropolisHastings(MarkovChainMonteCarlo):
             log_ratios = log_p_candidate - current_log_pdf - log_proposal_ratio
 
         # Compare candidate with current sample and decide or not to keep the candidate (loop over nc chains)
-        accept_vec = np.zeros((self.nchains,))  # this vector will be used to compute accept_ratio of each chain
-        unif_rvs = Uniform().rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1,))
+        accept_vec = np.zeros((self.chains_number,))  # this vector will be used to compute accept_ratio of each chain
+        unif_rvs = Uniform().rvs(nsamples=self.chains_number, random_state=self.random_state).reshape((-1,))
         for nc, (cand, log_p_cand, r_) in enumerate(zip(candidate, log_p_candidate, log_ratios)):
             accept = np.log(unif_rvs[nc]) < r_
             if accept:

@@ -28,7 +28,7 @@ def my_kernel_diffusion(data):
 
             distance_pairs.append(distance)
     else:
-        raise TypeError('UQpy: The size of the input data is not consistent with this method.')
+        raise TypeError('UQpy: The size of the input second_order_tensor is not consistent with this method.')
         
     kernel_matrix = np.exp(-sd.squareform(distance_pairs) ** 2 / (4 * epsilon))
     

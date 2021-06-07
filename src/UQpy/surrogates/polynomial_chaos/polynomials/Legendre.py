@@ -20,10 +20,10 @@ class Legendre(Polynomials):
     **Methods:**
     """
 
-    def __init__(self, degree, dist_object):
-        super().__init__(dist_object, degree)
+    def __init__(self, degree, distributions):
+        super().__init__(distributions, degree)
         self.degree = degree
-        self.pdf = self.dist_object.pdf
+        self.pdf = self.distribution.pdf
 
     def get_polys(self, x):
         """

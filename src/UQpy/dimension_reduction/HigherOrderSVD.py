@@ -1,12 +1,6 @@
 import numpy as np
 from UQpy.dimension_reduction.baseclass import POD
 
-########################################################################################################################
-########################################################################################################################
-#                            Higher Order Singular Value Decomposition                                                 #
-########################################################################################################################
-########################################################################################################################
-
 
 class HigherOrderSVD(POD):
     """
@@ -27,12 +21,12 @@ class HigherOrderSVD(POD):
     **Methods:**
     """
 
-    def __init__(self, input_sol, modes=10**10, reconstr_perc=10**10, verbose=False):
+    def __init__(self, solution_snapshots, modes=10 ** 10, reconstruction_percentage=10 ** 10, verbose=False):
 
-        super().__init__(input_sol, verbose)
+        super().__init__(solution_snapshots, verbose)
         self.verbose = verbose
         self.modes = modes
-        self.reconstr_perc = reconstr_perc
+        self.reconstruction_percentage = reconstruction_percentage
 
     def run(self, get_error=False):
         """
@@ -55,12 +49,16 @@ class HigherOrderSVD(POD):
 
         """
 
-        if type(self.input_sol) == list:
-            x, y, z = self.input_sol[0].shape[0], self.input_sol[0].shape[1], len(self.input_sol)
+        if type(self.solution_snapshots) == list:
+            rows = self.solution_snapshots[0].shape[0]
+            columns = self.solution_snapshots[0].shape[1]
+            snapshot_number = len(self.solution_snapshots)
         else:
-            x, y, z = self.input_sol.shape[0], self.input_sol.shape[1], self.input_sol.shape[2]
+            rows = self.solution_snapshots.shape[0]
+            columns = self.solution_snapshots.shape[1]
+            snapshot_number = self.solution_snapshots.shape[2]
 
-        a1, a2, a3 = POD.unfold(self.input_sol)
+        a1, a2, a3 = POD.unfold(self.solution_snapshots)
 
         u1, sig_1, v1 = np.linalg.svd(a1, full_matrices=True)
         u2, sig_2, v2 = np.linalg.svd(a2, full_matrices=True)
@@ -68,19 +66,19 @@ class HigherOrderSVD(POD):
 
         sig_3_ = np.diag(sig_3)
         hold = np.dot(np.linalg.inv(u3), a3)
-        kron_ = np.kron(u1, u2)
+        kronecker_product = np.kron(u1, u2)
 
-        s3 = np.array(np.dot(hold, np.linalg.inv(kron_.T)))
+        s3 = np.array(np.dot(hold, np.linalg.inv(kronecker_product.T)))
 
         if self.modes <= 0:
             print('Warning: Invalid input, the number of modes must be positive.')
             return [], []
 
-        elif self.reconstr_perc <= 0:
+        elif self.reconstruction_percentage <= 0:
             print('Warning: Invalid input, the reconstruction percentage is defined in the range (0,100].')
             return [], []
 
-        elif self.modes != 10**10 and self.reconstr_perc != 10**10:
+        elif self.modes != 10**10 and self.reconstruction_percentage != 10**10:
             print('Warning: Either a number of modes or a reconstruction percentage must be chosen, not both.')
             return [], []
 
@@ -92,20 +90,20 @@ class HigherOrderSVD(POD):
 
             if self.modes == 10**10:
                 error_ = []
-                for i in range(0, x):
+                for i in range(0, rows):
                     error_.append(np.sqrt(((sig_3[i + 1:]) ** 2).sum()) / np.sqrt((sig_3 ** 2).sum()))
-                    if i == x:
+                    if i == rows:
                         error_.append(0)
                 error = [i * 100 for i in error_]
                 error.reverse()
                 perc = error.copy()
-                percentage = min(perc, key=lambda x: abs(x-self.reconstr_perc))
+                percentage = min(perc, key=lambda x: abs(x - self.reconstruction_percentage))
                 self.modes = perc.index(percentage) + 1
 
             else:
-                if self.modes > x:
+                if self.modes > rows:
                     print("Warning: A number of modes greater than the number of temporal dimensions was given.")
-                    print("Number of temporal dimensions is {}.".format(x))
+                    print("Number of temporal dimensions is {}.".format(rows))
 
             reduced_solutions = np.dot(u3, sig_3_)
             u3hat = np.dot(u3[:, :self.modes], sig_3_[:self.modes, :self.modes])
@@ -115,9 +113,9 @@ class HigherOrderSVD(POD):
             c = np.dot(s3hat, b.T)
             d = np.dot(u3hat[:, :], c)
 
-            reconstructed_solutions = np.zeros((x, y, z))
-            for i in range(z):
-                reconstructed_solutions[0:x, 0:y, i] = d[i, :].reshape((x, y))
+            reconstructed_solutions = np.zeros((rows, columns, snapshot_number))
+            for i in range(snapshot_number):
+                reconstructed_solutions[0:rows, 0:columns, i] = d[i, :].reshape((rows, columns))
 
             if self.verbose:
                 print("UQpy: Successful execution of HOSVD!")

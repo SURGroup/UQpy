@@ -18,14 +18,14 @@ class POD:
     **Methods:**
     """
 
-    def __init__(self, input_sol, verbose=True, **kwargs):
+    def __init__(self, solution_snapshots, verbose=True, **kwargs):
 
-        self.input_sol = input_sol
+        self.solution_snapshots = solution_snapshots
         self.verbose = verbose
         self.kwargs = kwargs
 
     @staticmethod
-    def unfold(data):
+    def unfold(second_order_tensor):
         """
         Method for unfolding second order tensors.
 
@@ -40,19 +40,29 @@ class POD:
             Returns the 2-dimensional unfolded matrices.
         """
 
-        if type(data) == list:
-            x, y, z = data[0].shape[0], data[0].shape[1], len(data)
-            data_ = np.zeros((x, y, z))
-            for i in range(z):
-                data_[:, :, i] = data[i]
-            del data
-            data = np.copy(data_)
+        if type(second_order_tensor) == list:
+            rows = second_order_tensor[0].shape[0]
+            columns = second_order_tensor[0].shape[1]
+            number_of_data = len(second_order_tensor)
+            tensor_of_list = np.zeros((rows, columns, number_of_data))
+            for i in range(number_of_data):
+                tensor_of_list[:, :, i] = second_order_tensor[i]
+            del second_order_tensor
+            second_order_tensor = np.copy(tensor_of_list)
 
-        d0, d1, d2 = [0, 2, 1], [1, 2, 0], [2, 0, 1]
-        z0, z1, z2 = np.transpose(data, d0), np.transpose(data, d1), np.transpose(data, d2)
+        permutation1 = [0, 2, 1]
+        permutation2 = [1, 2, 0]
+        permutation3 = [2, 0, 1]
 
-        m0 = z0.reshape(data.shape[0], data.shape[2] * data.shape[1])
-        m1 = z1.reshape(data.shape[1], data.shape[2] * data.shape[0])
-        m2 = z2.reshape(data.shape[2], data.shape[0] * data.shape[1])
+        permuted_tensor1 = np.transpose(second_order_tensor, permutation1)
+        permuted_tensor2 = np.transpose(second_order_tensor, permutation2)
+        permuted_tensor3 = np.transpose(second_order_tensor, permutation3)
 
-        return m0, m1, m2
+        matrix1 = permuted_tensor1.reshape(second_order_tensor.shape[0],
+                                           second_order_tensor.shape[2] * second_order_tensor.shape[1])
+        matrix2 = permuted_tensor2.reshape(second_order_tensor.shape[1],
+                                           second_order_tensor.shape[2] * second_order_tensor.shape[0])
+        matrix3 = permuted_tensor3.reshape(second_order_tensor.shape[2],
+                                           second_order_tensor.shape[0] * second_order_tensor.shape[1])
+
+        return matrix1, matrix2, matrix3

@@ -21,7 +21,7 @@ import scipy.stats as stats
 from UQpy.RunModel import RunModel
 
 
-def svd(matrix, rank=None, tol=None):
+def svd(matrix, rank=None, tolerance=None):
     """
     Compute the singular value decomposition (SVD) of a matrix.
 
@@ -56,19 +56,19 @@ def svd(matrix, rank=None, tol=None):
     si = np.diag(si)
     vi = vi.T
     if rank is None:
-        if tol is not None:
-            rank = np.linalg.matrix_rank(si, tol=tol)
+        if tolerance is not None:
+            rank = np.linalg.matrix_rank(si, tol=tolerance)
         else:
             rank = np.linalg.matrix_rank(si)
-        u = ui[:, :rank]
-        s = si[:rank, :rank]
-        v = vi[:, :rank]
+        left_eigenvectors = ui[:, :rank]
+        eigenvalues = si[:rank, :rank]
+        right_eigenvectors = vi[:, :rank]
     else:
-        u = ui[:, :rank]
-        s = si[:rank, :rank]
-        v = vi[:, :rank]
+        left_eigenvectors = ui[:, :rank]
+        eigenvalues = si[:rank, :rank]
+        right_eigenvectors = vi[:, :rank]
 
-    return u, s, v
+    return left_eigenvectors, eigenvalues, right_eigenvectors
 
 
 def nearest_psd(input_matrix, iterations=10):
@@ -390,11 +390,8 @@ def _nn_coord(x, k):
 
     if k < 1:
         raise ValueError('k MUST be larger than or equal to 1.')
-    
-    # idx = x.argsort()[::-1][:k]
+
     idx = x.argsort()[:len(x)-k]
-    # idx = idx[0:k]
-    # idx = idx[k+1:]
     return idx
 
 

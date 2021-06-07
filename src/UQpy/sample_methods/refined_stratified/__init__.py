@@ -1,3 +1,3 @@
-from UQpy.sample_methods.refined_stratified.RectangularRefinedStratification import RectangularRSS
-from UQpy.sample_methods.refined_stratified.VoronoiRefinedStratification import VoronoiRSS
+from UQpy.sample_methods.refined_stratified.RectangularRefinedStratification import RectangularRefinedStratifiedSampling
+from UQpy.sample_methods.refined_stratified.VoronoiRefinedStratification import VoronoiRefinedStratifiedSampling
 

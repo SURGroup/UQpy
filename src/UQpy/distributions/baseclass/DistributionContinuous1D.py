@@ -21,9 +21,9 @@ class DistributionContinuous1D(Distribution):
         return x.reshape((-1,))
 
     def _construct_from_scipy(self, scipy_name=stats.rv_continuous):
-        self.cdf = lambda x: scipy_name.cdf(x=self._check_x_dimension(x), **self.params)
         self.pdf = lambda x: scipy_name.pdf(x=self._check_x_dimension(x), **self.params)
         self.log_pdf = lambda x: scipy_name.logpdf(x=self._check_x_dimension(x), **self.params)
+        self.cdf = lambda x: scipy_name.cdf(x=self._check_x_dimension(x), **self.params)
         self.icdf = lambda x: scipy_name.ppf(q=self._check_x_dimension(x), **self.params)
         self.moments = lambda moments2return='mvsk': scipy_name.stats(moments=moments2return, **self.params)
         self.rvs = lambda nsamples=1, random_state=None: scipy_name.rvs(

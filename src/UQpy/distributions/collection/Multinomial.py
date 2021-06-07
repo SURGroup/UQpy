@@ -22,8 +22,9 @@ class Multinomial(DistributionND):
 
     * ``pmf``, ``log_pmf``, ``rvs``, ``moments``.
     """
-    def __init__(self, n, p):
-        super().__init__(n=n, p=p)
+
+    def __init__(self, trials_number, trial_probability):
+        super().__init__(n=trials_number, p=trial_probability)
 
     def pmf(self, x):
         pdf_val = stats.multinomial.pmf(x=x, **self.params)
@@ -40,7 +41,7 @@ class Multinomial(DistributionND):
             size=nsamples, random_state=random_state, **self.params).reshape((nsamples, -1))
 
     def moments(self, moments2return='mv'):
-        n, p = self.get_params()['n'], np.array(self.get_params()['p'])
+        n, p = self.get_params()['trials_number'], np.array(self.get_params()['trial_probability'])
         d = len(p)
         if moments2return == 'm':
             mean = n * np.array(p)
@@ -56,4 +57,3 @@ class Multinomial(DistributionND):
             return mean, cov
         else:
             raise ValueError('UQpy: moments2return must be "m", "v" or "mv".')
-

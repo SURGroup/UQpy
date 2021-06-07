@@ -8,7 +8,7 @@ def my_interp(coordinates, samples, point):
     **Input:**
 
     * **coordinates** (`ndarray`)
-        Coordinates of the input data points.
+        Coordinates of the input second_order_tensor points.
 
     * **samples** (`ndarray`)
         Matrices corresponding to the points on the Grassmann manifold.

@@ -315,7 +315,7 @@ class RunModel:
         self.model_files = model_files
 
         # Create a new directory where the model will be executed
-        ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%p")
+        ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%trial_probability")
         self.model_dir = os.path.join(self.parent_dir, model_dir + "_" + ts)
         os.makedirs(self.model_dir)
         if self.verbose:

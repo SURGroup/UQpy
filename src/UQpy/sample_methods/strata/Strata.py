@@ -1,5 +1,5 @@
 import numpy as np
-
+import abc
 
 class Strata:
     """
@@ -47,6 +47,7 @@ class Strata:
         elif not isinstance(self.random_state, np.random.RandomState):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
+    @abc.abstractmethod
     def stratify(self):
 
         """
@@ -59,4 +60,4 @@ class Strata:
 
         """
 
-        return None
+        pass

@@ -16,8 +16,8 @@ class LeastSquareRegression:
 
     """
 
-    def __init__(self, poly_object, verbose=False):
-        self.poly_object = poly_object
+    def __init__(self, polynomials, verbose=False):
+        self.polynomials = polynomials
         self.verbose = verbose
 
     def run(self, x, y):
@@ -39,7 +39,7 @@ class LeastSquareRegression:
             Returns the polynomial_chaos coefficients.
 
         """
-        a = self.poly_object.evaluate(x)
+        a = self.polynomials.evaluate(x)
         c_, res, rank, sing = np.linalg.lstsq(a, y)
         if c_.ndim == 1:
             c_ = c_.reshape(-1, 1)

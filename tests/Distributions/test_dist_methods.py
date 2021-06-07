@@ -2,17 +2,17 @@ from UQpy.distributions import *
 import numpy as np
 
 # Test all functions for one type of continuous distribution: uniform
-dist_continuous = Uniform(loc=1., scale=2.)
+dist_continuous = Uniform(location=1., scale=2.)
 
 
 def test_get_params():
-    assert dist_continuous.get_params()['loc'] == 1.
+    assert dist_continuous.get_params()['location'] == 1.
 
 
 def test_update_params():
-    dist = Uniform(loc=1., scale=2.)
+    dist = Uniform(location=1., scale=2.)
     dist.update_params(loc=2.)
-    assert dist.get_params()['loc'] == 2.
+    assert dist.get_params()['location'] == 2.
 
 
 def test_continuous_pdf():
@@ -37,8 +37,8 @@ def test_continuous_rvs():
 
 
 def test_continuous_fit():
-    dict_fit = Uniform(loc=None, scale=None).fit(data=[1.5, 2.5, 3.5])
-    assert dict_fit == {'loc': 1.5, 'scale': 2.0}
+    dict_fit = Uniform(location=None, scale=None).fit(data=[1.5, 2.5, 3.5])
+    assert dict_fit == {'location': 1.5, 'scale': 2.0}
 
 
 def test_continuous_moments():
@@ -46,7 +46,7 @@ def test_continuous_moments():
 
 
 # Test all functions for one type of discrete distribution: binomial
-dist_discrete = Binomial(n=5, p=0.2)
+dist_discrete = Binomial(trials_number=5, trial_probability=0.2)
 
 
 def test_discrete_pmf():

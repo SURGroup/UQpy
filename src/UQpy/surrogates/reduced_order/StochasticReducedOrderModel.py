@@ -1,14 +1,8 @@
 import numpy as np
 from UQpy.distributions import DistributionContinuous1D
 
-########################################################################################################################
-########################################################################################################################
-#                                         Stochastic Reduced Order Model  (reduced_order)                                       #
-########################################################################################################################
-########################################################################################################################
 
-
-class SROM:
+class StochasticReducedOrderModel:
 
     """
     Stochastic Reduced Order Model(reduced_order) provide a low-dimensional, discrete approximation of a given random
@@ -86,10 +80,10 @@ class SROM:
 
     """
 
-    def __init__(self, samples, target_dist_object, moments=None, weights_errors=None, weights_distribution=None,
+    def __init__(self, samples, target_distributions, moments=None, weights_errors=None, weights_distribution=None,
                  weights_moments=None, weights_correlation=None, properties=None, correlation=None, verbose=False):
 
-        self.target_dist_object = target_dist_object
+        self.target_distributions = target_distributions
         self.correlation = correlation
         self.moments = moments
 
@@ -104,21 +98,21 @@ class SROM:
 
         if isinstance(samples, list):
             self.samples = np.array(samples)
-            self.nsamples = self.samples.shape[0]
+            self.samples_number = self.samples.shape[0]
             self.dimension = self.samples.shape[1]
         elif isinstance(samples, np.ndarray):
             self.dimension = samples.shape[1]
             self.samples = samples
-            self.nsamples = samples.shape[0]
+            self.samples_number = samples.shape[0]
         else:
             raise NotImplementedError("UQpy: 'samples' sholud be a list or numpy array")
 
-        if self.target_dist_object is None:
+        if self.target_distributions is None:
             raise NotImplementedError("UQpy: Target Distribution is not defined.")
 
-        if isinstance(self.target_dist_object, list):
-            for i in range(len(self.target_dist_object)):
-                if not isinstance(self.target_dist_object[i], DistributionContinuous1D):
+        if isinstance(self.target_distributions, list):
+            for i in range(len(self.target_distributions)):
+                if not isinstance(self.target_distributions[i], DistributionContinuous1D):
                     raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
 
         if self.properties is not None:
@@ -244,11 +238,11 @@ class SROM:
 
         cons = {'type': 'eq', 'fun': constraint}
 
-        p_ = optimize.minimize(f, np.zeros(self.nsamples),
+        p_ = optimize.minimize(f, np.zeros(self.samples_number),
                                args=(self.samples, self.weights_distribution, self.weights_moments,
-                                     self.weights_correlation, self.target_dist_object, self.nsamples, self.dimension,
+                                     self.weights_correlation, self.target_distributions, self.samples_number, self.dimension,
                                      self.moments, self.weights_errors, self.properties, self.correlation),
-                               constraints=cons, method='SLSQP', bounds=[[0, 1]]*self.nsamples)
+                               constraints=cons, method='SLSQP', bounds=[[0, 1]]*self.samples_number)
 
         self.sample_weights = p_.x
         if self.verbose:

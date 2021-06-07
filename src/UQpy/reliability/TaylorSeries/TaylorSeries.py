@@ -3,10 +3,7 @@ from UQpy.distributions import *
 from UQpy.RunModel import RunModel
 from UQpy.transformations import *
 
-########################################################################################################################
-########################################################################################################################
-#                                        First/Second order reliability method
-########################################################################################################################
+
 class TaylorSeries:
     """
     Perform First and Second Order reliability (FORM/SORM) methods.
@@ -51,35 +48,35 @@ class TaylorSeries:
     **Methods:**
     """
 
-    def __init__(self, dist_object, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u,  n_iter, tol1, tol2,
+    def __init__(self, distributions, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u, n_iter, tol1, tol2,
                  tol3, df_step, verbose):
 
         if form_object is None:
-            if isinstance(dist_object, list):
-                self.dimension = len(dist_object)
-                for i in range(len(dist_object)):
-                    if not isinstance(dist_object[i], (DistributionContinuous1D, JointIndependent)):
+            if isinstance(distributions, list):
+                self.dimension = len(distributions)
+                for i in range(len(distributions)):
+                    if not isinstance(distributions[i], (DistributionContinuous1D, JointIndependent)):
                         raise TypeError('UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object must be '
                                         'provided.')
             else:
-                if isinstance(dist_object, DistributionContinuous1D):
+                if isinstance(distributions, DistributionContinuous1D):
                     self.dimension = 1
-                elif isinstance(dist_object, JointIndependent):
-                    self.dimension = len(dist_object.marginals)
+                elif isinstance(distributions, JointIndependent):
+                    self.dimension = len(distributions.marginals)
                 else:
                     raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
 
             if not isinstance(runmodel_object, RunModel):
                 raise ValueError('UQpy: A RunModel object is required for the model.')
 
-            self.nataf_object = NatafTransformation(dist_object=dist_object, corr_z=corr_z, corr_x=corr_x)
+            self.nataf_object = NatafTransformation(dist_object=distributions, corr_z=corr_z, corr_x=corr_x)
 
         else:
             pass
 
         self.corr_x = corr_x
         self.corr_z = corr_z
-        self.dist_object = dist_object
+        self.dist_object = distributions
         self.n_iter = n_iter
         self.runmodel_object = runmodel_object
         self.tol1 = tol1

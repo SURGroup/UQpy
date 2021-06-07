@@ -1,20 +1,3 @@
-# UQpy is distributed under the MIT license.
-#
-# Copyright (C) 2018  -- Michael D. Shields
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
-# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
-# persons to whom the Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
-# Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 """This module contains functionality for sensitivity analysis in ``UQpy``.
 
 The module currently contains the following classes:
@@ -25,6 +8,7 @@ The module currently contains the following classes:
 from UQpy.distributions import *
 from UQpy.RunModel import RunModel
 import numpy as np
+
 
 class MorrisSensitivity:
     """
@@ -81,18 +65,18 @@ class MorrisSensitivity:
     **Methods:**
     """
 
-    def __init__(self, runmodel_object, dist_object, nlevels, delta=None, random_state=None, ntrajectories=None,
-                 **kwargs):
+    def __init__(self, runmodel_object, distributions, levels_number, delta=None, random_state=None,
+                 trajectories_number=None, **kwargs):
 
         # Check RunModel object and distributions
         self.runmodel_object = runmodel_object
         if not isinstance(self.runmodel_object, RunModel):
             raise TypeError('UQpy: runmodel_object must be an object of class RunModel')
-        if isinstance(dist_object, JointIndependent):
-            self.icdfs = [getattr(dist, 'icdf', None) for dist in dist_object.marginals]
-        elif (isinstance(dist_object, (list, tuple))
-              and all(isinstance(dist, Distribution) for dist in dist_object)):
-            self.icdfs = [getattr(dist, 'icdf', None) for dist in dist_object]
+        if isinstance(distributions, JointIndependent):
+            self.icdfs = [getattr(dist, 'icdf', None) for dist in distributions.marginals]
+        elif (isinstance(distributions, (list, tuple))
+              and all(isinstance(dist, Distribution) for dist in distributions)):
+            self.icdfs = [getattr(dist, 'icdf', None) for dist in distributions]
         else:
             raise ValueError
         if any(icdf is None for icdf in self.icdfs):
@@ -102,17 +86,17 @@ class MorrisSensitivity:
             raise ValueError
 
         # Check inputs nlevels and delta
-        self.nlevels = nlevels
-        if not isinstance(self.nlevels, int) or self.nlevels < 3:
+        self.levels_number = levels_number
+        if not isinstance(self.levels_number, int) or self.levels_number < 3:
             raise TypeError('UQpy: nlevels should be an integer >= 3')
         # delta should be in {1/(nlevels-1), ..., 1-1/(nlevels-1)}
         self.delta = delta
-        if (self.delta is None) and (self.nlevels % 2) == 0:
-            self.delta = self.nlevels / (2 * (self.nlevels - 1))  # delta = p / (2 * (p-1))
-        elif (self.delta is None) and (self.nlevels % 2) == 1:
-            self.delta = 1 / 2  # delta = (p-1) / (2 * (p-1))
+        if (self.delta is None) and (self.levels_number % 2) == 0:
+            self.delta = self.levels_number / (2 * (self.levels_number - 1))  # delta = trial_probability / (2 * (trial_probability-1))
+        elif (self.delta is None) and (self.levels_number % 2) == 1:
+            self.delta = 1 / 2  # delta = (trial_probability-1) / (2 * (trial_probability-1))
         elif not (isinstance(self.delta, (int, float))
-                  and float(self.delta) in [float(j / (self.nlevels - 1)) for j in range(1, self.nlevels - 1)]):
+                  and float(self.delta) in [float(j / (self.levels_number - 1)) for j in range(1, self.levels_number - 1)]):
             raise ValueError('UQpy: delta should be in {1/(nlevels-1), ..., 1-1/(nlevels-1)}')
 
         # Check random state
@@ -131,10 +115,10 @@ class MorrisSensitivity:
         self.mustar_indices = None
         self.sigma_indices = None
 
-        if ntrajectories is not None:
-            self.run(ntrajectories)
+        if trajectories_number is not None:
+            self.run(trajectories_number)
 
-    def run(self, ntrajectories):
+    def run(self, trajectories_number):
         """
         Run the Morris indices evaluation.
 
@@ -152,7 +136,7 @@ class MorrisSensitivity:
         """
         # Compute trajectories and elementary effects - append if any already exist
         trajectories_unit_hypercube, trajectories_physical_space = self.sample_trajectories(
-            ntrajectories=ntrajectories, **self.kwargs)
+            trajectories_number=trajectories_number, **self.kwargs)
         elementary_effects = self._compute_elementary_effects(trajectories_physical_space)
         if self.elementary_effects is None:
             self.elementary_effects = elementary_effects
@@ -168,7 +152,7 @@ class MorrisSensitivity:
         # Compute sensitivity indices
         self.mustar_indices, self.sigma_indices = self._compute_indices(self.elementary_effects)
 
-    def sample_trajectories(self, ntrajectories, maximize_dispersion=False):
+    def sample_trajectories(self, trajectories_number, maximize_dispersion=False):
         """
         Create the trajectories, first in the unit hypercube then transform them in the physical space.
 
@@ -187,16 +171,16 @@ class MorrisSensitivity:
         trajectories_unit_hypercube = []
         perms_indices = []
         if maximize_dispersion:
-            ntrajectories_all = 10 * ntrajectories
+            ntrajectories_all = 10 * trajectories_number
         else:
-            ntrajectories_all = 1 * ntrajectories
+            ntrajectories_all = 1 * trajectories_number
         for r in range(ntrajectories_all):
             if self.random_state is None:
                 perms = np.random.permutation(self.dimension)
             else:
                 perms = self.random_state.permutation(self.dimension)
-            initial_state = 1. / (self.nlevels - 1) * randint(
-                low=0, high=int((self.nlevels - 1) * (1 - self.delta) + 1)).rvs(
+            initial_state = 1. / (self.levels_number - 1) * randint(
+                low=0, high=int((self.levels_number - 1) * (1 - self.delta) + 1)).rvs(
                 size=(1, self.dimension), random_state=self.random_state)
             trajectory_uh = np.tile(initial_state, [self.dimension + 1, 1])
             for count_d, d in enumerate(perms):
@@ -219,9 +203,9 @@ class MorrisSensitivity:
             # try 20000 combinations of ntrajectories trajectories, keep the one that maximizes the distance
             def compute_combi_and_dist():
                 if self.random_state is None:
-                    combi = np.random.choice(ntrajectories_all, replace=False, size=ntrajectories)
+                    combi = np.random.choice(ntrajectories_all, replace=False, size=trajectories_number)
                 else:
-                    combi = self.random_state.choice(ntrajectories_all, replace=False, size=ntrajectories)
+                    combi = self.random_state.choice(ntrajectories_all, replace=False, size=trajectories_number)
                 dist_combi = 0.
                 for pairs in list(combinations(combi, 2)):
                     dist_combi += distances[min(pairs), max(pairs)] ** 2

@@ -44,33 +44,35 @@ class DifferentialEvolutionMetropolis(MarkovChainMonteCarlo):
 
     """
 
-    def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
-                 seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
-                 delta=3, c=0.1, c_star=1e-6, n_cr=3, p_g=0.2, adapt_cr=(-1, 1), check_chains=(-1, 1), verbose=False,
-                 random_state=None, nchains=None):
+    def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, burn_length=0, jump=1, dimension=None,
+                 seed=None, save_log_pdf=False, concatenate_chains=True, samples_number=None,
+                 samples_per_chain_number=None, jump_rate=3, c=0.1, c_star=1e-6, crossover_probabilities_number=3,
+                 gamma_probability=0.2, crossover_adaptation=(-1, 1),
+                 check_chains=(-1, 1), verbose=False, random_state=None, chains_number=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
-                         dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose, random_state=random_state, nchains=nchains)
+                         dimension=dimension, seed=seed, burn_length=burn_length, jump=jump, save_log_pdf=save_log_pdf,
+                         concatenate_chains=concatenate_chains, verbose=verbose, random_state=random_state,
+                         chains_number=chains_number)
 
         # Check nb of chains
-        if self.nchains < 2:
+        if self.chains_number < 2:
             raise ValueError('UQpy: For the DREAM algorithm, a seed must be provided with at least two samples.')
 
         # Check user-specific algorithms
-        self.delta = delta
+        self.jump_rate = jump_rate
         self.c = c
         self.c_star = c_star
-        self.n_cr = n_cr
-        self.p_g = p_g
-        self.adapt_cr = adapt_cr
+        self.crossover_probabilities_number = crossover_probabilities_number
+        self.gamma_probability = gamma_probability
+        self.crossover_adaptation = crossover_adaptation
         self.check_chains = check_chains
 
         for key, typ in zip(['delta', 'c', 'c_star', 'n_cr', 'p_g'], [int, float, float, int, float]):
             if not isinstance(getattr(self, key), typ):
                 raise TypeError('Input ' + key + ' must be of type ' + typ.__name__)
-        if self.dimension is not None and self.n_cr > self.dimension:
-            self.n_cr = self.dimension
+        if self.dimension is not None and self.crossover_probabilities_number > self.dimension:
+            self.crossover_probabilities_number = self.dimension
         for key in ['adapt_cr', 'check_chains']:
             p = getattr(self, key)
             if not (isinstance(p, tuple) and len(p) == 2 and all(isinstance(i, (int, float)) for i in p)):
@@ -79,53 +81,53 @@ class DifferentialEvolutionMetropolis(MarkovChainMonteCarlo):
             raise ValueError('UQpy: Input save_log_pdf must be True in order to check outlier chains')
 
         # Initialize a few other variables
-        self.j_ind, self.n_id = np.zeros((self.n_cr,)), np.zeros((self.n_cr,))
-        self.cross_prob = np.ones((self.n_cr,)) / self.n_cr
+        self.j_ind, self.n_id = np.zeros((self.crossover_probabilities_number,)), np.zeros((self.crossover_probabilities_number,))
+        self.cross_prob = np.ones((self.crossover_probabilities_number,)) / self.crossover_probabilities_number
 
         if self.verbose:
             print('UQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.\n')
 
         # If nsamples is provided, run the algorithm
-        if (nsamples is not None) or (nsamples_per_chain is not None):
-            self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
+        if (samples_number is not None) or (samples_per_chain_number is not None):
+            self.run(number_of_samples=samples_number, nsamples_per_chain=samples_per_chain_number)
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
         Run one iteration of the markov_chain chain for DREAM algorithm, starting at current state - see ``markov_chain`` class.
         """
-        r_diff = np.array([np.setdiff1d(np.arange(self.nchains), j) for j in range(self.nchains)])
-        cross = np.arange(1, self.n_cr + 1) / self.n_cr
+        r_diff = np.array([np.setdiff1d(np.arange(self.chains_number), j) for j in range(self.chains_number)])
+        cross = np.arange(1, self.crossover_probabilities_number + 1) / self.crossover_probabilities_number
 
         # Dynamic part: evolution of chains
-        unif_rvs = Uniform().rvs(nsamples=self.nchains * (self.nchains-1),
-                                 random_state=self.random_state).reshape((self.nchains - 1, self.nchains))
+        unif_rvs = Uniform().rvs(nsamples=self.chains_number * (self.chains_number - 1),
+                                 random_state=self.random_state).reshape((self.chains_number - 1, self.chains_number))
         draw = np.argsort(unif_rvs, axis=0)
         dx = np.zeros_like(current_state)
-        lmda = Uniform(scale=2 * self.c).rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1, ))
+        lmda = Uniform(scale=2 * self.c).rvs(nsamples=self.chains_number, random_state=self.random_state).reshape((-1,))
         std_x_tmp = np.std(current_state, axis=0)
 
-        multi_rvs = Multinomial(n=1, p=[1./self.delta, ] * self.delta).rvs(
-            nsamples=self.nchains, random_state=self.random_state)
+        multi_rvs = Multinomial(trials_number=1, trial_probability=[1. / self.jump_rate, ] * self.jump_rate).rvs(
+            nsamples=self.chains_number, random_state=self.random_state)
         d_ind = np.nonzero(multi_rvs)[1]
-        as_ = [r_diff[j, draw[slice(d_ind[j]), j]] for j in range(self.nchains)]
-        bs_ = [r_diff[j, draw[slice(d_ind[j], 2 * d_ind[j], 1), j]] for j in range(self.nchains)]
-        multi_rvs = Multinomial(n=1, p=self.cross_prob).rvs(nsamples=self.nchains, random_state=self.random_state)
+        as_ = [r_diff[j, draw[slice(d_ind[j]), j]] for j in range(self.chains_number)]
+        bs_ = [r_diff[j, draw[slice(d_ind[j], 2 * d_ind[j], 1), j]] for j in range(self.chains_number)]
+        multi_rvs = Multinomial(trials_number=1, trial_probability=self.cross_prob).rvs(nsamples=self.chains_number, random_state=self.random_state)
         id_ = np.nonzero(multi_rvs)[1]
-        # id = np.random.choice(self.n_CR, size=(self.nchains, ), replace=True, p=self.pCR)
-        z = Uniform().rvs(nsamples=self.nchains * self.dimension,
-                          random_state=self.random_state).reshape((self.nchains, self.dimension))
+        # id = np.random.choice(self.n_CR, size=(self.nchains, ), replace=True, trial_probability=self.pCR)
+        z = Uniform().rvs(nsamples=self.chains_number * self.dimension,
+                          random_state=self.random_state).reshape((self.chains_number, self.dimension))
         subset_a = [np.where(z_j < cross[id_j])[0] for (z_j, id_j) in zip(z, id_)]  # subset A of selected dimensions
         d_star = np.array([len(a_j) for a_j in subset_a])
-        for j in range(self.nchains):
+        for j in range(self.chains_number):
             if d_star[j] == 0:
                 subset_a[j] = np.array([np.argmin(z[j])])
                 d_star[j] = 1
         gamma_d = 2.38 / np.sqrt(2 * (d_ind + 1) * d_star)
-        g = Binomial(n=1, p=self.p_g).rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1, ))
+        g = Binomial(trials_number=1, trial_probability=self.gamma_probability).rvs(nsamples=self.chains_number, random_state=self.random_state).reshape((-1,))
         g[g == 0] = gamma_d[g == 0]
-        norm_vars = Normal(loc=0., scale=1.).rvs(nsamples=self.nchains ** 2,
-                                                 random_state=self.random_state).reshape((self.nchains, self.nchains))
-        for j in range(self.nchains):
+        norm_vars = Normal(loc=0., scale=1.).rvs(nsamples=self.chains_number ** 2,
+                                                 random_state=self.random_state).reshape((self.chains_number, self.chains_number))
+        for j in range(self.chains_number):
             for i in subset_a[j]:
                 dx[j, i] = self.c_star * norm_vars[j, i] + \
                            (1 + lmda[j]) * g[j] * np.sum(current_state[as_[j], i] - current_state[bs_[j], i])
@@ -135,8 +137,8 @@ class DifferentialEvolutionMetropolis(MarkovChainMonteCarlo):
         logp_candidates = self.evaluate_log_target(candidates)
 
         # Accept or reject
-        accept_vec = np.zeros((self.nchains, ))
-        unif_rvs = Uniform().rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1, ))
+        accept_vec = np.zeros((self.chains_number,))
+        unif_rvs = Uniform().rvs(nsamples=self.chains_number, random_state=self.random_state).reshape((-1,))
         for nc, (lpc, candidate, log_p_curr) in enumerate(zip(logp_candidates, candidates, current_log_pdf)):
             accept = np.log(unif_rvs[nc]) < lpc - log_p_curr
             if accept:
@@ -152,12 +154,12 @@ class DifferentialEvolutionMetropolis(MarkovChainMonteCarlo):
         self._update_acceptance_rate(accept_vec)
 
         # update selection cross prob
-        if self.niterations < self.adapt_cr[0] and self.niterations % self.adapt_cr[1] == 0:
+        if self.iterations_number < self.crossover_adaptation[0] and self.iterations_number % self.crossover_adaptation[1] == 0:
             self.cross_prob = self.j_ind / self.n_id
             self.cross_prob /= sum(self.cross_prob)
         # check outlier chains (only if you have saved at least 100 values already)
-        if (self.nsamples >= 100) and (self.niterations < self.check_chains[0]) and \
-                (self.niterations % self.check_chains[1] == 0):
+        if (self.samples_number >= 100) and (self.iterations_number < self.check_chains[0]) and \
+                (self.iterations_number % self.check_chains[1] == 0):
             self.check_outlier_chains(replace_with_best=True)
 
         return current_state, current_log_pdf
@@ -182,12 +184,12 @@ class DifferentialEvolutionMetropolis(MarkovChainMonteCarlo):
         avgs_logpdf = np.mean(self.log_pdf_values[start_:self.nsamples_per_chain], axis=0)
         best_ = np.argmax(avgs_logpdf)
         avg_sorted = np.sort(avgs_logpdf)
-        ind1, ind3 = 1 + round(0.25 * self.nchains), 1 + round(0.75 * self.nchains)
+        ind1, ind3 = 1 + round(0.25 * self.chains_number), 1 + round(0.75 * self.chains_number)
         q1, q3 = avg_sorted[ind1], avg_sorted[ind3]
         qr = q3 - q1
 
         outlier_num = 0
-        for j in range(self.nchains):
+        for j in range(self.chains_number):
             if avgs_logpdf[j] < q1 - 2.0 * qr:
                 outlier_num += 1
                 if replace_with_best:

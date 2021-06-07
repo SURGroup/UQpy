@@ -42,8 +42,8 @@ def test_corr2():
 
 
 def test_corr_x1():
-    dist1 = Uniform(loc=0.0, scale=1.0)
-    dist2 = Uniform(loc=0.0, scale=1.0)
+    dist1 = Uniform(location=0.0, scale=1.0)
+    dist2 = Uniform(location=0.0, scale=1.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = NatafTransformation(dist_object=[dist1, dist2], corr_x=rx)
     assert np.all(np.equal(ntf_obj.corr_z, rx))
@@ -66,16 +66,16 @@ def test_corr_x3():
 
 
 def test_corr_x4():
-    dist1 = Uniform(loc=0.0, scale=1.0)
-    dist2 = Uniform(loc=0.0, scale=1.0)
+    dist1 = Uniform(location=0.0, scale=1.0)
+    dist2 = Uniform(location=0.0, scale=1.0)
     rx = np.array([[1.0, 0.8], [0.8, 1.0]])
     ntf_obj = NatafTransformation(dist_object=[dist1, dist2], corr_x=rx)
     np.testing.assert_allclose(ntf_obj.corr_z,[[1., 0.8134732861515996], [0.8134732861515996, 1.]], rtol=1e-09)
 
 
 def test_corr_z1():
-    dist1 = Uniform(loc=0.0, scale=1.0)
-    dist2 = Uniform(loc=0.0, scale=1.0)
+    dist1 = Uniform(location=0.0, scale=1.0)
+    dist2 = Uniform(location=0.0, scale=1.0)
     rz = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = NatafTransformation(dist_object=[dist1, dist2], corr_z=rz)
     assert np.all(np.equal(ntf_obj.corr_x, rz))
@@ -98,8 +98,8 @@ def test_corr_z3():
 
 
 def test_corr_z4():
-    dist1 = Uniform(loc=0.0, scale=1.0)
-    dist2 = Uniform(loc=0.0, scale=1.0)
+    dist1 = Uniform(location=0.0, scale=1.0)
+    dist2 = Uniform(location=0.0, scale=1.0)
     rz = np.array([[1.0, 0.8], [0.8, 1.0]])
     ntf_obj = NatafTransformation(dist_object=[dist1, dist2], corr_z=rz)
     assert (ntf_obj.corr_x == [[1., 0.7859392826067285], [0.7859392826067285, 1.]]).all()
@@ -150,8 +150,8 @@ def test_samples_x_jxz1():
 
 
 def test_samples_x_jxz2():
-    dist1 = Uniform(loc=0.0, scale=5.0)
-    dist2 = Uniform(loc=0.0, scale=3.0)
+    dist1 = Uniform(location=0.0, scale=5.0)
+    dist2 = Uniform(location=0.0, scale=3.0)
     ntf_obj = NatafTransformation(dist_object=[dist1, dist2])
     samples_x = np.array([[0.3, 1.2, 3.5], [0.2, 2.4, 0.9]]).T
     ntf_obj.run(samples_x=samples_x, jacobian=True)
@@ -167,8 +167,8 @@ def test_samples_x_jxz2():
 
 
 def test_samples_x1():
-    dist1 = Uniform(loc=0.0, scale=5.0)
-    dist2 = Uniform(loc=0.0, scale=3.0)
+    dist1 = Uniform(location=0.0, scale=5.0)
+    dist2 = Uniform(location=0.0, scale=3.0)
     ntf_obj = NatafTransformation(dist_object=[dist1, dist2])
     samples_x = np.array([[0.3, 1.2, 3.5], [0.2, 2.4, 0.9]]).T
     ntf_obj.run(samples_x=samples_x, jacobian=True)
@@ -192,8 +192,8 @@ def test_samples_z_jzx1():
 
 
 def test_samples_z_jzx2():
-    dist1 = Uniform(loc=0.0, scale=5.0)
-    dist2 = Uniform(loc=0.0, scale=3.0)
+    dist1 = Uniform(location=0.0, scale=5.0)
+    dist2 = Uniform(location=0.0, scale=3.0)
     ntf_obj = NatafTransformation(dist_object=[dist1, dist2])
     samples_z = np.array([[0.3, 1.2], [0.2, 2.4]]).T
     ntf_obj.run(samples_z=samples_z, jacobian=True)
@@ -207,8 +207,8 @@ def test_samples_z_jzx2():
 
 
 def test_samples_z2():
-    dist1 = Uniform(loc=0.0, scale=5.0)
-    dist2 = Uniform(loc=0.0, scale=3.0)
+    dist1 = Uniform(location=0.0, scale=5.0)
+    dist2 = Uniform(location=0.0, scale=3.0)
     ntf_obj = NatafTransformation(dist_object=[dist1, dist2])
     samples_z = np.array([[0.3, 1.2], [0.2, 2.4]]).T
     ntf_obj.run(samples_z=samples_z, jacobian=True)
@@ -222,78 +222,78 @@ def test_samples_z2():
 
 
 def test_itam_1():
-    dist1 = Uniform(loc=0.0, scale=5.0)
+    dist1 = Uniform(location=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = NatafTransformation(dist_object=[dist1], corr_x=rx)
     assert ntf_obj.itam_beta == 1.0
 
 
 def test_itam_2():
-    dist1 = Uniform(loc=0.0, scale=5.0)
+    dist1 = Uniform(location=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = NatafTransformation(dist_object=[dist1], corr_x=rx)
     assert ntf_obj.itam_max_iter == 100
 
 
 def test_itam_3():
-    dist1 = Uniform(loc=0.0, scale=5.0)
+    dist1 = Uniform(location=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = NatafTransformation(dist_object=[dist1], corr_x=rx)
     assert ntf_obj.itam_threshold1 == 0.001
 
 
 def test_itam_4():
-    dist1 = Uniform(loc=0.0, scale=5.0)
+    dist1 = Uniform(location=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = NatafTransformation(dist_object=[dist1], corr_x=rx)
     assert ntf_obj.itam_threshold2 == 0.1
 
 
 def test_itam_1a():
-    dist1 = Uniform(loc=0.0, scale=5.0)
+    dist1 = Uniform(location=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = NatafTransformation(dist_object=[dist1], corr_x=rx, itam_beta=2.0)
     assert ntf_obj.itam_beta == 2.0
 
 
 def test_itam_2a():
-    dist1 = Uniform(loc=0.0, scale=5.0)
+    dist1 = Uniform(location=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = NatafTransformation(dist_object=[dist1], corr_x=rx, itam_max_iter=200)
     assert ntf_obj.itam_max_iter == 200
 
 
 def test_itam_2m():
-    dist1 = Uniform(loc=0.0, scale=5.0)
+    dist1 = Uniform(location=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = NatafTransformation(dist_object=[dist1], corr_x=rx, itam_max_iter=10.5)
     assert ntf_obj.itam_max_iter == 10
 
 
 def test_itam_3a():
-    dist1 = Uniform(loc=0.0, scale=5.0)
+    dist1 = Uniform(location=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = NatafTransformation(dist_object=[dist1], corr_x=rx, itam_threshold1=0.002)
     assert ntf_obj.itam_threshold1 == 0.002
 
 
 def test_itam_4a():
-    dist1 = Uniform(loc=0.0, scale=5.0)
+    dist1 = Uniform(location=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = NatafTransformation(dist_object=[dist1], corr_x=rx, itam_threshold2=0.3)
     assert ntf_obj.itam_threshold2 == 0.3
 
 
 def test_distortion_z2x_finite_moments():
-    dist1 = Lognormal(s=0.0, loc=0.0, scale=1.0)
-    dist2 = Uniform(loc=0.0, scale=1.0)
+    dist1 = Lognormal(s=0.0, location=0.0, scale=1.0)
+    dist2 = Uniform(location=0.0, scale=1.0)
     rz = np.array([[1.0, 0.8], [0.8, 1.0]])
     with pytest.raises(Exception):
         assert NatafTransformation(dist_object=[dist1, dist2], corr_z=rz)
 
 
 def distortion_z2x_dist_object():
-    dist1 = Lognormal(s=0.0, loc=0.0, scale=1.0)
+    dist1 = Lognormal(s=0.0, location=0.0, scale=1.0)
     rz = np.array([[1.0, 0.8], [0.8, 1.0]])
     with pytest.raises(Exception):
         assert NatafTransformation.distortion_z2x(dist_object=[dist1, 'Beta'], corr_z=rz)

@@ -3,11 +3,6 @@ import itertools
 from UQpy.Utilities import *
 
 
-########################################################################################################################
-########################################################################################################################
-#                                        Bi-spectral Representation Method
-########################################################################################################################
-
 class BispectralRepresentation:
     """
     A class to simulate non-Gaussian stochastic processes from a given power spectrum and bispectrum based on the 3-rd
@@ -106,9 +101,9 @@ class BispectralRepresentation:
     **Methods**
     """
 
-    def __init__(self, nsamples, power_spectrum, bispectrum, time_interval, frequency_interval, number_time_intervals,
-                 number_frequency_intervals, case='uni', random_state=None, verbose=False):
-        self.nsamples = nsamples
+    def __init__(self, samples_number, power_spectrum, bispectrum, time_interval, frequency_interval,
+                 number_time_intervals, number_frequency_intervals, case='uni', random_state=None, verbose=False):
+        self.samples_number = samples_number
         self.number_frequency_intervals = np.array(number_frequency_intervals)
         self.number_time_intervals = np.array(number_time_intervals)
         self.frequency_interval = np.array(frequency_interval)
@@ -146,8 +141,8 @@ class BispectralRepresentation:
             self.number_of_variables = self.power_spectrum.shape[0]
             self.case = 'multi'
 
-        if self.nsamples is not None:
-            self.run(nsamples=self.nsamples)
+        if self.samples_number is not None:
+            self.run(samples_number=self.samples_number)
 
     def _compute_bicoherence_uni(self):
         if self.verbose:
@@ -226,7 +221,7 @@ class BispectralRepresentation:
         samples = samples[:, np.newaxis]
         return np.real(samples)
 
-    def run(self, nsamples):
+    def run(self, samples_number):
         """
         Execute the random sampling in the ``BSRM`` class.
 
@@ -250,9 +245,9 @@ class BispectralRepresentation:
 
         """
 
-        if nsamples is None:
+        if samples_number is None:
             raise ValueError('UQpy: Stochastic Process: Number of samples must be defined.')
-        if not isinstance(nsamples, int):
+        if not isinstance(samples_number, int):
             raise ValueError('UQpy: Stochastic Process: nsamples should be an integer.')
 
         if self.verbose:
@@ -266,7 +261,7 @@ class BispectralRepresentation:
                 print('UQpy: Stochastic Process: Starting simulation of uni-variate Stochastic Processes.')
                 print('UQpy: The number of dimensions is :', self.number_of_dimensions)
             phi = np.random.uniform(
-                size=np.append(self.nsamples, np.ones(self.number_of_dimensions, dtype=np.int32)
+                size=np.append(self.samples_number, np.ones(self.number_of_dimensions, dtype=np.int32)
                                * self.number_frequency_intervals)) * 2 * np.pi
             samples = self._simulate_bsrm_uni(phi)
 

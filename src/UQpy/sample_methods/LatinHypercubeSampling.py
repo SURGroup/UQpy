@@ -4,13 +4,8 @@ from scipy.spatial.distance import pdist
 import scipy.stats as stats
 import copy
 
-########################################################################################################################
-########################################################################################################################
-#                                         Latin hypercube sampling  (LHS)
-########################################################################################################################
 
-
-class LHS:
+class LatinHypercubeSampling:
 
     """
     Perform Latin hypercube sampling (MCS) of random variables.
@@ -60,21 +55,21 @@ class LHS:
 
     """
 
-    def __init__(self, dist_object, nsamples, criterion=None, random_state=None, verbose=False,
+    def __init__(self, distributions, samples_number, criterion=None, random_state=None, verbose=False,
                  **kwargs):
 
         # Check if a Distribution object is provided.
         from UQpy.distributions import DistributionContinuous1D, JointIndependent
 
-        if isinstance(dist_object, list):
-            for i in range(len(dist_object)):
-                if not isinstance(dist_object[i], DistributionContinuous1D):
+        if isinstance(distributions, list):
+            for i in range(len(distributions)):
+                if not isinstance(distributions[i], DistributionContinuous1D):
                     raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
         else:
-            if not isinstance(dist_object, (DistributionContinuous1D, JointIndependent)):
+            if not isinstance(distributions, (DistributionContinuous1D, JointIndependent)):
                 raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
 
-        self.dist_object = dist_object
+        self.dist_object = distributions
         self.kwargs = kwargs
 
         self.random_state = random_state
@@ -92,8 +87,8 @@ class LHS:
         else:
             self.criterion = criterion
 
-        if isinstance(nsamples, int):
-            self.nsamples = nsamples
+        if isinstance(samples_number, int):
+            self.samples_number = samples_number
         else:
             raise ValueError('UQpy: number of samples must be specified.')
 
@@ -101,18 +96,18 @@ class LHS:
         self.verbose = verbose
 
         if isinstance(self.dist_object, list):
-            self.samples = np.zeros([self.nsamples, len(self.dist_object)])
+            self.samples = np.zeros([self.samples_number, len(self.dist_object)])
         elif isinstance(self.dist_object, DistributionContinuous1D):
-            self.samples = np.zeros([self.nsamples, 1])
+            self.samples = np.zeros([self.samples_number, 1])
         elif isinstance(self.dist_object, JointIndependent):
-            self.samples = np.zeros([self.nsamples, len(self.dist_object.marginals)])
+            self.samples = np.zeros([self.samples_number, len(self.dist_object.marginals)])
 
         self.samplesU01 = np.zeros_like(self.samples)
 
-        if self.nsamples is not None:
-            self.run(self.nsamples)
+        if self.samples_number is not None:
+            self.run(self.samples_number)
 
-    def run(self, nsamples):
+    def run(self, samples_number):
 
         """
         Execute the random sampling in the ``LHS`` class.
@@ -137,15 +132,15 @@ class LHS:
 
         """
 
-        if self.nsamples is None:
-            self.nsamples = nsamples
+        if self.samples_number is None:
+            self.samples_number = samples_number
 
         if self.verbose:
             print('UQpy: Running Latin Hypercube sampling...')
 
-        cut = np.linspace(0, 1, self.nsamples + 1)
-        a = cut[:self.nsamples]
-        b = cut[1:self.nsamples + 1]
+        cut = np.linspace(0, 1, self.samples_number + 1)
+        a = cut[:self.samples_number]
+        b = cut[1:self.samples_number + 1]
 
         u = np.zeros(shape=(self.samples.shape[0], self.samples.shape[1]))
         samples = np.zeros_like(u)
@@ -208,12 +203,12 @@ class LHS:
         """
 
         lhs_samples = np.zeros_like(samples)
-        nsamples = len(samples)
+        samples_number = len(samples)
         for j in range(samples.shape[1]):
             if random_state is not None:
-                order = random_state.permutation(nsamples)
+                order = random_state.permutation(samples_number)
             else:
-                order = np.random.permutation(nsamples)
+                order = np.random.permutation(samples_number)
             lhs_samples[:, j] = samples[order, j]
 
         return lhs_samples
@@ -267,11 +262,11 @@ class LHS:
             raise ValueError("UQpy: Please provide a valid metric.")
 
         i = 0
-        lhs_samples = LHS.random(samples, random_state)
+        lhs_samples = LatinHypercubeSampling.random(samples, random_state)
         d = d_func(lhs_samples)
         max_min_dist = np.min(d)
         while i < iterations:
-            samples_try = LHS.random(samples, random_state)
+            samples_try = LatinHypercubeSampling.random(samples, random_state)
             d = d_func(samples_try)
             if max_min_dist < np.min(d):
                 max_min_dist = np.min(d)
@@ -309,13 +304,13 @@ class LHS:
             raise ValueError('UQpy: number of iterations must be an integer.')
 
         i = 0
-        lhs_samples = LHS.random(samples, random_state)
+        lhs_samples = LatinHypercubeSampling.random(samples, random_state)
         r = np.corrcoef(np.transpose(lhs_samples))
         np.fill_diagonal(r, 1)
         r1 = r[r != 1]
         min_corr = np.max(np.abs(r1))
         while i < iterations:
-            samples_try = LHS.random(samples, random_state)
+            samples_try = LatinHypercubeSampling.random(samples, random_state)
             r = np.corrcoef(np.transpose(samples_try))
             np.fill_diagonal(r, 1)
             r1 = r[r != 1]

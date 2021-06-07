@@ -3,11 +3,6 @@ from scipy.linalg import sqrtm
 from UQpy.Utilities import *
 
 
-########################################################################################################################
-########################################################################################################################
-#                                       Karhunen-Loeve Expansion
-########################################################################################################################
-
 class KarhunenLoeveExpansion:
     """
     A class to simulate stochastic processes from a given auto-correlation function based on the Karhunen-Loeve
@@ -52,7 +47,8 @@ class KarhunenLoeveExpansion:
 
     # TODO: Test this for non-stationary processes.
 
-    def __init__(self, nsamples, correlation_function, time_interval, threshold=None, random_state=None, verbose=False):
+    def __init__(self, samples_number, correlation_function, time_interval, threshold=None, random_state=None,
+                 verbose=False):
         self.correlation_function = correlation_function
         self.time_interval = time_interval
         if threshold:
@@ -67,13 +63,13 @@ class KarhunenLoeveExpansion:
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         self.verbose = verbose
-        self.nsamples = nsamples
+        self.samples_number = samples_number
 
         self.samples = None
         self.xi = None
 
-        if self.nsamples is not None:
-            self.run(nsamples=self.nsamples)
+        if self.samples_number is not None:
+            self.run(samples_number=self.samples_number)
 
     def _simulate(self, xi):
         lam, phi = np.linalg.eig(self.correlation_function)
@@ -86,7 +82,7 @@ class KarhunenLoeveExpansion:
         samples = samples[:, np.newaxis]
         return samples
 
-    def run(self, nsamples):
+    def run(self, samples_number):
         """
         Execute the random sampling in the ``KLE`` class.
 
@@ -110,9 +106,9 @@ class KarhunenLoeveExpansion:
 
         """
 
-        if nsamples is None:
+        if samples_number is None:
             raise ValueError('UQpy: Stochastic Process: Number of samples must be defined.')
-        if not isinstance(nsamples, int):
+        if not isinstance(samples_number, int):
             raise ValueError('UQpy: Stochastic Process: nsamples should be an integer.')
 
         if self.verbose:
@@ -120,7 +116,7 @@ class KarhunenLoeveExpansion:
 
         if self.verbose:
             print('UQpy: Stochastic Process: Starting simulation of Stochastic Processes.')
-        xi = np.random.normal(size=(self.number_eigen_values, self.nsamples))
+        xi = np.random.normal(size=(self.number_eigen_values, self.samples_number))
         samples = self._simulate(xi)
 
         if self.samples is None:

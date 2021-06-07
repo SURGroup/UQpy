@@ -82,12 +82,13 @@ class DiffusionMaps:
 
     """
 
-    def __init__(self, alpha=0.5, n_evecs=2, sparse=False, k_neighbors=1, kernel_object=None, kernel_grassmann=None):
+    def __init__(self, alpha=0.5, eigenvectors_number=2, is_sparse=False, neighbors_number=1, kernel_object=None,
+                 kernel_grassmann=None):
 
         self.alpha = alpha
-        self.n_evecs = n_evecs
-        self.sparse = sparse
-        self.k_neighbors = k_neighbors
+        self.eigenvectors_number = eigenvectors_number
+        self.is_sparse = is_sparse
+        self.neighbors_number = neighbors_number
         self.kernel_object = kernel_object
         self.kernel_grassmann = kernel_grassmann
 
@@ -103,20 +104,20 @@ class DiffusionMaps:
         if alpha < 0 or alpha > 1:
             raise ValueError('UQpy: `alpha` must be a value between 0 and 1.')
 
-        if isinstance(n_evecs, int):
-            if n_evecs < 1:
-                raise ValueError('UQpy: `n_evecs` must be larger than or equal to one.')
+        if isinstance(eigenvectors_number, int):
+            if eigenvectors_number < 1:
+                raise ValueError('UQpy: `eigenvectors_number` must be larger than or equal to one.')
         else:
-            raise TypeError('UQpy: `n_evecs` must be integer.')
+            raise TypeError('UQpy: `eigenvectors_number` must be integer.')
 
-        if not isinstance(sparse, bool):
-            raise TypeError('UQpy: `sparse` must be a boolean variable.')
-        elif sparse is True:
-            if isinstance(k_neighbors, int):
-                if k_neighbors < 1:
-                    raise ValueError('UQpy: `k_neighbors` must be larger than or equal to one.')
+        if not isinstance(is_sparse, bool):
+            raise TypeError('UQpy: `is_sparse` must be a boolean variable.')
+        elif is_sparse is True:
+            if isinstance(neighbors_number, int):
+                if neighbors_number < 1:
+                    raise ValueError('UQpy: `neighbors_number` must be larger than or equal to one.')
             else:
-                raise TypeError('UQpy: `k_neighbors` must be integer.')
+                raise TypeError('UQpy: `neighbors_number` must be integer.')
 
     def mapping(self, data=None, epsilon=None):
 
@@ -140,7 +141,7 @@ class DiffusionMaps:
         * **data** (`list`)
             Data points in the ambient space.
         
-        * **epsilon** (`floar`)
+        * **epsilon** (`float`)
             Parameter of the Gaussian kernel.
 
         **Output/Returns:**
@@ -157,9 +158,9 @@ class DiffusionMaps:
         """
 
         alpha = self.alpha
-        n_evecs = self.n_evecs
-        sparse = self.sparse
-        k_neighbors = self.k_neighbors
+        eigenvectors_number = self.eigenvectors_number
+        sparse = self.is_sparse
+        k_neighbors = self.neighbors_number
 
         if data is None and not isinstance(self.kernel_object, GrassmannManifold):
             raise TypeError('UQpy: Data cannot be NoneType.')
@@ -194,12 +195,12 @@ class DiffusionMaps:
             kernel_matrix = self.__sparse_kernel(kernel_matrix, k_neighbors)
 
         # Compute the diagonal matrix D(i,i) = sum(Kernel(i,j)^alpha,j) and its inverse.
-        d, d_inv = self.__d_matrix(kernel_matrix, alpha)
+        d, d_inv = self.__diagonal_matrix(kernel_matrix, alpha)
 
         # Compute L^alpha = D^(-alpha)*L*D^(-alpha).
-        l_star = self.__l_alpha_normalize(kernel_matrix, d_inv)
+        l_star = self.__normalize_kernel_matrix(kernel_matrix, d_inv)
 
-        d_star, d_star_inv = self.__d_matrix(l_star, 1.0)
+        d_star, d_star_inv = self.__diagonal_matrix(l_star, 1.0)
         if sparse:
             d_star_invd = sps.spdiags(d_star_inv, 0, d_star_inv.shape[0], d_star_inv.shape[0])
         else:
@@ -209,31 +210,31 @@ class DiffusionMaps:
 
         # Find the eigenvalues and eigenvectors of Ps.
         if sparse:
-            evals, evecs = spsl.eigs(transition_matrix, k=(n_evecs + 1), which='LR')
+            eigenvalues, eigenvectors = spsl.eigs(transition_matrix, k=(eigenvectors_number + 1), which='LR')
         else:
-            evals, evecs = np.linalg.eig(transition_matrix)
+            eigenvalues, eigenvectors = np.linalg.eig(transition_matrix)
 
-        ix = np.argsort(np.abs(evals))
+        ix = np.argsort(np.abs(eigenvalues))
         ix = ix[::-1]
-        s = np.real(evals[ix])
-        u = np.real(evecs[:, ix])
+        s = np.real(eigenvalues[ix])
+        u = np.real(eigenvectors[:, ix])
 
         # Truncated eigenvalues and eigenvectors
-        evals = s[:n_evecs]
-        evecs = u[:, :n_evecs]
+        eigenvalues = s[:eigenvectors_number]
+        eigenvectors = u[:, :eigenvectors_number]
 
         # Compute the diffusion coordinates
-        dcoords = np.zeros([n, n_evecs])
-        for i in range(n_evecs):
-            dcoords[:, i] = evals[i] * evecs[:, i]
+        diffusion_coordinates = np.zeros([n, eigenvectors_number])
+        for i in range(eigenvectors_number):
+            diffusion_coordinates[:, i] = eigenvalues[i] * eigenvectors[:, i]
 
         self.kernel_matrix = kernel_matrix
         self.transition_matrix = transition_matrix
-        self.dcoords = dcoords
-        self.evecs = evecs
-        self.evals = evals
+        self.diffusion_coordinates = diffusion_coordinates
+        self.eigenvectors = eigenvectors
+        self.eigenvalues = eigenvalues
 
-        return dcoords, evals, evecs
+        return diffusion_coordinates, eigenvalues, eigenvectors
 
     def gaussian_kernel(self, data, epsilon=None):
 
@@ -259,14 +260,15 @@ class DiffusionMaps:
 
         """
 
-        sparse = self.sparse
-        k_neighbors = self.k_neighbors
+        sparse = self.is_sparse
+        k_neighbors = self.neighbors_number
 
         # Compute the pairwise distances.
-        if len(np.shape(data)) == 2:
+        data_dimensions = len(np.shape(data))
+        if data_dimensions == 2:
             # Set of 1-D arrays
             distance_pairs = sd.pdist(data, 'euclidean')
-        elif len(np.shape(data)) == 3:
+        elif data_dimensions == 3:
             # Set of 2-D arrays
             # Check arguments: verify the consistency of input arguments.
             nargs = len(data)
@@ -285,10 +287,10 @@ class DiffusionMaps:
 
                 distance_pairs.append(distance)
         else:
-            raise TypeError('UQpy: The size of the input data is not consistent with this method.')
+            raise TypeError('UQpy: The size of the input second_order_tensor is not consistent with this method.')
 
         if epsilon is None:
-            # Compute a suitable episilon when it is not provided by the user.
+            # Compute a suitable epsilon when it is not provided by the user.
             # Compute epsilon as the median of the square of the euclidean distances
             epsilon = np.median(np.array(distance_pairs) ** 2)
 
@@ -298,7 +300,7 @@ class DiffusionMaps:
 
     # Private method
     @staticmethod
-    def __sparse_kernel(kernel_matrix, k_neighbors):
+    def __sparse_kernel(kernel_matrix, neighbors_number):
 
         """
         Private method: Construct a sparse kernel.
@@ -323,13 +325,13 @@ class DiffusionMaps:
 
         """
 
-        nrows = np.shape(kernel_matrix)[0]
-        for i in range(nrows):
-            vec = kernel_matrix[i, :]
-            idx = _nn_coord(vec, k_neighbors)
-            kernel_matrix[i, idx] = 0
+        rows = np.shape(kernel_matrix)[0]
+        for i in range(rows):
+            row_data = kernel_matrix[i, :]
+            index = _nn_coord(row_data, neighbors_number)
+            kernel_matrix[i, index] = 0
             if sum(kernel_matrix[i, :]) <= 0:
-                raise ValueError('UQpy: Consider increasing `k_neighbors` to have a connected graph.')
+                raise ValueError('UQpy: Consider increasing `neighbors_number` to have a connected graph.')
 
         sparse_kernel_matrix = sps.csc_matrix(kernel_matrix)
 
@@ -337,7 +339,7 @@ class DiffusionMaps:
 
     # Private method
     @staticmethod
-    def __d_matrix(kernel_matrix, alpha):
+    def __diagonal_matrix(kernel_matrix, alpha):
 
         """
         Private method: Compute the diagonal matrix D and its inverse.
@@ -362,13 +364,13 @@ class DiffusionMaps:
 
         """
 
-        d = np.array(kernel_matrix.sum(axis=1)).flatten()
-        d_inv = np.power(d, -alpha)
+        diagonal_matrix = np.array(kernel_matrix.sum(axis=1)).flatten()
+        inverse_diagonal_matrix = np.power(diagonal_matrix, -alpha)
 
-        return d, d_inv
+        return diagonal_matrix, inverse_diagonal_matrix
 
     # Private method
-    def __l_alpha_normalize(self, kernel_mat, d_inv):
+    def __normalize_kernel_matrix(self, kernel_matrix, inverse_diagonal_matrix):
 
         """
         Private method: Compute and normalize the kernel matrix with the matrix D.
@@ -391,13 +393,10 @@ class DiffusionMaps:
 
         """
 
-        sparse = self.sparse
-        m = d_inv.shape[0]
-        if sparse:
-            d_alpha = sps.spdiags(d_inv, 0, m, m)
-        else:
-            d_alpha = np.diag(d_inv)
+        rows = inverse_diagonal_matrix.shape[0]
+        d_alpha = sps.spdiags(inverse_diagonal_matrix, 0, rows, rows) if self.is_sparse \
+            else np.diag(inverse_diagonal_matrix)
 
-        normalized_kernel = d_alpha.dot(kernel_mat.dot(d_alpha))
+        normalized_kernel = d_alpha.dot(kernel_matrix.dot(d_alpha))
 
         return normalized_kernel

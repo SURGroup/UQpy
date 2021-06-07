@@ -3,7 +3,7 @@ import time
 
 from UQpy.distributions import Normal, Uniform
 from UQpy.RunModel import *
-from UQpy.sample_methods import MCS
+from UQpy.sample_methods import MonteCarloSampling
 
 calling_directory = os.getcwd()
 t = time.time()
@@ -24,8 +24,8 @@ print('Example: Created the model object.')
 
 # Creating samples using MCS
 d_n = Normal(loc=50, scale=400)
-d_u = Uniform(loc=2.50e8, scale=1.75e7)
-x_mcs = MCS(dist_object=[d_n, d_u], nsamples=100, random_state=987979)
+d_u = Uniform(location=2.50e8, scale=1.75e7)
+x_mcs = MonteCarloSampling(distributions=[d_n, d_u], samples_number=100, random_state=987979)
 
 # Running simulations using the previously defined model object and samples
 sample_points = x_mcs.samples

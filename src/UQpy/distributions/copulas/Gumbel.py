@@ -28,34 +28,30 @@ class Gumbel(Copula):
             raise ValueError('Input theta should be a float in [1, +oo).')
         super().__init__(theta=theta)
 
-    def evaluate_cdf(self, unif):
-        if unif.shape[1] > 2:
+    def evaluate_cdf(self, uniform_distributions):
+        if uniform_distributions.shape[1] > 2:
             raise ValueError('Maximum dimension for the Gumbel Copula is 2.')
-        #if self.params['theta'] == 1:
-        #    return prod(unif, axis=1)
 
-        u = unif[:, 0]
-        v = unif[:, 1]
+        first_uniform = uniform_distributions[:, 0]
+        second_uniform = uniform_distributions[:, 1]
         theta = self.params['theta']
-        cdf_val = exp(-((-log(u)) ** theta + (-log(v)) ** theta) ** (1 / theta))
+        cdf_val = exp(-((-log(first_uniform)) ** theta + (-log(second_uniform)) ** theta) ** (1 / theta))
 
         return cdf_val
 
-    def evaluate_pdf(self, unif):
-        if unif.shape[1] > 2:
+    def evaluate_pdf(self, uniform_distributions):
+        if uniform_distributions.shape[1] > 2:
             raise ValueError('Maximum dimension for the Gumbel Copula is 2.')
 
-        #if self.params['theta'] == 1:
-        #    return ones(unif.shape[0])
-
-        u = unif[:, 0]
-        v = unif[:, 1]
+        first_uniform = uniform_distributions[:, 0]
+        second_uniform = uniform_distributions[:, 1]
         theta = self.params['theta']
-        c = exp(-((-log(u)) ** theta + (-log(v)) ** theta) ** (1 / theta))
+        c = exp(-((-log(first_uniform)) ** theta + (-log(second_uniform)) ** theta) ** (1 / theta))
 
-        pdf_val = c * 1 / u * 1 / v * ((-log(u)) ** theta + (-log(v)) ** theta) ** (-2 + 2 / theta) \
-                  * (log(u) * log(v)) ** (theta - 1) * \
-                  (1 + (theta - 1) * ((-log(u)) ** theta + (-log(v)) ** theta) ** (-1 / theta))
+        pdf_val = c * 1 / first_uniform * 1 / second_uniform * \
+                  ((-log(first_uniform)) ** theta + (-log(second_uniform)) ** theta) ** (-2 + 2 / theta) \
+                  * (log(first_uniform) * log(second_uniform)) ** (theta - 1) * \
+                  (1 + (theta - 1) * ((-log(first_uniform)) ** theta + (-log(second_uniform)) ** theta) ** (-1 / theta))
         return pdf_val
 
     @staticmethod

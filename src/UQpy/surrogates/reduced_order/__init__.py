@@ -1,2 +1,2 @@
-from .StochasticReducedOrderModel import SROM
+from .StochasticReducedOrderModel import StochasticReducedOrderModel
 

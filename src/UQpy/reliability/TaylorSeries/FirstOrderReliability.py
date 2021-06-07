@@ -5,7 +5,6 @@ from UQpy.transformations import *
 from UQpy.reliability.TaylorSeries.TaylorSeries import TaylorSeries
 
 
-########################################################################################################################
 class FirstOrderReliability(TaylorSeries):
     """
     A class perform the First Order reliability Method. The ``run`` method of the ``FORM`` class can be invoked many
@@ -43,10 +42,10 @@ class FirstOrderReliability(TaylorSeries):
     **Methods:**
      """
 
-    def __init__(self, dist_object, runmodel_object, form_object=None, seed_x=None, seed_u=None, df_step=0.01,
+    def __init__(self, distributions, runmodel_object, form_object=None, seed_x=None, seed_u=None, df_step=0.01,
                  corr_x=None, corr_z=None, n_iter=100, tol1=None, tol2=None, tol3=None, verbose=False):
 
-        super().__init__(dist_object, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u, n_iter, tol1, tol2,
+        super().__init__(distributions, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u, n_iter, tol1, tol2,
                          tol3, df_step, verbose)
 
         self.verbose = verbose
@@ -118,7 +117,7 @@ class FirstOrderReliability(TaylorSeries):
         alpha_record = list()
         error_record = list()
 
-        conv_flag = False
+        converged = False
         k = 0
         beta = np.zeros(shape=(self.n_iter + 1,))
         u = np.zeros([self.n_iter + 1, self.dimension])
@@ -126,7 +125,7 @@ class FirstOrderReliability(TaylorSeries):
         g_record.append(0.0)
         dg_u_record = np.zeros([self.n_iter + 1, self.dimension])
 
-        while not conv_flag:
+        while not converged:
             if self.verbose:
                 print('Number of iteration:', k)
             # FORM always starts from the standard normal space
@@ -182,7 +181,7 @@ class FirstOrderReliability(TaylorSeries):
                 error3 = np.linalg.norm(dg_u_record[k + 1, :] - dg_u_record[k, :])
                 error_record.append([error1, error2, error3])
                 if error1 <= self.tol1 and error2 <= self.tol2 and error3 < self.tol3:
-                    conv_flag = True
+                    converged = True
                 else:
                     k = k + 1
 
@@ -192,7 +191,7 @@ class FirstOrderReliability(TaylorSeries):
                 error3 = np.linalg.norm(dg_u_record[k + 1, :] - dg_u_record[k, :])
                 error_record.append([error1, error2, error3])
                 if error1 <= 1e-3 or error2 <= 1e-3 or error3 < 1e-3:
-                    conv_flag = True
+                    converged = True
                 else:
                     k = k + 1
 
@@ -200,7 +199,7 @@ class FirstOrderReliability(TaylorSeries):
                 error1 = np.linalg.norm(u[k + 1, :] - u[k, :])
                 error_record.append(error1)
                 if error1 <= self.tol1:
-                    conv_flag = True
+                    converged = True
                 else:
                     k = k + 1
 
@@ -208,7 +207,7 @@ class FirstOrderReliability(TaylorSeries):
                 error2 = np.linalg.norm(beta[k + 1] - beta[k])
                 error_record.append(error2)
                 if error2 <= self.tol2:
-                    conv_flag = True
+                    converged = True
                 else:
                     k = k + 1
 
@@ -216,7 +215,7 @@ class FirstOrderReliability(TaylorSeries):
                 error3 = np.linalg.norm(dg_u_record[k + 1, :] - dg_u_record[k, :])
                 error_record.append(error3)
                 if error3 < self.tol3:
-                    conv_flag = True
+                    converged = True
                 else:
                     k = k + 1
 
@@ -225,7 +224,7 @@ class FirstOrderReliability(TaylorSeries):
                 error2 = np.linalg.norm(beta[k + 1] - beta[k])
                 error_record.append([error1, error2])
                 if error1 <= self.tol1 and error2 <= self.tol1:
-                    conv_flag = True
+                    converged = True
                 else:
                     k = k + 1
 
@@ -234,7 +233,7 @@ class FirstOrderReliability(TaylorSeries):
                 error3 = np.linalg.norm(dg_u_record[k + 1, :] - dg_u_record[k, :])
                 error_record.append([error1, error3])
                 if error1 <= self.tol1 and error3 < self.tol3:
-                    conv_flag = True
+                    converged = True
                 else:
                     k = k + 1
 
@@ -243,14 +242,14 @@ class FirstOrderReliability(TaylorSeries):
                 error3 = np.linalg.norm(dg_u_record[k + 1, :] - dg_u_record[k, :])
                 error_record.append([error2, error3])
                 if error2 <= self.tol2 and error3 < self.tol3:
-                    conv_flag = True
+                    converged = True
                 else:
                     k = k + 1
 
             if self.verbose:
                 print('Error:', error_record[-1])
 
-            if conv_flag is True or k > self.n_iter:
+            if converged is True or k > self.n_iter:
                 break
 
         if k > self.n_iter:

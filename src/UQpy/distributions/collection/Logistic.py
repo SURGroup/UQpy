@@ -22,7 +22,7 @@ class Logistic(DistributionContinuous1D):
 
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
-    def __init__(self, loc=0., scale=1.):
-        super().__init__(loc=loc, scale=scale, order_params=('loc', 'scale'))
+    def __init__(self, location=0., scale=1.):
+        super().__init__(loc=location, scale=scale, order_params=('location', 'scale'))
         self._construct_from_scipy(scipy_name=stats.logistic)
 

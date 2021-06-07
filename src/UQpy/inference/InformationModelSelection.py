@@ -79,7 +79,7 @@ class InformationModelSelection:
         if not isinstance(candidate_models, (list, tuple)) or not all(isinstance(model, InferenceModel)
                                                                       for model in candidate_models):
             raise TypeError('UQpy: Input candidate_models must be a list of InferenceModel objects.')
-        self.nmodels = len(candidate_models)
+        self.models_number = len(candidate_models)
         self.candidate_models = candidate_models
         self.data = data
         if criterion not in ['AIC', 'BIC', 'AICc']:
@@ -104,9 +104,9 @@ class InformationModelSelection:
             self.ml_estimators.append(ml_estimator)
 
         # Initialize the outputs
-        self.criterion_values = [None, ] * self.nmodels
-        self.penalty_terms = [None, ] * self.nmodels
-        self.probabilities = [None, ] * self.nmodels
+        self.criterion_values = [None, ] * self.models_number
+        self.penalty_terms = [None, ] * self.models_number
+        self.probabilities = [None, ] * self.models_number
 
         # Run the model selection procedure
         if (nopt is not None) or (x0 is not None):
@@ -132,13 +132,13 @@ class InformationModelSelection:
         """
         # Check inputs x0, nopt
         if isinstance(nopt, int) or nopt is None:
-            nopt = [nopt] * self.nmodels
-        if not (isinstance(nopt, list) and len(nopt) == self.nmodels):
-            raise ValueError('UQpy: nopt should be an int or list of length nmodels')
+            nopt = [nopt] * self.models_number
+        if not (isinstance(nopt, list) and len(nopt) == self.models_number):
+            raise ValueError('UQpy: nopt should be an int or list of length models_number')
         if x0 is None:
-            x0 = [None] * self.nmodels
-        if not (isinstance(x0, list) and len(x0) == self.nmodels):
-            raise ValueError('UQpy: x0 should be a list of length nmodels (or None).')
+            x0 = [None] * self.models_number
+        if not (isinstance(x0, list) and len(x0) == self.models_number):
+            raise ValueError('UQpy: x0 should be a list of length models_number (or None).')
 
         # Loop over all the models
         for i, (inference_model, ml_estimator) in enumerate(zip(self.candidate_models, self.ml_estimators)):
@@ -209,12 +209,12 @@ class InformationModelSelection:
 
         """
 
-        n_params = inference_model.nparams
-        ndata = len(data)
+        n_params = inference_model.parameters_number
+        number_of_data = len(data)
         if criterion == 'BIC':
-            penalty_term = np.log(ndata) * n_params
+            penalty_term = np.log(number_of_data) * n_params
         elif criterion == 'AICc':
-            penalty_term = 2 * n_params + (2 * n_params ** 2 + 2 * n_params) / (ndata - n_params - 1)
+            penalty_term = 2 * n_params + (2 * n_params ** 2 + 2 * n_params) / (number_of_data - n_params - 1)
         elif criterion == 'AIC':  # default
             penalty_term = 2 * n_params
         else:

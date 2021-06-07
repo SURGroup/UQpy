@@ -1,11 +1,6 @@
 from UQpy.Utilities import *
 
 
-########################################################################################################################
-########################################################################################################################
-#                                        Spectral Representation Method
-########################################################################################################################
-
 class SpectralRepresentationMethod:
     """
     A class to simulate stochastic processes from a given power spectrum density using the Spectral Representation
@@ -82,7 +77,7 @@ class SpectralRepresentationMethod:
 
     """
 
-    def __init__(self, nsamples, power_spectrum, time_interval, frequency_interval, number_time_intervals,
+    def __init__(self, samples_number, power_spectrum, time_interval, frequency_interval, number_time_intervals,
                  number_frequency_intervals, random_state=None, verbose=False):
         self.power_spectrum = power_spectrum
         if isinstance(time_interval, float) and isinstance(frequency_interval, float) and \
@@ -95,7 +90,7 @@ class SpectralRepresentationMethod:
         self.frequency_interval = np.array(frequency_interval)
         self.number_time_intervals = np.array(number_time_intervals)
         self.number_frequency_intervals = np.array(number_frequency_intervals)
-        self.nsamples = nsamples
+        self.samples_number = samples_number
 
         # Error checks
         t_u = 2 * np.pi / (2 * self.number_frequency_intervals * self.frequency_interval)
@@ -122,8 +117,8 @@ class SpectralRepresentationMethod:
             self.case = 'multi'
 
         # Run Spectral Representation Method
-        if self.nsamples is not None:
-            self.run(nsamples=self.nsamples)
+        if self.samples_number is not None:
+            self.run(nsamples=self.samples_number)
 
     def run(self, nsamples):
         """
@@ -165,7 +160,7 @@ class SpectralRepresentationMethod:
                 print('UQpy: Stochastic Process: Starting simulation of uni-variate Stochastic Processes.')
                 print('UQpy: The number of dimensions is :', self.number_of_dimensions)
             phi = np.random.uniform(
-                size=np.append(self.nsamples, np.ones(self.number_of_dimensions, dtype=np.int32)
+                size=np.append(self.samples_number, np.ones(self.number_of_dimensions, dtype=np.int32)
                                * self.number_frequency_intervals)) * 2 * np.pi
             samples = self._simulate_uni(phi)
 
@@ -174,7 +169,7 @@ class SpectralRepresentationMethod:
                 print('UQpy: Stochastic Process: Starting simulation of multi-variate Stochastic Processes.')
                 print('UQpy: Stochastic Process: The number of variables is :', self.number_of_variables)
                 print('UQpy: Stochastic Process: The number of dimensions is :', self.number_of_dimensions)
-            phi = np.random.uniform(size=np.append(self.nsamples, np.append(
+            phi = np.random.uniform(size=np.append(self.samples_number, np.append(
                 np.ones(self.number_of_dimensions, dtype=np.int32) * self.number_frequency_intervals,
                 self.number_of_variables))) * 2 * np.pi
             samples = self._simulate_multi(phi)
@@ -202,7 +197,7 @@ class SpectralRepresentationMethod:
         coefficient = np.sqrt(2 ** (self.number_of_dimensions + 1)) * np.sqrt(np.prod(self.frequency_interval))
         u, s, v = np.linalg.svd(power_spectrum)
         power_spectrum_decomposed = np.einsum('...ij,...j->...ij', u, np.sqrt(s))
-        fourier_coefficient = coefficient * np.einsum('...ij,n...j -> n...i',
+        fourier_coefficient = coefficient * np.einsum('...ij,trials_number...j -> trials_number...i',
                                                       power_spectrum_decomposed, np.exp(phi * 1.0j))
         fourier_coefficient[np.isnan(fourier_coefficient)] = 0
         samples = np.real(np.fft.fftn(fourier_coefficient, s=self.number_time_intervals,

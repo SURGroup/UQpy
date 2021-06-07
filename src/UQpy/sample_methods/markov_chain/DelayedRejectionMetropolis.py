@@ -38,14 +38,16 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
 
     """
 
-    def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, nburn=0, jump=1, dimension=None,
-                 seed=None, save_log_pdf=False, concat_chains=True, nsamples=None, nsamples_per_chain=None,
-                 initial_covariance=None, k0=100, sp=None, gamma_2=1/5, save_covariance=False, verbose=False,
-                 random_state=None, nchains=None):
+    def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, burn_length=0, jump=1, dimension=None,
+                 seed=None, save_log_pdf=False, concatenate_chains=True, samples_number=None, samples_per_chain_number=None,
+                 initial_covariance=None, covariance_update_rate=100, scale_parameter=None,
+                 delayed_rejection_scale=1 / 5, save_covariance=False, verbose=False, random_state=None,
+                 chains_number=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
-                         dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                         concat_chains=concat_chains, verbose=verbose, random_state=random_state, nchains=nchains)
+                         dimension=dimension, seed=seed, burn_length=burn_length, jump=jump, save_log_pdf=save_log_pdf,
+                         concatenate_chains=concatenate_chains, verbose=verbose, random_state=random_state,
+                         chains_number=chains_number)
 
         # Check the initial covariance
         self.initial_covariance = initial_covariance
@@ -55,20 +57,20 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
                   and self.initial_covariance == (self.dimension, self.dimension)):
             raise TypeError('UQpy: Input initial_covariance should be a 2D ndarray of shape (dimension, dimension)')
 
-        self.k0 = k0
-        self.sp = sp
-        if self.sp is None:
-            self.sp = 2.38 ** 2 / self.dimension
-        self.gamma_2 = gamma_2
+        self.covariance_update_rate = covariance_update_rate
+        self.scale_parameter = scale_parameter
+        if self.scale_parameter is None:
+            self.scale_parameter = 2.38 ** 2 / self.dimension
+        self.delayed_rejection_scale = delayed_rejection_scale
         self.save_covariance = save_covariance
         for key, typ in zip(['k0', 'sp', 'gamma_2', 'save_covariance'], [int, float, float, bool]):
             if not isinstance(getattr(self, key), typ):
                 raise TypeError('Input ' + key + ' must be of type ' + typ.__name__)
 
         # initialize the sample mean and sample covariance that you need
-        self.current_covariance = np.tile(self.initial_covariance[np.newaxis, ...], (self.nchains, 1, 1))
-        self.sample_mean = np.zeros((self.nchains, self.dimension, ))
-        self.sample_covariance = np.zeros((self.nchains, self.dimension, self.dimension))
+        self.current_covariance = np.tile(self.initial_covariance[np.newaxis, ...], (self.chains_number, 1, 1))
+        self.sample_mean = np.zeros((self.chains_number, self.dimension,))
+        self.sample_covariance = np.zeros((self.chains_number, self.dimension, self.dimension))
         if self.save_covariance:
             self.adaptive_covariance = [self.current_covariance.copy(), ]
 
@@ -76,30 +78,30 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
             print('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
 
         # If nsamples is provided, run the algorithm
-        if (nsamples is not None) or (nsamples_per_chain is not None):
-            self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
+        if (samples_number is not None) or (samples_per_chain_number is not None):
+            self.run(number_of_samples=samples_number, nsamples_per_chain=samples_per_chain_number)
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
         Run one iteration of the markov_chain chain for DRAM algorithm, starting at current state - see ``markov_chain`` class.
         """
         from UQpy.distributions import MultivariateNormal
-        mvp = MultivariateNormal(mean=np.zeros(self.dimension, ), cov=1.)
+        multivariate_normal = MultivariateNormal(mean=np.zeros(self.dimension, ), covariance=1.)
 
         # Sample candidate
         candidate = np.zeros_like(current_state)
         for nc, current_cov in enumerate(self.current_covariance):
-            mvp.update_params(cov=current_cov)
-            candidate[nc, :] = current_state[nc, :] + mvp.rvs(
+            multivariate_normal.update_params(cov=current_cov)
+            candidate[nc, :] = current_state[nc, :] + multivariate_normal.rvs(
                 nsamples=1, random_state=self.random_state).reshape((self.dimension, ))
 
         # Compute log_pdf_target of candidate sample
         log_p_candidate = self.evaluate_log_target(candidate)
 
         # Compare candidate with current sample and decide or not to keep the candidate (loop over nc chains)
-        accept_vec = np.zeros((self.nchains, ))
-        inds_delayed = []   # indices of chains that will undergo delayed rejection
-        unif_rvs = Uniform().rvs(nsamples=self.nchains, random_state=self.random_state).reshape((-1,))
+        accept_vec = np.zeros((self.chains_number,))
+        delayed_chains_indices = []   # indices of chains that will undergo delayed rejection
+        unif_rvs = Uniform().rvs(nsamples=self.chains_number, random_state=self.random_state).reshape((-1,))
         for nc, (cand, log_p_cand, log_p_curr) in enumerate(zip(candidate, log_p_candidate, current_log_pdf)):
             accept = np.log(unif_rvs[nc]) < log_p_cand - log_p_curr
             if accept:
@@ -107,27 +109,27 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
                 current_log_pdf[nc] = log_p_cand
                 accept_vec[nc] += 1.
             else:    # enter delayed rejection
-                inds_delayed.append(nc)    # these indices will enter the delayed rejection part
+                delayed_chains_indices.append(nc)    # these indices will enter the delayed rejection part
 
         # Delayed rejection
-        if len(inds_delayed) > 0:   # performed delayed rejection for some chains
-            current_states_delayed = np.zeros((len(inds_delayed), self.dimension))
-            candidates_delayed = np.zeros((len(inds_delayed), self.dimension))
-            candidate2 = np.zeros((len(inds_delayed), self.dimension))
+        if len(delayed_chains_indices) > 0:   # performed delayed rejection for some chains
+            current_states_delayed = np.zeros((len(delayed_chains_indices), self.dimension))
+            candidates_delayed = np.zeros((len(delayed_chains_indices), self.dimension))
+            candidate2 = np.zeros((len(delayed_chains_indices), self.dimension))
             # Sample other candidates closer to the current one
-            for i, nc in enumerate(inds_delayed):
+            for i, nc in enumerate(delayed_chains_indices):
                 current_states_delayed[i, :] = current_state[nc, :]
                 candidates_delayed[i, :] = candidate[nc, :]
-                mvp.update_params(cov=self.gamma_2 ** 2 * self.current_covariance[nc])
-                candidate2[i, :] = current_states_delayed[i, :] + mvp.rvs(
+                multivariate_normal.update_params(cov=self.delayed_rejection_scale ** 2 * self.current_covariance[nc])
+                candidate2[i, :] = current_states_delayed[i, :] + multivariate_normal.rvs(
                     nsamples=1, random_state=self.random_state).reshape((self.dimension, ))
             # Evaluate their log_target
             log_p_candidate2 = self.evaluate_log_target(candidate2)
-            log_prop_cand_cand2 = mvp.log_pdf(candidates_delayed - candidate2)
-            log_prop_cand_curr = mvp.log_pdf(candidates_delayed - current_states_delayed)
+            log_prop_cand_cand2 = multivariate_normal.log_pdf(candidates_delayed - candidate2)
+            log_prop_cand_curr = multivariate_normal.log_pdf(candidates_delayed - current_states_delayed)
             # Accept or reject
-            unif_rvs = Uniform().rvs(nsamples=len(inds_delayed), random_state=self.random_state).reshape((-1,))
-            for (nc, cand2, log_p_cand2, j1, j2, u_rv) in zip(inds_delayed, candidate2, log_p_candidate2,
+            unif_rvs = Uniform().rvs(nsamples=len(delayed_chains_indices), random_state=self.random_state).reshape((-1,))
+            for (nc, cand2, log_p_cand2, j1, j2, u_rv) in zip(delayed_chains_indices, candidate2, log_p_candidate2,
                                                               log_prop_cand_cand2, log_prop_cand_curr, unif_rvs):
                 alpha_cand_cand2 = min(1., np.exp(log_p_candidate[nc] - log_p_cand2))
                 alpha_cand_curr = min(1., np.exp(log_p_candidate[nc] - current_log_pdf[nc]))
@@ -141,14 +143,14 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
                     accept_vec[nc] += 1.
 
         # Adaptive part: update the covariance
-        for nc in range(self.nchains):
+        for nc in range(self.chains_number):
             # update covariance
             self.sample_mean[nc], self.sample_covariance[nc] = self._recursive_update_mean_covariance(
-                n=self.niterations, new_sample=current_state[nc, :], previous_mean=self.sample_mean[nc],
+                samples_number=self.iterations_number, new_sample=current_state[nc, :], previous_mean=self.sample_mean[nc],
                 previous_covariance=self.sample_covariance[nc])
-            if (self.niterations > 1) and (self.niterations % self.k0 == 0):
-                self.current_covariance[nc] = self.sp * self.sample_covariance[nc] + 1e-6 * np.eye(self.dimension)
-        if self.save_covariance and ((self.niterations > 1) and (self.niterations % self.k0 == 0)):
+            if (self.iterations_number > 1) and (self.iterations_number % self.covariance_update_rate == 0):
+                self.current_covariance[nc] = self.scale_parameter * self.sample_covariance[nc] + 1e-6 * np.eye(self.dimension)
+        if self.save_covariance and ((self.iterations_number > 1) and (self.iterations_number % self.covariance_update_rate == 0)):
             self.adaptive_covariance.append(self.current_covariance.copy())
 
         # Update the acceptance rate
@@ -156,7 +158,7 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
         return current_state, current_log_pdf
 
     @staticmethod
-    def _recursive_update_mean_covariance(n, new_sample, previous_mean, previous_covariance=None):
+    def _recursive_update_mean_covariance(samples_number, new_sample, previous_mean, previous_covariance=None):
         """
         Iterative formula to compute a new sample mean and covariance based on previous ones and new sample.
 
@@ -175,13 +177,14 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
         * new_covariance (ndarray (dim, dim)): Updated sample covariance
 
         """
-        new_mean = (n - 1) / n * previous_mean + 1 / n * new_sample
+        new_mean = (samples_number - 1) / samples_number * previous_mean + 1 / samples_number * new_sample
         if previous_covariance is None:
             return new_mean
-        dim = new_sample.size
-        if n == 1:
-            new_covariance = np.zeros((dim, dim))
+        dimensions = new_sample.size
+        if samples_number == 1:
+            new_covariance = np.zeros((dimensions, dimensions))
         else:
-            delta_n = (new_sample - previous_mean).reshape((dim, 1))
-            new_covariance = (n - 2) / (n - 1) * previous_covariance + 1 / n * np.matmul(delta_n, delta_n.T)
+            delta_n = (new_sample - previous_mean).reshape((dimensions, 1))
+            new_covariance = (samples_number - 2) / (samples_number - 1) * previous_covariance +\
+                             1 / samples_number * np.matmul(delta_n, delta_n.T)
         return new_mean, new_covariance

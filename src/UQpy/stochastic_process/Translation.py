@@ -65,10 +65,10 @@ class Translation:
         correlation at '0' lag to be 1
     """
 
-    def __init__(self, dist_object, time_interval, frequency_interval, number_time_intervals,
+    def __init__(self, distributions, time_interval, frequency_interval, number_time_intervals,
                  number_frequency_intervals, power_spectrum_gaussian=None, correlation_function_gaussian=None,
                  samples_gaussian=None):
-        self.dist_object = dist_object
+        self.distributions = distributions
         self.time_interval = time_interval
         self.frequency_interval = frequency_interval
         self.number_time_intervals = number_time_intervals
@@ -108,8 +108,8 @@ class Translation:
     def _translate_gaussian_samples(self):
         standard_deviation = np.sqrt(self.correlation_function_gaussian[0])
         samples_cdf = norm.cdf(self.samples_gaussian, scale=standard_deviation)
-        if hasattr(self.dist_object, 'icdf'):
-            non_gaussian_icdf = getattr(self.dist_object, 'icdf')
+        if hasattr(self.distributions, 'icdf'):
+            non_gaussian_icdf = getattr(self.distributions, 'icdf')
             samples_non_gaussian = non_gaussian_icdf(samples_cdf)
         else:
             raise AttributeError('UQpy: The marginal dist_object needs to have an inverse cdf defined.')
@@ -120,10 +120,10 @@ class Translation:
         correlation_function_gaussian = np.clip(correlation_function_gaussian, -0.999, 0.999)
         correlation_function_non_gaussian = np.zeros_like(correlation_function_gaussian)
         for i in itertools.product(*[range(s) for s in self.shape]):
-            correlation_function_non_gaussian[i] = correlation_distortion(self.dist_object,
+            correlation_function_non_gaussian[i] = correlation_distortion(self.distributions,
                                                                           correlation_function_gaussian[i])
-        if hasattr(self.dist_object, 'moments'):
-            non_gaussian_moments = getattr(self.dist_object, 'moments')()
+        if hasattr(self.distributions, 'moments'):
+            non_gaussian_moments = getattr(self.distributions, 'moments')()
         else:
             raise AttributeError('UQpy: The marginal dist_object needs to have defined moments.')
         scaled_correlation_function_non_gaussian = correlation_function_non_gaussian * non_gaussian_moments[1]

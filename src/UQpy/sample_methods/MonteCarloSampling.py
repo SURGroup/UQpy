@@ -1,12 +1,8 @@
 from UQpy.distributions import *
 import numpy as np
 
-########################################################################################################################
-########################################################################################################################
-#                                         Monte Carlo Simulation
-########################################################################################################################
 
-class MCS:
+class MonteCarloSampling:
     """
     Perform Monte Carlo sampling (MCS) of random variables.
 
@@ -59,19 +55,19 @@ class MCS:
 
     """
 
-    def __init__(self, dist_object, nsamples=None,  random_state=None, verbose=False):
+    def __init__(self, distributions, samples_number=None, random_state=None, verbose=False):
 
-        if isinstance(dist_object, list):
+        if isinstance(distributions, list):
             add_continuous_1d = 0
             add_continuous_nd = 0
-            for i in range(len(dist_object)):
-                if not isinstance(dist_object[i], Distribution):
+            for i in range(len(distributions)):
+                if not isinstance(distributions[i], Distribution):
                     raise TypeError('UQpy: A UQpy.Distribution object must be provided.')
-                if isinstance(dist_object[i], DistributionContinuous1D):
+                if isinstance(distributions[i], DistributionContinuous1D):
                     add_continuous_1d = add_continuous_1d + 1
-                elif isinstance(dist_object[i], DistributionND):
+                elif isinstance(distributions[i], DistributionND):
                     add_continuous_nd = add_continuous_nd + 1
-            if add_continuous_1d == len(dist_object):
+            if add_continuous_1d == len(distributions):
                 self.list = False
                 self.array = True
             else:
@@ -84,12 +80,12 @@ class MCS:
             elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
                 raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
-            self.dist_object = dist_object
+            self.dist_object = distributions
         else:
-            if not isinstance(dist_object, Distribution):
+            if not isinstance(distributions, Distribution):
                 raise TypeError('UQpy: A UQpy.Distribution object must be provided.')
             else:
-                self.dist_object = dist_object
+                self.dist_object = distributions
                 self.list = False
                 self.array = True
             self.random_state = random_state
@@ -105,13 +101,13 @@ class MCS:
 
         # Set printing options
         self.verbose = verbose
-        self.nsamples = nsamples
+        self.samples_number = samples_number
 
         # Run Monte Carlo sampling
-        if nsamples is not None:
-            self.run(nsamples=self.nsamples, random_state=self.random_state)
+        if samples_number is not None:
+            self.run(samples_number=self.samples_number, random_state=self.random_state)
 
-    def run(self, nsamples, random_state=None):
+    def run(self, samples_number, random_state=None):
         """
         Execute the random sampling in the ``MCS`` class.
 
@@ -149,9 +145,9 @@ class MCS:
             elif not isinstance(random_state, (type(None), np.random.RandomState)):
                 raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
-        if nsamples is None:
+        if samples_number is None:
             raise ValueError('UQpy: Number of samples must be defined.')
-        if not isinstance(nsamples, int):
+        if not isinstance(samples_number, int):
             raise ValueError('UQpy: nsamples should be an integer.')
 
         if self.verbose:
@@ -161,18 +157,18 @@ class MCS:
             temp_samples = list()
             for i in range(len(self.dist_object)):
                 if hasattr(self.dist_object[i], 'rvs'):
-                    temp_samples.append(self.dist_object[i].rvs(nsamples=nsamples, random_state=random_state))
+                    temp_samples.append(self.dist_object[i].rvs(nsamples=samples_number, random_state=random_state))
                 else:
                     raise ValueError('UQpy: rvs method is missing.')
             self.x = list()
-            for j in range(nsamples):
+            for j in range(samples_number):
                 y = list()
                 for k in range(len(self.dist_object)):
                     y.append(temp_samples[k][j])
                 self.x.append(np.array(y))
         else:
             if hasattr(self.dist_object, 'rvs'):
-                temp_samples = self.dist_object.rvs(nsamples=nsamples, random_state=random_state)
+                temp_samples = self.dist_object.rvs(nsamples=samples_number, random_state=random_state)
                 self.x = temp_samples
 
         if self.samples is None:
@@ -188,7 +184,7 @@ class MCS:
                 self.samples = np.vstack([self.samples, self.x])
             else:
                 self.samples = np.vstack([self.samples, self.x])
-        self.nsamples = len(self.samples)
+        self.samples_number = len(self.samples)
 
         if self.verbose:
             print('UQpy: Monte Carlo Sampling Complete.')
@@ -211,7 +207,7 @@ class MCS:
 
         if isinstance(self.dist_object, list) and self.array is True:
             zi = np.zeros_like(self.samples)
-            for i in range(self.nsamples):
+            for i in range(self.samples_number):
                 z = self.samples[i, :]
                 for j in range(len(self.dist_object)):
                     if hasattr(self.dist_object[j], 'cdf'):
@@ -223,7 +219,7 @@ class MCS:
         elif isinstance(self.dist_object, Distribution):
             if hasattr(self.dist_object, 'cdf'):
                 zi = np.zeros_like(self.samples)
-                for i in range(self.nsamples):
+                for i in range(self.samples_number):
                     z = self.samples[i, :]
                     zi[i, :] = self.dist_object.cdf(z)
                 self.samplesU01 = zi
@@ -232,7 +228,7 @@ class MCS:
 
         elif isinstance(self.dist_object, list) and self.list is True:
             temp_samples_u01 = list()
-            for i in range(self.nsamples):
+            for i in range(self.samples_number):
                 z = self.samples[i][:]
                 y = [None] * len(self.dist_object)
                 for j in range(len(self.dist_object)):

@@ -1,13 +1,8 @@
 import numpy as np
 import scipy.stats as stats
 
-########################################################################################################################
-########################################################################################################################
-#                                        Generating random samples inside a Simplex
-########################################################################################################################
 
-
-class Simplex:
+class SimplexSampling:
     """
     Generate uniform random samples inside an n-dimensional simplex.
 
@@ -39,9 +34,9 @@ class Simplex:
 
     """
 
-    def __init__(self, nodes=None, nsamples=None, random_state=None):
+    def __init__(self, nodes=None, samples_number=None, random_state=None):
         self.nodes = np.atleast_2d(nodes)
-        self.nsamples = nsamples
+        self.samples_number = samples_number
 
         if self.nodes.shape[0] != self.nodes.shape[1] + 1:
             raise NotImplementedError("UQpy: Size of simplex (nodes) is not consistent.")
@@ -52,13 +47,13 @@ class Simplex:
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
-        if nsamples is not None:
-            if self.nsamples <= 0 or type(self.nsamples).__name__ != 'int':
+        if samples_number is not None:
+            if self.samples_number <= 0 or type(self.samples_number).__name__ != 'int':
                 raise NotImplementedError("UQpy: Number of samples to be generated 'nsamples' should be a positive "
                                           "integer.")
-            self.samples = self.run(nsamples=nsamples)
+            self.samples = self.run(samples_number=samples_number)
 
-    def run(self, nsamples):
+    def run(self, samples_number):
         """
         Execute the random sampling in the ``Simplex`` class.
 
@@ -81,11 +76,11 @@ class Simplex:
         class.
 
         """
-        self.nsamples = nsamples
+        self.samples_number = samples_number
         dimension = self.nodes.shape[1]
         if dimension > 1:
-            sample = np.zeros([self.nsamples, dimension])
-            for i in range(self.nsamples):
+            sample = np.zeros([self.samples_number, dimension])
+            for i in range(self.samples_number):
                 r = np.zeros([dimension])
                 ad = np.zeros(shape=(dimension, len(self.nodes)))
                 for j in range(dimension):
@@ -101,5 +96,5 @@ class Simplex:
         else:
             a = min(self.nodes)
             b = max(self.nodes)
-            sample = a + (b - a) * stats.uniform.rvs(size=[self.nsamples, dimension], random_state=self.random_state)
+            sample = a + (b - a) * stats.uniform.rvs(size=[self.samples_number, dimension], random_state=self.random_state)
         return sample

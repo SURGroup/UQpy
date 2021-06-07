@@ -1,20 +1,3 @@
-# UQpy is distributed under the MIT license.
-#
-# Copyright (C) 2018  -- Michael D. Shields
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
-# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
-# persons to whom the Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
-# Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 """This module contains functionality for all the surrogate methods supported in UQpy.
 
 The module currently contains the following classes:
@@ -99,16 +82,17 @@ class Kriging:
 
     """
 
-    def __init__(self, reg_model='Linear', corr_model='Exponential', bounds=None, op=True, nopt=1, normalize=True,
-                 verbose=False, corr_model_params=None, optimizer=None, random_state=None, **kwargs_optimizer):
+    def __init__(self, regression_model='Linear', correlation_model='Exponential', bounds=None, optimize=True,
+                 optimizations_number=1, normalize=True, verbose=False, correlation_model_parameters=None,
+                 optimizer=None, random_state=None, **kwargs_optimizer):
 
-        self.reg_model = reg_model
-        self.corr_model = corr_model
-        self.corr_model_params = np.array(corr_model_params)
+        self.regression_model = regression_model
+        self.correlation_model = correlation_model
+        self.correlation_model_parameters = np.array(correlation_model_parameters)
         self.bounds = bounds
         self.optimizer = optimizer
-        self.nopt = nopt
-        self.op = op
+        self.optimizations_number = optimizations_number
+        self.optimize = optimize
         self.normalize = normalize
         self.verbose = verbose
         self.random_state = random_state
@@ -125,17 +109,17 @@ class Kriging:
         self.F, self.R = None, None
 
         # Initialize and run preliminary error checks.
-        if self.reg_model is None:
+        if self.regression_model is None:
             raise NotImplementedError("UQpy: Regression model is not defined.")
 
-        if self.corr_model is None:
+        if self.correlation_model is None:
             raise NotImplementedError("Uqpy: Correlation model is not defined.")
 
-        if self.corr_model_params is None:
+        if self.correlation_model_parameters is None:
             raise NotImplementedError("UQpy: corr_model_params is not defined.")
 
         if self.bounds is None:
-            self.bounds = [[0.001, 10 ** 7]] * self.corr_model_params.shape[0]
+            self.bounds = [[0.001, 10 ** 7]] * self.correlation_model_parameters.shape[0]
 
         if self.optimizer is None:
             from scipy.optimize import fmin_l_bfgs_b
@@ -144,19 +128,19 @@ class Kriging:
         elif not callable(self.optimizer):
             raise TypeError('UQpy: Input optimizer should be None (set to scipy.optimize.minimize) or a callable.')
 
-        if type(self.reg_model).__name__ == 'function':
+        if type(self.regression_model).__name__ == 'function':
             self.rmodel = 'User defined'
-        elif self.reg_model in ['Constant', 'Linear', 'Quadratic']:
-            self.rmodel = self.reg_model
-            self.reg_model = self._regress()
+        elif self.regression_model in ['Constant', 'Linear', 'Quadratic']:
+            self.rmodel = self.regression_model
+            self.regression_model = self._regress()
         else:
             raise NotImplementedError("UQpy: Doesn't recognize the Regression model.")
 
-        if type(self.corr_model).__name__ == 'function':
+        if type(self.correlation_model).__name__ == 'function':
             self.cmodel = 'User defined'
-        elif self.corr_model in ['Exponential', 'Gaussian', 'Linear', 'Spherical', 'Cubic', 'Spline', 'Other']:
-            self.cmodel = self.corr_model
-            self.corr_model: callable = self._corr()
+        elif self.correlation_model in ['Exponential', 'Gaussian', 'Linear', 'Spherical', 'Cubic', 'Spline', 'Other']:
+            self.cmodel = self.correlation_model
+            self.correlation_model: callable = self._corr()
         else:
             raise NotImplementedError("UQpy: Doesn't recognize the Correlation model.")
 
@@ -165,7 +149,7 @@ class Kriging:
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
-    def fit(self, samples, values, nopt=None, corr_model_params=None):
+    def fit(self, samples, values, optimizations_number=None, correlation_model_parameters=None):
         """
         Fit the surrogate model using the training samples and the corresponding model values.
 
@@ -247,10 +231,10 @@ class Kriging:
 
             return ll, grad_mle
 
-        if nopt is not None:
-            self.nopt = nopt
-        if corr_model_params is not None:
-            self.corr_model_params = corr_model_params
+        if optimizations_number is not None:
+            self.optimizations_number = optimizations_number
+        if correlation_model_parameters is not None:
+            self.correlation_model_parameters = correlation_model_parameters
         self.samples = np.array(samples)
 
         # Number of samples and dimensions of samples and values
@@ -259,7 +243,7 @@ class Kriging:
 
         self.values = np.array(values).reshape(nsamples, output_dim)
 
-        # Normalizing the data
+        # Normalizing the second_order_tensor
         if self.normalize:
             self.sample_mean, self.sample_std = np.mean(self.samples, 0), np.std(self.samples, 0)
             self.value_mean, self.value_std = np.mean(self.values, 0), np.std(self.values, 0)
@@ -269,29 +253,29 @@ class Kriging:
             s_ = self.samples
             y_ = self.values
 
-        self.F, jf_ = self.reg_model(s_)
+        self.F, jf_ = self.regression_model(s_)
 
         # Maximum Likelihood Estimation : Solving optimization problem to calculate hyperparameters
-        if self.op:
-            starting_point = self.corr_model_params
-            minimizer, fun_value = np.zeros([self.nopt, input_dim]), np.zeros([self.nopt, 1])
-            for i__ in range(self.nopt):
-                p_ = self.optimizer(log_likelihood, starting_point, args=(self.corr_model, s_, self.F, y_),
+        if self.optimize:
+            starting_point = self.correlation_model_parameters
+            minimizer, fun_value = np.zeros([self.optimizations_number, input_dim]), np.zeros([self.optimizations_number, 1])
+            for i__ in range(self.optimizations_number):
+                p_ = self.optimizer(log_likelihood, starting_point, args=(self.correlation_model, s_, self.F, y_),
                                     **self.kwargs_optimizer)
                 minimizer[i__, :] = p_[0]
                 fun_value[i__, 0] = p_[1]
                 # Generating new starting points using log-uniform distribution
-                if i__ != self.nopt - 1:
+                if i__ != self.optimizations_number - 1:
                     starting_point = stats.reciprocal.rvs([j[0] for j in self.bounds], [j[1] for j in self.bounds], 1,
                                                           random_state=self.random_state)
             if min(fun_value) == np.inf:
                 raise NotImplementedError("Maximum likelihood estimator failed: Choose different starting point or "
                                           "increase nopt")
             t = np.argmin(fun_value)
-            self.corr_model_params = minimizer[t, :]
+            self.correlation_model_parameters = minimizer[t, :]
 
         # Updated Correlation matrix corresponding to MLE estimates of hyperparameters
-        self.R = self.corr_model(x=s_, s=s_, params=self.corr_model_params)
+        self.R = self.correlation_model(x=s_, s=s_, params=self.correlation_model_parameters)
         # Compute the regression coefficient (solving this linear equation: F * beta = Y)
         c = np.linalg.cholesky(self.R)  # Eq: 3.8, DACE
         c_inv = np.linalg.inv(c)
@@ -317,7 +301,7 @@ class Kriging:
         if self.verbose:
             print('UQpy: kriging fit complete.')
 
-    def predict(self, x, return_std=False):
+    def predict(self, points, return_std=False):
         """
         Predict the model response at new points.
 
@@ -341,14 +325,14 @@ class Kriging:
             Standard deviation of predicted values at the new points.
 
         """
-        x_ = np.atleast_2d(x)
+        x_ = np.atleast_2d(points)
         if self.normalize:
             x_ = (x_ - self.sample_mean) / self.sample_std
             s_ = (self.samples - self.sample_mean) / self.sample_std
         else:
             s_ = self.samples
-        fx, jf = self.reg_model(x_)
-        rx = self.corr_model(x=x_, s=s_, params=self.corr_model_params)
+        fx, jf = self.regression_model(x_)
+        rx = self.correlation_model(x=x_, s=s_, params=self.correlation_model_parameters)
         y = np.einsum('ij,jk->ik', fx, self.beta) + np.einsum('ij,jk->ik', rx, self.gamma)
         if self.normalize:
             y = self.value_mean + y * self.value_std
@@ -368,12 +352,12 @@ class Kriging:
         else:
             return y
 
-    def jacobian(self, x):
+    def jacobian(self, points):
         """
         Predict the gradient of the model at new points.
 
         This method evaluates the regression and correlation model at new sample point. Then, it predicts the gradient
-        using the regression coefficients and the training data.
+        using the regression coefficients and the training second_order_tensor.
 
         **Input:**
 
@@ -386,15 +370,15 @@ class Kriging:
             Gradient of the surrogate model evaluated at the new points.
 
         """
-        x_ = np.atleast_2d(x)
+        x_ = np.atleast_2d(points)
         if self.normalize:
             x_ = (x_ - self.sample_mean) / self.sample_std
             s_ = (self.samples - self.sample_mean) / self.sample_std
         else:
             s_ = self.samples
 
-        fx, jf = self.reg_model(x_)
-        rx, drdx = self.corr_model(x=x_, s=s_, params=self.corr_model_params, dx=True)
+        fx, jf = self.regression_model(x_)
+        rx, drdx = self.correlation_model(x=x_, s=s_, params=self.correlation_model_parameters, dx=True)
         y_grad = np.einsum('ikj,jm->ik', jf, self.beta) + np.einsum('ijk,jm->ki', drdx.T, self.gamma)
         if self.normalize:
             y_grad = y_grad * self.value_std / self.sample_std
@@ -404,13 +388,13 @@ class Kriging:
 
     # Defining Regression model (Linear)
     def _regress(self):
-        if self.reg_model == 'Constant':
+        if self.regression_model == 'Constant':
             def r(s):
                 s = np.atleast_2d(s)
                 fx = np.ones([np.size(s, 0), 1])
                 jf = np.zeros([np.size(s, 0), np.size(s, 1), 1])
                 return fx, jf
-        elif self.reg_model == 'Linear':
+        elif self.regression_model == 'Linear':
             def r(s):
                 s = np.atleast_2d(s)
                 fx = np.concatenate((np.ones([np.size(s, 0), 1]), s), 1)
@@ -476,7 +460,7 @@ class Kriging:
             dx_derivs_ = indices.astype(bool).astype(int) * params * np.sign(stack)
             return zeta_matrix_, dtheta_derivs_, dx_derivs_
 
-        if self.corr_model == 'Exponential':
+        if self.correlation_model == 'Exponential':
             def c(x, s, params, dt=False, dx=False):
                 stack = check_samples_and_return_stack(x, s)
                 rx = np.exp(np.sum(-params * abs(stack), axis=2))
@@ -487,7 +471,7 @@ class Kriging:
                     drdx = - params * np.sign(stack) * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
                     return rx, drdx
                 return rx
-        elif self.corr_model == 'Gaussian':
+        elif self.correlation_model == 'Gaussian':
             def c(x, s, params, dt=False, dx=False):
                 stack = check_samples_and_return_stack(x, s)
                 rx = np.exp(np.sum(-params * (stack ** 2), axis=2))
@@ -498,7 +482,7 @@ class Kriging:
                     drdx = - 2 * params * stack * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
                     return rx, drdx
                 return rx
-        elif self.corr_model == 'Linear':
+        elif self.correlation_model == 'Linear':
             def c(x, s, params, dt=False, dx=False):
                 stack = check_samples_and_return_stack(x, s)
                 # Taking stack and turning each d value into 1-theta*dij
@@ -530,7 +514,7 @@ class Kriging:
                         drdx = drdx * np.roll(max_matrix, i + 1, axis=2)
                     return rx, drdx
                 return rx
-        elif self.corr_model == 'Spherical':
+        elif self.correlation_model == 'Spherical':
             def c(x, s, params, dt=False, dx=False):
                 zeta_matrix, dtheta_derivs, dx_derivs = derivatives(x_=x, s_=s, params=params)
                 # Initial matrices containing derivates for all values in array. Note since
@@ -553,7 +537,7 @@ class Kriging:
                         drdx = drdx * np.roll(zeta_function, i + 1, axis=2)
                     return rx, drdx
                 return rx
-        elif self.corr_model == 'Cubic':
+        elif self.correlation_model == 'Cubic':
             def c(x, s, params, dt=False, dx=False):
                 zeta_matrix, dtheta_derivs, dx_derivs = derivatives(x_=x, s_=s, params=params)
                 # Initial matrices containing derivates for all values in array. Note since

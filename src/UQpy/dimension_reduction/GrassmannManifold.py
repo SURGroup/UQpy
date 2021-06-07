@@ -121,7 +121,7 @@ class GrassmannManifold:
 
     """
 
-    def __init__(self, distance_method=None, kernel_method=None, interp_object=None, karcher_method=None):
+    def __init__(self, distance_method=None, kernel_method=None, interpolator=None, karcher_method=None):
 
         # Distance.
         if distance_method is not None:
@@ -138,11 +138,11 @@ class GrassmannManifold:
                 raise TypeError('UQpy: A callable kernel object must be provided.')
 
         # Interpolation.
-        skl_str = "<class 'sklearn.gaussian_process._gpr.GaussianProcessRegressor'>"
-        self.skl = str(type(interp_object)) == skl_str
-        if interp_object is not None:
-            if callable(interp_object) or isinstance(interp_object, Kriging) or self.skl:
-                self.interp_object = interp_object
+        sklearn_string = "<class 'sklearn.gaussian_process._gpr.GaussianProcessRegressor'>"
+        self.is_sklearn = str(type(interpolator)) == sklearn_string
+        if interpolator is not None:
+            if callable(interpolator) or isinstance(interpolator, Kriging) or self.is_sklearn:
+                self.interpolator = interpolator
             else:
                 raise TypeError('UQpy: A callable interpolation object must be provided.')
 
@@ -152,7 +152,7 @@ class GrassmannManifold:
                 raise ValueError('UQpy: A callable distance object must be provided too.')
 
             if callable(karcher_method):
-                self.karcher_object = karcher_method
+                self.karcher_method = karcher_method
             else:
                 raise TypeError('UQpy: A callable Karcher mean object must be provided.')
 
@@ -292,14 +292,14 @@ class GrassmannManifold:
                         ranks.append(np.linalg.matrix_rank(samples[i]))
             else:
                 if not isinstance(p, int):
-                    raise TypeError('UQpy: `p` must be integer.')
+                    raise TypeError('UQpy: `trial_probability` must be integer.')
 
                 if p < 1:
-                    raise ValueError('UQpy: `p` must be an integer larger than or equal to one.')
+                    raise ValueError('UQpy: `trial_probability` must be an integer larger than or equal to one.')
 
                 for i in range(nargs):
                     if min(np.shape(samples[i])) < p:
-                        raise ValueError('UQpy: The dimension of the input data is not consistent with `p` of G(n,p).')
+                        raise ValueError('UQpy: The dimension of the input second_order_tensor is not consistent with `trial_probability` of G(trials_number,trial_probability).')
 
                 ranks = np.ones(nargs) * [int(p)]
                 ranks = ranks.tolist()
@@ -404,7 +404,7 @@ class GrassmannManifold:
                     raise TypeError('UQpy: The shape of the input matrices must be the same.')
 
             # if points_grasssmann is provided, use the shape of the input matrices to define
-            # the dimension of the p-planes defining the manifold of each individual input matrix.
+            # the dimension of the trial_probability-planes defining the manifold of each individual input matrix.
             p_dim = []
             for i in range(len(points_grassmann)):
                 p_dim.append(min(np.shape(np.array(points_grassmann[i]))))
@@ -1142,11 +1142,11 @@ class GrassmannManifold:
 
         """
 
-        # Show an error message if karcher_object is not provided.
-        if self.karcher_object is None:
-            raise TypeError('UQpy: `karcher_object` cannot be NoneType')
+        # Show an error message if karcher_method is not provided.
+        if self.karcher_method is None:
+            raise TypeError('UQpy: `karcher_method` cannot be NoneType')
         else:
-            karcher_fun = self.karcher_object
+            karcher_fun = self.karcher_method
 
         if self.distance_object is None:
             raise TypeError('UQpy: `distance_object` cannot be NoneType')
@@ -1537,17 +1537,17 @@ class GrassmannManifold:
 
         nargs = len(samples)
 
-        if self.interp_object is None:
-            raise TypeError('UQpy: `interp_object` cannot be NoneType')
+        if self.interpolator is None:
+            raise TypeError('UQpy: `interpolator` cannot be NoneType')
         else:
-            if self.interp_object is GrassmannManifold.linear_interp:
+            if self.interpolator is GrassmannManifold.linear_interp:
                 element_wise = False
 
-            if isinstance(self.interp_object, Kriging):
-                # K = self.interp_object
+            if isinstance(self.interpolator, Kriging):
+                # K = self.interpolator
                 element_wise = True
             else:
-                interp_fun = self.interp_object
+                interp_fun = self.interpolator
 
         shape_ref = np.shape(samples[0])
         for i in range(1, nargs):
@@ -1577,16 +1577,16 @@ class GrassmannManifold:
                     else:
                         val_data = np.array(val_data)
                         self.skl_str = "<class 'sklearn.gaussian_process.gpr.GaussianProcessRegressor'>"
-                        if isinstance(self.interp_object, Kriging) or self.skl:
-                            self.interp_object.fit(coordinates, val_data)
-                            y = self.interp_object.predict(point, return_std=False)
+                        if isinstance(self.interpolator, Kriging) or self.is_sklearn:
+                            self.interpolator.fit(coordinates, val_data)
+                            y = self.interpolator.predict(point, return_std=False)
                         else:
                             y = interp_fun(coordinates, samples, point)
 
                     interp_point[j, k] = y
 
         else:
-            if isinstance(self.interp_object, Kriging):
+            if isinstance(self.interpolator, Kriging):
                 raise TypeError('UQpy: Kriging only can be used in the elementwise interpolation.')
             else:
                 interp_point = interp_fun(coordinates, samples, point)

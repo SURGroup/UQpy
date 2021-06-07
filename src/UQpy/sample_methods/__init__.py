@@ -32,11 +32,11 @@ The module currently contains the following classes:
 
 """
 
-from UQpy.sample_methods.MonteCarloSampling import MCS
-from UQpy.sample_methods.LatinHypercubeSampling import LHS
-from UQpy.sample_methods.ImportanceSampling import IS
+from UQpy.sample_methods.MonteCarloSampling import MonteCarloSampling
+from UQpy.sample_methods.LatinHypercubeSampling import LatinHypercubeSampling
+from UQpy.sample_methods.ImportanceSampling import ImportanceSampling
 from UQpy.sample_methods.AdaptiveKrigingMonteCarlo import AKMCS
-from UQpy.sample_methods.SimplexSampling import Simplex
+from UQpy.sample_methods.SimplexSampling import SimplexSampling
 
 from UQpy.sample_methods.refined_stratified import *
 from UQpy.sample_methods.stratifications import *

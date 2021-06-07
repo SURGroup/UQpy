@@ -15,9 +15,9 @@ class LassoRegression:
 
     """
 
-    def __init__(self, poly_object, learning_rate=0.01, iterations=1000,
+    def __init__(self, polynomials, learning_rate=0.01, iterations=1000,
                  penalty=1, verbose=False):
-        self.poly_object = poly_object
+        self.polynomials = polynomials
         self.learning_rate = learning_rate
         self.iterations = iterations
         self.penalty = penalty
@@ -53,7 +53,7 @@ class LassoRegression:
             Returns the bias of the regressor.
         """
 
-        xx = self.poly_object.evaluate(x)
+        xx = self.polynomials.evaluate(x)
         m, n = xx.shape
 
         if y.ndim == 1 or y.shape[1] == 1:

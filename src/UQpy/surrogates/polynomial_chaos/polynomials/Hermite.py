@@ -3,6 +3,7 @@ import numpy as np
 from UQpy.distributions import Normal
 import scipy.special as special
 
+
 class Hermite(Polynomials):
     """
     Class of univariate polynomials appropriate for data generated from a
@@ -19,10 +20,10 @@ class Hermite(Polynomials):
     **Methods:**
     """
 
-    def __init__(self, degree, dist_object):
-        super().__init__(dist_object, degree)
+    def __init__(self, degree, distribution):
+        super().__init__(distribution, degree)
         self.degree = degree
-        self.pdf = self.dist_object.pdf
+        self.pdf = self.distribution.pdf
 
     def get_polys(self, x):
         """

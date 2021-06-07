@@ -56,7 +56,7 @@ class PCE:
         if self.verbose:
             print('UQpy: polynomial_chaos fit complete.')
 
-    def predict(self, x_test):
+    def predict(self, points):
 
         """
         Predict the model response at new points.
@@ -74,7 +74,7 @@ class PCE:
 
         """
 
-        a = self.method.poly_object.evaluate(x_test)
+        a = self.method.polynomials.evaluate(points)
 
         if type(self.method) == LeastSquareRegression:
             y = a.dot(self.C)

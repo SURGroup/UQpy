@@ -28,17 +28,14 @@ class Clayton(Copula):
             raise ValueError('Input theta should be a float in [-1, +oo)\{0}.')
         super().__init__(theta=theta)
 
-    def evaluate_cdf(self, unif):
-        if unif.shape[1] > 2:
+    def evaluate_cdf(self, uniform_distributions):
+        if uniform_distributions.shape[1] > 2:
             raise ValueError('Maximum dimension for the Clayton Copula is 2.')
 
-        #if self.params['theta'] == 1:
-        #    return np.prod(unif, axis=1)
-
-        u = unif[:, 0]
-        v = unif[:, 1]
+        first_uniform = uniform_distributions[:, 0]
+        second_uniform = uniform_distributions[:, 1]
         theta = self.params['theta']
-        cdf_val = (np.maximum(u ** (-theta) + v ** (-theta) - 1., 0.)) ** (-1. / theta)
+        cdf_val = (np.maximum(first_uniform ** (-theta) + second_uniform ** (-theta) - 1., 0.)) ** (-1. / theta)
         return cdf_val
 
     @staticmethod

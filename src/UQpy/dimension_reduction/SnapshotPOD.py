@@ -1,11 +1,6 @@
 import numpy as np
 from UQpy.dimension_reduction.baseclass import POD
 
-########################################################################################################################
-########################################################################################################################
-#                                                     Snapshot POD                                                     #
-########################################################################################################################
-########################################################################################################################
 
 class SnapshotPOD(POD):
     """
@@ -28,12 +23,12 @@ class SnapshotPOD(POD):
     **Methods:**
    """
 
-    def __init__(self, input_sol, modes=10**10, reconstr_perc=10**10, verbose=False):
+    def __init__(self, solution_snapshots, modes=10 ** 10, reconstruction_percentage=10 ** 10, verbose=False):
 
-        super().__init__(input_sol, verbose)
+        super().__init__(solution_snapshots, verbose)
         self.verbose = verbose
         self.modes = modes
-        self.reconstr_perc = reconstr_perc
+        self.reconstruction_percentage = reconstruction_percentage
 
     def run(self):
         """
@@ -49,36 +44,39 @@ class SnapshotPOD(POD):
             An array containing the solution snapshots reduced in the temporal dimension.
 
         """
-        if type(self.input_sol) == list:
+        if type(self.solution_snapshots) == list:
+            rows = self.solution_snapshots[0].shape[0]
+            columns = self.solution_snapshots[0].shape[1]
+            snapshot_number = len(self.solution_snapshots)
+            u = np.zeros((snapshot_number, rows * columns))
 
-            x, y, z = self.input_sol[0].shape[0], self.input_sol[0].shape[1], len(self.input_sol)
-            u = np.zeros((z, x * y))
-
-            for i in range(z):
-                u[i, :] = self.input_sol[i].ravel()
+            for i in range(snapshot_number):
+                u[i, :] = self.solution_snapshots[i].ravel()
 
         else:
-            x, y, z = self.input_sol.shape[0], self.input_sol.shape[1], self.input_sol.shape[2]
-            u = np.zeros((z, x * y))
+            rows = self.solution_snapshots.shape[0]
+            columns = self.solution_snapshots.shape[1]
+            snapshot_number = self.solution_snapshots.shape[2]
+            u = np.zeros((snapshot_number, rows * columns))
 
-            for i in range(z):
-                u[i, :] = self.input_sol[:, :, i].ravel()
+            for i in range(snapshot_number):
+                u[i, :] = self.solution_snapshots[:, :, i].ravel()
 
-        c_s = np.dot(u, u.T) / (z - 1)
+        c_s = np.dot(u, u.T) / (snapshot_number - 1)
 
-        eigval, a_s = np.linalg.eig(c_s)
+        eigenvalues, a_s = np.linalg.eig(c_s)
         a_s = a_s.real
-        eigval_ = eigval.real
+        real_eigenvalues = eigenvalues.real
 
         if self.modes <= 0:
             print('Warning: Invalid input, the number of modes must be positive.')
             return [], []
 
-        elif self.reconstr_perc <= 0:
+        elif self.reconstruction_percentage <= 0:
             print('Warning: Invalid input, the reconstruction percentage is defined in the range (0,100].')
             return [], []
 
-        elif self.modes != 10**10 and self.reconstr_perc != 10**10:
+        elif self.modes != 10**10 and self.reconstruction_percentage != 10**10:
             print('Warning: Either a number of modes or a reconstruction percentage must be chosen, not both.')
             return [], []
 
@@ -88,39 +86,38 @@ class SnapshotPOD(POD):
 
         else:
 
-            perc = []
-            for i in range(z):
-                perc.append((eigval_[:i + 1].sum() / eigval_.sum()) * 100)
+            percentages = []
+            for i in range(snapshot_number):
+                percentages.append((real_eigenvalues[:i + 1].sum() / real_eigenvalues.sum()) * 100)
 
-            percentage = min(perc, key=lambda x: abs(x - self.reconstr_perc))
+            minimum_percentage = min(percentages, key=lambda x: abs(x - self.reconstruction_percentage))
 
             if self.modes == 10**10:
-
-                self.modes = perc.index(percentage) + 1
-
+                self.modes = percentages.index(minimum_percentage) + 1
             else:
-
-                if self.modes > z:
+                if self.modes > snapshot_number:
                     print("Warning: A number of modes greater than the number of dimensions was given.")
-                    print("Number of dimensions is {}".format(z))
+                    print("Number of dimensions is {}".format(snapshot_number))
 
             phi_s = np.dot(u.T, a_s)
             reconstructed_solutions_ = np.dot(a_s[:, :self.modes], phi_s[:, :self.modes].T)
             reduced_solutions_ = (np.dot(u.T, a_s[:, :self.modes])).T
 
-            reconstructed_solutions = np.zeros((x, y, z))
-            reduced_solutions = np.zeros((x, y, self.modes))
+            reconstructed_solutions = np.zeros((rows, columns, snapshot_number))
+            reduced_solutions = np.zeros((rows, columns, self.modes))
 
-            for i in range(z):
-                reconstructed_solutions[0:x, 0:y, i] = reconstructed_solutions_[i, :].reshape((x, y))
+            for i in range(snapshot_number):
+                reconstructed_solutions[0:rows, 0:columns, i] = \
+                    reconstructed_solutions_[i, :].reshape((rows, columns))
 
             for i in range(self.modes):
-                reduced_solutions[0:x, 0:y, i] = reduced_solutions_[i, :].reshape((x, y))
+                reduced_solutions[0:rows, 0:columns, i] = \
+                    reduced_solutions_[i, :].reshape((rows, columns))
 
             if self.verbose:
                 print("UQpy: Successful execution of Snapshot POD!")
 
             if self.verbose:
-                print('Dataset reconstruction: {:.3%}'.format(perc[self.modes - 1] / 100))
+                print('Dataset reconstruction: {:.3%}'.format(percentages[self.modes - 1] / 100))
 
             return reconstructed_solutions, reduced_solutions

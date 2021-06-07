@@ -4,12 +4,6 @@ from UQpy.inference.BayesParameterEstimation import BayesParameterEstimation
 from UQpy.inference.InferenceModel import InferenceModel
 
 
-########################################################################################################################
-########################################################################################################################
-#                                  Bayesian Model Selection
-########################################################################################################################
-
-
 class BayesModelSelection:
 
     """
@@ -80,13 +74,13 @@ class BayesModelSelection:
     def __init__(self, candidate_models, data, prior_probabilities=None, method_evidence_computation='harmonic_mean',
                  random_state=None, verbose=False, nsamples=None, nsamples_per_chain=None, **kwargs):
 
-        # Check inputs: candidate_models is a list of instances of Model, data must be provided, and input arguments
+        # Check inputs: candidate_models is a list of instances of Model, second_order_tensor must be provided, and input arguments
         # for markov_chain must be provided as a list of length len(candidate_models)
         if (not isinstance(candidate_models, list)) or (not all(isinstance(model, InferenceModel)
                                                                 for model in candidate_models)):
             raise TypeError('UQpy: A list InferenceModel objects must be provided.')
         self.candidate_models = candidate_models
-        self.nmodels = len(candidate_models)
+        self.models_number = len(candidate_models)
         self.data = data
         self.method_evidence_computation = method_evidence_computation
         self.random_state = random_state
@@ -115,8 +109,8 @@ class BayesModelSelection:
             self.bayes_estimators.append(bayes_estimator)
 
         # Initialize the outputs
-        self.evidences = [0.] * self.nmodels
-        self.probabilities = [0.] * self.nmodels
+        self.evidences = [0.] * self.models_number
+        self.probabilities = [0.] * self.models_number
 
         # Run the model selection procedure
         if nsamples is not None or nsamples_per_chain is not None:
@@ -142,11 +136,11 @@ class BayesModelSelection:
 
         """
 
-        if nsamples is not None and not (isinstance(nsamples, list) and len(nsamples) == self.nmodels
+        if nsamples is not None and not (isinstance(nsamples, list) and len(nsamples) == self.models_number
                                          and all(isinstance(n, int) for n in nsamples)):
             raise ValueError('UQpy: nsamples should be a list of integers')
         if nsamples_per_chain is not None and not (isinstance(nsamples_per_chain, list)
-                                                   and len(nsamples_per_chain) == self.nmodels
+                                                   and len(nsamples_per_chain) == self.models_number
                                                    and all(isinstance(n, int) for n in nsamples_per_chain)):
             raise ValueError('UQpy: nsamples_per_chain should be a list of integers')
         if self.verbose:

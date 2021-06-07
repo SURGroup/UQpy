@@ -13,8 +13,8 @@ class MomentEstimation:
     **Methods:**
     """
 
-    def __init__(self, surr_object):
-        self.surr_object = surr_object
+    def __init__(self, pce_surrogate):
+        self.pce_surrogate = pce_surrogate
 
     def get(self):
         """
@@ -27,14 +27,14 @@ class MomentEstimation:
             Returns the mean and variance.
 
         """
-        if self.surr_object.b is not None:
-            mean = self.surr_object.C[0, :] + np.squeeze(self.surr_object.b)
+        if self.pce_surrogate.b is not None:
+            mean = self.pce_surrogate.C[0, :] + np.squeeze(self.pce_surrogate.b)
         else:
-            mean = self.surr_object.C[0, :]
+            mean = self.pce_surrogate.C[0, :]
 
-        variance = np.sum(self.surr_object.C[1:] ** 2, axis=0)
+        variance = np.sum(self.pce_surrogate.C[1:] ** 2, axis=0)
 
-        if self.surr_object.C.ndim == 1 or self.surr_object.C.shape[1] == 1:
+        if self.pce_surrogate.C.ndim == 1 or self.pce_surrogate.C.shape[1] == 1:
             variance = float(variance)
             mean = float(mean)
 
