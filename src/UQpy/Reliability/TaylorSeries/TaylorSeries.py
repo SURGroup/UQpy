@@ -163,14 +163,28 @@ class TaylorSeries:
             y_i1_j = point_u.tolist()
             y_i1_j[ii] = y_i1_j[ii] + df_step
 
-            TaylorSeries.auxiliary_method(list_of_samples, nataf_object, y_i1_j)
+            z_i1_j = Correlate(np.array(y_i1_j).reshape(1, -1), nataf_object.corr_z).samples_z
+            nataf_object.run(samples_z=z_i1_j.reshape(1, -1), jacobian=False)
+            temp_x_i1_j = nataf_object.samples_x
+            x_i1_j = temp_x_i1_j
+            list_of_samples.append(x_i1_j)
 
             y_1i_j = point_u.tolist()
             y_1i_j[ii] = y_1i_j[ii] - df_step
+            z_1i_j = Correlate(np.array(y_1i_j).reshape(1, -1), nataf_object.corr_z).samples_z
+            nataf_object.run(samples_z=z_1i_j.reshape(1, -1), jacobian=False)
+            temp_x_1i_j = nataf_object.samples_x
+            x_1i_j = temp_x_1i_j
+            list_of_samples.append(x_1i_j)
 
-            TaylorSeries.auxiliary_method(list_of_samples, nataf_object, y_i1_j)
+        array_of_samples = np.array(list_of_samples)
+        array_of_samples = array_of_samples.reshape((len(array_of_samples), -1))
 
-        y1, array_of_samples = TaylorSeries.auxiliary_method3(list_of_samples, runmodel_object)
+        if isinstance(runmodel_object, RunModel):
+            runmodel_object.run(samples=array_of_samples, append_samples=False)
+            y1 = runmodel_object.qoi_list
+        elif isinstance(runmodel_object, Callable):
+            y1 = runmodel_object(array_of_samples)
 
         if order.lower() == 'first':
             gradient = np.zeros(point_u.shape[0])
@@ -223,13 +237,35 @@ class TaylorSeries:
                 y_1i_1j[i[0]] -= df_step
                 y_1i_1j[i[1]] -= df_step
 
-                TaylorSeries.auxiliary_method2(list_of_mixed_points, nataf_object, y_i1_1j, y_i1_j1)
+                z_i1_j1 = Correlate(np.array(y_i1_j1).reshape(1, -1), nataf_object.corr_z).samples_z
+                nataf_object.run(samples_z=z_i1_j1.reshape(1, -1), jacobian=False)
+                x_i1_j1 = nataf_object.samples_x
+                list_of_mixed_points.append(x_i1_j1)
 
-                TaylorSeries.auxiliary_method2(list_of_mixed_points, nataf_object, y_i1_1j, y_i1_j1)
+                z_i1_1j = Correlate(np.array(y_i1_1j).reshape(1, -1), nataf_object.corr_z).samples_z
+                nataf_object.run(samples_z=z_i1_1j.reshape(1, -1), jacobian=False)
+                x_i1_1j = nataf_object.samples_x
+                list_of_mixed_points.append(x_i1_1j)
+
+                z_1i_j1 = Correlate(np.array(y_1i_j1).reshape(1, -1), nataf_object.corr_z).samples_z
+                nataf_object.run(samples_z=z_1i_j1.reshape(1, -1), jacobian=False)
+                x_1i_j1 = nataf_object.samples_x
+                list_of_mixed_points.append(x_1i_j1)
+
+                z_1i_1j = Correlate(np.array(y_1i_1j).reshape(1, -1), nataf_object.corr_z).samples_z
+                nataf_object.run(samples_z=z_1i_1j.reshape(1, -1), jacobian=False)
+                x_1i_1j = nataf_object.samples_x
+                list_of_mixed_points.append(x_1i_1j)
 
                 count = count + 1
 
-            y2, array = TaylorSeries.auxiliary_method3(list_of_mixed_points, runmodel_object)
+            array_of_mixed_points = np.array(list_of_mixed_points)
+            array_of_mixed_points = array_of_mixed_points.reshape((len(array_of_mixed_points), -1))
+            if isinstance(runmodel_object, RunModel):
+                runmodel_object.run(samples=array_of_mixed_points, append_samples=False)
+                y2 = runmodel_object.qoi_list
+            elif isinstance(runmodel_object, Callable):
+                y2 = runmodel_object(array_of_mixed_points)
 
             for j in range(count):
                 qoi_0 = y2[4 * j]
@@ -248,33 +284,3 @@ class TaylorSeries:
                 add_ += 1
 
             return hessian
-
-    @staticmethod
-    def auxiliary_method3(list_of_mixed_points, runmodel_object):
-        array_of_mixed_points = np.array(list_of_mixed_points)
-        array_of_mixed_points = array_of_mixed_points.reshape((len(array_of_mixed_points), -1))
-        if isinstance(runmodel_object, RunModel):
-            runmodel_object.run(samples=array_of_mixed_points, append_samples=False)
-            y2 = runmodel_object.qoi_list
-        elif isinstance(runmodel_object, Callable):
-            y2 = runmodel_object(array_of_mixed_points)
-        return y2, array_of_mixed_points
-
-    @staticmethod
-    def auxiliary_method2(list_of_mixed_points, nataf_object, y_i1_1j, y_i1_j1):
-        z_i1_j1 = Correlate(np.array(y_i1_j1).reshape(1, -1), nataf_object.corr_z).samples_z
-        nataf_object.run(samples_z=z_i1_j1.reshape(1, -1), jacobian=False)
-        x_i1_j1 = nataf_object.samples_x
-        list_of_mixed_points.append(x_i1_j1)
-        z_i1_1j = Correlate(np.array(y_i1_1j).reshape(1, -1), nataf_object.corr_z).samples_z
-        nataf_object.run(samples_z=z_i1_1j.reshape(1, -1), jacobian=False)
-        x_i1_1j = nataf_object.samples_x
-        list_of_mixed_points.append(x_i1_1j)
-
-    @staticmethod
-    def auxiliary_method(list_of_samples, nataf_object, y_i1_j):
-        z_i1_j = Correlate(np.array(y_i1_j).reshape(1, -1), nataf_object.corr_z).samples_z
-        nataf_object.run(samples_z=z_i1_j.reshape(1, -1), jacobian=False)
-        temp_x_i1_j = nataf_object.samples_x
-        x_i1_j = temp_x_i1_j
-        list_of_samples.append(x_i1_j)
