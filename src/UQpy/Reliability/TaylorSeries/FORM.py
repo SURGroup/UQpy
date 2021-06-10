@@ -44,7 +44,7 @@ class FORM(TaylorSeries):
      """
 
     def __init__(self, dist_object, runmodel_object, form_object=None, seed_x=None, seed_u=None, df_step=0.01,
-                 corr_x=None, corr_z=None, n_iter=100, tol1=1.0e-3, tol2=1.0e-3, tol3=1.0e-3, verbose=False):
+                 corr_x=None, corr_z=None, n_iter=100, tol1=None, tol2=None, tol3=None, verbose=False):
 
         super().__init__(dist_object, runmodel_object, form_object, seed_x, seed_u, df_step, corr_x, corr_z, n_iter,
                          tol1, tol2, tol3, verbose)

@@ -1,25 +1,32 @@
-# Test the Correlation module
-
-from UQpy.Reliability import FORM
+from UQpy.Distributions import Normal
+from UQpy.Reliability import FORM, SORM
+import glob
+import shutil
 import numpy as np
 import pytest
 
 
-def test_samples():
-    samples_z = np.array([[0.3, 0.2], [0.2, 2.4]])
-    rz = np.array([[1.0, 0.8], [0.8, 1.0]])
-    ntf_obj = Correlate(samples_u=samples_z, corr_z=rz)
-    np.testing.assert_allclose(ntf_obj.samples_z, [[0.3, 0.36], [0.2, 1.6]], rtol=1e-09)
+def model_i(samples):
+    qoi_list = [0] * samples.shape[0]
+    for i in range(samples.shape[0]):
+        qoi_list[i] = samples[i, 0] * samples[i, 1] - 80
+    return qoi_list
 
 
-def test_samples_u():
-    samples_z = np.array([[0.3, 0.2], [0.2, 2.4]])
+def test_sorm():
+    dist1 = Normal(loc=500, scale=100)
+    dist2 = Normal(loc=1000, scale=100)
+    dist = [dist1, dist2]
+    form_obj = FORM(dist_object=dist, runmodel_object=model_i)
+    form_obj.run()
+    sorm_obj = SORM(form_object=form_obj)
+    for file_name in glob.glob("Model_Runs_*"):
+        shutil.rmtree(file_name)
+    np.testing.assert_allclose(sorm_obj.Pf_sorm, 2.8803e-7, rtol=1e-02)
+
+
+def test_form_obj():
+    for file_name in glob.glob("Model_Runs_*"):
+        shutil.rmtree(file_name)
     with pytest.raises(Exception):
-        assert Correlate(samples_u=samples_z)
-
-
-def test_corr_z():
-    rz = np.array([[1.0, 0.0], [0.0, 1.0]])
-    with pytest.raises(Exception):
-        assert Correlate(corr_z=rz)
-
+        assert SORM(form_object='form')

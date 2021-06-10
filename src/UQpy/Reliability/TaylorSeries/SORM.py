@@ -27,23 +27,23 @@ class SORM(TaylorSeries):
         super().__init__(dist_object, runmodel_object, form_object, seed_x, seed_u, df_step, corr_x, corr_z, n_iter,
                          tol1, tol2, tol3, verbose)
 
-        self.beta_form = None
-        self.DesignPoint_U = None
-        self.DesignPoint_X = None
-        self.Pf_form = None
-        self.form_iterations = None
-        self.u_record = None
-        self.x_record = None
-        self.g_record = None
-        self.dg_record = None
-        self.beta_record = None
-        self.alpha_record = None
-        self.dg_u_record = None
-        self.df_step = df_step
-        self.error_record = None
+        #self.beta_form = None
+        #self.DesignPoint_U = None
+        #self.DesignPoint_X = None
+        #self.Pf_form = None
+        #self.form_iterations = None
+        #self.u_record = None
+        #self.x_record = None
+        #self.g_record = None
+        #self.dg_record = None
+        #self.beta_record = None
+        #self.alpha_record = None
+        #self.dg_u_record = None
+        #self.df_step = df_step
+        #self.error_record = None
 
-        self.Pf_sorm = None
-        self.beta_sorm = None
+        #self.Pf_sorm = None
+        #self.beta_sorm = None
         self.call = None
         if isinstance(form_object, FORM):
             self.form_object = form_object
@@ -104,7 +104,7 @@ class SORM(TaylorSeries):
         hessian_g = self.derivatives(point_u=self.DesignPoint_U, point_x=self.DesignPoint_X,
                                      runmodel_object=model, nataf_object=self.nataf_object,
                                      order='second', df_step=self.df_step, point_qoi=self.g_record[-1][-1])
-        print(hessian_g)
+
         matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(dg_u_record[-1])
         kappa = np.linalg.eig(matrix_b[:self.dimension-1, :self.dimension-1])
         if self.call is None:
