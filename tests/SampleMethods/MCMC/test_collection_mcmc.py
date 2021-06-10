@@ -92,7 +92,13 @@ def test_mmh_1d_burnjump():
     assert round(float(x.samples[-1]), 3) == 0.497
 
 
-def test_mmh_2d_list_target():
+def test_mmh_2d_list_target_pdf():
+    target = [Distributions.Normal().pdf, Distributions.Normal().pdf]
+    x = MMH(dimension=2, pdf_target=target, nsamples=10, nchains=1, random_state=123)
+    assert [round(float(x.samples[-1][0]), 3), round(float(x.samples[-1][1]), 3)] == [-0.810, 0.173]
+
+
+def test_mmh_2d_list_target_logpdf():
     target = [Distributions.Normal().log_pdf, Distributions.Normal().log_pdf]
     x = MMH(dimension=2, log_pdf_target=target, nsamples=10, nchains=1, random_state=123)
     assert [round(float(x.samples[-1][0]), 3), round(float(x.samples[-1][1]), 3)] == [-0.810, 0.173]
