@@ -4,7 +4,7 @@ import scipy.stats as stats
 from UQpy.sample_methods.LatinHypercubeSampling import LatinHypercubeSampling
 
 
-class AKMCS:
+class AdaptiveKrigingMonteCarlo:
     """
     Adaptively sample for construction of a kriging surrogate for different objectives including reliability,
     optimization, and global fit.

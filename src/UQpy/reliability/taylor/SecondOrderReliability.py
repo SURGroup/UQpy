@@ -1,15 +1,15 @@
 import numpy as np
 import scipy.stats as stats
 
-from UQpy.reliability.TaylorSeries.FirstOrderReliability import FirstOrderReliability
-from UQpy.reliability.TaylorSeries.TaylorSeries import TaylorSeries
+from UQpy.reliability.taylor.FirstOrderReliability import FirstOrderReliability
+from UQpy.reliability.taylor.TaylorSeries import TaylorSeries
 
 
 class SecondOrderReliability(TaylorSeries):
     """
     A class to perform the Second Order reliability Method. This class is used to correct the estimated FORM probability
      using second-order information.
-    ``SORM`` is a child class of the ``TaylorSeries`` class.
+    ``SORM`` is a child class of the ``taylor`` class.
     **Input:**
     The ``SORM`` class requires an object of type ``FORM`` as input.
     **Output/Returns:**

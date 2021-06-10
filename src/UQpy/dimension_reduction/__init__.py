@@ -4,5 +4,7 @@ from UQpy.dimension_reduction.DirectPOD import DirectPOD
 from UQpy.dimension_reduction.SnapshotPOD import SnapshotPOD
 from UQpy.dimension_reduction.HigherOrderSVD import HigherOrderSVD
 
+from UQpy.dimension_reduction.baseclass import *
+
 
 

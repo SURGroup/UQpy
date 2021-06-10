@@ -3,7 +3,7 @@ from UQpy.surrogates.polynomial_chaos.regressions.RidgeRegression import RidgeRe
 from UQpy.surrogates.polynomial_chaos.regressions.LassoRegression import LassoRegression
 
 
-class PCE:
+class PolynomialChaosExpansion:
     """
     Constructs a surrogate model based on the Polynomial Chaos Expansion (polynomial_chaos)
     method.

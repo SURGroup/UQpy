@@ -2,16 +2,16 @@ import numpy as np
 import scipy.stats as stats
 
 from UQpy.transformations import *
-from UQpy.reliability.TaylorSeries.TaylorSeries import TaylorSeries
+from UQpy.reliability.taylor.TaylorSeries import TaylorSeries
 
 
 class FirstOrderReliability(TaylorSeries):
     """
     A class perform the First Order reliability Method. The ``run`` method of the ``FORM`` class can be invoked many
     times and each time the results are appended to the existing ones.
-    This is a child class of the ``TaylorSeries`` class.
+    This is a child class of the ``taylor`` class.
     **Input:**
-    See ``TaylorSeries`` class.
+    See ``taylor`` class.
     **Attributes:**
     * **Pf_form** (`float`):
         First-order probability of failure estimate.
@@ -94,7 +94,7 @@ class FirstOrderReliability(TaylorSeries):
         This is an instance method that runs FORM.
         **Input:**
         * **seed_u** or **seed_x** (`ndarray`):
-            See ``TaylorSeries`` parent class.
+            See ``taylor`` parent class.
         """
         if self.verbose:
             print('UQpy: Running FORM...')
