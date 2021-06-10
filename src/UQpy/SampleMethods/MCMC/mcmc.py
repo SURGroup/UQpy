@@ -384,7 +384,7 @@ class MCMC:
                         ))
                 evaluate_log_pdf = (lambda x: np.sum(
                     [np.log(np.maximum(pdf_[i](x[:, i, np.newaxis], *args[i]), 10**(-320)*np.ones((x.shape[0],))))
-                     for i in range(len(log_pdf_))]))
+                     for i in range(len(pdf_))]))
             else:
                 raise TypeError('UQpy: pdf_target must be a callable or list of callables')
         else:
