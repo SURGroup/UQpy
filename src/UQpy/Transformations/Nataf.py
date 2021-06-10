@@ -2,7 +2,6 @@ from UQpy.Distributions import *
 import numpy as np
 import scipy.stats as stats
 
-
 class Nataf:
     """
     Transform random variables using the Nataf or Inverse Nataf transformation
