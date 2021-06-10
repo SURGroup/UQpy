@@ -77,9 +77,10 @@ class KLE:
 
     def _simulate(self, xi):
         lam, phi = np.linalg.eig(self.correlation_function)
+        lam = lam[:self.number_eigen_values]
         lam = np.diag(lam)
         lam = lam.astype(np.float64)
-        samples = np.dot(phi[:, :self.number_eigen_values], np.dot(sqrtm(lam[:self.number_eigen_values]), xi))
+        samples = np.dot(phi[:, :self.number_eigen_values], np.dot(sqrtm(lam), xi))
         samples = np.real(samples)
         samples = samples.T
         samples = samples[:, np.newaxis]

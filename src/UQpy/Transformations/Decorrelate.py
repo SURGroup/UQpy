@@ -25,6 +25,11 @@ class Decorrelate:
     """
     def __init__(self, samples_z, corr_z):
 
+        if samples_z is None:
+            raise ValueError("UQpy: An  array of samples must be provided.")
+        if corr_z is None:
+            raise ValueError("UQpy: A correlation matrix must be provided.")
+
         self.samples_z = samples_z
         self.corr_z = corr_z
         from scipy.linalg import cholesky

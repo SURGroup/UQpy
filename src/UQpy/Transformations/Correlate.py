@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Correlate:
     """
     A class to induce correlation to standard normal random variables.
@@ -23,7 +24,12 @@ class Correlate:
 
     """
 
-    def __init__(self, samples_u, corr_z):
+    def __init__(self, corr_z=None,  samples_u=None):
+
+        if samples_u is None:
+            raise ValueError("UQpy: An  array of samples must be provided.")
+        if corr_z is None:
+            raise ValueError("UQpy: A correlation matrix must be provided.")
 
         self.samples_y = samples_u
         self.corr_z = corr_z

@@ -2,6 +2,7 @@ from UQpy.Distributions import *
 import numpy as np
 import scipy.stats as stats
 
+
 class Nataf:
     """
     Transform random variables using the Nataf or Inverse Nataf transformation
@@ -45,7 +46,7 @@ class Nataf:
 
         Default: 0.01
 
-    * **beta** (`float`):
+    * **itam_beta** (`float`):
         A parameter selected to optimize convergence speed and desired accuracy of the ITAM method.
 
         Default: 1.0
@@ -109,8 +110,8 @@ class Nataf:
     **Methods:**
     """
 
-    def __init__(self, dist_object, samples_x=None, samples_z=None, jacobian=False, corr_z=None, corr_x=None, beta=None,
-                 itam_threshold1=None, itam_threshold2=None, itam_max_iter=None, verbose=False):
+    def __init__(self, dist_object, samples_x=None, samples_z=None, jacobian=False, corr_z=None, corr_x=None,
+                 itam_beta=1.0, itam_threshold1=0.001, itam_threshold2=0.1, itam_max_iter=100, verbose=False):
 
         if isinstance(dist_object, list):
             self.dimension = len(dist_object)
@@ -123,35 +124,34 @@ class Nataf:
                 raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
 
         self.dist_object = dist_object
-        self.corr_x = corr_x
-        self.corr_z = corr_z
         self.samples_x = samples_x
         self.samples_z = samples_z
         self.jacobian = jacobian
-        self.verbose = verbose
-        self.itam_max_iter = itam_max_iter
         self.jzx = None
         self.jxz = None
-
-        self.beta = beta
-        self.itam_threshold1 = itam_threshold1
-        self.itam_threshold2 = itam_threshold2
-        self.corr_x = corr_x
-        self.dist_object = dist_object
+        self.itam_max_iter = int(itam_max_iter)
+        self.itam_beta = float(itam_beta)
+        self.itam_threshold1 = float(itam_threshold1)
+        self.itam_threshold2 = float(itam_threshold2)
+        self.verbose = verbose
 
         if corr_x is None and corr_z is None:
             self.corr_x = np.eye(self.dimension)
             self.corr_z = np.eye(self.dimension)
         elif corr_x is not None:
+            self.corr_x = corr_x
             if np.all(np.equal(self.corr_x, np.eye(self.dimension))):
                 self.corr_z = self.corr_x
             elif all(isinstance(x, Normal) for x in dist_object):
                 self.corr_z = self.corr_x
             else:
-                self.corr_z, self.itam_error1, self.itam_error2 = self.itam(self.dist_object, self.corr_x, self.beta,
+                self.corr_z, self.itam_error1, self.itam_error2 = self.itam(self.dist_object, self.corr_x,
+                                                                            self.itam_max_iter,
+                                                                            self.itam_beta,
                                                                             self.itam_threshold1, self.itam_threshold2,
                                                                             self.verbose)
         elif corr_z is not None:
+            self.corr_z = corr_z
             if np.all(np.equal(self.corr_z, np.eye(self.dimension))):
                 self.corr_x = self.corr_z
             elif all(isinstance(x, Normal) for x in dist_object):
@@ -187,22 +187,28 @@ class Nataf:
         self.jacobian = jacobian
 
         if samples_x is not None:
-            self.samples_x = samples_x
-            if jacobian is False:
+            if len(samples_x.shape) != 2:
+                self.samples_x = np.atleast_2d(samples_x).T
+            else:
+                self.samples_x = samples_x
+            if not self.jacobian:
                 self.samples_z = self._transform_x2z(self.samples_x)
-            elif jacobian is True:
+            elif self.jacobian:
                 self.samples_z, self.jxz = self._transform_x2z(self.samples_x, jacobian=self.jacobian)
 
         if samples_z is not None:
-            self.samples_z = samples_z
-            if self.jacobian is False:
+            if len(samples_z.shape) != 2:
+                self.samples_z = np.atleast_2d(samples_z).T
+            else:
+                self.samples_z = samples_z
+            if not self.jacobian:
                 self.samples_x = self._transform_z2x(self.samples_z)
-            elif self.jacobian is True:
+            elif self.jacobian:
                 self.samples_x, self.jzx = self._transform_z2x(self.samples_z, jacobian=self.jacobian)
 
     @staticmethod
-    def itam(dist_object, corr_x,  itam_max_iter=None, beta=None, itam_threshold1=None, itam_threshold2=None,
-             verbose=None):
+    def itam(dist_object, corr_x,  itam_max_iter=100, itam_beta=1.0, itam_threshold1=0.001, itam_threshold2=0.01,
+             verbose=False):
         """
         Calculate the correlation matrix :math:`\mathbf{C_Z}` of the standard normal random vector
         :math:`\mathbf{Z}` given the correlation matrix :math:`\mathbf{C_X}` of the random vector :math:`\mathbf{X}`
@@ -247,7 +253,7 @@ class Nataf:
 
             Default: 0.01
 
-        * **beta** (`float`):
+        * **itam_beta** (`float`):
             A parameters selected to optimize convergence speed and desired accuracy of the ITAM method (see [2]_).
 
             Default: 1.0
@@ -270,16 +276,8 @@ class Nataf:
 
         """
 
-        if itam_max_iter is None:
-            itam_max_iter = 100
-        if beta is None:
-            beta = 1.0
-        if itam_threshold1 is None:
-            itam_threshold1 = 0.001
-        if itam_threshold2 is None:
-            itam_threshold2 = 0.1
-        if verbose is None:
-            verbose = False
+        if not isinstance(itam_max_iter, int):
+            itam_max_iter = int(itam_max_iter)
 
         # Initial Guess
         corr_z0 = corr_x
@@ -300,7 +298,7 @@ class Nataf:
 
             max_ratio = np.amax(np.ones((len(corr_x), len(corr_x))) / abs(corr_z0))
 
-            corr_z = np.nan_to_num((corr_x / corr0) ** beta * corr_z0)
+            corr_z = np.nan_to_num((corr_x / corr0) ** itam_beta * corr_z0)
 
             # Do not allow off-diagonal correlations to equal or exceed one
             corr_z[corr_z < -1.0] = (max_ratio + 1) / 2 * corr_z0[corr_z < -1.0]
@@ -326,7 +324,7 @@ class Nataf:
         return corr_z, itam_error1, itam_error2
 
     @staticmethod
-    def distortion_z2x(dist_object, corr_z, verbose=None):
+    def distortion_z2x(dist_object, corr_z, verbose=False):
         """
         This is a method to calculate the correlation matrix :math:`\mathbf{C_x}` of the random vector
         :math:`\mathbf{x}`  given the correlation matrix :math:`\mathbf{C_z}` of the standard normal random vector
@@ -359,21 +357,19 @@ class Nataf:
 
         """
 
-        if verbose is None:
-            verbose = False
-
         z_max = 8
         z_min = -z_max
-        points, weights = np.polynomial.legendre.leggauss(1024)
+        ng = 128
+        points, weights = np.polynomial.legendre.leggauss(ng)
         points = - (0.5 * (points + 1) * (z_max - z_min) + z_min)
         weights = weights * (0.5 * (z_max - z_min))
 
-        xi = np.tile(points, [1024, 1])
+        xi = np.tile(points, [ng, 1])
         xi = xi.flatten(order='F')
-        eta = np.tile(points, 1024)
+        eta = np.tile(points, ng)
 
-        first = np.tile(weights, 1024)
-        first = np.reshape(first, [1024, 1024])
+        first = np.tile(weights, ng)
+        first = np.reshape(first, [ng, ng])
         second = np.transpose(first)
 
         weights2d = first * second
@@ -412,6 +408,7 @@ class Nataf:
                         corr_x[j, i] = corr_x[i, j]
 
         elif isinstance(dist_object, list):
+
             if all(hasattr(m, 'moments') for m in dist_object) and \
                     all(hasattr(m, 'icdf') for m in dist_object):
                 for i in range(len(dist_object)):
@@ -433,9 +430,9 @@ class Nataf:
 
                         corr_x[i, j] = 1/(np.sqrt(mj[1]) * np.sqrt(mi[1])) * np.sum(tmp_f_xi * tmp_f_eta * w2d * phi2)
                         corr_x[j, i] = corr_x[i, j]
+            else:
+                raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
 
-        if verbose:
-            print('UQpy: Done.')
         return corr_x
 
     def _transform_x2z(self, samples_x, jacobian=False):
@@ -529,7 +526,6 @@ class Nataf:
         from scipy.linalg import cholesky
         h = cholesky(self.corr_z, lower=True)
         # samples_z = (h @ samples_y.T).T
-
         samples_x = np.zeros_like(samples_z)
         if isinstance(self.dist_object, JointInd):
             if all(hasattr(m, 'icdf') for m in self.dist_object.marginals):
@@ -581,5 +577,3 @@ class Nataf:
         for i in range(m):
             samples_x[:, i] = self.dist_object[i].icdf(stats.norm.cdf(z[:, i]))
         return samples_x
-
-

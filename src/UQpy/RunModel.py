@@ -928,7 +928,7 @@ class RunModel:
                 function_list.append(name)
 
         # There should be at least one class or function in the module - if not there, exit with error.
-        if class_list is [] and function_list is []:
+        if len(class_list) == 0 and len(function_list) == 0:
             raise ValueError(
                 "\nUQpy: A python model should be defined as a function or class in the script.\n")
 
@@ -979,7 +979,7 @@ class RunModel:
                 function_list.append(name)
 
         # There should be at least one class or function in the module - if not there, exit with error.
-        if class_list is [] and function_list is []:
+        if len(class_list) == 0 and len(function_list) == 0:
             raise ValueError(
                 "\nUQpy: The output object should be defined as a function or class in the script.\n")
 
