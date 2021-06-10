@@ -24,7 +24,7 @@ class Correlate:
 
     """
 
-    def __init__(self, corr_z=None,  samples_u=None):
+    def __init__(self, samples_u=None, corr_z=None):
 
         if samples_u is None:
             raise ValueError("UQpy: An  array of samples must be provided.")
