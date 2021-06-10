@@ -6,10 +6,10 @@ class Rosenbrock(DistributionND):
         super().__init__(p=p)
 
     def pdf(self, x):
-        return np.exp(-(100*(x[:, 1]-x[:, 0]**2)**2+(1-x[:, 0])**2)/self.params['trial_probability'])
+        return np.exp(-(100*(x[:, 1]-x[:, 0]**2)**2+(1-x[:, 0])**2) / self.parameters['trial_probability'])
 
     def log_pdf(self, x):
-        return -(100*(x[:, 1]-x[:, 0]**2)**2+(1-x[:, 0])**2)/self.params['trial_probability']
+        return -(100*(x[:, 1]-x[:, 0]**2)**2+(1-x[:, 0])**2)/self.parameters['trial_probability']
 
 
 # # These functions define the methods of the Rosenbrock bivariate distribution, here pdf and log_pdf.

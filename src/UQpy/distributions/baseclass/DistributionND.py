@@ -1,10 +1,6 @@
 import numpy as np
 from .Distribution import Distribution
 
-########################################################################################################################
-#        Multivariate Continuous distributions
-########################################################################################################################
-
 
 class DistributionND(Distribution):
     """

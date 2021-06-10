@@ -32,8 +32,8 @@ class JointCopula(DistributionND):
         super().__init__()
         self.order_params = []
         for i, m in enumerate(marginals):
-            self.order_params.extend([key + '_' + str(i) for key in m.order_params])
-        self.order_params.extend([key + '_c' for key in copula.order_params])
+            self.order_params.extend([key + '_' + str(i) for key in m.ordered_parameters_list])
+        self.order_params.extend([key + '_c' for key in copula.ordered_parameters_list])
 
         # Check and save the marginals
         self.marginals = marginals
@@ -84,7 +84,7 @@ class JointCopula(DistributionND):
                 return np.log(c_) + logpdf_val
             self.log_pdf = MethodType(joint_log_pdf, self)
 
-    def get_params(self):
+    def get_parameters(self):
         """
         Return the parameters of a ``distributions`` object.
 
@@ -100,13 +100,13 @@ class JointCopula(DistributionND):
         """
         params = {}
         for i, m in enumerate(self.marginals):
-            for key, value in m.get_params().items():
+            for key, value in m.get_parameters().items():
                 params[key + '_' + str(i)] = value
-        for key, value in self.copula.get_params().items():
+        for key, value in self.copula.get_parameters().items():
             params[key + '_c'] = value
         return params
 
-    def update_params(self, **kwargs):
+    def update_parameters(self, **kwargs):
         """
         Update the parameters of a ``distributions`` object.
 
@@ -121,7 +121,7 @@ class JointCopula(DistributionND):
 
         """
         # check arguments
-        all_keys = self.get_params().keys()
+        all_keys = self.get_parameters().keys()
         # update the marginal parameters
         for key_indexed, value in kwargs.items():
             if key_indexed not in all_keys:
@@ -129,6 +129,6 @@ class JointCopula(DistributionND):
             key_split = key_indexed.split('_')
             key, index = '_'.join(key_split[:-1]), key_split[-1]
             if index == 'c':
-                self.copula.params[key] = value
+                self.copula.parameters[key] = value
             else:
-                self.marginals[int(index)].params[key] = value
+                self.marginals[int(index)].parameters[key] = value

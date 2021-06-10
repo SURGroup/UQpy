@@ -27,7 +27,7 @@ class JointIndependent(DistributionND):
         super().__init__()
         self.order_params = []
         for i, m in enumerate(marginals):
-            self.order_params.extend([key + '_' + str(i) for key in m.order_params])
+            self.order_params.extend([key + '_' + str(i) for key in m.ordered_parameters_list])
 
         # Check and save the marginals
         if not (isinstance(marginals, list) and all(isinstance(d, (DistributionContinuous1D, DistributionDiscrete1D))
@@ -92,10 +92,10 @@ class JointIndependent(DistributionND):
                 # Compute ml estimates of independent marginal parameters
                 mle_all = {}
                 for ind_m, marg in enumerate(dist.marginals):
-                    if any(param_value is None for param_value in marg.get_params().values()):
+                    if any(param_value is None for param_value in marg.get_parameters().values()):
                         mle_i = marg.fit(data[:, ind_m])
                     else:
-                        mle_i = marg.get_params().copy()
+                        mle_i = marg.get_parameters().copy()
                     mle_all.update({key+'_'+str(ind_m): val for key, val in mle_i.items()})
                 return mle_all
             self.fit = MethodType(joint_fit, self)
@@ -113,7 +113,7 @@ class JointIndependent(DistributionND):
                 return tuple(moments_)
             self.moments = MethodType(joint_moments, self)
 
-    def get_params(self):
+    def get_parameters(self):
         """
         Return the parameters of a ``distributions`` object.
 
@@ -129,12 +129,12 @@ class JointIndependent(DistributionND):
         """
         params = {}
         for i, m in enumerate(self.marginals):
-            params_m = m.get_params()
+            params_m = m.get_parameters()
             for key, value in params_m.items():
                 params[key + '_' + str(i)] = value
         return params
 
-    def update_params(self, **kwargs):
+    def update_parameters(self, **kwargs):
         """
         Update the parameters of a ``distributions`` object.
 
@@ -149,11 +149,11 @@ class JointIndependent(DistributionND):
 
         """
         # check arguments
-        all_keys = self.get_params().keys()
+        all_keys = self.get_parameters().keys()
         # update the marginal parameters
         for key_indexed, value in kwargs.items():
             if key_indexed not in all_keys:
                 raise ValueError('Unrecognized keyword argument ' + key_indexed)
             key_split = key_indexed.split('_')
             key, index = '_'.join(key_split[:-1]), int(key_split[-1])
-            self.marginals[index].params[key] = value
+            self.marginals[index].parameters[key] = value

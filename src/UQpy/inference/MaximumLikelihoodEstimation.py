@@ -125,7 +125,7 @@ class MaximumLikelihoodEstimation:
             if not (isinstance(nopt, int) and nopt >= 1):
                 raise ValueError('UQpy: nopt should be an integer >= 1.')
             for _ in range(nopt):
-                self.inference_model.distributions.update_params(
+                self.inference_model.distributions.update_parameters(
                     **{key: None for key in self.inference_model.list_params})
                 mle_dict = self.inference_model.distributions.fit(data=self.data)
                 mle_tmp = np.array([mle_dict[key] for key in self.inference_model.list_params])

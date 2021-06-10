@@ -36,26 +36,26 @@ class MultivariateNormal(DistributionND):
         super().__init__(mean=mean, cov=covariance, order_params=['mean', 'covariance'])
 
     def cdf(self, x):
-        cdf_val = stats.multivariate_normal.cdf(x=x, **self.params)
+        cdf_val = stats.multivariate_normal.cdf(x=x, **self.parameters)
         return np.atleast_1d(cdf_val)
 
     def pdf(self, x):
-        pdf_val = stats.multivariate_normal.pdf(x=x, **self.params)
+        pdf_val = stats.multivariate_normal.pdf(x=x, **self.parameters)
         return np.atleast_1d(pdf_val)
 
     def log_pdf(self, x):
-        logpdf_val = stats.multivariate_normal.logpdf(x=x, **self.params)
+        logpdf_val = stats.multivariate_normal.logpdf(x=x, **self.parameters)
         return np.atleast_1d(logpdf_val)
 
     def rvs(self, nsamples=1, random_state=None):
         if not (isinstance(nsamples, int) and nsamples >= 1):
             raise ValueError('Input nsamples must be an integer > 0.')
         return stats.multivariate_normal.rvs(
-            size=nsamples, random_state=random_state, **self.params).reshape((nsamples, -1))
+            size=nsamples, random_state=random_state, **self.parameters).reshape((nsamples, -1))
 
     def fit(self, data):
         data = self._check_x_dimension(data)
-        mle_mu, mle_cov = self.params['mean'], self.params['covariance']
+        mle_mu, mle_cov = self.parameters['mean'], self.parameters['covariance']
         if mle_mu is None:
             mle_mu = np.mean(data, axis=0)
         if mle_cov is None:
@@ -64,10 +64,10 @@ class MultivariateNormal(DistributionND):
 
     def moments(self, moments2return='mv'):
         if moments2return == 'm':
-            return self.get_params()['mean']
+            return self.get_parameters()['mean']
         elif moments2return == 'v':
-            return self.get_params()['covariance']
+            return self.get_parameters()['covariance']
         elif moments2return == 'mv':
-            return self.get_params()['mean'], self.get_params()['covariance']
+            return self.get_parameters()['mean'], self.get_parameters()['covariance']
         else:
             raise ValueError('UQpy: moments2return must be "m", "v" or "mv".')

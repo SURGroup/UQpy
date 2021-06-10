@@ -91,7 +91,7 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
         # Sample candidate
         candidate = np.zeros_like(current_state)
         for nc, current_cov in enumerate(self.current_covariance):
-            multivariate_normal.update_params(cov=current_cov)
+            multivariate_normal.update_parameters(cov=current_cov)
             candidate[nc, :] = current_state[nc, :] + multivariate_normal.rvs(
                 nsamples=1, random_state=self.random_state).reshape((self.dimension, ))
 
@@ -120,7 +120,7 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
             for i, nc in enumerate(delayed_chains_indices):
                 current_states_delayed[i, :] = current_state[nc, :]
                 candidates_delayed[i, :] = candidate[nc, :]
-                multivariate_normal.update_params(cov=self.delayed_rejection_scale ** 2 * self.current_covariance[nc])
+                multivariate_normal.update_parameters(cov=self.delayed_rejection_scale ** 2 * self.current_covariance[nc])
                 candidate2[i, :] = current_states_delayed[i, :] + multivariate_normal.rvs(
                     nsamples=1, random_state=self.random_state).reshape((self.dimension, ))
             # Evaluate their log_target

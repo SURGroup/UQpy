@@ -163,15 +163,13 @@ class Distribution:
             Maximum-likelihood parameter estimates.
 
     """
-    def __init__(self, order_params=None, **kwargs):
-        self.params = kwargs
-        self.order_params = order_params
-        if self.order_params is None:
-            self.order_params = tuple(kwargs.keys())
-        if len(self.order_params) != len(self.params):
+    def __init__(self, ordered_parameters_list=None, **kwargs):
+        self.parameters = kwargs
+        self.ordered_parameters_list = ordered_parameters_list if not None else tuple(kwargs.keys())
+        if len(self.ordered_parameters_list) != len(self.parameters):
             raise ValueError('Inconsistent dimensions between order_params tuple and params dictionary.')
 
-    def update_params(self, **kwargs):
+    def update_parameters(self, **kwargs):
         """
         Update the parameters of a ``distributions`` object.
 
@@ -186,11 +184,11 @@ class Distribution:
 
         """
         for key in kwargs.keys():
-            if key not in self.get_params().keys():
+            if key not in self.get_parameters().keys():
                 raise ValueError('Wrong parameter name.')
-            self.params[key] = kwargs[key]
+            self.parameters[key] = kwargs[key]
 
-    def get_params(self):
+    def get_parameters(self):
         """
         Return the parameters of a ``distributions`` object.
 
@@ -204,4 +202,5 @@ class Distribution:
             Parameters of the distribution.
 
         """
-        return self.params
+        return self.parameters
+

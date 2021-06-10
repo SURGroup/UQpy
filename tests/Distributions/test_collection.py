@@ -172,8 +172,8 @@ dist_joint_copula = JointCopula(marginals=marginals, copula=Gumbel(theta=2.))
 def test_joint_ind_1():
     marginals_ = [Normal(loc=2., scale=2.), Lognormal(s=1., location=0., scale=np.exp(1))]
     dist_joint_ = JointIndependent(marginals=marginals_)
-    dist_joint_.update_params(loc_0=3.)
-    assert dist_joint_.get_params()['loc_0'] == 3.
+    dist_joint_.update_parameters(loc_0=3.)
+    assert dist_joint_.get_parameters()['loc_0'] == 3.
 
 
 def test_joint_ind_2():
@@ -211,8 +211,8 @@ def test_joint_ind_7():
 def test_joint_copula_1():
     marginals_ = [Normal(loc=2., scale=2.), Lognormal(s=1., location=0., scale=np.exp(1))]
     dist_joint_ = JointCopula(marginals=marginals_, copula=Gumbel(theta=3.))
-    dist_joint_.update_params(theta_c=2.)
-    assert dist_joint_.get_params()['theta_c'] == 2.
+    dist_joint_.update_parameters(theta_c=2.)
+    assert dist_joint_.get_parameters()['theta_c'] == 2.
 
 
 def test_joint_copula_3():

@@ -86,8 +86,8 @@ class InferenceModel:
                     raise AttributeError('UQpy: dist_object should have a log_pdf or pdf method.')
                 self.dist_object.log_pdf = lambda x: np.log(self.dist_object.pdf(x))
             # Check which parameters need to be updated (i.e., those set as None)
-            init_params = self.dist_object.get_params()
-            self.list_params = [key for key in self.dist_object.order_params if init_params[key] is None]
+            init_params = self.dist_object.get_parameters()
+            self.list_params = [key for key in self.dist_object.ordered_parameters_list if init_params[key] is None]
             if len(self.list_params) != self.parameters_number:
                 raise TypeError('UQpy: Incorrect dimensions between parameters_number and number of inputs set to None.')
 
@@ -177,7 +177,7 @@ class InferenceModel:
         else:
             log_like_values = []
             for params_ in params:
-                self.dist_object.update_params(**dict(zip(self.list_params, params_)))
+                self.dist_object.update_parameters(**dict(zip(self.list_params, params_)))
                 log_like_values.append(np.sum(self.dist_object.log_pdf(x=data)))
             log_like_values = np.array(log_like_values)
 

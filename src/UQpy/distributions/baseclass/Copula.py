@@ -1,8 +1,3 @@
-########################################################################################################################
-#        Copulas
-########################################################################################################################
-
-
 class Copula:
     """
     Define a copula for a multivariate distribution whose dependence structure is defined with a copula.
@@ -78,16 +73,14 @@ class Copula:
     """
     def __init__(self, order_params=None, **kwargs):
         self.params = kwargs
-        self.order_params = order_params
-        if self.order_params is None:
-            self.order_params = tuple(kwargs.keys())
+        self.order_params = order_params if not None else tuple(kwargs.keys())
         if len(self.order_params) != len(self.params):
             raise ValueError('Inconsistent dimensions between order_params tuple and params dictionary.')
 
-    def get_params(self):
+    def get_parameters(self):
         return self.params
 
-    def update_params(self, **kwargs):
+    def update_parameters(self, **kwargs):
         for key in kwargs.keys():
             if key not in self.params.keys():
                 raise ValueError('Wrong parameter name.')

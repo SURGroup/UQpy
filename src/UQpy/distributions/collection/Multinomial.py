@@ -27,21 +27,21 @@ class Multinomial(DistributionND):
         super().__init__(n=trials_number, p=trial_probability)
 
     def pmf(self, x):
-        pdf_val = stats.multinomial.pmf(x=x, **self.params)
+        pdf_val = stats.multinomial.pmf(x=x, **self.parameters)
         return np.atleast_1d(pdf_val)
 
     def log_pmf(self, x):
-        logpdf_val = stats.multinomial.logpmf(x=x, **self.params)
+        logpdf_val = stats.multinomial.logpmf(x=x, **self.parameters)
         return np.atleast_1d(logpdf_val)
 
     def rvs(self, nsamples=1, random_state=None):
         if not (isinstance(nsamples, int) and nsamples >= 1):
             raise ValueError('Input nsamples must be an integer > 0.')
         return stats.multinomial.rvs(
-            size=nsamples, random_state=random_state, **self.params).reshape((nsamples, -1))
+            size=nsamples, random_state=random_state, **self.parameters).reshape((nsamples, -1))
 
     def moments(self, moments2return='mv'):
-        n, p = self.get_params()['trials_number'], np.array(self.get_params()['trial_probability'])
+        n, p = self.get_parameters()['trials_number'], np.array(self.get_parameters()['trial_probability'])
         d = len(p)
         if moments2return == 'm':
             mean = n * np.array(p)

@@ -6,13 +6,13 @@ dist_continuous = Uniform(location=1., scale=2.)
 
 
 def test_get_params():
-    assert dist_continuous.get_params()['location'] == 1.
+    assert dist_continuous.get_parameters()['location'] == 1.
 
 
 def test_update_params():
     dist = Uniform(location=1., scale=2.)
-    dist.update_params(loc=2.)
-    assert dist.get_params()['location'] == 2.
+    dist.update_parameters(loc=2.)
+    assert dist.get_parameters()['location'] == 2.
 
 
 def test_continuous_pdf():
@@ -79,5 +79,5 @@ def test_discrete_moments():
 
 def test_update_params_copula():
     copula = Gumbel(theta=2.)
-    copula.update_params(theta=1.)
-    assert copula.get_params()['theta'] == 1.
+    copula.update_parameters(theta=1.)
+    assert copula.get_parameters()['theta'] == 1.
