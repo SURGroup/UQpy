@@ -141,7 +141,3 @@ class BayesParameterEstimation:
 
         if self.verbose:
             print('UQpy: Parameter estimation with ' + self.sampler.__class__.__name__ + ' completed successfully!')
-
-
-
-
