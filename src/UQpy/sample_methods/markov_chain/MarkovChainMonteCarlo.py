@@ -77,8 +77,8 @@ class MarkovChainMonteCarlo:
     **Attributes:**
 
     * **samples** (`ndarray`)
-        Set of markov_chain samples following the target distribution, `ndarray` of shape (`nsamples` * `nchains`, `dimension`)
-        or (nsamples, nchains, dimension) (see input `concat_chains`).
+        Set of markov_chain samples following the target distribution, `ndarray` of shape
+        (`nsamples` * `nchains`, `dimension`) or (nsamples, nchains, dimension) (see input `concat_chains`).
 
     * **log_pdf_values** (`ndarray`)
         Values of the log pdf for the accepted samples, `ndarray` of shape (nchains * nsamples,) or (nsamples, nchains)
@@ -142,8 +142,8 @@ class MarkovChainMonteCarlo:
         """
         Run the markov_chain algorithm.
 
-        This function samples from the markov_chain chains and appends samples to existing ones (if any). This method leverages
-        the ``run_iterations`` method that is specific to each algorithm.
+        This function samples from the markov_chain chains and appends samples to existing ones (if any).
+        This method leverages the ``run_iterations`` method that is specific to each algorithm.
 
         **Inputs:**
 
@@ -172,7 +172,8 @@ class MarkovChainMonteCarlo:
             current_state, current_log_pdf = self.run_one_iteration(current_state, current_log_pdf)
             # Update the chain, only if burn-in is over and the sample is not being jumped over
             # also increase the current number of samples and samples_per_chain
-            if self.iterations_number > self.burn_length and (self.iterations_number - self.burn_length) % self.jump == 0:
+            if self.iterations_number > self.burn_length and\
+                    (self.iterations_number - self.burn_length) % self.jump == 0:
                 self.samples[self.nsamples_per_chain, :, :] = current_state.copy()
                 if self.save_log_pdf:
                     self.log_pdf_values[self.nsamples_per_chain, :] = current_log_pdf.copy()
@@ -190,8 +191,8 @@ class MarkovChainMonteCarlo:
         """
         Run one iteration of the markov_chain algorithm, starting at `current_state`.
 
-        This method is over-written for each different markov_chain algorithm. It must return the new state and associated
-        log-pdf, which will be passed as inputs to the ``run_one_iteration`` method at the next iteration.
+        This method is over-written for each different markov_chain algorithm. It must return the new state and
+        associated log-pdf, which will be passed as inputs to the ``run_one_iteration`` method at the next iteration.
 
         **Inputs:**
 
@@ -446,5 +447,3 @@ class MarkovChainMonteCarlo:
                 raise AttributeError('UQpy: The proposal should have a log_pdf or pdf method')
             proposal_distribution.log_pdf = lambda x: np.log(np.maximum(proposal_distribution.pdf(x),
                                                                         10 ** (-320) * np.ones((x.shape[0],))))
-
-

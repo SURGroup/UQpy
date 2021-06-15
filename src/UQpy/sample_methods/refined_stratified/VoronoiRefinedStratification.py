@@ -9,9 +9,9 @@ class VoronoiRefinedStratifiedSampling(RefinedStratifiedSampling):
     """
     Executes Refined Stratified Sampling using Voronoi Stratification.
 
-    ``VoronoiRSS`` is a child class of ``refined_stratified``. ``VoronoiRSS`` takes in all parameters defined in the parent
-    ``refined_stratified`` class with differences note below. Only those inputs and attributes that differ from the parent class
-    are listed below. See documentation for ``refined_stratified`` for additional details.
+    ``VoronoiRSS`` is a child class of ``refined_stratified``. ``VoronoiRSS`` takes in all parameters defined in the
+      parent ``refined_stratified`` class with differences note below. Only those inputs and attributes that differ from
+      the parent class are listed below. See documentation for ``refined_stratified`` for additional details.
 
     **Inputs:**
 
@@ -19,8 +19,8 @@ class VoronoiRefinedStratifiedSampling(RefinedStratifiedSampling):
         The `sample_object` for ``VoronoiRSS`` can be an object of any ``sample_methods`` class that possesses the
         following attributes: `samples` and `samplesU01`
 
-        This can be any ``sample_methods`` object because ``VoronoiRSS`` creates its own `strata_object`. It does not use
-        a `strata_object` inherited from an ``stratifications`` object.
+        This can be any ``sample_methods`` object because ``VoronoiRSS`` creates its own `strata_object`. It does not
+        use a `strata_object` inherited from an ``stratifications`` object.
 
     **Methods:**
     """
@@ -70,24 +70,10 @@ class VoronoiRefinedStratifiedSampling(RefinedStratifiedSampling):
             p = min(self.new_iteration_samples, self.samples_number - i)  # Number of points to add in this iteration
 
             # Compute the centroids and the volumes of each simplex cell in the mesh
-            self.mesh.centroids = np.zeros([self.mesh.nsimplex, self.dimension])
-            self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
-            from scipy.spatial import qhull, ConvexHull
-            for j in range(self.mesh.nsimplex):
-                try:
-                    ConvexHull(self.points[self.mesh.vertices[j]])
-                    self.mesh.centroids[j, :], self.mesh.volumes[j] = \
-                        DelaunayStrata.compute_delaunay_centroid_volume(self.points[self.mesh.vertices[j]])
-                except qhull.QhullError:
-                    self.mesh.centroids[j, :], self.mesh.volumes[j] = np.mean(self.points[self.mesh.vertices[j]]), 0
+            self.compute_centroids()
 
             # If the quantity of interest is a dictionary, convert it to a list
-            qoi = [None] * len(self.runmodel_object.qoi_list)
-            if type(self.runmodel_object.qoi_list[0]) is dict:
-                for j in range(len(self.runmodel_object.qoi_list)):
-                    qoi[j] = self.runmodel_object.qoi_list[j][self.qoi_name]
-            else:
-                qoi = self.runmodel_object.qoi_list
+            qoi = self._convert_qoi_tolist()
 
             # ################################
             # --------------------------------
@@ -173,24 +159,7 @@ class VoronoiRefinedStratifiedSampling(RefinedStratifiedSampling):
             dy_dx_old = dy_dx
 
             # 'p' is number of samples to be added in the current iteration
-            bin2add = self.identify_bins(strata_metric=s, p_=p)
-
-            # Create 'p' sub-simplex within the simplex with maximum variance
-            new_points = np.zeros([p, self.dimension])
-            for j in range(p):
-                new_points[j, :] = self._generate_sample(bin2add[j])
-
-            # ###########################
-            # ---------------------------
-            # 2. Update sample attributes
-            # ---------------------------
-            self.update_samples(new_point=new_points)
-
-            # ###########################
-            # ---------------------------
-            # 3. Update strata attributes
-            # ---------------------------
-            self._update_strata(new_point=new_points)
+            self.update_samples_and_strata(p, s)
 
             # ###############################
             # -------------------------------
@@ -200,6 +169,27 @@ class VoronoiRefinedStratifiedSampling(RefinedStratifiedSampling):
 
             if self.verbose:
                 print("Iteration:", i)
+
+    def update_samples_and_strata(self, p, s):
+        bin2add = self.identify_bins(strata_metric=s, p_=p)
+        # Create 'p' sub-simplex within the simplex with maximum variance
+        new_points = np.zeros([p, self.dimension])
+        for j in range(p):
+            new_points[j, :] = self._generate_sample(bin2add[j])
+        self.update_samples(new_point=new_points)
+        self._update_strata(new_point=new_points)
+
+    def compute_centroids(self):
+        self.mesh.centroids = np.zeros([self.mesh.nsimplex, self.dimension])
+        self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
+        from scipy.spatial import qhull, ConvexHull
+        for j in range(self.mesh.nsimplex):
+            try:
+                ConvexHull(self.points[self.mesh.vertices[j]])
+                self.mesh.centroids[j, :], self.mesh.volumes[j] = \
+                    DelaunayStrata.compute_delaunay_centroid_volume(self.points[self.mesh.vertices[j]])
+            except qhull.QhullError:
+                self.mesh.centroids[j, :], self.mesh.volumes[j] = np.mean(self.points[self.mesh.vertices[j]]), 0
 
     def _rss(self):
         """
@@ -213,22 +203,7 @@ class VoronoiRefinedStratifiedSampling(RefinedStratifiedSampling):
         for i in range(self.samples.shape[0], self.samples_number, self.new_iteration_samples):
             p = min(self.new_iteration_samples, self.samples_number - i)  # Number of points to add in this iteration
 
-            # ################################
-            # --------------------------------
-            # 1. Determine the strata to break
-            # --------------------------------
-
-            # Compute the centroids and the volumes of each simplex cell in the mesh
-            self.mesh.centroids = np.zeros([self.mesh.nsimplex, self.dimension])
-            self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
-            from scipy.spatial import qhull, ConvexHull
-            for j in range(self.mesh.nsimplex):
-                try:
-                    ConvexHull(self.points[self.mesh.vertices[j]])
-                    self.mesh.centroids[j, :], self.mesh.volumes[j] = \
-                        DelaunayStrata.compute_delaunay_centroid_volume(self.points[self.mesh.vertices[j]])
-                except qhull.QhullError:
-                    self.mesh.centroids[j, :], self.mesh.volumes[j] = np.mean(self.points[self.mesh.vertices[j]]), 0
+            self.compute_centroids()
 
             # Determine the simplex to break and draw a new sample
             s = np.zeros(self.mesh.nsimplex)
@@ -236,24 +211,7 @@ class VoronoiRefinedStratifiedSampling(RefinedStratifiedSampling):
                 s[j] = self.mesh.volumes[j] ** 2
 
             # 'p' is number of samples to be added in the current iteration
-            bin2add = self.identify_bins(strata_metric=s, p_=p)
-
-            # Create 'p' sub-simplex within the simplex with maximum variance
-            new_points = np.zeros([p, self.dimension])
-            for j in range(p):
-                new_points[j, :] = self._generate_sample(bin2add[j])
-
-            # ###########################
-            # ---------------------------
-            # 2. Update sample attributes
-            # ---------------------------
-            self.update_samples(new_point=new_points)
-
-            # ###########################
-            # ---------------------------
-            # 3. Update strata attributes
-            # ---------------------------
-            self._update_strata(new_point=new_points)
+            self.update_samples_and_strata(p, s)
 
             if self.verbose:
                 print("Iteration:", i)

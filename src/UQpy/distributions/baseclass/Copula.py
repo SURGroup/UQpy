@@ -1,4 +1,9 @@
-class Copula:
+from UQpy.distributions.baseclass import DistributionContinuous1D
+from abc import ABC
+
+
+class Copula(ABC):
+
     """
     Define a copula for a multivariate distribution whose dependence structure is defined with a copula.
 
@@ -71,17 +76,30 @@ class Copula:
 
         No outputs, this code raises errors if necessary.
     """
-    def __init__(self, order_params=None, **kwargs):
-        self.params = kwargs
-        self.order_params = order_params if not None else tuple(kwargs.keys())
-        if len(self.order_params) != len(self.params):
+    def __init__(self, ordered_parameters=None, **kwargs):
+        theta = kwargs['theta']
+        if theta is not None and ((not isinstance(theta, (float, int))) or (theta < -1 or theta == 0.)):
+            raise ValueError('Input theta should be a float in [-1, +oo).')
+        self.parameters = kwargs
+        self.ordered_parameters = ordered_parameters if not None else tuple(kwargs.keys())
+        if len(self.ordered_parameters) != len(self.parameters):
             raise ValueError('Inconsistent dimensions between order_params tuple and params dictionary.')
 
     def get_parameters(self):
-        return self.params
+        return self.parameters
 
     def update_parameters(self, **kwargs):
         for key in kwargs.keys():
-            if key not in self.params.keys():
+            if key not in self.parameters.keys():
                 raise ValueError('Wrong parameter name.')
-            self.params[key] = kwargs[key]
+            self.parameters[key] = kwargs[key]
+
+    @staticmethod
+    def check_marginals(marginals):
+        """
+        Check that marginals contains 2 continuous univariate distributions.
+        """
+        if len(marginals) != 2:
+            raise ValueError('Maximum dimension for the Copula is 2.')
+        if not all(isinstance(m, DistributionContinuous1D) for m in marginals):
+            raise ValueError('Marginals should be 1d continuous distributions.')

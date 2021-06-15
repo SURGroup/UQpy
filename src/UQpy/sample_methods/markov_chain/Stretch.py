@@ -58,7 +58,8 @@ class Stretch(MarkovChainMonteCarlo):
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
-        Run one iteration of the markov_chain chain for Stretch algorithm, starting at current state - see ``markov_chain`` class.
+        Run one iteration of the markov_chain chain for Stretch algorithm, starting at current state -
+        see ``markov_chain`` class.
         """
         # Start the loop over nsamples - this code uses the parallel version of the stretch algorithm
         all_inds = np.arange(self.chains_number)

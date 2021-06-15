@@ -253,3 +253,12 @@ class RefinedStratifiedSampling:
         """
 
         pass
+
+    def _convert_qoi_tolist(self):
+        qoi = [None] * len(self.runmodel_object.qoi_list)
+        if type(self.runmodel_object.qoi_list[0]) is dict:
+            for j in range(len(self.runmodel_object.qoi_list)):
+                qoi[j] = self.runmodel_object.qoi_list[j][self.qoi_name]
+        else:
+            qoi = self.runmodel_object.qoi_list
+        return qoi

@@ -1,4 +1,7 @@
-class Distribution:
+from abc import ABC
+
+
+class Distribution(ABC):
     """
     A parent class to all ``Distribution`` classes.
 
@@ -203,4 +206,3 @@ class Distribution:
 
         """
         return self.parameters
-

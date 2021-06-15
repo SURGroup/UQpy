@@ -9,9 +9,9 @@ class RectangularRefinedStratifiedSampling(RefinedStratifiedSampling):
     """
     Executes Refined Stratified Sampling using Rectangular Stratification.
 
-    ``RectangularRSS`` is a child class of ``refined_stratified``. ``RectangularRSS`` takes in all parameters defined in the parent
-    ``refined_stratified`` class with differences note below. Only those inputs and attributes that differ from the parent class
-    are listed below. See documentation for ``refined_stratified`` for additional details.
+    ``RectangularRSS`` is a child class of ``refined_stratified``. ``RectangularRSS`` takes in all parameters defined
+      in the parent ``refined_stratified`` class with differences note below. Only those inputs and attributes that
+      differ from the parent class are listed below. See documentation for ``refined_stratified`` for additional details
 
     **Inputs:**
 
@@ -62,12 +62,7 @@ class RectangularRefinedStratifiedSampling(RefinedStratifiedSampling):
             p = min(self.new_iteration_samples, self.samples_number - i)  # Number of points to add in this iteration
 
             # If the quantity of interest is a dictionary, convert it to a list
-            qoi = [None] * len(self.runmodel_object.qoi_list)
-            if type(self.runmodel_object.qoi_list[0]) is dict:
-                for j in range(len(self.runmodel_object.qoi_list)):
-                    qoi[j] = self.runmodel_object.qoi_list[j][self.qoi_name]
-            else:
-                qoi = self.runmodel_object.qoi_list
+            qoi = self._convert_qoi_tolist()
 
             # ################################
             # --------------------------------
@@ -122,17 +117,10 @@ class RectangularRefinedStratifiedSampling(RefinedStratifiedSampling):
             for j in range(p):
                 new_points[j, :] = self._update_stratum_and_generate_sample(bin2break[j])
 
-            # ###########################
-            # ---------------------------
-            # 3. Update sample attributes
-            # ---------------------------
             self.update_samples(new_point=new_points)
 
-            # ###############################
-            # -------------------------------
-            # 4. Execute model at new samples
-            # -------------------------------
-            self.runmodel_object.run(samples=np.atleast_2d(self.samples[-self.new_iteration_samples:]), append_samples=True)
+            self.runmodel_object.run(samples=np.atleast_2d(self.samples[-self.new_iteration_samples:]),
+                                     append_samples=True)
 
             if self.verbose:
                 print("Iteration:", i)
@@ -169,10 +157,6 @@ class RectangularRefinedStratifiedSampling(RefinedStratifiedSampling):
             for j in range(p):
                 new_points[j, :] = self._update_stratum_and_generate_sample(bin2break[j])
 
-            # ###########################
-            # ---------------------------
-            # 3. Update sample attributes
-            # ---------------------------
             self.update_samples(new_point=new_points)
 
             if self.verbose:
@@ -202,7 +186,7 @@ class RectangularRefinedStratifiedSampling(RefinedStratifiedSampling):
         self.strata_object.volume = np.append(self.strata_object.volume, self.strata_object.volume[bin_])
 
         # Add a uniform random sample inside the new stratum
-        new = stats.uniform.rvs(loc=self.strata_object.seeds[-1, :], scale=self.strata_object.widths[-1, :],
-                                random_state=self.random_state)
+        new_samples = stats.uniform.rvs(loc=self.strata_object.seeds[-1, :], scale=self.strata_object.widths[-1, :],
+                                        random_state=self.random_state)
 
-        return new
+        return new_samples

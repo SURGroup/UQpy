@@ -81,7 +81,8 @@ class DifferentialEvolutionMetropolis(MarkovChainMonteCarlo):
             raise ValueError('UQpy: Input save_log_pdf must be True in order to check outlier chains')
 
         # Initialize a few other variables
-        self.j_ind, self.n_id = np.zeros((self.crossover_probabilities_number,)), np.zeros((self.crossover_probabilities_number,))
+        self.j_ind = np.zeros((self.crossover_probabilities_number,))
+        self.n_id = np.zeros((self.crossover_probabilities_number,))
         self.cross_prob = np.ones((self.crossover_probabilities_number,)) / self.crossover_probabilities_number
 
         if self.verbose:
@@ -93,7 +94,8 @@ class DifferentialEvolutionMetropolis(MarkovChainMonteCarlo):
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
-        Run one iteration of the markov_chain chain for DREAM algorithm, starting at current state - see ``markov_chain`` class.
+        Run one iteration of the markov_chain chain for DREAM algorithm, starting at current state -
+        see ``markov_chain`` class.
         """
         r_diff = np.array([np.setdiff1d(np.arange(self.chains_number), j) for j in range(self.chains_number)])
         cross = np.arange(1, self.crossover_probabilities_number + 1) / self.crossover_probabilities_number
@@ -111,7 +113,8 @@ class DifferentialEvolutionMetropolis(MarkovChainMonteCarlo):
         d_ind = np.nonzero(multi_rvs)[1]
         as_ = [r_diff[j, draw[slice(d_ind[j]), j]] for j in range(self.chains_number)]
         bs_ = [r_diff[j, draw[slice(d_ind[j], 2 * d_ind[j], 1), j]] for j in range(self.chains_number)]
-        multi_rvs = Multinomial(trials_number=1, trial_probability=self.cross_prob).rvs(nsamples=self.chains_number, random_state=self.random_state)
+        multi_rvs = Multinomial(trials_number=1, trial_probability=self.cross_prob)\
+            .rvs(nsamples=self.chains_number, random_state=self.random_state)
         id_ = np.nonzero(multi_rvs)[1]
         # id = np.random.choice(self.n_CR, size=(self.nchains, ), replace=True, trial_probability=self.pCR)
         z = Uniform().rvs(nsamples=self.chains_number * self.dimension,
@@ -123,10 +126,11 @@ class DifferentialEvolutionMetropolis(MarkovChainMonteCarlo):
                 subset_a[j] = np.array([np.argmin(z[j])])
                 d_star[j] = 1
         gamma_d = 2.38 / np.sqrt(2 * (d_ind + 1) * d_star)
-        g = Binomial(trials_number=1, trial_probability=self.gamma_probability).rvs(nsamples=self.chains_number, random_state=self.random_state).reshape((-1,))
+        g = Binomial(trials_number=1, trial_probability=self.gamma_probability)\
+            .rvs(nsamples=self.chains_number, random_state=self.random_state).reshape((-1,))
         g[g == 0] = gamma_d[g == 0]
-        norm_vars = Normal(loc=0., scale=1.).rvs(nsamples=self.chains_number ** 2,
-                                                 random_state=self.random_state).reshape((self.chains_number, self.chains_number))
+        norm_vars = Normal(loc=0., scale=1.).rvs(nsamples=self.chains_number ** 2, random_state=self.random_state)\
+            .reshape((self.chains_number, self.chains_number))
         for j in range(self.chains_number):
             for i in subset_a[j]:
                 dx[j, i] = self.c_star * norm_vars[j, i] + \
@@ -154,7 +158,8 @@ class DifferentialEvolutionMetropolis(MarkovChainMonteCarlo):
         self._update_acceptance_rate(accept_vec)
 
         # update selection cross prob
-        if self.iterations_number < self.crossover_adaptation[0] and self.iterations_number % self.crossover_adaptation[1] == 0:
+        if self.iterations_number < self.crossover_adaptation[0] and \
+                self.iterations_number % self.crossover_adaptation[1] == 0:
             self.cross_prob = self.j_ind / self.n_id
             self.cross_prob /= sum(self.cross_prob)
         # check outlier chains (only if you have saved at least 100 values already)
@@ -199,4 +204,3 @@ class DifferentialEvolutionMetropolis(MarkovChainMonteCarlo):
                     print('UQpy: Chain {} is an outlier chain'.format(j))
         if self.verbose and outlier_num > 0:
             print('UQpy: Detected {} outlier chains'.format(outlier_num))
-

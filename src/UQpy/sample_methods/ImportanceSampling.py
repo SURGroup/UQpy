@@ -136,30 +136,6 @@ class ImportanceSampling:
                 print('UQpy: unweighted samples are being deleted, call the resample method to regenerate them')
             self.unweighted_samples = None
 
-    # def resample(self, method='multinomial', nsamples=None):
-    #     """
-    #     Resample to get a set of un-weighted samples that represent the target pdf.
-    #
-    #     Utility function that creates a set of un-weighted samples from a set of weighted samples. Can be useful for
-    #     plotting for instance.
-    #
-    #     **Inputs:**
-    #
-    #     * **method** (`str`)
-    #         Resampling method, as of V3 only multinomial resampling is supported. Default: 'multinomial'.
-    #     * **nsamples** (`int`)
-    #         Number of un-weighted samples to generate. Default: None (same number of samples is generated as number of
-    #         existing samples).
-    #
-    #     **Output/Returns:**
-    #
-    #     * (`ndarray`)
-    #         Un-weighted samples that represent the target pdf, `ndarray` of shape (nsamples, dimension)
-    #
-    #     """
-    #     from .Utilities import resample
-    #     return resample(self.samples, self.weights, method=method, size=nsamples)
-
     def resample(self, method='multinomial', samples_number=None):
         """
         Resample to get a set of un-weighted samples that represent the target pdf.

@@ -11,7 +11,7 @@ import scipy.sparse.linalg as spsl
 import scipy.spatial.distance as sd
 from scipy.interpolate import LinearNDInterpolator
 
-from UQpy.surrogates import Kriging
+from UQpy.surrogates import kriging
 
 
 class GrassmannManifold:
@@ -73,7 +73,7 @@ class GrassmannManifold:
         via four different ways.
 
         - Using the ``Grassmann`` method ``linear_interp`` as Grassmann(interp_object=Grassmann.linear_interp).
-        - Using an object of ``UQpy.Kriging`` as Grassmann(interp_object=Kriging_Object)
+        - Using an object of ``UQpy.kriging`` as Grassmann(interp_object=Kriging_Object)
         - Using an object of ``sklearn.gaussian_process`` as Grassmann(interp_object=Sklearn_Object)
         - Using an user defined object (e.g., user_interp). In this case, the function must contain the following
           arguments: `coordinates`, `samples`, and `point`.
@@ -141,7 +141,7 @@ class GrassmannManifold:
         sklearn_string = "<class 'sklearn.gaussian_process._gpr.GaussianProcessRegressor'>"
         self.is_sklearn = str(type(interpolator)) == sklearn_string
         if interpolator is not None:
-            if callable(interpolator) or isinstance(interpolator, Kriging) or self.is_sklearn:
+            if callable(interpolator) or isinstance(interpolator, kriging) or self.is_sklearn:
                 self.interpolator = interpolator
             else:
                 raise TypeError('UQpy: A callable interpolation object must be provided.')
@@ -1543,7 +1543,7 @@ class GrassmannManifold:
             if self.interpolator is GrassmannManifold.linear_interp:
                 element_wise = False
 
-            if isinstance(self.interpolator, Kriging):
+            if isinstance(self.interpolator, kriging):
                 # K = self.interpolator
                 element_wise = True
             else:
@@ -1577,7 +1577,7 @@ class GrassmannManifold:
                     else:
                         val_data = np.array(val_data)
                         self.skl_str = "<class 'sklearn.gaussian_process.gpr.GaussianProcessRegressor'>"
-                        if isinstance(self.interpolator, Kriging) or self.is_sklearn:
+                        if isinstance(self.interpolator, kriging) or self.is_sklearn:
                             self.interpolator.fit(coordinates, val_data)
                             y = self.interpolator.predict(point, return_std=False)
                         else:
@@ -1586,8 +1586,8 @@ class GrassmannManifold:
                     interp_point[j, k] = y
 
         else:
-            if isinstance(self.interpolator, Kriging):
-                raise TypeError('UQpy: Kriging only can be used in the elementwise interpolation.')
+            if isinstance(self.interpolator, kriging):
+                raise TypeError('UQpy: kriging only can be used in the elementwise interpolation.')
             else:
                 interp_point = interp_fun(coordinates, samples, point)
 

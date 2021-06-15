@@ -104,29 +104,11 @@ class VoronoiStrata(Strata):
             initial_seeds = stats.uniform.rvs(size=[self.seeds_number, self.dimension], random_state=self.random_state)
 
         if self.decomposition_iterations == 0:
-            self.voronoi, bounded_regions = self.voronoi_unit_hypercube(initial_seeds)
-
-            cent, vol = [], []
-            for region in bounded_regions:
-                vertices = self.voronoi.vertices[region + [region[0]], :]
-                centroid, volume = self.compute_voronoi_centroid_volume(vertices)
-                self.vertices.append(vertices)
-                cent.append(centroid[0, :])
-                vol.append(volume)
-
+            cent, vol = self.create_volume(initial_seeds)
             self.volume = np.asarray(vol)
         else:
             for i in range(self.decomposition_iterations):
-                self.voronoi, bounded_regions = self.voronoi_unit_hypercube(initial_seeds)
-
-                cent, vol = [], []
-                for region in bounded_regions:
-                    vertices = self.voronoi.vertices[region + [region[0]], :]
-                    centroid, volume = self.compute_voronoi_centroid_volume(vertices)
-                    self.vertices.append(vertices)
-                    cent.append(centroid[0, :])
-                    vol.append(volume)
-
+                cent, vol = self.create_volume(initial_seeds)
                 initial_seeds = np.asarray(cent)
                 self.volume = np.asarray(vol)
 
@@ -134,6 +116,17 @@ class VoronoiStrata(Strata):
 
         if self.verbose:
             print('UQpy: Voronoi stratification created.')
+
+    def create_volume(self, initial_seeds):
+        self.voronoi, bounded_regions = self.voronoi_unit_hypercube(initial_seeds)
+        cent, vol = [], []
+        for region in bounded_regions:
+            vertices = self.voronoi.vertices[region + [region[0]], :]
+            centroid, volume = self.compute_voronoi_centroid_volume(vertices)
+            self.vertices.append(vertices)
+            cent.append(centroid[0, :])
+            vol.append(volume)
+        return cent, vol
 
     @staticmethod
     def voronoi_unit_hypercube(seeds):

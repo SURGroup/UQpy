@@ -62,14 +62,9 @@ class VoronoiStratification(StratifiedSampling):
 
                 new_samples = SimplexSampling(nodes=seed_and_vertices[delaunay_obj.vertices[simplex]], samples_number=1,
                                               random_state=self.random_state).samples
-
                 samples_in_strata.append(new_samples)
 
-            if int(self.samples_per_stratum_number[j]) != 0:
-                weights.extend(
-                    [self.strata_object.volume[j] / self.samples_per_stratum_number[j]] * int(self.samples_per_stratum_number[j]))
-            else:
-                weights.extend([0] * int(self.samples_per_stratum_number[j]))
+            self.extend_weights(j, weights)
 
         self.weights = weights
         self.samplesU01 = np.concatenate(samples_in_strata, axis=0)

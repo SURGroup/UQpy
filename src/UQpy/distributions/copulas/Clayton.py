@@ -1,5 +1,4 @@
 from UQpy.distributions.baseclass import Copula
-from UQpy.distributions.baseclass import DistributionContinuous1D, DistributionND, DistributionDiscrete1D
 import numpy as np
 
 
@@ -23,24 +22,9 @@ class Clayton(Copula):
     (``check_copula`` checks that `marginals` consist of solely 2 continuous univariate distributions).
     """
     def __init__(self, theta):
-        # Check the input copula_params
-        if theta is not None and ((not isinstance(theta, (float, int))) or (theta < -1 or theta == 0.)):
-            raise ValueError('Input theta should be a float in [-1, +oo)\{0}.')
         super().__init__(theta=theta)
 
-    def evaluate_cdf(self, uniform_distributions):
-        if uniform_distributions.shape[1] > 2:
-            raise ValueError('Maximum dimension for the Clayton Copula is 2.')
-
-        first_uniform = uniform_distributions[:, 0]
-        second_uniform = uniform_distributions[:, 1]
-        theta = self.params['theta']
+    def evaluate_cdf(self, first_uniform, second_uniform):
+        theta = self.parameters['theta']
         cdf_val = (np.maximum(first_uniform ** (-theta) + second_uniform ** (-theta) - 1., 0.)) ** (-1. / theta)
         return cdf_val
-
-    @staticmethod
-    def check_marginals(marginals):
-        if len(marginals) != 2:
-            raise ValueError('Maximum dimension for the Clayton Copula is 2.')
-        if not all(isinstance(m, DistributionContinuous1D) for m in marginals):
-            raise ValueError('Marginals should be 1d continuous distributions.')

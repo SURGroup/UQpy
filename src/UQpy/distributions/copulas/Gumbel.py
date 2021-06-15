@@ -1,6 +1,5 @@
 from UQpy.distributions.baseclass import Copula
-from UQpy.distributions.baseclass import DistributionContinuous1D
-from numpy import prod, log, ones, exp
+from numpy import log, exp
 
 
 class Gumbel(Copula):
@@ -22,30 +21,18 @@ class Gumbel(Copula):
 
     (``check_copula`` checks that `marginals` consist of solely 2 continuous univariate distributions).
     """
+
     def __init__(self, theta):
-        # Check the input copula_params
-        if theta is not None and ((not isinstance(theta, (float, int))) or (theta < 1)):
-            raise ValueError('Input theta should be a float in [1, +oo).')
         super().__init__(theta=theta)
 
-    def evaluate_cdf(self, uniform_distributions):
-        if uniform_distributions.shape[1] > 2:
-            raise ValueError('Maximum dimension for the Gumbel Copula is 2.')
-
-        first_uniform = uniform_distributions[:, 0]
-        second_uniform = uniform_distributions[:, 1]
-        theta = self.params['theta']
+    def evaluate_cdf(self, first_uniform, second_uniform):
+        theta = self.parameters['theta']
         cdf_val = exp(-((-log(first_uniform)) ** theta + (-log(second_uniform)) ** theta) ** (1 / theta))
 
         return cdf_val
 
-    def evaluate_pdf(self, uniform_distributions):
-        if uniform_distributions.shape[1] > 2:
-            raise ValueError('Maximum dimension for the Gumbel Copula is 2.')
-
-        first_uniform = uniform_distributions[:, 0]
-        second_uniform = uniform_distributions[:, 1]
-        theta = self.params['theta']
+    def evaluate_pdf(self, first_uniform, second_uniform):
+        theta = self.parameters['theta']
         c = exp(-((-log(first_uniform)) ** theta + (-log(second_uniform)) ** theta) ** (1 / theta))
 
         pdf_val = c * 1 / first_uniform * 1 / second_uniform * \
@@ -54,12 +41,4 @@ class Gumbel(Copula):
                   (1 + (theta - 1) * ((-log(first_uniform)) ** theta + (-log(second_uniform)) ** theta) ** (-1 / theta))
         return pdf_val
 
-    @staticmethod
-    def check_marginals(marginals):
-        """
-        Check that marginals contains 2 continuous univariate distributions.
-        """
-        if len(marginals) != 2:
-            raise ValueError('Maximum dimension for the Gumbel Copula is 2.')
-        if not all(isinstance(m, DistributionContinuous1D) for m in marginals):
-            raise ValueError('Marginals should be 1d continuous distributions.')
+

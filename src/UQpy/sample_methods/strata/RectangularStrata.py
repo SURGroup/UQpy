@@ -194,4 +194,3 @@ class RectangularStrata(Strata):
             ax.add_patch(rect1)
 
         return fig
-

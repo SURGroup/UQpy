@@ -33,8 +33,9 @@ class ModifiedMetropolisHastings(MarkovChainMonteCarlo):
 
     """
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, burn_length=0, jump=1, dimension=None,
-                 seed=None, save_log_pdf=False, concatenate_chains=True, samples_number=None, samples_per_chain_number=None,
-                 proposal=None, proposal_is_symmetric=False, verbose=False, random_state=None, chains_number=None):
+                 seed=None, save_log_pdf=False, concatenate_chains=True, samples_number=None,
+                 samples_per_chain_number=None, proposal=None, proposal_is_symmetric=False, verbose=False,
+                 random_state=None, chains_number=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, burn_length=burn_length, jump=jump, save_log_pdf=save_log_pdf,
@@ -89,7 +90,8 @@ class ModifiedMetropolisHastings(MarkovChainMonteCarlo):
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
-        Run one iteration of the markov_chain chain for MMH algorithm, starting at current state - see ``markov_chain`` class.
+        Run one iteration of the markov_chain chain for MMH algorithm, starting at current state -
+        see ``markov_chain`` class.
         """
         # The target pdf is provided via its marginals
         accept_vec = np.zeros((self.chains_number,))

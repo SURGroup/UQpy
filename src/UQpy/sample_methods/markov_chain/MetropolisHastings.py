@@ -2,6 +2,7 @@ from UQpy.sample_methods.markov_chain.MarkovChainMonteCarlo import MarkovChainMo
 from UQpy.distributions import *
 import numpy as np
 
+
 class MetropolisHastings(MarkovChainMonteCarlo):
     """
     Metropolis-Hastings algorithm
@@ -25,8 +26,9 @@ class MetropolisHastings(MarkovChainMonteCarlo):
 
     """
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, burn_length=0, jump=1, dimension=None,
-                 seed=None, save_log_pdf=False, concatenate_chains=True, samples_number=None, samples_per_chain_number=None,
-                 chains_number=None, proposal=None, proposal_is_symmetric=False, verbose=False, random_state=None):
+                 seed=None, save_log_pdf=False, concatenate_chains=True, samples_number=None,
+                 samples_per_chain_number=None, chains_number=None, proposal=None, proposal_is_symmetric=False,
+                 verbose=False, random_state=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, burn_length=burn_length, jump=jump, save_log_pdf=save_log_pdf,
@@ -55,7 +57,8 @@ class MetropolisHastings(MarkovChainMonteCarlo):
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
-        Run one iteration of the markov_chain chain for MH algorithm, starting at current state - see ``markov_chain`` class.
+        Run one iteration of the markov_chain chain for MH algorithm, starting at current state -
+        see ``markov_chain`` class.
         """
         # Sample candidate
         candidate = current_state + self.proposal.rvs(nsamples=self.chains_number, random_state=self.random_state)

@@ -1,8 +1,9 @@
 import numpy as np
 from .Distribution import Distribution
+from abc import ABC
 
 
-class DistributionND(Distribution):
+class DistributionND(ABC, Distribution):
     """
     Parent class for multivariate probability distributions.
 
@@ -11,7 +12,7 @@ class DistributionND(Distribution):
         super().__init__(**kwargs)
 
     @staticmethod
-    def _check_x_dimension(x, d=None):
+    def check_x_dimension(x, d=None):
         """
         Check the dimension of input x - must be an ndarray of shape (npoints, d)
         """

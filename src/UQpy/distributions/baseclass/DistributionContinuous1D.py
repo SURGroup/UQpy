@@ -1,8 +1,9 @@
 import scipy.stats as stats
 from UQpy.distributions.baseclass.Distribution1D import Distribution1D
+from abc import ABC
 
 
-class DistributionContinuous1D(Distribution1D):
+class DistributionContinuous1D(ABC, Distribution1D):
     """
     Parent class for univariate continuous probability distributions.
     """
@@ -23,7 +24,3 @@ class DistributionContinuous1D(Distribution1D):
             params_fitted = scipy_name.fit(data=data, **fixed_params)
             return dict(zip(dist.ordered_parameters_list, params_fitted))
         self.fit = lambda data: tmp_fit(self, data)
-
-
-
-

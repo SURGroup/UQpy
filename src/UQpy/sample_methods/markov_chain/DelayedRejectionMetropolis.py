@@ -13,8 +13,8 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
 
     **References:**
 
-    1. Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive markov_chain". Statistics
-       and Computing, 16(4):339–354, 2006
+    1. Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive markov_chain".
+       Statistics and Computing, 16(4):339–354, 2006
     2. R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
 
     **Algorithm-specific inputs:**
@@ -39,10 +39,10 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
     """
 
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, burn_length=0, jump=1, dimension=None,
-                 seed=None, save_log_pdf=False, concatenate_chains=True, samples_number=None, samples_per_chain_number=None,
-                 initial_covariance=None, covariance_update_rate=100, scale_parameter=None,
-                 delayed_rejection_scale=1 / 5, save_covariance=False, verbose=False, random_state=None,
-                 chains_number=None):
+                 seed=None, save_log_pdf=False, concatenate_chains=True, samples_number=None,
+                 samples_per_chain_number=None, initial_covariance=None, covariance_update_rate=100,
+                 scale_parameter=None, delayed_rejection_scale=1 / 5, save_covariance=False, verbose=False,
+                 random_state=None, chains_number=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, burn_length=burn_length, jump=jump, save_log_pdf=save_log_pdf,
@@ -83,7 +83,8 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
-        Run one iteration of the markov_chain chain for DRAM algorithm, starting at current state - see ``markov_chain`` class.
+        Run one iteration of the markov_chain chain for DRAM algorithm, starting at current state -
+        see ``markov_chain`` class.
         """
         from UQpy.distributions import MultivariateNormal
         multivariate_normal = MultivariateNormal(mean=np.zeros(self.dimension, ), covariance=1.)
@@ -93,14 +94,14 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
         for nc, current_cov in enumerate(self.current_covariance):
             multivariate_normal.update_parameters(cov=current_cov)
             candidate[nc, :] = current_state[nc, :] + multivariate_normal.rvs(
-                nsamples=1, random_state=self.random_state).reshape((self.dimension, ))
+                nsamples=1, random_state=self.random_state).reshape((self.dimension,))
 
         # Compute log_pdf_target of candidate sample
         log_p_candidate = self.evaluate_log_target(candidate)
 
         # Compare candidate with current sample and decide or not to keep the candidate (loop over nc chains)
         accept_vec = np.zeros((self.chains_number,))
-        delayed_chains_indices = []   # indices of chains that will undergo delayed rejection
+        delayed_chains_indices = []  # indices of chains that will undergo delayed rejection
         unif_rvs = Uniform().rvs(nsamples=self.chains_number, random_state=self.random_state).reshape((-1,))
         for nc, (cand, log_p_cand, log_p_curr) in enumerate(zip(candidate, log_p_candidate, current_log_pdf)):
             accept = np.log(unif_rvs[nc]) < log_p_cand - log_p_curr
@@ -108,11 +109,11 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
                 current_state[nc, :] = cand
                 current_log_pdf[nc] = log_p_cand
                 accept_vec[nc] += 1.
-            else:    # enter delayed rejection
-                delayed_chains_indices.append(nc)    # these indices will enter the delayed rejection part
+            else:  # enter delayed rejection
+                delayed_chains_indices.append(nc)  # these indices will enter the delayed rejection part
 
         # Delayed rejection
-        if len(delayed_chains_indices) > 0:   # performed delayed rejection for some chains
+        if len(delayed_chains_indices) > 0:  # performed delayed rejection for some chains
             current_states_delayed = np.zeros((len(delayed_chains_indices), self.dimension))
             candidates_delayed = np.zeros((len(delayed_chains_indices), self.dimension))
             candidate2 = np.zeros((len(delayed_chains_indices), self.dimension))
@@ -120,15 +121,17 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
             for i, nc in enumerate(delayed_chains_indices):
                 current_states_delayed[i, :] = current_state[nc, :]
                 candidates_delayed[i, :] = candidate[nc, :]
-                multivariate_normal.update_parameters(cov=self.delayed_rejection_scale ** 2 * self.current_covariance[nc])
+                multivariate_normal \
+                    .update_parameters(cov=self.delayed_rejection_scale ** 2 * self.current_covariance[nc])
                 candidate2[i, :] = current_states_delayed[i, :] + multivariate_normal.rvs(
-                    nsamples=1, random_state=self.random_state).reshape((self.dimension, ))
+                    nsamples=1, random_state=self.random_state).reshape((self.dimension,))
             # Evaluate their log_target
             log_p_candidate2 = self.evaluate_log_target(candidate2)
             log_prop_cand_cand2 = multivariate_normal.log_pdf(candidates_delayed - candidate2)
             log_prop_cand_curr = multivariate_normal.log_pdf(candidates_delayed - current_states_delayed)
             # Accept or reject
-            unif_rvs = Uniform().rvs(nsamples=len(delayed_chains_indices), random_state=self.random_state).reshape((-1,))
+            unif_rvs = Uniform().rvs(nsamples=len(delayed_chains_indices),
+                                     random_state=self.random_state).reshape((-1,))
             for (nc, cand2, log_p_cand2, j1, j2, u_rv) in zip(delayed_chains_indices, candidate2, log_p_candidate2,
                                                               log_prop_cand_cand2, log_prop_cand_curr, unif_rvs):
                 alpha_cand_cand2 = min(1., np.exp(log_p_candidate[nc] - log_p_cand2))
@@ -146,11 +149,13 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
         for nc in range(self.chains_number):
             # update covariance
             self.sample_mean[nc], self.sample_covariance[nc] = self._recursive_update_mean_covariance(
-                samples_number=self.iterations_number, new_sample=current_state[nc, :], previous_mean=self.sample_mean[nc],
-                previous_covariance=self.sample_covariance[nc])
+                samples_number=self.iterations_number, new_sample=current_state[nc, :],
+                previous_mean=self.sample_mean[nc], previous_covariance=self.sample_covariance[nc])
             if (self.iterations_number > 1) and (self.iterations_number % self.covariance_update_rate == 0):
-                self.current_covariance[nc] = self.scale_parameter * self.sample_covariance[nc] + 1e-6 * np.eye(self.dimension)
-        if self.save_covariance and ((self.iterations_number > 1) and (self.iterations_number % self.covariance_update_rate == 0)):
+                self.current_covariance[nc] = self.scale_parameter * self.sample_covariance[nc] + \
+                                              1e-6 * np.eye(self.dimension)
+        if self.save_covariance and ((self.iterations_number > 1) and
+                                     (self.iterations_number % self.covariance_update_rate == 0)):
             self.adaptive_covariance.append(self.current_covariance.copy())
 
         # Update the acceptance rate
@@ -185,6 +190,6 @@ class DelayedRejectionMetropolis(MarkovChainMonteCarlo):
             new_covariance = np.zeros((dimensions, dimensions))
         else:
             delta_n = (new_sample - previous_mean).reshape((dimensions, 1))
-            new_covariance = (samples_number - 2) / (samples_number - 1) * previous_covariance +\
+            new_covariance = (samples_number - 2) / (samples_number - 1) * previous_covariance + \
                              1 / samples_number * np.matmul(delta_n, delta_n.T)
         return new_mean, new_covariance
