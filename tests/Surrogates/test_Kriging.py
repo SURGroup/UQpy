@@ -24,7 +24,7 @@ def test_fit():
 def test_predict():
     prediction=np.round(krig.predict([[1], [np.pi/2], [np.pi]], True), 3)
     expected_prediction=np.array([[0.548,  0.001, -1.], [0.04,  0.009,  0.]])
-    assert (expected_prediction == prediction ).all()
+    assert (expected_prediction == prediction).all()
 
 
 def test_jacobian():

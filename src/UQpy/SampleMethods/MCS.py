@@ -6,6 +6,7 @@ import numpy as np
 #                                         Monte Carlo Simulation
 ########################################################################################################################
 
+
 class MCS:
     """
     Perform Monte Carlo sampling (MCS) of random variables.
@@ -243,4 +244,3 @@ class MCS:
                     y[j] = zi
                 temp_samples_u01.append(np.array(y))
             self.samplesU01 = temp_samples_u01
-
