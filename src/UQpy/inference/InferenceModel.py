@@ -87,7 +87,7 @@ class InferenceModel:
                 self.dist_object.log_pdf = lambda x: np.log(self.dist_object.pdf(x))
             # Check which parameters need to be updated (i.e., those set as None)
             init_params = self.dist_object.get_parameters()
-            self.list_params = [key for key in self.dist_object.ordered_parameters_list if init_params[key] is None]
+            self.list_params = [key for key in self.dist_object.ordered_parameters if init_params[key] is None]
             if len(self.list_params) != self.parameters_number:
                 raise TypeError('UQpy: Incorrect dimensions between parameters_number and number of inputs set to None.')
 
@@ -150,7 +150,7 @@ class InferenceModel:
                          for output in model_outputs]
                     )
                 else:
-                    multivariate_normal = MultivariateNormal(data, covariance=self.error_covariance)
+                    multivariate_normal = MultivariateNormal(data, cov=self.error_covariance)
                     log_like_values = np.array(
                         [multivariate_normal.log_pdf(x=np.array(output).reshape((-1,))) for output in model_outputs]
                     )

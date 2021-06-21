@@ -27,5 +27,5 @@ class Pareto(DistributionContinuous1D):
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, b, location=0., scale=1.):
-        super().__init__(b=b, loc=location, scale=scale, order_params=('b', 'location', 'scale'))
+        super().__init__(b=b, loc=location, scale=scale, ordered_parameters=('b', 'location', 'scale'))
         self._construct_from_scipy(scipy_name=stats.pareto)

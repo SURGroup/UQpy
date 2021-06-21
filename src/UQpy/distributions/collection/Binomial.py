@@ -28,5 +28,5 @@ class Binomial(DistributionDiscrete1D):
     """
     def __init__(self, trials_number, trial_probability, location=0.):
         super().__init__(n=trials_number, p=trial_probability, loc=location,
-                         order_params=('trials_number', 'trial_probability', 'location'))
+                         ordered_parameters=('trials_number', 'trial_probability', 'location'))
         self._construct_from_scipy(scipy_name=stats.binom)

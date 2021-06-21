@@ -28,6 +28,6 @@ class Lognormal(DistributionContinuous1D):
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, s, location=0., scale=1.):
-        super().__init__(s=s, loc=location, scale=scale, order_params=('s', 'location', 'scale'))
+        super().__init__(s=s, loc=location, scale=scale, ordered_parameters=('s', 'location', 'scale'))
         self._construct_from_scipy(scipy_name=stats.lognorm)
 

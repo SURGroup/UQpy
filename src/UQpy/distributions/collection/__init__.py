@@ -5,8 +5,8 @@ from UQpy.distributions.collection.Cauchy import Cauchy
 from UQpy.distributions.collection.ChiSquare import ChiSquare
 from UQpy.distributions.collection.Exponential import Exponential
 from UQpy.distributions.collection.Gamma import Gamma
-from UQpy.distributions.collection.GeneralizedExtreme import GeneralizedExtreme
-from UQpy.distributions.collection.InverseGauss import InverseGauss
+from UQpy.distributions.collection.GeneralizedExtremeValue import GeneralizedExtreme
+from UQpy.distributions.collection.InverseGaussian import InverseGauss
 from UQpy.distributions.collection.Laplace import Laplace
 from UQpy.distributions.collection.Levy import Levy
 from UQpy.distributions.collection.Logistic import Logistic

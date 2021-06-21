@@ -7,7 +7,7 @@ following classes:
 * ``InferenceModel``: Define a probabilistic model for inference.
 * ``MLEstimation``: Compute maximum likelihood parameter estimate.
 * ``InfoModelSelection``: Perform model selection using information theoretic criteria.
-* ``BayesParameterEstimation``: Perform Bayesian parameter estimation (estimate posterior density) via markov_chain or IS.
+* ``BayesParameterEstimation``: Perform Bayesian parameter estimation (estimate posterior density) via mcmc or IS.
 * ``BayesModelSelection``: Estimate model posterior probabilities.
 """
 
@@ -15,11 +15,11 @@ from UQpy.inference.BayesModelSelection import BayesModelSelection
 from UQpy.inference.InferenceModel import InferenceModel
 from UQpy.inference.InformationModelSelection import InformationModelSelection
 from UQpy.inference.BayesParameterEstimation import BayesParameterEstimation
-from UQpy.inference.MaximumLikelihoodEstimation import MaximumLikelihoodEstimation
+from UQpy.inference.MLE import MLE
 
 from UQpy.inference.BayesModelSelection import *
 from UQpy.inference.InferenceModel import *
 from UQpy.inference.InformationModelSelection import *
 from UQpy.inference.BayesParameterEstimation import *
-from UQpy.inference.MaximumLikelihoodEstimation import *
+from UQpy.inference.MLE import *
 

@@ -3,7 +3,7 @@ This module contains functionality for all the surrogate methods supported in UQ
 
 The module currently contains the following classes:
 
-- ``reduced_order``: Class to estimate a discrete approximation for a continuous random variable using Stochastic
+- ``stochastic_reduced_order_models``: Class to estimate a discrete approximation for a continuous random variable using Stochastic
     Reduced Order Model.
 
 - ``kriging``: Class to generate an approximate surrogate model using kriging.
@@ -13,7 +13,7 @@ The module currently contains the following classes:
 """
 
 from UQpy.surrogates.polynomial_chaos import *
-from UQpy.surrogates.reduced_order import *
+from UQpy.surrogates.stochastic_reduced_order_models import *
 from UQpy.surrogates.kriging import *
 
-from . import (polynomial_chaos, reduced_order, kriging)
+from . import (polynomial_chaos, stochastic_reduced_order_models, kriging)

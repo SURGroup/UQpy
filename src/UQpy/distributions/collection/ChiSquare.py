@@ -28,5 +28,5 @@ class ChiSquare(DistributionContinuous1D):
     """
     def __init__(self, degrees_of_freedom, location=0., scale=1.):
         super().__init__(df=degrees_of_freedom, loc=location, scale=scale,
-                         order_params=('degrees_of_freedom', 'location', 'scale'))
+                         ordered_parameters=('degrees_of_freedom', 'location', 'scale'))
         self._construct_from_scipy(scipy_name=stats.chi2)

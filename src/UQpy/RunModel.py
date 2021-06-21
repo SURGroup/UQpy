@@ -661,7 +661,7 @@ class RunModel:
         if self.verbose:
             print('\nUQpy: Performing parallel execution of the model without template input.\n')
         import multiprocessing
-        import UQpy.Utilities as Utilities
+        import UQpy.utilities.Utilities as Utilities
 
         sample = []
         pool = multiprocessing.Pool(processes=self.ntasks)

@@ -1,6 +1,6 @@
 import itertools
 
-from UQpy.Utilities import *
+from UQpy.utilities.Utilities import *
 
 
 class BispectralRepresentation:

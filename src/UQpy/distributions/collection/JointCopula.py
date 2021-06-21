@@ -30,10 +30,10 @@ class JointCopula(DistributionND):
     """
     def __init__(self, marginals, copula):
         super().__init__()
-        self.order_params = []
+        self.ordered_parameters = []
         for i, m in enumerate(marginals):
-            self.order_params.extend([key + '_' + str(i) for key in m.ordered_parameters_list])
-        self.order_params.extend([key + '_c' for key in copula.ordered_parameters_list])
+            self.ordered_parameters.extend([key + '_' + str(i) for key in m.ordered_parameters])
+        self.ordered_parameters.extend([key + '_c' for key in copula.ordered_parameters])
 
         # Check and save the marginals
         self.marginals = marginals
@@ -47,40 +47,40 @@ class JointCopula(DistributionND):
             raise ValueError('The input copula should be a Copula object.')
         if not all(hasattr(m, 'cdf') for m in self.marginals):
             raise ValueError('All the marginals should have a cdf method in order to define a joint with copula.')
-        self.copula.check_marginals(marginals=self.marginals)
+        Copula.check_marginals(marginals=self.marginals)
 
         # Check if methods should exist, if yes define them bound them to the object
         if hasattr(self.copula, 'evaluate_cdf'):
             def joint_cdf(dist, x):
-                x = dist._check_x_dimension(x)
+                x = dist.check_x_dimension(x)
                 # Compute cdf of independent marginals
                 unif = np.array([marg.cdf(x[:, ind_m]) for ind_m, marg in enumerate(dist.marginals)]).T
                 # Compute copula
-                cdf_val = dist.copula.evaluate_cdf(uniform_distributions=unif)
+                cdf_val = dist.copula.evaluate_cdf(unit_uniform_samples=unif)
                 return cdf_val
             self.cdf = MethodType(joint_cdf, self)
 
         if all(hasattr(m, 'pdf') for m in self.marginals) and hasattr(self.copula, 'evaluate_pdf'):
             def joint_pdf(dist, x):
-                x = dist._check_x_dimension(x)
+                x = dist.check_x_dimension(x)
                 # Compute pdf of independent marginals
                 pdf_val = np.prod(np.array([marg.pdf(x[:, ind_m])
                                             for ind_m, marg in enumerate(dist.marginals)]), axis=0)
                 # Add copula term
                 unif = np.array([marg.cdf(x[:, ind_m]) for ind_m, marg in enumerate(dist.marginals)]).T
-                c_ = dist.copula.evaluate_pdf(unif=unif)
+                c_ = dist.copula.evaluate_pdf(unit_uniform_samples=unif)
                 return c_ * pdf_val
             self.pdf = MethodType(joint_pdf, self)
 
         if all(hasattr(m, 'log_pdf') for m in self.marginals) and hasattr(self.copula, 'evaluate_pdf'):
             def joint_log_pdf(dist, x):
-                x = dist._check_x_dimension(x)
+                x = dist.check_x_dimension(x)
                 # Compute pdf of independent marginals
                 logpdf_val = np.sum(np.array([marg.log_pdf(x[:, ind_m])
                                               for ind_m, marg in enumerate(dist.marginals)]), axis=0)
                 # Add copula term
                 unif = np.array([marg.cdf(x[:, ind_m]) for ind_m, marg in enumerate(dist.marginals)]).T
-                c_ = dist.copula.evaluate_pdf(unif=unif)
+                c_ = dist.copula.evaluate_pdf(unit_uniform_samples=unif)
                 return np.log(c_) + logpdf_val
             self.log_pdf = MethodType(joint_log_pdf, self)
 

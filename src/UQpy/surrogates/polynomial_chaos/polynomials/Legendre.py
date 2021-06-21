@@ -1,7 +1,7 @@
 import scipy.special as special
 
 from UQpy.distributions import Uniform
-from UQpy.surrogates.polynomial_chaos.polynomials.Polynomials import Polynomials
+from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import Polynomials
 
 
 class Legendre(Polynomials):

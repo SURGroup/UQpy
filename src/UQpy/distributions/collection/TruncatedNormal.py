@@ -25,5 +25,5 @@ class TruncatedNormal(DistributionContinuous1D):
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, a, b, location=0., scale=1.):
-        super().__init__(a=a, b=b, loc=location, scale=scale, order_params=('a', 'b', 'location', 'scale'))
+        super().__init__(a=a, b=b, loc=location, scale=scale, ordered_parameters=('a', 'b', 'location', 'scale'))
         self._construct_from_scipy(scipy_name=stats.truncnorm)

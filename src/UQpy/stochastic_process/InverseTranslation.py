@@ -1,5 +1,5 @@
 from UQpy.distributions import *
-from UQpy.Utilities import *
+from UQpy.utilities.Utilities import *
 from UQpy.stochastic_process.supportive import inverse_wiener_khinchin_transform, wiener_khinchin_transform
 
 

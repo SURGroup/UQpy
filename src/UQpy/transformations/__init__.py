@@ -10,6 +10,6 @@ The module currently contains the following classes:
 
 """
 
-from .NatafTransformation import NatafTransformation
+from .Nataf import NatafTransformation
 from .Correlate import Correlate
 from .Decorrelate import Decorrelate

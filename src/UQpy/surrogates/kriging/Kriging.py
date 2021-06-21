@@ -2,7 +2,7 @@
 
 The module currently contains the following classes:
 
-- ``reduced_order``: Class to estimate a discrete approximation for a continuous random variable using Stochastic Reduced Order
+- ``stochastic_reduced_order_models``: Class to estimate a discrete approximation for a continuous random variable using Stochastic Reduced Order
             Model.
 - ``kriging``: Class to generate an approximate surrogate model using kriging.
 

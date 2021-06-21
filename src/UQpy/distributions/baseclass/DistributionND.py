@@ -1,9 +1,8 @@
 import numpy as np
 from .Distribution import Distribution
-from abc import ABC
 
 
-class DistributionND(ABC, Distribution):
+class DistributionND(Distribution):
     """
     Parent class for multivariate probability distributions.
 

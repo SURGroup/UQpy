@@ -4,9 +4,9 @@ import scipy.sparse as sps
 import scipy.sparse.linalg as spsl
 import scipy.spatial.distance as sd
 
-from UQpy.Utilities import *
-from UQpy.Utilities import _nn_coord
-from UQpy.dimension_reduction.GrassmannManifold import GrassmannManifold
+from UQpy.utilities.Utilities import *
+from UQpy.utilities.Utilities import _nn_coord
+from UQpy.dimension_reduction.Grassmann import Grassmann
 
 
 class DiffusionMaps:
@@ -96,7 +96,7 @@ class DiffusionMaps:
         # from dimension_reduction import Grassmann
 
         if kernel_object is not None:
-            if callable(kernel_object) or isinstance(kernel_object, GrassmannManifold):
+            if callable(kernel_object) or isinstance(kernel_object, Grassmann):
                 self.kernel_object = kernel_object
             else:
                 raise TypeError('UQpy: Either a callable kernel or a Grassmann class object must be provided.')
@@ -162,10 +162,10 @@ class DiffusionMaps:
         sparse = self.is_sparse
         k_neighbors = self.neighbors_number
 
-        if data is None and not isinstance(self.kernel_object, GrassmannManifold):
+        if data is None and not isinstance(self.kernel_object, Grassmann):
             raise TypeError('UQpy: Data cannot be NoneType.')
 
-        if isinstance(self.kernel_object, GrassmannManifold):
+        if isinstance(self.kernel_object, Grassmann):
 
             if self.kernel_grassmann is None:
                 raise ValueError('UQpy: kernel_grassmann is not provided.')

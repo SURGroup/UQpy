@@ -1,4 +1,4 @@
-from UQpy.Utilities import *
+from UQpy.utilities.Utilities import *
 
 
 class SpectralRepresentationMethod:

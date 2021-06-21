@@ -47,10 +47,10 @@ class BayesModelSelection:
         object itself can be passed directly.
 
     * **nsamples** (`list` of `int`):
-        Number of samples used in ``markov_chain``/``IS``, for each model
+        Number of samples used in ``mcmc``/``IS``, for each model
 
     * **samples_per_chain** (`list` of `int`):
-        Number of samples per chain used in ``markov_chain``, for each model
+        Number of samples per chain used in ``mcmc``, for each model
 
     If `nsamples` and `nsamples_per_chain` are both `None`, the object is created but the model selection procedure is
     not run, one must then call the ``run`` method.
@@ -75,7 +75,7 @@ class BayesModelSelection:
                  random_state=None, verbose=False, nsamples=None, nsamples_per_chain=None, **kwargs):
 
         # Check inputs: candidate_models is a list of instances of Model, second_order_tensor must be provided, and input arguments
-        # for markov_chain must be provided as a list of length len(candidate_models)
+        # for mcmc must be provided as a list of length len(candidate_models)
         if (not isinstance(candidate_models, list)) or (not all(isinstance(model, InferenceModel)
                                                                 for model in candidate_models)):
             raise TypeError('UQpy: A list InferenceModel objects must be provided.')
@@ -129,10 +129,10 @@ class BayesModelSelection:
         **Inputs:**
 
         * **nsamples** (`list` of `int`):
-            Number of samples used in ``markov_chain``/``IS``, for each model
+            Number of samples used in ``mcmc``/``IS``, for each model
 
         * **samples_per_chain** (`list` of `int`):
-            Number of samples per chain used in ``markov_chain``, for each model
+            Number of samples per chain used in ``mcmc``, for each model
 
         """
 
@@ -145,10 +145,10 @@ class BayesModelSelection:
             raise ValueError('UQpy: nsamples_per_chain should be a list of integers')
         if self.verbose:
             print('UQpy: Running Bayesian Model Selection.')
-        # Perform markov_chain for all candidate models
+        # Perform mcmc for all candidate models
         for i, (inference_model, bayes_estimator) in enumerate(zip(self.candidate_models, self.bayes_estimators)):
             if self.verbose:
-                print('UQpy: Running markov_chain for model '+inference_model.name)
+                print('UQpy: Running mcmc for model '+inference_model.name)
             if nsamples is not None:
                 bayes_estimator.run(nsamples=nsamples[i])
             elif nsamples_per_chain is not None:

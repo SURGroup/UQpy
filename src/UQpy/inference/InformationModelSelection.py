@@ -1,7 +1,7 @@
 import numpy as np
 
 from UQpy.inference.InferenceModel import InferenceModel
-from UQpy.inference.MaximumLikelihoodEstimation import MaximumLikelihoodEstimation
+from UQpy.inference.MLE import MLE
 
 
 class InformationModelSelection:
@@ -99,8 +99,8 @@ class InformationModelSelection:
         self.ml_estimators = []
         for i, inference_model in enumerate(self.candidate_models):
             kwargs_i = dict([(key, value[i]) for (key, value) in kwargs.items()])
-            ml_estimator = MaximumLikelihoodEstimation(inference_model=inference_model, data=self.data, verbose=self.verbose,
-                                                       random_state=self.random_state, x0=None, nopt=None, **kwargs_i)
+            ml_estimator = MLE(inference_model=inference_model, data=self.data, verbose=self.verbose,
+                               random_state=self.random_state, x0=None, nopt=None, **kwargs_i)
             self.ml_estimators.append(ml_estimator)
 
         # Initialize the outputs

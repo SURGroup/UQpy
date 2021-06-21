@@ -2,7 +2,7 @@ import numpy as np
 
 from UQpy.distributions import Uniform
 from UQpy.RunModel import RunModel
-from UQpy.sample_methods import MonteCarloSampling
+from UQpy.sampling import MonteCarloSampling
 
 dist1 = Uniform(location=15000, scale=10000)
 dist2 = Uniform(location=450000, scale=80000)

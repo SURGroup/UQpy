@@ -5,7 +5,8 @@ import numpy as np
 
 
 def test_beta():
-    assert Beta(a=1., b=2.).cdf(x=0.8) == 0.96
+    result = Beta(a=1., b=2.).cdf(x=0.8)
+    assert result == 0.96
 
 
 def test_cauchy():
@@ -89,7 +90,9 @@ def test_multinomial_3():
 
 
 def test_multinomial_4():
-    assert np.all(Multinomial(trials_number=5, trial_probability=[0.2, 0.3, 0.5]).moments(moments2return='m') == [1., 1.5, 2.5])
+    multinomial = Multinomial(trials_number=5, trial_probability=[0.2, 0.3, 0.5])
+    moments = multinomial.moments(moments2return='m')
+    assert np.all(moments == [1., 1.5, 2.5])
 
 
 def test_multinomial_5():
@@ -105,40 +108,40 @@ def test_multinomial_6():
 
 
 def test_mvnormal_1():
-    assert np.round(MultivariateNormal(mean=[1., 2.], covariance=3.).cdf(x=[0.8, 0.8]), 3) == 0.111
+    assert np.round(MultivariateNormal(mean=[1., 2.], cov=3.).cdf(x=[0.8, 0.8]), 3) == 0.111
 
 
 def test_mvnormal_2():
-    assert np.round(MultivariateNormal(mean=[1., 2.], covariance=3.).pdf(x=[0.8, 0.8]), 3) == 0.041
+    assert np.round(MultivariateNormal(mean=[1., 2.], cov=3.).pdf(x=[0.8, 0.8]), 3) == 0.041
 
 
 def test_mvnormal_3():
-    assert np.round(MultivariateNormal(mean=[1., 2.], covariance=3.).log_pdf(x=[0.8, 0.8]), 3) == -3.183
+    assert np.round(MultivariateNormal(mean=[1., 2.], cov=3.).log_pdf(x=[0.8, 0.8]), 3) == -3.183
 
 
 def test_mvnormal_4():
     data = np.array([[0., 0.9], [0.1, 1.], [-0.1, 1.1]])
     true_mean = np.array([0., 1.])
     true_cov = np.array([[0.010, -0.005], [-0.005, 0.010]])
-    dict_fit = MultivariateNormal(mean=None, covariance=None).fit(data=data)
-    assert np.all(dict_fit['mean'] == true_mean) and np.all(np.round(dict_fit['covariance'], 3) == true_cov)
+    dict_fit = MultivariateNormal(mean=None, cov=None).fit(data=data)
+    assert np.all(dict_fit['mean'] == true_mean) and np.all(np.round(dict_fit['cov'], 3) == true_cov)
 
 
 def test_mvnormal_5():
-    samples = MultivariateNormal(mean=[1., 2.], covariance=1.).rvs(nsamples=3, random_state=123)
+    samples = MultivariateNormal(mean=[1., 2.], cov=1.).rvs(nsamples=3, random_state=123)
     assert np.all(np.round(samples, 3) == np.array([[-0.086, 2.997], [1.283, 0.494], [0.421, 3.651]]))
 
 
 def test_mvnormal_6():
-    assert np.all(MultivariateNormal(mean=[1., 2.], covariance=3.).moments(moments2return='m') == [1., 2.])
+    assert np.all(MultivariateNormal(mean=[1., 2.], cov=3.).moments(moments2return='m') == [1., 2.])
 
 
 def test_mvnormal_7():
-    assert np.all(MultivariateNormal(mean=[1., 2.], covariance=3.).moments(moments2return='v') == 3.)
+    assert np.all(MultivariateNormal(mean=[1., 2.], cov=3.).moments(moments2return='v') == 3.)
 
 
 def test_mvnormal_8():
-    moments = MultivariateNormal(mean=[1., 2.], covariance=3.).moments(moments2return='mv')
+    moments = MultivariateNormal(mean=[1., 2.], cov=3.).moments(moments2return='mv')
     assert np.all(moments[0] == [1., 2.]) and moments[1] == 3.
 
 
@@ -147,19 +150,19 @@ unif = np.array([0.4, 0.9]).reshape((1, 2))
 
 
 def test_clayton():
-    assert np.round(Clayton(theta=2.).evaluate_cdf(uniform_distributions=unif), 3) == 0.393
+    assert np.round(Clayton(theta=2.).evaluate_cdf(unit_uniform_samples=unif), 3) == 0.393
 
 
 def test_frank():
-    assert np.round(Frank(theta=2.).evaluate_cdf(uniform_distributions=unif), 3) == 0.379
+    assert np.round(Frank(theta=2.).evaluate_cdf(unit_uniform_samples=unif), 3) == 0.379
 
 
 def test_gumbel_1():
-    assert np.round(Gumbel(theta=2.).evaluate_cdf(uniform_distributions=unif), 3) == 0.398
+    assert np.round(Gumbel(theta=2.).evaluate_cdf(unit_uniform_samples=unif), 3) == 0.398
 
 
 def test_gumbel_2():
-    assert np.round(Gumbel(theta=2.).evaluate_pdf(unif=unif), 3) == 0.261
+    assert np.round(Gumbel(theta=2.).evaluate_pdf(unit_uniform_samples=unif), 3) == 0.261
 
 
 # Check JointInd and JointCopula
@@ -205,7 +208,7 @@ def test_joint_ind_7():
     dist_joint_ = JointIndependent(marginals=marginals_)
     data = np.array([[-0.17126121, 0.91793325], [3.99469089, 7.36946747], [2.565957, 3.60736828]])
     mle_fit = dist_joint_.fit(data=data)
-    assert np.round(mle_fit['loc_0'], 3) == 2.130
+    assert np.round(mle_fit['location_0'], 3) == 2.130
 
 
 def test_joint_copula_1():

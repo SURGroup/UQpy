@@ -25,9 +25,9 @@ class JointIndependent(DistributionND):
     """
     def __init__(self, marginals):
         super().__init__()
-        self.order_params = []
+        self.ordered_parameters = []
         for i, m in enumerate(marginals):
-            self.order_params.extend([key + '_' + str(i) for key in m.ordered_parameters_list])
+            self.ordered_parameters.extend([key + '_' + str(i) for key in m.ordered_parameters])
 
         # Check and save the marginals
         if not (isinstance(marginals, list) and all(isinstance(d, (DistributionContinuous1D, DistributionDiscrete1D))
@@ -38,7 +38,7 @@ class JointIndependent(DistributionND):
         # If all marginals have a method, the joint has it to
         if all(hasattr(m, 'pdf') or hasattr(m, 'pmf') for m in self.marginals):
             def joint_pdf(dist, x):
-                x = dist._check_x_dimension(x)
+                x = dist.check_x_dimension(x)
                 # Compute pdf of independent marginals
                 pdf_val = np.ones((x.shape[0], ))
                 for ind_m in range(len(self.marginals)):
@@ -54,7 +54,7 @@ class JointIndependent(DistributionND):
 
         if all(hasattr(m, 'log_pdf') or hasattr(m, 'log_pmf') for m in self.marginals):
             def joint_log_pdf(dist, x):
-                x = dist._check_x_dimension(x)
+                x = dist.check_x_dimension(x)
                 # Compute pdf of independent marginals
                 pdf_val = np.zeros((x.shape[0],))
                 for ind_m in range(len(self.marginals)):
@@ -70,7 +70,7 @@ class JointIndependent(DistributionND):
 
         if all(hasattr(m, 'cdf') for m in self.marginals):
             def joint_cdf(dist, x):
-                x = dist._check_x_dimension(x)
+                x = dist.check_x_dimension(x)
                 # Compute cdf of independent marginals
                 cdf_val = np.prod(np.array([marg.cdf(x[:, ind_m])
                                             for ind_m, marg in enumerate(dist.marginals)]), axis=0)
@@ -88,7 +88,7 @@ class JointIndependent(DistributionND):
 
         if all(hasattr(m, 'fit') for m in self.marginals):
             def joint_fit(dist, data):
-                data = dist._check_x_dimension(data)
+                data = dist.check_x_dimension(data)
                 # Compute ml estimates of independent marginal parameters
                 mle_all = {}
                 for ind_m, marg in enumerate(dist.marginals):

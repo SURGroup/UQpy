@@ -1,6 +1,6 @@
 from UQpy.distributions import Uniform
 from UQpy.RunModel import RunModel
-from UQpy.sample_methods import MonteCarloSampling
+from UQpy.sampling import MonteCarloSampling
 
 # Define the distribution objects
 d1 = Uniform(location=0.02, scale=0.06)

@@ -1,4 +1,4 @@
-from UQpy.surrogates.polynomial_chaos.polynomials.Polynomials import Polynomials
+from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import Polynomials
 import numpy as np
 from UQpy.distributions import Normal
 import scipy.special as special

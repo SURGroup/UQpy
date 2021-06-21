@@ -1,4 +1,4 @@
-from UQpy.sample_methods import MonteCarloSampling
+from UQpy.sampling import MonteCarloSampling
 from UQpy.RunModel import RunModel
 from UQpy.distributions import Normal
 import pytest

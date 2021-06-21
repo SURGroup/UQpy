@@ -1,7 +1,7 @@
 import numpy as np
 
 from UQpy.inference.InferenceModel import InferenceModel
-from UQpy.sample_methods import MarkovChainMonteCarlo, ImportanceSampling
+from UQpy.sampling import MCMC, ImportanceSampling
 
 
 class BayesParameterEstimation:
@@ -9,7 +9,7 @@ class BayesParameterEstimation:
     Estimate the parameter posterior density given some data.
 
     This class generates samples from the parameter posterior distribution using Markov Chain Monte Carlo or Importance
-    Sampling. It leverages the ``markov_chain`` and ``IS`` classes from the ``sample_methods`` module.
+    Sampling. It leverages the ``mcmc`` and ``IS`` classes from the ``sampling`` module.
 
 
     **Inputs:**
@@ -21,12 +21,12 @@ class BayesParameterEstimation:
         Available data, `ndarray` of shape consistent with log-likelihood function in ``InferenceModel``
 
     * **sampling_class** (class instance):
-        Class instance, must be a subclass of ``markov_chain`` or ``IS``.
+        Class instance, must be a subclass of ``mcmc`` or ``IS``.
 
     * **kwargs_sampler**:
-        Keyword arguments of the sampling class, see ``sample_methods.markov_chain`` or ``sample_methods.IS``.
+        Keyword arguments of the sampling class, see ``sampling.mcmc`` or ``sampling.IS``.
 
-        Note on the seed for ``markov_chain``: if input `seed` is not provided, a seed (`ndarray` of shape
+        Note on the seed for ``mcmc``: if input `seed` is not provided, a seed (`ndarray` of shape
         `(nchains, dimension)`) is sampled from the prior pdf, which must have an `rvs` method.
 
         Note on the proposal for ``IS``: if no input `proposal` is provided, the prior is used as proposal.
@@ -38,17 +38,17 @@ class BayesParameterEstimation:
         object itself can be passed directly.
 
     * **nsamples** (`int`):
-        Number of samples used in markov_chain/IS, see `run` method.
+        Number of samples used in mcmc/IS, see `run` method.
 
     * **samples_per_chain** (`int`):
-        Number of samples per chain used in markov_chain, see `run` method.
+        Number of samples per chain used in mcmc, see `run` method.
 
     If both `nsamples` and `nsamples_per_chain` are `None`, the object is created but the sampling procedure is not run,
     one must call the ``run`` method.
 
     **Attributes:**
 
-    * **sampler** (object of ``sample_methods`` class specified by `sampling_class`):
+    * **sampler** (object of ``sampling`` class specified by `sampling_class`):
         Sampling method object, contains e.g. the posterior samples.
 
         This object is created along with the ``BayesParameterEstimation`` object, and its `run` method is called
@@ -73,13 +73,13 @@ class BayesParameterEstimation:
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
         self.verbose = verbose
 
-        from UQpy.sample_methods import MarkovChainMonteCarlo, ImportanceSampling
-        # markov_chain algorithm
-        if issubclass(sampling_class, MarkovChainMonteCarlo):
+        from UQpy.sampling import MCMC, ImportanceSampling
+        # mcmc algorithm
+        if issubclass(sampling_class, MCMC):
             # If the seed is not provided, sample one from the prior pdf of the parameters
             if 'seed' not in kwargs_sampler.keys() or kwargs_sampler['seed'] is None:
                 if self.inference_model.prior is None or not hasattr(self.inference_model.prior, 'rvs'):
-                    raise NotImplementedError('UQpy: A prior with a rvs method or a seed must be provided for markov_chain.')
+                    raise NotImplementedError('UQpy: A prior with a rvs method or a seed must be provided for mcmc.')
                 else:
                     kwargs_sampler['seed'] = self.inference_model.prior.rvs(
                         nsamples=kwargs_sampler['nchains'], random_state=self.random_state)
@@ -100,7 +100,7 @@ class BayesParameterEstimation:
                 random_state=self.random_state, verbose=self.verbose, nsamples=None, **kwargs_sampler)
 
         else:
-            raise ValueError('UQpy: Sampling_class should be either a markov_chain algorithm or IS.')
+            raise ValueError('UQpy: Sampling_class should be either a mcmc algorithm or IS.')
 
         # Run the analysis if a certain number of samples was provided
         if (nsamples is not None) or (nsamples_per_chain is not None):
@@ -116,14 +116,14 @@ class BayesParameterEstimation:
         **Inputs:**
 
         * **nsamples** (`int`):
-            Number of samples used in ``markov_chain``/``IS``
+            Number of samples used in ``mcmc``/``IS``
 
         * **samples_per_chain** (`int`):
-            Number of samples per chain used in ``markov_chain``
+            Number of samples per chain used in ``mcmc``
 
         """
 
-        if isinstance(self.sampler, MarkovChainMonteCarlo):
+        if isinstance(self.sampler, MCMC):
             self.sampler.run(number_of_samples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
         elif isinstance(self.sampler, ImportanceSampling):
@@ -132,7 +132,7 @@ class BayesParameterEstimation:
             self.sampler.run(nsamples=nsamples)
 
         else:
-            raise ValueError('UQpy: sampling class should be a subclass of markov_chain or IS')
+            raise ValueError('UQpy: sampling class should be a subclass of mcmc or IS')
 
         if self.verbose:
             print('UQpy: Parameter estimation with ' + self.sampler.__class__.__name__ + ' completed successfully!')

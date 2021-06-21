@@ -1,6 +1,6 @@
 from UQpy.distributions import Uniform
 from UQpy.RunModel import RunModel
-from UQpy.sample_methods import MonteCarloSampling
+from UQpy.sampling import MonteCarloSampling
 
 ########################################################################################################################
 # This will need to be rewritten when MCS is updated.

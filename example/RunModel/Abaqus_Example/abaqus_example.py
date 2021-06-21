@@ -3,7 +3,7 @@ import time
 
 from UQpy.distributions import Normal, Uniform
 from UQpy.RunModel import *
-from UQpy.sample_methods import MonteCarloSampling
+from UQpy.sampling import MonteCarloSampling
 
 calling_directory = os.getcwd()
 t = time.time()

@@ -1,4 +1,4 @@
-from UQpy.distributions.baseclass import DistributionContinuous1D
+from UQpy.distributions.baseclass.DistributionContinuous1D import DistributionContinuous1D
 from abc import ABC
 
 
@@ -77,13 +77,12 @@ class Copula(ABC):
         No outputs, this code raises errors if necessary.
     """
     def __init__(self, ordered_parameters=None, **kwargs):
-        theta = kwargs['theta']
-        if theta is not None and ((not isinstance(theta, (float, int))) or (theta < -1 or theta == 0.)):
-            raise ValueError('Input theta should be a float in [-1, +oo).')
         self.parameters = kwargs
-        self.ordered_parameters = ordered_parameters if not None else tuple(kwargs.keys())
-        if len(self.ordered_parameters) != len(self.parameters):
-            raise ValueError('Inconsistent dimensions between order_params tuple and params dictionary.')
+        self.ordered_parameters = ordered_parameters
+        if self.ordered_parameters is None:
+            self.ordered_parameters = tuple(kwargs.keys())
+        if len(self.ordered_parameters)!=len(self.parameters):
+            raise ValueError('Inconsistent dimensions between ordered_parameters tuple and parameters dictionary.')
 
     def get_parameters(self):
         return self.parameters

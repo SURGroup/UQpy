@@ -4,7 +4,7 @@ from inspect import isclass
 import numpy as np
 
 from UQpy.RunModel import RunModel
-from UQpy.sample_methods import *
+from UQpy.sampling import *
 
 
 class SubsetSimulation:
@@ -12,17 +12,17 @@ class SubsetSimulation:
     Perform Subset Simulation to estimate probability of failure.
 
     This class estimates probability of failure for a user-defined model using Subset Simulation. The class can
-    use one of several markov_chain algorithms to draw conditional samples.
+    use one of several mcmc algorithms to draw conditional samples.
 
     **Input:**
 
     * **runmodel_object** (``RunModel`` object):
         The computational model. It should be of type `RunModel` (see ``RunModel`` class).
 
-    * **mcmc_class** (Class of type ``sample_methods.markov_chain``)
-        Specifies the markov_chain algorithm.
+    * **mcmc_class** (Class of type ``sampling.mcmc``)
+        Specifies the mcmc algorithm.
 
-        Must be a child class of the ``sample_methods.markov_chain`` parent class. Note: This is `not` and object of the class.
+        Must be a child class of the ``sampling.mcmc`` parent class. Note: This is `not` and object of the class.
         This input specifies the class itself.
 
     * **samples_init** (`ndarray`)
@@ -46,7 +46,7 @@ class SubsetSimulation:
         A boolean declaring whether to write text to the terminal.
 
     * **mcmc_kwargs** (`dict`)
-        Any additional keyword arguments needed for the specific ``markov_chain`` class.
+        Any additional keyword arguments needed for the specific ``mcmc`` class.
 
     **Attributes:**
 
@@ -75,7 +75,7 @@ class SubsetSimulation:
     def __init__(self, runmodel_object, mcmc_class=ModifiedMetropolisHastings, samples_init=None,
                  conditional_probability=0.1, nsamples_per_ss=1000, max_level=10, verbose=False, **mcmc_kwargs):
 
-        # Store the markov_chain object to create a new object of this type for each subset
+        # Store the mcmc object to create a new object of this type for each subset
         self.mcmc_kwargs = mcmc_kwargs
         self.mcmc_class = mcmc_class
 
@@ -114,7 +114,7 @@ class SubsetSimulation:
         self.g_level = list()
 
         if self.verbose:
-            print('UQpy: Running Subset Simulation with markov_chain of type: ' + str(type(mcmc_object)))
+            print('UQpy: Running Subset Simulation with mcmc of type: ' + str(type(mcmc_object)))
 
         [self.pf, self.cov1, self.cov2] = self.run()
 
@@ -154,7 +154,7 @@ class SubsetSimulation:
             warnings.warn('UQpy: You have not provided initial samples.\n Subset simulation is highly sensitive to the '
                           'initial sample set. It is recommended that the user either:\n'
                           '- Provide an initial set of samples (samples_init) known to follow the distribution; or\n'
-                          '- Provide a robust markov_chain object that will draw independent initial samples from the '
+                          '- Provide a robust mcmc object that will draw independent initial samples from the '
                           'distribution.')
             self.mcmc_objects[0].run(number_of_samples=self.nsamples_per_ss)
             self.samples.append(self.mcmc_objects[0].samples)
@@ -189,7 +189,7 @@ class SubsetSimulation:
 
             # Unpack the attributes
 
-            # Initialize a new markov_chain object for each conditional level
+            # Initialize a new mcmc object for each conditional level
             self.mcmc_kwargs['seed'] = np.atleast_2d(self.samples[step][:n_keep, :])
             self.mcmc_kwargs['random_state'] = self.random_state
             new_mcmc_object = self.mcmc_class(**self.mcmc_kwargs)
@@ -202,7 +202,7 @@ class SubsetSimulation:
             else:
                 raise AttributeError(
                     'UQpy: The number of samples per subset (nsamples_per_ss) must be an integer multiple of '
-                    'the number of markov_chain chains.')
+                    'the number of mcmc chains.')
 
             # Propagate each chain n_prop times and evaluate the model to accept or reject.
             for i in range(n_prop - 1):
@@ -224,7 +224,7 @@ class SubsetSimulation:
                 # Pull out the indices of the true values in the test list
                 ind_true = [i for i, val in enumerate(test) if val]
 
-                # Do not run the model for those samples where the markov_chain state remains unchanged.
+                # Do not run the model for those samples where the mcmc state remains unchanged.
                 self.samples[step][[x + (i + 1) * n_keep for x in ind_true], :] = \
                     self.mcmc_objects[step].samples[ind_true, :]
                 self.g[step][[x + (i + 1) * n_keep for x in ind_true]] = self.g[step][ind_true]
@@ -282,11 +282,11 @@ class SubsetSimulation:
         No inputs or returns.
         """
 
-        # Check that an markov_chain class is being passed in.
+        # Check that an mcmc class is being passed in.
         if not isclass(self.mcmc_class):
-            raise ValueError('UQpy: mcmc_class must be a child class of markov_chain. Note it is not an instance of the class.')
-        if not issubclass(self.mcmc_class, markov_chain):
-            raise ValueError('UQpy: mcmc_class must be a child class of markov_chain.')
+            raise ValueError('UQpy: mcmc_class must be a child class of mcmc. Note it is not an instance of the class.')
+        if not issubclass(self.mcmc_class, mcmc):
+            raise ValueError('UQpy: mcmc_class must be a child class of mcmc.')
 
         # Check that a RunModel object is being passed in.
         if not isinstance(self.runmodel_object, RunModel):

@@ -1,6 +1,6 @@
 from scipy.linalg import sqrtm
 
-from UQpy.Utilities import *
+from UQpy.utilities.Utilities import *
 
 
 class KarhunenLoeveExpansion:

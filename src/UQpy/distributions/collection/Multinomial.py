@@ -41,7 +41,8 @@ class Multinomial(DistributionND):
             size=nsamples, random_state=random_state, **self.parameters).reshape((nsamples, -1))
 
     def moments(self, moments2return='mv'):
-        n, p = self.get_parameters()['trials_number'], np.array(self.get_parameters()['trial_probability'])
+        n = self.get_parameters()['n']
+        p = np.array(self.get_parameters()['p'])
         d = len(p)
         if moments2return == 'm':
             mean = n * np.array(p)

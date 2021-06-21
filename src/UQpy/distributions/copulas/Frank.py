@@ -1,5 +1,6 @@
 import numpy as np
 from UQpy.distributions.baseclass import Copula
+from UQpy.utilities.validation.Validations import *
 
 
 class Frank(Copula):
@@ -21,12 +22,21 @@ class Frank(Copula):
 
     (``check_copula`` checks that `marginals` consist of solely 2 continuous univariate distributions).
     """
+
+    @check_copula_theta()
     def __init__(self, theta):
         super().__init__(theta=theta)
 
-    def evaluate_cdf(self, first_uniform, second_uniform):
-        theta = self.parameters['theta']
-        tmp_ratio = (np.exp(-theta * first_uniform) - 1.) * \
-                    (np.exp(-theta * second_uniform) - 1.) / (np.exp(-theta) - 1.)
+    @check_sample_dimensions()
+    def evaluate_cdf(self, unit_uniform_samples):
+        theta, u, v = self.extract_data(unit_uniform_samples)
+        tmp_ratio = (np.exp(-theta * u) - 1.) * \
+                    (np.exp(-theta * v) - 1.) / (np.exp(-theta) - 1.)
         cdf_val = -1. / theta * np.log(1. + tmp_ratio)
         return cdf_val
+
+    def extract_data(self, unit_uniform_samples):
+        u = unit_uniform_samples[:, 0]
+        v = unit_uniform_samples[:, 1]
+        theta = self.parameters['theta']
+        return theta, u, v
