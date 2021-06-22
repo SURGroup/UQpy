@@ -1,4 +1,4 @@
-from UQpy.sampling.latin_hypercube_criteria import Criterion, RandomCriterion
+from UQpy.sampling.latin_hypercube_criteria import Criterion, Random
 import numpy as np
 import copy
 
@@ -25,24 +25,28 @@ class MinCorrelation(Criterion):
 
             """
 
-    def __init__(self, samples, random_state=None, iterations=100):
+    def __init__(self, random_state=None, iterations=100, verbose = True):
         if not isinstance(iterations, int):
             raise ValueError('UQpy: number of iterations must be an integer.')
 
-        self.samples = samples
         self.random_state = random_state
         self.iterations = iterations
-        self.random_criterion = RandomCriterion()
+        self.random_criterion = Random(random_state=random_state)
+        self.verbose = verbose
+
+    def create_bins(self, samples):
+        self.random_criterion.create_bins(samples)
+        super().create_bins(samples)
 
     def generate_samples(self):
         i = 0
-        lhs_samples = self.random_criterion(self.samples, self.random_state)
+        lhs_samples = self.random_criterion.generate_samples()
         r = np.corrcoef(np.transpose(lhs_samples))
         np.fill_diagonal(r, 1)
         r1 = r[r != 1]
         min_corr = np.max(np.abs(r1))
         while i < self.iterations:
-            samples_try = self.random_criterion(self.samples, self.random_state)
+            samples_try = self.random_criterion.generate_samples()
             r = np.corrcoef(np.transpose(samples_try))
             np.fill_diagonal(r, 1)
             r1 = r[r != 1]

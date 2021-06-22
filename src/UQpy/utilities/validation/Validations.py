@@ -14,6 +14,18 @@ def check_copula_theta():
         return wrap
     return validator
 
+def check_random_state():
+    def validator(f):
+        @functools.wraps(f)
+        def wrap(self, **kwargs):
+            random_state = kwargs['random_state']
+            if not isinstance(random_state, int) and \
+                    not isinstance(random_state, (type(None), np.random.RandomState)):
+                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            return f(self, **kwargs)
+        return wrap
+    return validator
+
 
 def check_sample_dimensions():
     def validator(f):

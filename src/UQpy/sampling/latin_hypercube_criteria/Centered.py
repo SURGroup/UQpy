@@ -3,11 +3,6 @@ import numpy as np
 
 
 class Centered(Criterion):
-    def __init__(self, samples, random_state=None, a=None, b=None):
-        self.samples = samples
-        self.random_state = random_state
-        self.a = a
-        self.b = b
 
     def generate_samples(self):
         u_temp = (self.a + self.b) / 2

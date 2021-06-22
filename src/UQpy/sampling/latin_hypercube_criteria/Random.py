@@ -23,10 +23,6 @@ class Random(Criterion):
                 The randomly shuffled set of LHS samples.
             """
 
-    def __init__(self, samples, random_state=None):
-        self.samples = samples
-        self.random_state = random_state
-
     def generate_samples(self):
         lhs_samples = np.zeros_like(self.samples)
         samples_number = len(self.samples)

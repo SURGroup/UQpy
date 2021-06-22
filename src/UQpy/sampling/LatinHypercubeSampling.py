@@ -1,4 +1,5 @@
 from UQpy.distributions import *
+from UQpy.sampling.latin_hypercube_criteria.baseclass.Criterion import *
 import numpy as np
 from scipy.spatial.distance import pdist
 import scipy.stats as stats
@@ -55,7 +56,7 @@ class LatinHypercubeSampling:
 
     """
 
-    def __init__(self, distributions, samples_number, criterion=None, random_state=None, verbose=False,
+    def __init__(self, distributions, samples_number, criterion=None, verbose=False,
                  **kwargs):
 
         # Check if a Distribution object is provided.
@@ -72,20 +73,10 @@ class LatinHypercubeSampling:
         self.dist_object = distributions
         self.kwargs = kwargs
 
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
-
-        if isinstance(criterion, str):
-            if criterion not in ['random', 'centered', 'maximin', 'correlate']:
-                raise NotImplementedError("Exit code: Supported lhs criteria: 'random', 'centered', 'maximin', "
-                                          "'correlate'.")
-            else:
-                self.criterion = criterion
-        else:
+        if isinstance(criterion, Criterion):
             self.criterion = criterion
+        else:
+            raise NotImplementedError("Exit code: Supported lhs criteria must implement Criterion.")
 
         if isinstance(samples_number, int):
             self.samples_number = samples_number
@@ -138,29 +129,9 @@ class LatinHypercubeSampling:
         if self.verbose:
             print('UQpy: Running Latin Hypercube sampling...')
 
-        cut = np.linspace(0, 1, self.samples_number + 1)
-        a = cut[:self.samples_number]
-        b = cut[1:self.samples_number + 1]
+        self.criterion.create_bins(self.samples)
 
-        u = np.zeros(shape=(self.samples.shape[0], self.samples.shape[1]))
-        samples = np.zeros_like(u)
-        for i in range(self.samples.shape[1]):
-            u[:, i] = stats.uniform.rvs(size=self.samples.shape[0], random_state=self.random_state)
-            samples[:, i] = u[:, i] * (b - a) + a
-
-        if self.criterion == 'random' or self.criterion is None:
-            u_lhs = self.random(samples, random_state=self.random_state)
-        elif self.criterion == 'centered':
-            u_lhs = self.centered(samples, random_state=self.random_state, a=a, b=b)
-        elif self.criterion == 'maximin':
-            u_lhs = self.max_min(samples, random_state=self.random_state, **self.kwargs)
-        elif self.criterion == 'correlate':
-            u_lhs = self.correlate(samples, random_state=self.random_state, **self.kwargs)
-        elif callable(self.criterion):
-            u_lhs = self.criterion(samples, random_state=self.random_state, **self.kwargs)
-        else:
-            raise ValueError('UQpy: A valid criterion is required.')
-
+        u_lhs = self.criterion.generate_samples()
         self.samplesU01 = u_lhs
 
         if isinstance(self.dist_object, list):
