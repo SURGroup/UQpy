@@ -77,7 +77,7 @@ class IS:
 
         self.verbose = verbose
         self.random_state = random_state
-        if isinstance(self.random_state, int):
+        if isinstance(self.random_state, int) or self.random_state is None:
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
@@ -193,7 +193,7 @@ class IS:
         if nsamples is None:
             nsamples = self.samples.shape[0]
         if method == 'multinomial':
-            multinomial_run = np.random.multinomial(nsamples, self.weights, size=1)[0]
+            multinomial_run = self.random_state.multinomial(nsamples, self.weights, size=1)[0]
             idx = list()
             for j in range(self.samples.shape[0]):
                 if multinomial_run[j] > 0:
