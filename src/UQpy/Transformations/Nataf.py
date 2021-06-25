@@ -113,15 +113,12 @@ class Nataf:
     def __init__(self, dist_object, samples_x=None, samples_z=None, jacobian=False, corr_z=None, corr_x=None,
                  itam_beta=1.0, itam_threshold1=0.001, itam_threshold2=0.1, itam_max_iter=100, verbose=False):
 
+        self.dimension = 0
         if isinstance(dist_object, list):
-            self.dimension = len(dist_object)
             for i in range(len(dist_object)):
-                if not isinstance(dist_object[i], (DistributionContinuous1D, JointInd)):
-                    raise TypeError('UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object '
-                                    'must be provided.')
+                self.update_dimensions(dist_object[i])
         else:
-            if not isinstance(dist_object, (DistributionContinuous1D, JointInd)):
-                raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
+            self.update_dimensions(dist_object)
 
         self.dist_object = dist_object
         self.samples_x = samples_x
@@ -164,6 +161,14 @@ class Nataf:
 
         if self.samples_x is not None or self.samples_z is not None:
             self.run(self.samples_x, self.samples_z, self.jacobian)
+
+    def update_dimensions(self, dist_object):
+        if isinstance(dist_object, DistributionContinuous1D):
+            self.dimension += 1
+        elif isinstance(dist_object, JointInd):
+            self.dimension += len(dist_object.marginals)
+        else:
+            raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
 
     def run(self, samples_x=None, samples_z=None, jacobian=False):
         """

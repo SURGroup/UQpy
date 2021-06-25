@@ -46,15 +46,10 @@ class FORM(TaylorSeries):
     def __init__(self, dist_object, runmodel_object, form_object=None, seed_x=None, seed_u=None, df_step=0.01,
                  corr_x=None, corr_z=None, n_iter=100, tol1=None, tol2=None, tol3=None, verbose=False):
 
-        super().__init__(dist_object, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u, n_iter, tol1, tol2,
-                         tol3, df_step, verbose)
+        super().__init__(dist_object, runmodel_object, form_object, seed_x, seed_u, df_step, corr_x, corr_z, n_iter,
+                         tol1, tol2, tol3, verbose)
 
         self.verbose = verbose
-
-        if df_step is not None:
-            if not isinstance(df_step, (float, int)):
-                raise ValueError('UQpy: df_step must be of type float or integer.')
-
         # Initialize output
         self.beta_form = None
         self.DesignPoint_U = None
@@ -117,7 +112,6 @@ class FORM(TaylorSeries):
         g_record = list()
         alpha_record = list()
         error_record = list()
-
         conv_flag = False
         k = 0
         beta = np.zeros(shape=(self.n_iter + 1,))
@@ -134,12 +128,12 @@ class FORM(TaylorSeries):
                 if seed_x is not None:
                     x = seed_x
                 else:
-                    seed_z = Correlate(seed.reshape(1, -1), self.nataf_object.corr_z).samples_z
+                    seed_z = Correlate(samples_u=seed.reshape(1, -1), corr_z=self.nataf_object.corr_z).samples_z
                     self.nataf_object.run(samples_z=seed_z.reshape(1, -1), jacobian=True)
                     x = self.nataf_object.samples_x
                     self.jzx = self.nataf_object.jxz
             else:
-                z = Correlate(u[k, :].reshape(1, -1), self.nataf_object.corr_z).samples_z
+                z = Correlate(samples_u=u[k, :].reshape(1, -1), corr_z=self.nataf_object.corr_z).samples_z
                 self.nataf_object.run(samples_z=z, jacobian=True)
                 x = self.nataf_object.samples_x
                 self.jzx = self.nataf_object.jxz
@@ -153,9 +147,9 @@ class FORM(TaylorSeries):
                 print('Jacobian Jzx: {0}'.format(self.jzx))
 
             # 2. evaluate Limit State Function and the gradient at point u_k and direction cosines
-            dg_u, qoi = self.derivatives(point_u=u[k, :], point_x=self.x, runmodel_object=self.runmodel_object,
-                                         nataf_object=self.nataf_object, df_step=self.df_step, order='first',
-                                         verbose=self.verbose)
+            dg_u, qoi, _ = self.derivatives(point_u=u[k, :], point_x=self.x, runmodel_object=self.runmodel_object,
+                                            nataf_object=self.nataf_object, df_step=self.df_step, order='first',
+                                            verbose=self.verbose)
             g_record.append(qoi)
 
             dg_u_record[k + 1, :] = dg_u
