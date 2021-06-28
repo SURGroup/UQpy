@@ -28,15 +28,18 @@ From GitHub: Clone your fork of the UQpy repo from your GitHub account to your l
 
 	git clone https://github.com/SURGroup/UQpy.git
 	cd UQpy
-	python setup.py install 
+	python setup.py {version} install
 
+In this case, {version} must be replaced with the latest version number, eq. 3.1.4, when running the command.
 
 Development
 -----------
 
 UQpy is designed to serve as a platform for developing new UQ methodologies and algorithms. To install ``UQpy`` as a developer run::
 
-    python setup.py develop 
+    python setup.py {version} develop
+
+In this case, {version} must be replaced with the latest version number, eq. 3.1.4, when running the command.
 
 Referencing
 -------------
