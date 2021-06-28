@@ -2,6 +2,7 @@ import numpy as np
 import scipy.stats as stats
 
 from UQpy.utilities.strata.baseclass.Strata import Strata
+from UQpy.sampling.SimplexSampling import SimplexSampling
 
 
 class Delaunay(Strata):
@@ -132,3 +133,17 @@ class Delaunay(Strata):
         centroid = np.mean(vertices, axis=0)
 
         return centroid, volume
+
+    def sample_strata(self, samples_per_stratum_number):
+        samples_in_strata, weights = [], []
+        count = 0
+        for simplex in self.delaunay.simplices:  # extract simplices from Delaunay triangulation
+            samples_temp = \
+                SimplexSampling(nodes=self.delaunay.points[simplex],
+                                samples_number=int(samples_per_stratum_number[count]),
+                                random_state=self.random_state)
+            samples_in_strata.append(samples_temp.samples)
+            self.extend_weights(samples_per_stratum_number, count, weights)
+            count = count + 1
+        return samples_in_strata, weights
+

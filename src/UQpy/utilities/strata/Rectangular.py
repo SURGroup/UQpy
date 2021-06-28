@@ -1,92 +1,19 @@
 import numpy as np
 
 from UQpy.utilities.strata.baseclass.Strata import Strata
+from UQpy.utilities.strata.StratificationCriterion import StratificationCriterion
+import scipy.stats as stats
 
 
 class Rectangular(Strata):
-    """
-    Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling
-    rectangular strata.
-
-    ``RectangularStrata`` is a child class of the ``strata`` class
-
-    **Inputs:**
-
-    * **nstrata** (`list` of `int`):
-        A list of length `n` defining the number of strata in each of the `n` dimensions. Creates an equal
-        stratification with strata widths equal to 1/`n_strata`. The total number of strata, `N`, is the product
-        of the terms of `n_strata`.
-
-        Example: `n_strata` = [2, 3, 2] creates a 3-dimensional stratification with:\n
-                2 strata in dimension 0 with stratum widths 1/2\n
-                3 strata in dimension 1 with stratum widths 1/3\n
-                2 strata in dimension 2 with stratum widths 1/2\n
-
-        The user must pass one of `nstrata` OR `input_file` OR `seeds` and `widths`
-
-    * **input_file** (`str`):
-        File path to an input file specifying stratum seeds and stratum widths.
-
-        This is typically used to define irregular stratified designs.
-
-        The user must pass one of `n_strata` OR `input_file` OR `seeds` and `widths`
-
-    * **seeds** (`ndarray`):
-        An array of dimension `N x n` specifying the seeds of all strata. The seeds of the strata are the
-        coordinates of the stratum orthotope nearest the global origin.
-
-        Example: A 2-dimensional stratification with 2 equal strata in each dimension:
-
-            `origins` = [[0, 0], [0, 0.5], [0.5, 0], [0.5, 0.5]]
-
-        The user must pass one of `n_strata` OR `input_file` OR `seeds` and `widths`
-
-    * **widths** (`ndarray`):
-        An array of dimension `N x n` specifying the widths of all strata in each dimension
-
-        Example: A 2-dimensional stratification with 2 strata in each dimension
-
-            `widths` = [[0.5, 0.5], [0.5, 0.5], [0.5, 0.5], [0.5, 0.5]]
-
-        The user must pass one of `n_strata` OR `input_file` OR `seeds` and `widths`
-
-    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
-
-        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-        object itself can be passed directly.
-
-    * **verbose** (`Boolean`):
-        A boolean declaring whether to write text to the terminal.
-
-
-    **Attributes:**
-
-    * **nstrata** (`list` of `int`):
-        A list of length `n` defining the number of strata in each of the `n` dimensions. Creates an equal
-        stratification with strata widths equal to 1/`n_strata`. The total number of strata, `N`, is the product
-        of the terms of `n_strata`.
-
-    * **seeds** (`ndarray`):
-        An array of dimension `N x n` specifying the seeds of all strata. The seeds of the strata are the
-        coordinates of the stratum orthotope nearest the global origin.
-
-    * **widths** (`ndarray`):
-        An array of dimension `N x n` specifying the widths of all strata in each dimension
-
-    * **volume** (`ndarray`):
-        An array of dimension `(nstrata, )` containing the volume of each stratum. Stratum volumes are equal to the
-        product of the strata widths.
-
-    **Methods:**
-    """
-    def __init__(self, strata_number=None, input_file=None, seeds=None, widths=None, random_state=None, verbose=False):
-        super().__init__(random_state=random_state, seeds=seeds, verbose=verbose)
+    def __init__(self, strata_number=None, input_file=None, seeds=None, widths=None, random_state=None, verbose=False,
+                 stratification_criterion = StratificationCriterion.RANDOM):
+        super().__init__(seeds=seeds, random_state=random_state, verbose=verbose)
 
         self.input_file = input_file
         self.strata_number = strata_number
         self.widths = widths
-
+        self.stratification_criterion = stratification_criterion
         self.stratify()
 
     def stratify(self):
@@ -194,3 +121,61 @@ class Rectangular(Strata):
             ax.add_patch(rect1)
 
         return fig
+
+    def sample_strata(self, samples_per_stratum_number):
+        samples_in_strata, weights = [], []
+        for i in range(self.seeds.shape[0]):
+            samples_temp = np.zeros([int(samples_per_stratum_number[i]), self.seeds.shape[1]])
+            for j in range(self.seeds.shape[1]):
+                if self.stratification_criterion == StratificationCriterion.RANDOM:
+                    samples_temp[:, j] = stats.uniform.rvs(loc=self.seeds[i, j],
+                                                           scale=self.widths[i, j],
+                                                           random_state=self.random_state,
+                                                           size=int(samples_per_stratum_number[i]))
+                else:
+                    samples_temp[:, j] = self.seeds[i, j] + self.widths[i, j] / 2.
+
+            samples_in_strata.append(samples_temp)
+            self.extend_weights(samples_per_stratum_number, i, weights)
+        return samples_in_strata, weights
+
+    def calculate_strata_metrics(self):
+        s = np.zeros(self.strata_number)
+        for i in range(self.strata_number):
+            s[i] = self.strata_object.volume[i] ** 2
+        return s
+
+    def update_strata_and_generate_samples(self, bins2break):
+        new_points = np.zeros([p, self.dimension])
+        for j in range(len(bins2break)):
+            new_points[j, :] = self._update_stratum_and_generate_sample(bin2break[j])
+        return new_points
+
+
+    def _update_stratum_and_generate_sample(self, bin_):
+        # Cut the stratum in the direction of maximum length
+        cut_dir_temp = self.strata_object.widths[bin_, :]
+        dir2break = np.random.choice(np.argwhere(cut_dir_temp == np.amax(cut_dir_temp))[0])
+
+        # Divide the stratum bin2break in the direction dir2break
+        self.strata_object.widths[bin_, dir2break] = self.strata_object.widths[bin_, dir2break] / 2
+        self.strata_object.widths = np.vstack([self.strata_object.widths, self.strata_object.widths[bin_, :]])
+        self.strata_object.seeds = np.vstack([self.strata_object.seeds, self.strata_object.seeds[bin_, :]])
+        if self.samplesU01[bin_, dir2break] < self.strata_object.seeds[bin_, dir2break] + \
+                self.strata_object.widths[bin_, dir2break]:
+            self.strata_object.seeds[-1, dir2break] = self.strata_object.seeds[bin_, dir2break] + \
+                                                      self.strata_object.widths[bin_, dir2break]
+        else:
+            self.strata_object.seeds[bin_, dir2break] = self.strata_object.seeds[bin_, dir2break] + \
+                                                        self.strata_object.widths[bin_, dir2break]
+
+        self.strata_object.volume[bin_] = self.strata_object.volume[bin_] / 2
+        self.strata_object.volume = np.append(self.strata_object.volume, self.strata_object.volume[bin_])
+
+        # Add a uniform random sample inside the new stratum
+        new_samples = stats.uniform.rvs(loc=self.strata_object.seeds[-1, :], scale=self.strata_object.widths[-1, :],
+                                        random_state=self.random_state)
+
+        return new_samples
+
+

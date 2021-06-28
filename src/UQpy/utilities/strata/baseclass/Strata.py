@@ -50,7 +50,6 @@ class Strata:
 
     @abc.abstractmethod
     def stratify(self):
-
         """
         Perform the stratification of the unit hypercube. It is overwritten by the subclass. This method must exist in
         any subclass of the ``strata`` class.
@@ -62,3 +61,19 @@ class Strata:
         """
 
         pass
+
+    @abc.abstractmethod
+    def sample_strata(self):
+        pass
+
+    @abc.abstractmethod
+    def calculate_strata_metrics(self):
+        pass
+
+    def extend_weights(self, samples_per_stratum_number, index, weights):
+        if int(samples_per_stratum_number[index]) != 0:
+            weights.extend(
+                [self.volume[index] / samples_per_stratum_number[index]] *
+                int(samples_per_stratum_number[index]))
+        else:
+            weights.extend([0] * int(samples_per_stratum_number[index]))

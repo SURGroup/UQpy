@@ -39,13 +39,3 @@ def test_lhs_maximin_criterion():
     actual_samples = latin_hypercube_sampling.samples.flatten()
     expected_samples = np.array([[1.208511], [1.86016225]]).flatten()
     np.testing.assert_allclose(expected_samples, actual_samples, rtol=1e-6)
-
-
-def test_lhs_correlate_criterion():
-    correlate_criterion = MinCorrelation(random_state=1)
-    latin_hypercube_sampling = \
-        LatinHypercubeSampling(distributions=distribution, samples_number=2,
-                               random_state=1, verbose=True, criterion=correlate_criterion)
-    actual_samples = latin_hypercube_sampling.samples.flatten()
-    expected_samples = np.array([[1.27514], [1.126541]]).flatten()
-    np.testing.assert_allclose(expected_samples, actual_samples, rtol=1e-6)
