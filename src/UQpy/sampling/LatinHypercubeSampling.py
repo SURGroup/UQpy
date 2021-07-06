@@ -56,8 +56,7 @@ class LatinHypercubeSampling:
 
     """
 
-    def __init__(self, distributions, samples_number, criterion=None, verbose=False,
-                 **kwargs):
+    def __init__(self, distributions, samples_number, criterion=None, verbose=False):
 
         # Check if a Distribution object is provided.
         from UQpy.distributions import DistributionContinuous1D, JointIndependent
@@ -71,7 +70,6 @@ class LatinHypercubeSampling:
                 raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
 
         self.dist_object = distributions
-        self.kwargs = kwargs
 
         if isinstance(criterion, Criterion):
             self.criterion = criterion
@@ -151,5 +149,10 @@ class LatinHypercubeSampling:
         if self.verbose:
             print('Successful execution of LHS design.')
 
+    def __copy__(self):
+        new = self.__class__(distributions=self.dist_object,
+                             criterion=self.criterion,
+                             verbose=self.verbose)
+        new.__dict__.update(self.__dict__)
 
-
+        return new

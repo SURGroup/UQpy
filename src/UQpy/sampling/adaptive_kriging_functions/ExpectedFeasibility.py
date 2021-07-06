@@ -48,19 +48,18 @@ class ExpectedFeasibility(LearningFunction):
                 EFF learning function evaluated at the new sample points.
 
             """
-    def __init__(self, n_add, eff_a, eff_epsilon, eff_stop):
-        self.n_add = n_add
+    def __init__(self, eff_a=0, eff_epsilon=2, eff_stop=0.001):
         self.eff_a = eff_a
         self.eff_epsilon = eff_epsilon
         self.eff_stop = eff_stop
 
-    def evaluate_function(self, surrogate, population, qoi=None, samples=None):
+    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
 
-        g, sig = self.surrogate(self.pop, True)
+        g, sig = surrogate.predict(population, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array
-        g = g.reshape([self.pop.shape[0], 1])
-        sig = sig.reshape([self.pop.shape[0], 1])
+        g = g.reshape([population.shape[0], 1])
+        sig = sig.reshape([population.shape[0], 1])
         # reliability threshold: a_ = 0
         # EGRA method: epsilon = 2*sigma(x)
         a_, ep = self.eff_a, self.eff_epsilon * sig
@@ -70,12 +69,12 @@ class ExpectedFeasibility(LearningFunction):
         eff = (g - a_) * (2 * stats.norm.cdf(t1) - stats.norm.cdf(t2) - stats.norm.cdf(t3))
         eff += -sig * (2 * stats.norm.pdf(t1) - stats.norm.pdf(t2) - stats.norm.pdf(t3))
         eff += ep * (stats.norm.cdf(t3) - stats.norm.cdf(t2))
-        rows = eff[:, 0].argsort()[-self.n_add:]
+        rows = eff[:, 0].argsort()[-n_add:]
 
         stopping_criteria_indicator = False
         if max(eff[:, 0]) <= self.eff_stop:
             stopping_criteria_indicator = True
 
-        new_samples = self.pop[rows, :]
+        new_samples = population[rows, :]
         learning_function_values = eff[rows, :]
         return new_samples, learning_function_values, stopping_criteria_indicator

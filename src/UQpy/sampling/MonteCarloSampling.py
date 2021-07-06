@@ -240,3 +240,10 @@ class MonteCarloSampling:
                 temp_samples_u01.append(np.array(y))
             self.samplesU01 = temp_samples_u01
 
+    def __copy__(self):
+        new = self.__class__(distributions=self.dist_object,
+                             random_state=self.random_state,
+                             verbose=self.verbose)
+        new.__dict__.update(self.__dict__)
+
+        return new

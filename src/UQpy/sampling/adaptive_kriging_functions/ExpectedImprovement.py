@@ -50,28 +50,24 @@ class ExpectedImprovement(LearningFunction):
             * **eif_lf** (`ndarray`)
                 EIF learning function evaluated at the new sample points.
             """
-    def __init__(self, surrogate, pop, n_add, eif_stop, qoi):
-        self.surrogate = surrogate
-        self.pop = pop
-        self.n_add = n_add
+    def __init__(self, eif_stop=0.01):
         self.eif_stop = eif_stop
-        self.qoi = qoi
 
-    def evaluate_function(self):
-        g, sig = self.surrogate(self.pop, True)
+    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
+        g, sig = surrogate.predict(population, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array
-        g = g.reshape([self.pop.shape[0], 1])
-        sig = sig.reshape([self.pop.shape[0], 1])
+        g = g.reshape([population.shape[0], 1])
+        sig = sig.reshape([population.shape[0], 1])
 
-        fm = min(self.qoi)
+        fm = min(qoi)
         eif = (fm - g) * stats.norm.cdf((fm - g) / sig) + sig * stats.norm.pdf((fm - g) / sig)
-        rows = eif[:, 0].argsort()[(np.size(g) - self.n_add):]
+        rows = eif[:, 0].argsort()[(np.size(g) - n_add):]
 
         stopping_criteria_indicator = False
         if max(eif[:, 0]) / abs(fm) <= self.eif_stop:
             stopping_criteria_indicator = True
 
-        new_samples = self.pop[rows, :]
+        new_samples = population[rows, :]
         learning_function_values = eif[rows, :]
         return new_samples, learning_function_values, stopping_criteria_indicator

@@ -50,37 +50,29 @@ class ExpectedImprovementGlobalFit(LearningFunction):
                 EIGF learning function evaluated at the new sample points.
 
             """
-
-    def __init__(self, surrogate, pop, samples, qoi, n_add):
-        self.surrogate = surrogate
-        self.pop = pop
-        self.samples = samples
-        self.qoi = qoi
-        self.n_add = n_add
-
-    def evaluate_function(self):
-        g, sig = self.surrogate(self.pop, True)
+    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
+        g, sig = surrogate.predict(population, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array
-        g = g.reshape([self.pop.shape[0], 1])
-        sig = sig.reshape([self.pop.shape[0], 1])
+        g = g.reshape([population.shape[0], 1])
+        sig = sig.reshape([population.shape[0], 1])
 
         # Evaluation of the learning function
         # First, find the nearest neighbor in the training set for each point in the population.
 
         knn = NearestNeighbors(n_neighbors=1)
-        knn.fit(np.atleast_2d(self.samples))
-        neighbors = knn.kneighbors(np.atleast_2d(self.pop), return_distance=False)
+        knn.fit(np.atleast_2d(samples))
+        neighbors = knn.kneighbors(np.atleast_2d(population), return_distance=False)
 
         # noinspection PyTypeChecker
-        qoi_array = np.array([self.qoi[x] for x in np.squeeze(neighbors)])
+        qoi_array = np.array([qoi[x] for x in np.squeeze(neighbors)])
 
         # Compute the learning function at every point in the population.
         u = np.square(g - qoi_array) + np.square(sig)
-        rows = u[:, 0].argsort()[(np.size(g) - self.n_add):]
+        rows = u[:, 0].argsort()[(np.size(g) - n_add):]
 
         stopping_criteria_indicator = False
-        new_samples = self.pop[rows, :]
+        new_samples = population[rows, :]
         learning_function_evaluations = u[rows, :]
 
         return new_samples, learning_function_evaluations, stopping_criteria_indicator

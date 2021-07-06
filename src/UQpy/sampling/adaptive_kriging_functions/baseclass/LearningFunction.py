@@ -10,5 +10,5 @@ class LearningFunction(ABC):
             raise ValueError('Inconsistent dimensions between order_params tuple and params dictionary.')
 
     @abstractmethod
-    def evaluate_function(self):
+    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
         pass

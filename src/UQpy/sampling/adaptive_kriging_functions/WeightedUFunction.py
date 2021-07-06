@@ -48,38 +48,33 @@ class WeightedUFunction(LearningFunction):
 
             """
 
-    def __init__(self, surrogate, pop, n_add, weighted_u_stop, samples, distributions):
-        self.surrogate = surrogate
-        self.pop = pop
-        self.n_add = n_add
+    def __init__(self, weighted_u_stop):
         self.weighted_u_stop = weighted_u_stop
-        self.samples = samples
-        self.distributions = distributions
 
-    def evaluate_function(self):
-        g, sig = self.surrogate(self.pop, True)
+    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
+        g, sig = surrogate.predict(population, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array
-        g = g.reshape([self.pop.shape[0], 1])
-        sig = sig.reshape([self.pop.shape[0], 1])
+        g = g.reshape([population.shape[0], 1])
+        sig = sig.reshape([population.shape[0], 1])
 
         u = abs(g) / sig
-        p1 = np.ones([self.pop.shape[0], self.pop.shape[1]])
-        p2 = np.ones([self.samples.shape[0], self.pop.shape[1]])
+        p1 = np.ones([population.shape[0], population.shape[1]])
+        p2 = np.ones([samples.shape[0], population.shape[1]])
 
-        for j in range(self.samples.shape[1]):
-            p1[:, j] = self.distributions[j].pdf(np.atleast_2d(self.pop[:, j]).T)
-            p2[:, j] = self.distributions[j].pdf(np.atleast_2d(self.samples[:, j]).T)
+        for j in range(samples.shape[1]):
+            p1[:, j] = distributions[j].pdf(np.atleast_2d(population[:, j]).T)
+            p2[:, j] = distributions[j].pdf(np.atleast_2d(samples[:, j]).T)
 
         p1 = p1.prod(1).reshape(u.size, 1)
         max_p = max(p2.prod(1))
         u_ = u * ((max_p - p1) / max_p)
-        rows = u_[:, 0].argsort()[:self.n_add]
+        rows = u_[:, 0].argsort()[:n_add]
 
         stopping_criteria_indicator = False
         if min(u[:, 0]) >= self.weighted_u_stop:
             stopping_criteria_indicator = True
 
-        new_samples = self.pop[rows, :]
+        new_samples = population[rows, :]
         learning_function_values = u_[rows, :]
         return new_samples, learning_function_values, stopping_criteria_indicator

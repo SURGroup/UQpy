@@ -68,7 +68,9 @@ class ImportanceSampling:
                 raise AttributeError('UQpy: The proposal should have a log_pdf or pdf method')
             self.proposal.log_pdf = lambda x: np.log(np.maximum(self.proposal.pdf(x),
                                                                 10 ** (-320) * np.ones((x.shape[0],))))
-
+        self._pdf_target = pdf_target
+        self._log_pdf_target=log_pdf_target
+        self._args_target=args_target
         # Initialize target
         self.evaluate_log_target = self._preprocess_target(log_pdf_=log_pdf_target, pdf_=pdf_target, args=args_target)
 
@@ -214,3 +216,14 @@ class ImportanceSampling:
         else:
             raise ValueError('UQpy: log_pdf_target or pdf_target should be provided.')
         return evaluate_log_pdf
+
+    def __copy__(self):
+        new = self.__class__(pdf_target=self._pdf_target,
+                             log_pdf_target=self._log_pdf_target,
+                             args_target=self._args_target,
+                             proposal=self.proposal,
+                             verbose=self.verbose,
+                             random_state=self.random_state)
+        new.__dict__.update(self.__dict__)
+
+        return new

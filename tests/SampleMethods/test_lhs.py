@@ -25,7 +25,7 @@ def test_lhs_centered_criterion():
     centered_criterion = Centered(random_state=1)
     latin_hypercube_sampling = \
         LatinHypercubeSampling(distributions=distribution, samples_number=2,
-                               random_state=1, verbose=True, criterion=centered_criterion)
+                               verbose=True, criterion=centered_criterion)
     actual_samples = latin_hypercube_sampling.samples.flatten()
     expected_samples = np.array([[1.25], [1.75]]).flatten()
     np.testing.assert_allclose(expected_samples, actual_samples, rtol=1e-6)
@@ -35,7 +35,7 @@ def test_lhs_maximin_criterion():
     maximin_criterion = MaxiMin(random_state=1)
     latin_hypercube_sampling = \
         LatinHypercubeSampling(distributions=distribution, samples_number=2,
-                               random_state=1, verbose=True, criterion=maximin_criterion)
+                               verbose=True, criterion=maximin_criterion)
     actual_samples = latin_hypercube_sampling.samples.flatten()
     expected_samples = np.array([[1.208511], [1.86016225]]).flatten()
     np.testing.assert_allclose(expected_samples, actual_samples, rtol=1e-6)

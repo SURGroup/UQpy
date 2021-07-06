@@ -1,20 +1,13 @@
-from UQpy.sampling.refined_stratified_sampling import *
-from UQpy.RunModel import RunModel
 from UQpy.distributions.collection import *
-import matplotlib.pyplot as plt
-from matplotlib import cm
-from mpl_toolkits import mplot3d
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
-import matplotlib.patches as patches
-import numpy as np
 from UQpy.utilities.strata.Rectangular import *
 from UQpy.utilities.strata.Voronoi import *
-from UQpy.sampling.stratified_sampling.StratifiedSampling import *
+from UQpy.sampling.StratifiedSampling import *
 from UQpy.utilities.strata.Delaunay import *
+
 
 def test_rectangular_sts():
     marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
-    strata = Rectangular(strata_number=[4, 4], random_state=1 )
+    strata = Rectangular(strata_number=[4, 4], random_state=1)
     x = StratifiedSampling(distributions=marginals, strata_object=strata,
                            samples_per_stratum_number=1, verbose=True)
     assert x.samples[6, 0] == 0.5511130624328794

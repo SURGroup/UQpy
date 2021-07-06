@@ -98,3 +98,10 @@ class SimplexSampling:
             b = max(self.nodes)
             sample = a + (b - a) * stats.uniform.rvs(size=[self.samples_number, dimension], random_state=self.random_state)
         return sample
+
+    def __copy__(self):
+        new = self.__class__(nodes=self.nodes,
+                             random_state=self.random_state)
+        new.__dict__.update(self.__dict__)
+
+        return new

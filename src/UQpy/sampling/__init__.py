@@ -12,16 +12,14 @@ The module currently contains the following classes:
 - ``refined_stratified_sampling``: Class to perform refined stratified sampling.
 - ``strata``: Class to perform stratification of the unit hypercube.
 - ``Simplex``: Class to uniformly sample from a simplex.
-
 """
+
 from UQpy.sampling.mcmc import *
 from UQpy.sampling.refined_stratified_sampling import *
-from UQpy.sampling.stratified_sampling import *
 
-from UQpy.sampling.AdaptiveKriging import AdaptiveKrigingMonteCarlo
+from UQpy.sampling.AdaptiveKriging import AdaptiveKriging
 from UQpy.sampling.ImportanceSampling import ImportanceSampling
 from UQpy.sampling.LatinHypercubeSampling import LatinHypercubeSampling
 from UQpy.sampling.MonteCarloSampling import MonteCarloSampling
 from UQpy.sampling.SimplexSampling import SimplexSampling
-
-
+from UQpy.sampling.StratifiedSampling import StratifiedSampling

@@ -1,8 +1,10 @@
 import numpy as np
 from UQpy.sampling.LatinHypercubeSampling import LatinHypercubeSampling
+from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import LearningFunction
+from UQpy.distributions import DistributionContinuous1D, JointIndependent
+from UQpy.sampling.latin_hypercube_criteria import Random
 
-
-class AdaptiveKrigingMonteCarlo:
+class AdaptiveKriging:
     """
     Adaptively sample for construction of a kriging surrogate for different objectives including reliability,
     optimization, and global fit.
@@ -94,9 +96,9 @@ class AdaptiveKrigingMonteCarlo:
 
     """
 
-    def __init__(self, distributions, runmodel_object, kriging, samples=None, samples_number=None,
+    def __init__(self, distributions, runmodel_object, surrogate, samples=None, samples_number=None,
                  learning_samples_number=None, qoi_name=None, learning_function='U', n_add=1, random_state=None,
-                 verbose=False, **kwargs):
+                 verbose=False):
 
         # Initialize the internal variables of the class.
         self.runmodel_object = runmodel_object
@@ -118,8 +120,7 @@ class AdaptiveKrigingMonteCarlo:
         self.cov_pf = []
         self.dimension = 0
         self.qoi = None
-        self.krig_model = None
-        self.kwargs = kwargs
+        self.prediction_model = None
 
         # Initialize and run preliminary error checks.
         self.dimension = len(distributions)
@@ -128,32 +129,8 @@ class AdaptiveKrigingMonteCarlo:
             if self.dimension != self.samples.shape[1]:
                 raise NotImplementedError("UQpy Error: Dimension of samples and distribution are inconsistent.")
 
-        if self.learning_function not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
+        if not isinstance(self.learning_function, LearningFunction):
             raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
-        elif self.learning_function == 'EIGF':
-            self.learning_function = self.expected_improvement_global_fit
-        elif self.learning_function == 'EIF':
-            if 'eif_stop' not in self.kwargs:
-                self.kwargs['eif_stop'] = 0.01
-            self.learning_function = self.expected_improvement_function
-        elif self.learning_function == 'U':
-            if 'u_stop' not in self.kwargs:
-                self.kwargs['u_stop'] = 2
-            self.learning_function = self.u
-        elif self.learning_function == 'Weighted-U':
-            if 'u_stop' not in self.kwargs:
-                self.kwargs['u_stop'] = 2
-            self.learning_function = self.weighted_u
-        else:
-            if 'a' not in self.kwargs:
-                self.kwargs['a'] = 0
-            if 'epsilon' not in self.kwargs:
-                self.kwargs['epsilon'] = 2
-            if 'eff_stop' not in self.kwargs:
-                self.kwargs['u_stop'] = 0.001
-            self.learning_function = self.expected_feasiblity_function
-
-        from UQpy.distributions import DistributionContinuous1D, JointIndependent
 
         if isinstance(distributions, list):
             for i in range(len(distributions)):
@@ -169,8 +146,8 @@ class AdaptiveKrigingMonteCarlo:
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
-        if hasattr(kriging, 'fit') and hasattr(kriging, 'predict'):
-            self.krig_object = kriging
+        if hasattr(surrogate, 'fit') and hasattr(surrogate, 'predict'):
+            self.surrogate = surrogate
         else:
             raise NotImplementedError("UQpy: krig_object must have 'fit' and 'predict' methods.")
 
@@ -255,9 +232,13 @@ class AdaptiveKrigingMonteCarlo:
                     raise NotImplementedError("UQpy: User should provide either 'samples' or 'nstart' value.")
                 if self.verbose:
                     print('UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling.')
-                self.samples = LatinHypercubeSampling(distributions=self.dist_object,
-                                                      samples_number=self.initial_samples_number,
-                                                      random_state=self.random_state).samples
+
+
+                random_criterion = Random(random_state=self.random_state)
+                latin_hypercube_sampling = \
+                    LatinHypercubeSampling(distributions=self.dist_object, samples_number=2,
+                                           verbose=True, criterion=random_criterion)
+                self.samples = latin_hypercube_sampling.samples
                 self.runmodel_object.run(samples=self.samples)
 
         if self.verbose:
@@ -267,11 +248,8 @@ class AdaptiveKrigingMonteCarlo:
         self._convert_qoi_tolist()
 
         # Train the initial kriging model.
-        self.krig_object.fit(self.samples, self.qoi)
-        self.krig_model = self.krig_object.predict
-
-        # kwargs = {"n_add": self.n_add, "parameters": self.kwargs, "samples": self.samples, "qoi": self.qoi,
-        #           "dist_object": self.dist_object}
+        self.surrogate.fit(self.samples, self.qoi)
+        self.prediction_model = self.surrogate.predict
 
         # ---------------------------------------------
         # Primary loop for learning and adding samples.
@@ -280,9 +258,11 @@ class AdaptiveKrigingMonteCarlo:
         for i in range(self.samples.shape[0], self.samples_number):
             # Initialize the population of samples at which to evaluate the learning function and from which to draw
             # in the sampling.
+            random_criterion = Random(random_state=self.random_state)
+            lhs = \
+                LatinHypercubeSampling(distributions=self.dist_object, samples_number=self.learning_samples_number,
+                                       verbose=True, criterion=random_criterion)
 
-            lhs = LatinHypercubeSampling(distributions=self.dist_object, samples_number=self.learning_samples_number,
-                                         random_state=self.random_state)
             self.learning_set = lhs.samples.copy()
 
             # Find all of the points in the population that have not already been integrated into the training set
@@ -291,9 +271,14 @@ class AdaptiveKrigingMonteCarlo:
             # Apply the learning function to identify the new point to run the model.
 
             # new_point, lf, ind = self.learning_function(self.krig_model, rest_pop, **kwargs)
-            new_point, lf, ind = self.learning_function(self.krig_model, rest_pop, n_add=self.n_add,
-                                                        parameters=self.kwargs, samples=self.samples, qoi=self.qoi,
-                                                        dist_object=self.dist_object)
+            new_point, lf, ind = self.learning_function\
+                .evaluate_function(distributions=self.dist_object,
+                                   n_add=self.n_add,
+                                   surrogate=self.surrogate,
+                                   population=rest_pop,
+                                   qoi=self.qoi,
+                                   samples=self.samples)
+
 
             # Add the new points to the training set and to the sample set.
             self.samples = np.vstack([self.samples, np.atleast_2d(new_point)])
@@ -305,8 +290,8 @@ class AdaptiveKrigingMonteCarlo:
             self._convert_qoi_tolist()
 
             # Retrain the surrogate model
-            self.krig_object.fit(self.samples, self.qoi, optimizations_number=1)
-            self.krig_model = self.krig_object.predict
+            self.surrogate.fit(self.samples, self.qoi, optimizations_number=1)
+            self.prediction_model = self.surrogate.predict
 
             # Exit the loop, if error criteria is satisfied
             if ind:
