@@ -1,5 +1,6 @@
 import numpy as np
 import abc
+from UQpy.utilities.Utilities import gradient
 
 
 class Strata:
@@ -63,11 +64,14 @@ class Strata:
         pass
 
     @abc.abstractmethod
-    def sample_strata(self):
+    def sample_strata(self, samples_per_stratum_number):
         pass
 
     @abc.abstractmethod
-    def calculate_strata_metrics(self):
+    def calculate_strata_metrics(self, index):
+        pass
+
+    def initialize(self, samples_number, training_points):
         pass
 
     def extend_weights(self, samples_per_stratum_number, index, weights):

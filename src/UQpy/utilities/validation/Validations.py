@@ -1,4 +1,5 @@
 import functools
+import numpy as np
 
 
 def check_copula_theta():

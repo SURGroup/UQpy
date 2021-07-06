@@ -61,6 +61,9 @@ class Delaunay(Strata):
         **Methods:**
         """
 
+    def calculate_strata_metrics(self):
+        pass
+
     def __init__(self, seeds=None, seeds_number=None, dimension=None, random_state=None, verbose=False):
         super().__init__(random_state=random_state, seeds=seeds, verbose=verbose)
 
@@ -146,4 +149,3 @@ class Delaunay(Strata):
             self.extend_weights(samples_per_stratum_number, count, weights)
             count = count + 1
         return samples_in_strata, weights
-

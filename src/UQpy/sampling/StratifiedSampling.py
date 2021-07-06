@@ -1,5 +1,4 @@
 import numpy as np
-import abc
 
 
 class StratifiedSampling:
@@ -28,7 +27,7 @@ class StratifiedSampling:
             if not isinstance(distributions, (DistributionContinuous1D, JointIndependent)):
                 raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
 
-        self.dist_object = distributions
+        self.distributions = distributions
 
         if self.verbose:
             print("UQpy: stratified_sampling object is created")
@@ -54,7 +53,7 @@ class StratifiedSampling:
 
         samples_u_to_x = np.zeros_like(samples01)
         for j in range(0, samples01.shape[1]):
-            samples_u_to_x[:, j] = self.dist_object[j].icdf(samples01[:, j])
+            samples_u_to_x[:, j] = self.distributions[j].icdf(samples01[:, j])
 
         self.samples = samples_u_to_x
 
@@ -134,7 +133,6 @@ class StratifiedSampling:
                 raise ValueError("UQpy: 'nsamples_per_stratum' must be an integer or a list.")
         else:
             self.samples_per_stratum_number = [1] * self.strata_object.volume.shape[0]
-
 
     def create_unit_hypercube_samples(self):
         samples_in_strata, weights = self.strata_object.sample_strata(self.samples_per_stratum_number)

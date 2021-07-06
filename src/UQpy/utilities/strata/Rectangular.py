@@ -7,7 +7,7 @@ import scipy.stats as stats
 
 class Rectangular(Strata):
     def __init__(self, strata_number=None, input_file=None, seeds=None, widths=None, random_state=None, verbose=False,
-                 stratification_criterion = StratificationCriterion.RANDOM):
+                 stratification_criterion=StratificationCriterion.RANDOM):
         super().__init__(seeds=seeds, random_state=random_state, verbose=verbose)
 
         self.input_file = input_file
@@ -139,43 +139,53 @@ class Rectangular(Strata):
             self.extend_weights(samples_per_stratum_number, i, weights)
         return samples_in_strata, weights
 
-    def calculate_strata_metrics(self):
-        s = np.zeros(self.strata_number)
-        for i in range(self.strata_number):
-            s[i] = self.strata_object.volume[i] ** 2
+    def calculate_strata_metrics(self, index):
+        s = np.zeros(index)
+        for i in range(index):
+            s[i] = self.volume[i] ** 2
         return s
 
-    def update_strata_and_generate_samples(self, bins2break):
-        new_points = np.zeros([p, self.dimension])
+    def calculate_gradient_strata_metrics(self, index, dy_dx):
+        dy_dx1 = dy_dx[:index]
+        stratum_variance = (1 / 12) * self.widths ** 2
+        s = np.zeros(index)
+        for i in range(index):
+            s[i] = np.sum(dy_dx1[i, :] * stratum_variance[i, :] * dy_dx1[i, :]) * self.volume[i] ** 2
+        return s
+
+    def estimate_gradient(self, index, samples_u01, training_points, qoi, max_train_size=None):
+        return super().estimate_gradient(np.atleast_2d(training_points),
+                                         np.atleast_2d(np.array(qoi)),
+                                         self.seeds + 0.5 * self.widths)
+
+    def update_strata_and_generate_samples(self, dimension, points_to_add, bins2break, samples_u01, random_state):
+        new_points = np.zeros([points_to_add, dimension])
         for j in range(len(bins2break)):
-            new_points[j, :] = self._update_stratum_and_generate_sample(bin2break[j])
+            new_points[j, :] = self._update_stratum_and_generate_sample(bins2break[j], samples_u01, random_state)
         return new_points
 
-
-    def _update_stratum_and_generate_sample(self, bin_):
+    def _update_stratum_and_generate_sample(self, bin_, samples_u01, random_state):
         # Cut the stratum in the direction of maximum length
-        cut_dir_temp = self.strata_object.widths[bin_, :]
+        cut_dir_temp = self.widths[bin_, :]
         dir2break = np.random.choice(np.argwhere(cut_dir_temp == np.amax(cut_dir_temp))[0])
 
         # Divide the stratum bin2break in the direction dir2break
-        self.strata_object.widths[bin_, dir2break] = self.strata_object.widths[bin_, dir2break] / 2
-        self.strata_object.widths = np.vstack([self.strata_object.widths, self.strata_object.widths[bin_, :]])
-        self.strata_object.seeds = np.vstack([self.strata_object.seeds, self.strata_object.seeds[bin_, :]])
-        if self.samplesU01[bin_, dir2break] < self.strata_object.seeds[bin_, dir2break] + \
-                self.strata_object.widths[bin_, dir2break]:
-            self.strata_object.seeds[-1, dir2break] = self.strata_object.seeds[bin_, dir2break] + \
-                                                      self.strata_object.widths[bin_, dir2break]
+        self.widths[bin_, dir2break] = self.widths[bin_, dir2break] / 2
+        self.widths = np.vstack([self.widths, self.widths[bin_, :]])
+        self.seeds = np.vstack([self.seeds, self.seeds[bin_, :]])
+        if samples_u01[bin_, dir2break] < self.seeds[bin_, dir2break] + \
+                self.widths[bin_, dir2break]:
+            self.seeds[-1, dir2break] = self.seeds[bin_, dir2break] + \
+                                                      self.widths[bin_, dir2break]
         else:
-            self.strata_object.seeds[bin_, dir2break] = self.strata_object.seeds[bin_, dir2break] + \
-                                                        self.strata_object.widths[bin_, dir2break]
+            self.seeds[bin_, dir2break] = self.seeds[bin_, dir2break] + \
+                                                        self.widths[bin_, dir2break]
 
-        self.strata_object.volume[bin_] = self.strata_object.volume[bin_] / 2
-        self.strata_object.volume = np.append(self.strata_object.volume, self.strata_object.volume[bin_])
+        self.volume[bin_] = self.volume[bin_] / 2
+        self.volume = np.append(self.volume, self.volume[bin_])
 
         # Add a uniform random sample inside the new stratum
-        new_samples = stats.uniform.rvs(loc=self.strata_object.seeds[-1, :], scale=self.strata_object.widths[-1, :],
-                                        random_state=self.random_state)
+        new_samples = stats.uniform.rvs(loc=self.seeds[-1, :], scale=self.widths[-1, :],
+                                        random_state=random_state)
 
         return new_samples
-
-
