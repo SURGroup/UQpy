@@ -1,17 +1,11 @@
 from UQpy.surrogates.kriging.Kriging import Kriging
 from UQpy.sampling import MonteCarloSampling, AdaptiveKriging
 from UQpy.RunModel import RunModel
-from UQpy.distributions.collection import Uniform
 from UQpy.distributions.collection import Normal
-from BraninHoo import function
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
-import time
-import numpy as np
-from UQpy.sampling import AdaptiveKriging
 from UQpy.sampling.adaptive_kriging_functions import *
 
 
-def test_akmcs_1():
+def test_akmcs_weighted_u():
     from UQpy.surrogates.kriging.regression_models.Linear import Linear
     from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential
 
@@ -33,7 +27,7 @@ def test_akmcs_1():
     assert a.samples[20, 1] == -0.16784257369267955
 
 
-def test_akmcs_2():
+def test_akmcs_u():
     from UQpy.surrogates.kriging.regression_models.Linear import Linear
     from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential
 
@@ -55,7 +49,7 @@ def test_akmcs_2():
     assert a.samples[20, 1] == -7.865501626326106
 
 
-def test_akmcs_3():
+def test_akmcs_expected_feasibility():
     from UQpy.surrogates.kriging.regression_models.Linear import Linear
     from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential
 
@@ -77,7 +71,7 @@ def test_akmcs_3():
     assert a.samples[20, 1] == -12.914668932772358
 
 
-def test_akmcs_4():
+def test_akmcs_expected_improvement():
     from UQpy.surrogates.kriging.regression_models.Linear import Linear
     from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential
 
@@ -99,7 +93,7 @@ def test_akmcs_4():
     assert a.samples[20, 1] == -3.508949564718469
 
 
-def test_akmcs_5():
+def test_akmcs_Expected_improvement_global_fit():
     from UQpy.surrogates.kriging.regression_models.Linear import Linear
     from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential
 
