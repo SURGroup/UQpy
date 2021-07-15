@@ -27,7 +27,7 @@ x1g = LHS(dist_object=[dist1, dist2], nsamples=5)
 def d_func(x): return pdist(x, metric='euclidean')
 
 
-x1h = LHS(dist_object=[dist1, dist2], nsamples=5, random_state=789, metric=d_func)
+x1h = LHS(dist_object=[dist1, dist2], criterion='maximin', nsamples=5, random_state=789, metric=d_func)
 
 
 def test_samples1():

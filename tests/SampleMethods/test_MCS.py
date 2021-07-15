@@ -142,17 +142,18 @@ def test_cdf_method1():
         x.transform_u01()
 
 
-# def test_cdf_method2():
-#     """Check, if dist_object attribute has 'cdf' method,  when dist_object is list of multiple distribution class
-#     object."""
-#     del y.dist_object[0].cdf
-#     with pytest.raises(ValueError):
-#         y.transform_u01()
-#
-#
-# def test_cdf_method3():
-#     """Check, if dist_object attribute has 'cdf' method,  when dist_object is a distributionND class object."""
-#     del z4.dist_object[0].cdf
-#     with pytest.raises(ValueError):
-#         z4.transform_u01()
+def test_cdf_method2():
+    """Check, if dist_object attribute has 'cdf' method,  when dist_object is list of multiple distribution class
+    object."""
+    y.dist_object, y.array = [1, 1], True
+    with pytest.raises(ValueError):
+        y.transform_u01()
+
+
+def test_cdf_method3():
+    """Check, if dist_object attribute has 'cdf' method,  when dist_object is a distributionND class object."""
+
+    z4.dist_object, z4.list = [1, 2], True
+    with pytest.raises(ValueError):
+        z4.transform_u01()
 
