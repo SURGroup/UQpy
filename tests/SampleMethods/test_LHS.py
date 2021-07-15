@@ -59,7 +59,7 @@ def test_samples4():
 def test_samples5():
     """ Check the samples attribute, when dist_object is a list of distribution class object, criterion is
     'maximin' and metric is callable."""
-    expected_samples = np.array([[0.56, 0.4], [0.72, 0.62], [1., 0.15], [0.25, 0.2], [0.06, 0.91]])
+    expected_samples = np.array([[0.56, 0.2], [0.25, 0.62], [1., 0.4], [0.72, 0.91], [0.06, 0.15]])
     assert (x1h.samples.round(2) == expected_samples).all()
 
 
