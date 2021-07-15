@@ -109,8 +109,7 @@ class LHS:
 
         self.samplesU01 = np.zeros_like(self.samples)
 
-        if self.nsamples is not None:
-            self.run(self.nsamples)
+        self.run(self.nsamples)
 
     def run(self, nsamples):
 
@@ -137,8 +136,10 @@ class LHS:
 
         """
 
-        if self.nsamples is None:
+        if isinstance(nsamples, int):
             self.nsamples = nsamples
+        else:
+            raise ValueError('UQpy: number of samples must be specified.')
 
         if self.verbose:
             print('UQpy: Running Latin Hypercube sampling...')
