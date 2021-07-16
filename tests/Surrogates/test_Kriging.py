@@ -15,22 +15,12 @@ krig2 = Kriging(reg_model='Constant', corr_model='Gaussian', corr_model_params=[
 krig2.fit(samples=samples, values=values)
 
 
-# def test_fit():
-#     tmp1 = np.round(krig.corr_model_params, 3) == np.array([2.914])
-#     tmp2 = np.round(krig2.corr_model_params, 3) == np.array([0.253])
-#     assert tmp1 and tmp2
-
+# May be solution
 
 def test_fit():
     tmp1 = np.round(krig.corr_model_params, 3) == np.array([1.883])
     tmp2 = np.round(krig2.corr_model_params, 3) == np.array([0.866])
     assert tmp1 and tmp2
-
-
-# def test_predict():
-#     prediction = np.round(krig.predict([[1], [np.pi/2], [np.pi]], True), 3)
-#     expected_prediction = np.array([[0.548,  0.001, -1.], [0.04,  0.009,  0.]])
-#     assert (expected_prediction == prediction).all()
 
 
 def test_predict():
@@ -39,16 +29,48 @@ def test_predict():
     assert (expected_prediction == prediction).all()
 
 
+def test_jacobian():
+    jacobian = np.round(krig.jacobian([[np.pi], [np.pi/2]]), 3)
+    expected_jacobian = np.array([-0., -1.])
+    assert (expected_jacobian == jacobian).all()
+
+# Dimistris' values
+
+# def test_fit():
+#     tmp1 = np.round(krig.corr_model_params, 3) == np.array([2.914])
+#     tmp2 = np.round(krig2.corr_model_params, 3) == np.array([0.253])
+#     assert tmp1 and tmp2
+
+
+# def test_predict():
+#     prediction = np.round(krig.predict([[1], [np.pi/2], [np.pi]], True), 3)
+#     expected_prediction = np.array([[0.548,  0.001, -1.], [0.04,  0.009,  0.]])
+#     assert (expected_prediction == prediction).all()
+
+
 # def test_jacobian():
 #     jacobian = np.round(krig.jacobian([[np.pi], [np.pi/2]]), 3)
 #     expected_jacobian = np.array([0., -1.007])
 #     assert (expected_jacobian == jacobian).all()
 
+# Mohit's values
 
-def test_jacobian():
-    jacobian = np.round(krig.jacobian([[np.pi], [np.pi/2]]), 3)
-    expected_jacobian = np.array([-0., -1.])
-    assert (expected_jacobian == jacobian).all()
+# def test_fit():
+#     tmp1 = np.round(krig.corr_model_params, 3) == np.array([1.883])
+#     tmp2 = np.round(krig2.corr_model_params, 3) == np.array([0.866])
+#     assert tmp1 and tmp2
+#
+#
+# def test_predict():
+#     prediction = np.round(krig.predict([[1], [np.pi/2], [np.pi]], True), 3)
+#     expected_prediction = np.array([[0.54,  -0., -1.], [0.017,  0.005,  0.]])
+#     assert (expected_prediction == prediction).all()
+#
+#
+# def test_jacobian():
+#     jacobian = np.round(krig.jacobian([[np.pi], [np.pi/2]]), 3)
+#     expected_jacobian = np.array([-0., -1.])
+#     assert (expected_jacobian == jacobian).all()
 
 
 def test_regress():
