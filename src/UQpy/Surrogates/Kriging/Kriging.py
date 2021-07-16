@@ -166,9 +166,14 @@ class Kriging:
             raise NotImplementedError("UQpy: Doesn't recognize the Correlation model.")
 
         if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            self.random_state = np.random.default_rng(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.default_rng)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.default_rng object.')
+
+        # if isinstance(self.random_state, int):
+        #     self.random_state = np.random.RandomState(self.random_state)
+        # elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+        #     raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
     def fit(self, samples, values, nopt=None, corr_model_params=None):
         """
