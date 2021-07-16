@@ -36,6 +36,7 @@ def test_samples1():
     assert (x1a.samples.round(2) == expected_samples).all()
 
 
+
 def test_samples2():
     """ Check the samples attribute, when dist_object is a jointInd class object and criterion is 'correlate'."""
     expected_samples = np.array([[0.21, 0.76], [0.14, 0.16], [0.64, 0.38], [0.44, 0.98], [0.84, 0.46]])
