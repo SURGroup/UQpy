@@ -12,7 +12,7 @@ x1a = LHS(dist_object=dist1, criterion='maximin', random_state=123, nsamples=5, 
 
 x1b = LHS(dist_object=joint_dist, criterion='correlate', nsamples=5, random_state=123, verbose=True)
 
-x1c = LHS(dist_object=[dist1, dist2], nsamples=5, random_state=np.random.RandomState(789), verbose=True)
+x1c = LHS(dist_object=[dist1, dist2], nsamples=5, random_state=np.random.default_rng(789), verbose=True)
 
 x1d = LHS(dist_object=dist1, criterion='centered', random_state=123, nsamples=5, verbose=True)
 
@@ -32,35 +32,35 @@ x1h = LHS(dist_object=[dist1, dist2], criterion='maximin', nsamples=5, random_st
 
 def test_samples1():
     """ Check the samples attribute, when dist_object is a distribution class object and criterion is 'maximin'."""
-    expected_samples = np.array([0.14, 0.94, 0.45, 0.26, 0.71])
+    expected_samples = np.array([0.44, 0.84, 0.14, 0.64, 0.21])
     assert (x1a.samples.round(2) == expected_samples).all()
 
 
 
 def test_samples2():
     """ Check the samples attribute, when dist_object is a jointInd class object and criterion is 'correlate'."""
-    expected_samples = np.array([[0.94, 0.54], [0.26, 0.08], [0.45, 0.88], [0.14, 0.7], [0.71, 0.4]])
+    expected_samples = np.array([[0.21, 0.76], [0.14, 0.16], [0.64, 0.38], [0.44, 0.98], [0.84, 0.46]])
     assert (x1b.samples.round(2) == expected_samples).all()
 
 
 def test_samples3():
     """ Check the samples attribute, when dist_object is a list of distribution class object, criterion is
     'random'."""
-    expected_samples = np.array([[0.56, 0.4], [0.72, 0.62], [1., 0.15], [0.25, 0.2], [0.06, 0.91]])
+    expected_samples = np.array([[0.24, 0.49], [0.63, 0.82], [0.02, 0.12], [0.53, 0.22], [0.8 , 0.75]])
     assert (x1c.samples.round(2) == expected_samples).all()
 
 
 def test_samples4():
     """ Check the samples attribute, when dist_object is a list of distribution class object and criterion is
     'centered'."""
-    expected_samples = np.array([0.1, 0.9, 0.5, 0.3, 0.7])
+    expected_samples = np.array([0.5, 0.9, 0.1, 0.7, 0.3])
     assert (x1d.samples.round(2) == expected_samples).all()
 
 
 def test_samples5():
     """ Check the samples attribute, when dist_object is a list of distribution class object, criterion is
     'maximin' and metric is callable."""
-    expected_samples = np.array([[0.56, 0.2], [0.25, 0.62], [1., 0.4], [0.72, 0.91], [0.06, 0.15]])
+    expected_samples = np.array([[0.24, 0.22], [0.8 , 0.49], [0.63, 0.12], [0.02, 0.82], [0.53, 0.75]])
     assert (x1h.samples.round(2) == expected_samples).all()
 
 
