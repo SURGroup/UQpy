@@ -218,7 +218,10 @@ class Kriging:
                 return np.inf, np.zeros(n)
 
             cc_inv = np.linalg.inv(cc)
-            r_inv = np.matmul(cc_inv.T, cc_inv)
+
+            a=cc_inv.T
+            #r_inv = np.matmul(cc_inv.T, cc_inv)
+            r_inv = cc_inv.T.dot(cc_inv)
             f__ = cc_inv.dot(f)
             y__ = cc_inv.dot(y)
 
@@ -293,7 +296,8 @@ class Kriging:
                 # Generating new starting points using log-uniform distribution
                 if i__ != self.nopt - 1:
                     starting_point = stats.reciprocal.rvs([j[0] for j in self.bounds], [j[1] for j in self.bounds], 1,
-                                                          random_state=self.random_state)
+                                                          random_state=int(self.random_state.random()*100))
+
             if min(fun_value) == np.inf:
                 raise NotImplementedError("Maximum likelihood estimator failed: Choose different starting point or "
                                           "increase nopt")
