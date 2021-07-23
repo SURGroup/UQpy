@@ -18,14 +18,14 @@ krig2.fit(samples=samples, values=values)
 # May be solution
 
 def test_fit():
-    tmp1 = np.round(krig.corr_model_params, 3) == np.array([1.015])
-    tmp2 = np.round(krig2.corr_model_params, 3) == np.array([1.013])
+    tmp1 = np.round(krig.corr_model_params, 3) == np.array([1.035])
+    tmp2 = np.round(krig2.corr_model_params, 3) == np.array([0.448])
     assert tmp1 and tmp2
 
 
 def test_predict():
     prediction = np.round(krig.predict([[1], [np.pi/2], [np.pi]], True), 3)
-    expected_prediction = np.array([[0.54,  0.0, -1.], [0.002,  0.001,  0.]])
+    expected_prediction = np.array([[0.54,  0.0, -1.], [0.004,  0.001,  0.]])
     assert (expected_prediction == prediction).all()
 
 
