@@ -142,6 +142,7 @@ class BSRM:
 
         if self.number_of_dimensions == len(self.power_spectrum.shape):
             self.case = 'uni'
+            self._compute_bicoherence_uni()
         else:
             self.number_of_variables = self.power_spectrum.shape[0]
             self.case = 'multi'
