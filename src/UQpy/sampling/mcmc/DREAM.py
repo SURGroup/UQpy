@@ -1,3 +1,5 @@
+import logging
+
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
 import numpy as np
@@ -48,13 +50,14 @@ class DREAM(MCMC):
                  seed=None, save_log_pdf=False, concatenate_chains=True, samples_number=None,
                  samples_per_chain_number=None, jump_rate=3, c=0.1, c_star=1e-6, crossover_probabilities_number=3,
                  gamma_probability=0.2, crossover_adaptation=(-1, 1),
-                 check_chains=(-1, 1), verbose=False, random_state=None, chains_number=None):
+                 check_chains=(-1, 1),  random_state=None, chains_number=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, burn_length=burn_length, jump=jump, save_log_pdf=save_log_pdf,
-                         concatenate_chains=concatenate_chains, verbose=verbose, random_state=random_state,
+                         concatenate_chains=concatenate_chains, random_state=random_state,
                          chains_number=chains_number)
 
+        self.logger = logging.getLogger(__name__)
         # Check nb of chains
         if self.chains_number < 2:
             raise ValueError('UQpy: For the DREAM algorithm, a seed must be provided with at least two samples.')
@@ -85,8 +88,7 @@ class DREAM(MCMC):
         self.n_id = np.zeros((self.crossover_probabilities_number,))
         self.cross_prob = np.ones((self.crossover_probabilities_number,)) / self.crossover_probabilities_number
 
-        if self.verbose:
-            print('UQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.\n')
+        self.logger.info('UQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.\n')
 
         # If nsamples is provided, run the algorithm
         if (samples_number is not None) or (samples_per_chain_number is not None):
@@ -201,9 +203,9 @@ class DREAM(MCMC):
                     self.samples[start_:, j, :] = self.samples[start_:, best_, :].copy()
                     self.log_pdf_values[start_:, j] = self.log_pdf_values[start_:, best_].copy()
                 else:
-                    print('UQpy: Chain {} is an outlier chain'.format(j))
-        if self.verbose and outlier_num > 0:
-            print('UQpy: Detected {} outlier chains'.format(outlier_num))
+                    self.logger.info('UQpy: Chain {} is an outlier chain'.format(j))
+        if outlier_num > 0:
+            self.verbose.info('UQpy: Detected {} outlier chains'.format(outlier_num))
 
     def __copy__(self):
         new = self.__class__(pdf_target=self.pdf_target,
@@ -223,7 +225,6 @@ class DREAM(MCMC):
                              crossover_adaptation=self.crossover_adaptation,
                              check_chains=self.check_chains,
                              chains_number=self.chains_number,
-                             verbose=self.verbose,
                              random_state=self.random_state)
         new.__dict__.update(self.__dict__)
 

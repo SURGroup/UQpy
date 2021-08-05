@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 from UQpy.dimension_reduction.baseclass import POD
 
@@ -21,10 +23,10 @@ class HigherOrderSVD(POD):
     **Methods:**
     """
 
-    def __init__(self, solution_snapshots, modes=10 ** 10, reconstruction_percentage=10 ** 10, verbose=False):
+    def __init__(self, solution_snapshots, modes=10 ** 10, reconstruction_percentage=10 ** 10):
 
-        super().__init__(solution_snapshots, verbose)
-        self.verbose = verbose
+        super().__init__(solution_snapshots)
+        self.logger = logging.getLogger(__name__)
         self.modes = modes
         self.reconstruction_percentage = reconstruction_percentage
 
@@ -71,19 +73,19 @@ class HigherOrderSVD(POD):
         s3 = np.array(np.dot(hold, np.linalg.inv(kronecker_product.T)))
 
         if self.modes <= 0:
-            print('Warning: Invalid input, the number of modes must be positive.')
+            self.logger.warning('Invalid input, the number of modes must be positive.')
             return [], []
 
         elif self.reconstruction_percentage <= 0:
-            print('Warning: Invalid input, the reconstruction percentage is defined in the range (0,100].')
+            self.logger.warning('Invalid input, the reconstruction percentage is defined in the range (0,100].')
             return [], []
 
         elif self.modes != 10**10 and self.reconstruction_percentage != 10**10:
-            print('Warning: Either a number of modes or a reconstruction percentage must be chosen, not both.')
+            self.logger.warning('Either a number of modes or a reconstruction percentage must be chosen, not both.')
             return [], []
 
         elif type(self.modes) != int:
-            print('Warning: The number of modes must be an integer.')
+            self.logger.warning('The number of modes must be an integer.')
             return [], []
 
         else:
@@ -102,8 +104,8 @@ class HigherOrderSVD(POD):
 
             else:
                 if self.modes > rows:
-                    print("Warning: A number of modes greater than the number of temporal dimensions was given.")
-                    print("Number of temporal dimensions is {}.".format(rows))
+                    self.logger.warning("A number of modes greater than the number of temporal dimensions was given."
+                                        "Number of temporal dimensions is {}.".format(rows))
 
             reduced_solutions = np.dot(u3, sig_3_)
             u3hat = np.dot(u3[:, :self.modes], sig_3_[:self.modes, :self.modes])
@@ -117,16 +119,14 @@ class HigherOrderSVD(POD):
             for i in range(snapshot_number):
                 reconstructed_solutions[0:rows, 0:columns, i] = d[i, :].reshape((rows, columns))
 
-            if self.verbose:
-                print("UQpy: Successful execution of HOSVD!")
+            self.logger.info("UQpy: Successful execution of HOSVD!")
 
             if self.modes == 10**10:
-                if self.verbose:
-                    print('Dataset reconstruction: {0:.3%}'.format(percentage / 100))
+                self.logger.info('Dataset reconstruction: {0:.3%}'.format(percentage / 100))
 
             else:
                 if get_error:
                     error_rec = np.sqrt(((sig_3[self.modes:]) ** 2).sum()) / np.sqrt((sig_3 ** 2).sum())
-                    print("Reduced-order reconstruction error: {0:.3%}".format(error_rec))
+                    self.logger.warning("Reduced-order reconstruction error: {0:.3%}".format(error_rec))
 
             return reconstructed_solutions, reduced_solutions

@@ -294,7 +294,8 @@ class Grassmann:
 
                 for i in range(nargs):
                     if min(np.shape(samples[i])) < p:
-                        raise ValueError('UQpy: The dimension of the input second_order_tensor is not consistent with `trial_probability` of G(trials_number,trial_probability).')
+                        raise ValueError('UQpy: The dimension of the input second_order_tensor is not consistent with'
+                                         ' `trial_probability` of G(trials_number,trial_probability).')
 
                 ranks = np.ones(nargs) * [int(p)]
                 ranks = ranks.tolist()

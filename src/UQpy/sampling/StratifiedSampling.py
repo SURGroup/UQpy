@@ -1,13 +1,14 @@
+import logging
+
 import numpy as np
 
 
 class StratifiedSampling:
     def __init__(self, distributions, strata_object,
                  samples_per_stratum_number=None,
-                 samples_number=None,
-                 verbose=False):
+                 samples_number=None):
 
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
         self.weights = None
         self.strata_object = strata_object
         self.samples_per_stratum_number = samples_per_stratum_number
@@ -29,8 +30,7 @@ class StratifiedSampling:
 
         self.distributions = distributions
 
-        if self.verbose:
-            print("UQpy: stratified_sampling object is created")
+        self.logger.info("UQpy: stratified_sampling object is created")
 
         # If nsamples_per_stratum or nsamples is provided, execute run method
         if self.samples_per_stratum_number is not None or self.samples_number is not None:
@@ -101,8 +101,7 @@ class StratifiedSampling:
         self.samples_number = samples_number
         self._run_checks()
 
-        if self.verbose:
-            print("UQpy: Performing Stratified Sampling")
+        self.logger.info("UQpy: Performing Stratified Sampling")
 
         # Call "create_sampleu01" method and generate samples in  the unit hypercube
         self.create_unit_hypercube_samples()
@@ -110,8 +109,7 @@ class StratifiedSampling:
         # Compute inverse cdf of samplesU01
         self.transform_samples(self.samplesU01)
 
-        if self.verbose:
-            print("UQpy: Stratified Sampling is completed")
+        self.logger.info("UQpy: Stratified Sampling is completed")
 
     def _run_checks(self):
         if self.samples_number is not None:

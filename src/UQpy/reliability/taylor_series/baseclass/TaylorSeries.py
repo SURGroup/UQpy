@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 from UQpy.distributions import *
 from UQpy.RunModel import RunModel
@@ -49,7 +51,7 @@ class TaylorSeries:
     """
 
     def __init__(self, distributions, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u, n_iter, tol1, tol2,
-                 tol3, df_step, verbose):
+                 tol3, df_step):
 
         if form_object is None:
             if isinstance(distributions, list):
@@ -85,7 +87,7 @@ class TaylorSeries:
         self.seed_u = seed_u
         self.seed_x = seed_x
         self.df_step = df_step
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
 
     @staticmethod
     def derivatives(point_u, point_x, runmodel_object, nataf_object, order='first', point_qoi=None, df_step=0.01,
@@ -154,9 +156,8 @@ class TaylorSeries:
         array_of_samples = array_of_samples.reshape((len(array_of_samples), -1))
 
         runmodel_object.run(samples=array_of_samples, append_samples=False)
-        if verbose:
-            print('samples to evaluate the model: {0}'.format(array_of_samples))
-            print('model evaluations: {0}'.format(runmodel_object.qoi_list))
+        logging.getLogger(__name__).info('samples to evaluate the model: {0}'.format(array_of_samples) +
+                                         'model evaluations: {0}'.format(runmodel_object.qoi_list))
 
         if order.lower() == 'first':
             gradient = np.zeros(point_u.shape[0])
@@ -169,8 +170,7 @@ class TaylorSeries:
             return gradient, runmodel_object.qoi_list[0]
 
         elif order.lower() == 'second':
-            if verbose:
-                print('UQpy: Calculating second order derivatives..')
+            logging.getLogger(__name__).info('UQpy: Calculating second order derivatives..')
             d2y_dj = np.zeros([point_u.shape[0]])
 
             if point_qoi is None:
@@ -235,9 +235,9 @@ class TaylorSeries:
             array_of_mixed_points = array_of_mixed_points.reshape((len(array_of_mixed_points), -1))
             runmodel_object.run(samples=array_of_mixed_points, append_samples=False)
 
-            if verbose:
-                print('samples for gradient: {0}'.format(array_of_mixed_points[1:]))
-                print('model evaluations for the gradient: {0}'.format(runmodel_object.qoi_list[1:]))
+            logging.getLogger(__name__)\
+                .info('samples for gradient: {0}'.format(array_of_mixed_points[1:]) +
+                      'model evaluations for the gradient: {0}'.format(runmodel_object.qoi_list[1:]))
 
             for j in range(count):
                 qoi_0 = runmodel_object.qoi_list[4 * j]

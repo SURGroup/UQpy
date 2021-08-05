@@ -1,3 +1,5 @@
+import logging
+
 from UQpy.distributions import Distribution
 import numpy as np
 
@@ -56,7 +58,7 @@ class ImportanceSampling:
     """
     # Last Modified: 10/05/2020 by Audrey Olivier
     def __init__(self, samples_number=None, pdf_target=None, log_pdf_target=None, args_target=None,
-                 proposal=None, verbose=False, random_state=None):
+                 proposal=None, random_state=None):
         # Initialize proposal: it should have an rvs and log pdf or pdf method
         self.proposal = proposal
         if not isinstance(self.proposal, Distribution):
@@ -74,7 +76,7 @@ class ImportanceSampling:
         # Initialize target
         self.evaluate_log_target = self._preprocess_target(log_pdf_=log_pdf_target, pdf_=pdf_target, args=args_target)
 
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
         self.random_state = random_state
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
@@ -109,8 +111,7 @@ class ImportanceSampling:
         `weights` of the ``IS`` object.
         """
 
-        if self.verbose:
-            print('UQpy: Running Importance Sampling...')
+        self.logger.info('UQpy: Running Importance Sampling...')
         # Sample from proposal
         new_samples = self.proposal.rvs(nsamples=nsamples, random_state=self.random_state)
         # Compute un-scaled weights of new samples
@@ -129,13 +130,11 @@ class ImportanceSampling:
         # note: scaling with max avoids having NaN of Inf when taking the exp
         sum_w = np.sum(weights, axis=0)
         self.weights = weights / sum_w
-        if self.verbose:
-            print('UQpy: Importance Sampling performed successfully')
+        self.logger.info('UQpy: Importance Sampling performed successfully')
 
         # If a set of unweighted samples exist, delete them as they are not representative of the distribution anymore
         if self.unweighted_samples is not None:
-            if self.verbose:
-                print('UQpy: unweighted samples are being deleted, call the resample method to regenerate them')
+            self.logger.info('UQpy: unweighted samples are being deleted, call the resample method to regenerate them')
             self.unweighted_samples = None
 
     def resample(self, method='multinomial', samples_number=None):
@@ -222,7 +221,6 @@ class ImportanceSampling:
                              log_pdf_target=self._log_pdf_target,
                              args_target=self._args_target,
                              proposal=self.proposal,
-                             verbose=self.verbose,
                              random_state=self.random_state)
         new.__dict__.update(self.__dict__)
 

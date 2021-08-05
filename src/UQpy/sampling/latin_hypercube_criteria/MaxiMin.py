@@ -1,3 +1,5 @@
+import logging
+
 from UQpy.sampling.latin_hypercube_criteria import Criterion, Random
 from UQpy.sampling.latin_hypercube_criteria.DistanceMetric import DistanceMetric
 from scipy.spatial.distance import pdist
@@ -34,10 +36,10 @@ class MaxiMin(Criterion):
 
             """
     def __init__(self, random_state=None, iterations=100,
-                 metric=DistanceMetric.EUCLIDEAN, verbose = True):
+                 metric=DistanceMetric.EUCLIDEAN):
         self.random_state = random_state
         self.iterations = iterations
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
 
         if isinstance(metric, DistanceMetric):
             metric_str=str(metric.name).lower()
@@ -69,7 +71,6 @@ class MaxiMin(Criterion):
                 lhs_samples = copy.deepcopy(samples_try)
             i = i + 1
 
-        if self.verbose:
-            print('UQpy: Achieved maximum distance of ', maximized_minimum_distance)
+        self.logger.info('UQpy: Achieved maximum distance of ', maximized_minimum_distance)
 
         return lhs_samples

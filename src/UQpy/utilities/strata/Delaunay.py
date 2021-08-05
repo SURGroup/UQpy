@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import scipy.stats as stats
 
@@ -65,12 +67,13 @@ class Delaunay(Strata):
         pass
 
     def __init__(self, seeds=None, seeds_number=None, dimension=None, random_state=None, verbose=False):
-        super().__init__(random_state=random_state, seeds=seeds, verbose=verbose)
+        super().__init__(random_state=random_state, seeds=seeds)
 
         self.seeds_number = seeds_number
         self.dimension = dimension
         self.delaunay = None
         self.centroids = []
+        self.logger = logging.getLogger(__name__)
 
         if self.seeds is not None:
             if self.seeds_number is not None or self.dimension is not None:
@@ -83,8 +86,7 @@ class Delaunay(Strata):
         import itertools
         from scipy.spatial import Delaunay
 
-        if self.verbose:
-            print('UQpy: Creating Delaaunay stratification ...')
+        self.logger.info('UQpy: Creating Delaunay stratification ...')
 
         initial_seeds = self.seeds
         if self.seeds is None:
@@ -106,8 +108,7 @@ class Delaunay(Strata):
             self.volume = np.hstack([self.volume, np.array([vol])])
             count = count + 1
 
-        if self.verbose:
-            print('UQpy: Delaunay stratification created.')
+        self.logger.info('UQpy: Delaunay stratification created.')
 
     @staticmethod
     def compute_delaunay_centroid_volume(vertices):

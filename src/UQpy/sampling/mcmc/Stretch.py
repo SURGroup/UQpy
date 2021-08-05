@@ -1,3 +1,5 @@
+import logging
+
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
 import numpy as np
@@ -24,7 +26,7 @@ class Stretch(MCMC):
     """
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, burn_length=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concatenate_chains=True, samples_number=None,
-                 samples_per_chain_number=None, scale=2., verbose=False, random_state=None, chains_number=None):
+                 samples_per_chain_number=None, scale=2., random_state=None, chains_number=None):
 
         flag_seed = False
         if seed is None:
@@ -34,9 +36,10 @@ class Stretch(MCMC):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, burn_length=burn_length, jump=jump, save_log_pdf=save_log_pdf,
-                         concatenate_chains=concatenate_chains, verbose=verbose, random_state=random_state,
+                         concatenate_chains=concatenate_chains, random_state=random_state,
                          chains_number=chains_number)
 
+        self.logger = logging.getLogger(__name__)
         # Check nchains = ensemble size for the Stretch algorithm
         if flag_seed:
             self.seed = Uniform().rvs(nsamples=self.dimension * self.chains_number, random_state=self.random_state)\
@@ -49,8 +52,7 @@ class Stretch(MCMC):
         if not isinstance(self.scale, float):
             raise TypeError('UQpy: Input scale must be of type float.')
 
-        if self.verbose:
-            print('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
+        self.logger.info('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
 
         # If nsamples is provided, run the algorithm
         if (samples_number is not None) or (samples_per_chain_number is not None):
@@ -113,7 +115,6 @@ class Stretch(MCMC):
                              concatenate_chains=self.concatenate_chains,
                              scale=self.scale,
                              chains_number=self.chains_number,
-                             verbose=self.verbose,
                              random_state=self.random_state)
         new.__dict__.update(self.__dict__)
 

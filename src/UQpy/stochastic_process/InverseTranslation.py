@@ -1,3 +1,5 @@
+import logging
+
 from UQpy.distributions import *
 from UQpy.utilities.Utilities import *
 from UQpy.stochastic_process.supportive import inverse_wiener_khinchin_transform, wiener_khinchin_transform
@@ -61,11 +63,12 @@ class InverseTranslation:
     def __init__(self, distributions, time_interval, frequency_interval, number_time_intervals,
                  number_frequency_intervals, correlation_function_non_gaussian=None,
                  power_spectrum_non_gaussian=None, samples_non_gaussian=None):
+        self.logger = logging.getLogger(__name__)
         self.dist_object = distributions
         self.frequency = np.arange(0, number_frequency_intervals) * frequency_interval
         self.time = np.arange(0, number_time_intervals) * time_interval
         if correlation_function_non_gaussian is None and power_spectrum_non_gaussian is None:
-            print('Either the Power Spectrum or the Autocorrelation function should be specified')
+            self.logger.info('Either the Power Spectrum or the Autocorrelation function should be specified')
         if correlation_function_non_gaussian is None:
             self.power_spectrum_non_gaussian = power_spectrum_non_gaussian
             self.correlation_function_non_gaussian = wiener_khinchin_transform(power_spectrum_non_gaussian,

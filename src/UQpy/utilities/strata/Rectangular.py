@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 
 from UQpy.utilities.strata.baseclass.Strata import Strata
@@ -6,10 +8,11 @@ import scipy.stats as stats
 
 
 class Rectangular(Strata):
-    def __init__(self, strata_number=None, input_file=None, seeds=None, widths=None, random_state=None, verbose=False,
+    def __init__(self, strata_number=None, input_file=None, seeds=None, widths=None, random_state=None,
                  stratification_criterion=StratificationCriterion.RANDOM):
-        super().__init__(seeds=seeds, random_state=random_state, verbose=verbose)
+        super().__init__(seeds=seeds, random_state=random_state)
 
+        self.logger = logging.getLogger(__name__)
         self.input_file = input_file
         self.strata_number = strata_number
         self.widths = widths
@@ -20,8 +23,7 @@ class Rectangular(Strata):
         """
         Performs the rectangular stratification.
         """
-        if self.verbose:
-            print('UQpy: Creating Rectangular stratification ...')
+        self.logger.info('UQpy: Creating Rectangular stratification ...')
 
         if self.strata_number is None:
             if self.input_file is None:
@@ -50,8 +52,7 @@ class Rectangular(Strata):
 
         self.volume = np.prod(self.widths, axis=1)
 
-        if self.verbose:
-            print('UQpy: Rectangular stratification created.')
+        self.logger.info('UQpy: Rectangular stratification created.')
 
     @staticmethod
     def fullfact(levels):

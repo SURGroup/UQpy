@@ -1,3 +1,5 @@
+import logging
+
 from scipy.linalg import sqrtm
 
 from UQpy.utilities.Utilities import *
@@ -47,8 +49,7 @@ class KarhunenLoeveExpansion:
 
     # TODO: Test this for non-stationary processes.
 
-    def __init__(self, samples_number, correlation_function, time_interval, threshold=None, random_state=None,
-                 verbose=False):
+    def __init__(self, samples_number, correlation_function, time_interval, threshold=None, random_state=None):
         self.correlation_function = correlation_function
         self.time_interval = time_interval
         self.number_eigen_values = threshold if threshold else len(self.correlation_function[0])
@@ -59,7 +60,7 @@ class KarhunenLoeveExpansion:
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
         self.samples_number = samples_number
 
         self.samples = None
@@ -108,11 +109,9 @@ class KarhunenLoeveExpansion:
         if not isinstance(samples_number, int):
             raise ValueError('UQpy: Stochastic Process: nsamples should be an integer.')
 
-        if self.verbose:
-            print('UQpy: Stochastic Process: Running Karhunen Loeve Expansion.')
+        self.logger.info('UQpy: Stochastic Process: Running Karhunen Loeve Expansion.')
 
-        if self.verbose:
-            print('UQpy: Stochastic Process: Starting simulation of Stochastic Processes.')
+        self.logger.info('UQpy: Stochastic Process: Starting simulation of Stochastic Processes.')
         xi = np.random.normal(size=(self.number_eigen_values, self.samples_number))
         samples = self._simulate(xi)
 
@@ -123,5 +122,4 @@ class KarhunenLoeveExpansion:
             self.samples = np.concatenate((self.samples, samples), axis=0)
             self.xi = np.concatenate((self.xi, xi), axis=0)
 
-        if self.verbose:
-            print('UQpy: Stochastic Process: Karhunen-Loeve Expansion Complete.')
+        self.logger.info('UQpy: Stochastic Process: Karhunen-Loeve Expansion Complete.')

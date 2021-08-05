@@ -1,3 +1,5 @@
+import logging
+
 from UQpy.distributions import *
 import numpy as np
 import scipy.stats as stats
@@ -111,7 +113,7 @@ class NatafTransformation:
     """
 
     def __init__(self, dist_object, samples_x=None, samples_z=None, jacobian=False, corr_z=None, corr_x=None,
-                 itam_beta=1.0, itam_threshold1=0.001, itam_threshold2=0.1, itam_max_iter=100, verbose=False):
+                 itam_beta=1.0, itam_threshold1=0.001, itam_threshold2=0.1, itam_max_iter=100):
 
         if isinstance(dist_object, list):
             self.dimension = len(dist_object)
@@ -133,7 +135,7 @@ class NatafTransformation:
         self.itam_beta = float(itam_beta)
         self.itam_threshold1 = float(itam_threshold1)
         self.itam_threshold2 = float(itam_threshold2)
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
 
         if corr_x is None and corr_z is None:
             self.corr_x = np.eye(self.dimension)
@@ -148,8 +150,7 @@ class NatafTransformation:
                 self.corr_z, self.itam_error1, self.itam_error2 = self.itam(self.dist_object, self.corr_x,
                                                                             self.itam_max_iter,
                                                                             self.itam_beta,
-                                                                            self.itam_threshold1, self.itam_threshold2,
-                                                                            self.verbose)
+                                                                            self.itam_threshold1, self.itam_threshold2)
         elif corr_z is not None:
             self.corr_z = corr_z
             if np.all(np.equal(self.corr_z, np.eye(self.dimension))):
@@ -207,8 +208,7 @@ class NatafTransformation:
                 self.samples_x, self.jzx = self._transform_z2x(self.samples_z, jacobian=self.jacobian)
 
     @staticmethod
-    def itam(dist_object, corr_x,  itam_max_iter=100, itam_beta=1.0, itam_threshold1=0.001, itam_threshold2=0.01,
-             verbose=False):
+    def itam(dist_object, corr_x,  itam_max_iter=100, itam_beta=1.0, itam_threshold1=0.001, itam_threshold2=0.01):
         """
         Calculate the correlation matrix :math:`\mathbf{C_Z}` of the standard normal random vector
         :math:`\mathbf{Z}` given the correlation matrix :math:`\mathbf{C_X}` of the random vector :math:`\mathbf{X}`
@@ -288,8 +288,9 @@ class NatafTransformation:
         itam_error1.append(100.0)
         itam_error2.append(abs(itam_error1[0] - 0.1) / 0.1)
 
-        if verbose:
-            print("UQpy: Initializing Iterative Translation Approximation Method (ITAM)")
+        logger = logging.getLogger(__name__)
+
+        logger.info("UQpy: Initializing Iterative Translation Approximation Method (ITAM)")
 
         for k in range(itam_max_iter):
             error0 = itam_error1[k]
@@ -311,20 +312,18 @@ class NatafTransformation:
             itam_error1.append(np.linalg.norm(corr_x - corr0))
             itam_error2.append(abs(itam_error1[-1] - error0) / error0)
 
-            if verbose:
-                print("UQpy: ITAM iteration number ", k)
-                print("UQpy: Current error, ", itam_error1[-1], itam_error2[-1])
+            logger.info("UQpy: ITAM iteration number ", k)
+            logger.info("UQpy: Current error, ", itam_error1[-1], itam_error2[-1])
 
             if itam_error1[k] <= itam_threshold1 and itam_error2[k] <= itam_threshold2:
                 break
 
-        if verbose:
-            print("UQpy: ITAM Done.")
+        logger.info("UQpy: ITAM Done.")
 
         return corr_z, itam_error1, itam_error2
 
     @staticmethod
-    def distortion_z2x(dist_object, corr_z, verbose=False):
+    def distortion_z2x(dist_object, corr_z):
         """
         This is a method to calculate the correlation matrix :math:`\mathbf{C_x}` of the random vector
         :math:`\mathbf{x}`  given the correlation matrix :math:`\mathbf{C_z}` of the standard normal random vector
@@ -356,7 +355,7 @@ class NatafTransformation:
             Distorted correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X**.
 
         """
-
+        logger = logging.getLogger(__name__)
         z_max = 8
         z_min = -z_max
         ng = 128
@@ -381,8 +380,7 @@ class NatafTransformation:
                     (ksi ** 2 - 2 * rho * ksi * psi + psi ** 2)))
 
         corr_x = np.ones_like(corr_z)
-        if verbose:
-            print('UQpy: Computing Nataf correlation distortion...')
+        logger.info('UQpy: Computing Nataf correlation distortion...')
         from UQpy.distributions import JointIndependent
         if isinstance(dist_object, JointIndependent):
             if all(hasattr(m, 'moments') for m in dist_object.marginals) and \

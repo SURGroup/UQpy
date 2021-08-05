@@ -1,3 +1,4 @@
+import logging
 import math
 
 from UQpy.utilities.strata.Delaunay import Delaunay
@@ -9,9 +10,10 @@ import numpy as np
 
 class Voronoi(Strata):
     def __init__(self, seeds=None, seeds_number=None, dimension=None, decomposition_iterations=1,
-                 random_state=None, verbose=False, stratification_criterion=StratificationCriterion.RANDOM):
-        super().__init__(random_state=random_state, seeds=seeds, verbose=verbose)
+                 random_state=None, stratification_criterion=StratificationCriterion.RANDOM):
+        super().__init__(random_state=random_state, seeds=seeds)
 
+        self.logger = logging.getLogger(__name__)
         self.seeds_number = seeds_number
         self.dimension = dimension
         self.decomposition_iterations = decomposition_iterations
@@ -21,7 +23,7 @@ class Voronoi(Strata):
 
         if self.seeds is not None:
             if self.seeds_number is not None or self.dimension is not None:
-                print("UQpy: Ignoring 'nseeds' and 'dimension' attributes because 'seeds' are provided")
+                self.logger.info("UQpy: Ignoring 'nseeds' and 'dimension' attributes because 'seeds' are provided")
             self.dimension = self.seeds.shape[1]
 
         self.stratify()
@@ -30,8 +32,7 @@ class Voronoi(Strata):
         """
         Performs the Voronoi stratification.
         """
-        if self.verbose:
-            print('UQpy: Creating Voronoi stratification ...')
+        self.logger.info('UQpy: Creating Voronoi stratification ...')
 
         initial_seeds = self.seeds
         if self.seeds is None:
@@ -48,8 +49,7 @@ class Voronoi(Strata):
 
         self.seeds = initial_seeds
 
-        if self.verbose:
-            print('UQpy: Voronoi stratification created.')
+        self.logger.info('UQpy: Voronoi stratification created.')
 
     def create_volume(self, initial_seeds):
         self.voronoi, bounded_regions = self.voronoi_unit_hypercube(initial_seeds)

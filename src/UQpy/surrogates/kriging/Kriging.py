@@ -8,6 +8,7 @@ The module currently contains the following classes:
 
 - ``polynomial_chaos``: Class to generate an approximate surrogate model using Polynomial Chaos Expansion.
 """
+import logging
 
 import numpy as np
 import scipy.stats as stats
@@ -86,7 +87,7 @@ class Kriging:
     """
 
     def __init__(self, regression_model, correlation_model, bounds=None, optimize=True,
-                 optimizations_number=1, normalize=True, verbose=False, correlation_model_parameters=None,
+                 optimizations_number=1, normalize=True, correlation_model_parameters=None,
                  optimizer=None, random_state=None, **kwargs_optimizer):
 
         self.regression_model = regression_model
@@ -97,7 +98,7 @@ class Kriging:
         self.optimizations_number = optimizations_number
         self.optimize = optimize
         self.normalize = normalize
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
         self.random_state = random_state
         self.kwargs_optimizer = kwargs_optimizer
 
@@ -167,8 +168,7 @@ class Kriging:
         """
         from scipy.linalg import cholesky
 
-        if self.verbose:
-            print('UQpy: Running kriging.fit')
+        self.logger.info('UQpy: Running kriging.fit')
 
         def log_likelihood(p0, cm, s, f, y):
             # Return the log-likelihood function and it's gradient. Gradient is calculate using Central Difference
@@ -291,8 +291,7 @@ class Kriging:
 
         self.F_dash, self.C_inv, self.G = f_dash, c_inv, g_
 
-        if self.verbose:
-            print('UQpy: kriging fit complete.')
+        self.logger.info('UQpy: kriging fit complete.')
 
     def predict(self, points, return_std=False):
         """

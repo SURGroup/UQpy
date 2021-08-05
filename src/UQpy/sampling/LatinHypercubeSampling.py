@@ -1,3 +1,5 @@
+import logging
+
 from UQpy.distributions import *
 from UQpy.sampling.latin_hypercube_criteria.baseclass.Criterion import *
 import numpy as np
@@ -56,7 +58,7 @@ class LatinHypercubeSampling:
 
     """
 
-    def __init__(self, distributions, samples_number, criterion=None, verbose=False):
+    def __init__(self, distributions, samples_number, criterion=None):
 
         # Check if a Distribution object is provided.
         from UQpy.distributions import DistributionContinuous1D, JointIndependent
@@ -82,7 +84,7 @@ class LatinHypercubeSampling:
             raise ValueError('UQpy: number of samples must be specified.')
 
         # Set printing options
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
 
         if isinstance(self.dist_object, list):
             self.samples = np.zeros([self.samples_number, len(self.dist_object)])
@@ -124,8 +126,7 @@ class LatinHypercubeSampling:
         if self.samples_number is None:
             self.samples_number = samples_number
 
-        if self.verbose:
-            print('UQpy: Running Latin Hypercube sampling...')
+        self.logger.info('UQpy: Running Latin Hypercube sampling...')
 
         self.criterion.create_bins(self.samples)
 
@@ -146,13 +147,11 @@ class LatinHypercubeSampling:
             if hasattr(self.dist_object, 'icdf'):
                 self.samples = self.dist_object.icdf(u_lhs)
 
-        if self.verbose:
-            print('Successful execution of LHS design.')
+        self.logger.info('Successful execution of LHS design.')
 
     def __copy__(self):
         new = self.__class__(distributions=self.dist_object,
-                             criterion=self.criterion,
-                             verbose=self.verbose)
+                             criterion=self.criterion)
         new.__dict__.update(self.__dict__)
 
         return new

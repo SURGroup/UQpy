@@ -23,10 +23,9 @@ class SnapshotPOD(POD):
     **Methods:**
    """
 
-    def __init__(self, solution_snapshots, modes=10 ** 10, reconstruction_percentage=10 ** 10, verbose=False):
+    def __init__(self, solution_snapshots, modes=10 ** 10, reconstruction_percentage=10 ** 10):
 
-        super().__init__(solution_snapshots, verbose)
-        self.verbose = verbose
+        super().__init__(solution_snapshots)
         self.modes = modes
         self.reconstruction_percentage = reconstruction_percentage
 
@@ -69,19 +68,19 @@ class SnapshotPOD(POD):
         real_eigenvalues = eigenvalues.real
 
         if self.modes <= 0:
-            print('Warning: Invalid input, the number of modes must be positive.')
+            self.logger.warning('Invalid input, the number of modes must be positive.')
             return [], []
 
         elif self.reconstruction_percentage <= 0:
-            print('Warning: Invalid input, the reconstruction percentage is defined in the range (0,100].')
+            self.logger.warning('Invalid input, the reconstruction percentage is defined in the range (0,100].')
             return [], []
 
         elif self.modes != 10**10 and self.reconstruction_percentage != 10**10:
-            print('Warning: Either a number of modes or a reconstruction percentage must be chosen, not both.')
+            self.logger.warning('Either a number of modes or a reconstruction percentage must be chosen, not both.')
             return [], []
 
         elif type(self.modes) != int:
-            print('Warning: The number of modes must be an integer.')
+            self.logger.warning('The number of modes must be an integer.')
             return [], []
 
         else:
@@ -96,8 +95,8 @@ class SnapshotPOD(POD):
                 self.modes = percentages.index(minimum_percentage) + 1
             else:
                 if self.modes > snapshot_number:
-                    print("Warning: A number of modes greater than the number of dimensions was given.")
-                    print("Number of dimensions is {}".format(snapshot_number))
+                    self.logger.warning("A number of modes greater than the number of dimensions was given."
+                                        "Number of dimensions is {}".format(snapshot_number))
 
             phi_s = np.dot(u.T, a_s)
             reconstructed_solutions_ = np.dot(a_s[:, :self.modes], phi_s[:, :self.modes].T)
@@ -114,10 +113,8 @@ class SnapshotPOD(POD):
                 reduced_solutions[0:rows, 0:columns, i] = \
                     reduced_solutions_[i, :].reshape((rows, columns))
 
-            if self.verbose:
-                print("UQpy: Successful execution of Snapshot POD!")
+            self.logger.info("UQpy: Successful execution of Snapshot POD!")
 
-            if self.verbose:
-                print('Dataset reconstruction: {:.3%}'.format(percentages[self.modes - 1] / 100))
+            self.logger.info('Dataset reconstruction: {:.3%}'.format(percentages[self.modes - 1] / 100))
 
             return reconstructed_solutions, reduced_solutions

@@ -1,3 +1,5 @@
+import logging
+
 from UQpy.surrogates.polynomial_chaos.regressions.LeastSquares import LeastSquareRegression
 from UQpy.surrogates.polynomial_chaos.regressions.Ridge import RidgeRegression
 from UQpy.surrogates.polynomial_chaos.regressions.Lasso import LassoRegression
@@ -17,9 +19,9 @@ class PolynomialChaosExpansion:
 
     """
 
-    def __init__(self, method, verbose=False):
+    def __init__(self, method):
         self.method = method
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
         self.C = None
         self.b = None
 
@@ -43,8 +45,7 @@ class PolynomialChaosExpansion:
         polynomial_chaos coefficients.
         """
 
-        if self.verbose:
-            print('UQpy: Running polynomial_chaos.fit')
+        self.logger.info('UQpy: Running polynomial_chaos.fit')
 
         if type(self.method) == LeastSquareRegression:
             self.C = self.method.run(x, y)
@@ -53,8 +54,7 @@ class PolynomialChaosExpansion:
                 type(self.method) == RidgeRegression:
             self.C, self.b = self.method.run(x, y)
 
-        if self.verbose:
-            print('UQpy: polynomial_chaos fit complete.')
+        self.logger.info('UQpy: polynomial_chaos fit complete.')
 
     def predict(self, points):
 

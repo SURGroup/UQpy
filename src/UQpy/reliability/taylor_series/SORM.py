@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import scipy.stats as stats
 
@@ -22,11 +24,11 @@ class SORM(TaylorSeries):
     """
 
     def __init__(self, form_object, distributions=None, seed_u=None, seed_x=None, runmodel_object=None, def_step=None,
-                 corr_x=None, corr_z=None, n_iter=None, tol1=None, tol2=None, tol3=None, verbose=False):
+                 corr_x=None, corr_z=None, n_iter=None, tol1=None, tol2=None, tol3=None):
 
         super().__init__(distributions, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u, n_iter, tol1,
-                         tol2, tol3, def_step, verbose)
-
+                         tol2, tol3, def_step)
+        self.logger = logging.getLogger(__name__)
         self.beta_form = None
         self.DesignPoint_U = None
         self.DesignPoint_X = None
@@ -58,8 +60,7 @@ class SORM(TaylorSeries):
         This is an instance method that runs SORM.
         """
 
-        if self.verbose:
-            print('UQpy: Calculating SORM correction...')
+        self.logger.info('UQpy: Calculating SORM correction...')
 
         self.beta_form = self.form_object.beta_form[-1]
         self.nataf_object = self.form_object.nataf_object
@@ -98,8 +99,7 @@ class SORM(TaylorSeries):
             q[:, i] = normalize(ai)
 
         r1 = np.fliplr(q).T
-        if self.verbose:
-            print('UQpy: Calculating the hessian for SORM..')
+        self.logger.info('UQpy: Calculating the hessian for SORM..')
 
         hessian_g = self.derivatives(point_u=self.DesignPoint_U, point_x=self.DesignPoint_X,
                                      runmodel_object=model, nataf_object=self.nataf_object,

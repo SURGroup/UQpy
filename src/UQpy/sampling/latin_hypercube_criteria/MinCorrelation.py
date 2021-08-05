@@ -1,3 +1,5 @@
+import logging
+
 from UQpy.sampling.latin_hypercube_criteria import Criterion, Random
 import numpy as np
 import copy
@@ -25,14 +27,14 @@ class MinCorrelation(Criterion):
 
             """
 
-    def __init__(self, random_state=None, iterations=100, verbose = True):
+    def __init__(self, random_state=None, iterations=100):
         if not isinstance(iterations, int):
             raise ValueError('UQpy: number of iterations must be an integer.')
 
         self.random_state = random_state
         self.iterations = iterations
         self.random_criterion = Random(random_state=random_state)
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
 
     def create_bins(self, samples):
         self.random_criterion.create_bins(samples)
@@ -54,7 +56,6 @@ class MinCorrelation(Criterion):
                 min_corr = np.max(np.abs(r1))
                 lhs_samples = copy.deepcopy(samples_try)
             i = i + 1
-        if self.verbose:
-            print('UQpy: Achieved minimum correlation of ', min_corr)
+        self.logger.info('UQpy: Achieved minimum correlation of ', min_corr)
 
         return lhs_samples

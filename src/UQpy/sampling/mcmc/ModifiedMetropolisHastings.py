@@ -1,3 +1,5 @@
+import logging
+
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
 import numpy as np
@@ -34,14 +36,15 @@ class ModifiedMetropolisHastings(MCMC):
     """
     def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, burn_length=0, jump=1, dimension=None,
                  seed=None, save_log_pdf=False, concatenate_chains=True, samples_number=None,
-                 samples_per_chain_number=None, proposal=None, proposal_is_symmetric=False, verbose=False,
+                 samples_per_chain_number=None, proposal=None, proposal_is_symmetric=False,
                  random_state=None, chains_number=None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, burn_length=burn_length, jump=jump, save_log_pdf=save_log_pdf,
-                         concatenate_chains=concatenate_chains, verbose=verbose, random_state=random_state,
+                         concatenate_chains=concatenate_chains,  random_state=random_state,
                          chains_number=chains_number)
 
+        self.logger = logging.getLogger(__name__)
         # If proposal is not provided: set it as a list of standard gaussians
         from UQpy.distributions import Normal
         self.proposal = proposal
@@ -81,8 +84,7 @@ class ModifiedMetropolisHastings(MCMC):
         else:
             self.target_type = 'joint'
 
-        if self.verbose:
-            print('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
+        self.logger.info('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
 
         # If nsamples is provided, run the algorithm
         if (samples_number is not None) or (samples_per_chain_number is not None):
@@ -174,7 +176,6 @@ class ModifiedMetropolisHastings(MCMC):
                              proposal=self.proposal,
                              proposal_is_symmetric=self.proposal_is_symmetric,
                              chains_number=self.chains_number,
-                             verbose=self.verbose,
                              random_state=self.random_state)
         new.__dict__.update(self.__dict__)
 

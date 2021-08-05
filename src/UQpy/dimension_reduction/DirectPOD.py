@@ -1,5 +1,6 @@
 import numpy as np
 from UQpy.dimension_reduction.baseclass import POD
+import logging
 
 
 class DirectPOD(POD):
@@ -22,10 +23,9 @@ class DirectPOD(POD):
     **Methods:**
     """
 
-    def __init__(self, solution_snapshots, modes=10 ** 10, reconstruction_percentage=10 ** 10, verbose=False):
-
-        super().__init__(solution_snapshots, verbose)
-        self.verbose = verbose
+    def __init__(self, solution_snapshots, modes=10 ** 10, reconstruction_percentage=10 ** 10, ):
+        self.logger = logging.getLogger(__name__)
+        super().__init__(solution_snapshots)
         self.modes = modes
         self.reconstruction_percentage = reconstruction_percentage
 
@@ -70,19 +70,21 @@ class DirectPOD(POD):
         a = np.dot(u, phi)
 
         if self.modes <= 0:
-            print('Warning: Invalid input, the number of modes must be positive.')
+            self.logger.warning('Invalid input, the number of modes must be positive.')
             return [], []
 
         elif self.reconstruction_percentage <= 0:
-            print('Warning: Invalid input, the reconstruction percentage is defined in the range (0,100].')
+            self.logger\
+                .warning('Invalid input, the reconstruction percentage is defined in the range (0,100].')
             return [], []
 
         elif self.modes != 10**10 and self.reconstruction_percentage != 10**10:
-            print('Warning: Either a number of modes or a reconstruction percentage must be chosen, not both.')
+            self.logger\
+                .warning('Warning: Either a number of modes or a reconstruction percentage must be chosen, not both.')
             return [], []
 
         elif type(self.modes) != int:
-            print('Warning: The number of modes must be an integer.')
+            self.logger.warning('Warning: The number of modes must be an integer.')
             return [], []
 
         else:
@@ -97,8 +99,8 @@ class DirectPOD(POD):
                 self.modes = percentages.index(minimum_percentage) + 1
             else:
                 if self.modes > rows * columns:
-                    print("Warning: A number of modes greater than the number of dimensions was given.")
-                    print("Number of dimensions is {}".format(rows * columns))
+                    self.logger.warning("A number of modes greater than the number of dimensions was given."
+                                        "Number of dimensions is {}".format(rows * columns))
 
             reconstructed_solutions_ = np.dot(a[:, :self.modes], phi[:, :self.modes].T)
             reduced_solutions = np.dot(u, phi[:, :self.modes])
@@ -107,12 +109,11 @@ class DirectPOD(POD):
             for i in range(snapshot_number):
                 reconstructed_solutions[0:rows, 0:columns, i] = reconstructed_solutions_[i, :].reshape((rows , columns))
 
-            if self.verbose:
-                print("UQpy: Successful execution of Direct POD!")
-                if snapshot_number < rows * columns and rows * columns > 1000:
-                    print("Snapshot POD is recommended.")
+            self.logger.info("UQpy: Successful execution of Direct POD!")
 
-            if self.verbose:
-                print('Dataset reconstruction: {:.3%}'.format(percentages[self.modes - 1] / 100))
+            if snapshot_number < rows * columns and rows * columns > 1000:
+                self.logger.warning("Snapshot POD is recommended.")
+
+            self.logger.info('Dataset reconstruction: {:.3%}'.format(percentages[self.modes - 1] / 100))
 
             return reconstructed_solutions, reduced_solutions

@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 
 from UQpy.inference.InformationTheoreticCriterion import InformationTheoreticCriterion
@@ -72,7 +74,8 @@ class InformationModelSelection:
     """
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
-    def __init__(self, candidate_models, data, optimizer, criterion=InformationTheoreticCriterion.AIC, random_state=None, verbose=False, nopt=None, x0=None):
+    def __init__(self, candidate_models, data, optimizer, criterion=InformationTheoreticCriterion.AIC,
+                 random_state=None, nopt=None, x0=None):
 
         # Check inputs
         # candidate_models is a list of InferenceModel objects
@@ -90,7 +93,7 @@ class InformationModelSelection:
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
 
         # Instantiate the ML estimators
         # if not all(isinstance(value, (list, tuple)) for (key, value) in kwargs.items()) or \
@@ -100,7 +103,7 @@ class InformationModelSelection:
         self.ml_estimators = []
         for i, inference_model in enumerate(self.candidate_models):
             # kwargs_i = dict([(key, value[i]) for (key, value) in kwargs.items()])
-            ml_estimator = MLE(inference_model=inference_model, data=self.data, verbose=self.verbose,
+            ml_estimator = MLE(inference_model=inference_model, data=self.data,
                                random_state=self.random_state, x0=None, nopt=None, optimizer=self.optimizer)
             self.ml_estimators.append(ml_estimator)
 

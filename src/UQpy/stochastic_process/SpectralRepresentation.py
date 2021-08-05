@@ -1,3 +1,5 @@
+import logging
+
 from UQpy.stochastic_process.supportive.MultivariateStochasticProcess import MultivariateStochasticProcess
 from UQpy.stochastic_process.supportive.UnivariateStochacticProcess import UnivariateStochasticProcess
 from UQpy.utilities.Utilities import *
@@ -80,7 +82,7 @@ class SpectralRepresentationMethod:
     """
 
     def __init__(self, samples_number, power_spectrum, time_interval, frequency_interval, number_time_intervals,
-                 number_frequency_intervals, random_state=None, verbose=False):
+                 number_frequency_intervals, random_state=None):
         self.power_spectrum = power_spectrum
         if isinstance(time_interval, float) and isinstance(frequency_interval, float) and \
                 isinstance(number_time_intervals, int) and isinstance(number_frequency_intervals, int):
@@ -99,7 +101,7 @@ class SpectralRepresentationMethod:
         if (self.time_interval > t_u).any():
             raise RuntimeError('UQpy: Aliasing might occur during execution')
 
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
 
         self.random_state = random_state
         if isinstance(self.random_state, int):
@@ -151,8 +153,7 @@ class SpectralRepresentationMethod:
         if not isinstance(nsamples, int):
             raise ValueError('UQpy: Stochastic Process: nsamples should be an integer.')
 
-        if self.verbose:
-            print('UQpy: Stochastic Process: Running Spectral Representation Method.')
+        self.logger.info('UQpy: Stochastic Process: Running Spectral Representation Method.')
 
         samples = None
         phi = None
@@ -166,8 +167,7 @@ class SpectralRepresentationMethod:
             self.samples = np.concatenate((self.samples, samples), axis=0)
             self.phi = np.concatenate((self.phi, phi), axis=0)
 
-        if self.verbose:
-            print('UQpy: Stochastic Process: Spectral Representation Method Complete.')
+        self.logger.info('UQpy: Stochastic Process: Spectral Representation Method Complete.')
 
 
 

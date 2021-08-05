@@ -31,6 +31,7 @@ The module currently contains the following classes:
 import collections
 import datetime
 import glob
+import logging
 import os
 import pathlib
 import platform
@@ -166,8 +167,6 @@ class RunModel:
 
         `resume` is not used in the Python model workflow.
 
-    * **verbose** (`boolean`)
-        Set ``verbose = True`` to print status messages to the terminal during execution.
 
     * **model_dir** (`str`)
         Specifies the name of the sub-directory from which the model will be executed and to which output files will be
@@ -259,7 +258,7 @@ class RunModel:
 
     def __init__(self, samples=None, model_script=None, model_object_name=None,
                  input_template=None, var_names=None, output_script=None, output_object_name=None, ntasks=1,
-                 cores_per_task=1, nodes=1, cluster=False, resume=False, verbose=False, model_dir='Model_Runs',
+                 cores_per_task=1, nodes=1, cluster=False, resume=False, model_dir='Model_Runs',
                  fmt=None, separator=', ', vec=True, delete_files=False, **kwargs):
 
         # Check the platform and build appropriate call to Python
@@ -270,8 +269,7 @@ class RunModel:
         else:
             self.python_command = "python3"
 
-        # Verbose option
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
 
         # Vectorized computation
         self.vec = vec
@@ -318,8 +316,7 @@ class RunModel:
         ts = datetime.datetime.now().strftime("%Y_%m_%d_%I_%M_%f_%trial_probability")
         self.model_dir = os.path.join(self.parent_dir, model_dir + "_" + ts)
         os.makedirs(self.model_dir)
-        if self.verbose:
-            print('\nUQpy: The following directory has been created for model evaluations: \n' + self.model_dir)
+        self.logger.info('\nUQpy: The following directory has been created for model evaluations: \n' + self.model_dir)
 
         # Copy files from the model list to model run directory
         for file_name in model_files:
@@ -329,8 +326,7 @@ class RunModel:
             else:
                 new_dir_name = os.path.join(self.model_dir, os.path.basename(full_file_name))
                 shutil.copytree(full_file_name, new_dir_name)
-        if self.verbose:
-            print('\nUQpy: The model files have been copied to the following directory for evaluation: \n' +
+        self.logger.info('\nUQpy: The model files have been copied to the following directory for evaluation: \n' +
                   self.model_dir)
 
         # Check if the model script is a python script
@@ -370,8 +366,7 @@ class RunModel:
 
         # Check if samples are provided.
         if samples is None:
-            if self.verbose:
-                print("\nUQpy: No samples are provided. Creating the object and building the model directory.\n")
+            self.logger.info("\nUQpy: No samples are provided. Creating the object and building the model directory.\n")
         elif isinstance(samples, (list, np.ndarray)):
             self.run(samples)
         else:
@@ -417,8 +412,8 @@ class RunModel:
 
         # Change current working directory to model run directory
         os.chdir(self.model_dir)
-        if self.verbose:
-            print('\nUQpy: All model evaluations will be executed from the following directory: \n' + self.model_dir)
+        self.logger.info('\nUQpy: All model evaluations will be executed from the following directory: \n'
+                         + self.model_dir)
 
         # Number of simulations to be performed
         self.nsim = len(samples)
@@ -492,13 +487,11 @@ class RunModel:
                 self._parallel_python_execution()
 
         # Return to parent directory
-        if self.verbose:
-            print("\nUQpy: Returning to the parent directory:\n" + self.parent_dir)
+        self.logger.info("\nUQpy: Returning to the parent directory:\n" + self.parent_dir)
         os.chdir(self.parent_dir)
 
         if self.delete_files:
-            if self.verbose:
-                print("UQpy: Deleting individual run files.")
+            self.logger.info("UQpy: Deleting individual run files.")
             for dirname in glob.glob(os.path.join(self.model_dir, "run*")):
                 shutil.rmtree(dirname)
 
@@ -515,8 +508,7 @@ class RunModel:
         changes the current working directory to the model run directory, calls the input function, executes the model,
         calls the output function, removes the copied files and folders, and returns to the previous directory.
         """
-        if self.verbose:
-            print('\nUQpy: Performing serial execution of the third-party model.\n')
+        self.logger.info('\nUQpy: Performing serial execution of the third-party model.\n')
 
         # Loop over the number of simulations, executing the model once per loop
         for i in range(self.nexist, self.nexist + self.nsim):
@@ -526,8 +518,7 @@ class RunModel:
 
             # Change current working directory to model run directory
             os.chdir(work_dir)
-            if self.verbose:
-                print('\nUQpy: Running model number ' + str(i) + ' in the following directory: \n' + work_dir)
+            self.logger.info('\nUQpy: Running model number ' + str(i) + ' in the following directory: \n' + work_dir)
 
             # Call the input function
             self._input_serial(i)
@@ -544,12 +535,10 @@ class RunModel:
 
             # Return to the model directory
             os.chdir(self.model_dir)
-            if self.verbose:
-                print('\nUQpy: Model evaluation ' + str(i) + ' complete.\n')
-                print('\nUQpy: Returning to the model directory:\n' + self.model_dir)
+            self.logger.info('\nUQpy: Model evaluation ' + str(i) + ' complete.\n')
+            self.logger.info('\nUQpy: Returning to the model directory:\n' + self.model_dir)
 
-        if self.verbose:
-            print('\nUQpy: Serial execution of the third-party model complete.\n')
+        self.logger.info('\nUQpy: Serial execution of the third-party model complete.\n')
 
     ####################################################################################################################
 
@@ -561,10 +550,9 @@ class RunModel:
         for each model run, copies files to the model run directory, executes the model in parallel, collects output,
         removes the copied files and folders.
         """
-        if self.verbose:
-            print('\nUQpy: Performing parallel execution of the third-party model.\n')
-            # Call the input function
-            print('\nUQpy: Creating inputs for parallel execution of the third-party model.\n')
+        self.logger.info('\nUQpy: Performing parallel execution of the third-party model.\n')
+        # Call the input function
+        self.logger.info('\nUQpy: Creating inputs for parallel execution of the third-party model.\n')
 
         # Create all input files for the parallel execution and place them in the proper directories
         for i in range(self.nexist, self.nexist + self.nsim):
@@ -575,39 +563,33 @@ class RunModel:
         self._input_parallel()
 
         # Execute the model
-        if self.verbose:
-            print('\nUQpy: Executing the third-party model in parallel.\n')
+        self.logger.info('\nUQpy: Executing the third-party model in parallel.\n')
 
         self._execute_parallel()
 
         # Call the output function
-        if self.verbose:
-            print('\nUQpy: Collecting outputs from parallel execution of the third-party model.\n')
+        self.logger.info('\nUQpy: Collecting outputs from parallel execution of the third-party model.\n')
 
         for i in range(self.nexist, self.nexist + self.nsim):
             # Change current working directory to model run directory
             work_dir = os.path.join(self.model_dir, "run_" + str(i))
-            if self.verbose:
-                print('\nUQpy: Changing to the following directory for output processing:\n' + work_dir)
+            self.logger.info('\nUQpy: Changing to the following directory for output processing:\n' + work_dir)
             os.chdir(work_dir)
 
             # Run output processing function
             if self.output_script is not None:
-                if self.verbose:
-                    print('\nUQpy: Processing output from parallel execution of the third-party model run ' + str(i) +
-                          '.\n')
+                self.logger.info('\nUQpy: Processing output from parallel execution of the third-party model run '
+                                 + str(i) + '.\n')
                 self._output_serial(i)
 
             # Remove the copied files and folders
             self._remove_copied_files(work_dir)
 
             # Change back to the upper directory
-            if self.verbose:
-                print('\nUQpy: Changing back to the following model directory:\n' + self.model_dir)
+            self.logger.info('\nUQpy: Changing back to the following model directory:\n' + self.model_dir)
             os.chdir(self.model_dir)
 
-        if self.verbose:
-            print('\nUQpy: Parallel execution of the third-party model complete.\n')
+        self.logger.info('\nUQpy: Parallel execution of the third-party model complete.\n')
 
     ####################################################################################################################
     def _serial_python_execution(self):
@@ -617,8 +599,7 @@ class RunModel:
         This function imports the model_object from the model_script, and executes the model in series by passing the
         corresponding sample/samples along with keyword arguments, if any, as inputs to the model object.
         """
-        if self.verbose:
-            print('\nUQpy: Performing serial execution of a Python model.\n')
+        self.logger.info('\nUQpy: Performing serial execution of a Python model.\n')
 
         model_object = getattr(self.python_model, self.model_object_name)
         # Run python model
@@ -643,11 +624,9 @@ class RunModel:
                 else:
                     self.qoi_list[i] = self.model_output
 
-        if self.verbose:
-            print('\nUQpy: Serial execution of the python model complete.\n')
+        self.logger.info('\nUQpy: Serial execution of the python model complete.\n')
 
-        if self.verbose:
-            print('\nUQpy: Serial execution of the python model complete.\n')
+        self.logger.info('\nUQpy: Serial execution of the python model complete.\n')
 
     ####################################################################################################################
     def _parallel_python_execution(self):
@@ -658,8 +637,7 @@ class RunModel:
         samples along with keyword arguments, if any, as inputs to the model object.
         """
 
-        if self.verbose:
-            print('\nUQpy: Performing parallel execution of the model without template input.\n')
+        self.logger.info('\nUQpy: Performing parallel execution of the model without template input.\n')
         import multiprocessing
         import UQpy.utilities.Utilities as Utilities
 
@@ -682,8 +660,7 @@ class RunModel:
 
         pool.close()
 
-        if self.verbose:
-            print('\nUQpy: Parallel execution of the python model complete.\n')
+        self.logger.info('\nUQpy: Parallel execution of the python model complete.\n')
 
     ####################################################################################################################
     def _input_serial(self, index):
@@ -741,8 +718,7 @@ class RunModel:
             # Write the new text to the input file
             self._create_input_files(file_name=self.input_template, num=i+self.nexist, text=new_text,
                                      new_folder=folder_to_write)
-            if self.verbose:
-                print('\nUQpy: Created input files for run ' + str(i) + ' in the directory: \n' +
+            self.logger.info('\nUQpy: Created input files for run ' + str(i) + ' in the directory: \n' +
                       os.path.join(self.model_dir, folder_to_write))
 
     def _execute_parallel(self):
@@ -864,16 +840,15 @@ class RunModel:
                     new_text = new_text[0:new_text.index(string)] + to_add + new_text[(new_text.index(string) +
                                                                                        len(string)):]
                     count += 1
-            if self.verbose:
-                if index == 0:
-                    if count > 1:
-                        print(
-                            "\nUQpy: Found " + str(count) + " instances of variable: '" + var_names[j] +
-                            "' in the input file.\n")
-                    else:
-                        print(
-                            "\nUQpy: Found " + str(count) + " instance of variable: '" + var_names[j] +
-                            "' in the input file.\n")
+            if index == 0:
+                if count > 1:
+                    self.logger.info(
+                        "\nUQpy: Found " + str(count) + " instances of variable: '" + var_names[j] +
+                        "' in the input file.\n")
+                else:
+                    self.logger.info(
+                        "\nUQpy: Found " + str(count) + " instance of variable: '" + var_names[j] +
+                        "' in the input file.\n")
         return new_text
 
     def _remove_copied_files(self, work_dir):
@@ -943,12 +918,10 @@ class RunModel:
 
             # If there is a model_object_name given, check if it is in the list.
             if self.model_object_name in class_list:
-                if self.verbose:
-                    print('\nUQpy: The model class that will be run: ' + self.model_object_name)
+                self.logger.info('\nUQpy: The model class that will be run: ' + self.model_object_name)
                 self.model_is_class = True
             elif self.model_object_name in function_list:
-                if self.verbose:
-                    print('\nUQpy: The model function that will be run: ' + self.model_object_name)
+                self.logger.info('\nUQpy: The model function that will be run: ' + self.model_object_name)
                 self.model_is_class = False
             else:
                 if self.model_object_name is None:
@@ -994,12 +967,10 @@ class RunModel:
 
             # If there is a model_object_name given, check if it is in the list.
             if self.output_object_name in class_list:
-                if self.verbose:
-                    print('\nUQpy: The output class that will be run: ' + self.output_object_name)
+                self.logger.info('\nUQpy: The output class that will be run: ' + self.output_object_name)
                 self.output_is_class = True
             elif self.output_object_name in function_list:
-                if self.verbose:
-                    print('\nUQpy: The output function that will be run: ' + self.output_object_name)
+                self.logger.info('\nUQpy: The output function that will be run: ' + self.output_object_name)
                 self.output_is_class = False
             else:
                 if self.output_object_name is None:

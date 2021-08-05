@@ -15,6 +15,7 @@ def check_copula_theta():
         return wrap
     return validator
 
+
 def check_random_state():
     def validator(f):
         @functools.wraps(f)

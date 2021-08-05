@@ -1,9 +1,15 @@
+import logging
+
+import numpy as np
+
 class UnivariateStochasticProcess():
 
+    def __init__(self):
+        self.logger=logging.getLogger(__name__)
+
     def calculate_samples(self):
-        if self.verbose:
-            print('UQpy: Stochastic Process: Starting simulation of uni-variate Stochastic Processes.')
-            print('UQpy: The number of dimensions is :', self.number_of_dimensions)
+        self.logger.info('UQpy: Stochastic Process: Starting simulation of uni-variate Stochastic Processes.')
+        self.logger.info('UQpy: The number of dimensions is :', self.number_of_dimensions)
         phi = np.random.uniform(
             size=np.append(self.samples_number, np.ones(self.number_of_dimensions, dtype=np.int32)
                            * self.number_frequency_intervals)) * 2 * np.pi

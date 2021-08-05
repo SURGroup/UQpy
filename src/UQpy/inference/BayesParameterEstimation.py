@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
@@ -60,7 +62,7 @@ class BayesParameterEstimation:
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
     def __init__(self, inference_model, data, sampling_class=None, nsamples=None, nsamples_per_chain=None,
-                 random_state=None, verbose=False):
+                 random_state=None):
 
         self.inference_model = inference_model
         if not isinstance(self.inference_model, InferenceModel):
@@ -71,7 +73,7 @@ class BayesParameterEstimation:
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
 
         if not issubclass(sampling_class, MCMC) or not issubclass(sampling_class, ImportanceSampling):
             raise ValueError('UQpy: Sampling_class should be either a MCMC algorithm or IS.')
@@ -120,8 +122,8 @@ class BayesParameterEstimation:
 
         BayesParameterEstimation.sampling_actions[self.sampler](self.sampler, nsamples, nsamples_per_chain)
 
-        if self.verbose:
-            print('UQpy: Parameter estimation with ' + self.sampler.__class__.__name__ + ' completed successfully!')
+        self.logger.info('UQpy: Parameter estimation with '
+                         + self.sampler.__class__.__name__ + ' completed successfully!')
 
 
 

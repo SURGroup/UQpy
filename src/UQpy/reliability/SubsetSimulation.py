@@ -1,4 +1,5 @@
 import copy
+import logging
 import warnings
 from inspect import isclass
 
@@ -74,14 +75,14 @@ class SubsetSimulation:
     """
 
     def __init__(self, runmodel_object, mcmc_object, samples_init=None,
-                 conditional_probability=0.1, nsamples_per_ss=1000, max_level=10, verbose=False):
+                 conditional_probability=0.1, nsamples_per_ss=1000, max_level=10):
         # Initialize other attributes
         self.runmodel_object = runmodel_object
         self.samples_init = samples_init
         self.conditional_probability = conditional_probability
         self.nsamples_per_ss = nsamples_per_ss
         self.max_level = max_level
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
 
         # Check that a RunModel object is being passed in.
         if not isinstance(self.runmodel_object, RunModel):
@@ -100,13 +101,11 @@ class SubsetSimulation:
         self.g = list()
         self.g_level = list()
 
-        if self.verbose:
-            print('UQpy: Running Subset Simulation with mcmc of type: ' + str(type(mcmc_object)))
+        self.logger.info('UQpy: Running Subset Simulation with mcmc of type: ' + str(type(mcmc_object)))
 
         [self.pf, self.cov1, self.cov2] = self.run()
 
-        if self.verbose:
-            print('UQpy: Subset Simulation Complete!')
+        self.logger.info('UQpy: Subset Simulation Complete!')
 
     # -----------------------------------------------------------------------------------------------------------------------
     # The run function executes the chosen subset simulation algorithm
@@ -138,11 +137,11 @@ class SubsetSimulation:
         # Generate the initial samples - Level 0
         # Here we need to make sure that we have good initial samples from the target joint density.
         if self.samples_init is None:
-            warnings.warn('UQpy: You have not provided initial samples.\n Subset simulation is highly sensitive to the '
-                          'initial sample set. It is recommended that the user either:\n'
-                          '- Provide an initial set of samples (samples_init) known to follow the distribution; or\n'
-                          '- Provide a robust mcmc object that will draw independent initial samples from the '
-                          'distribution.')
+            self.logger.warning('UQpy: You have not provided initial samples.\n Subset simulation is highly sensitive '
+                                'to the initial sample set. It is recommended that the user either:\n'
+                                '- Provide an initial set of samples (samples_init) known to follow the distribution; '
+                                'or\n - Provide a robust mcmc object that will draw independent initial samples from '
+                                'the distribution.')
             self.mcmc_objects[0].run(number_of_samples=self.nsamples_per_ss)
             self.samples.append(self.mcmc_objects[0].samples)
         else:
@@ -160,8 +159,7 @@ class SubsetSimulation:
         d12.append(d1 ** 2)
         d22.append(d2 ** 2)
 
-        if self.verbose:
-            print('UQpy: Subset Simulation, conditional level 0 complete.')
+        self.logger.info('UQpy: Subset Simulation, conditional level 0 complete.')
 
         while self.g_level[step] > 0 and step < self.max_level:
 
@@ -242,8 +240,7 @@ class SubsetSimulation:
             d12.append(d1 ** 2)
             d22.append(d2 ** 2)
 
-            if self.verbose:
-                print('UQpy: Subset Simulation, conditional level ' + str(step) + ' complete.')
+            self.logger.info('UQpy: Subset Simulation, conditional level ' + str(step) + ' complete.')
 
         n_fail = len([value for value in self.g[step] if value < 0])
 

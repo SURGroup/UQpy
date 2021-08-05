@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import scipy.stats as stats
 
@@ -43,12 +45,12 @@ class FORM(TaylorSeries):
      """
 
     def __init__(self, distributions, runmodel_object, form_object=None, seed_x=None, seed_u=None, df_step=0.01,
-                 corr_x=None, corr_z=None, n_iter=100, tol1=None, tol2=None, tol3=None, verbose=False):
+                 corr_x=None, corr_z=None, n_iter=100, tol1=None, tol2=None, tol3=None):
 
         super().__init__(distributions, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u, n_iter, tol1, tol2,
-                         tol3, df_step, verbose)
+                         tol3, df_step)
 
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
 
         if df_step is not None:
             if not isinstance(df_step, (float, int)):
@@ -96,8 +98,7 @@ class FORM(TaylorSeries):
         * **seed_u** or **seed_x** (`ndarray`):
             See ``taylor_series`` parent class.
         """
-        if self.verbose:
-            print('UQpy: Running FORM...')
+        self.logger.info('UQpy: Running FORM...')
         if seed_u is None and seed_x is None:
             seed = np.zeros(self.dimension)
         elif seed_u is None and seed_x is not None:
@@ -126,8 +127,7 @@ class FORM(TaylorSeries):
         dg_u_record = np.zeros([self.n_iter + 1, self.dimension])
 
         while not converged:
-            if self.verbose:
-                print('Number of iteration:', k)
+            self.logger.info('Number of iteration:', k)
             # FORM always starts from the standard normal space
             if k == 0:
                 if seed_x is not None:
@@ -146,32 +146,28 @@ class FORM(TaylorSeries):
             self.x = x
             u_record.append(u)
             x_record.append(x)
-            if self.verbose:
-                print('Design point Y: {0}'.format(u[k, :]))
-                print('Design point X: {0}'.format(self.x))
-                print('Jacobian Jzx: {0}'.format(self.jzx))
+            self.logger.info('Design point Y: {0}\n'.format(u[k, :]) +
+                             'Design point X: {0}\n'.format(self.x) +
+                             'Jacobian Jzx: {0}\n'.format(self.jzx))
 
             # 2. evaluate Limit State Function and the gradient at point u_k and direction cosines
             dg_u, qoi = self.derivatives(point_u=u[k, :], point_x=self.x, runmodel_object=self.runmodel_object,
-                                         nataf_object=self.nataf_object, df_step=self.df_step, order='first',
-                                         verbose=self.verbose)
+                                         nataf_object=self.nataf_object, df_step=self.df_step, order='first')
             g_record.append(qoi)
 
             dg_u_record[k + 1, :] = dg_u
             norm_grad = np.linalg.norm(dg_u_record[k + 1, :])
             alpha = dg_u / norm_grad
-            if self.verbose:
-                print('Directional cosines (alpha): {0}'.format(alpha))
-                print('Gradient (dg_y): {0}'.format(dg_u_record[k + 1, :]))
-                print('norm dg_y:', norm_grad)
+            self.logger.info('Directional cosines (alpha): {0}\n'.format(alpha) +
+                             'Gradient (dg_y): {0}\n'.format(dg_u_record[k + 1, :]) +
+                             'norm dg_y:', norm_grad)
 
             self.alpha = alpha.squeeze()
             alpha_record.append(self.alpha)
             beta[k] = -np.inner(u[k, :].T, self.alpha)
             beta[k + 1] = beta[k] + qoi / norm_grad
-            if self.verbose:
-                print('Beta: {0}'.format(beta[k]))
-                print('Pf: {0}'.format(stats.norm.cdf(-beta[k])))
+            self.logger.info('Beta: {0}\n'.format(beta[k]) +
+                             'Pf: {0}'.format(stats.norm.cdf(-beta[k])))
 
             u[k + 1, :] = -beta[k + 1] * self.alpha
 
@@ -246,14 +242,14 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
-            if self.verbose:
-                print('Error:', error_record[-1])
+            self.logger.error('Error:', error_record[-1])
 
             if converged is True or k > self.n_iter:
                 break
 
         if k > self.n_iter:
-            print('UQpy: Maximum number of iterations {0} was reached before convergence.'.format(self.n_iter))
+            self.logger\
+                .info('UQpy: Maximum number of iterations {0} was reached before convergence.'.format(self.n_iter))
             self.error_record = error_record
             self.u_record = [u_record]
             self.x_record = [x_record]

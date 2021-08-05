@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 from abc import abstractmethod
 from UQpy.distributions import Distribution, Normal, MultivariateNormal
@@ -52,7 +54,7 @@ class InferenceModel:
     # Last Modified: 05/13/2020 by Audrey Olivier
 
     def __init__(self, parameters_number, runmodel_object=None, log_likelihood=None, dist_object=None, name='',
-                 error_covariance=1.0, prior=None, verbose=False, **kwargs_likelihood):
+                 error_covariance=1.0, prior=None, **kwargs_likelihood):
 
         # Initialize some parameters
         self.parameters_number = parameters_number
@@ -61,7 +63,7 @@ class InferenceModel:
         self.name = name
         if not isinstance(self.name, str):
             raise TypeError('Input name must be a string.')
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
 
         self.runmodel_object = runmodel_object
         self.error_covariance = error_covariance

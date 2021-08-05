@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 
 
@@ -18,10 +20,9 @@ class POD:
     **Methods:**
     """
 
-    def __init__(self, solution_snapshots, verbose=True, **kwargs):
+    def __init__(self, solution_snapshots, **kwargs):
 
         self.solution_snapshots = solution_snapshots
-        self.verbose = verbose
         self.kwargs = kwargs
 
     @staticmethod

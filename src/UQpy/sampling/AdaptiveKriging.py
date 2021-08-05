@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 from UQpy.sampling.LatinHypercubeSampling import LatinHypercubeSampling
 from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import LearningFunction
@@ -97,15 +99,14 @@ class AdaptiveKriging:
     """
 
     def __init__(self, distributions, runmodel_object, surrogate, samples=None, samples_number=None,
-                 learning_samples_number=None, qoi_name=None, learning_function='U', n_add=1, random_state=None,
-                 verbose=False):
+                 learning_samples_number=None, qoi_name=None, learning_function='U', n_add=1, random_state=None):
 
         # Initialize the internal variables of the class.
         self.runmodel_object = runmodel_object
         self.samples = np.array(samples)
         self.learning_samples_number = learning_samples_number
         self.initial_samples_number = None
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
         self.qoi_name = qoi_name
 
         self.learning_function = learning_function
@@ -151,8 +152,7 @@ class AdaptiveKriging:
         else:
             raise NotImplementedError("UQpy: krig_object must have 'fit' and 'predict' methods.")
 
-        if self.verbose:
-            print('UQpy: AKMCS - Running the initial sample set using RunModel.')
+        self.logger.info('UQpy: AKMCS - Running the initial sample set using RunModel.')
 
         # Evaluate model at the training points
         if len(self.runmodel_object.qoi_list) == 0 and samples is not None:
@@ -222,16 +222,14 @@ class AdaptiveKriging:
                 self.samples = np.array(samples)
                 self.runmodel_object.qoi_list = []
 
-            if self.verbose:
-                print('UQpy: AKMCS - Evaluating the model at the sample set using RunModel.')
+            self.logger.info('UQpy: AKMCS - Evaluating the model at the sample set using RunModel.')
 
             self.runmodel_object.run(samples=samples, append_samples=append_samples)
         else:
             if len(self.samples.shape) == 0:
                 if self.initial_samples_number is None:
                     raise NotImplementedError("UQpy: User should provide either 'samples' or 'nstart' value.")
-                if self.verbose:
-                    print('UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling.')
+                self.logger.info('UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling.')
 
 
                 random_criterion = Random(random_state=self.random_state)
@@ -241,8 +239,7 @@ class AdaptiveKriging:
                 self.samples = latin_hypercube_sampling.samples
                 self.runmodel_object.run(samples=self.samples)
 
-        if self.verbose:
-            print('UQpy: Performing AK-MCS design...')
+        self.logger.info('UQpy: Performing AK-MCS design...')
 
         # If the quantity of interest is a dictionary, convert it to a list
         self._convert_qoi_tolist()
@@ -295,14 +292,12 @@ class AdaptiveKriging:
 
             # Exit the loop, if error criteria is satisfied
             if ind:
-                print("UQpy: Learning stops at iteration: ", i)
+                self.logger.info("UQpy: Learning stops at iteration: ", i)
                 break
 
-            if self.verbose:
-                print("Iteration:", i)
+            self.logger.info("Iteration:", i)
 
-        if self.verbose:
-            print('UQpy: AKMCS complete')
+        self.logger.info('UQpy: AKMCS complete')
 
     def _convert_qoi_tolist(self):
         self.qoi = [None] * len(self.runmodel_object.qoi_list)

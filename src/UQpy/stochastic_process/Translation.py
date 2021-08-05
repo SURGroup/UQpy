@@ -1,4 +1,5 @@
 import itertools
+import logging
 
 from scipy.stats import norm
 
@@ -68,13 +69,14 @@ class Translation:
     def __init__(self, distributions, time_interval, frequency_interval, number_time_intervals,
                  number_frequency_intervals, power_spectrum_gaussian=None, correlation_function_gaussian=None,
                  samples_gaussian=None):
+        self.logger = logging.getLogger(__name__)
         self.distributions = distributions
         self.time_interval = time_interval
         self.frequency_interval = frequency_interval
         self.number_time_intervals = number_time_intervals
         self.number_frequency_intervals = number_frequency_intervals
         if correlation_function_gaussian is None and power_spectrum_gaussian is None:
-            print('Either the Power Spectrum or the Autocorrelation function should be specified')
+            self.logger.info('Either the Power Spectrum or the Autocorrelation function should be specified')
         if correlation_function_gaussian is None:
             self.power_spectrum_gaussian = power_spectrum_gaussian
             self.correlation_function_gaussian = wiener_khinchin_transform(power_spectrum_gaussian, np.arange(0,

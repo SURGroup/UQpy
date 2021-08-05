@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import abc
 from UQpy.utilities.Utilities import gradient
@@ -35,11 +37,10 @@ class Strata:
     **Methods:**
     """
 
-    def __init__(self, seeds=None, random_state=None, verbose=False):
+    def __init__(self, seeds=None, random_state=None):
 
         self.seeds = seeds
         self.volume = None
-        self.verbose = verbose
 
         self.random_state = random_state
         if isinstance(self.random_state, int):

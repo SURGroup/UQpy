@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 from UQpy.distributions import DistributionContinuous1D
 
@@ -81,7 +83,7 @@ class StochasticReducedOrderModel:
     """
 
     def __init__(self, samples, target_distributions, moments=None, weights_errors=None, weights_distribution=None,
-                 weights_moments=None, weights_correlation=None, properties=None, correlation=None, verbose=False):
+                 weights_moments=None, weights_correlation=None, properties=None, correlation=None):
 
         self.target_distributions = target_distributions
         self.correlation = correlation
@@ -93,7 +95,7 @@ class StochasticReducedOrderModel:
         self.weights_errors = weights_errors
 
         self.properties = properties
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
         self.sample_weights = None
 
         if isinstance(samples, list):
@@ -118,8 +120,8 @@ class StochasticReducedOrderModel:
         if self.properties is not None:
             self.run()
         else:
-            print('UQpy: No properties list provided, execute the stochastic_reduced_order_models by calling run method and specifying a '
-                  'properties list')
+            self.logger.log('UQpy: No properties list provided, execute the stochastic_reduced_order_models by calling '
+                            'run method and specifying a properties list')
 
     def run(self, weights_errors=None, weights_distribution=None, weights_moments=None, weights_correlation=None,
             properties=None):
@@ -197,8 +199,7 @@ class StochasticReducedOrderModel:
 
         self._init_srom()
 
-        if self.verbose:
-            print('UQpy: Performing stochastic_reduced_order_models...')
+        self.logger.info('UQpy: Performing stochastic_reduced_order_models...')
 
         def f(p0, samples, wd, wm, wc, mar, n, d, m, alpha, prop, correlation):
             e1 = 0.
@@ -245,8 +246,7 @@ class StochasticReducedOrderModel:
                                constraints=cons, method='SLSQP', bounds=[[0, 1]]*self.samples_number)
 
         self.sample_weights = p_.x
-        if self.verbose:
-            print('UQpy: stochastic_reduced_order_models completed!')
+        self.logger.info('UQpy: stochastic_reduced_order_models completed!')
 
     def _init_srom(self):
         """

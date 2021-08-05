@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
@@ -62,7 +64,7 @@ class MLE:
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
 
-    def __init__(self, inference_model, data, verbose=False, nopt=None, x0=None,
+    def __init__(self, inference_model, data, nopt=None, x0=None,
                  optimizer=MinimizeOptimizer(), random_state=None):
 
         # Initialize variables
@@ -75,7 +77,7 @@ class MLE:
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
         if (optimizer is None) or (not isinstance(optimizer, Optimizer)):
             raise TypeError('UQpy: Input optimizer should be None (set to scipy.optimize.minimize) or a callable.')
 
@@ -83,8 +85,7 @@ class MLE:
 
         self.mle = None
         self.max_log_like = None
-        if self.verbose:
-            print('UQpy: Initialization of MLEstimation object completed.')
+        self.logger.info('UQpy: Initialization of MLEstimation object completed.')
 
         # Run the optimization procedure
         if (nopt is not None) or (x0 is not None):
@@ -116,8 +117,8 @@ class MLE:
 
         """
         # Run optimization (use x0 if provided, otherwise sample starting point from [0, 1] or bounds)
-        if self.verbose:
-            print('UQpy: Evaluating maximum likelihood estimate for inference model ' + self.inference_model.name)
+        self.logger.info('UQpy: Evaluating maximum likelihood estimate for inference model '
+                         + self.inference_model.name)
 
         # Case 3: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization below.
         if hasattr(self.inference_model, 'distributions') and self.inference_model.distributions is not None\
@@ -167,8 +168,7 @@ class MLE:
                     self.mle = mle_tmp
                     self.max_log_like = max_log_like_tmp
 
-            if self.verbose:
-                print('UQpy: ML estimation completed.')
+            self.logger.info('UQpy: ML estimation completed.')
 
     def _evaluate_func_to_minimize(self, one_param):
         """
