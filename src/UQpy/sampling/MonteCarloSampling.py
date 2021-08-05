@@ -1,5 +1,6 @@
 from UQpy.distributions import *
 import numpy as np
+import logging
 
 
 class MonteCarloSampling:
@@ -55,8 +56,8 @@ class MonteCarloSampling:
 
     """
 
-    def __init__(self, distributions, samples_number=None, random_state=None, verbose=False):
-
+    def __init__(self, distributions, samples_number=None, random_state=None):
+        self.logger = logging.getLogger(__name__)
         if isinstance(distributions, list):
             add_continuous_1d = 0
             add_continuous_nd = 0
@@ -98,9 +99,6 @@ class MonteCarloSampling:
         self.samples = None
         self.x = None
         self.samplesU01 = None
-
-        # Set printing options
-        self.verbose = verbose
         self.samples_number = samples_number
 
         # Run Monte Carlo sampling
@@ -136,6 +134,7 @@ class MonteCarloSampling:
         class.
 
         """
+
         # Check if a random_state is provided.
         if random_state is None:
             random_state = self.random_state
@@ -150,8 +149,7 @@ class MonteCarloSampling:
         if not isinstance(samples_number, int):
             raise ValueError('UQpy: nsamples should be an integer.')
 
-        if self.verbose:
-            print('UQpy: Running Monte Carlo Sampling.')
+        self.logger.info('UQpy: Running Monte Carlo Sampling.')
 
         if isinstance(self.dist_object, list):
             temp_samples = list()
@@ -186,8 +184,7 @@ class MonteCarloSampling:
                 self.samples = np.vstack([self.samples, self.x])
         self.samples_number = len(self.samples)
 
-        if self.verbose:
-            print('UQpy: Monte Carlo Sampling Complete.')
+        self.logger.info('UQpy: Monte Carlo Sampling Complete.')
 
     def transform_u01(self):
         """
@@ -242,8 +239,7 @@ class MonteCarloSampling:
 
     def __copy__(self):
         new = self.__class__(distributions=self.dist_object,
-                             random_state=self.random_state,
-                             verbose=self.verbose)
+                             random_state=self.random_state)
         new.__dict__.update(self.__dict__)
 
         return new

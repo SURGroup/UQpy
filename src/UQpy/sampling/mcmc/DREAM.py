@@ -204,3 +204,27 @@ class DREAM(MCMC):
                     print('UQpy: Chain {} is an outlier chain'.format(j))
         if self.verbose and outlier_num > 0:
             print('UQpy: Detected {} outlier chains'.format(outlier_num))
+
+    def __copy__(self):
+        new = self.__class__(pdf_target=self.pdf_target,
+                             log_pdf_target=self.log_pdf_target,
+                             args_target=self.args_target,
+                             burn_length=self.burn_length,
+                             jump=self.jump,
+                             dimension=self.dimension,
+                             seed=self.seed,
+                             save_log_pdf=self.save_log_pdf,
+                             concatenate_chains=self.concatenate_chains,
+                             jump_rate=self.jump_rate,
+                             c=self.c,
+                             c_star=self.c_star,
+                             crossover_probabilities_number=self.crossover_probabilities_number,
+                             gamma_probability=self.gamma_probability,
+                             crossover_adaptation=self.crossover_adaptation,
+                             check_chains=self.check_chains,
+                             chains_number=self.chains_number,
+                             verbose=self.verbose,
+                             random_state=self.random_state)
+        new.__dict__.update(self.__dict__)
+
+        return new

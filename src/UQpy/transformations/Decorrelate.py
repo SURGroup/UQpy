@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Decorrelate:
     """
     A class to remove correlation from correlated standard normal random variables.

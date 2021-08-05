@@ -100,3 +100,21 @@ class Stretch(MCMC):
         # Update the acceptance rate
         self._update_acceptance_rate(accept_vec)
         return current_state, current_log_pdf
+
+    def __copy__(self):
+        new = self.__class__(pdf_target=self.pdf_target,
+                             log_pdf_target=self.log_pdf_target,
+                             args_target=self.args_target,
+                             burn_length=self.burn_length,
+                             jump=self.jump,
+                             dimension=self.dimension,
+                             seed=self.seed,
+                             save_log_pdf=self.save_log_pdf,
+                             concatenate_chains=self.concatenate_chains,
+                             scale=self.scale,
+                             chains_number=self.chains_number,
+                             verbose=self.verbose,
+                             random_state=self.random_state)
+        new.__dict__.update(self.__dict__)
+
+        return new

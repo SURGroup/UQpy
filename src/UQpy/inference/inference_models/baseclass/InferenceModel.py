@@ -1,5 +1,5 @@
 import numpy as np
-
+from abc import abstractmethod
 from UQpy.distributions import Distribution, Normal, MultivariateNormal
 from UQpy.RunModel import RunModel
 
@@ -101,6 +101,7 @@ class InferenceModel:
                     raise AttributeError('UQpy: Input prior should have a log_pdf or pdf method.')
                 self.prior.log_pdf = lambda x: np.log(self.prior.pdf(x))
 
+    @abstractmethod
     def evaluate_log_likelihood(self, params, data):
         """
         Evaluate the log likelihood, `log p(data|params)`.
@@ -127,61 +128,7 @@ class InferenceModel:
             Log-likelihood evaluated at all `nsamples` parameter vector values, `ndarray` of shape (nsamples, ).
 
         """
-
-        # Check parameter_vector
-        if not isinstance(params, np.ndarray):
-            params = np.array(params)
-        if len(params.shape) != 2:
-            raise TypeError('UQpy: input parameter_vector should be a nested list or 2d ndarray of shape (nsamples, dimension).')
-        if params.shape[1] != self.parameters_number:
-            raise ValueError('UQpy: Wrong dimensions in parameter_vector.')
-
-        # Case 1 - Forward model is given by RunModel
-        if self.runmodel_object is not None:
-            self.runmodel_object.run(samples=params, append_samples=False)
-            model_outputs = self.runmodel_object.qoi_list
-
-            # Case 1.a: Gaussian error model
-            if self.log_likelihood is None:
-                if isinstance(self.error_covariance, (float, int)):
-                    norm = Normal(loc=0., scale=np.sqrt(self.error_covariance))
-                    log_like_values = np.array(
-                        [np.sum([norm.log_pdf(data_i-outpt_i) for data_i, outpt_i in zip(data, output)])
-                         for output in model_outputs]
-                    )
-                else:
-                    multivariate_normal = MultivariateNormal(data, cov=self.error_covariance)
-                    log_like_values = np.array(
-                        [multivariate_normal.log_pdf(x=np.array(output).reshape((-1,))) for output in model_outputs]
-                    )
-
-            # Case 1.b: likelihood is user-defined
-            else:
-                log_like_values = self.log_likelihood(
-                    data=data, model_outputs=model_outputs, params=params, **self.kwargs_likelihood)
-                if not isinstance(log_like_values, np.ndarray):
-                    log_like_values = np.array(log_like_values)
-                if log_like_values.shape != (params.shape[0],):
-                    raise ValueError('UQpy: Likelihood function should output a (nsamples, ) ndarray of likelihood '
-                                     'values.')
-
-        # Case 2 - Log likelihood is user defined
-        elif self.log_likelihood is not None:
-            log_like_values = self.log_likelihood(data=data, params=params, **self.kwargs_likelihood)
-            if not isinstance(log_like_values, np.ndarray):
-                log_like_values = np.array(log_like_values)
-            if log_like_values.shape != (params.shape[0],):
-                raise ValueError('UQpy: Likelihood function should output a (nsamples, ) ndarray of likelihood values.')
-
-        # Case 3 - Learn parameters of a probability distribution pi. Data consists in iid sampled from pi.
-        else:
-            log_like_values = []
-            for params_ in params:
-                self.dist_object.update_parameters(**dict(zip(self.list_params, params_)))
-                log_like_values.append(np.sum(self.dist_object.log_pdf(x=data)))
-            log_like_values = np.array(log_like_values)
-
-        return log_like_values
+        pass
 
     def evaluate_log_posterior(self, parameter_vector, data):
         """

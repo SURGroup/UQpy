@@ -1,6 +1,8 @@
 import numpy as np
 
-from UQpy.inference.InferenceModel import InferenceModel
+from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
+from UQpy.inference.inference_models.baseclass.Optimizer import Optimizer
+from UQpy.inference.inference_models.optimization.MinizeOptimizer import MinimizeOptimizer
 
 
 class MLE:
@@ -60,28 +62,25 @@ class MLE:
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
 
-    def __init__(self, inference_model, data, verbose=False, nopt=None, x0=None, optimizer=None, random_state=None,
-                 **kwargs_optimizer):
+    def __init__(self, inference_model, data, verbose=False, nopt=None, x0=None,
+                 optimizer=MinimizeOptimizer(), random_state=None):
 
         # Initialize variables
         self.inference_model = inference_model
         if not isinstance(inference_model, InferenceModel):
             raise TypeError('UQpy: Input inference_model should be of type InferenceModel')
         self.data = data
-        self.kwargs_optimizer = kwargs_optimizer
         self.random_state = random_state
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
         self.verbose = verbose
-        if optimizer is None:
-            from scipy.optimize import minimize
-            self.optimizer = minimize
-        elif callable(optimizer):
-            self.optimizer = optimizer
-        else:
+        if (optimizer is None) or (not isinstance(optimizer, Optimizer)):
             raise TypeError('UQpy: Input optimizer should be None (set to scipy.optimize.minimize) or a callable.')
+
+        self.optimizer = optimizer
+
         self.mle = None
         self.max_log_like = None
         if self.verbose:
@@ -121,7 +120,8 @@ class MLE:
             print('UQpy: Evaluating maximum likelihood estimate for inference model ' + self.inference_model.name)
 
         # Case 3: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization below.
-        if (self.inference_model.distributions is not None) and hasattr(self.inference_model.distributions, 'fit'):
+        if hasattr(self.inference_model, 'distributions') and self.inference_model.distributions is not None\
+                and hasattr(self.inference_model.distributions, 'fit'):
             if not (isinstance(nopt, int) and nopt >= 1):
                 raise ValueError('UQpy: nopt should be an integer >= 1.')
             for _ in range(nopt):
@@ -148,15 +148,15 @@ class MLE:
                 x0 = Uniform().rvs(
                     nsamples=nopt * self.inference_model.parameters_number, random_state=self.random_state).reshape(
                     (nopt, self.inference_model.parameters_number))
-                if 'bounds' in self.kwargs_optimizer.keys():
-                    bounds = np.array(self.kwargs_optimizer['bounds'])
-                    x0 = bounds[:, 0].reshape((1, -1)) + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) * x0
+                if self.optimizer.bounds is not None:
+                    x0 = self.optimizer.bounds[:, 0].reshape((1, -1)) \
+                         + (self.optimizer.bounds[:, 1] - self.optimizer.bounds[:, 0]).reshape((1, -1)) * x0
             else:
                 x0 = np.atleast_2d(x0)
                 if x0.shape[1] != self.inference_model.parameters_number:
                     raise ValueError('UQpy: Wrong dimensions in x0')
             for x0_ in x0:
-                res = self.optimizer(self._evaluate_func_to_minimize, x0_, **self.kwargs_optimizer)
+                res = self.optimizer.optimize(self._evaluate_func_to_minimize, x0_)
                 mle_tmp = res.x
                 max_log_like_tmp = (-1.) * res.fun
                 # Save result

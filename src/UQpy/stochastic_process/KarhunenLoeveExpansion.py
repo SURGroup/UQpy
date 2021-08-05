@@ -51,10 +51,7 @@ class KarhunenLoeveExpansion:
                  verbose=False):
         self.correlation_function = correlation_function
         self.time_interval = time_interval
-        if threshold:
-            self.number_eigen_values = threshold
-        else:
-            self.number_eigen_values = len(self.correlation_function[0])
+        self.number_eigen_values = threshold if threshold else len(self.correlation_function[0])
 
         self.random_state = random_state
         if isinstance(self.random_state, int):

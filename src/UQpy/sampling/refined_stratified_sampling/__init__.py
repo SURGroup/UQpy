@@ -1,5 +1,7 @@
-from UQpy.sampling.refined_stratified_sampling.RectangularRSS import RectangularRSS
-from UQpy.sampling.refined_stratified_sampling.VoronoiRSS import VoronoiRefinedStratifiedSampling
+from UQpy.sampling.refined_stratified_sampling.SimpleRefinement import *
+from UQpy.sampling.refined_stratified_sampling.GradientEnhancedRefinement import *
+from UQpy.sampling.refined_stratified_sampling.baseclass import *
 
-from UQpy.sampling.refined_stratified_sampling.baseclass.RefinedStratifiedSampling import *
+from UQpy.sampling.refined_stratified_sampling.RefinedStratifiedSampling import *
+
 

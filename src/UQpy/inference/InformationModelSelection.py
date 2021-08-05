@@ -1,6 +1,7 @@
 import numpy as np
 
-from UQpy.inference.InferenceModel import InferenceModel
+from UQpy.inference.InformationTheoreticCriterion import InformationTheoreticCriterion
+from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
 from UQpy.inference.MLE import MLE
 
 
@@ -71,8 +72,7 @@ class InformationModelSelection:
     """
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
-    def __init__(self, candidate_models, data, criterion='AIC', random_state=None, verbose=False, nopt=None, x0=None,
-                 **kwargs):
+    def __init__(self, candidate_models, data, optimizer, criterion=InformationTheoreticCriterion.AIC, random_state=None, verbose=False, nopt=None, x0=None):
 
         # Check inputs
         # candidate_models is a list of InferenceModel objects
@@ -82,7 +82,7 @@ class InformationModelSelection:
         self.models_number = len(candidate_models)
         self.candidate_models = candidate_models
         self.data = data
-        if criterion not in ['AIC', 'BIC', 'AICc']:
+        if isinstance(criterion, InformationTheoreticCriterion):
             raise ValueError('UQpy: Criterion should be AIC (default), BIC or AICc')
         self.criterion = criterion
         self.random_state = random_state
@@ -93,20 +93,23 @@ class InformationModelSelection:
         self.verbose = verbose
 
         # Instantiate the ML estimators
-        if not all(isinstance(value, (list, tuple)) for (key, value) in kwargs.items()) or \
-                not all(len(value) == len(candidate_models) for (key, value) in kwargs.items()):
-            raise TypeError('UQpy: Extra inputs to model selection must be lists of length len(candidate_models)')
+        # if not all(isinstance(value, (list, tuple)) for (key, value) in kwargs.items()) or \
+        #         not all(len(value) == len(candidate_models) for (key, value) in kwargs.items()):
+        #     raise TypeError('UQpy: Extra inputs to model selection must be lists of length len(candidate_models)')
+        self.optimizer = optimizer
         self.ml_estimators = []
         for i, inference_model in enumerate(self.candidate_models):
-            kwargs_i = dict([(key, value[i]) for (key, value) in kwargs.items()])
+            # kwargs_i = dict([(key, value[i]) for (key, value) in kwargs.items()])
             ml_estimator = MLE(inference_model=inference_model, data=self.data, verbose=self.verbose,
-                               random_state=self.random_state, x0=None, nopt=None, **kwargs_i)
+                               random_state=self.random_state, x0=None, nopt=None, optimizer=self.optimizer)
             self.ml_estimators.append(ml_estimator)
 
         # Initialize the outputs
         self.criterion_values = [None, ] * self.models_number
         self.penalty_terms = [None, ] * self.models_number
         self.probabilities = [None, ] * self.models_number
+
+
 
         # Run the model selection procedure
         if (nopt is not None) or (x0 is not None):
@@ -211,17 +214,12 @@ class InformationModelSelection:
 
         n_params = inference_model.parameters_number
         number_of_data = len(data)
-        if criterion == 'BIC':
-            penalty_term = np.log(number_of_data) * n_params
-        elif criterion == 'AICc':
-            penalty_term = 2 * n_params + (2 * n_params ** 2 + 2 * n_params) / (number_of_data - n_params - 1)
-        elif criterion == 'AIC':  # default
-            penalty_term = 2 * n_params
-        else:
-            raise ValueError('UQpy: Criterion should be AIC (default), BIC or AICc')
+        penalty_term = InformationTheoreticCriterion.penalty_terms[criterion](number_of_data, n_params)
         if return_penalty:
             return -2 * max_log_like + penalty_term, penalty_term
         return -2 * max_log_like + penalty_term
+
+
 
     @staticmethod
     def _compute_probabilities(criterion_values):

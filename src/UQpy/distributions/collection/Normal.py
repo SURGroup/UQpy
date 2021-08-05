@@ -24,5 +24,5 @@ class Normal(DistributionContinuous1D):
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     def __init__(self, loc=0., scale=1.):
-        super().__init__(loc=loc, scale=scale, ordered_parameters=('location', 'scale'))
+        super().__init__(loc=loc, scale=scale, ordered_parameters=('loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.norm)

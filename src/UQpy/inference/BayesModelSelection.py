@@ -1,7 +1,10 @@
+import copy
+
 import numpy as np
 
 from UQpy.inference.BayesParameterEstimation import BayesParameterEstimation
-from UQpy.inference.InferenceModel import InferenceModel
+from UQpy.inference.MethodEvidence import MethodEvidence
+from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
 
 
 class BayesModelSelection:
@@ -71,8 +74,9 @@ class BayesModelSelection:
     """
     # Authors: Audrey Olivier, Yuchen Zhou
     # Last modified: 01/24/2020 by Audrey Olivier
-    def __init__(self, candidate_models, data, prior_probabilities=None, method_evidence_computation='harmonic_mean',
-                 random_state=None, verbose=False, nsamples=None, nsamples_per_chain=None, **kwargs):
+    def __init__(self, candidate_models, data, sampling_class, prior_probabilities=None,
+                 method_evidence_computation=MethodEvidence.HARMONIC_MEAN,
+                 random_state=None, verbose=False, nsamples=None, nsamples_per_chain=None):
 
         # Check inputs: candidate_models is a list of instances of Model, second_order_tensor must be provided, and input arguments
         # for mcmc must be provided as a list of length len(candidate_models)
@@ -84,6 +88,7 @@ class BayesModelSelection:
         self.data = data
         self.method_evidence_computation = method_evidence_computation
         self.random_state = random_state
+        self.sampling_class = sampling_class
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
@@ -97,15 +102,16 @@ class BayesModelSelection:
 
         # Instantiate the Bayesian parameter estimators (without running them)
         self.bayes_estimators = []
-        if not all(isinstance(value, (list, tuple)) for (key, value) in kwargs.items()) or not all(
-                len(value) == len(candidate_models) for (key, value) in kwargs.items()):
-            raise TypeError('UQpy: Extra inputs to model selection must be lists of length len(candidate_models)')
+        # if not all(isinstance(value, (list, tuple)) for (key, value) in kwargs.items()) or not all(
+        #         len(value) == len(candidate_models) for (key, value) in kwargs.items()):
+        #     raise TypeError('UQpy: Extra inputs to model selection must be lists of length len(candidate_models)')
         for i, inference_model in enumerate(self.candidate_models):
-            kwargs_i = dict([(key, value[i]) for (key, value) in kwargs.items()])
-            kwargs_i.update({'concat_chains': True, 'save_log_pdf': True})
+            # kwargs_i = dict([(key, value[i]) for (key, value) in kwargs.items()])
+            # kwargs_i.update({'concat_chains': True, 'save_log_pdf': True})
             bayes_estimator = BayesParameterEstimation(
                 inference_model=inference_model, data=self.data, verbose=self.verbose,
-                random_state=self.random_state, nsamples=None, nsamples_per_chain=None, **kwargs_i)
+                random_state=self.random_state, nsamples=None, nsamples_per_chain=None,
+                sampling_class=copy.copy(self.sampling_class))
             self.bayes_estimators.append(bayes_estimator)
 
         # Initialize the outputs
@@ -214,7 +220,7 @@ class BayesModelSelection:
         :rtype evidence: float
 
         """
-        if method_evidence_computation.lower() == 'harmonic_mean':
+        if method_evidence_computation == MethodEvidence.HARMONIC_MEAN:
             # samples[int(0.5 * len(samples)):]
             log_likelihood_values = log_posterior_values - inference_model.prior.log_pdf(x=posterior_samples)
             temp = np.mean(1./np.exp(log_likelihood_values))

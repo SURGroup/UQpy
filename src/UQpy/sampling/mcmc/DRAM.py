@@ -193,3 +193,25 @@ class DRAM(MCMC):
             new_covariance = (samples_number - 2) / (samples_number - 1) * previous_covariance + \
                              1 / samples_number * np.matmul(delta_n, delta_n.T)
         return new_mean, new_covariance
+
+    def __copy__(self):
+        new = self.__class__(pdf_target=self.pdf_target,
+                             log_pdf_target=self.log_pdf_target,
+                             args_target=self.args_target,
+                             burn_length=self.burn_length,
+                             jump=self.jump,
+                             dimension=self.dimension,
+                             seed=self.seed,
+                             save_log_pdf=self.save_log_pdf,
+                             concatenate_chains=self.concatenate_chains,
+                             initial_covariance=self.initial_covariance,
+                             covariance_update_rate=self.covariance_update_rate,
+                             scale_parameter=self.scale_parameter,
+                             delayed_rejection_scale=self.delayed_rejection_scale,
+                             save_covariance=self.save_covariance,
+                             chains_number=self.chains_number,
+                             verbose=self.verbose,
+                             random_state=self.random_state)
+        new.__dict__.update(self.__dict__)
+
+        return new

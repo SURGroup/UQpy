@@ -1,3 +1,4 @@
+import copy
 import warnings
 from inspect import isclass
 
@@ -72,13 +73,8 @@ class SubsetSimulation:
     **Methods:**
     """
 
-    def __init__(self, runmodel_object, mcmc_class=ModifiedMetropolisHastings, samples_init=None,
-                 conditional_probability=0.1, nsamples_per_ss=1000, max_level=10, verbose=False, **mcmc_kwargs):
-
-        # Store the mcmc object to create a new object of this type for each subset
-        self.mcmc_kwargs = mcmc_kwargs
-        self.mcmc_class = mcmc_class
-
+    def __init__(self, runmodel_object, mcmc_object, samples_init=None,
+                 conditional_probability=0.1, nsamples_per_ss=1000, max_level=10, verbose=False):
         # Initialize other attributes
         self.runmodel_object = runmodel_object
         self.samples_init = samples_init
@@ -92,20 +88,11 @@ class SubsetSimulation:
             raise AttributeError(
                 'UQpy: Subset simulation requires the user to pass a RunModel object')
 
-        if 'random_state' in self.mcmc_kwargs:
-            self.random_state = self.mcmc_kwargs['random_state']
-            if isinstance(self.random_state, int):
-                self.random_state = np.random.RandomState(self.random_state)
-            elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
-        else:
-            self.random_state = None
 
         # Perform initial error checks
         self._verify_initialization_data()
 
         # Initialize the mcmc_object from the specified class.
-        mcmc_object = self.mcmc_class(**self.mcmc_kwargs)
         self.mcmc_objects = [mcmc_object]
 
         # Initialize new attributes/variables
@@ -189,10 +176,7 @@ class SubsetSimulation:
 
             # Unpack the attributes
 
-            # Initialize a new mcmc object for each conditional level
-            self.mcmc_kwargs['seed'] = np.atleast_2d(self.samples[step][:n_keep, :])
-            self.mcmc_kwargs['random_state'] = self.random_state
-            new_mcmc_object = self.mcmc_class(**self.mcmc_kwargs)
+            new_mcmc_object = copy.copy(self.mcmc_objects)
             self.mcmc_objects.append(new_mcmc_object)
 
             # Set the number of samples to propagate each chain (n_prop) in the conditional level

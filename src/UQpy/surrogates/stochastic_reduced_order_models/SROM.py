@@ -105,7 +105,7 @@ class StochasticReducedOrderModel:
             self.samples = samples
             self.samples_number = samples.shape[0]
         else:
-            raise NotImplementedError("UQpy: 'samples' sholud be a list or numpy array")
+            raise NotImplementedError("UQpy: 'samples' should be a list or numpy array")
 
         if self.target_distributions is None:
             raise NotImplementedError("UQpy: Target Distribution is not defined.")

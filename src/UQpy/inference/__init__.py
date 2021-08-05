@@ -12,13 +12,13 @@ following classes:
 """
 
 from UQpy.inference.BayesModelSelection import BayesModelSelection
-from UQpy.inference.InferenceModel import InferenceModel
+from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
 from UQpy.inference.InformationModelSelection import InformationModelSelection
 from UQpy.inference.BayesParameterEstimation import BayesParameterEstimation
 from UQpy.inference.MLE import MLE
 
 from UQpy.inference.BayesModelSelection import *
-from UQpy.inference.InferenceModel import *
+from UQpy.inference.inference_models.baseclass.InferenceModel import *
 from UQpy.inference.InformationModelSelection import *
 from UQpy.inference.BayesParameterEstimation import *
 from UQpy.inference.MLE import *
