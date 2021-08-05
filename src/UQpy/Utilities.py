@@ -419,7 +419,7 @@ def correlation_distortion(dist_object, rho):
         """
     if rho == 1.0:
         rho = 0.999
-    n = 1024
+    n = 512
     zmax = 8
     zmin = -zmax
     points, weights = np.polynomial.legendre.leggauss(n)
