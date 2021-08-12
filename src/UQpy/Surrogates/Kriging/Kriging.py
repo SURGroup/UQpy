@@ -130,13 +130,7 @@ class Kriging:
         self.F, self.R = None, None
 
         # Initialize and run preliminary error checks.
-        if self.reg_model is None:
-            raise NotImplementedError("UQpy: Regression model is not defined.")
-
-        if self.corr_model is None:
-            raise NotImplementedError("Uqpy: Correlation model is not defined.")
-
-        if self.corr_model_params is None:
+        if corr_model_params is None:
             raise NotImplementedError("UQpy: corr_model_params is not defined.")
 
         if self.bounds is None:
@@ -167,13 +161,8 @@ class Kriging:
 
         if isinstance(self.random_state, int):
             self.random_state = np.random.default_rng(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.default_rng)):
+        elif not isinstance(self.random_state, (type(None), np.random._generator.Generator)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.default_rng object.')
-
-        # if isinstance(self.random_state, int):
-        #     self.random_state = np.random.RandomState(self.random_state)
-        # elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-        #     raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
     def fit(self, samples, values, nopt=None, corr_model_params=None):
         """
@@ -263,7 +252,7 @@ class Kriging:
         if nopt is not None:
             self.nopt = nopt
         if corr_model_params is not None:
-            self.corr_model_params = corr_model_params
+            self.corr_model_params = np.array(corr_model_params)
         self.samples = np.array(samples)
 
         # Number of samples and dimensions of samples and values
@@ -296,7 +285,7 @@ class Kriging:
                 # Generating new starting points using log-uniform distribution
                 if i__ != self.nopt - 1:
                     starting_point = stats.reciprocal.rvs([j[0] for j in self.bounds], [j[1] for j in self.bounds], 1,
-                                                          random_state=int(self.random_state.random()*100))
+                                                          random_state=self.random_state)
 
             if min(fun_value) == np.inf:
                 raise NotImplementedError("Maximum likelihood estimator failed: Choose different starting point or "

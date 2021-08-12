@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from UQpy.Distributions import Uniform
 from UQpy.SampleMethods import MCS
 from UQpy.Surrogates import Kriging
@@ -6,16 +7,24 @@ from UQpy.Surrogates import Kriging
 dist = Uniform(loc=0, scale=5)
 samples = MCS(dist_object=dist, nsamples=20, random_state=0).samples
 values = np.cos(samples)
-krig = Kriging(reg_model='Linear', corr_model='Gaussian', corr_model_params=[1], bounds=[[0.01, 5]],
-               nopt=100, random_state=1)
-krig.fit(samples=samples, values=values)
+krig = Kriging(reg_model='Linear', corr_model='Gaussian', corr_model_params=[1], bounds=[[0.01, 5]], random_state=1)
+krig.fit(samples=samples, values=values, nopt=100, corr_model_params=[1])
 
 krig2 = Kriging(reg_model='Constant', corr_model='Gaussian', corr_model_params=[1], bounds=[[0.01, 5]],
-                nopt=100, normalize=False, random_state=2)
+                nopt=100, normalize=False, random_state=2, verbose=True)
 krig2.fit(samples=samples, values=values)
 
 
+# Using the in-built linear regression model as a function
+linear_regression_model = Kriging(reg_model='Linear', corr_model='Gaussian', corr_model_params=[1]).reg_model
+gaussian_corrleation_model = Kriging(reg_model='Linear', corr_model='Gaussian', corr_model_params=[1]).corr_model
+
+krig3 = Kriging(reg_model=linear_regression_model, corr_model=gaussian_corrleation_model, corr_model_params=[1],
+                nopt=100, normalize=False)
+krig3.fit(samples=samples, values=values)
+
 # May be solution
+
 
 def test_fit():
     tmp1 = np.round(krig.corr_model_params, 3) == np.array([1.015])
@@ -29,10 +38,23 @@ def test_predict():
     assert (expected_prediction == prediction).all()
 
 
+def test_predict1():
+    prediction = np.round(krig3.predict([[1], [np.pi/2], [np.pi]]), 3)
+    expected_prediction = np.array([[0.371, -0.018, -1.]])
+    assert (expected_prediction == prediction).all()
+
+
 def test_jacobian():
     jacobian = np.round(krig.jacobian([[np.pi], [np.pi/2]]), 3)
     expected_jacobian = np.array([-0., -1.])
     assert (expected_jacobian == jacobian).all()
+
+
+def test_jacobian1():
+    jacobian = np.round(krig3.jacobian([[np.pi], [np.pi/2]]), 3)
+    expected_jacobian = np.array([0.001, -0.813])
+    assert (expected_jacobian == jacobian).all()
+
 
 def test_regress():
     krig.reg_model = 'Constant'
@@ -101,3 +123,53 @@ def test_corr():
     spline = rx_spline and drdt_spline and drdx_spline
 
     assert expon and linear and spherical and cubic and spline
+
+
+def test_reg_model():
+    """
+        Raises an error if reg_model is not callable or a string of an in-built model.
+    """
+    with pytest.raises(NotImplementedError):
+        Kriging(reg_model='A', corr_model='Gaussian', corr_model_params=[1])
+
+
+def test_corr_model():
+    """
+        Raises an error if corr_model is not callable or a string of an in-built model.
+    """
+    with pytest.raises(NotImplementedError):
+        Kriging(reg_model='Linear', corr_model='A', corr_model_params=[1])
+
+
+def test_corr_model_params():
+    """
+        Raises an error if corr_model_params is not defined.
+    """
+    with pytest.raises(NotImplementedError):
+        Kriging(reg_model='Linear', corr_model='Gaussian', bounds=[[0.01, 5]], nopt=100, random_state=1)
+
+
+def test_optimizer():
+    """
+        Raises an error if corr_model_params is not defined.
+    """
+    with pytest.raises(TypeError):
+        Kriging(reg_model='Linear', corr_model='Gaussian', corr_model_params=[1], optimizer='A')
+
+
+def test_random_state():
+    """
+        Raises an error if type of random_state is not correct.
+    """
+    with pytest.raises(TypeError):
+        Kriging(reg_model='Linear', corr_model='Gaussian', corr_model_params=[1], random_state='A')
+
+
+def test_mle_failure():
+    """
+        Maximum likelihood estimator failed: Choose different starting point or increase nopt
+    """
+    with pytest.raises(NotImplementedError):
+        krig4 = Kriging(reg_model=linear_regression_model, corr_model=gaussian_corrleation_model, corr_model_params=[1],
+                        normalize=False)
+        krig4.fit(samples=samples, values=values)
