@@ -40,7 +40,7 @@ def test_predict():
 
 def test_predict1():
     prediction = np.round(krig3.predict([[1], [np.pi/2], [np.pi]]), 3)
-    expected_prediction = np.array([[0.371, -0.018, -1.]])
+    expected_prediction = np.array([[0.54, -0., -1.]])
     assert (expected_prediction == prediction).all()
 
 
@@ -52,7 +52,7 @@ def test_jacobian():
 
 def test_jacobian1():
     jacobian = np.round(krig3.jacobian([[np.pi], [np.pi/2]]), 3)
-    expected_jacobian = np.array([0.001, -0.813])
+    expected_jacobian = np.array([-0., -0.999])
     assert (expected_jacobian == jacobian).all()
 
 
