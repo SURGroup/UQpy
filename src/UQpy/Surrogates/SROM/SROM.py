@@ -201,7 +201,7 @@ class SROM:
             self.weights_errors = weights_errors
         if properties is not None:
             self.properties = properties
-        else:
+        elif self.properties is None:
             self.properties = [True, True, True, False]
 
         self._init_srom()
