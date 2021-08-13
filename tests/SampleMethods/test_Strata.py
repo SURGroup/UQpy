@@ -67,7 +67,9 @@ def test_not_space_filling():
         No attribute is assigned to define the strata.
     """
     with pytest.raises(RuntimeError):
-        RectangularStrata(input_file='strata1.txt')
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        filepath = os.path.join(dir_path, 'strata1.txt')
+        RectangularStrata(input_file=filepath)
 
 
 def test_over_filling():
@@ -75,7 +77,9 @@ def test_over_filling():
         No attribute is assigned to define the strata.
     """
     with pytest.raises(RuntimeError):
-        RectangularStrata(input_file='strata2.txt')
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        filepath = os.path.join(dir_path, 'strata2.txt')
+        RectangularStrata(input_file=filepath)
 
 
 def test_5():
