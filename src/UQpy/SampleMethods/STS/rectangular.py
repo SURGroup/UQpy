@@ -3,6 +3,7 @@ from UQpy.SampleMethods.Strata import RectangularStrata
 import numpy as np
 import scipy.stats as stats
 
+
 class RectangularSTS(STS):
     """
     Executes Stratified Sampling using Rectangular Stratification.
@@ -50,11 +51,13 @@ class RectangularSTS(STS):
 
     def create_samplesu01(self, nsamples_per_stratum=None, nsamples=None):
         """
-        Overwrites the ``create_samplesu01`` method in the parent class to generate samples in rectangular strata on the
-        unit hypercube. It has the same inputs and outputs as the ``create_samplesu01`` method in the parent class. See
-        the ``STS`` class for additional details.
-        """
 
+        Overwrites the ``create_samplesu01`` method in the parent class.
+
+        This method generate samples in rectangular strata on the unit hypercube. It has the same inputs and outputs as
+        the ``create_samplesu01`` method in the parent class. See the ``STS`` class for additional details.
+
+        """
         samples_in_strata, weights = [], []
 
         for i in range(self.strata_object.seeds.shape[0]):
@@ -68,12 +71,10 @@ class RectangularSTS(STS):
                 else:
                     samples_temp[:, j] = self.strata_object.seeds[i, j] + self.strata_object.widths[i, j] / 2.
             samples_in_strata.append(samples_temp)
-
             if int(self.nsamples_per_stratum[i]) != 0:
                 weights.extend(
                     [self.strata_object.volume[i] / self.nsamples_per_stratum[i]] * int(self.nsamples_per_stratum[i]))
             else:
                 weights.extend([0] * int(self.nsamples_per_stratum[i]))
-
         self.weights = np.array(weights)
         self.samplesU01 = np.concatenate(samples_in_strata, axis=0)
