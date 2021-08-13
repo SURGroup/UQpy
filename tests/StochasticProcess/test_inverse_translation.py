@@ -52,8 +52,8 @@ def test_samples_shape():
 
 
 def test_samples_g_value():
-    assert np.isclose(samples_g[25, 0, 43] == 0.2544126816395569)
+    assert np.isclose(samples_g[25, 0, 43], 0.2544126816395569)
 
 
 def test_R_g_value():
-    assert np.isclose(R_g[42] == -0.0007525497536971386)
+    assert np.isclose(R_g[42], -0.0007525497536971386)
