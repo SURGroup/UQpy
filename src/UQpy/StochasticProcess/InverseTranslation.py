@@ -1,3 +1,5 @@
+import numpy as np
+
 from UQpy.Distributions import *
 from UQpy.Utilities import *
 from UQpy.StochasticProcess.supportive import inverse_wiener_khinchin_transform, wiener_khinchin_transform
@@ -101,35 +103,37 @@ class InverseTranslation:
         return samples_g
 
     def _itam_power_spectrum(self):
-        target_s = self.power_spectrum_non_gaussian
+        target_S = self.power_spectrum_non_gaussian
         i_converge = 0
         max_iter = 100
-        target_r = wiener_khinchin_transform(target_s, self.frequency, self.time)
-        r_g_iterate = target_r
-        s_g_iterate = target_s
-        r_ng_iterate = np.zeros_like(target_r)
-        s_ng_iterate = np.zeros_like(target_s)
+        target_R = wiener_khinchin_transform(target_S, self.frequency, self.time)
+        R_g_iterate = target_R
+        S_g_iterate = target_S
+        R_ng_iterate = np.zeros_like(R_g_iterate)
+        r_ng_iterate = np.zeros_like(R_g_iterate)
+        S_ng_iterate = np.zeros_like(S_g_iterate)
 
         for _ in range(max_iter):
-            r_g_iterate = wiener_khinchin_transform(s_g_iterate, self.frequency, self.time)
-            for i in range(len(target_r)):
+            R_g_iterate = wiener_khinchin_transform(S_g_iterate, self.frequency, self.time)
+            for i in range(len(target_R)):
                 r_ng_iterate[i] = correlation_distortion(dist_object=self.dist_object,
-                                                         rho=r_g_iterate[i] / r_g_iterate[0])
-            s_ng_iterate = inverse_wiener_khinchin_transform(r_ng_iterate, self.frequency, self.time)
+                                                         rho=R_g_iterate[i] / R_g_iterate[0])
+            R_ng_iterate = r_ng_iterate * target_R[0]
+            S_ng_iterate = inverse_wiener_khinchin_transform(R_ng_iterate, self.frequency, self.time)
 
-            err1 = np.sum((target_s - s_ng_iterate) ** 2)
-            err2 = np.sum(target_s ** 2)
+            err1 = np.sum((target_S - S_ng_iterate) ** 2)
+            err2 = np.sum(target_S ** 2)
 
-            if 100 * np.sqrt(err1 / err2) < 0.0005:
+            if 100 * np.sqrt(err1 / err2) < 1.5:
                 i_converge = 1
 
-            s_g_next_iterate = (target_s / s_ng_iterate) * s_g_iterate
+            S_g_next_iterate = ((target_S / S_ng_iterate) ** 1.3) * S_g_iterate
 
             # Eliminate Numerical error of Upgrading Scheme
-            s_g_next_iterate[s_g_next_iterate < 0] = 0
-            s_g_iterate = s_g_next_iterate
+            S_g_next_iterate[S_g_next_iterate < 0] = 0
+            S_g_iterate = S_g_next_iterate
 
             if i_converge:
                 break
 
-        return s_g_iterate
+        return S_g_iterate

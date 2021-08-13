@@ -47,8 +47,5 @@ def test_samples_ng_values():
 
 
 def test_correlation_values():
-    # print(Translate_object.correlation_function_non_gaussian[52])
     assert np.isclose(Translate_object.correlation_function_non_gaussian[52], -0.00604468129285296)
 
-# R_ng = Translate_object.auto_correlation_function_non_gaussian
-# r_ng = Translate_object.correlation_function_non_gaussian
