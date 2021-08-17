@@ -4,7 +4,13 @@ The module currently contains the following classes:
 
 - ``Morris``: Class to compute sensitivity indices based on the Morris method.
 """
+from typing import Union, Tuple, List, Annotated
 
+from beartype import beartype
+from beartype.vale import Is
+
+from UQpy.utilities.Utilities import process_random_state
+from UQpy.utilities.ValidationTypes import RandomStateType,PositiveInteger
 from UQpy.distributions import *
 from UQpy.RunModel import RunModel
 import numpy as np
@@ -64,14 +70,18 @@ class MorrisSensitivity:
 
     **Methods:**
     """
-
-    def __init__(self, runmodel_object, distributions, levels_number, delta=None, random_state=None,
-                 trajectories_number=None, **kwargs):
+    @beartype
+    def __init__(self,
+                 runmodel_object: RunModel,
+                 distributions: Union[JointIndependent, Tuple[List, Tuple]],
+                 levels_number: Annotated[int: Is[lambda x: x >= 3]],
+                 delta: float = None,
+                 random_state: RandomStateType = None,
+                 trajectories_number: PositiveInteger = None,
+                 **kwargs):
 
         # Check RunModel object and distributions
         self.runmodel_object = runmodel_object
-        if not isinstance(self.runmodel_object, RunModel):
-            raise TypeError('UQpy: runmodel_object must be an object of class RunModel')
         if isinstance(distributions, JointIndependent):
             self.icdfs = [getattr(dist, 'icdf', None) for dist in distributions.marginals]
         elif (isinstance(distributions, (list, tuple))
@@ -87,8 +97,6 @@ class MorrisSensitivity:
 
         # Check inputs nlevels and delta
         self.levels_number = levels_number
-        if not isinstance(self.levels_number, int) or self.levels_number < 3:
-            raise TypeError('UQpy: nlevels should be an integer >= 3')
         # delta should be in {1/(nlevels-1), ..., 1-1/(nlevels-1)}
         self.delta = delta
         if (self.delta is None) and (self.levels_number % 2) == 0:
@@ -100,15 +108,10 @@ class MorrisSensitivity:
             raise ValueError('UQpy: delta should be in {1/(nlevels-1), ..., 1-1/(nlevels-1)}')
 
         # Check random state
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not (self.random_state is None or isinstance(self.random_state, np.random.RandomState)):
-            raise TypeError('UQpy: random state should be None, an integer or np.random.RandomState object')
+        self.random_state = process_random_state(random_state)
 
         self.kwargs = kwargs
 
-        # Initialize the thingy
         self.trajectories_unit_hypercube = None
         self.trajectories_physical_space = None
         self.elementary_effects = None
@@ -118,7 +121,8 @@ class MorrisSensitivity:
         if trajectories_number is not None:
             self.run(trajectories_number)
 
-    def run(self, trajectories_number):
+    @beartype
+    def run(self, trajectories_number: PositiveInteger):
         """
         Run the Morris indices evaluation.
 
@@ -152,7 +156,8 @@ class MorrisSensitivity:
         # Compute sensitivity indices
         self.mustar_indices, self.sigma_indices = self._compute_indices(self.elementary_effects)
 
-    def sample_trajectories(self, trajectories_number, maximize_dispersion=False):
+    @beartype
+    def sample_trajectories(self, trajectories_number: PositiveInteger, maximize_dispersion: bool = False):
         """
         Create the trajectories, first in the unit hypercube then transform them in the physical space.
 
