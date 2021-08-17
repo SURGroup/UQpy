@@ -76,7 +76,7 @@ class Copula(ABC):
 
         No outputs, this code raises errors if necessary.
     """
-    def __init__(self, ordered_parameters=None, **kwargs):
+    def __init__(self, ordered_parameters: dict = None, **kwargs):
         self.parameters = kwargs
         self.ordered_parameters = ordered_parameters
         if self.ordered_parameters is None:

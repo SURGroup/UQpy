@@ -1,4 +1,6 @@
 import scipy.stats as stats
+from beartype import beartype
+
 from UQpy.distributions.baseclass import DistributionDiscrete1D
 
 
@@ -24,6 +26,7 @@ class Poisson(DistributionDiscrete1D):
 
     * ``cdf``, ``pmf``, ``log_pmf``, ``icdf``, ``rvs``, ``moments``.
     """
-    def __init__(self, mu, location=0.):
+    @beartype
+    def __init__(self, mu: float, location: float = 0.):
         super().__init__(mu=mu, loc=location, ordered_parameters=('mu', 'location'))
         self._construct_from_scipy(scipy_name=stats.poisson)

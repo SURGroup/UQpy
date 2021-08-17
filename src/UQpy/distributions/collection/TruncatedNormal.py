@@ -1,4 +1,6 @@
 import scipy.stats as stats
+from beartype import beartype
+
 from UQpy.distributions.baseclass import DistributionContinuous1D
 
 
@@ -24,6 +26,7 @@ class TruncatedNormal(DistributionContinuous1D):
 
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
-    def __init__(self, a, b, location=0., scale=1.):
+    @beartype
+    def __init__(self, a: float, b: float, location: float = 0., scale: float = 1.):
         super().__init__(a=a, b=b, loc=location, scale=scale, ordered_parameters=('a', 'b', 'location', 'scale'))
         self._construct_from_scipy(scipy_name=stats.truncnorm)

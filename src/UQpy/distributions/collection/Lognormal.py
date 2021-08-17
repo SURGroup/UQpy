@@ -1,4 +1,6 @@
 import scipy.stats as stats
+from beartype import beartype
+
 from UQpy.distributions.baseclass import DistributionContinuous1D
 
 
@@ -27,7 +29,9 @@ class Lognormal(DistributionContinuous1D):
 
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
-    def __init__(self, s, loc=0., scale=1.):
-        super().__init__(s=s, loc=loc, scale=scale, ordered_parameters=('s', 'loc', 'scale'))
+    @beartype
+    def __init__(self, shape_parameter: float, location: float = 0., scale: float = 1.):
+        super().__init__(s=shape_parameter, loc=location, scale=scale,
+                         ordered_parameters=('shape_parameter', 'location', 'scale'))
         self._construct_from_scipy(scipy_name=stats.lognorm)
 

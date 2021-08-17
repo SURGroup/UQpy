@@ -1,5 +1,8 @@
 from types import MethodType
+from typing import List, Union
+
 import numpy as np
+from beartype import beartype
 
 from UQpy.distributions.baseclass import Copula
 from UQpy.distributions.baseclass import DistributionContinuous1D, DistributionND, DistributionDiscrete1D
@@ -28,7 +31,10 @@ class JointCopula(DistributionND):
     parameters.
 
     """
-    def __init__(self, marginals, copula):
+    @beartype
+    def __init__(self,
+                 marginals: Union[List[DistributionContinuous1D], List[DistributionDiscrete1D]],
+                 copula: Copula):
         super().__init__()
         self.ordered_parameters = []
         for i, m in enumerate(marginals):

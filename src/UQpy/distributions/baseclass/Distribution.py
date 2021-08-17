@@ -166,7 +166,7 @@ class Distribution(ABC):
             Maximum-likelihood parameter estimates.
 
     """
-    def __init__(self, ordered_parameters=None, **kwargs):
+    def __init__(self, ordered_parameters: list = None, **kwargs):
         self.parameters = kwargs
         self.ordered_parameters = ordered_parameters
         if self.ordered_parameters is None:

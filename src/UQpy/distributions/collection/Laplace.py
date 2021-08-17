@@ -1,4 +1,6 @@
 import scipy.stats as stats
+from beartype import beartype
+
 from UQpy.distributions.baseclass import DistributionContinuous1D
 
 
@@ -22,7 +24,8 @@ class Laplace(DistributionContinuous1D):
 
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
-    def __init__(self, location=0., scale=1.):
+    @beartype
+    def __init__(self, location: float = 0., scale: float = 1.):
         super().__init__(loc=location, scale=scale, ordered_parameters=('location', 'scale'))
         self._construct_from_scipy(scipy_name=stats.laplace)
 

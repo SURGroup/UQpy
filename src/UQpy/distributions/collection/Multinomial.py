@@ -1,5 +1,10 @@
+from typing import Union, List
+
 import numpy as np
 import scipy.stats as stats
+from beartype import beartype
+from beartype.vale import IsAttr, IsEqual
+
 from UQpy.distributions.baseclass import DistributionND
 
 
@@ -22,8 +27,8 @@ class Multinomial(DistributionND):
 
     * ``pmf``, ``log_pmf``, ``rvs``, ``moments``.
     """
-
-    def __init__(self, trials_number, trial_probability):
+    @beartype
+    def __init__(self, trials_number: int, trial_probability):
         super().__init__(n=trials_number, p=trial_probability)
 
     def pmf(self, x):
@@ -41,8 +46,8 @@ class Multinomial(DistributionND):
             size=nsamples, random_state=random_state, **self.parameters).reshape((nsamples, -1))
 
     def moments(self, moments2return='mv'):
-        n = self.get_parameters()['n']
-        p = np.array(self.get_parameters()['p'])
+        n = self.get_parameters()['trials_number']
+        p = np.array(self.get_parameters()['trial_probability'])
         d = len(p)
         if moments2return == 'm':
             mean = n * np.array(p)

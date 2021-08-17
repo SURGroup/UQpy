@@ -1,4 +1,6 @@
 import scipy.stats as stats
+from beartype import beartype
+
 from UQpy.distributions.baseclass import DistributionContinuous1D
 
 
@@ -30,6 +32,7 @@ class GeneralizedExtreme(DistributionContinuous1D):
 
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
-    def __init__(self, c, location=0., scale=1.):
+    @beartype
+    def __init__(self, c: float, location: float = 0., scale: float = 1.):
         super().__init__(c=c, loc=location, scale=scale, ordered_parameters=('c', 'location', 'scale'))
         self._construct_from_scipy(scipy_name=stats.genextreme)

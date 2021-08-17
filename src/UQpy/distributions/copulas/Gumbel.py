@@ -1,5 +1,6 @@
+from beartype import beartype
+
 from UQpy.distributions.baseclass import Copula
-from UQpy.utilities.validation.Validations import *
 from numpy import log, exp
 
 
@@ -23,8 +24,8 @@ class Gumbel(Copula):
     (``check_copula`` checks that `marginals` consist of solely 2 continuous univariate distributions).
     """
 
-    @check_copula_theta()
-    def __init__(self, theta):
+    @beartype
+    def __init__(self, theta: float):
         super().__init__(theta=theta)
 
     def evaluate_cdf(self, unit_uniform_samples):

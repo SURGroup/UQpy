@@ -11,7 +11,7 @@ class DistributionND(Distribution):
         super().__init__(**kwargs)
 
     @staticmethod
-    def check_x_dimension(x, d=None):
+    def check_x_dimension(x: np.ndarray, d: int = None):
         """
         Check the dimension of input x - must be an ndarray of shape (npoints, d)
         """

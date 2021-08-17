@@ -1,6 +1,7 @@
 import numpy as np
+from beartype import beartype
+
 from UQpy.distributions.baseclass import Copula
-from UQpy.utilities.validation.Validations import *
 
 
 class Frank(Copula):
@@ -23,11 +24,10 @@ class Frank(Copula):
     (``check_copula`` checks that `marginals` consist of solely 2 continuous univariate distributions).
     """
 
-    @check_copula_theta()
-    def __init__(self, theta):
+    @beartype
+    def __init__(self, theta: float):
         super().__init__(theta=theta)
 
-    @check_sample_dimensions()
     def evaluate_cdf(self, unit_uniform_samples):
         theta, u, v = self.extract_data(unit_uniform_samples)
         tmp_ratio = (np.exp(-theta * u) - 1.) * \

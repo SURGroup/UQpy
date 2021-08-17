@@ -1,6 +1,12 @@
+from typing import Union
+
 import numpy as np
 import scipy.stats as stats
+from beartype import beartype
+from beartype.vale import IsAttr, IsEqual
+
 from UQpy.distributions.baseclass import DistributionND
+from UQpy.utilities.ValidationTypes import Numpy1DArray
 
 
 class MultivariateNormal(DistributionND):
@@ -23,17 +29,16 @@ class MultivariateNormal(DistributionND):
 
     * ``cdf``, ``pdf``, ``log_pdf``, ``rvs``, ``fit``, ``moments``.
     """
-    def __init__(self, mean, cov=1.):
-        if mean is not None and cov is not None:
-            if len(np.array(mean).shape) != 1:
-                raise ValueError('Input mean must be a 1D array.')
-            if isinstance(cov, (int, float)):
+    @beartype
+    def __init__(self, mean: Numpy1DArray, covariance: Union[int, float, np.ndarray] = 1.):
+        if mean is not None and covariance is not None:
+            if isinstance(covariance, (int, float)):
                 pass
             else:
-                if not (len(np.array(cov).shape) in [1, 2] and
-                        all(sh == len(mean) for sh in np.array(cov).shape)):
+                if not (len(np.array(covariance).shape) in [1, 2] and
+                        all(sh == len(mean) for sh in np.array(covariance).shape)):
                     raise ValueError('Input covariance must be a float or ndarray of appropriate dimensions.')
-        super().__init__(mean=mean, cov=cov, ordered_parameters=['mean', 'cov'])
+        super().__init__(mean=mean, cov=covariance, ordered_parameters=['mean', 'covariance'])
 
     def cdf(self, x):
         cdf_val = stats.multivariate_normal.cdf(x=x, **self.parameters)
@@ -55,7 +60,7 @@ class MultivariateNormal(DistributionND):
 
     def fit(self, data):
         data = self.check_x_dimension(data)
-        mle_mu, mle_cov = self.parameters['mean'], self.parameters['cov']
+        mle_mu, mle_cov = self.parameters['mean'], self.parameters['covariance']
         if mle_mu is None:
             mle_mu = np.mean(data, axis=0)
         if mle_cov is None:

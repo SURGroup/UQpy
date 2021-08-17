@@ -1,4 +1,6 @@
 import scipy.stats as stats
+from beartype import beartype
+
 from UQpy.distributions.baseclass import DistributionContinuous1D
 
 
@@ -26,6 +28,7 @@ class Gamma(DistributionContinuous1D):
 
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
-    def __init__(self, a, loc=0., scale=1.):
+    @beartype
+    def __init__(self, a: float, loc: float = 0., scale: float = 1.):
         super().__init__(a=a, loc=loc, scale=scale, ordered_parameters=('a', 'loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.gamma)

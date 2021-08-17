@@ -1,4 +1,6 @@
 import scipy.stats as stats
+from beartype import beartype
+
 from UQpy.distributions.baseclass import DistributionContinuous1D
 
 
@@ -26,7 +28,8 @@ class ChiSquare(DistributionContinuous1D):
 
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
-    def __init__(self, degrees_of_freedom, location=0., scale=1.):
+    @beartype
+    def __init__(self, degrees_of_freedom: float, location: float = 0., scale: float = 1.):
         super().__init__(df=degrees_of_freedom, loc=location, scale=scale,
                          ordered_parameters=('degrees_of_freedom', 'location', 'scale'))
         self._construct_from_scipy(scipy_name=stats.chi2)
