@@ -1,11 +1,19 @@
+from ctypes import Union
+from UQpy.utilities.ValidationTypes import *
+from UQpy import RunModel
 from UQpy.sampling.refined_stratified_sampling.baseclass.Refinement import *
-
+from UQpy.surrogates.kriging import Kriging
+from UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion import PolynomialChaosExpansion
 
 class GradientEnhancedRefinement(Refinement):
 
-    def __init__(self, strata, runmodel_object, surrogate,
-                 nearest_points_number=None,
-                 qoi_name=None, step_size=0.005):
+    def __init__(self,
+                 strata,
+                 runmodel_object: RunModel,
+                 surrogate: Union[Kriging, PolynomialChaosExpansion],
+                 nearest_points_number: int = None,
+                 qoi_name: str = None,
+                 step_size: float = 0.005):
         self.runmodel_object = runmodel_object
         self.step_size = step_size
         self.nearest_points_number = nearest_points_number
@@ -13,15 +21,9 @@ class GradientEnhancedRefinement(Refinement):
         self.strata = strata
         self.dy_dx = 0
 
-        if self.runmodel_object is not None:
-            if type(self.runmodel_object).__name__ not in ['RunModel']:
-                raise NotImplementedError("UQpy Error: runmodel_object must be an object of the RunModel class.")
-
         if surrogate is not None:
             if surrogate is not None and hasattr(surrogate, 'fit') and hasattr(surrogate, 'predict'):
                 self.surrogate = surrogate
-            else:
-                raise NotImplementedError("UQpy Error: krig_object must have 'fit' and 'predict' methods.")
 
     def initialize(self, nsamples, training_points):
         self.dy_dx = np.zeros((nsamples, np.size(training_points[1])))

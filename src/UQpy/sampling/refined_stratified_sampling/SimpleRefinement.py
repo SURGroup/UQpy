@@ -1,11 +1,13 @@
+from beartype import beartype
+
 from UQpy.sampling.refined_stratified_sampling.baseclass.Refinement import *
 
 
 class SimpleRefinement(Refinement):
 
+    @beartype
     def __init__(self, strata):
         self.strata = strata
-        self.verbose = True
 
     def initialize(self, samples_number, training_points):
         self.strata.initialize(samples_number, training_points)

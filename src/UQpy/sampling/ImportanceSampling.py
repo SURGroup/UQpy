@@ -1,5 +1,10 @@
 import logging
+from ctypes import Union
 
+from beartype import beartype
+
+from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger
+from UQpy.utilities.Utilities import process_random_state
 from UQpy.distributions import Distribution
 import numpy as np
 
@@ -57,8 +62,14 @@ class ImportanceSampling:
     **Methods:**
     """
     # Last Modified: 10/05/2020 by Audrey Olivier
-    def __init__(self, samples_number=None, pdf_target=None, log_pdf_target=None, args_target=None,
-                 proposal=None, random_state=None):
+    @beartype
+    def __init__(self,
+                 samples_number: PositiveInteger = None,
+                 pdf_target=None,
+                 log_pdf_target=None,
+                 args_target=None,
+                 proposal: Distribution = None,
+                 random_state: RandomStateType = None):
         # Initialize proposal: it should have an rvs and log pdf or pdf method
         self.proposal = proposal
         if not isinstance(self.proposal, Distribution):
@@ -71,17 +82,13 @@ class ImportanceSampling:
             self.proposal.log_pdf = lambda x: np.log(np.maximum(self.proposal.pdf(x),
                                                                 10 ** (-320) * np.ones((x.shape[0],))))
         self._pdf_target = pdf_target
-        self._log_pdf_target=log_pdf_target
-        self._args_target=args_target
+        self._log_pdf_target = log_pdf_target
+        self._args_target = args_target
         # Initialize target
         self.evaluate_log_target = self._preprocess_target(log_pdf_=log_pdf_target, pdf_=pdf_target, args=args_target)
 
         self.logger = logging.getLogger(__name__)
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        self.random_state = process_random_state(random_state)
 
         # Initialize the samples and weights
         self.samples = None
@@ -93,7 +100,8 @@ class ImportanceSampling:
         if samples_number is not None and samples_number != 0:
             self.run(samples_number)
 
-    def run(self, nsamples):
+    @beartype
+    def run(self, samples_number: PositiveInteger):
         """
         Generate and weight samples.
 
@@ -113,7 +121,7 @@ class ImportanceSampling:
 
         self.logger.info('UQpy: Running Importance Sampling...')
         # Sample from proposal
-        new_samples = self.proposal.rvs(nsamples=nsamples, random_state=self.random_state)
+        new_samples = self.proposal.rvs(nsamples=samples_number, random_state=self.random_state)
         # Compute un-scaled weights of new samples
         new_log_weights = self.evaluate_log_target(x=new_samples) - self.proposal.log_pdf(x=new_samples)
 

@@ -1,10 +1,20 @@
 import logging
+from typing import Union, List
 
 import numpy as np
+from beartype import beartype
+
+from UQpy import RunModel
+from UQpy.distributions.baseclass import Distribution
 from UQpy.sampling.LatinHypercubeSampling import LatinHypercubeSampling
 from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import LearningFunction
 from UQpy.distributions import DistributionContinuous1D, JointIndependent
 from UQpy.sampling.latin_hypercube_criteria import Random
+from UQpy.surrogates.kriging import Kriging
+from UQpy.surrogates.polynomial_chaos import PolynomialChaosExpansion
+from UQpy.utilities.ValidationTypes import *
+from UQpy.utilities.Utilities import process_random_state
+
 
 class AdaptiveKriging:
     """
@@ -97,9 +107,18 @@ class AdaptiveKriging:
     **Methods:**
 
     """
-
-    def __init__(self, distributions, runmodel_object, surrogate, samples=None, samples_number=None,
-                 learning_samples_number=None, qoi_name=None, learning_function='U', n_add=1, random_state=None):
+    @beartype
+    def __init__(self,
+                 distributions: Union[Distribution, List[Distribution]],
+                 runmodel_object: RunModel,
+                 surrogate: Union[Kriging, PolynomialChaosExpansion],
+                 learning_function: LearningFunction,
+                 samples=None,
+                 samples_number: PositiveInteger = None,
+                 learning_samples_number: PositiveInteger = None,
+                 qoi_name: str = None,
+                 n_add: int = 1,
+                 random_state: RandomStateType = None):
 
         # Initialize the internal variables of the class.
         self.runmodel_object = runmodel_object
@@ -130,9 +149,6 @@ class AdaptiveKriging:
             if self.dimension != self.samples.shape[1]:
                 raise NotImplementedError("UQpy Error: Dimension of samples and distribution are inconsistent.")
 
-        if not isinstance(self.learning_function, LearningFunction):
-            raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
-
         if isinstance(distributions, list):
             for i in range(len(distributions)):
                 if not isinstance(distributions[i], DistributionContinuous1D):
@@ -141,16 +157,9 @@ class AdaptiveKriging:
             if not isinstance(distributions, (DistributionContinuous1D, JointIndependent)):
                 raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
 
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        self.random_state = process_random_state(random_state)
 
-        if hasattr(surrogate, 'fit') and hasattr(surrogate, 'predict'):
-            self.surrogate = surrogate
-        else:
-            raise NotImplementedError("UQpy: krig_object must have 'fit' and 'predict' methods.")
+        self.surrogate = surrogate
 
         self.logger.info('UQpy: AKMCS - Running the initial sample set using RunModel.')
 

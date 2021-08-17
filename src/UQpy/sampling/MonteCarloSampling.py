@@ -1,4 +1,11 @@
+from typing import Union
+from typing import List
+from typing import Optional
+from beartype import beartype
+
+from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger
 from UQpy.distributions import *
+from UQpy.utilities.Utilities import process_random_state
 import numpy as np
 import logging
 
@@ -55,9 +62,28 @@ class MonteCarloSampling:
     **Methods**
 
     """
-
-    def __init__(self, distributions, samples_number=None, random_state=None):
+    @beartype
+    def __init__(self,
+                 distributions: Union[Distribution, List[Distribution]],
+                 samples_number: Optional[int] = None,
+                 random_state: RandomStateType = None):
         self.logger = logging.getLogger(__name__)
+        self.random_state = process_random_state(random_state)
+
+        self.list = False
+        self.array = False
+        self._process_distributions(distributions)
+
+        self.samples = None
+        self.x = None
+        self.samplesU01 = None
+        self.samples_number = samples_number
+
+        # Run Monte Carlo sampling
+        if samples_number is not None:
+            self.run(samples_number=self.samples_number, random_state=self.random_state)
+
+    def _process_distributions(self, distributions):
         if isinstance(distributions, list):
             add_continuous_1d = 0
             add_continuous_nd = 0
@@ -74,38 +100,14 @@ class MonteCarloSampling:
             else:
                 self.list = True
                 self.array = False
-
-            self.random_state = random_state
-            if isinstance(self.random_state, int):
-                self.random_state = np.random.RandomState(self.random_state)
-            elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
-
             self.dist_object = distributions
         else:
-            if not isinstance(distributions, Distribution):
-                raise TypeError('UQpy: A UQpy.Distribution object must be provided.')
-            else:
-                self.dist_object = distributions
-                self.list = False
-                self.array = True
-            self.random_state = random_state
-            if isinstance(self.random_state, int):
-                self.random_state = np.random.RandomState(self.random_state)
-            elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            self.dist_object = distributions
+            self.list = False
+            self.array = True
 
-        # Instantiate the output attributes.
-        self.samples = None
-        self.x = None
-        self.samplesU01 = None
-        self.samples_number = samples_number
-
-        # Run Monte Carlo sampling
-        if samples_number is not None:
-            self.run(samples_number=self.samples_number, random_state=self.random_state)
-
-    def run(self, samples_number, random_state=None):
+    @beartype
+    def run(self, samples_number: PositiveInteger, random_state: RandomStateType = None):
         """
         Execute the random sampling in the ``MCS`` class.
 
@@ -136,18 +138,7 @@ class MonteCarloSampling:
         """
 
         # Check if a random_state is provided.
-        if random_state is None:
-            random_state = self.random_state
-        else:
-            if isinstance(random_state, int):
-                random_state = np.random.RandomState(random_state)
-            elif not isinstance(random_state, (type(None), np.random.RandomState)):
-                raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
-
-        if samples_number is None:
-            raise ValueError('UQpy: Number of samples must be defined.')
-        if not isinstance(samples_number, int):
-            raise ValueError('UQpy: nsamples should be an integer.')
+        self.random_state = process_random_state(random_state)
 
         self.logger.info('UQpy: Running Monte Carlo Sampling.')
 

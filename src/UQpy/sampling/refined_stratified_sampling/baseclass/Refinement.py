@@ -5,7 +5,7 @@ import numpy as np
 class Refinement(ABC):
 
     @abstractmethod
-    def update_samples(self,samples_number, samples_per_iteration,
+    def update_samples(self, samples_number, samples_per_iteration,
                        random_state, index, dimension, samplesU01, training_points):
         pass
 

@@ -1,3 +1,5 @@
+from beartype import beartype
+
 from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import LearningFunction
 import numpy as np
 
@@ -47,8 +49,8 @@ class WeightedUFunction(LearningFunction):
                 `indicator = True` specifies that the stopping criterion has been met and the AKMCS.run method stops.
 
             """
-
-    def __init__(self, weighted_u_stop):
+    @beartype
+    def __init__(self, weighted_u_stop: int):
         self.weighted_u_stop = weighted_u_stop
 
     def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):

@@ -1,11 +1,12 @@
 import logging
+from ctypes import Union
+from typing import List
 
+from UQpy.utilities.ValidationTypes import PositiveInteger
 from UQpy.distributions import *
 from UQpy.sampling.latin_hypercube_criteria.baseclass.Criterion import *
 import numpy as np
-from scipy.spatial.distance import pdist
-import scipy.stats as stats
-import copy
+from UQpy.distributions import DistributionContinuous1D, JointIndependent
 
 
 class LatinHypercubeSampling:
@@ -57,33 +58,15 @@ class LatinHypercubeSampling:
     **Methods**
 
     """
-
-    def __init__(self, distributions, samples_number, criterion=None):
-
-        # Check if a Distribution object is provided.
-        from UQpy.distributions import DistributionContinuous1D, JointIndependent
-
-        if isinstance(distributions, list):
-            for i in range(len(distributions)):
-                if not isinstance(distributions[i], DistributionContinuous1D):
-                    raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
-        else:
-            if not isinstance(distributions, (DistributionContinuous1D, JointIndependent)):
-                raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
+    @beartype
+    def __init__(self,
+                 distributions: Union[DistributionContinuous1D, JointIndependent, List[DistributionContinuous1D]],
+                 samples_number: PositiveInteger,
+                 criterion: Criterion = None):
 
         self.dist_object = distributions
-
-        if isinstance(criterion, Criterion):
-            self.criterion = criterion
-        else:
-            raise NotImplementedError("Exit code: Supported lhs criteria must implement Criterion.")
-
-        if isinstance(samples_number, int):
-            self.samples_number = samples_number
-        else:
-            raise ValueError('UQpy: number of samples must be specified.')
-
-        # Set printing options
+        self.criterion = criterion
+        self.samples_number = samples_number
         self.logger = logging.getLogger(__name__)
 
         if isinstance(self.dist_object, list):
@@ -98,7 +81,8 @@ class LatinHypercubeSampling:
         if self.samples_number is not None:
             self.run(self.samples_number)
 
-    def run(self, samples_number):
+    @beartype
+    def run(self, samples_number: PositiveInteger):
 
         """
         Execute the random sampling in the ``LHS`` class.
@@ -123,11 +107,8 @@ class LatinHypercubeSampling:
 
         """
 
-        if self.samples_number is None:
-            self.samples_number = samples_number
-
+        self.samples_number = samples_number
         self.logger.info('UQpy: Running Latin Hypercube sampling...')
-
         self.criterion.create_bins(self.samples)
 
         u_lhs = self.criterion.generate_samples()

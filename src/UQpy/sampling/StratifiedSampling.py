@@ -1,12 +1,20 @@
 import logging
+from typing import List, Union
 
-import numpy as np
+from beartype import beartype
+from UQpy.distributions import DistributionContinuous1D, JointIndependent
+from UQpy.utilities.strata.baseclass import Strata
+from UQpy.utilities.ValidationTypes import *
 
 
 class StratifiedSampling:
-    def __init__(self, distributions, strata_object,
-                 samples_per_stratum_number=None,
-                 samples_number=None):
+
+    @beartype
+    def __init__(self,
+                 distributions: Union[DistributionContinuous1D, JointIndependent, List[DistributionContinuous1D]],
+                 strata_object: Strata,
+                 samples_per_stratum_number: Union[int, List[int]] = None,
+                 samples_number: int = None):
 
         self.logger = logging.getLogger(__name__)
         self.weights = None
@@ -14,25 +22,10 @@ class StratifiedSampling:
         self.samples_per_stratum_number = samples_per_stratum_number
         self.samples_number = samples_number
         self.samplesU01, self.samples = None, None
-
-        # Check if a Distribution object is provided.
-        from UQpy.distributions import DistributionContinuous1D, JointIndependent
-
-        if isinstance(distributions, list):
-            self.dimension = len(distributions)
-            for i in range(len(distributions)):
-                if not isinstance(distributions[i], DistributionContinuous1D):
-                    raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
-        else:
-            self.dimension = 1
-            if not isinstance(distributions, (DistributionContinuous1D, JointIndependent)):
-                raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
-
         self.distributions = distributions
 
         self.logger.info("UQpy: stratified_sampling object is created")
 
-        # If nsamples_per_stratum or nsamples is provided, execute run method
         if self.samples_per_stratum_number is not None or self.samples_number is not None:
             self.run(samples_per_stratum_number=self.samples_per_stratum_number, samples_number=self.samples_number)
 
@@ -57,7 +50,9 @@ class StratifiedSampling:
 
         self.samples = samples_u_to_x
 
-    def run(self, samples_per_stratum_number=None, samples_number=None):
+    @beartype
+    def run(self, samples_per_stratum_number: Union[int, List[int]] = None,
+            samples_number: PositiveInteger = None):
         """
         Executes stratified sampling.
 
@@ -96,29 +91,20 @@ class StratifiedSampling:
         The ``run`` method has no output, although it modifies the `samples`, `samplesu01`, and `weights` attributes.
         """
 
-        # Check inputs of run methods
         self.samples_per_stratum_number = samples_per_stratum_number
         self.samples_number = samples_number
         self._run_checks()
 
         self.logger.info("UQpy: Performing Stratified Sampling")
 
-        # Call "create_sampleu01" method and generate samples in  the unit hypercube
         self.create_unit_hypercube_samples()
 
-        # Compute inverse cdf of samplesU01
         self.transform_samples(self.samplesU01)
 
         self.logger.info("UQpy: Stratified Sampling is completed")
 
     def _run_checks(self):
         if self.samples_number is not None:
-            if not isinstance(self.samples_number, int):
-                raise RuntimeError("UQpy: 'nsamples' must be an integer.")
-            else:
-                if isinstance(self.samples_per_stratum_number, (int, list)):
-                    print("UQpy: stratified_sampling class is executing proportional sampling, thus ignoring "
-                          "'nsamples_per_stratum'.")
             self.samples_per_stratum_number = (self.strata_object.volume * self.samples_number).round()
 
         if self.samples_per_stratum_number is not None:

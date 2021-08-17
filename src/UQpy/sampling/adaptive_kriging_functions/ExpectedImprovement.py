@@ -1,3 +1,5 @@
+from beartype import beartype
+
 from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import LearningFunction
 import scipy.stats as stats
 import numpy as np
@@ -50,7 +52,8 @@ class ExpectedImprovement(LearningFunction):
             * **eif_lf** (`ndarray`)
                 EIF learning function evaluated at the new sample points.
             """
-    def __init__(self, eif_stop=0.01):
+    @beartype
+    def __init__(self, eif_stop: float = 0.01):
         self.eif_stop = eif_stop
 
     def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):

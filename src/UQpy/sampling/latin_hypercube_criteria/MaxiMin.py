@@ -1,10 +1,15 @@
 import logging
+from typing import Callable, Union
+
+from beartype import beartype
 
 from UQpy.sampling.latin_hypercube_criteria import Criterion, Random
 from UQpy.sampling.latin_hypercube_criteria.DistanceMetric import DistanceMetric
 from scipy.spatial.distance import pdist
 import numpy as np
 import copy
+
+from UQpy.utilities.ValidationTypes import RandomStateType
 
 
 class MaxiMin(Criterion):
@@ -35,14 +40,18 @@ class MaxiMin(Criterion):
                 The maximin set of LHS samples.
 
             """
-    def __init__(self, random_state=None, iterations=100,
-                 metric=DistanceMetric.EUCLIDEAN):
+    @beartype
+    def __init__(self,
+                 random_state: RandomStateType = None,
+                 iterations: int = 100,
+                 metric: Union[Callable, DistanceMetric] = DistanceMetric.EUCLIDEAN):
+        super.__init__(random_state)
         self.random_state = random_state
         self.iterations = iterations
         self.logger = logging.getLogger(__name__)
 
         if isinstance(metric, DistanceMetric):
-            metric_str=str(metric.name).lower()
+            metric_str = str(metric.name).lower()
             self.distance_function = lambda x: pdist(x, metric=metric_str)
         elif callable(metric):
             self. distance_function = metric

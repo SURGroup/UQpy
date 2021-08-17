@@ -1,13 +1,15 @@
 from abc import ABC, abstractmethod
 import numpy as np
 import scipy.stats as stats
-from UQpy.utilities.validation.Validations import *
+from beartype import beartype
+
+from UQpy.utilities.ValidationTypes import RandomStateType
 
 
 class Criterion(ABC):
 
-    @check_random_state()
-    def __init__(self, random_state=None):
+    @beartype
+    def __init__(self, random_state: RandomStateType = None):
         self.a = 0
         self.b = 0
         self.samples = np.zeros(shape=(0, 0))

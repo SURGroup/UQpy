@@ -1,8 +1,13 @@
 import logging
+from typing import Annotated, Tuple
+
+from beartype import beartype
+from beartype.vale import Is
 
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
 import numpy as np
+from UQpy.utilities.ValidationTypes import *
 
 
 class DREAM(MCMC):
@@ -45,12 +50,28 @@ class DREAM(MCMC):
     **Methods:**
 
     """
-
-    def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, burn_length=0, jump=1, dimension=None,
-                 seed=None, save_log_pdf=False, concatenate_chains=True, samples_number=None,
-                 samples_per_chain_number=None, jump_rate=3, c=0.1, c_star=1e-6, crossover_probabilities_number=3,
-                 gamma_probability=0.2, crossover_adaptation=(-1, 1),
-                 check_chains=(-1, 1),  random_state=None, chains_number=None):
+    @beartype
+    def __init__(self,
+                 pdf_target=None,
+                 log_pdf_target=None,
+                 args_target=None,
+                 burn_length: Annotated[int: Is[lambda x: x >= 0]] = 0,
+                 jump: PositiveInteger = 1,
+                 dimension: int = None,
+                 seed=None,
+                 save_log_pdf: bool = False,
+                 concatenate_chains: bool = True,
+                 samples_number: int = None,
+                 samples_number_per_chain: int = None,
+                 jump_rate: int = 3,
+                 c: float = 0.1,
+                 c_star: float = 1e-6,
+                 crossover_probabilities_number: int = 3,
+                 gamma_probability: float = 0.2,
+                 crossover_adaptation: Tuple = (-1, 1),
+                 check_chains: Tuple = (-1, 1),
+                 random_state: RandomStateType = None,
+                 chains_number: int = None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, burn_length=burn_length, jump=jump, save_log_pdf=save_log_pdf,
@@ -91,8 +112,8 @@ class DREAM(MCMC):
         self.logger.info('UQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.\n')
 
         # If nsamples is provided, run the algorithm
-        if (samples_number is not None) or (samples_per_chain_number is not None):
-            self.run(number_of_samples=samples_number, nsamples_per_chain=samples_per_chain_number)
+        if (samples_number is not None) or (samples_number_per_chain is not None):
+            self.run(samples_number=samples_number, samples_number_per_chain=samples_number_per_chain)
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """

@@ -1,10 +1,23 @@
+import logging
+
 import numpy as np
+from beartype import beartype
+from UQpy.sampling.refined_stratified_sampling.baseclass.Refinement import *
+from UQpy.sampling.StratifiedSampling import *
+from UQpy.utilities.ValidationTypes import RandomStateType,PositiveInteger
+from UQpy.utilities.Utilities import process_random_state
+
 
 
 class RefinedStratifiedSampling:
 
-    def __init__(self, stratified_sampling, refinement_algorithm, samples_number=None,
-                 samples_per_iteration=1, random_state=None, verbose=True):
+    @beartype
+    def __init__(self,
+                 stratified_sampling: StratifiedSampling,
+                 refinement_algorithm: Refinement,
+                 samples_number: PositiveInteger = None,
+                 samples_per_iteration: int = 1,
+                 random_state: RandomStateType = None):
         self.stratified_sampling = stratified_sampling
         self.samples_per_iteration = samples_per_iteration
         self.refinement_algorithm = refinement_algorithm
@@ -13,37 +26,28 @@ class RefinedStratifiedSampling:
         self.samples = self.stratified_sampling.samples
         self.dimension = self.samples.shape[1]
         self.random_state = random_state
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
 
         self.samples_number = samples_number
 
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        self.random_state = process_random_state(random_state)
 
         if self.samples_number is not None:
-            if isinstance(self.samples_number, int) and self.samples_number > 0:
-                self.run(nsamples=self.samples_number)
-            else:
-                raise NotImplementedError("UQpy: nsamples msut be a positive integer.")
+            self.run(nsamples=self.samples_number)
 
-    def run(self, nsamples):
-        if isinstance(nsamples, int) and nsamples > 0:
-            self.samples_number = nsamples
-        else:
-            raise RuntimeError("UQpy: nsamples must be a positive integer.")
+    @beartype
+    def run(self, samples_number: PositiveInteger):
+        self.samples_number = samples_number
 
         if self.samples_number <= self.samples.shape[0]:
-            raise NotImplementedError('UQpy Error: The number of requested samples must be larger than the existing '
+            raise ValueError('UQpy Error: The number of requested samples must be larger than the existing '
                                       'sample set.')
 
         initial_number = self.samples.shape[0]
 
         self.refinement_algorithm.initialize(self.samples_number, self.training_points)
 
-        for i in range(initial_number, nsamples, self.samples_per_iteration):
+        for i in range(initial_number, samples_number, self.samples_per_iteration):
             new_points = self.refinement_algorithm\
                 .update_samples(self.samples_number, self.samples_per_iteration,
                                 self.random_state, i, self.dimension, self.samplesU01,

@@ -1,8 +1,12 @@
 import logging
 
+from beartype import beartype
+
 from UQpy.sampling.latin_hypercube_criteria import Criterion, Random
 import numpy as np
 import copy
+
+from UQpy.utilities.ValidationTypes import RandomStateType
 
 
 class MinCorrelation(Criterion):
@@ -26,10 +30,11 @@ class MinCorrelation(Criterion):
                 The minimum correlation set of LHS samples.
 
             """
-
-    def __init__(self, random_state=None, iterations=100):
-        if not isinstance(iterations, int):
-            raise ValueError('UQpy: number of iterations must be an integer.')
+    @beartype
+    def __init__(self,
+                 random_state: RandomStateType = None,
+                 iterations: int = 100):
+        super.__init__(random_state)
 
         self.random_state = random_state
         self.iterations = iterations

@@ -1,8 +1,13 @@
 import logging
+from typing import Annotated
+
+from beartype import beartype
+from beartype.vale import Is
 
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
 import numpy as np
+from UQpy.utilities.ValidationTypes import *
 
 
 class ModifiedMetropolisHastings(MCMC):
@@ -34,10 +39,23 @@ class ModifiedMetropolisHastings(MCMC):
     **Methods:**
 
     """
-    def __init__(self, pdf_target=None, log_pdf_target=None, args_target=None, burn_length=0, jump=1, dimension=None,
-                 seed=None, save_log_pdf=False, concatenate_chains=True, samples_number=None,
-                 samples_per_chain_number=None, proposal=None, proposal_is_symmetric=False,
-                 random_state=None, chains_number=None):
+    @beartype
+    def __init__(self,
+                 pdf_target=None,
+                 log_pdf_target=None,
+                 args_target=None,
+                 burn_length: Annotated[int: Is[lambda x: x >= 0]] = 0,
+                 jump: PositiveInteger = 1,
+                 dimension: int = None,
+                 seed=None,
+                 save_log_pdf: bool = False,
+                 concatenate_chains: bool = True,
+                 samples_number: PositiveInteger = None,
+                 samples_number_per_chain: PositiveInteger = None,
+                 proposal=None,
+                 proposal_is_symmetric: bool = False,
+                 random_state: RandomStateType = None,
+                 chains_number: int = None):
 
         super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
                          dimension=dimension, seed=seed, burn_length=burn_length, jump=jump, save_log_pdf=save_log_pdf,
@@ -87,8 +105,8 @@ class ModifiedMetropolisHastings(MCMC):
         self.logger.info('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
 
         # If nsamples is provided, run the algorithm
-        if (samples_number is not None) or (samples_per_chain_number is not None):
-            self.run(number_of_samples=samples_number, nsamples_per_chain=samples_per_chain_number)
+        if (samples_number is not None) or (samples_number_per_chain is not None):
+            self.run(samples_number=samples_number, samples_number_per_chain=samples_number_per_chain)
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """

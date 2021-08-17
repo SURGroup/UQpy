@@ -1,6 +1,8 @@
-import numpy as np
-import scipy.stats as stats
 
+import scipy.stats as stats
+from beartype import beartype
+from UQpy.utilities.ValidationTypes import *
+from UQpy.utilities.Utilities import process_random_state
 
 class SimplexSampling:
     """
@@ -33,27 +35,24 @@ class SimplexSampling:
     **Methods:**
 
     """
-
-    def __init__(self, nodes=None, samples_number=None, random_state=None):
+    @beartype
+    def __init__(self,
+                 nodes=None,
+                 samples_number: PositiveInteger = None,
+                 random_state: RandomStateType = None):
         self.nodes = np.atleast_2d(nodes)
         self.samples_number = samples_number
 
         if self.nodes.shape[0] != self.nodes.shape[1] + 1:
             raise NotImplementedError("UQpy: Size of simplex (nodes) is not consistent.")
 
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        self.random_state = process_random_state(random_state)
 
         if samples_number is not None:
-            if self.samples_number <= 0 or type(self.samples_number).__name__ != 'int':
-                raise NotImplementedError("UQpy: Number of samples to be generated 'nsamples' should be a positive "
-                                          "integer.")
             self.samples = self.run(samples_number=samples_number)
 
-    def run(self, samples_number):
+    @beartype
+    def run(self, samples_number: PositiveInteger):
         """
         Execute the random sampling in the ``Simplex`` class.
 

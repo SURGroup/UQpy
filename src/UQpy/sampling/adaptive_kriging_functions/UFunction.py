@@ -1,3 +1,5 @@
+from beartype import beartype
+
 from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import LearningFunction
 
 
@@ -47,8 +49,8 @@ class UFunction(LearningFunction):
                 U learning function evaluated at the new sample points.
 
             """
-
-    def __init__(self, u_stop=2):
+    @beartype
+    def __init__(self, u_stop: int = 2):
         self.u_stop = u_stop
 
     def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):

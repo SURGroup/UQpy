@@ -1,5 +1,11 @@
+import logging
+
 import numpy as np
+from beartype import beartype
+
 from UQpy.distributions import Distribution
+from UQpy.utilities.ValidationTypes import *
+from UQpy.utilities.Utilities import process_random_state
 
 
 class MCMC:
@@ -102,15 +108,20 @@ class MCMC:
     **Methods:**
     """
     # Last Modified: 10/05/20 by Audrey Olivier
+    @beartype
+    def __init__(self,
+                 dimension: int = None,
+                 pdf_target=None,
+                 log_pdf_target=None,
+                 args_target=None,
+                 seed=None,
+                 burn_length: Annotated[int: Is[lambda x: x >= 0]] = 0,
+                 jump: PositiveInteger = 1,
+                 chains_number: int = None,
+                 save_log_pdf: bool = False,
+                 concatenate_chains: bool = True,
+                 random_state: RandomStateType = None):
 
-    def __init__(self, dimension=None, pdf_target=None, log_pdf_target=None, args_target=None, seed=None,
-                 burn_length=0, jump=1, chains_number=None, save_log_pdf=False, verbose=False, concatenate_chains=True,
-                 random_state=None):
-
-        if not (isinstance(burn_length, int) and burn_length >= 0):
-            raise TypeError('UQpy: nburn should be an integer >= 0')
-        if not (isinstance(jump, int) and jump >= 1):
-            raise TypeError('UQpy: jump should be an integer >= 1')
         self.burn_length, self.jump = burn_length, jump
         self.seed = self._preprocess_seed(seed=seed, dimensions=dimension, chains_number=chains_number)
         self.chains_number, self.dimension = self.seed.shape
@@ -120,12 +131,8 @@ class MCMC:
             pdf_=pdf_target, log_pdf_=log_pdf_target, args=args_target)
         self.save_log_pdf = save_log_pdf
         self.concatenate_chains = concatenate_chains
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
-        self.verbose = verbose
+        self.random_state = process_random_state(random_state)
+        self.logger = logging.getLogger(__name__)
 
         self.log_pdf_target = log_pdf_target
         self.pdf_target = pdf_target
@@ -138,7 +145,9 @@ class MCMC:
         self.samples_number, self.nsamples_per_chain = 0, 0
         self.iterations_number = 0  # total nb of iterations, grows if you call run several times
 
-    def run(self, number_of_samples=None, nsamples_per_chain=None):
+    def run(self,
+            samples_number: PositiveInteger = None,
+            samples_number_per_chain=None):
         """
         Run the mcmc algorithm.
 
@@ -159,10 +168,9 @@ class MCMC:
         """
         # Initialize the runs: allocate space for the new samples and log pdf values
         final_nsamples, final_nsamples_per_chain, current_state, current_log_pdf = self._initialize_samples(
-            number_of_samples=number_of_samples, samples_per_chain_number=nsamples_per_chain)
+            number_of_samples=samples_number, samples_per_chain_number=samples_number_per_chain)
 
-        if self.verbose:
-            print('UQpy: Running mcmc...')
+        self.logger.info('UQpy: Running mcmc...')
 
         # Run nsims iterations of the mcmc algorithm, starting at current_state
         while self.nsamples_per_chain < final_nsamples_per_chain:
@@ -180,8 +188,7 @@ class MCMC:
                 self.nsamples_per_chain += 1
                 self.samples_number += self.chains_number
 
-        if self.verbose:
-            print('UQpy: mcmc run successfully !')
+        self.logger.info('UQpy: mcmc run successfully !')
 
         # Concatenate chains maybe
         if self.concatenate_chains:
