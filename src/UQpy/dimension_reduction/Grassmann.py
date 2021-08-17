@@ -1,12 +1,16 @@
 import copy
 import itertools
+from typing import Callable, Union
+
+import sklearn.gaussian_process
 
 from UQpy.utilities.Utilities import *
 
 import scipy.spatial.distance as sd
 from scipy.interpolate import LinearNDInterpolator
 
-from UQpy.surrogates import kriging
+from UQpy.surrogates.kriging import Kriging
+from UQpy.utilities.constant import SKLEARN_STRING
 
 
 class Grassmann:
@@ -116,40 +120,28 @@ class Grassmann:
 
     """
 
-    def __init__(self, distance_method=None, kernel_method=None, interpolator=None, karcher_method=None):
+    def __init__(self,
+                 distance_method: Callable = None,
+                 kernel_method: Callable = None,
+                 interpolator: Union[Callable, Kriging, sklearn.gaussian_process.GaussianProcessRegressor] = None,
+                 karcher_method: Callable = None):
 
-        # Distance.
         if distance_method is not None:
-            if callable(distance_method):
-                self.distance_object = distance_method
-            else:
-                raise TypeError('UQpy: A callable distance object must be provided.')
+            self.distance_object = distance_method
 
-        # Kernels.
         if kernel_method is not None:
-            if callable(kernel_method):
-                self.kernel_object = kernel_method
-            else:
-                raise TypeError('UQpy: A callable kernel object must be provided.')
+            self.kernel_object = kernel_method
 
-        # Interpolation.
-        sklearn_string = "<class 'sklearn.gaussian_process._gpr.GaussianProcessRegressor'>"
-        self.is_sklearn = str(type(interpolator)) == sklearn_string
+        self.is_sklearn = str(type(interpolator)) == SKLEARN_STRING
         if interpolator is not None:
-            if callable(interpolator) or isinstance(interpolator, kriging) or self.is_sklearn:
-                self.interpolator = interpolator
-            else:
-                raise TypeError('UQpy: A callable interpolation object must be provided.')
+            self.interpolator = interpolator
 
-        # Karcher mean.
         if karcher_method is not None:
             if distance_method is None:
                 raise ValueError('UQpy: A callable distance object must be provided too.')
 
             if callable(karcher_method):
                 self.karcher_method = karcher_method
-            else:
-                raise TypeError('UQpy: A callable Karcher mean object must be provided.')
 
         self.samples = []
         self.psi = []

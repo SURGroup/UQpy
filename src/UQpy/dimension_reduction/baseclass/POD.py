@@ -1,4 +1,5 @@
 import logging
+from typing import Union
 
 import numpy as np
 
@@ -20,7 +21,9 @@ class POD:
     **Methods:**
     """
 
-    def __init__(self, solution_snapshots, **kwargs):
+    def __init__(self,
+                 solution_snapshots: Union[np.ndarray, list],
+                 **kwargs):
 
         self.solution_snapshots = solution_snapshots
         self.kwargs = kwargs

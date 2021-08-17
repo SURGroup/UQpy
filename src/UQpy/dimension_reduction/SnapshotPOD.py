@@ -1,3 +1,5 @@
+from typing import Union
+
 import numpy as np
 from UQpy.dimension_reduction.baseclass import POD
 
@@ -23,7 +25,10 @@ class SnapshotPOD(POD):
     **Methods:**
    """
 
-    def __init__(self, solution_snapshots, modes=10 ** 10, reconstruction_percentage=10 ** 10):
+    def __init__(self,
+                 solution_snapshots: Union[np.ndarray, list],
+                 modes: int = 10 ** 10,
+                 reconstruction_percentage: float = 10 ** 10):
 
         super().__init__(solution_snapshots)
         self.modes = modes

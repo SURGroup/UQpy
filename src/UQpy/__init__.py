@@ -30,15 +30,21 @@ from UQpy.surrogates import *
 from UQpy.transformations import *
 from UQpy.utilities.Utilities import *
 from UQpy.sensitivity import *
+from UQpy.utilities.UQpyLoggingFormatter import *
 import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-ch = logging.StreamHandler()
-formatter = logging.Formatter('[%(levelname)s] - %(asctime)s - File: %(filename)s - Method: %(funcName)s -'
-                              ' Line: %(lineno)s - %(message)s', "%Y-%m-%d %H:%M:%S")
-ch.setFormatter(formatter)
-logger.addHandler(ch)
+
+formatter = UQpyLoggingFormatter()
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+
+logger.addHandler(console_handler)
+
+logging.logThreads = 0
+logging.logProcesses = 0
 
 try:
     __version__ = pkg_resources.get_distribution("UQpy").version

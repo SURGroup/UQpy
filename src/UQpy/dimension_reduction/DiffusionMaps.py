@@ -1,4 +1,5 @@
 import itertools
+from typing import Optional, Union, Callable
 
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsl
@@ -7,6 +8,9 @@ import scipy.spatial.distance as sd
 from UQpy.utilities.Utilities import *
 from UQpy.utilities.Utilities import _nn_coord
 from UQpy.dimension_reduction.Grassmann import Grassmann
+from beartype import beartype
+from typing import Annotated
+from beartype.vale import Is
 
 
 class DiffusionMaps:
@@ -81,8 +85,15 @@ class DiffusionMaps:
     **Methods:**
 
     """
+    AlphaType = Annotated[float, Is[lambda number: 0 <= number <= 1]]
+    IntegerLargerThanUnityType = Annotated[int, Is[lambda number: number >= 1]]
 
-    def __init__(self, alpha=0.5, eigenvectors_number=2, is_sparse=False, neighbors_number=1, kernel_object=None,
+    @beartype
+    def __init__(self, alpha: AlphaType = 0.5,
+                 eigenvectors_number: IntegerLargerThanUnityType = 2,
+                 is_sparse: bool = False,
+                 neighbors_number: IntegerLargerThanUnityType = 1,
+                 kernel_object: Union[Callable, Grassmann] = None,
                  kernel_grassmann=None):
 
         self.alpha = alpha
@@ -92,34 +103,13 @@ class DiffusionMaps:
         self.kernel_object = kernel_object
         self.kernel_grassmann = kernel_grassmann
 
-        # from UQpy.dimension_reduction import Grassmann
-        # from dimension_reduction import Grassmann
-
         if kernel_object is not None:
-            if callable(kernel_object) or isinstance(kernel_object, Grassmann):
-                self.kernel_object = kernel_object
-            else:
-                raise TypeError('UQpy: Either a callable kernel or a Grassmann class object must be provided.')
+            self.kernel_object = kernel_object
 
-        if alpha < 0 or alpha > 1:
-            raise ValueError('UQpy: `alpha` must be a value between 0 and 1.')
+        # if alpha < 0 or alpha > 1:
+        #     raise ValueError('UQpy: `alpha` must be a value between 0 and 1.')
 
-        if isinstance(eigenvectors_number, int):
-            if eigenvectors_number < 1:
-                raise ValueError('UQpy: `eigenvectors_number` must be larger than or equal to one.')
-        else:
-            raise TypeError('UQpy: `eigenvectors_number` must be integer.')
-
-        if not isinstance(is_sparse, bool):
-            raise TypeError('UQpy: `is_sparse` must be a boolean variable.')
-        elif is_sparse is True:
-            if isinstance(neighbors_number, int):
-                if neighbors_number < 1:
-                    raise ValueError('UQpy: `neighbors_number` must be larger than or equal to one.')
-            else:
-                raise TypeError('UQpy: `neighbors_number` must be integer.')
-
-    def mapping(self, data=None, epsilon=None):
+    def mapping(self, data: list = None, epsilon=None):
 
         """
         Perform diffusion maps to reveal the embedded geometry of datasets.

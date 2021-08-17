@@ -1,5 +1,5 @@
 numpy == 1.19.4
-scipy == 1.5.4
+scipy~=1.6.1
 matplotlib == 3.3.3
 scikit-learn == 0.23.2
 fire == 0.3.1
@@ -10,3 +10,6 @@ pylint == 2.6.0
 wheel == 0.36.2
 pytest-azurepipelines == 0.8.0
 twine == 3.3.0
+pathlib~=1.0.1
+beartype~=0.7.1
+setuptools~=49.6.0
