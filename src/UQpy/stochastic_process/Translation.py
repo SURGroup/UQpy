@@ -1,8 +1,11 @@
 import itertools
 import logging
+from typing import Union, List
 
+from beartype import beartype
 from scipy.stats import norm
 
+from UQpy.distributions.baseclass import Distribution
 from UQpy.utilities.Utilities import *
 from UQpy.stochastic_process.supportive import inverse_wiener_khinchin_transform, wiener_khinchin_transform, \
     scaling_correlation_function
@@ -65,16 +68,22 @@ class Translation:
         This obtained by scaling the correlation function of the non-Gaussian stochastic processes to make the
         correlation at '0' lag to be 1
     """
-
-    def __init__(self, distributions, time_interval, frequency_interval, number_time_intervals,
-                 number_frequency_intervals, power_spectrum_gaussian=None, correlation_function_gaussian=None,
-                 samples_gaussian=None):
+    @beartype
+    def __init__(self,
+                 distributions: Union[Distribution, List[Distribution]],
+                 time_interval: float,
+                 frequency_interval: float,
+                 time_intervals_number: int,
+                 frequency_intervals_number: int,
+                 power_spectrum_gaussian: Union[list, np.ndarray] = None,
+                 correlation_function_gaussian: Union[list, np.ndarray] = None,
+                 samples_gaussian: Union[list, np.ndarray] = None):
         self.logger = logging.getLogger(__name__)
         self.distributions = distributions
         self.time_interval = time_interval
         self.frequency_interval = frequency_interval
-        self.number_time_intervals = number_time_intervals
-        self.number_frequency_intervals = number_frequency_intervals
+        self.number_time_intervals = time_intervals_number
+        self.number_frequency_intervals = frequency_intervals_number
         if correlation_function_gaussian is None and power_spectrum_gaussian is None:
             self.logger.info('Either the Power Spectrum or the Autocorrelation function should be specified')
         if correlation_function_gaussian is None:

@@ -1,4 +1,8 @@
 import logging
+from typing import Union, List
+
+import numpy as np
+from beartype import beartype
 
 from UQpy.distributions import *
 from UQpy.utilities.Utilities import *
@@ -59,14 +63,20 @@ class InverseTranslation:
         at '0' distance to be 1
 
     """
-
-    def __init__(self, distributions, time_interval, frequency_interval, number_time_intervals,
-                 number_frequency_intervals, correlation_function_non_gaussian=None,
-                 power_spectrum_non_gaussian=None, samples_non_gaussian=None):
+    @beartype
+    def __init__(self,
+                 distributions: Union[Distribution, List[Distribution]],
+                 time_interval: float,
+                 frequency_interval: float,
+                 time_intervals_number: int,
+                 frequency_intervals_number: int,
+                 correlation_function_non_gaussian: np.ndarray = None,
+                 power_spectrum_non_gaussian: np.ndarray = None,
+                 samples_non_gaussian: np.ndarray = None):
         self.logger = logging.getLogger(__name__)
         self.dist_object = distributions
-        self.frequency = np.arange(0, number_frequency_intervals) * frequency_interval
-        self.time = np.arange(0, number_time_intervals) * time_interval
+        self.frequency = np.arange(0, frequency_intervals_number) * frequency_interval
+        self.time = np.arange(0, time_intervals_number) * time_interval
         if correlation_function_non_gaussian is None and power_spectrum_non_gaussian is None:
             self.logger.info('Either the Power Spectrum or the Autocorrelation function should be specified')
         if correlation_function_non_gaussian is None:

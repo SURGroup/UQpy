@@ -1,6 +1,9 @@
 import itertools
 import logging
 
+from beartype import beartype
+
+from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger
 from UQpy.utilities.Utilities import *
 
 
@@ -101,9 +104,17 @@ class BispectralRepresentation:
 
     **Methods**
     """
-
-    def __init__(self, samples_number, power_spectrum, bispectrum, time_interval, frequency_interval,
-                 number_time_intervals, number_frequency_intervals, case='uni', random_state=None):
+    @beartype
+    def __init__(self,
+                 samples_number: PositiveInteger,
+                 power_spectrum,
+                 bispectrum,
+                 time_interval,
+                 frequency_interval,
+                 number_time_intervals,
+                 number_frequency_intervals,
+                 case: str = 'uni',
+                 random_state: RandomStateType = None):
         self.samples_number = samples_number
         self.number_frequency_intervals = np.array(number_frequency_intervals)
         self.number_time_intervals = np.array(number_time_intervals)

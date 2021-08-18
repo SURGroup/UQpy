@@ -2,6 +2,7 @@ import logging
 
 import numpy as np
 
+
 class MultivariateStochasticProcess():
 
     def __init__(self):

@@ -1,5 +1,8 @@
 import logging
+from typing import Union
 
+import numpy as np
+from beartype import beartype
 from scipy.linalg import sqrtm
 
 from UQpy.utilities.Utilities import *
@@ -48,8 +51,13 @@ class KarhunenLoeveExpansion:
     """
 
     # TODO: Test this for non-stationary processes.
-
-    def __init__(self, samples_number, correlation_function, time_interval, threshold=None, random_state=None):
+    @beartype
+    def __init__(self,
+                 samples_number: int,
+                 correlation_function: Union[list, np.ndarray],
+                 time_interval: float,
+                 threshold: int = None,
+                 random_state: RandomStateType = None):
         self.correlation_function = correlation_function
         self.time_interval = time_interval
         self.number_eigen_values = threshold if threshold else len(self.correlation_function[0])

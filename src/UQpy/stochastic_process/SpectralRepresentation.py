@@ -1,8 +1,12 @@
 import logging
 
+import numpy as np
+from beartype import beartype
+
 from UQpy.stochastic_process.supportive.MultivariateStochasticProcess import MultivariateStochasticProcess
 from UQpy.stochastic_process.supportive.UnivariateStochacticProcess import UnivariateStochasticProcess
 from UQpy.utilities.Utilities import *
+from UQpy.utilities.ValidationTypes import *
 
 
 class SpectralRepresentationMethod:
@@ -80,20 +84,26 @@ class SpectralRepresentationMethod:
     **Methods**
 
     """
-
-    def __init__(self, samples_number, power_spectrum, time_interval, frequency_interval, number_time_intervals,
-                 number_frequency_intervals, random_state=None):
+    @beartype
+    def __init__(self,
+                 samples_number: PositiveInteger,
+                 power_spectrum: Union[list, np.ndarray],
+                 time_interval: Union[list, np.ndarray],
+                 frequency_interval: Union[list, np.ndarray],
+                 time_intervals_number: int,
+                 frequency_intervals_number: int,
+                 random_state: RandomStateType = None):
         self.power_spectrum = power_spectrum
         if isinstance(time_interval, float) and isinstance(frequency_interval, float) and \
-                isinstance(number_time_intervals, int) and isinstance(number_frequency_intervals, int):
+                isinstance(time_intervals_number, int) and isinstance(frequency_intervals_number, int):
             time_interval = [time_interval]
             frequency_interval = [frequency_interval]
-            number_time_intervals = [number_time_intervals]
-            number_frequency_intervals = [number_frequency_intervals]
+            time_intervals_number = [time_intervals_number]
+            frequency_intervals_number = [frequency_intervals_number]
         self.time_interval = np.array(time_interval)
         self.frequency_interval = np.array(frequency_interval)
-        self.number_time_intervals = np.array(number_time_intervals)
-        self.number_frequency_intervals = np.array(number_frequency_intervals)
+        self.number_time_intervals = np.array(time_intervals_number)
+        self.number_frequency_intervals = np.array(frequency_intervals_number)
         self.samples_number = samples_number
 
         # Error checks
@@ -103,11 +113,7 @@ class SpectralRepresentationMethod:
 
         self.logger = logging.getLogger(__name__)
 
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            np.random.seed(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        self.random_state = process_random_state(random_state)
 
         self.samples = None
         self.number_of_variables = None
@@ -122,9 +128,10 @@ class SpectralRepresentationMethod:
 
         # Run Spectral Representation Method
         if self.samples_number is not None:
-            self.run(nsamples=self.samples_number)
+            self.run(samples_number=self.samples_number)
 
-    def run(self, nsamples):
+    @beartype
+    def run(self, samples_number: PositiveInteger):
         """
         Execute the random sampling in the ``SRM`` class.
 
@@ -147,12 +154,6 @@ class SpectralRepresentationMethod:
         class.
 
         """
-
-        if nsamples is None:
-            raise ValueError('UQpy: Stochastic Process: Number of samples must be defined.')
-        if not isinstance(nsamples, int):
-            raise ValueError('UQpy: Stochastic Process: nsamples should be an integer.')
-
         self.logger.info('UQpy: Stochastic Process: Running Spectral Representation Method.')
 
         samples = None
