@@ -1,7 +1,12 @@
+from typing import List
+
 import numpy as np
 
+from UQpy.surrogates.polynomial_chaos.polynomials.baseclass import Polynomials
+from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
 
-class LeastSquareRegression:
+
+class LeastSquareRegression(Regression):
     """
     Class to calculate the polynomial_chaos coefficients via the least-squares solution to
     the linear matrix equation. The equation may be under-, well-, or
@@ -16,9 +21,9 @@ class LeastSquareRegression:
 
     """
 
-    def __init__(self, polynomials, verbose=False):
+    def __init__(self,
+                 polynomials: Polynomials):
         self.polynomials = polynomials
-        self.verbose = verbose
 
     def run(self, x, y):
         """

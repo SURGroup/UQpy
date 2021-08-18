@@ -3,6 +3,7 @@ import math
 
 import numpy as np
 import scipy.integrate as integrate
+from beartype import beartype
 
 from UQpy.distributions import *
 
@@ -21,8 +22,10 @@ class Polynomials:
 
     **Methods:**
     """
-
-    def __init__(self, distributions, degree):
+    @beartype
+    def __init__(self,
+                 distributions,
+                 degree: int):
         self.distribution = distributions
         self.degree = degree + 1
 

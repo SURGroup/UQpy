@@ -1,7 +1,14 @@
+import logging
+from typing import List
+
 import numpy as np
+from beartype import beartype
+
+from UQpy.surrogates.polynomial_chaos.polynomials.baseclass import Polynomials
+from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
 
 
-class LassoRegression:
+class LassoRegression(Regression):
     """
     Class to calculate the polynomial_chaos coefficients with the Least Absolute Shrinkage
     and Selection Operator (LASSO) method.
@@ -14,14 +21,17 @@ class LassoRegression:
     **Methods:**
 
     """
-
-    def __init__(self, polynomials, learning_rate=0.01, iterations=1000,
-                 penalty=1, verbose=False):
+    @beartype
+    def __init__(self,
+                 polynomials: List[Polynomials],
+                 learning_rate: float = 0.01,
+                 iterations: int = 1000,
+                 penalty: float = 1):
         self.polynomials = polynomials
         self.learning_rate = learning_rate
         self.iterations = iterations
         self.penalty = penalty
-        self.verbose = verbose
+        self.logger = logging.getLogger(__name__)
 
     def run(self, x, y):
         """

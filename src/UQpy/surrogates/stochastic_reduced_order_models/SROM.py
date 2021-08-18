@@ -82,8 +82,16 @@ class StochasticReducedOrderModel:
 
     """
 
-    def __init__(self, samples, target_distributions, moments=None, weights_errors=None, weights_distribution=None,
-                 weights_moments=None, weights_correlation=None, properties=None, correlation=None):
+    def __init__(self,
+                 samples,
+                 target_distributions,
+                 moments=None,
+                 weights_errors=None,
+                 weights_distribution=None,
+                 weights_moments=None,
+                 weights_correlation=None,
+                 properties=None,
+                 correlation=None):
 
         self.target_distributions = target_distributions
         self.correlation = correlation

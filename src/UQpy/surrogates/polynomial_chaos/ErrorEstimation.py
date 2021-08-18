@@ -1,4 +1,7 @@
 import numpy as np
+from beartype import beartype
+
+from UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion import PolynomialChaosExpansion
 
 
 class ErrorEstimation:
@@ -13,8 +16,9 @@ class ErrorEstimation:
 
     **Methods:**
     """
-
-    def __init__(self, pce_surrogate):
+    @beartype
+    def __init__(self,
+                 pce_surrogate: PolynomialChaosExpansion):
         self.pce_surrogate = pce_surrogate
 
     def validation(self, x, y):

@@ -12,6 +12,9 @@ import logging
 
 import numpy as np
 import scipy.stats as stats
+from beartype import beartype
+
+from UQpy.utilities.ValidationTypes import RandomStateType
 from UQpy.distributions import Normal, Uniform, DistributionContinuous1D, JointIndependent
 import scipy.integrate as integrate
 import scipy.special as special
@@ -85,10 +88,18 @@ class Kriging:
     **Methods:**
 
     """
-
-    def __init__(self, regression_model, correlation_model, bounds=None, optimize=True,
-                 optimizations_number=1, normalize=True, correlation_model_parameters=None,
-                 optimizer=None, random_state=None, **kwargs_optimizer):
+    @beartype
+    def __init__(self,
+                 regression_model: Regression,
+                 correlation_model: Correlation,
+                 bounds=None,
+                 optimize: bool = True,
+                 optimizations_number: int = 1,
+                 normalize: bool = True,
+                 correlation_model_parameters=None,
+                 optimizer=None,
+                 random_state: RandomStateType = None,
+                 **kwargs_optimizer):
 
         self.regression_model = regression_model
         self.correlation_model = correlation_model

@@ -1,3 +1,5 @@
+from beartype import beartype
+
 from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import Polynomials
 import numpy as np
 from UQpy.distributions import Normal
@@ -19,8 +21,10 @@ class Hermite(Polynomials):
 
     **Methods:**
     """
-
-    def __init__(self, degree, distribution):
+    @beartype
+    def __init__(self,
+                 degree: int,
+                 distribution):
         super().__init__(distribution, degree)
         self.degree = degree
         self.pdf = self.distribution.pdf
