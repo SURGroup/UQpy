@@ -24,7 +24,9 @@ class Decorrelate:
         (:math:`\mathbf{C_Z}`).
 
     """
-    def __init__(self, samples_z, corr_z):
+    def __init__(self,
+                 samples_z,
+                 corr_z):
 
         if samples_z is None:
             raise ValueError("UQpy: An  array of samples must be provided.")

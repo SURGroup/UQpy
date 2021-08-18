@@ -1,4 +1,7 @@
 import logging
+from typing import Union, List
+
+from beartype import beartype
 
 from UQpy.distributions import *
 import numpy as np
@@ -111,9 +114,18 @@ class NatafTransformation:
 
     **Methods:**
     """
-
-    def __init__(self, dist_object, samples_x=None, samples_z=None, jacobian=False, corr_z=None, corr_x=None,
-                 itam_beta=1.0, itam_threshold1=0.001, itam_threshold2=0.1, itam_max_iter=100):
+    @beartype
+    def __init__(self,
+                 dist_object: Union[Distribution, List[Distribution]],
+                 samples_x: np.ndarray = None,
+                 samples_z: np. ndarray = None,
+                 jacobian: bool = False,
+                 corr_z: np. ndarray = None,
+                 corr_x: np. ndarray = None,
+                 itam_beta: float = 1.0,
+                 itam_threshold1: float = 0.001,
+                 itam_threshold2: float = 0.1,
+                 itam_max_iter: int = 100):
 
         if isinstance(dist_object, list):
             self.dimension = len(dist_object)

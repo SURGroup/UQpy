@@ -1,4 +1,5 @@
 import numpy as np
+from beartype import beartype
 
 
 class Correlate:
@@ -23,8 +24,10 @@ class Correlate:
         (:math:`\mathbf{C_Z}`).
 
     """
-
-    def __init__(self, corr_z=None,  samples_u=None):
+    @beartype
+    def __init__(self,
+                 corr_z: np.ndarray = None,
+                 samples_u: np. ndarray = None):
 
         if samples_u is None:
             raise ValueError("UQpy: An  array of samples must be provided.")
