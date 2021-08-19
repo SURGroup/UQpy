@@ -1,3 +1,5 @@
+from typing import Union
+
 import scipy.stats as stats
 from beartype import beartype
 
@@ -29,6 +31,6 @@ class Gamma(DistributionContinuous1D):
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     @beartype
-    def __init__(self, a: float, loc: float = 0., scale: float = 1.):
+    def __init__(self, a: Union[None, float], loc: Union[None, float] = 0., scale: Union[None, float] = 1.):
         super().__init__(a=a, loc=loc, scale=scale, ordered_parameters=('a', 'loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.gamma)

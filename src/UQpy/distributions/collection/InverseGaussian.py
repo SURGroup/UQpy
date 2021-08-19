@@ -1,3 +1,5 @@
+from typing import Union
+
 import scipy.stats as stats
 from beartype import beartype
 
@@ -29,6 +31,6 @@ class InverseGauss(DistributionContinuous1D):
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     @beartype
-    def __init__(self, mu: float, location: float = 0., scale: float = 1.):
-        super().__init__(mu=mu, loc=location, scale=scale, ordered_parameters=('mu', 'location', 'scale'))
+    def __init__(self, mu: Union[None, float], loc: Union[None, float] = 0., scale: Union[None, float] = 1.):
+        super().__init__(mu=mu, loc=loc, scale=scale, ordered_parameters=('mu', 'loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.invgauss)

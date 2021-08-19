@@ -1,3 +1,5 @@
+from typing import Union
+
 import scipy.stats as stats
 from beartype import beartype
 
@@ -29,7 +31,7 @@ class Binomial(DistributionDiscrete1D):
     * ``cdf``, ``pmf``, ``log_pmf``, ``icdf``, ``rvs``, ``moments``.
     """
     @beartype
-    def __init__(self, trials_number: int, trial_probability: float, location: float = 0.):
-        super().__init__(n=trials_number, p=trial_probability, loc=location,
-                         ordered_parameters=('trials_number', 'trial_probability', 'location'))
+    def __init__(self, n: Union[None, int], p: Union[None, float], loc: Union[None, float] = 0.):
+        super().__init__(n=n, p=p, loc=loc,
+                         ordered_parameters=('n', 'p', 'loc'))
         self._construct_from_scipy(scipy_name=stats.binom)

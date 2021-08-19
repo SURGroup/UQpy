@@ -1,3 +1,5 @@
+from typing import Union
+
 import scipy.stats as stats
 from beartype import beartype
 
@@ -27,6 +29,6 @@ class Poisson(DistributionDiscrete1D):
     * ``cdf``, ``pmf``, ``log_pmf``, ``icdf``, ``rvs``, ``moments``.
     """
     @beartype
-    def __init__(self, mu: float, location: float = 0.):
-        super().__init__(mu=mu, loc=location, ordered_parameters=('mu', 'location'))
+    def __init__(self, mu: Union[None, float], loc: Union[None, float] = 0.):
+        super().__init__(mu=mu, loc=loc, ordered_parameters=('mu', 'loc'))
         self._construct_from_scipy(scipy_name=stats.poisson)

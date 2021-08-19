@@ -28,8 +28,8 @@ class Multinomial(DistributionND):
     * ``pmf``, ``log_pmf``, ``rvs``, ``moments``.
     """
     @beartype
-    def __init__(self, trials_number: int, trial_probability):
-        super().__init__(n=trials_number, p=trial_probability)
+    def __init__(self, n: Union[None, int], p):
+        super().__init__(n=n, p=p)
 
     def pmf(self, x):
         pdf_val = stats.multinomial.pmf(x=x, **self.parameters)
@@ -46,8 +46,8 @@ class Multinomial(DistributionND):
             size=nsamples, random_state=random_state, **self.parameters).reshape((nsamples, -1))
 
     def moments(self, moments2return='mv'):
-        n = self.get_parameters()['trials_number']
-        p = np.array(self.get_parameters()['trial_probability'])
+        n = self.get_parameters()['n']
+        p = np.array(self.get_parameters()['p'])
         d = len(p)
         if moments2return == 'm':
             mean = n * np.array(p)

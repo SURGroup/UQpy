@@ -1,3 +1,5 @@
+from typing import Union
+
 import scipy.stats as stats
 from beartype import beartype
 
@@ -28,6 +30,6 @@ class Exponential(DistributionContinuous1D):
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     @beartype
-    def __init__(self, loc: float = 0., scale: float = 1.):
-        super().__init__(loc=loc, scale=scale, ordered_parameters=('location', 'scale'))
+    def __init__(self, loc: Union[None, float] = 0., scale: Union[None, float] = 1.):
+        super().__init__(loc=loc, scale=scale, ordered_parameters=('loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.expon)

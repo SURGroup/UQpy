@@ -1,3 +1,5 @@
+from typing import Union
+
 import scipy.stats as stats
 from beartype import beartype
 
@@ -29,7 +31,7 @@ class ChiSquare(DistributionContinuous1D):
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     @beartype
-    def __init__(self, degrees_of_freedom: float, location: float = 0., scale: float = 1.):
-        super().__init__(df=degrees_of_freedom, loc=location, scale=scale,
-                         ordered_parameters=('degrees_of_freedom', 'location', 'scale'))
+    def __init__(self, df: Union[None, float], loc: Union[None, float] = 0., scale: Union[None, float] = 1.):
+        super().__init__(df=df, loc=loc, scale=scale,
+                         ordered_parameters=('df', 'loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.chi2)

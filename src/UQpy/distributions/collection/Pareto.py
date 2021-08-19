@@ -1,3 +1,5 @@
+from typing import Union
+
 import scipy.stats as stats
 from beartype import beartype
 
@@ -29,7 +31,7 @@ class Pareto(DistributionContinuous1D):
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     @beartype
-    def __init__(self, shape_parameter: float, location: float = 0., scale: float = 1.):
-        super().__init__(b=shape_parameter, loc=location, scale=scale,
-                         ordered_parameters=('shape_parameter', 'location', 'scale'))
+    def __init__(self, b: Union[None, float], loc: Union[None, float] = 0., scale: Union[None, float] = 1.):
+        super().__init__(b=b, loc=loc, scale=scale,
+                         ordered_parameters=('b', 'loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.pareto)

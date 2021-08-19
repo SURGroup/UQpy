@@ -1,3 +1,5 @@
+from typing import Union
+
 import scipy.stats as stats
 from UQpy.distributions.baseclass import DistributionContinuous1D
 from beartype import beartype
@@ -31,6 +33,7 @@ class Beta(DistributionContinuous1D):
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``
     """
     @beartype
-    def __init__(self, a: float, b: float, location: float = 0., scale: float = 1.):
-        super().__init__(a=a, b=b, loc=location, scale=scale, ordered_parameters=('a', 'b', 'location', 'scale'))
+    def __init__(self, a: Union[None, float], b: Union[None, float],
+                 loc: Union[None, float] = 0., scale: Union[None, float] = 1.):
+        super().__init__(a=a, b=b, loc=loc, scale=scale, ordered_parameters=('a', 'b', 'loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.beta)

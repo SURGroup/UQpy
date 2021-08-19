@@ -1,3 +1,5 @@
+from typing import Union
+
 import scipy.stats as stats
 from beartype import beartype
 
@@ -33,6 +35,6 @@ class GeneralizedExtreme(DistributionContinuous1D):
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
     @beartype
-    def __init__(self, c: float, location: float = 0., scale: float = 1.):
-        super().__init__(c=c, loc=location, scale=scale, ordered_parameters=('c', 'location', 'scale'))
+    def __init__(self, c: Union[None, float], loc: Union[None, float] = 0., scale: Union[None, float] = 1.):
+        super().__init__(c=c, loc=loc, scale=scale, ordered_parameters=('c', 'loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.genextreme)
