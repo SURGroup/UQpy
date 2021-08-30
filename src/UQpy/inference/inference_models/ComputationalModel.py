@@ -1,21 +1,26 @@
+from beartype import beartype
+
 from UQpy.inference.inference_models.baseclass.InferenceModel import *
 from UQpy.distributions.collection.MultivariateNormal import MultivariateNormal
+from UQpy.utilities.ValidationTypes import *
 
 
 class ComputationalModel(InferenceModel):
 
-    def __init__(self, parameters_number, runmodel_object, error_covariance=1.0, name='', prior=None,
+    @beartype
+    def __init__(self,
+                 parameters_number: PositiveInteger,
+                 runmodel_object: RunModel,
+                 error_covariance: Union[np.ndarray, float] = 1.0,
+                 name: str = '',
+                 prior: Distribution = None,
                  log_likelihood=None):
         self.parameters_number = parameters_number
         self.runmodel_object = runmodel_object
         self.error_covariance = error_covariance
         self.name = name
-        self.log_likelihood=log_likelihood
-        if not isinstance(self.parameters_number, int) or self.parameters_number <= 0:
-            raise TypeError('Input nparams must be an integer > 0.')
+        self.log_likelihood = log_likelihood
         self.name = name
-        if not isinstance(self.name, str):
-            raise TypeError('Input name must be a string.')
 
         self.prior = prior
         if self.prior is not None:

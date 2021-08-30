@@ -1,10 +1,16 @@
 import logging
+from typing import List, Union
 
 import numpy as np
+from beartype import beartype
 
-from UQpy.inference.InformationTheoreticCriterion import InformationTheoreticCriterion
+from UQpy.inference.inference_models.optimization.MinizeOptimizer import MinimizeOptimizer
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
 from UQpy.inference.MLE import MLE
+from UQpy.inference.inference_models.optimization.Optimizer import Optimizer
+from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger
+from UQpy.utilities.Utilities import process_random_state
+from UQpy.inference.InformationTheoreticCriterion import *
 
 
 class InformationModelSelection:
@@ -74,51 +80,48 @@ class InformationModelSelection:
     """
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
-    def __init__(self, candidate_models, data, optimizer, criterion=InformationTheoreticCriterion.AIC,
-                 random_state=None, nopt=None, x0=None):
+    @beartype
+    def __init__(self,
+                 candidate_models: List[InferenceModel],
+                 data: np.ndarray,
+                 optimizer: Optimizer = MinimizeOptimizer(),
+                 criterion: InformationTheoreticCriterion = InformationTheoreticCriterion.AIC,
+                 random_state: RandomStateType = None,
+                 optimizations_number: Union[PositiveInteger, None] = None,
+                 initial_guess: List[np.ndarray] = None):
 
-        # Check inputs
-        # candidate_models is a list of InferenceModel objects
         if not isinstance(candidate_models, (list, tuple)) or not all(isinstance(model, InferenceModel)
                                                                       for model in candidate_models):
             raise TypeError('UQpy: Input candidate_models must be a list of InferenceModel objects.')
         self.models_number = len(candidate_models)
         self.candidate_models = candidate_models
         self.data = data
-        if isinstance(criterion, InformationTheoreticCriterion):
-            raise ValueError('UQpy: Criterion should be AIC (default), BIC or AICc')
-        self.criterion = criterion
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        self.criterion: InformationTheoreticCriterion = criterion
+        self.random_state = process_random_state(random_state)
         self.logger = logging.getLogger(__name__)
 
-        # Instantiate the ML estimators
-        # if not all(isinstance(value, (list, tuple)) for (key, value) in kwargs.items()) or \
-        #         not all(len(value) == len(candidate_models) for (key, value) in kwargs.items()):
-        #     raise TypeError('UQpy: Extra inputs to model selection must be lists of length len(candidate_models)')
         self.optimizer = optimizer
         self.ml_estimators = []
-        for i, inference_model in enumerate(self.candidate_models):
-            # kwargs_i = dict([(key, value[i]) for (key, value) in kwargs.items()])
-            ml_estimator = MLE(inference_model=inference_model, data=self.data,
-                               random_state=self.random_state, x0=None, nopt=None, optimizer=self.optimizer)
-            self.ml_estimators.append(ml_estimator)
+        self._initialize_ml_estimators()
 
         # Initialize the outputs
         self.criterion_values = [None, ] * self.models_number
         self.penalty_terms = [None, ] * self.models_number
         self.probabilities = [None, ] * self.models_number
 
-
-
         # Run the model selection procedure
-        if (nopt is not None) or (x0 is not None):
-            self.run(nopt=nopt, x0=x0)
+        if (optimizations_number is not None) or (initial_guess is not None):
+            self.run(optimizations_number=optimizations_number, initial_guess=initial_guess)
 
-    def run(self, nopt=1, x0=None):
+    def _initialize_ml_estimators(self):
+        for i, inference_model in enumerate(self.candidate_models):
+            ml_estimator = MLE(inference_model=inference_model, data=self.data,
+                               random_state=self.random_state, initial_guess=None,
+                               optimization_number=None,
+                               optimizer=self.optimizer)
+            self.ml_estimators.append(ml_estimator)
+
+    def run(self, optimizations_number: PositiveInteger = 1, initial_guess=None):
         """
         Run the model selection procedure, i.e. compute criterion value for all models.
 
@@ -136,28 +139,31 @@ class InformationModelSelection:
             `x0` is not provided. Default is 1. See ``MLEstimation`` class.
 
         """
-        # Check inputs x0, nopt
-        if isinstance(nopt, int) or nopt is None:
-            nopt = [nopt] * self.models_number
-        if not (isinstance(nopt, list) and len(nopt) == self.models_number):
-            raise ValueError('UQpy: nopt should be an int or list of length models_number')
-        if x0 is None:
-            x0 = [None] * self.models_number
-        if not (isinstance(x0, list) and len(x0) == self.models_number):
-            raise ValueError('UQpy: x0 should be a list of length models_number (or None).')
+        initial_guess, optimizations_number = self._check_input_data(initial_guess, optimizations_number)
 
         # Loop over all the models
         for i, (inference_model, ml_estimator) in enumerate(zip(self.candidate_models, self.ml_estimators)):
             # First evaluate ML estimate for all models, do several iterations if demanded
-            ml_estimator.run(nopt=nopt[i], x0=x0[i])
+            ml_estimator.run(optimizations_number=optimizations_number[i], initial_guess=initial_guess[i])
 
             # Then minimize the criterion
-            self.criterion_values[i], self.penalty_terms[i] = self._compute_info_criterion(
+            self.criterion_values[i], self.penalty_terms[i] = self._minimize_info_criterion(
                 criterion=self.criterion, data=self.data, inference_model=inference_model,
                 max_log_like=ml_estimator.max_log_like, return_penalty=True)
 
         # Compute probabilities from criterion values
         self.probabilities = self._compute_probabilities(self.criterion_values)
+
+    def _check_input_data(self, initial_guess, optimizations_number):
+        if isinstance(optimizations_number, int) or optimizations_number is None:
+            optimizations_number = [optimizations_number] * self.models_number
+        if not (isinstance(optimizations_number, list) and len(optimizations_number) == self.models_number):
+            raise ValueError('UQpy: nopt should be an int or list of length models_number')
+        if initial_guess is None:
+            initial_guess = [None] * self.models_number
+        if not (isinstance(initial_guess, list) and len(initial_guess) == self.models_number):
+            raise ValueError('UQpy: x0 should be a list of length models_number (or None).')
+        return initial_guess, optimizations_number
 
     def sort_models(self):
         """
@@ -179,7 +185,8 @@ class InformationModelSelection:
         self.probabilities = [self.probabilities[i] for i in sort_idx]
 
     @staticmethod
-    def _compute_info_criterion(criterion, data, inference_model, max_log_like, return_penalty=False):
+    def _minimize_info_criterion(criterion: InformationTheoreticCriterion, data, inference_model,
+                                 max_log_like, return_penalty=False):
         """
         Compute the criterion value for a given model, given a max_log_likelihood value.
 
@@ -217,12 +224,10 @@ class InformationModelSelection:
 
         n_params = inference_model.parameters_number
         number_of_data = len(data)
-        penalty_term = InformationTheoreticCriterion.penalty_terms[criterion](number_of_data, n_params)
+        penalty_term = penalty_terms[criterion.name](number_of_data, n_params)
         if return_penalty:
             return -2 * max_log_like + penalty_term, penalty_term
         return -2 * max_log_like + penalty_term
-
-
 
     @staticmethod
     def _compute_probabilities(criterion_values):

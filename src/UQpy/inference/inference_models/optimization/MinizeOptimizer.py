@@ -1,6 +1,6 @@
 from scipy.optimize import minimize
 
-from UQpy.inference.inference_models.baseclass.Optimizer import Optimizer
+from UQpy.inference.inference_models.optimization.Optimizer import Optimizer
 
 
 class MinimizeOptimizer(Optimizer):

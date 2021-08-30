@@ -1,10 +1,14 @@
 import logging
+from typing import Union
 
 import numpy as np
+from beartype import beartype
 
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
-from UQpy.inference.inference_models.baseclass.Optimizer import Optimizer
+from UQpy.inference.inference_models.optimization.Optimizer import Optimizer
 from UQpy.inference.inference_models.optimization.MinizeOptimizer import MinimizeOptimizer
+from UQpy.utilities.Utilities import process_random_state
+from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
 class MLE:
@@ -63,35 +67,31 @@ class MLE:
     """
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
-
-    def __init__(self, inference_model, data, nopt=None, x0=None,
-                 optimizer=MinimizeOptimizer(), random_state=None):
+    @beartype
+    def __init__(self,
+                 inference_model: InferenceModel,
+                 data: np.ndarray,
+                 optimization_number: Union[None, int] = None,
+                 initial_guess=None,
+                 optimizer: Optimizer = MinimizeOptimizer(),
+                 random_state=None):
 
         # Initialize variables
         self.inference_model = inference_model
-        if not isinstance(inference_model, InferenceModel):
-            raise TypeError('UQpy: Input inference_model should be of type InferenceModel')
         self.data = data
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        self.random_state = process_random_state(random_state)
         self.logger = logging.getLogger(__name__)
-        if (optimizer is None) or (not isinstance(optimizer, Optimizer)):
-            raise TypeError('UQpy: Input optimizer should be None (set to scipy.optimize.minimize) or a callable.')
-
         self.optimizer = optimizer
-
         self.mle = None
         self.max_log_like = None
         self.logger.info('UQpy: Initialization of MLEstimation object completed.')
 
         # Run the optimization procedure
-        if (nopt is not None) or (x0 is not None):
-            self.run(nopt=nopt, x0=x0)
+        if (optimization_number is not None) or (initial_guess is not None):
+            self.run(optimizations_number=optimization_number, initial_guess=initial_guess)
 
-    def run(self, nopt=1, x0=None):
+    @beartype
+    def run(self, optimizations_number: PositiveInteger = 1, initial_guess=None):
         """
         Run the maximum likelihood estimation procedure.
 
@@ -120,57 +120,61 @@ class MLE:
         self.logger.info('UQpy: Evaluating maximum likelihood estimate for inference model '
                          + self.inference_model.name)
 
-        # Case 3: check if the distribution pi has a fit method, can be used for MLE. If not, use optimization below.
-        if hasattr(self.inference_model, 'distributions') and self.inference_model.distributions is not None\
-                and hasattr(self.inference_model.distributions, 'fit'):
-            if not (isinstance(nopt, int) and nopt >= 1):
-                raise ValueError('UQpy: nopt should be an integer >= 1.')
-            for _ in range(nopt):
-                self.inference_model.distributions.update_parameters(
-                    **{key: None for key in self.inference_model.list_params})
-                mle_dict = self.inference_model.distributions.fit(data=self.data)
-                mle_tmp = np.array([mle_dict[key] for key in self.inference_model.list_params])
-                max_log_like_tmp = self.inference_model.evaluate_log_likelihood(
-                    params=mle_tmp[np.newaxis, :], data=self.data)[0]
-                # Save result
-                if self.mle is None:
-                    self.mle = mle_tmp
-                    self.max_log_like = max_log_like_tmp
-                elif max_log_like_tmp > self.max_log_like:
-                    self.mle = mle_tmp
-                    self.max_log_like = max_log_like_tmp
+        use_distribution_fit = hasattr(self.inference_model, 'distributions') and \
+                               self.inference_model.distributions is not None and \
+                               hasattr(self.inference_model.distributions, 'fit')
 
-        # Otherwise run optimization
+        if use_distribution_fit:
+            self._run_distribution_fit(optimizations_number)
         else:
-            if x0 is None:
-                if not (isinstance(nopt, int) and nopt >= 1):
-                    raise ValueError('UQpy: nopt should be an integer >= 1.')
-                from UQpy.distributions import Uniform
-                x0 = Uniform().rvs(
-                    nsamples=nopt * self.inference_model.parameters_number, random_state=self.random_state).reshape(
-                    (nopt, self.inference_model.parameters_number))
-                if self.optimizer.bounds is not None:
-                    x0 = self.optimizer.bounds[:, 0].reshape((1, -1)) \
-                         + (self.optimizer.bounds[:, 1] - self.optimizer.bounds[:, 0]).reshape((1, -1)) * x0
-            else:
-                x0 = np.atleast_2d(x0)
-                if x0.shape[1] != self.inference_model.parameters_number:
-                    raise ValueError('UQpy: Wrong dimensions in x0')
-            for x0_ in x0:
-                res = self.optimizer.optimize(self._evaluate_func_to_minimize, x0_)
-                mle_tmp = res.x
-                max_log_like_tmp = (-1.) * res.fun
-                # Save result
-                if self.mle is None:
-                    self.mle = mle_tmp
-                    self.max_log_like = max_log_like_tmp
-                elif max_log_like_tmp > self.max_log_like:
-                    self.mle = mle_tmp
-                    self.max_log_like = max_log_like_tmp
+            self._run_optimization(initial_guess, optimizations_number)
 
-            self.logger.info('UQpy: ML estimation completed.')
+    def _run_distribution_fit(self, optimizations_number):
+        for _ in range(optimizations_number):
+            self.inference_model.distributions.update_parameters(
+                **{key: None for key in self.inference_model.list_params})
+            mle_dict = self.inference_model.distributions.fit(data=self.data)
+            mle_tmp = np.array([mle_dict[key] for key in self.inference_model.list_params])
+            max_log_like_tmp = self.inference_model.evaluate_log_likelihood(
+                params=mle_tmp[np.newaxis, :], data=self.data)[0]
+            # Save result
+            if self.mle is None:
+                self.mle = mle_tmp
+                self.max_log_like = max_log_like_tmp
+            elif max_log_like_tmp > self.max_log_like:
+                self.mle = mle_tmp
+                self.max_log_like = max_log_like_tmp
 
-    def _evaluate_func_to_minimize(self, one_param):
+    def _run_optimization(self, initial_guess, optimizations_number):
+        if initial_guess is None:
+            from UQpy.distributions import Uniform
+            initial_guess = Uniform().rvs(
+                nsamples=optimizations_number * self.inference_model.parameters_number,
+                random_state=self.random_state) \
+                .reshape((optimizations_number, self.inference_model.parameters_number))
+            if self.optimizer.bounds is not None:
+                initial_guess = self.optimizer.bounds[:, 0].reshape((1, -1)) \
+                                + (self.optimizer.bounds[:, 1] - self.optimizer.bounds[:, 0]).reshape(
+                    (1, -1)) * initial_guess
+        else:
+            initial_guess = np.atleast_2d(initial_guess)
+            if initial_guess.shape[1] != self.inference_model.parameters_number:
+                raise ValueError('UQpy: Wrong dimensions in x0')
+        for x0_ in initial_guess:
+            res = self.optimizer.optimize(self._evaluate_func_to_minimize, x0_)
+            mle_tmp = res.x
+            max_log_like_tmp = (-1.) * res.fun
+            # Save result
+            if self.mle is None:
+                self.mle = mle_tmp
+                self.max_log_like = max_log_like_tmp
+            elif max_log_like_tmp > self.max_log_like:
+                self.mle = mle_tmp
+                self.max_log_like = max_log_like_tmp
+        self.logger.info('UQpy: ML estimation completed.')
+
+    @beartype
+    def _evaluate_func_to_minimize(self, one_param: np.ndarray):
         """
         Compute negative log likelihood for one parameter vector.
 
