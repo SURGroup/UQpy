@@ -9,9 +9,10 @@ from UQpy.distributions.baseclass import Distribution
 from UQpy.utilities.Utilities import *
 from UQpy.stochastic_process.supportive import inverse_wiener_khinchin_transform, wiener_khinchin_transform, \
     scaling_correlation_function
+from UQpy.utilities.NoPublicConstructor import NoPublicConstructor
 
 
-class Translation:
+class Translation(metaclass=NoPublicConstructor):
     """
     A class to translate Gaussian Stochastic Processes to non-Gaussian Stochastic Processes
 
@@ -77,29 +78,15 @@ class Translation:
                  frequency_intervals_number: int,
                  power_spectrum_gaussian: Union[list, np.ndarray] = None,
                  correlation_function_gaussian: Union[list, np.ndarray] = None,
-                 samples_gaussian: Union[list, np.ndarray] = None):
+                 samples_gaussian: Union[None, list, np.ndarray] = None):
         self.logger = logging.getLogger(__name__)
         self.distributions = distributions
         self.time_interval = time_interval
         self.frequency_interval = frequency_interval
         self.number_time_intervals = time_intervals_number
         self.number_frequency_intervals = frequency_intervals_number
-        if correlation_function_gaussian is None and power_spectrum_gaussian is None:
-            self.logger.info('Either the Power Spectrum or the Autocorrelation function should be specified')
-        if correlation_function_gaussian is None:
-            self.power_spectrum_gaussian = power_spectrum_gaussian
-            self.correlation_function_gaussian = wiener_khinchin_transform(power_spectrum_gaussian, np.arange(0,
-                                                                           self.number_frequency_intervals) *
-                                                                           self.frequency_interval,
-                                                                           np.arange(0, self.number_time_intervals) *
-                                                                           self.time_interval)
-        elif power_spectrum_gaussian is None:
-            self.correlation_function_gaussian = correlation_function_gaussian
-            self.power_spectrum_gaussian = inverse_wiener_khinchin_transform(correlation_function_gaussian, np.arange(0,
-                                                                             self.number_frequency_intervals) *
-                                                                             self.frequency_interval,
-                                                                             np.arange(0, self.number_time_intervals) *
-                                                                             self.time_interval)
+        self.power_spectrum_gaussian = power_spectrum_gaussian
+        self.correlation_function_gaussian = correlation_function_gaussian
         self.shape = self.correlation_function_gaussian.shape
         self.dim = len(self.correlation_function_gaussian.shape)
         if samples_gaussian is not None:
@@ -108,13 +95,46 @@ class Translation:
             self.samples_non_gaussian = self._translate_gaussian_samples().reshape(self.samples_shape)
         self.correlation_function_non_gaussian, self.scaled_correlation_function_non_gaussian = \
             self._autocorrelation_distortion()
-        self.power_spectrum_non_gaussian = inverse_wiener_khinchin_transform(self.correlation_function_non_gaussian,
-                                                                             np.arange(0,
-                                                                                       self.number_frequency_intervals)
-                                                                             * self.frequency_interval,
-                                                                             np.arange(0,
-                                                                                       self.number_time_intervals)
-                                                                             * self.time_interval)
+        self.power_spectrum_non_gaussian = \
+            inverse_wiener_khinchin_transform(self.correlation_function_non_gaussian,
+                                              np.arange(0, self.number_frequency_intervals) * self.frequency_interval,
+                                              np.arange(0, self.number_time_intervals) * self.time_interval)
+
+    @classmethod
+    @beartype
+    def create_with_correlation_function(cls,
+                                         distributions: Union[Distribution, List[Distribution]],
+                                         time_interval: float,
+                                         frequency_interval: float,
+                                         time_intervals_number: int,
+                                         frequency_intervals_number: int,
+                                         correlation_function_gaussian: Union[list, np.ndarray],
+                                         samples_gaussian: Union[None, list, np.ndarray] = None):
+        power_spectrum_gaussian = \
+            inverse_wiener_khinchin_transform(correlation_function_gaussian,
+                                              np.arange(0, frequency_intervals_number) * frequency_interval,
+                                              np.arange(0, time_intervals_number) * time_interval)
+        return cls._create(distributions, time_interval, frequency_interval, time_intervals_number,
+                           frequency_intervals_number, power_spectrum_gaussian, correlation_function_gaussian,
+                           samples_gaussian)
+
+    @classmethod
+    @beartype
+    def create_with_power_spectrum(cls,
+                                   distributions: Union[Distribution, List[Distribution]],
+                                   time_interval: float,
+                                   frequency_interval: float,
+                                   time_intervals_number: int,
+                                   frequency_intervals_number: int,
+                                   power_spectrum_gaussian: Union[list, np.ndarray] = None,
+                                   samples_gaussian: Union[None, list, np.ndarray] = None):
+        correlation_function_gaussian = \
+            wiener_khinchin_transform(power_spectrum_gaussian,
+                                      np.arange(0, frequency_intervals_number) * frequency_interval,
+                                      np.arange(0, time_intervals_number) * time_interval)
+        return cls._create(distributions, time_interval, frequency_interval, time_intervals_number,
+                           frequency_intervals_number, power_spectrum_gaussian, correlation_function_gaussian,
+                           samples_gaussian)
 
     def _translate_gaussian_samples(self):
         standard_deviation = np.sqrt(self.correlation_function_gaussian[0])

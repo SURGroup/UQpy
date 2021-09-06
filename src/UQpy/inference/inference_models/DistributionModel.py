@@ -38,8 +38,6 @@ class DistributionModel(InferenceModel):
                     raise AttributeError('UQpy: Input prior should have a log_pdf or pdf method.')
                 self.prior.log_pdf = lambda x: np.log(self.prior.pdf(x))
 
-
-
     def evaluate_log_likelihood(self, params, data):
         log_like_values = []
         for params_ in params:

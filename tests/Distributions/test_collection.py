@@ -14,7 +14,7 @@ def test_cauchy():
 
 
 def test_chi_square():
-    assert np.round(ChiSquare(degrees_of_freedom=5.).cdf(x=0.8), 3) == 0.023
+    assert np.round(ChiSquare(df=5.).cdf(x=0.8), 3) == 0.023
 
 
 def test_exponential():
@@ -77,31 +77,31 @@ def test_truncated_normal():
 
 
 def test_multinomial_1():
-    assert Multinomial(trials_number=5, trial_probability=[0.2, 0.3, 0.5]).pmf(x=[1, 1, 3]) == 0.15
+    assert Multinomial(n=5, p=[0.2, 0.3, 0.5]).pmf(x=[1, 1, 3]) == 0.15
 
 
 def test_multinomial_2():
-    assert np.round(Multinomial(trials_number=5, trial_probability=[0.2, 0.3, 0.5]).log_pmf(x=[1, 1, 3]), 3) == -1.897
+    assert np.round(Multinomial(n=5, p=[0.2, 0.3, 0.5]).log_pmf(x=[1, 1, 3]), 3) == -1.897
 
 
 def test_multinomial_3():
-    samples = Multinomial(trials_number=5, trial_probability=[0.2, 0.3, 0.5]).rvs(nsamples=2, random_state=123)
+    samples = Multinomial(n=5, p=[0.2, 0.3, 0.5]).rvs(nsamples=2, random_state=123)
     assert np.all(samples == np.array([[1, 1, 3], [0, 2, 3]]))
 
 
 def test_multinomial_4():
-    multinomial = Multinomial(trials_number=5, trial_probability=[0.2, 0.3, 0.5])
+    multinomial = Multinomial(n=5, p=[0.2, 0.3, 0.5])
     moments = multinomial.moments(moments2return='m')
     assert np.all(moments == [1., 1.5, 2.5])
 
 
 def test_multinomial_5():
-    cov = Multinomial(trials_number=5, trial_probability=[0.2, 0.3, 0.5]).moments(moments2return='v')
+    cov = Multinomial(n=5, p=[0.2, 0.3, 0.5]).moments(moments2return='v')
     assert np.all(np.round(cov, 2) == np.array([[0.80, -0.30, -0.50], [-0.30, 1.05, -0.75], [-0.50, -0.75, 1.25]]))
 
 
 def test_multinomial_6():
-    moments = Multinomial(trials_number=5, trial_probability=[0.2, 0.3, 0.5]).moments(moments2return='mv')
+    moments = Multinomial(n=5, p=[0.2, 0.3, 0.5]).moments(moments2return='mv')
     true_values = (np.array([1., 1.5, 2.5]),
                    np.array([[0.80, -0.30, -0.50], [-0.30, 1.05, -0.75], [-0.50, -0.75, 1.25]]))
     assert np.all(moments[0] == true_values[0]) and np.all(np.round(moments[1], 2) == true_values[1])
@@ -167,13 +167,13 @@ def test_gumbel_2():
 
 # Check JointInd and JointCopula
 
-marginals = [Normal(loc=2., scale=2.), Lognormal(s=1., location=0., scale=np.exp(1))]
+marginals = [Normal(loc=2., scale=2.), Lognormal(s=1., loc=0., scale=np.exp(1))]
 dist_joint = JointIndependent(marginals=marginals)
 dist_joint_copula = JointCopula(marginals=marginals, copula=Gumbel(theta=2.))
 
 
 def test_joint_ind_1():
-    marginals_ = [Normal(loc=2., scale=2.), Lognormal(s=1., location=0., scale=np.exp(1))]
+    marginals_ = [Normal(loc=2., scale=2.), Lognormal(s=1., loc=0., scale=np.exp(1))]
     dist_joint_ = JointIndependent(marginals=marginals_)
     dist_joint_.update_parameters(loc_0=3.)
     assert dist_joint_.get_parameters()['loc_0'] == 3.
@@ -204,15 +204,15 @@ def test_joint_ind_6():
 
 
 def test_joint_ind_7():
-    marginals_ = [Normal(loc=None, scale=2.), Lognormal(s=1., location=0., scale=np.exp(1))]
+    marginals_ = [Normal(loc=None, scale=2.), Lognormal(s=1., loc=0., scale=np.exp(1))]
     dist_joint_ = JointIndependent(marginals=marginals_)
     data = np.array([[-0.17126121, 0.91793325], [3.99469089, 7.36946747], [2.565957, 3.60736828]])
     mle_fit = dist_joint_.fit(data=data)
-    assert np.round(mle_fit['location_0'], 3) == 2.130
+    assert np.round(mle_fit['loc_0'], 3) == 2.130
 
 
 def test_joint_copula_1():
-    marginals_ = [Normal(loc=2., scale=2.), Lognormal(s=1., location=0., scale=np.exp(1))]
+    marginals_ = [Normal(loc=2., scale=2.), Lognormal(s=1., loc=0., scale=np.exp(1))]
     dist_joint_ = JointCopula(marginals=marginals_, copula=Gumbel(theta=3.))
     dist_joint_.update_parameters(theta_c=2.)
     assert dist_joint_.get_parameters()['theta_c'] == 2.

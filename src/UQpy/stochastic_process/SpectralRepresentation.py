@@ -102,12 +102,12 @@ class SpectralRepresentationMethod:
             frequency_intervals_number = [frequency_intervals_number]
         self.time_interval = np.array(time_interval)
         self.frequency_interval = np.array(frequency_interval)
-        self.number_time_intervals = np.array(time_intervals_number)
-        self.number_frequency_intervals = np.array(frequency_intervals_number)
+        self.time_intervals_number = np.array(time_intervals_number)
+        self.frequency_intervals_number = np.array(frequency_intervals_number)
         self.samples_number = samples_number
 
         # Error checks
-        t_u = 2 * np.pi / (2 * self.number_frequency_intervals * self.frequency_interval)
+        t_u = 2 * np.pi / (2 * self.frequency_intervals_number * self.frequency_interval)
         if (self.time_interval > t_u).any():
             raise RuntimeError('UQpy: Aliasing might occur during execution')
 
@@ -117,14 +117,24 @@ class SpectralRepresentationMethod:
 
         self.samples = None
         self.number_of_variables = None
-        self.number_of_dimensions = len(self.number_frequency_intervals)
+        self.number_of_dimensions = len(self.frequency_intervals_number)
         self.phi = None
 
         if self.number_of_dimensions == len(self.power_spectrum.shape):
-            self.case = UnivariateStochasticProcess()
+            self.case = UnivariateStochasticProcess(self.number_of_variables,
+                                                    self.number_of_dimensions,
+                                                    self.frequency_intervals_number,
+                                                    self.time_intervals_number,
+                                                    self.power_spectrum,
+                                                    self.frequency_interval)
         else:
             self.number_of_variables = self.power_spectrum.shape[0]
-            self.case = MultivariateStochasticProcess()
+            self.case = MultivariateStochasticProcess(self.number_of_variables,
+                                                      self.number_of_dimensions,
+                                                      self.frequency_intervals_number,
+                                                      self.time_intervals_number,
+                                                      self.power_spectrum,
+                                                      self.frequency_interval)
 
         # Run Spectral Representation Method
         if self.samples_number is not None:
@@ -159,9 +169,9 @@ class SpectralRepresentationMethod:
         samples = None
         phi = None
 
-        samples = self.case.calculate_samples()
+        samples = self.case.calculate_samples(samples_number)
 
-        if self.samples is None:
+        if samples is None:
             self.samples = samples
             self.phi = phi
         else:

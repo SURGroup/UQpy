@@ -1,12 +1,11 @@
 import logging
-from typing import Annotated
 
 from beartype import beartype
-from beartype.vale import Is
 
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
-import numpy as np
+
+from UQpy.sampling.input_data.MmhInput import MmhInput
 from UQpy.utilities.ValidationTypes import *
 
 
@@ -41,32 +40,21 @@ class ModifiedMetropolisHastings(MCMC):
     """
     @beartype
     def __init__(self,
-                 pdf_target=None,
-                 log_pdf_target=None,
-                 args_target=None,
-                 burn_length: Annotated[int: Is[lambda x: x >= 0]] = 0,
-                 jump: PositiveInteger = 1,
-                 dimension: int = None,
-                 seed=None,
-                 save_log_pdf: bool = False,
-                 concatenate_chains: bool = True,
+                 mmh_input: MmhInput,
                  samples_number: PositiveInteger = None,
-                 samples_number_per_chain: PositiveInteger = None,
-                 proposal=None,
-                 proposal_is_symmetric: bool = False,
-                 random_state: RandomStateType = None,
-                 chains_number: int = None):
+                 samples_number_per_chain: PositiveInteger = None):
 
-        super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
-                         dimension=dimension, seed=seed, burn_length=burn_length, jump=jump, save_log_pdf=save_log_pdf,
-                         concatenate_chains=concatenate_chains,  random_state=random_state,
-                         chains_number=chains_number)
+        super().__init__(pdf_target=mmh_input.pdf_target, log_pdf_target=mmh_input.log_pdf_target,
+                         args_target=mmh_input.args_target, dimension=mmh_input.dimension,
+                         seed=mmh_input.seed, burn_length=mmh_input.burn_length, jump=mmh_input.jump,
+                         save_log_pdf=mmh_input.save_log_pdf, concatenate_chains=mmh_input.concatenate_chains,
+                         random_state=mmh_input.random_state, chains_number=mmh_input.chains_number)
 
         self.logger = logging.getLogger(__name__)
         # If proposal is not provided: set it as a list of standard gaussians
         from UQpy.distributions import Normal
-        self.proposal = proposal
-        self.proposal_is_symmetric = proposal_is_symmetric
+        self.proposal = mmh_input.proposal
+        self.proposal_is_symmetric = mmh_input.proposal_is_symmetric
 
         # set default proposal
         if self.proposal is None:

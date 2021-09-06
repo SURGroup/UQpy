@@ -89,7 +89,7 @@ class BayesModelSelection:
                  prior_probabilities=None,
                  method_evidence_computation: MethodEvidence = MethodEvidence.HARMONIC_MEAN,
                  samples_number: List[PositiveInteger] = None,
-                 samples_number_per_chain: List[PositiveInteger] = None):
+                 samples_per_chain_number: List[PositiveInteger] = None):
 
         self.candidate_models = candidate_models
         self.models_number = len(candidate_models)
@@ -97,12 +97,6 @@ class BayesModelSelection:
         self.method_evidence_computation = method_evidence_computation
         self.sampling_classes = sampling_class_inputs
         self.logger = logging.getLogger(__name__)
-
-        # self.random_state = random_state
-        # if isinstance(self.random_state, int):
-        #     self.random_state = np.random.RandomState(self.random_state)
-        # elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-        #     raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if prior_probabilities is None:
             self.prior_probabilities = [1. / len(candidate_models) for _ in candidate_models]
@@ -118,8 +112,8 @@ class BayesModelSelection:
         self.probabilities = [0.] * self.models_number
 
         # Run the model selection procedure
-        if samples_number is not None or samples_number_per_chain is not None:
-            self.run(samples_number=samples_number, samples_number_per_chain=samples_number_per_chain)
+        if samples_number is not None or samples_per_chain_number is not None:
+            self.run(samples_number=samples_number, samples_number_per_chain=samples_per_chain_number)
 
     def _create_bayes_estimators(self, candidate_models, sampling_classes):
         if len(candidate_models) != len(sampling_classes):
@@ -135,6 +129,7 @@ class BayesModelSelection:
                 bayes_estimator = BayesParameterEstimation \
                     .create_with_importance_sampling(inference_model, self.data, sampling_input)
             else:
+                sampling_input.dimension = inference_model.parameters_number
                 bayes_estimator = BayesParameterEstimation \
                     .create_with_mcmc_sampling(sampling_input, inference_model, self.data)
             self.bayes_estimators.append(bayes_estimator)

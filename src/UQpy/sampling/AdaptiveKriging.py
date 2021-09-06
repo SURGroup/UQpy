@@ -4,7 +4,7 @@ from typing import Union, List
 import numpy as np
 from beartype import beartype
 
-from UQpy import RunModel
+from UQpy.RunModel import RunModel
 from UQpy.distributions.baseclass import Distribution
 from UQpy.sampling.LatinHypercubeSampling import LatinHypercubeSampling
 from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import LearningFunction
@@ -244,7 +244,7 @@ class AdaptiveKriging:
                 random_criterion = Random(random_state=self.random_state)
                 latin_hypercube_sampling = \
                     LatinHypercubeSampling(distributions=self.dist_object, samples_number=2,
-                                           verbose=True, criterion=random_criterion)
+                                           criterion=random_criterion)
                 self.samples = latin_hypercube_sampling.samples
                 self.runmodel_object.run(samples=self.samples)
 
@@ -267,7 +267,7 @@ class AdaptiveKriging:
             random_criterion = Random(random_state=self.random_state)
             lhs = \
                 LatinHypercubeSampling(distributions=self.dist_object, samples_number=self.learning_samples_number,
-                                       verbose=True, criterion=random_criterion)
+                                       criterion=random_criterion)
 
             self.learning_set = lhs.samples.copy()
 
@@ -301,10 +301,10 @@ class AdaptiveKriging:
 
             # Exit the loop, if error criteria is satisfied
             if ind:
-                self.logger.info("UQpy: Learning stops at iteration: ", i)
+                self.logger.info("UQpy: Learning stops at iteration: %(iteration)s" % {'iteration': i})
                 break
 
-            self.logger.info("Iteration:", i)
+            self.logger.info("Iteration: %(iteration)s" % {'iteration': i})
 
         self.logger.info('UQpy: AKMCS complete')
 

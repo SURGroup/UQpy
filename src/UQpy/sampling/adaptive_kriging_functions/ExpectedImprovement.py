@@ -1,3 +1,5 @@
+from typing import Union
+
 from beartype import beartype
 
 from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import LearningFunction
@@ -53,7 +55,7 @@ class ExpectedImprovement(LearningFunction):
                 EIF learning function evaluated at the new sample points.
             """
     @beartype
-    def __init__(self, eif_stop: float = 0.01):
+    def __init__(self, eif_stop: Union[float, int] = 0.01):
         self.eif_stop = eif_stop
 
     def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):

@@ -1,17 +1,28 @@
 import logging
+from typing import Union, List
 
 import numpy as np
+from beartype import beartype
 
+from UQpy import RandomStateType, PositiveInteger
 from UQpy.utilities.strata.baseclass.Strata import Strata
 from UQpy.utilities.strata.StratificationCriterion import StratificationCriterion
+from UQpy.utilities.Utilities import calculate_gradient
 import scipy.stats as stats
 
 
 class Rectangular(Strata):
-    def __init__(self, strata_number=None, input_file=None, seeds=None, widths=None, random_state=None,
-                 stratification_criterion=StratificationCriterion.RANDOM):
+    @beartype
+    def __init__(self,
+                 strata_number: Union[PositiveInteger, List[PositiveInteger]] = None,
+                 input_file: str = None,
+                 seeds: Union[None, np.ndarray] = None,
+                 widths=None,
+                 random_state: RandomStateType = None,
+                 stratification_criterion: StratificationCriterion = StratificationCriterion.RANDOM):
         super().__init__(seeds=seeds, random_state=random_state)
 
+        self.gradients = None
         self.logger = logging.getLogger(__name__)
         self.input_file = input_file
         self.strata_number = strata_number
@@ -146,18 +157,41 @@ class Rectangular(Strata):
             s[i] = self.volume[i] ** 2
         return s
 
-    def calculate_gradient_strata_metrics(self, index, dy_dx):
-        dy_dx1 = dy_dx[:index]
+    def calculate_gradient_strata_metrics(self, index):
+        dy_dx1 = self.gradients[:index]
         stratum_variance = (1 / 12) * self.widths ** 2
         s = np.zeros(index)
         for i in range(index):
             s[i] = np.sum(dy_dx1[i, :] * stratum_variance[i, :] * dy_dx1[i, :]) * self.volume[i] ** 2
         return s
 
-    def estimate_gradient(self, index, samples_u01, training_points, qoi, max_train_size=None):
-        return super().estimate_gradient(np.atleast_2d(training_points),
-                                         np.atleast_2d(np.array(qoi)),
-                                         self.seeds + 0.5 * self.widths)
+    def estimate_gradient(self, surrogate, step_size, samples_number,
+                          index, samples_u01, training_points, qoi,
+                          max_train_size=None):
+        if self.gradients is None:
+            self.gradients = np.zeros((samples_number, np.size(training_points[1])))
+        if max_train_size is None or len(training_points) <= max_train_size or index == samples_u01.shape[0]:
+            # Use the entire sample set to train the surrogate model (more expensive option)
+            self.gradients[:index] = calculate_gradient(surrogate,
+                                                        step_size,
+                                                        np.atleast_2d(training_points),
+                                                        np.atleast_2d(np.array(qoi)),
+                                                        self.seeds + 0.5 * self.widths)
+        else:
+            # Use only max_train_size points to train the surrogate model (more economical option)
+            # Find the nearest neighbors to the most recently added point
+            from sklearn.neighbors import NearestNeighbors
+            knn = NearestNeighbors(n_neighbors=max_train_size)
+            knn.fit(np.atleast_2d(training_points))
+            neighbors = knn.kneighbors(np.atleast_2d(training_points[-1]), return_distance=False)
+
+            # Recompute the gradient only at the nearest neighbor points.
+            self.gradients[neighbors] = \
+                calculate_gradient(surrogate,
+                                   step_size,
+                                   np.squeeze(training_points[neighbors]),
+                                   np.array(qoi)[neighbors][0],
+                                   np.squeeze(self.seeds[neighbors] + 0.5 * self.widths[neighbors]))
 
     def update_strata_and_generate_samples(self, dimension, points_to_add, bins2break, samples_u01, random_state):
         new_points = np.zeros([points_to_add, dimension])
@@ -177,10 +211,10 @@ class Rectangular(Strata):
         if samples_u01[bin_, dir2break] < self.seeds[bin_, dir2break] + \
                 self.widths[bin_, dir2break]:
             self.seeds[-1, dir2break] = self.seeds[bin_, dir2break] + \
-                                                      self.widths[bin_, dir2break]
+                                        self.widths[bin_, dir2break]
         else:
             self.seeds[bin_, dir2break] = self.seeds[bin_, dir2break] + \
-                                                        self.widths[bin_, dir2break]
+                                          self.widths[bin_, dir2break]
 
         self.volume[bin_] = self.volume[bin_] / 2
         self.volume = np.append(self.volume, self.volume[bin_])

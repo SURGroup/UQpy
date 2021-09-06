@@ -1,4 +1,6 @@
 import numpy as np
+from beartype import beartype
+from scipy.linalg import cholesky
 
 
 class Decorrelate:
@@ -24,17 +26,11 @@ class Decorrelate:
         (:math:`\mathbf{C_Z}`).
 
     """
+    @beartype
     def __init__(self,
-                 samples_z,
-                 corr_z):
-
-        if samples_z is None:
-            raise ValueError("UQpy: An  array of samples must be provided.")
-        if corr_z is None:
-            raise ValueError("UQpy: A correlation matrix must be provided.")
-
+                 samples_z: np.ndarray,
+                 corr_z: np.ndarray):
         self.samples_z = samples_z
         self.corr_z = corr_z
-        from scipy.linalg import cholesky
         self.H = cholesky(self.corr_z, lower=True)
         self.samples_u = np.linalg.solve(self.H, samples_z.T.squeeze()).T

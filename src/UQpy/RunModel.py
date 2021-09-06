@@ -38,8 +38,12 @@ import platform
 import re
 import shutil
 import subprocess
+from typing import List
 
 import numpy as np
+from beartype import beartype
+
+from UQpy.utilities.ValidationTypes import *
 
 
 class RunModel:
@@ -255,11 +259,26 @@ class RunModel:
     #
     # Last
     # modified: 5 / 8 / 2020 by Michael D.Shields
-
-    def __init__(self, samples=None, model_script=None, model_object_name=None,
-                 input_template=None, var_names=None, output_script=None, output_object_name=None, ntasks=1,
-                 cores_per_task=1, nodes=1, cluster=False, resume=False, model_dir='Model_Runs',
-                 fmt=None, separator=', ', vec=True, delete_files=False, **kwargs):
+    @beartype
+    def __init__(self,
+                 samples=None,
+                 model_script: str = None,
+                 model_object_name: str = None,
+                 input_template: str = None,
+                 var_names: List[str] = None,
+                 output_script: str = None,
+                 output_object_name: str = None,
+                 ntasks: int = 1,
+                 cores_per_task: int = 1,
+                 nodes: int = 1,
+                 cluster: bool = False,
+                 resume: bool = False,
+                 model_dir: str = 'Model_Runs',
+                 fmt=None,
+                 separator: str = ', ',
+                 vec: bool=True,
+                 delete_files: bool=False,
+                 **kwargs):
 
         # Check the platform and build appropriate call to Python
         if platform.system() in ['Windows']:

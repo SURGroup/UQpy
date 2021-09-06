@@ -1,14 +1,20 @@
 import logging
-from typing import Union, List
-
+from typing import Union, List, Annotated
 from beartype import beartype
+from beartype.vale import Is
 
 from UQpy.distributions import *
 import numpy as np
 import scipy.stats as stats
+from UQpy.utilities.Utilities import nearest_psd, calculate_gauss_quadrature_2d
+from UQpy.utilities.Utilities import bi_variate_normal_pdf
+from scipy.linalg import cholesky
+from UQpy.utilities.ValidationTypes import PositiveInteger
 
+DistributionList = Annotated[list[Distribution], Is[lambda lst: all(
+    isinstance(item, Distribution) for item in lst)]]
 
-class NatafTransformation:
+class Nataf:
     """
     Transform random variables using the Nataf or Inverse Nataf transformation
 
@@ -116,34 +122,29 @@ class NatafTransformation:
     """
     @beartype
     def __init__(self,
-                 dist_object: Union[Distribution, List[Distribution]],
-                 samples_x: np.ndarray = None,
-                 samples_z: np. ndarray = None,
+                 distributions: Union[Distribution,DistributionList],
+                 samples_x: Union[None, np.ndarray] = None,
+                 samples_z: Union[None, np.ndarray] = None,
                  jacobian: bool = False,
-                 corr_z: np. ndarray = None,
-                 corr_x: np. ndarray = None,
-                 itam_beta: float = 1.0,
-                 itam_threshold1: float = 0.001,
-                 itam_threshold2: float = 0.1,
+                 corr_z: Union[None, np.ndarray] = None,
+                 corr_x: Union[None, np.ndarray] = None,
+                 itam_beta: Union[float, int] = 1.0,
+                 itam_threshold1: Union[float, int] = 0.001,
+                 itam_threshold2: Union[float, int] = 0.1,
                  itam_max_iter: int = 100):
-
-        if isinstance(dist_object, list):
-            self.dimension = len(dist_object)
-            for i in range(len(dist_object)):
-                if not isinstance(dist_object[i], (DistributionContinuous1D, JointIndependent)):
-                    raise TypeError('UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object '
-                                    'must be provided.')
+        self.dimension = 0
+        if isinstance(distributions, list):
+            for i in range(len(distributions)):
+                self.update_dimensions(distributions[i])
         else:
-            if not isinstance(dist_object, (DistributionContinuous1D, JointIndependent)):
-                raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
-
-        self.dist_object = dist_object
+            self.update_dimensions(distributions)
+        self.dist_object = distributions
         self.samples_x = samples_x
         self.samples_z = samples_z
         self.jacobian = jacobian
         self.jzx = None
         self.jxz = None
-        self.itam_max_iter = int(itam_max_iter)
+        self.itam_max_iter = itam_max_iter
         self.itam_beta = float(itam_beta)
         self.itam_threshold1 = float(itam_threshold1)
         self.itam_threshold2 = float(itam_threshold2)
@@ -156,7 +157,7 @@ class NatafTransformation:
             self.corr_x = corr_x
             if np.all(np.equal(self.corr_x, np.eye(self.dimension))):
                 self.corr_z = self.corr_x
-            elif all(isinstance(x, Normal) for x in dist_object):
+            elif all(isinstance(x, Normal) for x in distributions):
                 self.corr_z = self.corr_x
             else:
                 self.corr_z, self.itam_error1, self.itam_error2 = self.itam(self.dist_object, self.corr_x,
@@ -167,18 +168,20 @@ class NatafTransformation:
             self.corr_z = corr_z
             if np.all(np.equal(self.corr_z, np.eye(self.dimension))):
                 self.corr_x = self.corr_z
-            elif all(isinstance(x, Normal) for x in dist_object):
+            elif all(isinstance(x, Normal) for x in distributions):
                 self.corr_x = self.corr_z
             else:
                 self.corr_x = self.distortion_z2x(self.dist_object, self.corr_z)
 
-        from scipy.linalg import cholesky
         self.H = cholesky(self.corr_z, lower=True)
 
         if self.samples_x is not None or self.samples_z is not None:
             self.run(self.samples_x, self.samples_z, self.jacobian)
 
-    def run(self, samples_x=None, samples_z=None, jacobian=False):
+    @beartype
+    def run(self, samples_x: Union[None, np.ndarray] = None,
+            samples_z: Union[None, np.ndarray] = None,
+            jacobian: bool = False):
         """
         Execute the Nataf transformation or its inverse.
 
@@ -220,7 +223,13 @@ class NatafTransformation:
                 self.samples_x, self.jzx = self._transform_z2x(self.samples_z, jacobian=self.jacobian)
 
     @staticmethod
-    def itam(dist_object, corr_x,  itam_max_iter=100, itam_beta=1.0, itam_threshold1=0.001, itam_threshold2=0.01):
+    def itam(distributions: Union[DistributionContinuous1D, JointIndependent,
+                                  List[Union[DistributionContinuous1D, JointIndependent]]],
+             corr_x,
+             itam_max_iter: int = 100,
+             itam_beta: Union[float, int] = 1.0,
+             itam_threshold1: Union[float, int] = 0.001,
+             itam_threshold2: Union[float, int] = 0.01):
         """
         Calculate the correlation matrix :math:`\mathbf{C_Z}` of the standard normal random vector
         :math:`\mathbf{Z}` given the correlation matrix :math:`\mathbf{C_X}` of the random vector :math:`\mathbf{X}`
@@ -288,9 +297,6 @@ class NatafTransformation:
 
         """
 
-        if not isinstance(itam_max_iter, int):
-            itam_max_iter = int(itam_max_iter)
-
         # Initial Guess
         corr_z0 = corr_x
         corr_z = np.zeros_like(corr_z0)
@@ -306,8 +312,8 @@ class NatafTransformation:
 
         for k in range(itam_max_iter):
             error0 = itam_error1[k]
-            from UQpy.utilities.Utilities import nearest_psd
-            corr0 = NatafTransformation.distortion_z2x(dist_object, corr_z0, verbose)
+
+            corr0 = Nataf.distortion_z2x(distributions, corr_z0)
 
             max_ratio = np.amax(np.ones((len(corr_x), len(corr_x))) / abs(corr_z0))
 
@@ -335,7 +341,7 @@ class NatafTransformation:
         return corr_z, itam_error1, itam_error2
 
     @staticmethod
-    def distortion_z2x(dist_object, corr_z):
+    def distortion_z2x(distributions, corr_z):
         """
         This is a method to calculate the correlation matrix :math:`\mathbf{C_x}` of the random vector
         :math:`\mathbf{x}`  given the correlation matrix :math:`\mathbf{C_z}` of the standard normal random vector
@@ -371,78 +377,41 @@ class NatafTransformation:
         z_max = 8
         z_min = -z_max
         ng = 128
-        points, weights = np.polynomial.legendre.leggauss(ng)
-        points = - (0.5 * (points + 1) * (z_max - z_min) + z_min)
-        weights = weights * (0.5 * (z_max - z_min))
 
-        xi = np.tile(points, [ng, 1])
-        xi = xi.flatten(order='F')
-        eta = np.tile(points, ng)
-
-        first = np.tile(weights, ng)
-        first = np.reshape(first, [ng, ng])
-        second = np.transpose(first)
-
-        weights2d = first * second
-        w2d = weights2d.flatten()
-
-        def bivariate_normal(ksi, psi, rho):
-            return (1 / (2 * np.pi * np.sqrt(1 - rho ** 2)) *
-                    np.exp(-1 / (2 * (1 - rho ** 2)) *
-                    (ksi ** 2 - 2 * rho * ksi * psi + psi ** 2)))
+        eta, w2d, xi = calculate_gauss_quadrature_2d(ng, z_max, z_min)
 
         corr_x = np.ones_like(corr_z)
         logger.info('UQpy: Computing Nataf correlation distortion...')
-        from UQpy.distributions import JointIndependent
-        if isinstance(dist_object, JointIndependent):
-            if all(hasattr(m, 'moments') for m in dist_object.marginals) and \
-                    all(hasattr(m, 'icdf') for m in dist_object.marginals):
-                for i in range(len(dist_object.marginals)):
-                    i_cdf_i = dist_object.marginals[i].icdf
-                    mi = dist_object.marginals[i].moments()
-                    if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
-                        raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
-                    for j in range(i + 1, len(dist_object.marginals)):
-                        i_cdf_j = dist_object.marginals[j].icdf
-                        mj = dist_object.marginals[j].moments()
-                        if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
-                            raise RuntimeError(
-                                "UQpy: The marginal distributions need to have finite mean and variance.")
 
-                        tmp_f_xi = (i_cdf_j(np.atleast_2d(stats.norm.cdf(xi)).T) - mj[0] ** 2)
-                        tmp_f_eta = (i_cdf_i(np.atleast_2d(stats.norm.cdf(eta)).T) - mi[0] ** 2)
+        is_joint = isinstance(distributions, JointIndependent)
+        marginals = distributions.marginals if is_joint else distributions
+        corr_x = Nataf.calculate_corr_x(corr_x, corr_z, marginals, eta, w2d, xi, is_joint)
+        return corr_x
 
-                        phi2 = bivariate_normal(xi, eta, corr_z[i, j])
+    @staticmethod
+    def calculate_corr_x(corr_x, corr_z, marginals, eta, w2d, xi, is_joint):
+        if all(hasattr(m, 'moments') for m in marginals) and \
+                all(hasattr(m, 'icdf') for m in marginals):
+            for i in range(len(marginals)):
+                i_cdf_i = marginals[i].icdf
+                mi = marginals[i].moments()
+                if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
+                    raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
+                for j in range(i + 1, len(marginals)):
+                    i_cdf_j = marginals[j].icdf
+                    mj = marginals[j].moments()
+                    if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
+                        raise RuntimeError(
+                            "UQpy: The marginal distributions need to have finite mean and variance.")
+                    term1 = mj[0] ** 2 if is_joint else mj[0]
+                    term2 = mi[0] ** 2 if is_joint else mi[0]
+                    tmp_f_xi = (i_cdf_j(np.atleast_2d(stats.norm.cdf(xi)).T) - term1)
+                    tmp_f_eta = (i_cdf_i(np.atleast_2d(stats.norm.cdf(eta)).T) - term2)
 
-                        corr_x[i, j] = 1/(np.sqrt(mj[1]) * np.sqrt(mi[1])) * np.sum(tmp_f_xi * tmp_f_eta * w2d * phi2)
-                        corr_x[j, i] = corr_x[i, j]
+                    phi2 = bi_variate_normal_pdf(xi, eta, corr_z[i, j])
 
-        elif isinstance(dist_object, list):
-
-            if all(hasattr(m, 'moments') for m in dist_object) and \
-                    all(hasattr(m, 'icdf') for m in dist_object):
-                for i in range(len(dist_object)):
-                    i_cdf_i = dist_object[i].icdf
-                    mi = dist_object[i].moments()
-                    if not (np.isfinite(mi[0]) and np.isfinite(mi[1])):
-                        raise RuntimeError("UQpy: The marginal distributions need to have finite mean and variance.")
-
-                    for j in range(i + 1, len(dist_object)):
-                        i_cdf_j = dist_object[j].icdf
-                        mj = dist_object[j].moments()
-                        if not (np.isfinite(mj[0]) and np.isfinite(mj[1])):
-                            raise RuntimeError(
-                                "UQpy: The marginal distributions need to have finite mean and variance.")
-
-                        tmp_f_xi = (i_cdf_j(np.atleast_2d(stats.norm.cdf(xi)).T) - mj[0])
-                        tmp_f_eta = (i_cdf_i(np.atleast_2d(stats.norm.cdf(eta)).T) - mi[0])
-                        phi2 = bivariate_normal(xi, eta, corr_z[i, j])
-
-                        corr_x[i, j] = 1/(np.sqrt(mj[1]) * np.sqrt(mi[1])) * np.sum(tmp_f_xi * tmp_f_eta * w2d * phi2)
-                        corr_x[j, i] = corr_x[i, j]
-            else:
-                raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
-
+                    corr_x[i, j] = 1 / (np.sqrt(mj[1]) * np.sqrt(mi[1])) * np.sum(tmp_f_xi * tmp_f_eta * w2d * phi2)
+                    corr_x[j, i] = corr_x[i, j]
         return corr_x
 
     def _transform_x2z(self, samples_x, jacobian=False):
@@ -533,7 +502,6 @@ class NatafTransformation:
         """
 
         m, n = np.shape(samples_z)
-        from scipy.linalg import cholesky
         h = cholesky(self.corr_z, lower=True)
         # samples_z = (h @ samples_y.T).T
         samples_x = np.zeros_like(samples_z)
@@ -562,7 +530,8 @@ class NatafTransformation:
 
             return samples_x, jzx
 
-    def rvs(self, nsamples):
+    @beartype
+    def rvs(self, samples_number: PositiveInteger):
         """
         Generate realizations from the joint pdf of the random vector **X**.
 
@@ -577,13 +546,20 @@ class NatafTransformation:
             Random vector in the parameter space of shape ``(nsamples, dimension)``.
 
         """
-        from scipy.linalg import cholesky
         h = cholesky(self.corr_z, lower=True)
-        n = int(nsamples)
+        n = int(samples_number)
         m = np.size(self.dist_object)
-        y = np.random.randn(nsamples, m)
+        y = np.random.randn(samples_number, m)
         z = np.dot(h, y.T).T
         samples_x = np.zeros([n, m])
         for i in range(m):
             samples_x[:, i] = self.dist_object[i].icdf(stats.norm.cdf(z[:, i]))
         return samples_x
+
+    def update_dimensions(self, dist_object):
+        if isinstance(dist_object, DistributionContinuous1D):
+            self.dimension += 1
+        elif isinstance(dist_object, JointIndependent):
+            self.dimension += len(dist_object.marginals)
+        else:
+            raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')

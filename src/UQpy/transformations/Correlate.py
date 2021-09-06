@@ -1,5 +1,6 @@
 import numpy as np
 from beartype import beartype
+from scipy.linalg import cholesky
 
 
 class Correlate:
@@ -26,16 +27,9 @@ class Correlate:
     """
     @beartype
     def __init__(self,
-                 corr_z: np.ndarray = None,
-                 samples_u: np. ndarray = None):
-
-        if samples_u is None:
-            raise ValueError("UQpy: An  array of samples must be provided.")
-        if corr_z is None:
-            raise ValueError("UQpy: A correlation matrix must be provided.")
-
+                 samples_u: np.ndarray,
+                 corr_z: np.ndarray):
         self.samples_y = samples_u
         self.corr_z = corr_z
-        from scipy.linalg import cholesky
         self.H = cholesky(self.corr_z, lower=True)
         self.samples_z = (self.H @ samples_u.T).T

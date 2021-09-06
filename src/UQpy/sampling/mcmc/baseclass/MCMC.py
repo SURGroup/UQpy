@@ -110,14 +110,14 @@ class MCMC:
     # Last Modified: 10/05/20 by Audrey Olivier
     @beartype
     def __init__(self,
-                 dimension: int = None,
+                 dimension: Union[None, int] = None,
                  pdf_target=None,
                  log_pdf_target=None,
                  args_target=None,
                  seed=None,
-                 burn_length: Annotated[int: Is[lambda x: x >= 0]] = 0,
+                 burn_length: Annotated[int, Is[lambda x: x >= 0]] = 0,
                  jump: PositiveInteger = 1,
-                 chains_number: int = None,
+                 chains_number: Union[None, int] = None,
                  save_log_pdf: bool = False,
                  concatenate_chains: bool = True,
                  random_state: RandomStateType = None):
@@ -390,7 +390,7 @@ class MCMC:
                         ))
                 evaluate_log_pdf = (lambda x: np.sum(
                     [np.log(np.maximum(pdf_[i](x[:, i, np.newaxis], *args[i]), 10**(-320)*np.ones((x.shape[0],))))
-                     for i in range(len(log_pdf_))]))
+                     for i in range(len(pdf_))]))
             else:
                 raise TypeError('UQpy: pdf_target must be a callable or list of callables')
         else:

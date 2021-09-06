@@ -5,6 +5,7 @@ from UQpy.RunModel import RunModel
 from UQpy.distributions.collection.Gamma import Gamma
 from UQpy.distributions.collection.Uniform import Uniform
 import numpy as np
+import shutil
 
 def test_kriging_constant_exponential():
     from UQpy.surrogates.kriging.regression_models.Constant import Constant
@@ -24,6 +25,8 @@ def test_kriging_constant_exponential():
     assert round(K.correlation_model_parameters[0], 5) == 3.99253
     assert round(K.correlation_model_parameters[1], 5) == 0.78878
 
+    shutil.rmtree(rmodel.model_dir)
+
 
 def test_kriging_linear_gaussian():
     from UQpy.surrogates.kriging.regression_models.Linear import Linear
@@ -42,6 +45,7 @@ def test_kriging_linear_gaussian():
     K.fit(samples=x.samples, values=rmodel.qoi_list)
     assert round(K.correlation_model_parameters[0], 3) == 52.625
     assert round(K.correlation_model_parameters[1], 3) == 3.027
+    shutil.rmtree(rmodel.model_dir)
 
 
 def test_kriging_quadratic_linear():
@@ -59,8 +63,9 @@ def test_kriging_quadratic_linear():
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
                 optimizations_number=20, correlation_model_parameters=[1, 1])
     K.fit(samples=x.samples, values=rmodel.qoi_list)
-    assert round(K.correlation_model_parameters[0], 3) == 3.601
-    assert round(K.correlation_model_parameters[1], 3) == 1.156
+    assert round(K.correlation_model_parameters[0], 3) == 12.44
+    assert round(K.correlation_model_parameters[1], 3) == 0.6
+    shutil.rmtree(rmodel.model_dir)
 
 
 def test_kriging_constant_spherical():
@@ -80,6 +85,7 @@ def test_kriging_constant_spherical():
     K.fit(samples=x.samples, values=rmodel.qoi_list)
     assert round(K.correlation_model_parameters[0], 3) == 2.315
     assert round(K.correlation_model_parameters[1], 3) == 0.536
+    shutil.rmtree(rmodel.model_dir)
 
 
 def test_kriging_constant_spline():
@@ -99,6 +105,7 @@ def test_kriging_constant_spline():
     K.fit(samples=x.samples, values=rmodel.qoi_list)
     assert round(K.correlation_model_parameters[0], 3) == 2.104
     assert round(K.correlation_model_parameters[1], 3) == 0.387
+    shutil.rmtree(rmodel.model_dir)
 
 
 def test_kriging_constant_cubic():
@@ -116,5 +123,6 @@ def test_kriging_constant_cubic():
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
                 optimizations_number=20, correlation_model_parameters=[1, 1])
     K.fit(samples=x.samples, values=rmodel.qoi_list)
-    assert round(K.correlation_model_parameters[0], 3) == 2.104
-    assert round(K.correlation_model_parameters[1], 3) == 0.387
+    assert round(K.correlation_model_parameters[0], 3) == 17.419
+    assert round(K.correlation_model_parameters[1], 3) == 0.275
+    shutil.rmtree(rmodel.model_dir)

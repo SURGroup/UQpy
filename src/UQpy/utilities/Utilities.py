@@ -17,6 +17,7 @@
 
 import numpy as np
 import scipy.stats as stats
+from UQpy.utilities.ValidationTypes import RandomStateType
 
 from UQpy.RunModel import RunModel
 
@@ -304,7 +305,7 @@ def gradient(runmodel_object=None, point=None, order='first', df_step=None):
         return d2u_dij
 
 
-def _bi_variate_normal_pdf(x1, x2, rho):
+def bi_variate_normal_pdf(x1, x2, rho):
     return (1 / (2 * np.pi * np.sqrt(1-rho**2)) *
             np.exp(-1/(2*(1-rho**2)) * (x1**2 - 2 * rho * x1 * x2 + x2**2)))
 
@@ -419,24 +420,59 @@ def correlation_distortion(dist_object, rho):
     n = 1024
     zmax = 8
     zmin = -zmax
-    points, weights = np.polynomial.legendre.leggauss(n)
-    points = - (0.5 * (points + 1) * (zmax - zmin) + zmin)
-    weights = weights * (0.5 * (zmax - zmin))
-
-    xi = np.tile(points, [n, 1])
-    xi = xi.flatten(order='F')
-    eta = np.tile(points, n)
-
-    first = np.tile(weights, n)
-    first = np.reshape(first, [n, n])
-    second = np.transpose(first)
-
-    weights2d = first * second
-    w2d = weights2d.flatten()
+    eta, w2d, xi = calculate_gauss_quadrature_2d(n, zmax, zmin)
     tmp_f_xi = dist_object.icdf(stats.norm.cdf(xi[:, np.newaxis]))
     tmp_f_eta = dist_object.icdf(stats.norm.cdf(eta[:, np.newaxis]))
     coef = tmp_f_xi * tmp_f_eta * w2d
-    phi2 = _bi_variate_normal_pdf(xi, eta, rho)
+    phi2 = bi_variate_normal_pdf(xi, eta, rho)
     rho_non = np.sum(coef * phi2)
     rho_non = (rho_non - dist_object.moments(moments2return='m') ** 2) / dist_object.moments(moments2return='v')
     return rho_non
+
+
+def calculate_gauss_quadrature_2d(n, zmax, zmin):
+    points, weights = np.polynomial.legendre.leggauss(n)
+    points = - (0.5 * (points + 1) * (zmax - zmin) + zmin)
+    weights = weights * (0.5 * (zmax - zmin))
+    xi = np.tile(points, [n, 1])
+    xi = xi.flatten(order='F')
+    eta = np.tile(points, n)
+    first = np.tile(weights, n)
+    first = np.reshape(first, [n, n])
+    second = np.transpose(first)
+    weights2d = first * second
+    w2d = weights2d.flatten()
+    return eta, w2d, xi
+
+
+def process_random_state(random_state: RandomStateType):
+    if isinstance(random_state, int):
+        return np.random.RandomState(random_state)
+    else:
+        return random_state
+
+
+def calculate_gradient(krig_object, step_size, x, y, xt):
+    """
+    Estimating gradients with a Kriging metamodel (surrogate).
+    **Inputs:**
+    * **x** (`ndarray`):
+        Samples in the training data.
+    * **y** (`ndarray`):
+        Function values evaluated at the samples in the training data.
+    * **xt** (`ndarray`):
+        Samples where gradients need to be evaluated.
+    **Outputs:**
+    * **gr** (`ndarray`):
+        First-order gradient evaluated at the points 'xt' using central difference.
+    """
+    if krig_object is not None:
+        krig_object.fit(x, y)
+        krig_object.nopt = 1
+        tck = krig_object.predict
+    else:
+        from scipy.interpolate import LinearNDInterpolator
+        tck = LinearNDInterpolator(x, y, fill_value=0).__call__
+
+    gr = gradient(point=xt, runmodel_object=tck, order='first', df_step=step_size)
+    return gr

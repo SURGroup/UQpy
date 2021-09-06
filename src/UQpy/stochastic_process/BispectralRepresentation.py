@@ -129,12 +129,7 @@ class BispectralRepresentation:
         if (self.time_interval > t_u).any():
             raise RuntimeError('UQpy: Aliasing might occur during execution')
 
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            np.random.seed(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
-
+        self.random_state = process_random_state(random_state)
         self.b_ampl = np.absolute(bispectrum)
         self.b_real = np.real(bispectrum)
         self.b_imag = np.imag(bispectrum)
@@ -232,7 +227,7 @@ class BispectralRepresentation:
         samples = samples[:, np.newaxis]
         return np.real(samples)
 
-    def run(self, samples_number):
+    def run(self, samples_number: PositiveInteger):
         """
         Execute the random sampling in the ``BSRM`` class.
 
@@ -255,12 +250,6 @@ class BispectralRepresentation:
             ``BSRM`` class.
 
         """
-
-        if samples_number is None:
-            raise ValueError('UQpy: Stochastic Process: Number of samples must be defined.')
-        if not isinstance(samples_number, int):
-            raise ValueError('UQpy: Stochastic Process: nsamples should be an integer.')
-
         self.logger.info('UQpy: Stochastic Process: Running 3rd-order Spectral Representation Method.')
 
         samples = None
@@ -270,7 +259,7 @@ class BispectralRepresentation:
             self.logger.info('UQpy: Stochastic Process: Starting simulation of uni-variate Stochastic Processes.')
             self.logger.info('UQpy: The number of dimensions is :', self.number_of_dimensions)
             phi = np.random.uniform(
-                size=np.append(self.samples_number, np.ones(self.number_of_dimensions, dtype=np.int32)
+                size=np.append(samples_number, np.ones(self.number_of_dimensions, dtype=np.int32)
                                * self.number_frequency_intervals)) * 2 * np.pi
             samples = self._simulate_bsrm_uni(phi)
 

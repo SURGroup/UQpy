@@ -1,12 +1,11 @@
 import logging
-from typing import Annotated, Tuple
 
 from beartype import beartype
-from beartype.vale import Is
 
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
-import numpy as np
+
+from UQpy.sampling.input_data.DreamInput import DreamInput
 from UQpy.utilities.ValidationTypes import *
 
 
@@ -52,31 +51,16 @@ class DREAM(MCMC):
     """
     @beartype
     def __init__(self,
-                 pdf_target=None,
-                 log_pdf_target=None,
-                 args_target=None,
-                 burn_length: Annotated[int: Is[lambda x: x >= 0]] = 0,
-                 jump: PositiveInteger = 1,
-                 dimension: int = None,
-                 seed=None,
-                 save_log_pdf: bool = False,
-                 concatenate_chains: bool = True,
+                 dream_input: DreamInput,
                  samples_number: int = None,
-                 samples_number_per_chain: int = None,
-                 jump_rate: int = 3,
-                 c: float = 0.1,
-                 c_star: float = 1e-6,
-                 crossover_probabilities_number: int = 3,
-                 gamma_probability: float = 0.2,
-                 crossover_adaptation: Tuple = (-1, 1),
-                 check_chains: Tuple = (-1, 1),
-                 random_state: RandomStateType = None,
-                 chains_number: int = None):
+                 samples_number_per_chain: int = None):
 
-        super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
-                         dimension=dimension, seed=seed, burn_length=burn_length, jump=jump, save_log_pdf=save_log_pdf,
-                         concatenate_chains=concatenate_chains, random_state=random_state,
-                         chains_number=chains_number)
+        super().__init__(pdf_target=dream_input.pdf_target, log_pdf_target=dream_input.log_pdf_target,
+                         args_target=dream_input.args_target, dimension=dream_input.dimension,
+                         seed=dream_input.seed, burn_length=dream_input.burn_length, jump=dream_input.jump,
+                         save_log_pdf=dream_input.save_log_pdf, concatenate_chains=dream_input.concatenate_chains,
+                         random_state=dream_input.random_state,
+                         chains_number=dream_input.chains_number)
 
         self.logger = logging.getLogger(__name__)
         # Check nb of chains
@@ -84,20 +68,21 @@ class DREAM(MCMC):
             raise ValueError('UQpy: For the DREAM algorithm, a seed must be provided with at least two samples.')
 
         # Check user-specific algorithms
-        self.jump_rate = jump_rate
-        self.c = c
-        self.c_star = c_star
-        self.crossover_probabilities_number = crossover_probabilities_number
-        self.gamma_probability = gamma_probability
-        self.crossover_adaptation = crossover_adaptation
-        self.check_chains = check_chains
+        self.jump_rate = dream_input.jump_rate
+        self.c = dream_input.c
+        self.c_star = dream_input.c_star
+        self.crossover_probabilities_number = dream_input.crossover_probabilities_number
+        self.gamma_probability = dream_input.gamma_probability
+        self.crossover_adaptation = dream_input.crossover_adaptation
+        self.check_chains = dream_input.check_chains
 
-        for key, typ in zip(['delta', 'c', 'c_star', 'n_cr', 'p_g'], [int, float, float, int, float]):
+        for key, typ in zip(['jump_rate', 'c', 'c_star', 'crossover_probabilities_number', 'gamma_probability'],
+                            [int, float, float, int, float]):
             if not isinstance(getattr(self, key), typ):
                 raise TypeError('Input ' + key + ' must be of type ' + typ.__name__)
         if self.dimension is not None and self.crossover_probabilities_number > self.dimension:
             self.crossover_probabilities_number = self.dimension
-        for key in ['adapt_cr', 'check_chains']:
+        for key in ['crossover_adaptation', 'check_chains']:
             p = getattr(self, key)
             if not (isinstance(p, tuple) and len(p) == 2 and all(isinstance(i, (int, float)) for i in p)):
                 raise TypeError('Inputs ' + key + ' must be a tuple of 2 integers.')
@@ -131,12 +116,12 @@ class DREAM(MCMC):
         lmda = Uniform(scale=2 * self.c).rvs(nsamples=self.chains_number, random_state=self.random_state).reshape((-1,))
         std_x_tmp = np.std(current_state, axis=0)
 
-        multi_rvs = Multinomial(trials_number=1, trial_probability=[1. / self.jump_rate, ] * self.jump_rate).rvs(
+        multi_rvs = Multinomial(n=1, p=[1. / self.jump_rate, ] * self.jump_rate).rvs(
             nsamples=self.chains_number, random_state=self.random_state)
         d_ind = np.nonzero(multi_rvs)[1]
         as_ = [r_diff[j, draw[slice(d_ind[j]), j]] for j in range(self.chains_number)]
         bs_ = [r_diff[j, draw[slice(d_ind[j], 2 * d_ind[j], 1), j]] for j in range(self.chains_number)]
-        multi_rvs = Multinomial(trials_number=1, trial_probability=self.cross_prob)\
+        multi_rvs = Multinomial(n=1, p=self.cross_prob)\
             .rvs(nsamples=self.chains_number, random_state=self.random_state)
         id_ = np.nonzero(multi_rvs)[1]
         # id = np.random.choice(self.n_CR, size=(self.nchains, ), replace=True, trial_probability=self.pCR)
@@ -149,7 +134,7 @@ class DREAM(MCMC):
                 subset_a[j] = np.array([np.argmin(z[j])])
                 d_star[j] = 1
         gamma_d = 2.38 / np.sqrt(2 * (d_ind + 1) * d_star)
-        g = Binomial(trials_number=1, trial_probability=self.gamma_probability)\
+        g = Binomial(n=1, p=self.gamma_probability)\
             .rvs(nsamples=self.chains_number, random_state=self.random_state).reshape((-1,))
         g[g == 0] = gamma_d[g == 0]
         norm_vars = Normal(loc=0., scale=1.).rvs(nsamples=self.chains_number ** 2, random_state=self.random_state)\
@@ -226,7 +211,7 @@ class DREAM(MCMC):
                 else:
                     self.logger.info('UQpy: Chain {} is an outlier chain'.format(j))
         if outlier_num > 0:
-            self.verbose.info('UQpy: Detected {} outlier chains'.format(outlier_num))
+            self.logger.info('UQpy: Detected {} outlier chains'.format(outlier_num))
 
     def __copy__(self):
         new = self.__class__(pdf_target=self.pdf_target,

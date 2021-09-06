@@ -1,7 +1,12 @@
 import logging
+from typing import Union
 
 import numpy as np
 import abc
+
+from beartype import beartype
+
+from UQpy.utilities.ValidationTypes import RandomStateType
 from UQpy.utilities.Utilities import gradient
 
 
@@ -36,8 +41,10 @@ class Strata:
 
     **Methods:**
     """
-
-    def __init__(self, seeds=None, random_state=None):
+    @beartype
+    def __init__(self,
+                 seeds: Union[None,np.ndarray] = None,
+                 random_state: RandomStateType = None):
 
         self.seeds = seeds
         self.volume = None

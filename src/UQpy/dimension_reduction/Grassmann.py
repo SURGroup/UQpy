@@ -10,7 +10,7 @@ import scipy.spatial.distance as sd
 from scipy.interpolate import LinearNDInterpolator
 
 from UQpy.surrogates.kriging import Kriging
-from UQpy.utilities.constant import SKLEARN_STRING
+from UQpy.utilities.Constants import SKLEARN_STRING
 
 
 class Grassmann:

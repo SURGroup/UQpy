@@ -4,7 +4,8 @@ from beartype import beartype
 
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
-import numpy as np
+
+from UQpy.sampling.input_data.DramInput import DramInput
 from UQpy.utilities.ValidationTypes import *
 
 
@@ -44,46 +45,33 @@ class DRAM(MCMC):
     """
     @beartype
     def __init__(self,
-                 pdf_target=None,
-                 log_pdf_target=None,
-                 args_target=None,
-                 burn_length: Annotated[int: Is[lambda x: x >= 0]] = 0,
-                 jump: PositiveInteger = 1,
-                 dimension: int = None,
-                 seed=None,
-                 save_log_pdf=False,
-                 concatenate_chains=True,
+                 dram_input: DramInput,
                  samples_number: int = None,
-                 samples_number_per_chain: int = None,
-                 initial_covariance: float = None,
-                 covariance_update_rate: float = 100,
-                 scale_parameter: float = None,
-                 delayed_rejection_scale: float = 1 / 5,
-                 save_covariance: bool = False,
-                 random_state: RandomStateType = None,
-                 chains_number: PositiveInteger = None):
+                 samples_number_per_chain: int = None):
 
-        super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
-                         dimension=dimension, seed=seed, burn_length=burn_length, jump=jump, save_log_pdf=save_log_pdf,
-                         concatenate_chains=concatenate_chains, random_state=random_state,
-                         chains_number=chains_number)
+        super().__init__(pdf_target=dram_input.pdf_target, log_pdf_target=dram_input.log_pdf_target,
+                         args_target=dram_input.args_target, dimension=dram_input.dimension,
+                         seed=dram_input.seed, burn_length=dram_input.burn_length, jump=dram_input.jump,
+                         save_log_pdf=dram_input.save_log_pdf, concatenate_chains=dram_input.concatenate_chains,
+                         random_state=dram_input.random_state, chains_number=dram_input.chains_number)
 
         self.logger = logging.getLogger(__name__)
         # Check the initial covariance
-        self.initial_covariance = initial_covariance
+        self.initial_covariance = dram_input.initial_covariance
         if self.initial_covariance is None:
             self.initial_covariance = np.eye(self.dimension)
         elif not (isinstance(self.initial_covariance, np.ndarray)
                   and self.initial_covariance == (self.dimension, self.dimension)):
             raise TypeError('UQpy: Input initial_covariance should be a 2D ndarray of shape (dimension, dimension)')
 
-        self.covariance_update_rate = covariance_update_rate
-        self.scale_parameter = scale_parameter
+        self.covariance_update_rate = dram_input.covariance_update_rate
+        self.scale_parameter = dram_input.scale_parameter
         if self.scale_parameter is None:
             self.scale_parameter = 2.38 ** 2 / self.dimension
-        self.delayed_rejection_scale = delayed_rejection_scale
-        self.save_covariance = save_covariance
-        for key, typ in zip(['k0', 'sp', 'gamma_2', 'save_covariance'], [int, float, float, bool]):
+        self.delayed_rejection_scale = dram_input.delayed_rejection_scale
+        self.save_covariance = dram_input.save_covariance
+        for key, typ in zip(['covariance_update_rate', 'scale_parameter', 'delayed_rejection_scale', 'save_covariance'],
+                            [int, float, float, bool]):
             if not isinstance(getattr(self, key), typ):
                 raise TypeError('Input ' + key + ' must be of type ' + typ.__name__)
 

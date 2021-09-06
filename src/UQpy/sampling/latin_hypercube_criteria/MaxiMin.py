@@ -41,11 +41,9 @@ class MaxiMin(Criterion):
 
             """
     @beartype
-    def __init__(self,
-                 random_state: RandomStateType = None,
-                 iterations: int = 100,
+    def __init__(self, random_state: RandomStateType = None, iterations: int = 100,
                  metric: Union[Callable, DistanceMetric] = DistanceMetric.EUCLIDEAN):
-        super.__init__(random_state)
+        super().__init__(random_state)
         self.random_state = random_state
         self.iterations = iterations
         self.logger = logging.getLogger(__name__)
@@ -57,9 +55,6 @@ class MaxiMin(Criterion):
             self. distance_function = metric
         else:
             raise ValueError("UQpy: Please provide a valid metric.")
-
-        if not isinstance(iterations, int):
-            raise ValueError('UQpy: number of iterations must be an integer.')
 
         self.random_criterion = Random(random_state=random_state)
 
@@ -80,6 +75,6 @@ class MaxiMin(Criterion):
                 lhs_samples = copy.deepcopy(samples_try)
             i = i + 1
 
-        self.logger.info('UQpy: Achieved maximum distance of ', maximized_minimum_distance)
+        self.logger.info('UQpy: Achieved maximum distance of %(distance)s' % {"distance": maximized_minimum_distance})
 
         return lhs_samples

@@ -1,9 +1,9 @@
 import logging
-from ctypes import Union
 
 from beartype import beartype
 
-from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger
+from UQpy.sampling.input_data.ISInput import ISInput
+from UQpy.utilities.ValidationTypes import PositiveInteger
 from UQpy.utilities.Utilities import process_random_state
 from UQpy.distributions import Distribution
 import numpy as np
@@ -64,14 +64,10 @@ class ImportanceSampling:
     # Last Modified: 10/05/2020 by Audrey Olivier
     @beartype
     def __init__(self,
-                 samples_number: PositiveInteger = None,
-                 pdf_target=None,
-                 log_pdf_target=None,
-                 args_target=None,
-                 proposal: Distribution = None,
-                 random_state: RandomStateType = None):
+                 is_input: ISInput,
+                 samples_number: PositiveInteger = None):
         # Initialize proposal: it should have an rvs and log pdf or pdf method
-        self.proposal = proposal
+        self.proposal = is_input.proposal
         if not isinstance(self.proposal, Distribution):
             raise TypeError('UQpy: The proposal should be of type Distribution.')
         if not hasattr(self.proposal, 'rvs'):
@@ -81,14 +77,17 @@ class ImportanceSampling:
                 raise AttributeError('UQpy: The proposal should have a log_pdf or pdf method')
             self.proposal.log_pdf = lambda x: np.log(np.maximum(self.proposal.pdf(x),
                                                                 10 ** (-320) * np.ones((x.shape[0],))))
-        self._pdf_target = pdf_target
-        self._log_pdf_target = log_pdf_target
-        self._args_target = args_target
+        # self._pdf_target = is_input.pdf_target
+        # self._log_pdf_target = is_input.log_pdf_target
+        # self._args_target = is_input.args_target
         # Initialize target
-        self.evaluate_log_target = self._preprocess_target(log_pdf_=log_pdf_target, pdf_=pdf_target, args=args_target)
+        self.evaluate_log_target = \
+            self._preprocess_target(log_pdf_=is_input.log_pdf_target,
+                                    pdf_=is_input.pdf_target,
+                                    args=is_input.args_target)
 
         self.logger = logging.getLogger(__name__)
-        self.random_state = process_random_state(random_state)
+        self.random_state = process_random_state(is_input.random_state)
 
         # Initialize the samples and weights
         self.samples = None
@@ -175,7 +174,7 @@ class ImportanceSampling:
         if samples_number is None:
             samples_number = self.samples.shape[0]
         if method == 'multinomial':
-            multinomial_run = np.random.multinomial(samples_number, self.weights, size=1)[0]
+            multinomial_run = self.random_state.multinomial(samples_number, self.weights, size=1)[0]
             idx = list()
             for j in range(self.samples.shape[0]):
                 if multinomial_run[j] > 0:

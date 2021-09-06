@@ -24,7 +24,7 @@ class StratifiedSampling:
         self.samplesU01, self.samples = None, None
         self.distributions = distributions
 
-        self.logger.info("UQpy: stratified_sampling object is created")
+        self.logger.info("UQpy: Stratified_sampling object is created")
 
         if self.samples_per_stratum_number is not None or self.samples_number is not None:
             self.run(samples_per_stratum_number=self.samples_per_stratum_number, samples_number=self.samples_number)
@@ -51,8 +51,8 @@ class StratifiedSampling:
         self.samples = samples_u_to_x
 
     @beartype
-    def run(self, samples_per_stratum_number: Union[int, List[int]] = None,
-            samples_number: PositiveInteger = None):
+    def run(self, samples_per_stratum_number: Union[None, int, List[int]] = None,
+            samples_number: Union[None, PositiveInteger] = None):
         """
         Executes stratified sampling.
 

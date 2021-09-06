@@ -145,14 +145,14 @@ class Polynomials:
         """
         Returns a `float` with the location of the UQpy distribution object.
         """
-        m = self.distribution.__dict__['parameter_vector']['location']
+        m = self.distribution.__dict__['parameters']['location']
         return m
 
     def scale(self):
         """
         Returns a `float` with the scale of the UQpy distribution object.
         """
-        s = self.distribution.__dict__['parameter_vector']['scale']
+        s = self.distribution.__dict__['parameters']['scale']
         return s
 
     def evaluate(self, x):

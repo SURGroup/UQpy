@@ -1,11 +1,6 @@
 import copy
 import logging
-import warnings
-from inspect import isclass
-
-import numpy as np
-
-from UQpy.RunModel import RunModel
+from beartype.vale import Is
 from UQpy.sampling import *
 
 
@@ -73,30 +68,24 @@ class SubsetSimulation:
 
     **Methods:**
     """
-
-    def __init__(self, runmodel_object, mcmc_object, samples_init=None,
-                 conditional_probability=0.1, nsamples_per_ss=1000, max_level=10):
+    @beartype
+    def __init__(self,
+                 runmodel_object,
+                 mcmc_object: MCMC,
+                 samples_init: np.ndarray = None,
+                 conditional_probability: Annotated[Union[float, int], Is[lambda number: 0 <= number <= 1]] = 0.1,
+                 samples_number_per_subset: int = 1000,
+                 max_level: int = 10):
         # Initialize other attributes
         self.runmodel_object = runmodel_object
         self.samples_init = samples_init
         self.conditional_probability = conditional_probability
-        self.nsamples_per_ss = nsamples_per_ss
+        self.samples_number_per_subset = samples_number_per_subset
         self.max_level = max_level
         self.logger = logging.getLogger(__name__)
 
-        # Check that a RunModel object is being passed in.
-        if not isinstance(self.runmodel_object, RunModel):
-            raise AttributeError(
-                'UQpy: Subset simulation requires the user to pass a RunModel object')
-
-
-        # Perform initial error checks
-        self._verify_initialization_data()
-
-        # Initialize the mcmc_object from the specified class.
         self.mcmc_objects = [mcmc_object]
 
-        # Initialize new attributes/variables
         self.samples = list()
         self.g = list()
         self.g_level = list()
@@ -130,7 +119,7 @@ class SubsetSimulation:
         """
 
         step = 0
-        n_keep = int(self.conditional_probability * self.nsamples_per_ss)
+        n_keep = int(self.conditional_probability * self.samples_number_per_subset)
         d12 = list()
         d22 = list()
 
@@ -142,7 +131,7 @@ class SubsetSimulation:
                                 '- Provide an initial set of samples (samples_init) known to follow the distribution; '
                                 'or\n - Provide a robust mcmc object that will draw independent initial samples from '
                                 'the distribution.')
-            self.mcmc_objects[0].run(number_of_samples=self.nsamples_per_ss)
+            self.mcmc_objects[0].run(samples_number=self.samples_number_per_subset)
             self.samples.append(self.mcmc_objects[0].samples)
         else:
             self.samples.append(self.samples_init)
@@ -178,9 +167,9 @@ class SubsetSimulation:
             self.mcmc_objects.append(new_mcmc_object)
 
             # Set the number of samples to propagate each chain (n_prop) in the conditional level
-            n_prop_test = self.nsamples_per_ss / self.mcmc_objects[step].chains_number
+            n_prop_test = self.samples_number_per_subset / self.mcmc_objects[step].chains_number
             if n_prop_test.is_integer():
-                n_prop = self.nsamples_per_ss // self.mcmc_objects[step].chains_number
+                n_prop = self.samples_number_per_subset // self.mcmc_objects[step].chains_number
             else:
                 raise AttributeError(
                     'UQpy: The number of samples per subset (nsamples_per_ss) must be an integer multiple of '
@@ -191,9 +180,9 @@ class SubsetSimulation:
 
                 # Propagate each chain
                 if i == 0:
-                    self.mcmc_objects[step].run(number_of_samples=2 * self.mcmc_objects[step].chains_number)
+                    self.mcmc_objects[step].run(samples_number=2 * self.mcmc_objects[step].chains_number)
                 else:
-                    self.mcmc_objects[step].run(number_of_samples=self.mcmc_objects[step].chains_number)
+                    self.mcmc_objects[step].run(samples_number=self.mcmc_objects[step].chains_number)
 
                 # Decide whether a new simulation is needed for each proposed state
                 a = self.mcmc_objects[step].samples[i * n_keep:(i + 1) * n_keep, :]
@@ -244,7 +233,7 @@ class SubsetSimulation:
 
         n_fail = len([value for value in self.g[step] if value < 0])
 
-        failure_probability = self.conditional_probability ** step * n_fail / self.nsamples_per_ss
+        failure_probability = self.conditional_probability ** step * n_fail / self.samples_number_per_subset
         probability_cov_independent = np.sqrt(np.sum(d12))
         probability_cov_dependent = np.sqrt(np.sum(d22))
 
@@ -252,41 +241,6 @@ class SubsetSimulation:
 
     # -----------------------------------------------------------------------------------------------------------------------
     # Support functions for subset simulation
-
-    def _verify_initialization_data(self):
-        """
-        Check for errors in the SubsetSimulation class input
-
-        This is an instance method that checks for errors in the input to the SubsetSimulation class. It is
-        automatically called when the SubsetSimulation class is instantiated.
-
-        No inputs or returns.
-        """
-
-        # Check that an mcmc class is being passed in.
-        if not isclass(self.mcmc_class):
-            raise ValueError('UQpy: mcmc_class must be a child class of mcmc. Note it is not an instance of the class.')
-        if not issubclass(self.mcmc_class, mcmc):
-            raise ValueError('UQpy: mcmc_class must be a child class of mcmc.')
-
-        # Check that a RunModel object is being passed in.
-        if not isinstance(self.runmodel_object, RunModel):
-            raise AttributeError(
-                'UQpy: Subset simulation requires the user to pass a RunModel object')
-
-        # Check that a valid conditional probability is specified.
-        if type(self.conditional_probability).__name__ != 'float':
-            raise AttributeError('UQpy: Invalid conditional probability. p_cond must be of float type.')
-        elif self.conditional_probability <= 0. or self.conditional_probability >= 1.:
-            raise AttributeError('UQpy: Invalid conditional probability. p_cond must be in (0, 1).')
-
-        # Check that the number of samples per subset is properly defined.
-        if type(self.nsamples_per_ss).__name__ != 'int':
-            raise AttributeError('UQpy: Number of samples per subset (nsamples_per_ss) must be integer valued.')
-
-        # Check that max_level is an integer
-        if type(self.max_level).__name__ != 'int':
-            raise AttributeError('UQpy: The maximum subset level (max_level) must be integer valued.')
 
     def _compute_coefficient_of_variation(self, step):
 
@@ -314,13 +268,13 @@ class SubsetSimulation:
         # need to be computed.
         if step == 0:
             independent_chains_cov = np.sqrt((1 - self.conditional_probability) /
-                                             (self.conditional_probability * self.nsamples_per_ss))
+                                             (self.conditional_probability * self.samples_number_per_subset))
             dependent_chains_cov = np.sqrt((1 - self.conditional_probability) /
-                                           (self.conditional_probability * self.nsamples_per_ss))
+                                           (self.conditional_probability * self.samples_number_per_subset))
 
             return independent_chains_cov, dependent_chains_cov
         else:
-            n_c = int(self.conditional_probability * self.nsamples_per_ss)
+            n_c = int(self.conditional_probability * self.samples_number_per_subset)
             n_s = int(1 / self.conditional_probability)
             indicator = np.reshape(self.g[step] < self.g_level[step], (n_s, n_c))
             gamma = self._correlation_factor_gamma(indicator, n_s, n_c)
@@ -329,10 +283,10 @@ class SubsetSimulation:
 
             independent_chains_cov = \
                 np.sqrt(((1 - self.conditional_probability) /
-                         (self.conditional_probability * self.nsamples_per_ss)) * (1 + gamma))
+                         (self.conditional_probability * self.samples_number_per_subset)) * (1 + gamma))
             dependent_chains_cov =\
                 np.sqrt(((1 - self.conditional_probability) /
-                         (self.conditional_probability * self.nsamples_per_ss)) * (1 + gamma + beta_hat))
+                         (self.conditional_probability * self.samples_number_per_subset)) * (1 + gamma + beta_hat))
 
             return independent_chains_cov, dependent_chains_cov
 

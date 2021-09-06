@@ -6,6 +6,7 @@ from beartype import beartype
 from scipy.linalg import sqrtm
 
 from UQpy.utilities.Utilities import *
+from UQpy.utilities.ValidationTypes import *
 
 
 class KarhunenLoeveExpansion:
@@ -49,11 +50,10 @@ class KarhunenLoeveExpansion:
 
     **Methods**
     """
-
     # TODO: Test this for non-stationary processes.
     @beartype
     def __init__(self,
-                 samples_number: int,
+                 samples_number: Union[PositiveInteger, int],
                  correlation_function: Union[list, np.ndarray],
                  time_interval: float,
                  threshold: int = None,
@@ -61,16 +61,9 @@ class KarhunenLoeveExpansion:
         self.correlation_function = correlation_function
         self.time_interval = time_interval
         self.number_eigen_values = threshold if threshold else len(self.correlation_function[0])
-
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            np.random.seed(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
-
+        self.random_state = process_random_state(random_state)
         self.logger = logging.getLogger(__name__)
         self.samples_number = samples_number
-
         self.samples = None
         self.xi = None
 
@@ -88,7 +81,7 @@ class KarhunenLoeveExpansion:
         samples = samples[:, np.newaxis]
         return samples
 
-    def run(self, samples_number):
+    def run(self, samples_number: PositiveInteger):
         """
         Execute the random sampling in the ``KLE`` class.
 
@@ -111,16 +104,9 @@ class KarhunenLoeveExpansion:
             ``KLE`` class.
 
         """
-
-        if samples_number is None:
-            raise ValueError('UQpy: Stochastic Process: Number of samples must be defined.')
-        if not isinstance(samples_number, int):
-            raise ValueError('UQpy: Stochastic Process: nsamples should be an integer.')
-
         self.logger.info('UQpy: Stochastic Process: Running Karhunen Loeve Expansion.')
-
         self.logger.info('UQpy: Stochastic Process: Starting simulation of Stochastic Processes.')
-        xi = np.random.normal(size=(self.number_eigen_values, self.samples_number))
+        xi = np.random.normal(size=(self.number_eigen_values, samples_number))
         samples = self._simulate(xi)
 
         if self.samples is None:

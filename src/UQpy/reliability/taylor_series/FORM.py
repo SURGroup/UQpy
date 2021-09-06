@@ -1,10 +1,16 @@
 import logging
+from typing import Union, List
 
 import numpy as np
 import scipy.stats as stats
+from beartype import beartype
 
+from UQpy.RunModel import RunModel
+from UQpy.distributions.baseclass import Distribution
 from UQpy.transformations import *
 from UQpy.reliability.taylor_series.baseclass.TaylorSeries import TaylorSeries
+from UQpy.utilities.ValidationTypes import PositiveInteger
+from UQpy.transformations import Decorrelate
 
 
 class FORM(TaylorSeries):
@@ -43,25 +49,32 @@ class FORM(TaylorSeries):
         Record of the error defined by criteria `e1, e2, e3`.
     **Methods:**
      """
+    @beartype
+    def __init__(self,
+                 distributions: Union[None, Distribution, List[Distribution]],
+                 runmodel_object,
+                 form_object=None,
+                 seed_x: Union[list, np.ndarray] = None,
+                 seed_u: Union[list, np.ndarray] = None,
+                 df_step: Union[int, float] = 0.01,
+                 corr_x: Union[list, np.ndarray] = None,
+                 corr_z: Union[list, np.ndarray] = None,
+                 iterations_number: PositiveInteger = 100,
+                 tol1: Union[float, int] = None,
+                 tol2: Union[float, int] = None,
+                 tol3: Union[float, int] = None):
 
-    def __init__(self, distributions, runmodel_object, form_object=None, seed_x=None, seed_u=None, df_step=0.01,
-                 corr_x=None, corr_z=None, n_iter=100, tol1=None, tol2=None, tol3=None):
-
-        super().__init__(distributions, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u, n_iter, tol1, tol2,
-                         tol3, df_step)
+        super().__init__(distributions, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u,
+                         iterations_number, tol1, tol2, tol3, df_step)
 
         self.logger = logging.getLogger(__name__)
-
-        if df_step is not None:
-            if not isinstance(df_step, (float, int)):
-                raise ValueError('UQpy: df_step must be of type float or integer.')
 
         # Initialize output
         self.beta_form = None
         self.DesignPoint_U = None
         self.DesignPoint_X = None
         self.alpha = None
-        self.Pf_form = None
+        self.failure_probability = None
         self.x = None
         self.alpha = None
         self.g0 = None
@@ -102,10 +115,8 @@ class FORM(TaylorSeries):
         if seed_u is None and seed_x is None:
             seed = np.zeros(self.dimension)
         elif seed_u is None and seed_x is not None:
-            from UQpy.transformations import NatafTransformation
             self.nataf_object.run(samples_x=seed_x.reshape(1, -1), jacobian=False)
             seed_z = self.nataf_object.samples_z
-            from UQpy.transformations import Decorrelate
             seed = Decorrelate(seed_z, self.nataf_object.corr_z)
         elif seed_u is not None and seed_x is None:
             seed = np.squeeze(seed_u)
@@ -133,7 +144,8 @@ class FORM(TaylorSeries):
                 if seed_x is not None:
                     x = seed_x
                 else:
-                    seed_z = Correlate(seed.reshape(1, -1), self.nataf_object.corr_z).samples_z
+                    seed_z = Correlate(samples_u=seed.reshape(1, -1),
+                                       corr_z=self.nataf_object.corr_z).samples_z
                     self.nataf_object.run(samples_z=seed_z.reshape(1, -1), jacobian=True)
                     x = self.nataf_object.samples_x
                     self.jzx = self.nataf_object.jxz
@@ -151,7 +163,7 @@ class FORM(TaylorSeries):
                              'Jacobian Jzx: {0}\n'.format(self.jzx))
 
             # 2. evaluate Limit State Function and the gradient at point u_k and direction cosines
-            dg_u, qoi = self.derivatives(point_u=u[k, :], point_x=self.x, runmodel_object=self.runmodel_object,
+            dg_u, qoi, _ = self.derivatives(point_u=u[k, :], point_x=self.x, runmodel_object=self.runmodel_object,
                                          nataf_object=self.nataf_object, df_step=self.df_step, order='first')
             g_record.append(qoi)
 
@@ -242,7 +254,7 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
-            self.logger.error('Error:', error_record[-1])
+            self.logger.error('Error: %s', error_record[-1])
 
             if converged is True or k > self.n_iter:
                 break
@@ -263,7 +275,7 @@ class FORM(TaylorSeries):
                 self.beta_form = [beta[k]]
                 self.DesignPoint_U = [u[k, :]]
                 self.DesignPoint_X = [np.squeeze(self.x)]
-                self.Pf_form = [stats.norm.cdf(-self.beta_form[-1])]
+                self.failure_probability = [stats.norm.cdf(-self.beta_form[-1])]
                 self.form_iterations = [k]
                 self.u_record = [u_record[:k]]
                 self.x_record = [x_record[:k]]
@@ -276,7 +288,7 @@ class FORM(TaylorSeries):
                 self.error_record = self.error_record + error_record
                 self.DesignPoint_U = self.DesignPoint_U + [u[k, :]]
                 self.DesignPoint_X = self.DesignPoint_X + [np.squeeze(self.x)]
-                self.Pf_form = self.Pf_form + [stats.norm.cdf(-beta[k])]
+                self.failure_probability = self.failure_probability + [stats.norm.cdf(-beta[k])]
                 self.form_iterations = self.form_iterations + [k]
                 self.u_record = self.u_record + [u_record[:k]]
                 self.x_record = self.x_record + [x_record[:k]]

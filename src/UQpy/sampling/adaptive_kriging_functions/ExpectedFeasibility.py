@@ -1,3 +1,5 @@
+from typing import Union
+
 from beartype import beartype
 
 from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import LearningFunction
@@ -52,9 +54,9 @@ class ExpectedFeasibility(LearningFunction):
             """
     @beartype
     def __init__(self,
-                 eff_a: float = 0,
-                 eff_epsilon: float = 2,
-                 eff_stop: float = 0.001):
+                 eff_a: Union[float, int] = 0,
+                 eff_epsilon: Union[float, int] = 2,
+                 eff_stop: Union[float, int] = 0.001):
         self.eff_a = eff_a
         self.eff_epsilon = eff_epsilon
         self.eff_stop = eff_stop

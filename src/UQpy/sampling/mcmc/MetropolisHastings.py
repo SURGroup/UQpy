@@ -1,13 +1,13 @@
 import logging
-from typing import Annotated
 
 from beartype import beartype
-from beartype.vale import Is
 
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
-import numpy as np
+
+from UQpy.sampling.input_data.MhInput import MhInput
 from UQpy.utilities.ValidationTypes import *
+
 
 class MetropolisHastings(MCMC):
     """
@@ -33,32 +33,20 @@ class MetropolisHastings(MCMC):
     """
     @beartype
     def __init__(self,
-                 pdf_target=None,
-                 log_pdf_target=None,
-                 args_target=None,
-                 burn_length: Annotated[int: Is[lambda x: x >= 0]] = 0,
-                 jump=1,
-                 dimension: int = None,
-                 seed=None,
-                 save_log_pdf=False,
-                 concatenate_chains: bool = True,
+                 mh_input: MhInput,
                  samples_number: PositiveInteger = None,
-                 samples_number_per_chain: PositiveInteger = None,
-                 chains_number: int = None,
-                 proposal=None,
-                 proposal_is_symmetric: bool = False,
-                 random_state: RandomStateType = None):
+                 samples_number_per_chain: PositiveInteger = None):
 
-        super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
-                         dimension=dimension, seed=seed, burn_length=burn_length, jump=jump, save_log_pdf=save_log_pdf,
-                         concatenate_chains=concatenate_chains, random_state=random_state,
-                         chains_number=chains_number)
+        super().__init__(pdf_target=mh_input.pdf_target, log_pdf_target=mh_input.log_pdf_target,
+                         args_target=mh_input.args_target, dimension=mh_input.dimension,
+                         seed=mh_input.seed, burn_length=mh_input.burn_length, jump=mh_input.jump,
+                         save_log_pdf=mh_input.save_log_pdf, concatenate_chains=mh_input.concatenate_chains,
+                         random_state=mh_input.random_state, chains_number=mh_input.chains_number)
 
         self.logger = logging.getLogger(__name__)
         # Initialize algorithm specific inputs
-        self.proposal = proposal
-        self.proposal_is_symmetric = proposal_is_symmetric
-
+        self.proposal = mh_input.proposal
+        self.proposal_is_symmetric = mh_input.proposal_is_symmetric
         if self.proposal is None:
             if self.dimension is None:
                 raise ValueError('UQpy: Either input proposal or dimension must be provided.')

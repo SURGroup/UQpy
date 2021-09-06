@@ -1,18 +1,19 @@
 from UQpy.distributions.collection.Uniform import Uniform
 from UQpy.utilities.strata.Rectangular import Rectangular
-from UQpy.sampling.StratifiedSampling import StratifiedSampling
-from UQpy.sampling.refined_stratified_sampling.RefinedStratifiedSampling import *
+from UQpy.sampling.RefinedStratifiedSampling import *
 from UQpy.sampling.refined_stratified_sampling.SimpleRefinement import *
 from UQpy.utilities.strata.Voronoi import *
 from UQpy.RunModel import *
 from UQpy.surrogates.kriging.Kriging import Kriging
+
+import shutil
 
 
 def test_rss_simple_rectangular():
     marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
     strata = Rectangular(strata_number=[4, 4], random_state=1)
     x = StratifiedSampling(distributions=marginals, strata_object=strata,
-                           samples_per_stratum_number=1, verbose=True)
+                           samples_per_stratum_number=1)
     algorithm = SimpleRefinement(strata)
     y = RefinedStratifiedSampling(stratified_sampling=x,
                                   samples_number=18,
@@ -29,7 +30,7 @@ def test_rss_simple_voronoi():
     marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
     strata = Voronoi(seeds_number=16, dimension=2, random_state=1)
     x = StratifiedSampling(distributions=marginals, strata_object=strata,
-                           samples_per_stratum_number=1, verbose=True)
+                           samples_per_stratum_number=1)
     algorithm = SimpleRefinement(strata)
     y = RefinedStratifiedSampling(stratified_sampling=x,
                                   samples_number=18,
@@ -41,6 +42,7 @@ def test_rss_simple_voronoi():
     assert y.samples[17, 0] == 0.3507629313878089
     assert y.samples[17, 1] == 0.17076741629044234
 
+
 def test_rss2():
     from UQpy.surrogates.kriging.regression_models.Linear import Linear
     from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential
@@ -49,7 +51,7 @@ def test_rss2():
     x = StratifiedSampling(distributions=marginals, strata_object=strata,
                            samples_per_stratum_number=1)
     initial_samples = x.samples.copy()
-    rmodel1 = RunModel(model_script='python_model_function.py', vec='False')
+    rmodel1 = RunModel(model_script='python_model_function.py', vec=False)
     rmodel1.run(samples=x.samples)
     num = 50
     x1 = np.linspace(0, 1, num)
@@ -73,15 +75,16 @@ def test_rss2():
     z = RefinedStratifiedSampling(stratified_sampling=x,
                                   refinement_algorithm=algorithm,
                                   random_state=2)
-    z.run(nsamples=18)
+    z.run(samples_number=18)
 
     assert z.samples[16, 0] == 0.42949936276775047
     assert z.samples[16, 1] == 0.2564815579569728
     assert z.samples[17, 0] == 0.44370780973483864
     assert z.samples[17, 1] == 0.6088305981545692
 
-from sklearn.gaussian_process.kernels import Matern
-from sklearn.gaussian_process import GaussianProcessRegressor
+    shutil.rmtree(r1model.model_dir)
+    shutil.rmtree(rmodel1.model_dir)
+
 # def test_rss3():
 #     from UQpy.surrogates.kriging.regression_models.Linear import Linear
 #     from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential

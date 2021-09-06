@@ -1,6 +1,9 @@
 import logging
+from typing import Union, List
 
 import numpy as np
+from beartype import beartype
+
 from UQpy.distributions import *
 from UQpy.RunModel import RunModel
 from UQpy.transformations import *
@@ -49,15 +52,31 @@ class TaylorSeries:
         A boolean declaring whether to write text to the terminal.
     **Methods:**
     """
-
-    def __init__(self, distributions, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u, n_iter, tol1, tol2,
-                 tol3, df_step):
+    @beartype
+    def __init__(self,
+                 distributions: Union[None, Distribution, List[Distribution]]=None,
+                 runmodel_object=None,
+                 form_object = None,
+                 corr_x: Union[list, None, np.ndarray]=None,
+                 corr_z: Union[list, None, np.ndarray]=None,
+                 seed_x: Union[list, None, np.ndarray]=None,
+                 seed_u: Union[list, None, np.ndarray]=None,
+                 iterations_number: Union[None, int]=None,
+                 tol1: Union[None, float, int]=None,
+                 tol2: Union[None, float, int]=None,
+                 tol3: Union[None, float, int]=None,
+                 df_step: Union[None, float, int]=None):
 
         if form_object is None:
             if isinstance(distributions, list):
                 self.dimension = len(distributions)
+                self.dimension = 0
                 for i in range(len(distributions)):
-                    if not isinstance(distributions[i], (DistributionContinuous1D, JointIndependent)):
+                    if isinstance(distributions[i], DistributionContinuous1D):
+                        self.dimension = self.dimension + 1
+                    elif isinstance(distributions[i], JointIndependent):
+                        self.dimension = self.dimension + len(distributions[i].marginals)
+                    else:
                         raise TypeError('UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object must be '
                                         'provided.')
             else:
@@ -68,18 +87,14 @@ class TaylorSeries:
                 else:
                     raise TypeError('UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.')
 
-            if not isinstance(runmodel_object, RunModel):
-                raise ValueError('UQpy: A RunModel object is required for the model.')
-
-            self.nataf_object = NatafTransformation(dist_object=distributions, corr_z=corr_z, corr_x=corr_x)
-
+            self.nataf_object = Nataf(distributions=distributions, corr_z=corr_z, corr_x=corr_x)
         else:
             pass
 
         self.corr_x = corr_x
         self.corr_z = corr_z
         self.dist_object = distributions
-        self.n_iter = n_iter
+        self.n_iter = iterations_number
         self.runmodel_object = runmodel_object
         self.tol1 = tol1
         self.tol2 = tol2
@@ -90,8 +105,7 @@ class TaylorSeries:
         self.logger = logging.getLogger(__name__)
 
     @staticmethod
-    def derivatives(point_u, point_x, runmodel_object, nataf_object, order='first', point_qoi=None, df_step=0.01,
-                    verbose=False):
+    def derivatives(point_u, runmodel_object, nataf_object, order='first', point_x= None, point_qoi=None, df_step=0.01):
         """
         A method to estimate the derivatives (1st-order, 2nd-order, mixed) of a function using a central difference
         scheme after transformation to the standard normal space.
@@ -130,9 +144,19 @@ class TaylorSeries:
             Vector of mixed derivatives (if order = 'mixed').
         """
 
+        if point_u is None and point_x is None:
+            raise TypeError('UQpy: Either `point_u` or `point_x` must be specified.')
+
         list_of_samples = list()
-        if order.lower() == 'first' or (order.lower() == 'second' and point_qoi is None):
-            list_of_samples.append(point_x.reshape(1, -1))
+        if point_x is not None:
+            if order.lower() == 'first' or (order.lower() == 'second' and point_qoi is None):
+                list_of_samples.append(point_x.reshape(1, -1))
+        else:
+            z_0 = Correlate(point_u.reshape(1, -1), nataf_object.corr_z).samples_z
+            nataf_object.run(samples_z=z_0.reshape(1, -1), jacobian=False)
+            temp_x_0 = nataf_object.samples_x
+            x_0 = temp_x_0
+            list_of_samples.append(x_0)
 
         for ii in range(point_u.shape[0]):
             y_i1_j = point_u.tolist()
@@ -156,6 +180,7 @@ class TaylorSeries:
         array_of_samples = array_of_samples.reshape((len(array_of_samples), -1))
 
         runmodel_object.run(samples=array_of_samples, append_samples=False)
+        y1 = runmodel_object.qoi_list
         logging.getLogger(__name__).info('samples to evaluate the model: {0}'.format(array_of_samples) +
                                          'model evaluations: {0}'.format(runmodel_object.qoi_list))
 
@@ -163,11 +188,11 @@ class TaylorSeries:
             gradient = np.zeros(point_u.shape[0])
 
             for jj in range(point_u.shape[0]):
-                qoi_plus = runmodel_object.qoi_list[2 * jj + 1]
-                qoi_minus = runmodel_object.qoi_list[2 * jj + 2]
+                qoi_plus = y1[2 * jj + 1]
+                qoi_minus = y1[2 * jj + 2]
                 gradient[jj] = ((qoi_plus - qoi_minus) / (2 * df_step))
 
-            return gradient, runmodel_object.qoi_list[0]
+            return gradient, y1[0], array_of_samples
 
         elif order.lower() == 'second':
             logging.getLogger(__name__).info('UQpy: Calculating second order derivatives..')

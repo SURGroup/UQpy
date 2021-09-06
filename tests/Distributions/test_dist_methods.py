@@ -46,7 +46,7 @@ def test_continuous_moments():
 
 
 # Test all functions for one type of discrete distribution: binomial
-dist_discrete = Binomial(trials_number=5, trial_probability=0.2)
+dist_discrete = Binomial(n=5, p=0.2)
 
 
 def test_discrete_pmf():

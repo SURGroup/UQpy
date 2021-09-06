@@ -33,7 +33,7 @@ class Beta(DistributionContinuous1D):
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``
     """
     @beartype
-    def __init__(self, a: Union[None, float], b: Union[None, float],
-                 loc: Union[None, float] = 0., scale: Union[None, float] = 1.):
+    def __init__(self, a: Union[None, float, int], b: Union[None, float, int],
+                 loc: Union[None, float, int] = 0., scale: Union[None, float, int] = 1.):
         super().__init__(a=a, b=b, loc=loc, scale=scale, ordered_parameters=('a', 'b', 'loc', 'scale'))
         self._construct_from_scipy(scipy_name=stats.beta)

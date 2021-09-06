@@ -6,7 +6,6 @@ from beartype import beartype
 from beartype.vale import IsAttr, IsEqual
 
 from UQpy.distributions.baseclass import DistributionND
-from UQpy.utilities.ValidationTypes import Numpy1DArray
 
 
 class MultivariateNormal(DistributionND):

@@ -1,3 +1,4 @@
+import logging
 from typing import Union
 
 import numpy as np
@@ -31,6 +32,7 @@ class SnapshotPOD(POD):
                  reconstruction_percentage: float = 10 ** 10):
 
         super().__init__(solution_snapshots)
+        self.logger = logging.getLogger(__name__)
         self.modes = modes
         self.reconstruction_percentage = reconstruction_percentage
 

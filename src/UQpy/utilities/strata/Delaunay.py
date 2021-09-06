@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import scipy.stats as stats
 
+from UQpy import RandomStateType
 from UQpy.utilities.strata.baseclass.Strata import Strata
 from UQpy.sampling.SimplexSampling import SimplexSampling
 
@@ -66,7 +67,11 @@ class Delaunay(Strata):
     def calculate_strata_metrics(self):
         pass
 
-    def __init__(self, seeds=None, seeds_number=None, dimension=None, random_state=None, verbose=False):
+    def __init__(self,
+                 seeds: np.ndarray = None,
+                 seeds_number: int = None,
+                 dimension: np.ndarray = None,
+                 random_state: RandomStateType = None):
         super().__init__(random_state=random_state, seeds=seeds)
 
         self.seeds_number = seeds_number
@@ -133,7 +138,6 @@ class Delaunay(Strata):
 
         ch = ConvexHull(vertices)
         volume = ch.volume
-        # ch.volume: float = ch.volume
         centroid = np.mean(vertices, axis=0)
 
         return centroid, volume

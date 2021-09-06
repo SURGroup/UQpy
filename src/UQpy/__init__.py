@@ -34,7 +34,7 @@ from UQpy.utilities.UQpyLoggingFormatter import *
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.ERROR)
 
 formatter = UQpyLoggingFormatter()
 

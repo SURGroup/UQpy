@@ -1,6 +1,5 @@
 import logging
-from ctypes import Union
-from typing import List
+from typing import List, Union
 
 from UQpy.utilities.ValidationTypes import PositiveInteger
 from UQpy.distributions import *
@@ -60,7 +59,7 @@ class LatinHypercubeSampling:
     """
     @beartype
     def __init__(self,
-                 distributions: Union[DistributionContinuous1D, JointIndependent, List[DistributionContinuous1D]],
+                 distributions: Union[Distribution, List[Distribution]],
                  samples_number: PositiveInteger,
                  criterion: Criterion = None):
 

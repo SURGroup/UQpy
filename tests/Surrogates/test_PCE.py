@@ -3,7 +3,7 @@ from UQpy.surrogates import *
 import numpy as np
 
 np.random.seed(1)
-dist = Uniform(location=0, scale=10)
+dist = Uniform(loc=0, scale=10)
 max_degree, n_samples = 2, 10
 polys = Polynomials(distributions=dist, degree=max_degree)
 
@@ -20,7 +20,7 @@ def poly_func(x):
 
 def pce_model(polys, x, y):
     lstsq = LeastSquareRegression(polynomials=polys)
-    pce = pce(method=lstsq)
+    pce = PolynomialChaosExpansion(regression_method=lstsq)
     pce.fit(x, y)
     return pce
 

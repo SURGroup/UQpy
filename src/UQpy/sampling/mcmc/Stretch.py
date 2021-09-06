@@ -1,12 +1,11 @@
 import logging
-from typing import Annotated
 
 from beartype import beartype
-from beartype.vale import Is
 
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
-import numpy as np
+
+from UQpy.sampling.input_data.StretchInput import StretchInput
 from UQpy.utilities.ValidationTypes import *
 
 class Stretch(MCMC):
@@ -30,31 +29,22 @@ class Stretch(MCMC):
     """
     @beartype
     def __init__(self,
-                 pdf_target=None,
-                 log_pdf_target=None,
-                 args_target=None,
-                 burn_length: Annotated[int: Is[lambda x: x >= 0]] = 0,
-                 jump: PositiveInteger = 1,
-                 dimension: int = None,
-                 seed=None,
-                 save_log_pdf: bool = False,
-                 concatenate_chains: bool = True,
+                 stretch_input: StretchInput,
                  samples_number: PositiveInteger = None,
-                 samples_number_per_chain: PositiveInteger = None,
-                 scale: float = 2.,
-                 random_state: RandomStateType = None,
-                 chains_number: int = None):
+                 samples_number_per_chain: PositiveInteger = None):
 
         flag_seed = False
-        if seed is None:
-            if dimension is None or chains_number is None:
+        if stretch_input.seed is None:
+            if stretch_input.dimension is None or stretch_input.chains_number is None:
                 raise ValueError('UQpy: Either `seed` or `dimension` and `nchains` must be provided.')
             flag_seed = True
 
-        super().__init__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
-                         dimension=dimension, seed=seed, burn_length=burn_length, jump=jump, save_log_pdf=save_log_pdf,
-                         concatenate_chains=concatenate_chains, random_state=random_state,
-                         chains_number=chains_number)
+        super().__init__(pdf_target=stretch_input.pdf_target, log_pdf_target=stretch_input.log_pdf_target,
+                         args_target=stretch_input.args_target, dimension=stretch_input.dimension,
+                         seed=stretch_input.seed, burn_length=stretch_input.burn_length,
+                         jump=stretch_input.jump, save_log_pdf=stretch_input.save_log_pdf,
+                         concatenate_chains=stretch_input.concatenate_chains, random_state=stretch_input.random_state,
+                         chains_number=stretch_input.chains_number)
 
         self.logger = logging.getLogger(__name__)
         # Check nchains = ensemble size for the Stretch algorithm
@@ -65,7 +55,7 @@ class Stretch(MCMC):
             raise ValueError('UQpy: For the Stretch algorithm, a seed must be provided with at least two samples.')
 
         # Check Stretch algorithm inputs: proposal_type and proposal_scale
-        self.scale = scale
+        self.scale = stretch_input.scale
         if not isinstance(self.scale, float):
             raise TypeError('UQpy: Input scale must be of type float.')
 
@@ -97,7 +87,7 @@ class Stretch(MCMC):
             unif_rvs = Uniform().rvs(nsamples=ns, random_state=self.random_state)
             zz = ((self.scale - 1.) * unif_rvs + 1.) ** 2. / self.scale  # sample Z
             factors = (self.dimension - 1.) * np.log(zz)  # compute log(Z ** (d - 1))
-            multi_rvs = Multinomial(trials_number=1, trial_probability=[1. / nc, ] * nc)\
+            multi_rvs = Multinomial(n=1, p=[1. / nc, ] * nc)\
                 .rvs(nsamples=ns, random_state=self.random_state)
             rint = np.nonzero(multi_rvs)[1]    # sample X_{j} from complementary set
             candidates = comp_set[rint, :] - (comp_set[rint, :] - curr_set) * np.tile(

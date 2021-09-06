@@ -1,7 +1,7 @@
 import logging
 
 import numpy as np
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 from beartype.vale import Is
 
@@ -10,7 +10,7 @@ from UQpy.RunModel import RunModel
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
-class InferenceModel:
+class InferenceModel(ABC):
     """
     Define a probabilistic model for inference.
 

@@ -65,13 +65,14 @@ class MLE:
     **Methods:**
 
     """
+
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
     @beartype
     def __init__(self,
                  inference_model: InferenceModel,
-                 data: np.ndarray,
-                 optimization_number: Union[None, int] = None,
+                 data: Union[list, np.ndarray],
+                 optimizations_number: Union[None, int] = None,
                  initial_guess=None,
                  optimizer: Optimizer = MinimizeOptimizer(),
                  random_state=None):
@@ -87,11 +88,11 @@ class MLE:
         self.logger.info('UQpy: Initialization of MLEstimation object completed.')
 
         # Run the optimization procedure
-        if (optimization_number is not None) or (initial_guess is not None):
-            self.run(optimizations_number=optimization_number, initial_guess=initial_guess)
+        if (optimizations_number is not None) or (initial_guess is not None):
+            self.run(optimizations_number=optimizations_number, initial_guess=initial_guess)
 
     @beartype
-    def run(self, optimizations_number: PositiveInteger = 1, initial_guess=None):
+    def run(self, optimizations_number: Union[None, PositiveInteger] = 1, initial_guess=None):
         """
         Run the maximum likelihood estimation procedure.
 
@@ -153,9 +154,9 @@ class MLE:
                 random_state=self.random_state) \
                 .reshape((optimizations_number, self.inference_model.parameters_number))
             if self.optimizer.bounds is not None:
-                initial_guess = self.optimizer.bounds[:, 0].reshape((1, -1)) \
-                                + (self.optimizer.bounds[:, 1] - self.optimizer.bounds[:, 0]).reshape(
-                    (1, -1)) * initial_guess
+                bounds = np.array(self.optimizer.bounds)
+                initial_guess = bounds[:, 0].reshape((1, -1)) + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) \
+                                * initial_guess
         else:
             initial_guess = np.atleast_2d(initial_guess)
             if initial_guess.shape[1] != self.inference_model.parameters_number:
@@ -192,6 +193,5 @@ class MLE:
             Value of negative log-likelihood.
         """
 
-        return -1 * self.inference_model.evaluate_log_likelihood(params=one_param.reshape((1, -1)), data=self.data)[0]
-
-
+        a= -1 * self.inference_model.evaluate_log_likelihood(params=one_param.reshape((1, -1)), data=self.data)[0]
+        return a

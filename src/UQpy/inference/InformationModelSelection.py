@@ -83,7 +83,7 @@ class InformationModelSelection:
     @beartype
     def __init__(self,
                  candidate_models: List[InferenceModel],
-                 data: np.ndarray,
+                 data: Union[list, np.ndarray],
                  optimizer: Optimizer = MinimizeOptimizer(),
                  criterion: InformationTheoreticCriterion = InformationTheoreticCriterion.AIC,
                  random_state: RandomStateType = None,
@@ -117,7 +117,7 @@ class InformationModelSelection:
         for i, inference_model in enumerate(self.candidate_models):
             ml_estimator = MLE(inference_model=inference_model, data=self.data,
                                random_state=self.random_state, initial_guess=None,
-                               optimization_number=None,
+                               optimizations_number=None,
                                optimizer=self.optimizer)
             self.ml_estimators.append(ml_estimator)
 

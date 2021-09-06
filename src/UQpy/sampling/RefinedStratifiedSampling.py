@@ -8,7 +8,6 @@ from UQpy.utilities.ValidationTypes import RandomStateType,PositiveInteger
 from UQpy.utilities.Utilities import process_random_state
 
 
-
 class RefinedStratifiedSampling:
 
     @beartype
@@ -33,7 +32,7 @@ class RefinedStratifiedSampling:
         self.random_state = process_random_state(random_state)
 
         if self.samples_number is not None:
-            self.run(nsamples=self.samples_number)
+            self.run(samples_number=self.samples_number)
 
     @beartype
     def run(self, samples_number: PositiveInteger):

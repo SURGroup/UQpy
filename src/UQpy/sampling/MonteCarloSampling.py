@@ -138,7 +138,7 @@ class MonteCarloSampling:
         """
 
         # Check if a random_state is provided.
-        self.random_state = process_random_state(random_state)
+        self.random_state = process_random_state(random_state) if random_state is not None else self.random_state
 
         self.logger.info('UQpy: Running Monte Carlo Sampling.')
 
@@ -146,7 +146,8 @@ class MonteCarloSampling:
             temp_samples = list()
             for i in range(len(self.dist_object)):
                 if hasattr(self.dist_object[i], 'rvs'):
-                    temp_samples.append(self.dist_object[i].rvs(nsamples=samples_number, random_state=random_state))
+                    temp_samples.append(self.dist_object[i].rvs(nsamples=samples_number,
+                                                                random_state=self.random_state))
                 else:
                     raise ValueError('UQpy: rvs method is missing.')
             self.x = list()
@@ -157,7 +158,7 @@ class MonteCarloSampling:
                 self.x.append(np.array(y))
         else:
             if hasattr(self.dist_object, 'rvs'):
-                temp_samples = self.dist_object.rvs(nsamples=samples_number, random_state=random_state)
+                temp_samples = self.dist_object.rvs(nsamples=samples_number, random_state=self.random_state)
                 self.x = temp_samples
 
         if self.samples is None:

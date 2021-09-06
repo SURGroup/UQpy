@@ -1,4 +1,5 @@
 import logging
+from typing import Union, List
 
 import numpy as np
 from UQpy.distributions import DistributionContinuous1D
@@ -83,7 +84,7 @@ class StochasticReducedOrderModel:
     """
 
     def __init__(self,
-                 samples,
+                 samples: Union[List, np.ndarray],
                  target_distributions,
                  moments=None,
                  weights_errors=None,

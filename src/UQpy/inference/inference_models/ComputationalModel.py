@@ -51,7 +51,7 @@ class ComputationalModel(InferenceModel):
         # Case 1.b: likelihood is user-defined
         else:
             log_like_values = self.log_likelihood(
-                data=data, model_outputs=model_outputs, params=params, **self.kwargs_likelihood)
+                data=data, model_outputs=model_outputs, params=params)
             if not isinstance(log_like_values, np.ndarray):
                 log_like_values = np.array(log_like_values)
             if log_like_values.shape != (params.shape[0],):

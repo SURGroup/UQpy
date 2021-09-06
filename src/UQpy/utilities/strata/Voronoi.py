@@ -5,12 +5,19 @@ from UQpy.utilities.strata.Delaunay import Delaunay
 from UQpy.utilities.strata.baseclass.Strata import Strata
 from UQpy.utilities.strata.StratificationCriterion import StratificationCriterion
 from UQpy.sampling.SimplexSampling import *
+from UQpy.utilities.ValidationTypes import RandomStateType
 import numpy as np
 
 
 class Voronoi(Strata):
-    def __init__(self, seeds=None, seeds_number=None, dimension=None, decomposition_iterations=1,
-                 random_state=None, stratification_criterion=StratificationCriterion.RANDOM):
+    @beartype
+    def __init__(self,
+                 seeds: np.ndarray = None,
+                 seeds_number: PositiveInteger = None,
+                 dimension: PositiveInteger = None,
+                 decomposition_iterations: PositiveInteger = 1,
+                 random_state: RandomStateType = None,
+                 stratification_criterion: StratificationCriterion = StratificationCriterion.RANDOM):
         super().__init__(random_state=random_state, seeds=seeds)
 
         self.logger = logging.getLogger(__name__)

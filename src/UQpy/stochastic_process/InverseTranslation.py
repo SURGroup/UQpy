@@ -63,30 +63,21 @@ class InverseTranslation:
         at '0' distance to be 1
 
     """
+
     @beartype
     def __init__(self,
                  distributions: Union[Distribution, List[Distribution]],
-                 time_interval: float,
-                 frequency_interval: float,
-                 time_intervals_number: int,
-                 frequency_intervals_number: int,
+                 time: float,
+                 frequency: float,
                  correlation_function_non_gaussian: np.ndarray = None,
                  power_spectrum_non_gaussian: np.ndarray = None,
-                 samples_non_gaussian: np.ndarray = None):
+                 samples_non_gaussian: Union[None, np.ndarray] = None):
         self.logger = logging.getLogger(__name__)
         self.dist_object = distributions
-        self.frequency = np.arange(0, frequency_intervals_number) * frequency_interval
-        self.time = np.arange(0, time_intervals_number) * time_interval
-        if correlation_function_non_gaussian is None and power_spectrum_non_gaussian is None:
-            self.logger.info('Either the Power Spectrum or the Autocorrelation function should be specified')
-        if correlation_function_non_gaussian is None:
-            self.power_spectrum_non_gaussian = power_spectrum_non_gaussian
-            self.correlation_function_non_gaussian = wiener_khinchin_transform(power_spectrum_non_gaussian,
-                                                                               self.frequency, self.time)
-        elif power_spectrum_non_gaussian is None:
-            self.correlation_function_non_gaussian = correlation_function_non_gaussian
-            self.power_spectrum_non_gaussian = inverse_wiener_khinchin_transform(correlation_function_non_gaussian,
-                                                                                 self.frequency, self.time)
+        self.frequency = frequency
+        self.time = time
+        self.power_spectrum_non_gaussian = power_spectrum_non_gaussian
+        self.correlation_function_non_gaussian = correlation_function_non_gaussian
         self.num = self.correlation_function_non_gaussian.shape[0]
         self.dim = len(self.correlation_function_non_gaussian.shape)
         if samples_non_gaussian is not None:
@@ -98,6 +89,41 @@ class InverseTranslation:
                                                                             self.frequency, self.time)
         self.correlation_function_gaussian = self.auto_correlation_function_gaussian / \
                                              self.auto_correlation_function_gaussian[0]
+
+    @classmethod
+    @beartype
+    def create_with_power_spectrum(cls,
+                                   distributions: Union[Distribution, List[Distribution]],
+                                   time_interval: float,
+                                   frequency_interval: float,
+                                   time_intervals_number: int,
+                                   frequency_intervals_number: int,
+                                   correlation_function_non_gaussian: np.ndarray = None,
+                                   power_spectrum_non_gaussian: np.ndarray = None,
+                                   samples_non_gaussian: np.ndarray = None):
+        frequency = np.arange(0, frequency_intervals_number) * frequency_interval
+        time = np.arange(0, time_intervals_number) * time_interval
+        correlation_function_non_gaussian = wiener_khinchin_transform(power_spectrum_non_gaussian,
+                                                                      frequency, time)
+        return cls._create(distributions, time, frequency, correlation_function_non_gaussian,
+                           power_spectrum_non_gaussian, samples_non_gaussian)
+
+    @classmethod
+    @beartype
+    def create_with_correlation_function(cls,
+                                         distributions: Union[Distribution, List[Distribution]],
+                                         time_interval: float,
+                                         frequency_interval: float,
+                                         time_intervals_number: int,
+                                         frequency_intervals_number: int,
+                                         correlation_function_non_gaussian: np.ndarray = None,
+                                         samples_non_gaussian: np.ndarray = None):
+        frequency = np.arange(0, frequency_intervals_number) * frequency_interval
+        time = np.arange(0, time_intervals_number) * time_interval
+        power_spectrum_non_gaussian = inverse_wiener_khinchin_transform(correlation_function_non_gaussian,
+                                                                        frequency, time)
+        return cls._create(distributions, time, frequency, correlation_function_non_gaussian,
+                           power_spectrum_non_gaussian, samples_non_gaussian)
 
     def _inverse_translate_non_gaussian_samples(self):
         if hasattr(self.dist_object, 'cdf'):

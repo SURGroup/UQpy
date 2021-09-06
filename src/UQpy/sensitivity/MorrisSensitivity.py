@@ -10,10 +10,11 @@ from beartype import beartype
 from beartype.vale import Is
 
 from UQpy.utilities.Utilities import process_random_state
-from UQpy.utilities.ValidationTypes import RandomStateType,PositiveInteger
+from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger
 from UQpy.distributions import *
 from UQpy.RunModel import RunModel
 import numpy as np
+from scipy.stats import randint
 
 
 class MorrisSensitivity:
@@ -73,44 +74,28 @@ class MorrisSensitivity:
     @beartype
     def __init__(self,
                  runmodel_object: RunModel,
-                 distributions: Union[JointIndependent, Tuple[List, Tuple]],
-                 levels_number: Annotated[int: Is[lambda x: x >= 3]],
-                 delta: float = None,
+                 distributions: Union[JointIndependent, Union[List, Tuple]],
+                 levels_number: Annotated[int, Is[lambda x: x >= 3]],
+                 delta: Union[float, int] = None,
                  random_state: RandomStateType = None,
                  trajectories_number: PositiveInteger = None,
-                 **kwargs):
+                 maximize_dispersion: bool = False):
 
         # Check RunModel object and distributions
         self.runmodel_object = runmodel_object
-        if isinstance(distributions, JointIndependent):
-            self.icdfs = [getattr(dist, 'icdf', None) for dist in distributions.marginals]
-        elif (isinstance(distributions, (list, tuple))
-              and all(isinstance(dist, Distribution) for dist in distributions)):
-            self.icdfs = [getattr(dist, 'icdf', None) for dist in distributions]
-        else:
-            raise ValueError
+        marginals = distributions.marginals if isinstance(distributions, JointIndependent) else distributions
+        self.icdfs = [getattr(dist, 'icdf', None) for dist in marginals]
         if any(icdf is None for icdf in self.icdfs):
-            raise ValueError
+            raise ValueError("At least one of the distributions provided has a None icdf")
         self.dimension = len(self.icdfs)
         if self.dimension != len(self.runmodel_object.var_names):
-            raise ValueError
+            raise ValueError("The number of distributions provided does not match the number of RunModel variables")
 
-        # Check inputs nlevels and delta
         self.levels_number = levels_number
-        # delta should be in {1/(nlevels-1), ..., 1-1/(nlevels-1)}
         self.delta = delta
-        if (self.delta is None) and (self.levels_number % 2) == 0:
-            self.delta = self.levels_number / (2 * (self.levels_number - 1))  # delta = trial_probability / (2 * (trial_probability-1))
-        elif (self.delta is None) and (self.levels_number % 2) == 1:
-            self.delta = 1 / 2  # delta = (trial_probability-1) / (2 * (trial_probability-1))
-        elif not (isinstance(self.delta, (int, float))
-                  and float(self.delta) in [float(j / (self.levels_number - 1)) for j in range(1, self.levels_number - 1)]):
-            raise ValueError('UQpy: delta should be in {1/(nlevels-1), ..., 1-1/(nlevels-1)}')
-
-        # Check random state
+        self.check_levels_delta()
         self.random_state = process_random_state(random_state)
-
-        self.kwargs = kwargs
+        self.maximize_dispersion = maximize_dispersion
 
         self.trajectories_unit_hypercube = None
         self.trajectories_physical_space = None
@@ -120,6 +105,18 @@ class MorrisSensitivity:
 
         if trajectories_number is not None:
             self.run(trajectories_number)
+
+    def check_levels_delta(self):
+        # delta should be in {1/(nlevels-1), ..., 1-1/(nlevels-1)}
+        if (self.delta is None) and (self.levels_number % 2) == 0:
+            # delta = trial_probability / (2 * (trial_probability-1))
+            self.delta = self.levels_number / (2 * (self.levels_number - 1))
+        elif (self.delta is None) and (self.levels_number % 2) == 1:
+            self.delta = 1 / 2  # delta = (trial_probability-1) / (2 * (trial_probability-1))
+        elif not (isinstance(self.delta, (int, float))
+                  and float(self.delta) in
+                  [float(j / (self.levels_number - 1)) for j in range(1, self.levels_number - 1)]):
+            raise ValueError('UQpy: delta should be in {1/(nlevels-1), ..., 1-1/(nlevels-1)}')
 
     @beartype
     def run(self, trajectories_number: PositiveInteger):
@@ -139,9 +136,14 @@ class MorrisSensitivity:
 
         """
         # Compute trajectories and elementary effects - append if any already exist
-        trajectories_unit_hypercube, trajectories_physical_space = self.sample_trajectories(
-            trajectories_number=trajectories_number, **self.kwargs)
+        trajectories_unit_hypercube, trajectories_physical_space = \
+            self.sample_trajectories(trajectories_number=trajectories_number,
+                                     maximize_dispersion=self.maximize_dispersion)
         elementary_effects = self._compute_elementary_effects(trajectories_physical_space)
+        self.store_data(elementary_effects, trajectories_physical_space, trajectories_unit_hypercube)
+        self.mustar_indices, self.sigma_indices = self._compute_indices(self.elementary_effects)
+
+    def store_data(self, elementary_effects, trajectories_physical_space, trajectories_unit_hypercube):
         if self.elementary_effects is None:
             self.elementary_effects = elementary_effects
             self.trajectories_unit_hypercube = trajectories_unit_hypercube
@@ -152,9 +154,6 @@ class MorrisSensitivity:
                 [self.trajectories_unit_hypercube, trajectories_unit_hypercube], axis=0)
             self.trajectories_physical_space = np.concatenate(
                 [self.trajectories_physical_space, trajectories_physical_space], axis=0)
-
-        # Compute sensitivity indices
-        self.mustar_indices, self.sigma_indices = self._compute_indices(self.elementary_effects)
 
     @beartype
     def sample_trajectories(self, trajectories_number: PositiveInteger, maximize_dispersion: bool = False):
@@ -171,14 +170,9 @@ class MorrisSensitivity:
 
             Default False.
         """
-        from scipy.stats import randint
-
         trajectories_unit_hypercube = []
         perms_indices = []
-        if maximize_dispersion:
-            ntrajectories_all = 10 * trajectories_number
-        else:
-            ntrajectories_all = 1 * trajectories_number
+        ntrajectories_all = 10 * trajectories_number if maximize_dispersion else 1 * trajectories_number
         for r in range(ntrajectories_all):
             if self.random_state is None:
                 perms = np.random.permutation(self.dimension)
