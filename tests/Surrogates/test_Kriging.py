@@ -51,7 +51,10 @@ def test_jacobian():
 
 
 def test_jacobian1():
-    jacobian = np.round(krig3.jacobian([[np.pi], [np.pi/2]]), 3)
+    krig4 = Kriging(reg_model=linear_regression_model, corr_model=gaussian_corrleation_model, corr_model_params=[1],
+                    nopt=100, normalize=False, random_state=0)
+    krig4.fit(samples=samples, values=values)
+    jacobian = np.round(krig4.jacobian([[np.pi], [np.pi/2]]), 3)
     expected_jacobian = np.array([0.001, -0.813])
     assert (expected_jacobian == jacobian).all()
 
