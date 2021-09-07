@@ -27,20 +27,19 @@ krig3.fit(samples=samples, values=values)
 
 
 def test_fit():
-    tmp1 = np.round(krig.corr_model_params, 3) == np.array([0.730])
-    tmp2 = np.round(krig2.corr_model_params, 3) == np.array([0.462])
-    assert tmp1 and tmp2
+    assert np.round(krig.corr_model_params, 3) == np.array([1.035])
+    assert np.round(krig2.corr_model_params, 3) == np.array([0.448])
 
 
 def test_predict():
     prediction = np.round(krig.predict([[1], [np.pi/2], [np.pi]], True), 3)
-    expected_prediction = np.array([[0.54,  -0.0, -1.], [0.001,  0.,  0.]])
+    expected_prediction = np.array([[0.54,  -0.0, -1.], [0.004,  0.001,  0.]])
     assert (expected_prediction == prediction).all()
 
 
 def test_predict1():
     prediction = np.round(krig3.predict([[1], [np.pi/2], [np.pi]]), 3)
-    expected_prediction = np.array([[0.54, -0., -1.]])
+    expected_prediction = np.array([[0.373, -0.018, -1.]])
     assert (expected_prediction == prediction).all()
 
 
@@ -54,8 +53,9 @@ def test_jacobian1():
     krig4 = Kriging(reg_model=linear_regression_model, corr_model=gaussian_corrleation_model, corr_model_params=[1],
                     nopt=100, normalize=False, random_state=0)
     krig4.fit(samples=samples, values=values)
-    jacobian = np.round(krig4.jacobian([[np.pi], [np.pi/2]]), 3)
-    expected_jacobian = np.array([-0, -0.999])
+    v = krig4.jacobian([[np.pi], [np.pi/2]])
+    jacobian = np.round(v, 3)
+    expected_jacobian = np.array([0.001, -0.813])
     assert (expected_jacobian == jacobian).all()
 
 

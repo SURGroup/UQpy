@@ -161,9 +161,9 @@ class Kriging:
 
         self.random_state = random_state
         if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            self.random_state = np.random.default_rng(random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.Generator)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.Generator object.')
 
     def fit(self, samples, values, nopt=None, corr_model_params=None):
         """
@@ -285,8 +285,9 @@ class Kriging:
                 fun_value[i__, 0] = p_[1]
                 # Generating new starting points using log-uniform distribution
                 if i__ != self.nopt - 1:
-                    starting_point = stats.reciprocal.rvs([j[0] for j in self.bounds], [j[1] for j in self.bounds], 1,
-                                                          random_state=self.random_state)
+                    scipy_reciprocal = stats.reciprocal
+                    scipy_reciprocal.random_state = self.random_state
+                    starting_point = stats.reciprocal.rvs([j[0] for j in self.bounds], [j[1] for j in self.bounds], 1)
 
             if min(fun_value) == np.inf:
                 raise NotImplementedError("Maximum likelihood estimator failed: Choose different starting point or "
