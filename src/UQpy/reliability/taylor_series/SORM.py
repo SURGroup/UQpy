@@ -41,8 +41,8 @@ class SORM(TaylorSeries):
                  tol2: Union[float, int] = None,
                  tol3: Union[float, int] = None):
 
-        super().__init__(distributions, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u, iterations_number, tol1,
-                         tol2, tol3, df_step)
+        super().__init__(distributions, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u, iterations_number,
+                         tol1, tol2, tol3, df_step)
         self.logger = logging.getLogger(__name__)
         self.beta_form = None
         self.DesignPoint_U = None
@@ -121,11 +121,12 @@ class SORM(TaylorSeries):
         matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(dg_u_record[-1])
         kappa = np.linalg.eig(matrix_b[:self.dimension-1, :self.dimension-1])
         if self.call is None:
-            self.failure_probability = [stats.norm.cdf(-1 * self.beta_form) * np.prod(1 / (1 + self.beta_form * kappa[0]) ** 0.5)]
+            self.failure_probability = [stats.norm.cdf(-1 * self.beta_form) *
+                                        np.prod(1 / (1 + self.beta_form * kappa[0]) ** 0.5)]
             self.beta_sorm = [-stats.norm.ppf(self.failure_probability)]
         else:
-            self.failure_probability = self.failure_probability + [stats.norm.cdf(-1 * self.beta_form) * np.prod(1 / (1 + self.beta_form *
-                                                                                                                      kappa[0]) ** 0.5)]
+            self.failure_probability = self.failure_probability + [stats.norm.cdf(-1 * self.beta_form) *
+                                                                   np.prod(1 / (1 + self.beta_form * kappa[0]) ** 0.5)]
             self.beta_sorm = self.beta_sorm + [-stats.norm.ppf(self.failure_probability)]
 
         self.call = True

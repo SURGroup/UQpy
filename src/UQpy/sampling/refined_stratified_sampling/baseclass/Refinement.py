@@ -6,7 +6,7 @@ class Refinement(ABC):
 
     @abstractmethod
     def update_samples(self, samples_number, samples_per_iteration,
-                       random_state, index, dimension, samplesU01, training_points):
+                       random_state, index, dimension, samples_u01, training_points):
         pass
 
     def initialize(self, samples_number, training_points):
@@ -15,7 +15,8 @@ class Refinement(ABC):
     def finalize(self, samples, samples_per_iteration):
         pass
 
-    def identify_bins(self, strata_metrics, points_to_add, random_state):
+    @staticmethod
+    def identify_bins(strata_metrics, points_to_add, random_state):
         bins2break = np.array([])
         points_left = points_to_add
         while np.where(strata_metrics == strata_metrics.max())[0].shape[0] < points_left:

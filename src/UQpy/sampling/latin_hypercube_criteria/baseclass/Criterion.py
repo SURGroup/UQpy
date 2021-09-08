@@ -17,11 +17,6 @@ class Criterion(ABC):
         self.random_state = \
             np.random.RandomState(self.random_state) if isinstance(self.random_state, int) else random_state
 
-        # self.parameters = kwargs
-        # self.ordered_parameters = ordered_parameters if not None else tuple(kwargs.keys())
-        # if len(self.ordered_parameters) != len(self.parameters):
-        #     raise ValueError('Inconsistent dimensions between order_params tuple and params dictionary.')
-
     def create_bins(self, samples):
         samples_number = samples.shape[0]
         cut = np.linspace(0, 1, samples_number + 1)

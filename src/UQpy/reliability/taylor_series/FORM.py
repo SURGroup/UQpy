@@ -1,11 +1,8 @@
 import logging
 from typing import Union, List
-
 import numpy as np
 import scipy.stats as stats
 from beartype import beartype
-
-from UQpy.RunModel import RunModel
 from UQpy.distributions.baseclass import Distribution
 from UQpy.transformations import *
 from UQpy.reliability.taylor_series.baseclass.TaylorSeries import TaylorSeries
@@ -163,8 +160,9 @@ class FORM(TaylorSeries):
                              'Jacobian Jzx: {0}\n'.format(self.jzx))
 
             # 2. evaluate Limit State Function and the gradient at point u_k and direction cosines
-            dg_u, qoi, _ = self.derivatives(point_u=u[k, :], point_x=self.x, runmodel_object=self.runmodel_object,
-                                         nataf_object=self.nataf_object, df_step=self.df_step, order='first')
+            dg_u, qoi, _ = \
+                self.derivatives(point_u=u[k, :], point_x=self.x, runmodel_object=self.runmodel_object,
+                                 nataf_object=self.nataf_object, df_step=self.df_step, order='first')
             g_record.append(qoi)
 
             dg_u_record[k + 1, :] = dg_u

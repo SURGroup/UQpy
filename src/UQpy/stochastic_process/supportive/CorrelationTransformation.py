@@ -1,7 +1,6 @@
 import numpy as np
 
 
-@staticmethod
 def scaling_correlation_function(correlation_function):
     """
     A function to scale a correlation function such that correlation at 0 lag is equal to 1
@@ -22,7 +21,6 @@ def scaling_correlation_function(correlation_function):
     return scaled_correlation_function
 
 
-@staticmethod
 def inverse_wiener_khinchin_transform(correlation_function, frequency, time):
     """
     A function to transform the autocorrelation function to a power spectrum by the Inverse Wiener Khinchin
@@ -60,7 +58,6 @@ def inverse_wiener_khinchin_transform(correlation_function, frequency, time):
     return power_spectrum
 
 
-@staticmethod
 def wiener_khinchin_transform(power_spectrum, frequency, time):
     """
     A function to transform the power spectrum to a correlation function by the Wiener Khinchin transformation

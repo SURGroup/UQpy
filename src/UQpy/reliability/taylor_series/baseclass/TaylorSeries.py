@@ -1,11 +1,8 @@
 import logging
 from typing import Union, List
-
 import numpy as np
 from beartype import beartype
-
 from UQpy.distributions import *
-from UQpy.RunModel import RunModel
 from UQpy.transformations import *
 
 
@@ -54,18 +51,18 @@ class TaylorSeries:
     """
     @beartype
     def __init__(self,
-                 distributions: Union[None, Distribution, List[Distribution]]=None,
+                 distributions: Union[None, Distribution, List[Distribution]] = None,
                  runmodel_object=None,
-                 form_object = None,
-                 corr_x: Union[list, None, np.ndarray]=None,
-                 corr_z: Union[list, None, np.ndarray]=None,
-                 seed_x: Union[list, None, np.ndarray]=None,
-                 seed_u: Union[list, None, np.ndarray]=None,
-                 iterations_number: Union[None, int]=None,
-                 tol1: Union[None, float, int]=None,
-                 tol2: Union[None, float, int]=None,
-                 tol3: Union[None, float, int]=None,
-                 df_step: Union[None, float, int]=None):
+                 form_object=None,
+                 corr_x: Union[list, None, np.ndarray] = None,
+                 corr_z: Union[list, None, np.ndarray] = None,
+                 seed_x: Union[list, None, np.ndarray] = None,
+                 seed_u: Union[list, None, np.ndarray] = None,
+                 iterations_number: Union[None, int] = None,
+                 tol1: Union[None, float, int] = None,
+                 tol2: Union[None, float, int] = None,
+                 tol3: Union[None, float, int] = None,
+                 df_step: Union[None, float, int] = None):
 
         if form_object is None:
             if isinstance(distributions, list):
@@ -105,7 +102,7 @@ class TaylorSeries:
         self.logger = logging.getLogger(__name__)
 
     @staticmethod
-    def derivatives(point_u, runmodel_object, nataf_object, order='first', point_x= None, point_qoi=None, df_step=0.01):
+    def derivatives(point_u, runmodel_object, nataf_object, order='first', point_x=None, point_qoi=None, df_step=0.01):
         """
         A method to estimate the derivatives (1st-order, 2nd-order, mixed) of a function using a central difference
         scheme after transformation to the standard normal space.

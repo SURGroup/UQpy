@@ -1,6 +1,5 @@
 import logging
 from typing import List, Union
-
 from UQpy.utilities.ValidationTypes import PositiveInteger
 from UQpy.distributions import *
 from UQpy.sampling.latin_hypercube_criteria.baseclass.Criterion import *

@@ -4,6 +4,7 @@ from beartype import beartype
 from UQpy.utilities.ValidationTypes import *
 from UQpy.utilities.Utilities import process_random_state
 
+
 class SimplexSampling:
     """
     Generate uniform random samples inside an n-dimensional simplex.
@@ -95,7 +96,8 @@ class SimplexSampling:
         else:
             a = min(self.nodes)
             b = max(self.nodes)
-            sample = a + (b - a) * stats.uniform.rvs(size=[self.samples_number, dimension], random_state=self.random_state)
+            sample = a + (b - a) * stats.uniform.rvs(size=[self.samples_number, dimension],
+                                                     random_state=self.random_state)
         return sample
 
     def __copy__(self):

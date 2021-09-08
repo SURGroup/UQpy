@@ -1,18 +1,15 @@
 import logging
 from typing import Union
-
 from beartype import beartype
-
 from UQpy.sampling.input_data.ISInput import ISInput
 from UQpy.sampling.mcmc import *
-from UQpy.distributions.baseclass import Distribution
 from UQpy.sampling.input_data.DramInput import DramInput
 from UQpy.sampling.input_data.DreamInput import DreamInput
 from UQpy.sampling.input_data.MhInput import MhInput
 from UQpy.sampling.input_data.MmhInput import MmhInput
 from UQpy.sampling.input_data.StretchInput import StretchInput
 from UQpy.utilities.NoPublicConstructor import NoPublicConstructor
-from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger
+from UQpy.utilities.ValidationTypes import PositiveInteger
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
 from UQpy.sampling import MCMC, ImportanceSampling, MetropolisHastings
 

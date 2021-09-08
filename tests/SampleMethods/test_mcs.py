@@ -124,6 +124,7 @@ def test_random_state1():
         MonteCarloSampling(distributions=dist1, random_state='abc')
 
 
+
 def test_random_state2():
     """Check if random_state attribute is not an integer, np.random.RandomState object or None, when dist_object is a
     list of multiple distribution class object."""

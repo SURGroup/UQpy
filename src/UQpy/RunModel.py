@@ -276,8 +276,8 @@ class RunModel:
                  model_dir: str = 'Model_Runs',
                  fmt=None,
                  separator: str = ', ',
-                 vec: bool=True,
-                 delete_files: bool=False,
+                 vec: bool = True,
+                 delete_files: bool = False,
                  **kwargs):
 
         # Check the platform and build appropriate call to Python
@@ -346,7 +346,7 @@ class RunModel:
                 new_dir_name = os.path.join(self.model_dir, os.path.basename(full_file_name))
                 shutil.copytree(full_file_name, new_dir_name)
         self.logger.info('\nUQpy: The model files have been copied to the following directory for evaluation: \n' +
-                  self.model_dir)
+                         self.model_dir)
 
         # Check if the model script is a python script
         model_extension = pathlib.Path(model_script).suffix
@@ -626,9 +626,9 @@ class RunModel:
             # If the Python model is vectorized to accept many samples.
             self.model_output = model_object(self.samples[self.nexist:self.nexist + self.nsim], **self.python_kwargs)
             if self.model_is_class:
-                self.qoi_list[self.nexist:self.nexist+self.nsim] = list(self.model_output.qoi)
+                self.qoi_list[self.nexist:self.nexist + self.nsim] = list(self.model_output.qoi)
             else:
-                self.qoi_list[self.nexist:self.nexist+self.nsim] = list(self.model_output)
+                self.qoi_list[self.nexist:self.nexist + self.nsim] = list(self.model_output)
         else:
             # If the Python model is not vectorized and accepts only a single sample.
             for i in range(self.nexist, self.nexist + self.nsim):
@@ -733,12 +733,12 @@ class RunModel:
         # Loop over the number of samples and create input files in a folder in current directory
         for i in range(self.nsim):
             new_text = self._find_and_replace_var_names_with_values(index=i + self.nexist)
-            folder_to_write = 'run_' + str(i+self.nexist) + '/InputFiles'
+            folder_to_write = 'run_' + str(i + self.nexist) + '/InputFiles'
             # Write the new text to the input file
-            self._create_input_files(file_name=self.input_template, num=i+self.nexist, text=new_text,
+            self._create_input_files(file_name=self.input_template, num=i + self.nexist, text=new_text,
                                      new_folder=folder_to_write)
             self.logger.info('\nUQpy: Created input files for run ' + str(i) + ' in the directory: \n' +
-                      os.path.join(self.model_dir, folder_to_write))
+                             os.path.join(self.model_dir, folder_to_write))
 
     def _execute_parallel(self):
         """

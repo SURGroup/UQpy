@@ -1,8 +1,5 @@
 import logging
-
-import numpy as np
 from beartype import beartype
-
 from UQpy.stochastic_process.supportive.MultivariateStochasticProcess import MultivariateStochasticProcess
 from UQpy.stochastic_process.supportive.UnivariateStochacticProcess import UnivariateStochasticProcess
 from UQpy.utilities.Utilities import *
@@ -166,7 +163,6 @@ class SpectralRepresentationMethod:
         """
         self.logger.info('UQpy: Stochastic Process: Running Spectral Representation Method.')
 
-        samples = None
         phi = None
 
         samples = self.case.calculate_samples(samples_number)
@@ -179,7 +175,3 @@ class SpectralRepresentationMethod:
             self.phi = np.concatenate((self.phi, phi), axis=0)
 
         self.logger.info('UQpy: Stochastic Process: Spectral Representation Method Complete.')
-
-
-
-

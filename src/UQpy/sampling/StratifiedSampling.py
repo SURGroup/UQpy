@@ -1,6 +1,5 @@
 import logging
-from typing import List, Union
-
+from typing import List
 from beartype import beartype
 from UQpy.distributions import DistributionContinuous1D, JointIndependent
 from UQpy.utilities.strata.baseclass import Strata

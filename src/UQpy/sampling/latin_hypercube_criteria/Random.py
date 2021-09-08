@@ -6,8 +6,8 @@ class Random(Criterion):
     """
             Method for generating a Latin hypercube design by sampling randomly inside each bin.
 
-            The ``random`` method takes a set of samples drawn randomly from within the Latin hypercube bins and performs a
-            random shuffling of them to pair the variables.
+            The ``random`` method takes a set of samples drawn randomly from within the Latin hypercube bins and
+            performs a random shuffling of them to pair the variables.
 
             **Input:**
 

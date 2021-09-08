@@ -186,10 +186,9 @@ class Voronoi(Strata):
             except qhull.QhullError:
                 self.mesh.centroids[j, :], self.mesh.volumes[j] = np.mean(self.points[self.mesh.vertices[j]]), 0
 
-
     def initialize(self, samples_number, training_points):
         self.add_boundary_points_and_construct_delaunay(samples_number, training_points)
-        self.mesh.old_vertices=self.mesh.vertices
+        self.mesh.old_vertices = self.mesh.vertices
 
     def add_boundary_points_and_construct_delaunay(self, samples_number, training_points):
         """
@@ -239,7 +238,7 @@ class Voronoi(Strata):
                 var[j, k] = (self.mesh.volumes[j] * math.factorial(self.dimension) /
                              math.factorial(self.dimension + 2)) * (self.dimension * std ** 2)
             s[j] = np.sum(dy_dx[j, :] * var[j, :] * dy_dx[j, :]) * (self.mesh.volumes[j] ** 2)
-        self.dy_dx_old=dy_dx
+        self.dy_dx_old = dy_dx
 
     def estimate_gradient(self, index, dimension, samples_u01, training_points, qoi, max_train_size):
         self.mesh.centroids = np.zeros([self.mesh.nsimplex, self.dimension])
@@ -252,7 +251,6 @@ class Voronoi(Strata):
                     Delaunay.compute_delaunay_centroid_volume(self.points[self.mesh.vertices[j]])
             except qhull.QhullError:
                 self.mesh.centroids[j, :], self.mesh.volumes[j] = np.mean(self.points[self.mesh.vertices[j]]), 0
-
 
         if max_train_size is None or len(training_points) <= max_train_size or \
                 index == self.training_points.shape[0]:
@@ -311,9 +309,10 @@ class Voronoi(Strata):
                     dy_dx[j, :] = self.dy_dx_old[int(self.mesh.new_to_old[j]), :]
 
             # For those simplices that will be updated, compute the new gradient
-            dy_dx[update_array, :] = self._estimate_gradient(np.squeeze(self.samplesU01[neighbors]),
-                                                            np.atleast_2d(np.array(qoi)[neighbors]),
-                                                            self.mesh.centroids[update_array])
+            dy_dx[update_array, :] = \
+                self._estimate_gradient(np.squeeze(self.samplesU01[neighbors]),
+                                        np.atleast_2d(np.array(qoi)[neighbors]),
+                                        self.mesh.centroids[update_array])
         return dy_dx
 
     def _update_strata(self, new_point, samples_u01):

@@ -14,7 +14,8 @@ class ExpectedFeasibility(LearningFunction):
             **Inputs:**
 
             * **surr** (`class` object):
-                A kriging surrogate model, this object must have a ``predict`` method as defined in `krig_object` parameter.
+                A kriging surrogate model, this object must have a ``predict`` method as defined in `krig_object`
+                parameter.
 
             * **pop** (`ndarray`):
                 An array of samples defining the learning set at which points the EFF is evaluated
@@ -25,8 +26,8 @@ class ExpectedFeasibility(LearningFunction):
                 Default: 1.
 
             * **parameters** (`dictionary`)
-                Dictionary containing all necessary parameters and the stopping criterion for the learning function. Here
-                these include `a`, `epsilon`, and `eff_stop`.
+                Dictionary containing all necessary parameters and the stopping criterion for the learning function.
+                Here these include `a`, `epsilon`, and `eff_stop`.
 
             * **samples** (`ndarray`):
                 The initial samples at which to evaluate the model.

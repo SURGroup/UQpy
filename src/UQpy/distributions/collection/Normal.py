@@ -1,9 +1,6 @@
 from typing import Union
-
-import numpy as np
 import scipy.stats as stats
 from beartype import beartype
-
 from UQpy.distributions.baseclass import DistributionContinuous1D
 
 

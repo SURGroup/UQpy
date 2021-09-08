@@ -1,6 +1,6 @@
 import copy
 import logging
-from beartype.vale import Is
+from UQpy import DramInput, DreamInput, MhInput, MmhInput, StretchInput
 from UQpy.sampling import *
 
 
@@ -71,12 +71,16 @@ class SubsetSimulation:
     @beartype
     def __init__(self,
                  runmodel_object,
-                 mcmc_object: MCMC,
+                 mcmc_input: Union[DramInput, DreamInput, MhInput, MmhInput, StretchInput],
                  samples_init: np.ndarray = None,
                  conditional_probability: Annotated[Union[float, int], Is[lambda number: 0 <= number <= 1]] = 0.1,
                  samples_number_per_subset: int = 1000,
                  max_level: int = 10):
         # Initialize other attributes
+
+        class_type = type(mcmc_input)
+        sampling_class = SubsetSimulation.input_to_class[class_type]
+
         self.runmodel_object = runmodel_object
         self.samples_init = samples_init
         self.conditional_probability = conditional_probability
@@ -84,17 +88,25 @@ class SubsetSimulation:
         self.max_level = max_level
         self.logger = logging.getLogger(__name__)
 
-        self.mcmc_objects = [mcmc_object]
+        self.mcmc_objects = [sampling_class]
 
         self.samples = list()
         self.g = list()
         self.g_level = list()
 
-        self.logger.info('UQpy: Running Subset Simulation with mcmc of type: ' + str(type(mcmc_object)))
+        self.logger.info('UQpy: Running Subset Simulation with mcmc of type: ' + str(type(mcmc_input)))
 
         [self.pf, self.cov1, self.cov2] = self.run()
 
         self.logger.info('UQpy: Subset Simulation Complete!')
+
+    input_to_class = {
+        DramInput: DRAM,
+        DreamInput: DREAM,
+        MhInput: MetropolisHastings,
+        MmhInput: ModifiedMetropolisHastings,
+        StretchInput: Stretch
+    }
 
     # -----------------------------------------------------------------------------------------------------------------------
     # The run function executes the chosen subset simulation algorithm

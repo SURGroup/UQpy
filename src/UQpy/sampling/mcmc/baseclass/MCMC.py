@@ -1,14 +1,12 @@
 import logging
-
-import numpy as np
 from beartype import beartype
-
 from UQpy.distributions import Distribution
 from UQpy.utilities.ValidationTypes import *
 from UQpy.utilities.Utilities import process_random_state
+from abc import ABC
 
 
-class MCMC:
+class MCMC(ABC):
     """
     Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
 

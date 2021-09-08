@@ -8,8 +8,8 @@ from UQpy.distributions import DistributionContinuous1D
 class StochasticReducedOrderModel:
 
     """
-    Stochastic Reduced Order Model(stochastic_reduced_order_models) provide a low-dimensional, discrete approximation of a given random
-    quantity.
+    Stochastic Reduced Order Model(stochastic_reduced_order_models) provide a low-dimensional, discrete approximation of
+    a given random quantity.
 
     **Inputs:**
 
@@ -129,8 +129,8 @@ class StochasticReducedOrderModel:
         if self.properties is not None:
             self.run()
         else:
-            self.logger.log('UQpy: No properties list provided, execute the stochastic_reduced_order_models by calling '
-                            'run method and specifying a properties list')
+            self.logger.info('UQpy: No properties list provided, execute the stochastic_reduced_order_models by calling'
+                             ' run method and specifying a properties list')
 
     def run(self, weights_errors=None, weights_distribution=None, weights_moments=None, weights_correlation=None,
             properties=None):
@@ -138,10 +138,10 @@ class StochasticReducedOrderModel:
         Execute the stochastic reduced order model in the ``stochastic_reduced_order_models`` class.
 
         The ``run`` method is the function that computes the probability weights corresponding to the sample. If
-        `properties` is provided, the ``run`` method is automatically called when the ``stochastic_reduced_order_models`` object is defined. The
-        user may also call the ``run`` method directly to generate samples. The ``run`` method of the ``stochastic_reduced_order_models`` class can
-        be invoked many times with different weights parameters and each time computed probability weights are
-        overwritten.
+        `properties` is provided, the ``run`` method is automatically called when the ``stochastic_reduced_order_models`
+        ` object is defined. The user may also call the ``run`` method directly to generate samples. The ``run`` method
+        of the ``stochastic_reduced_order_models`` class can be invoked many times with different weights parameters and
+        each time computed probability weights are overwritten.
 
         **Inputs:**
 
@@ -250,8 +250,9 @@ class StochasticReducedOrderModel:
 
         p_ = optimize.minimize(f, np.zeros(self.samples_number),
                                args=(self.samples, self.weights_distribution, self.weights_moments,
-                                     self.weights_correlation, self.target_distributions, self.samples_number, self.dimension,
-                                     self.moments, self.weights_errors, self.properties, self.correlation),
+                                     self.weights_correlation, self.target_distributions, self.samples_number,
+                                     self.dimension, self.moments, self.weights_errors, self.properties,
+                                     self.correlation),
                                constraints=cons, method='SLSQP', bounds=[[0, 1]]*self.samples_number)
 
         self.sample_weights = p_.x

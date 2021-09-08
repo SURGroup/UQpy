@@ -11,8 +11,9 @@ from UQpy.utilities.Utilities import bi_variate_normal_pdf
 from scipy.linalg import cholesky
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
-DistributionList = Annotated[list[Distribution], Is[lambda lst: all(
+DistributionList = Annotated[List[Distribution], Is[lambda lst: all(
     isinstance(item, Distribution) for item in lst)]]
+
 
 class Nataf:
     """
@@ -122,7 +123,7 @@ class Nataf:
     """
     @beartype
     def __init__(self,
-                 distributions: Union[Distribution,DistributionList],
+                 distributions: Union[Distribution, DistributionList],
                  samples_x: Union[None, np.ndarray] = None,
                  samples_z: Union[None, np.ndarray] = None,
                  jacobian: bool = False,

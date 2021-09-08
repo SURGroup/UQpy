@@ -1,9 +1,6 @@
 import logging
-from typing import Union, List
-
-import numpy as np
+from typing import List
 from beartype import beartype
-
 from UQpy.RunModel import RunModel
 from UQpy.distributions.baseclass import Distribution
 from UQpy.sampling.LatinHypercubeSampling import LatinHypercubeSampling
@@ -240,7 +237,6 @@ class AdaptiveKriging:
                     raise NotImplementedError("UQpy: User should provide either 'samples' or 'nstart' value.")
                 self.logger.info('UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling.')
 
-
                 random_criterion = Random(random_state=self.random_state)
                 latin_hypercube_sampling = \
                     LatinHypercubeSampling(distributions=self.dist_object, samples_number=2,
@@ -284,7 +280,6 @@ class AdaptiveKriging:
                                    population=rest_pop,
                                    qoi=self.qoi,
                                    samples=self.samples)
-
 
             # Add the new points to the training set and to the sample set.
             self.samples = np.vstack([self.samples, np.atleast_2d(new_point)])

@@ -1,9 +1,8 @@
-from typing import Union, List
+from typing import Union
 
 import numpy as np
 import scipy.stats as stats
 from beartype import beartype
-from beartype.vale import IsAttr, IsEqual
 
 from UQpy.distributions.baseclass import DistributionND
 

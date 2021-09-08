@@ -1,10 +1,7 @@
 import logging
-
 from beartype import beartype
-
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
-
 from UQpy.sampling.input_data.DramInput import DramInput
 from UQpy.utilities.ValidationTypes import *
 
@@ -43,6 +40,7 @@ class DRAM(MCMC):
     **Methods:**
 
     """
+
     @beartype
     def __init__(self,
                  dram_input: DramInput,
@@ -197,8 +195,9 @@ class DRAM(MCMC):
             new_covariance = np.zeros((dimensions, dimensions))
         else:
             delta_n = (new_sample - previous_mean).reshape((dimensions, 1))
-            new_covariance = (samples_number - 2) / (samples_number - 1) * previous_covariance + \
-                             1 / samples_number * np.matmul(delta_n, delta_n.T)
+            new_covariance = \
+                (samples_number - 2) / (samples_number - 1) * previous_covariance + \
+                1 / samples_number * np.matmul(delta_n, delta_n.T)
         return new_mean, new_covariance
 
     def __copy__(self):

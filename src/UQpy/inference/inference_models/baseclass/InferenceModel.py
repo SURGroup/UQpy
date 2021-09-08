@@ -2,10 +2,7 @@ import logging
 
 import numpy as np
 from abc import ABC, abstractmethod
-
-from beartype.vale import Is
-
-from UQpy.distributions import Distribution, Normal, MultivariateNormal
+from UQpy.distributions import Distribution
 from UQpy.RunModel import RunModel
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
@@ -63,8 +60,7 @@ class InferenceModel(ABC):
                  distributions=None,
                  name: str = '',
                  error_covariance: float = 1.0,
-                 prior: Distribution = None,
-                 **kwargs_likelihood):
+                 prior: Distribution = None):
 
         # Initialize some parameters
         self.parameters_number = parameters_number
@@ -75,7 +71,6 @@ class InferenceModel(ABC):
         self.error_covariance = error_covariance
         self.log_likelihood = log_likelihood
         self.distributions = distributions
-        self.kwargs_likelihood = kwargs_likelihood
         # Perform checks on inputs runmodel_object, log_likelihood, distribution_object that define the inference model
         if (self.runmodel_object is None) and (self.log_likelihood is None) and (self.distributions is None):
             raise ValueError('UQpy: One of runmodel_object, log_likelihood or dist_object inputs must be provided.')
@@ -97,7 +92,8 @@ class InferenceModel(ABC):
             init_params = self.distributions.get_parameters()
             self.list_params = [key for key in self.distributions.ordered_parameters if init_params[key] is None]
             if len(self.list_params) != self.parameters_number:
-                raise TypeError('UQpy: Incorrect dimensions between parameters_number and number of inputs set to None.')
+                raise TypeError('UQpy: Incorrect dimensions between parameters_number and number'
+                                ' of inputs set to None.')
 
         # Define prior if it is given
         self.prior = prior
@@ -170,4 +166,3 @@ class InferenceModel(ABC):
         log_prior_eval = self.prior.log_pdf(x=parameter_vector)
 
         return log_likelihood_eval + log_prior_eval
-

@@ -1,10 +1,6 @@
 import logging
-from typing import Union
-
-import numpy as np
 from beartype import beartype
 from scipy.linalg import sqrtm
-
 from UQpy.utilities.Utilities import *
 from UQpy.utilities.ValidationTypes import *
 

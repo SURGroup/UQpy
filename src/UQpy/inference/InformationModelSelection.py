@@ -1,9 +1,6 @@
 import logging
 from typing import List, Union
-
-import numpy as np
 from beartype import beartype
-
 from UQpy.inference.inference_models.optimization.MinizeOptimizer import MinimizeOptimizer
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
 from UQpy.inference.MLE import MLE
@@ -252,8 +249,3 @@ class InformationModelSelection:
         delta = np.array(criterion_values) - min(criterion_values)
         prob = np.exp(-delta / 2)
         return prob / np.sum(prob)
-
-
-
-
-

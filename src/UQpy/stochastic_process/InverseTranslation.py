@@ -1,15 +1,14 @@
 import logging
 from typing import Union, List
-
-import numpy as np
 from beartype import beartype
 
+from UQpy import NoPublicConstructor
 from UQpy.distributions import *
 from UQpy.utilities.Utilities import *
 from UQpy.stochastic_process.supportive import inverse_wiener_khinchin_transform, wiener_khinchin_transform
 
 
-class InverseTranslation:
+class InverseTranslation(metaclass=NoPublicConstructor):
     """
     A class to perform Iterative Translation Approximation Method to find the underlying  Gaussian Stochastic Processes
     which upon translation would yield the necessary non-Gaussian Stochastic Processes.
@@ -87,8 +86,9 @@ class InverseTranslation:
         self.power_spectrum_gaussian = self._itam_power_spectrum()
         self.auto_correlation_function_gaussian = wiener_khinchin_transform(self.power_spectrum_gaussian,
                                                                             self.frequency, self.time)
-        self.correlation_function_gaussian = self.auto_correlation_function_gaussian / \
-                                             self.auto_correlation_function_gaussian[0]
+        self.correlation_function_gaussian = \
+            self.auto_correlation_function_gaussian / \
+            self.auto_correlation_function_gaussian[0]
 
     @classmethod
     @beartype
@@ -98,7 +98,6 @@ class InverseTranslation:
                                    frequency_interval: float,
                                    time_intervals_number: int,
                                    frequency_intervals_number: int,
-                                   correlation_function_non_gaussian: np.ndarray = None,
                                    power_spectrum_non_gaussian: np.ndarray = None,
                                    samples_non_gaussian: np.ndarray = None):
         frequency = np.arange(0, frequency_intervals_number) * frequency_interval
@@ -139,10 +138,8 @@ class InverseTranslation:
         i_converge = 0
         max_iter = 100
         target_r = wiener_khinchin_transform(target_s, self.frequency, self.time)
-        r_g_iterate = target_r
         s_g_iterate = target_s
         r_ng_iterate = np.zeros_like(target_r)
-        s_ng_iterate = np.zeros_like(target_s)
 
         for _ in range(max_iter):
             r_g_iterate = wiener_khinchin_transform(s_g_iterate, self.frequency, self.time)

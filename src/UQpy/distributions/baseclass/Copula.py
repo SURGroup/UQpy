@@ -3,7 +3,6 @@ from abc import ABC
 
 
 class Copula(ABC):
-
     """
     Define a copula for a multivariate distribution whose dependence structure is defined with a copula.
 
@@ -81,7 +80,7 @@ class Copula(ABC):
         self.ordered_parameters = ordered_parameters
         if self.ordered_parameters is None:
             self.ordered_parameters = tuple(kwargs.keys())
-        if len(self.ordered_parameters)!=len(self.parameters):
+        if len(self.ordered_parameters) != len(self.parameters):
             raise ValueError('Inconsistent dimensions between ordered_parameters tuple and parameters dictionary.')
 
     def get_parameters(self):

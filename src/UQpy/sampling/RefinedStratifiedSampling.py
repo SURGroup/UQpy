@@ -1,10 +1,6 @@
-import logging
-
-import numpy as np
-from beartype import beartype
 from UQpy.sampling.refined_stratified_sampling.baseclass.Refinement import *
 from UQpy.sampling.StratifiedSampling import *
-from UQpy.utilities.ValidationTypes import RandomStateType,PositiveInteger
+from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger
 from UQpy.utilities.Utilities import process_random_state
 
 
@@ -40,14 +36,14 @@ class RefinedStratifiedSampling:
 
         if self.samples_number <= self.samples.shape[0]:
             raise ValueError('UQpy Error: The number of requested samples must be larger than the existing '
-                                      'sample set.')
+                             'sample set.')
 
         initial_number = self.samples.shape[0]
 
         self.refinement_algorithm.initialize(self.samples_number, self.training_points)
 
         for i in range(initial_number, samples_number, self.samples_per_iteration):
-            new_points = self.refinement_algorithm\
+            new_points = self.refinement_algorithm \
                 .update_samples(self.samples_number, self.samples_per_iteration,
                                 self.random_state, i, self.dimension, self.samplesU01,
                                 self.training_points)
@@ -63,4 +59,3 @@ class RefinedStratifiedSampling:
         for k in range(self.dimension):
             new_point_[:, k] = self.stratified_sampling.distributions[k].icdf(new_points[:, k])
         self.samples = np.vstack([self.samples, new_point_])
-

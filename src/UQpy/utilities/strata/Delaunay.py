@@ -64,7 +64,7 @@ class Delaunay(Strata):
         **Methods:**
         """
 
-    def calculate_strata_metrics(self):
+    def calculate_strata_metrics(self, **kwargs):
         pass
 
     def __init__(self,

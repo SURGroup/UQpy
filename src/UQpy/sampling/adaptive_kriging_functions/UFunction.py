@@ -11,7 +11,8 @@ class UFunction(LearningFunction):
             **Inputs:**
 
             * **surr** (`class` object):
-                A kriging surrogate model, this object must have a ``predict`` method as defined in `krig_object` parameter.
+                A kriging surrogate model, this object must have a ``predict`` method as defined in `krig_object`
+                parameter.
 
             * **pop** (`ndarray`):
                 An array of samples defining the learning set at which points the U-function is evaluated
@@ -22,8 +23,8 @@ class UFunction(LearningFunction):
                 Default: 1.
 
             * **parameters** (`dictionary`)
-                Dictionary containing all necessary parameters and the stopping criterion for the learning function. Here
-                this includes the parameter `u_stop`.
+                Dictionary containing all necessary parameters and the stopping criterion for the learning function.
+                Here this includes the parameter `u_stop`.
 
             * **samples** (`ndarray`):
                 The initial samples at which to evaluate the model.

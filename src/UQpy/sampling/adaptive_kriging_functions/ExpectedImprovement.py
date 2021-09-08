@@ -1,7 +1,5 @@
 from typing import Union
-
 from beartype import beartype
-
 from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import LearningFunction
 import scipy.stats as stats
 import numpy as np

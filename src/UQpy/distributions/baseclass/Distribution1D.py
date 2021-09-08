@@ -1,9 +1,10 @@
 import numpy as np
 import scipy.stats as stats
 from UQpy.distributions.baseclass.Distribution import Distribution
+from abc import ABC
 
 
-class Distribution1D(Distribution):
+class Distribution1D(Distribution, ABC):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

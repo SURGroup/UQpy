@@ -9,7 +9,8 @@ from UQpy.distributions.baseclass import DistributionContinuous1D, DistributionN
 
 class JointIndependent(DistributionND):
     """
-    Define a joint distribution from its independent marginals. ``JointIndependent`` is a child class of ``DistributionND``.
+    Define a joint distribution from its independent marginals. ``JointIndependent`` is a child class of
+    ``DistributionND``.
 
     **Inputs:**
 

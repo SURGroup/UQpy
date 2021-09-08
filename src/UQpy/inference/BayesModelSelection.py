@@ -1,4 +1,3 @@
-import copy
 import logging
 from typing import List, Union
 
@@ -10,8 +9,7 @@ from UQpy.inference.MethodEvidence import MethodEvidence
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
 from UQpy.sampling.input_data.ISInput import ISInput
 from UQpy.sampling.input_data.SamplingInput import SamplingInput
-from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger
-from UQpy.utilities.Utilities import process_random_state
+from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
 class BayesModelSelection:
@@ -258,8 +256,3 @@ class BayesModelSelection:
         """
         scaled_evidences = [evi * prior_prob for (evi, prior_prob) in zip(evidence_values, prior_probabilities)]
         return scaled_evidences / np.sum(scaled_evidences)
-
-
-
-
-

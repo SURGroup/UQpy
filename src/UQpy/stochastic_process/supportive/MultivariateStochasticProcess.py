@@ -3,7 +3,7 @@ import logging
 import numpy as np
 
 
-class MultivariateStochasticProcess():
+class MultivariateStochasticProcess:
 
     def __init__(self,
                  number_of_variables,

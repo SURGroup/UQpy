@@ -3,7 +3,7 @@ import logging
 
 from beartype import beartype
 
-from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger
+from UQpy.utilities.ValidationTypes import PositiveInteger
 from UQpy.utilities.Utilities import *
 
 

@@ -3,6 +3,7 @@ from beartype import beartype
 from UQpy.inference.inference_models.baseclass.InferenceModel import *
 from UQpy.distributions.collection.MultivariateNormal import MultivariateNormal
 from UQpy.utilities.ValidationTypes import *
+from UQpy.distributions.collection import Normal
 
 
 class ComputationalModel(InferenceModel):

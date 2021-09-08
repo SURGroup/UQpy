@@ -1,8 +1,9 @@
 import scipy.stats as stats
 from UQpy.distributions.baseclass.Distribution1D import Distribution1D
+from abc import ABC
 
 
-class DistributionContinuous1D(Distribution1D):
+class DistributionContinuous1D(Distribution1D, ABC):
     """
     Parent class for univariate continuous probability distributions.
     """

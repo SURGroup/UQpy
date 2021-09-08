@@ -1,5 +1,5 @@
 import itertools
-from typing import Optional, Union, Callable
+from typing import Union, Callable
 
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsl

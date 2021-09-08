@@ -121,9 +121,10 @@ class MLE:
         self.logger.info('UQpy: Evaluating maximum likelihood estimate for inference model '
                          + self.inference_model.name)
 
-        use_distribution_fit = hasattr(self.inference_model, 'distributions') and \
-                               self.inference_model.distributions is not None and \
-                               hasattr(self.inference_model.distributions, 'fit')
+        use_distribution_fit = \
+            hasattr(self.inference_model, 'distributions') and \
+            self.inference_model.distributions is not None and \
+            hasattr(self.inference_model.distributions, 'fit')
 
         if use_distribution_fit:
             self._run_distribution_fit(optimizations_number)
@@ -155,8 +156,9 @@ class MLE:
                 .reshape((optimizations_number, self.inference_model.parameters_number))
             if self.optimizer.bounds is not None:
                 bounds = np.array(self.optimizer.bounds)
-                initial_guess = bounds[:, 0].reshape((1, -1)) + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) \
-                                * initial_guess
+                initial_guess = \
+                    bounds[:, 0].reshape((1, -1)) + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) \
+                    * initial_guess
         else:
             initial_guess = np.atleast_2d(initial_guess)
             if initial_guess.shape[1] != self.inference_model.parameters_number:
@@ -193,5 +195,5 @@ class MLE:
             Value of negative log-likelihood.
         """
 
-        a= -1 * self.inference_model.evaluate_log_likelihood(params=one_param.reshape((1, -1)), data=self.data)[0]
+        a = -1 * self.inference_model.evaluate_log_likelihood(params=one_param.reshape((1, -1)), data=self.data)[0]
         return a
