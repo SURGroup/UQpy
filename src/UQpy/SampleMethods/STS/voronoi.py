@@ -68,8 +68,8 @@ class VoronoiSTS(STS):
             if int(self.nsamples_per_stratum[j]) != 0:
                 weights.extend(
                     [self.strata_object.volume[j] / self.nsamples_per_stratum[j]] * int(self.nsamples_per_stratum[j]))
-            else:
-                weights.extend([0] * int(self.nsamples_per_stratum[j]))
+            # else:
+            #     weights.extend([0] * int(self.nsamples_per_stratum[j]))
 
         self.weights = weights
         self.samplesU01 = np.concatenate(samples_in_strata, axis=0)

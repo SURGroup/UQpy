@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class STS:
     """
     Parent class for Stratified Sampling ([9]_).
