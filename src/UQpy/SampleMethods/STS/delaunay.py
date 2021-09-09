@@ -41,16 +41,16 @@ class DelaunaySTS(STS):
         samples_in_strata, weights = [], []
         count = 0
         for simplex in self.strata_object.delaunay.simplices:  # extract simplices from Delaunay triangulation
-            samples_temp = Simplex(nodes=self.strata_object.delaunay.points[simplex],
-                                   nsamples=int(self.nsamples_per_stratum[count]), random_state=self.random_state)
-            samples_in_strata.append(samples_temp.samples)
             if int(self.nsamples_per_stratum[count]) != 0:
+                samples_temp = Simplex(nodes=self.strata_object.delaunay.points[simplex],
+                                       nsamples=int(self.nsamples_per_stratum[count]), random_state=self.random_state)
+                samples_in_strata.append(samples_temp.samples)
                 weights.extend(
                     [self.strata_object.volume[count] / self.nsamples_per_stratum[count]] * int(
                         self.nsamples_per_stratum[
                             count]))
-            else:
-                weights.extend([0] * int(self.nsamples_per_stratum[count]))
+            # else:
+            #     weights.extend([0] * int(self.nsamples_per_stratum[count]))
             count = count + 1
 
         self.weights = np.array(weights)
