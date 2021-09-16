@@ -780,7 +780,11 @@ class RunModel:
                                          str(self.model_script) + "' {1}  ::: {" + str(self.nexist) + ".." +
                                          str(self.nexist + self.nsim - 1) + "}")
 
-        subprocess.run(self.model_command_string, shell=True)
+        # Use bash instead of the default sh in Linux/Unix platforms 
+        if platform.system() in ['Linux', 'Unix']:
+            subprocess.run(self.model_command_string, shell=True, executable='/bin/bash')
+        else:
+            subprocess.run(self.model_command_string, shell=True)
 
     ####################################################################################################################
     # Helper functions
