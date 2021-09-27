@@ -1,3 +1,4 @@
+from UQpy.utilities.ValidationTypes import RandomStateType
 from UQpy.sampling.latin_hypercube_criteria import Criterion
 import numpy as np
 
@@ -22,6 +23,9 @@ class Random(Criterion):
             * **lhs_samples** (`ndarray`)
                 The randomly shuffled set of LHS samples.
             """
+
+    def __init__(self, random_state: RandomStateType = None):
+        super().__init__(random_state)
 
     def generate_samples(self):
         lhs_samples = np.zeros_like(self.samples)

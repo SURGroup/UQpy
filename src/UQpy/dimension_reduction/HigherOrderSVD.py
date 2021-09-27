@@ -2,10 +2,9 @@ import logging
 from typing import Union
 
 import numpy as np
-from UQpy.dimension_reduction.baseclass import POD
 
 
-class HigherOrderSVD(POD):
+class HigherOrderSVD:
     """
     HigherOrderSVD child class is used for higher-order singular value decomposition on the input solutions tensor.
 
@@ -64,7 +63,7 @@ class HigherOrderSVD(POD):
             columns = self.solution_snapshots.shape[1]
             snapshot_number = self.solution_snapshots.shape[2]
 
-        a1, a2, a3 = POD.unfold(self.solution_snapshots)
+        a1, a2, a3 = HigherOrderSVD.unfold(self.solution_snapshots)
 
         u1, sig_1, v1 = np.linalg.svd(a1, full_matrices=True)
         u2, sig_2, v2 = np.linalg.svd(a2, full_matrices=True)
@@ -134,3 +133,47 @@ class HigherOrderSVD(POD):
                     self.logger.warning("Reduced-order reconstruction error: {0:.3%}".format(error_rec))
 
             return reconstructed_solutions, reduced_solutions
+
+
+    @staticmethod
+    def unfold(second_order_tensor):
+        """
+        Method for unfolding second order tensors.
+
+        **Input:**
+
+        * **data** (`ndarray`) or (`list`):
+            Input second order tensor to be unfolded.
+
+        **Output/Returns:**
+
+        * **M0, M1, M2** (`ndarrays`):
+            Returns the 2-dimensional unfolded matrices.
+        """
+
+        if type(second_order_tensor) == list:
+            rows = second_order_tensor[0].shape[0]
+            columns = second_order_tensor[0].shape[1]
+            number_of_data = len(second_order_tensor)
+            tensor_of_list = np.zeros((rows, columns, number_of_data))
+            for i in range(number_of_data):
+                tensor_of_list[:, :, i] = second_order_tensor[i]
+            del second_order_tensor
+            second_order_tensor = np.copy(tensor_of_list)
+
+        permutation1 = [0, 2, 1]
+        permutation2 = [1, 2, 0]
+        permutation3 = [2, 0, 1]
+
+        permuted_tensor1 = np.transpose(second_order_tensor, permutation1)
+        permuted_tensor2 = np.transpose(second_order_tensor, permutation2)
+        permuted_tensor3 = np.transpose(second_order_tensor, permutation3)
+
+        matrix1 = permuted_tensor1.reshape(second_order_tensor.shape[0],
+                                           second_order_tensor.shape[2] * second_order_tensor.shape[1])
+        matrix2 = permuted_tensor2.reshape(second_order_tensor.shape[1],
+                                           second_order_tensor.shape[2] * second_order_tensor.shape[0])
+        matrix3 = permuted_tensor3.reshape(second_order_tensor.shape[2],
+                                           second_order_tensor.shape[0] * second_order_tensor.shape[1])
+
+        return matrix1, matrix2, matrix3

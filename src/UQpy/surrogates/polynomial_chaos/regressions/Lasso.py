@@ -1,9 +1,6 @@
 import logging
-from typing import List
-
 import numpy as np
 from beartype import beartype
-
 from UQpy.surrogates.polynomial_chaos.polynomials.baseclass import Polynomials
 from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
 
@@ -23,7 +20,7 @@ class LassoRegression(Regression):
     """
     @beartype
     def __init__(self,
-                 polynomials: List[Polynomials],
+                 polynomials: list[Polynomials],
                  learning_rate: float = 0.01,
                  iterations: int = 1000,
                  penalty: float = 1):

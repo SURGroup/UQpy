@@ -1,5 +1,4 @@
 import logging
-from typing import List
 from beartype import beartype
 from UQpy.RunModel import RunModel
 from UQpy.distributions.baseclass import Distribution
@@ -106,7 +105,7 @@ class AdaptiveKriging:
     """
     @beartype
     def __init__(self,
-                 distributions: Union[Distribution, List[Distribution]],
+                 distributions: Union[Distribution, list[Distribution]],
                  runmodel_object: RunModel,
                  surrogate: Union[Kriging, PolynomialChaosExpansion],
                  learning_function: LearningFunction,

@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import scipy.stats as stats
 
-from UQpy import RandomStateType
+from UQpy.utilities.ValidationTypes import RandomStateType
 from UQpy.utilities.strata.baseclass.Strata import Strata
 from UQpy.sampling.SimplexSampling import SimplexSampling
 

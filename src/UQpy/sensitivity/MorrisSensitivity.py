@@ -4,7 +4,7 @@ The module currently contains the following classes:
 
 - ``Morris``: Class to compute sensitivity indices based on the Morris method.
 """
-from typing import Union, Tuple, List, Annotated
+from typing import Union, Annotated
 
 from beartype import beartype
 from beartype.vale import Is
@@ -74,7 +74,7 @@ class MorrisSensitivity:
     @beartype
     def __init__(self,
                  runmodel_object: RunModel,
-                 distributions: Union[JointIndependent, Union[List, Tuple]],
+                 distributions: Union[JointIndependent, Union[list, tuple]],
                  levels_number: Annotated[int, Is[lambda x: x >= 3]],
                  delta: Union[float, int] = None,
                  random_state: RandomStateType = None,

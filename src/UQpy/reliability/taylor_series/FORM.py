@@ -1,5 +1,5 @@
 import logging
-from typing import Union, List
+from typing import Union
 import numpy as np
 import scipy.stats as stats
 from beartype import beartype
@@ -48,7 +48,7 @@ class FORM(TaylorSeries):
      """
     @beartype
     def __init__(self,
-                 distributions: Union[None, Distribution, List[Distribution]],
+                 distributions: Union[None, Distribution, list[Distribution]],
                  runmodel_object,
                  form_object=None,
                  seed_x: Union[list, np.ndarray] = None,

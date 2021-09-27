@@ -1,5 +1,5 @@
 from types import MethodType
-from typing import List, Union
+from typing import Union
 
 import numpy as np
 from beartype import beartype
@@ -33,7 +33,7 @@ class JointCopula(DistributionND):
     """
     @beartype
     def __init__(self,
-                 marginals: Union[List[DistributionContinuous1D], List[DistributionDiscrete1D]],
+                 marginals: Union[list[DistributionContinuous1D], list[DistributionDiscrete1D]],
                  copula: Copula):
         super().__init__()
         self.ordered_parameters = []

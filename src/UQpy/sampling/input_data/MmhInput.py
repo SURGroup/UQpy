@@ -1,8 +1,4 @@
 from dataclasses import dataclass
-from typing import Annotated, Tuple
-
-from beartype.vale import Is
-
 from UQpy.sampling.input_data.SamplingInput import SamplingInput
 from UQpy.utilities.ValidationTypes import *
 

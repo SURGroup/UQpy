@@ -1,5 +1,5 @@
 from types import MethodType
-from typing import List, Union
+from typing import Union
 
 import numpy as np
 from beartype import beartype
@@ -29,7 +29,7 @@ class JointIndependent(DistributionND):
 
     """
     @beartype
-    def __init__(self, marginals: Union[List[DistributionContinuous1D], List[DistributionDiscrete1D]]):
+    def __init__(self, marginals: Union[list[DistributionContinuous1D], list[DistributionDiscrete1D]]):
         super().__init__()
         self.ordered_parameters = []
         for i, m in enumerate(marginals):

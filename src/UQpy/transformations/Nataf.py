@@ -1,5 +1,5 @@
 import logging
-from typing import Union, List, Annotated
+from typing import Union, Annotated
 from beartype import beartype
 from beartype.vale import Is
 
@@ -11,7 +11,7 @@ from UQpy.utilities.Utilities import bi_variate_normal_pdf
 from scipy.linalg import cholesky
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
-DistributionList = Annotated[List[Distribution], Is[lambda lst: all(
+DistributionList = Annotated[list[Distribution], Is[lambda lst: all(
     isinstance(item, Distribution) for item in lst)]]
 
 
@@ -225,7 +225,7 @@ class Nataf:
 
     @staticmethod
     def itam(distributions: Union[DistributionContinuous1D, JointIndependent,
-                                  List[Union[DistributionContinuous1D, JointIndependent]]],
+                                  list[Union[DistributionContinuous1D, JointIndependent]]],
              corr_x,
              itam_max_iter: int = 100,
              itam_beta: Union[float, int] = 1.0,

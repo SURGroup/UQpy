@@ -1,5 +1,5 @@
 import logging
-from typing import List, Union, Optional
+from typing import Union, Optional
 
 import numpy as np
 import scipy.stats as stats
@@ -29,7 +29,7 @@ class SORM(TaylorSeries):
     @beartype
     def __init__(self,
                  form_object: FORM,
-                 distributions: Optional[Union[None, Distribution, List[Distribution]]] = None,
+                 distributions: Optional[Union[None, Distribution, list[Distribution]]] = None,
                  seed_u: np.ndarray = None,
                  seed_x: np.ndarray = None,
                  runmodel_object: RunModel = None,

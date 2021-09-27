@@ -7,6 +7,7 @@ from UQpy.distributions.collection.Uniform import Uniform
 import numpy as np
 import shutil
 
+
 def test_kriging_constant_exponential():
     from UQpy.surrogates.kriging.regression_models.Constant import Constant
     from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential
@@ -22,6 +23,7 @@ def test_kriging_constant_exponential():
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
                 optimizations_number=20, correlation_model_parameters=[1, 1])
     K.fit(samples=x.samples, values=rmodel.qoi_list)
+
     assert round(K.correlation_model_parameters[0], 5) == 3.99253
     assert round(K.correlation_model_parameters[1], 5) == 0.78878
 

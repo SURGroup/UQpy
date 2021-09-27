@@ -1,7 +1,4 @@
-from typing import List
-
 import numpy as np
-
 from UQpy.surrogates.polynomial_chaos.polynomials.baseclass import Polynomials
 from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
 

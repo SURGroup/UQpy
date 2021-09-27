@@ -374,8 +374,8 @@ class Kriging:
         else:
             s_ = self.samples
 
-        fx, jf = self.regression_model(x_)
-        rx, drdx = self.correlation_model(x=x_, s=s_, params=self.correlation_model_parameters, dx=True)
+        fx, jf = self.regression_model.r(x_)
+        rx, drdx = self.correlation_model.c(x=x_, s=s_, params=self.correlation_model_parameters, dx=True)
         y_grad = np.einsum('ikj,jm->ik', jf, self.beta) + np.einsum('ijk,jm->ki', drdx.T, self.gamma)
         if self.normalize:
             y_grad = y_grad * self.value_std / self.sample_std

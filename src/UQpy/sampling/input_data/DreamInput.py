@@ -1,8 +1,4 @@
 from dataclasses import dataclass
-from typing import Annotated, Tuple
-
-from beartype.vale import Is
-
 from UQpy.sampling.input_data.SamplingInput import SamplingInput
 from UQpy.utilities.ValidationTypes import *
 
@@ -23,7 +19,7 @@ class DreamInput(SamplingInput):
     c_star: float = 1e-6
     crossover_probabilities_number: int = 3
     gamma_probability: float = 0.2
-    crossover_adaptation: Tuple = (-1, 1)
-    check_chains: Tuple = (-1, 1)
+    crossover_adaptation: tuple = (-1, 1)
+    check_chains: tuple = (-1, 1)
     random_state: RandomStateType = None
     chains_number: int = None

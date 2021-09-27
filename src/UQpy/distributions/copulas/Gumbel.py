@@ -1,3 +1,5 @@
+from typing import Union
+
 from beartype import beartype
 
 from UQpy.distributions.baseclass import Copula
@@ -25,7 +27,7 @@ class Gumbel(Copula):
     """
 
     @beartype
-    def __init__(self, theta: float):
+    def __init__(self, theta: Union[None, float]):
         super().__init__(theta=theta)
 
     def evaluate_cdf(self, unit_uniform_samples):

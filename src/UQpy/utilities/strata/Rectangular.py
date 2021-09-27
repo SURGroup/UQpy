@@ -1,10 +1,6 @@
 import logging
-from typing import Union, List
-
-import numpy as np
 from beartype import beartype
-
-from UQpy import RandomStateType, PositiveInteger
+from UQpy.utilities.ValidationTypes import *
 from UQpy.utilities.strata.baseclass.Strata import Strata
 from UQpy.utilities.strata.StratificationCriterion import StratificationCriterion
 from UQpy.utilities.Utilities import calculate_gradient
@@ -14,7 +10,7 @@ import scipy.stats as stats
 class Rectangular(Strata):
     @beartype
     def __init__(self,
-                 strata_number: Union[PositiveInteger, List[PositiveInteger]] = None,
+                 strata_number: Union[PositiveInteger, list[PositiveInteger]] = None,
                  input_file: str = None,
                  seeds: Union[None, np.ndarray] = None,
                  widths=None,

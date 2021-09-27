@@ -1,1 +1,1 @@
-from .SROM import StochasticReducedOrderModel
+from .SROM import SROM

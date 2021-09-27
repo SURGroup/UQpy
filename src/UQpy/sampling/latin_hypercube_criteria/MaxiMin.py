@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Union
+from typing import Union
 
 from beartype import beartype
 
@@ -42,7 +42,7 @@ class MaxiMin(Criterion):
             """
     @beartype
     def __init__(self, random_state: RandomStateType = None, iterations: int = 100,
-                 metric: Union[Callable, DistanceMetric] = DistanceMetric.EUCLIDEAN):
+                 metric: DistanceMetric = DistanceMetric.EUCLIDEAN):
         super().__init__(random_state)
         self.random_state = random_state
         self.iterations = iterations
@@ -51,8 +51,6 @@ class MaxiMin(Criterion):
         if isinstance(metric, DistanceMetric):
             metric_str = str(metric.name).lower()
             self.distance_function = lambda x: pdist(x, metric=metric_str)
-        elif callable(metric):
-            self. distance_function = metric
         else:
             raise ValueError("UQpy: Please provide a valid metric.")
 

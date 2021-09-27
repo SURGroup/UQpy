@@ -1,12 +1,10 @@
 import logging
-from typing import Union, List
-
+from typing import Union
 import numpy as np
 from UQpy.distributions import DistributionContinuous1D
 
 
-class StochasticReducedOrderModel:
-
+class SROM:
     """
     Stochastic Reduced Order Model(stochastic_reduced_order_models) provide a low-dimensional, discrete approximation of
     a given random quantity.
@@ -82,9 +80,8 @@ class StochasticReducedOrderModel:
     **Methods:**
 
     """
-
     def __init__(self,
-                 samples: Union[List, np.ndarray],
+                 samples: Union[list, np.ndarray],
                  target_distributions,
                  moments=None,
                  weights_errors=None,

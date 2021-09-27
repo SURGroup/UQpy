@@ -1,8 +1,12 @@
+from UQpy.utilities.ValidationTypes import RandomStateType
 from UQpy.sampling.latin_hypercube_criteria import Criterion
 import numpy as np
 
 
 class Centered(Criterion):
+
+    def __init__(self, random_state: RandomStateType = None):
+        super().__init__(random_state)
 
     def generate_samples(self):
         u_temp = (self.a + self.b) / 2

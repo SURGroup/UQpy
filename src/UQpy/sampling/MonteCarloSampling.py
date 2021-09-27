@@ -1,5 +1,4 @@
 from typing import Union
-from typing import List
 from typing import Optional
 from beartype import beartype
 
@@ -64,7 +63,7 @@ class MonteCarloSampling:
     """
     @beartype
     def __init__(self,
-                 distributions: Union[Distribution, List[Distribution]],
+                 distributions: Union[Distribution, list[Distribution]],
                  samples_number: Optional[int] = None,
                  random_state: RandomStateType = None):
         self.logger = logging.getLogger(__name__)

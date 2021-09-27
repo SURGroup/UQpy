@@ -1,8 +1,8 @@
 import logging
-from typing import Union, List
+from typing import Union
 from beartype import beartype
 
-from UQpy import NoPublicConstructor
+from UQpy.utilities.NoPublicConstructor import *
 from UQpy.distributions import *
 from UQpy.utilities.Utilities import *
 from UQpy.stochastic_process.supportive import inverse_wiener_khinchin_transform, wiener_khinchin_transform
@@ -65,7 +65,7 @@ class InverseTranslation(metaclass=NoPublicConstructor):
 
     @beartype
     def __init__(self,
-                 distributions: Union[Distribution, List[Distribution]],
+                 distributions: Union[Distribution, list[Distribution]],
                  time: float,
                  frequency: float,
                  correlation_function_non_gaussian: np.ndarray = None,
@@ -93,7 +93,7 @@ class InverseTranslation(metaclass=NoPublicConstructor):
     @classmethod
     @beartype
     def create_with_power_spectrum(cls,
-                                   distributions: Union[Distribution, List[Distribution]],
+                                   distributions: Union[Distribution, list[Distribution]],
                                    time_interval: float,
                                    frequency_interval: float,
                                    time_intervals_number: int,
@@ -110,7 +110,7 @@ class InverseTranslation(metaclass=NoPublicConstructor):
     @classmethod
     @beartype
     def create_with_correlation_function(cls,
-                                         distributions: Union[Distribution, List[Distribution]],
+                                         distributions: Union[Distribution, list[Distribution]],
                                          time_interval: float,
                                          frequency_interval: float,
                                          time_intervals_number: int,

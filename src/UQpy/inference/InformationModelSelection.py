@@ -1,5 +1,5 @@
 import logging
-from typing import List, Union
+from typing import Union
 from beartype import beartype
 from UQpy.inference.inference_models.optimization.MinizeOptimizer import MinimizeOptimizer
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
@@ -79,13 +79,13 @@ class InformationModelSelection:
     # Last Modified: 12/19 by Audrey Olivier
     @beartype
     def __init__(self,
-                 candidate_models: List[InferenceModel],
+                 candidate_models: list[InferenceModel],
                  data: Union[list, np.ndarray],
                  optimizer: Optimizer = MinimizeOptimizer(),
                  criterion: InformationTheoreticCriterion = InformationTheoreticCriterion.AIC,
                  random_state: RandomStateType = None,
                  optimizations_number: Union[PositiveInteger, None] = None,
-                 initial_guess: List[np.ndarray] = None):
+                 initial_guess: list[np.ndarray] = None):
 
         if not isinstance(candidate_models, (list, tuple)) or not all(isinstance(model, InferenceModel)
                                                                       for model in candidate_models):

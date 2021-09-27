@@ -28,7 +28,7 @@ class MultivariateNormal(DistributionND):
     * ``cdf``, ``pdf``, ``log_pdf``, ``rvs``, ``fit``, ``moments``.
     """
     @beartype
-    def __init__(self, mean: Union[None, np.ndarray, list], cov: Union[None, int, float, np.ndarray] = 1.):
+    def __init__(self, mean: Union[None, np.ndarray, list], cov: Union[None, int, float, np.ndarray, list[list]] = 1.):
         if mean is not None and cov is not None:
             if isinstance(cov, (int, float)):
                 pass

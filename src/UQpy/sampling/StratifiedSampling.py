@@ -1,5 +1,4 @@
 import logging
-from typing import List
 from beartype import beartype
 from UQpy.distributions import DistributionContinuous1D, JointIndependent
 from UQpy.utilities.strata.baseclass import Strata
@@ -10,9 +9,9 @@ class StratifiedSampling:
 
     @beartype
     def __init__(self,
-                 distributions: Union[DistributionContinuous1D, JointIndependent, List[DistributionContinuous1D]],
+                 distributions: Union[DistributionContinuous1D, JointIndependent, list[DistributionContinuous1D]],
                  strata_object: Strata,
-                 samples_per_stratum_number: Union[int, List[int]] = None,
+                 samples_per_stratum_number: Union[int, list[int]] = None,
                  samples_number: int = None):
 
         self.logger = logging.getLogger(__name__)
@@ -50,7 +49,7 @@ class StratifiedSampling:
         self.samples = samples_u_to_x
 
     @beartype
-    def run(self, samples_per_stratum_number: Union[None, int, List[int]] = None,
+    def run(self, samples_per_stratum_number: Union[None, int, list[int]] = None,
             samples_number: Union[None, PositiveInteger] = None):
         """
         Executes stratified sampling.

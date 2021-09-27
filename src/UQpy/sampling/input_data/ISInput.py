@@ -8,7 +8,7 @@ from UQpy.sampling.input_data.SamplingInput import SamplingInput
 from UQpy.utilities.ValidationTypes import *
 
 
-@dataclass
+@dataclass(init=True)
 class ISInput(SamplingInput):
     pdf_target = None
     log_pdf_target = None

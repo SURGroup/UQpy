@@ -1,5 +1,5 @@
 import logging
-from typing import List, Union
+from typing import Union
 
 import numpy as np
 from beartype import beartype
@@ -81,13 +81,13 @@ class BayesModelSelection:
     # Last modified: 01/24/2020 by Audrey Olivier
     @beartype
     def __init__(self,
-                 candidate_models: List[InferenceModel],
+                 candidate_models: list[InferenceModel],
                  data,
-                 sampling_class_inputs: List[SamplingInput],
+                 sampling_class_inputs: list[SamplingInput],
                  prior_probabilities=None,
                  method_evidence_computation: MethodEvidence = MethodEvidence.HARMONIC_MEAN,
-                 samples_number: List[PositiveInteger] = None,
-                 samples_per_chain_number: List[PositiveInteger] = None):
+                 samples_number: list[PositiveInteger] = None,
+                 samples_per_chain_number: list[PositiveInteger] = None):
 
         self.candidate_models = candidate_models
         self.models_number = len(candidate_models)
@@ -133,8 +133,8 @@ class BayesModelSelection:
             self.bayes_estimators.append(bayes_estimator)
 
     @beartype
-    def run(self, samples_number: Union[None, List[PositiveInteger]] = None,
-            samples_number_per_chain: Union[None, List[PositiveInteger]] = None):
+    def run(self, samples_number: Union[None, list[PositiveInteger]] = None,
+            samples_number_per_chain: Union[None, list[PositiveInteger]] = None):
         """
         Run the Bayesian model selection procedure, i.e., compute model posterior probabilities.
 

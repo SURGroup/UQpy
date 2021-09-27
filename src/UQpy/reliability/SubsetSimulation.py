@@ -1,6 +1,6 @@
 import copy
 import logging
-from UQpy import DramInput, DreamInput, MhInput, MmhInput, StretchInput
+from UQpy.sampling.input_data import *
 from UQpy.sampling import *
 
 

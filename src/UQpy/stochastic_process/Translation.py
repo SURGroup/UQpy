@@ -1,6 +1,6 @@
 import itertools
 import logging
-from typing import Union, List
+from typing import Union
 
 from beartype import beartype
 from scipy.stats import norm
@@ -71,7 +71,7 @@ class Translation(metaclass=NoPublicConstructor):
     """
     @beartype
     def __init__(self,
-                 distributions: Union[Distribution, List[Distribution]],
+                 distributions: Union[Distribution, list[Distribution]],
                  time_interval: float,
                  frequency_interval: float,
                  time_intervals_number: int,
@@ -103,7 +103,7 @@ class Translation(metaclass=NoPublicConstructor):
     @classmethod
     @beartype
     def create_with_correlation_function(cls,
-                                         distributions: Union[Distribution, List[Distribution]],
+                                         distributions: Union[Distribution, list[Distribution]],
                                          time_interval: float,
                                          frequency_interval: float,
                                          time_intervals_number: int,
@@ -121,7 +121,7 @@ class Translation(metaclass=NoPublicConstructor):
     @classmethod
     @beartype
     def create_with_power_spectrum(cls,
-                                   distributions: Union[Distribution, List[Distribution]],
+                                   distributions: Union[Distribution, list[Distribution]],
                                    time_interval: float,
                                    frequency_interval: float,
                                    time_intervals_number: int,

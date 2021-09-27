@@ -1,5 +1,7 @@
 import logging
-from typing import List, Union
+from typing import Union
+
+from UQpy.sampling.latin_hypercube_criteria import Random
 from UQpy.utilities.ValidationTypes import PositiveInteger
 from UQpy.distributions import *
 from UQpy.sampling.latin_hypercube_criteria.baseclass.Criterion import *
@@ -58,9 +60,9 @@ class LatinHypercubeSampling:
     """
     @beartype
     def __init__(self,
-                 distributions: Union[Distribution, List[Distribution]],
+                 distributions: Union[Distribution, list[Distribution]],
                  samples_number: PositiveInteger,
-                 criterion: Criterion = None):
+                 criterion: Criterion = Random()):
 
         self.dist_object = distributions
         self.criterion = criterion
@@ -109,7 +111,7 @@ class LatinHypercubeSampling:
         self.logger.info('UQpy: Running Latin Hypercube sampling...')
         self.criterion.create_bins(self.samples)
 
-        u_lhs = self.criterion.generate_samples()
+        u_lhs = self.criterion.generate_samples(self.samples)
         self.samplesU01 = u_lhs
 
         if isinstance(self.dist_object, list):
@@ -127,10 +129,3 @@ class LatinHypercubeSampling:
                 self.samples = self.dist_object.icdf(u_lhs)
 
         self.logger.info('Successful execution of LHS design.')
-
-    def __copy__(self):
-        new = self.__class__(distributions=self.dist_object,
-                             criterion=self.criterion)
-        new.__dict__.update(self.__dict__)
-
-        return new

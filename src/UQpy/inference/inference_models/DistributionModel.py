@@ -1,4 +1,4 @@
-from typing import Union, List
+from typing import Union
 
 from beartype import beartype
 
@@ -9,7 +9,7 @@ class DistributionModel(InferenceModel):
 
     @beartype
     def __init__(self,
-                 distributions: Union[Distribution, List[Distribution]],
+                 distributions: Union[Distribution, list[Distribution]],
                  parameters_number: PositiveInteger,
                  name: str = '',
                  prior: Distribution = None):

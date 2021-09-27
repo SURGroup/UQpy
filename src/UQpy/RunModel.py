@@ -38,9 +38,6 @@ import platform
 import re
 import shutil
 import subprocess
-from typing import List
-
-import numpy as np
 from beartype import beartype
 
 from UQpy.utilities.ValidationTypes import *
@@ -265,7 +262,7 @@ class RunModel:
                  model_script: str = None,
                  model_object_name: str = None,
                  input_template: str = None,
-                 var_names: List[str] = None,
+                 var_names: list[str] = None,
                  output_script: str = None,
                  output_object_name: str = None,
                  ntasks: int = 1,

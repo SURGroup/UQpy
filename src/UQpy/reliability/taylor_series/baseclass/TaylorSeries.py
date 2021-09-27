@@ -1,5 +1,5 @@
 import logging
-from typing import Union, List
+from typing import Union
 import numpy as np
 from beartype import beartype
 from UQpy.distributions import *
@@ -51,7 +51,7 @@ class TaylorSeries:
     """
     @beartype
     def __init__(self,
-                 distributions: Union[None, Distribution, List[Distribution]] = None,
+                 distributions: Union[None, Distribution, list[Distribution]] = None,
                  runmodel_object=None,
                  form_object=None,
                  corr_x: Union[list, None, np.ndarray] = None,
