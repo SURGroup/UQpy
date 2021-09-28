@@ -8,26 +8,6 @@ import sys
 class Martin(RiemannianDistance):
 
     def compute_distance(self, point1, point2):
-
-        """
-        Estimate the Binet-Cauchy distance.
-
-        One of the distances defined on the Grassmann manifold is the projection distance.
-
-        **Input:**
-
-        * **x0** (`list` or `ndarray`)
-            Point on the Grassmann manifold.
-
-        * **x1** (`list` or `ndarray`)
-            Point on the Grassmann manifold.
-
-        **Output/Returns:**
-
-        * **distance** (`float`)
-            Projection distance between x0 and x1.
-        """
-
         point1, point2 = check_points(point1, point2)
 
         l = min(np.shape(point1))

@@ -12,41 +12,6 @@ class KarcherMean:
 
     def compute_mean(self, points_grassmann):
 
-        """
-        Compute the Karcher mean.
-
-        This method computes the Karcher mean given a set of points on the grassman manifold. The Karcher mean is
-        estimated by the minimization of the Frechet variance, where the Frechet variance corresponds to the sum of the
-        square distances, defined on the grassman manifold, to a given point. The command to compute the Karcher mean
-        given a seto of points on the grassman manifold is.
-
-        In this case two values are returned corresponding to the ones related to the manifolds defined by the left and
-        right singular eigenvectors.
-
-        **Input:**
-
-        * **points_grassmann** (`list` or `ndarray`)
-            Matrices (at least 2) corresponding to the points on the grassman manifold.
-
-        * **kwargs** (`dictionary`)
-            Contains the keywords for the used in the optimizers to find the Karcher mean. If ``gradient_descent`` is
-            employed the keywords are `acc`, a boolean variable for the accelerated method; `tol`, tolerance with
-            default value equal to 1e-3; and `maxiter`, maximum number of iterations with default value equal to 1000.
-            If `stochastic_gradient_descent` is employed instead, `acc` is not used.
-
-        **Output/Returns:**
-
-        * **kr_mean** (`list`)
-            Karcher mean.
-
-        * **kr_mean_psi** (`list`)
-            Karcher mean for left singular eigenvectors if `points_grassmann` is not provided.
-
-        * **kr_mean_phi** (`list`)
-            Karcher mean for right singular eigenvectors if `points_grassmann` is not provided.
-
-        """
-
         # Test the input data for type consistency.
         if not isinstance(points_grassmann, list) and not isinstance(points_grassmann, np.ndarray):
             raise TypeError('UQpy: `points_grassmann` must be either list or numpy.ndarray.')
@@ -93,27 +58,6 @@ class KarcherMean:
 
     @staticmethod
     def __estimate_distance(points, p_dim, distance):
-        """
-        Private method: Estimate the distance between points on the grassman manifold.
-
-        This is an auxiliary method to compute the pairwise distance of points on the grassman manifold.
-        The input arguments are passed through a list . Further, the user has the option to pass the dimension
-        of the embedding space.
-
-        **Input:**
-
-        * **points** (`list` or `ndarray`)
-            Matrices (at least 2) corresponding to the points on the grassman manifold.
-
-        * **p_dim** (`list`)
-            Embedding dimension.
-
-        **Output/Returns:**
-
-        * **distance_list** (`list`)
-            Pairwise distance.
-
-        """
 
         # Check points for type and shape consistency.
         # -----------------------------------------------------------

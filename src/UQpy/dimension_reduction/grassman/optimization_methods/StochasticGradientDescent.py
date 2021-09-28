@@ -1,32 +1,20 @@
 from UQpy import PositiveInteger
-from UQpy.dimension_reduction_v4.kernel_based.distances.baseclass.RiemannianDistance import RiemannianDistance
 import numpy as np
+
+from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
+from UQpy.dimension_reduction.grassman.KarcherMean import KarcherMean
 
 
 class StochasticGradientDescent:
 
-    def __init__(self, distance_function: RiemannianDistance,
-                 acceleration: bool = False,
+    def __init__(self, acceleration: bool = False,
                  error_tolerance: float = 1e-3,
                  max_iterations:PositiveInteger = 1000):
         self.max_iterations = max_iterations
         self.error_tolerance = error_tolerance
         self.acceleration = acceleration
-        self.distance_function = distance_function
 
-    def optimize(self, data_points):
-
-        data_points = self.X
-
-        if 'tol' in kwargs.keys():
-            tol = kwargs['tol']
-        else:
-            tol = 1e-3
-
-        if 'maxiter' in kwargs.keys():
-            maxiter = kwargs['maxiter']
-        else:
-            maxiter = 1000
+    def optimize(self, data_points, distance):
 
         n_mat = len(data_points)
 
@@ -38,15 +26,16 @@ class StochasticGradientDescent:
 
         fmean = []
         for i in range(n_mat):
-            fmean.append(self.frechet_variance(data_points[i]))
+            fmean.append(KarcherMean.frechet_variance(data_points[i]))
 
         index_0 = fmean.index(min(fmean))
 
         mean_element = data_points[index_0].tolist()
-        itera = 0
+        counter_iteration = 0
         _gamma = []
         k = 1
-        while itera < maxiter:
+        from UQpy.dimension_reduction.grassman.Grassman import Grassmann
+        while counter_iteration < self.max_iterations:
 
             indices = np.arange(n_mat)
             np.random.shuffle(indices)
@@ -55,11 +44,11 @@ class StochasticGradientDescent:
             for i in range(len(indices)):
                 alpha = 0.5 / k
                 idx = indices[i]
-                _gamma = self.log_map(points_grassmann=[data_points[idx]], ref=np.asarray(mean_element))
+                _gamma = Grassmann.log_map(points_grassmann=[data_points[idx]], ref=np.asarray(mean_element))
 
                 step = 2 * alpha * _gamma[0]
 
-                X = self.exp_map(points_tangent=[step], ref=np.asarray(mean_element))
+                X = Grassmann.exp_map(points_tangent=[step], ref=np.asarray(mean_element))
 
                 _gamma = []
                 mean_element = X[0]
@@ -67,9 +56,9 @@ class StochasticGradientDescent:
                 k += 1
 
             test_1 = np.linalg.norm(mean_element - melem, 'fro')
-            if test_1 < tol:
+            if test_1 < self.error_tolerance:
                 break
 
-            itera += 1
+            counter_iteration += 1
 
         return mean_element

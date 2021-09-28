@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.linalg import svd
-from UQpy.dimension_reduction_v4.kernel_based.distances.baseclass.RiemannianDistance import RiemannianDistance, \
-    check_points
+
+from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
 
 
 class BinetCauchyDistance(RiemannianDistance):
@@ -26,7 +26,7 @@ class BinetCauchyDistance(RiemannianDistance):
                    Projection distance between x0 and x1.
                """
 
-        point1, point2 = check_points(point1, point2)
+        point1, point2 = RiemannianDistance.check_points(point1, point2)
 
         l = min(np.shape(point1))
         k = min(np.shape(point2))
