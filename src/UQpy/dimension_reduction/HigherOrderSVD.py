@@ -1,34 +1,18 @@
 import logging
 from typing import Union
+from UQpy.dimension_reduction.SVD import SVD
 
 import numpy as np
 
 
 class HigherOrderSVD:
-    """
-    HigherOrderSVD child class is used for higher-order singular value decomposition on the input solutions tensor.
-
-    **Inputs:**
-
-    * **input_sol** (`ndarray`) or (`list`):
-        Second order tensor or list containing the solution snapshots. Third dimension or length of list corresponds
-        to the number of snapshots.
-
-    * **modes** (`int`):
-        Number of modes to keep for dataset reconstruction.
-
-    * **reconstr_perc** (`float`):
-        Dataset reconstruction percentage
-
-    **Methods:**
-    """
 
     def __init__(self,
                  solution_snapshots: Union[np.ndarray, list],
                  modes: int = 10 ** 10,
                  reconstruction_percentage: float = 10 ** 10):
 
-        super().__init__(solution_snapshots)
+        self.solution_snapshots = solution_snapshots
         self.logger = logging.getLogger(__name__)
         self.modes = modes
         self.reconstruction_percentage = reconstruction_percentage
@@ -65,9 +49,9 @@ class HigherOrderSVD:
 
         a1, a2, a3 = HigherOrderSVD.unfold(self.solution_snapshots)
 
-        u1, sig_1, v1 = np.linalg.svd(a1, full_matrices=True)
-        u2, sig_2, v2 = np.linalg.svd(a2, full_matrices=True)
-        u3, sig_3, v3 = np.linalg.svd(a3, full_matrices=True)
+        u1, sig_1, v1 = SVD(a1, full_matrices=True).run()
+        u2, sig_2, v2 = SVD(a2, full_matrices=True).run()
+        u3, sig_3, v3 = SVD(a3, full_matrices=True).run()
 
         sig_3_ = np.diag(sig_3)
         hold = np.dot(np.linalg.inv(u3), a3)
@@ -125,7 +109,7 @@ class HigherOrderSVD:
             self.logger.info("UQpy: Successful execution of HOSVD!")
 
             if self.modes == 10**10:
-                self.logger.info('Dataset reconstruction: {0:.3%}'.format(percentage / 100))
+                self.logger.info('Dataset reconstruction: {0:.3%}'.format(self.reconstruction_percentage / 100))
 
             else:
                 if get_error:
@@ -133,7 +117,6 @@ class HigherOrderSVD:
                     self.logger.warning("Reduced-order reconstruction error: {0:.3%}".format(error_rec))
 
             return reconstructed_solutions, reduced_solutions
-
 
     @staticmethod
     def unfold(second_order_tensor):

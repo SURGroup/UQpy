@@ -1,26 +1,28 @@
 import numpy as np
-from numpy.linalg import svd
-
 from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
+from UQpy.dimension_reduction.SVD import SVD
 
 
 class ArcLength(RiemannianDistance):
-
+    """
+    TODO: Add description of ArcLength distance (This should reflect on the documentation).
+    TODO: Validate results.
+    """
     def compute_distance(self, point1, point2) -> float:
+        """
+        TODO: Add description of compute_distance method.
+        """
+
         point1, point2 = RiemannianDistance.check_points(point1, point2)
 
-        l = min(np.shape(point1))
-        k = min(np.shape(point2))
-        rank = min(l, k)
+        rank1 = min(np.shape(point1))
+        rank2 = min(np.shape(point2))
+        rank = min(rank1, rank2)
 
         r = np.dot(point1.T, point2)
-        (ui, si, vi) = svd(r, rank)
-
-        index = np.where(si > 1)
-        si[index] = 1.0
+        (ui, si, vi) = SVD(r, rank=rank).run()
+        si[np.where(si > 1)] = 1.0
         theta = np.arccos(np.diag(si))
-        d = np.sqrt(abs(k - l) * np.pi ** 2 / 4 + np.sum(theta ** 2))
+        d = np.sqrt(abs(rank1 - rank2) * np.pi ** 2 / 4 + np.sum(theta ** 2))
 
         return d
-
-

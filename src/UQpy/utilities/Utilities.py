@@ -22,56 +22,6 @@ from UQpy.utilities.ValidationTypes import RandomStateType
 from UQpy.RunModel import RunModel
 
 
-def svd(matrix, rank=None, tolerance=None):
-    """
-    Compute the singular value decomposition (SVD) of a matrix.
-
-    **Inputs:**
-
-    * **matrix** (`ndarray`):
-        Matrix of ``shape=(m, n)`` to perform the factorization using thin SVD
-
-    * **tol** (`float`):
-        Tolerance to estimate the rank of the matrix.
-
-        Default: Machine precision
-
-    * **iterations** (`rank`):
-        Number of eigenvalues to keep.
-
-        Default: None
-
-    **Output/Returns:**
-
-    * **u** (`ndarray`):
-        Matrix of left eigenvectors of ``shape=(m, rank)``.
-
-    * **v** (`ndarray`):
-        Matrix of right eigenvectors of ``shape=(rank, n)``.
-
-    * **s** (`ndarray`):
-        Matrix of eigenvalues ``shape=(rank, rank)``.
-
-    """
-    ui, si, vi = np.linalg.svd(matrix, full_matrices=True, hermitian=False)
-    si = np.diag(si)
-    vi = vi.T
-    if rank is None:
-        if tolerance is not None:
-            rank = np.linalg.matrix_rank(si, tol=tolerance)
-        else:
-            rank = np.linalg.matrix_rank(si)
-        left_eigenvectors = ui[:, :rank]
-        eigenvalues = si[:rank, :rank]
-        right_eigenvectors = vi[:, :rank]
-    else:
-        left_eigenvectors = ui[:, :rank]
-        eigenvalues = si[:rank, :rank]
-        right_eigenvectors = vi[:, :rank]
-
-    return left_eigenvectors, eigenvalues, right_eigenvectors
-
-
 def nearest_psd(input_matrix, iterations=10):
     """
     A function to compute the nearest positive semi-definite matrix of a given matrix [3]_.

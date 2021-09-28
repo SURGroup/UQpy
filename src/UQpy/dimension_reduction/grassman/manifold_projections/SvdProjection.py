@@ -1,8 +1,7 @@
-import itertools
+ import itertools
 import sys
 from typing import List
 import scipy.spatial.distance as sd
-from UQpy import Kriging, Surrogate
 from UQpy.dimension_reduction.grassman.Grassman import Grassmann
 from UQpy.dimension_reduction.grassman.interpolations import LinearInterpolation
 from UQpy.dimension_reduction.grassman.manifold_projections.KernelComposition import KernelComposition, \

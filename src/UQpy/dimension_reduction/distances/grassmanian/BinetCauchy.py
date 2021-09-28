@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.linalg import svd
 
 from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
 
@@ -35,7 +34,7 @@ class BinetCauchyDistance(RiemannianDistance):
             raise NotImplementedError('UQpy: distance not implemented for manifolds with distinct dimensions.')
 
         r = np.dot(point1.T, point2)
-        (ui, si, vi) = svd(r, k)
+        (ui, si, vi) = np.linalg.svd(r, k)
 
         index = np.where(si > 1)
         si[index] = 1.0
