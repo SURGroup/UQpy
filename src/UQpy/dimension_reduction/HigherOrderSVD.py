@@ -80,7 +80,7 @@ class HigherOrderSVD:
                     error_rec = np.sqrt(((s3hat[self.modes:]) ** 2).sum()) / np.sqrt((sig_3 ** 2).sum())
                     self.logger.warning("Reduced-order reconstruction error: {0:.3%}".format(error_rec))
 
-            return u1, u2, u3, u3hat, s3hat
+            return u1, u2, u3, s3, u3hat, s3hat, reduced_solutions
 
     @staticmethod
     def unfold3d(second_order_tensor):
@@ -125,8 +125,6 @@ class HigherOrderSVD:
         reconstructed_solutions = np.zeros((rows, columns, snapshot_number))
         for i in range(snapshot_number):
             reconstructed_solutions[0:rows, 0:columns, i] = d[i, :].reshape((rows, columns))
-
-        logging.getLogger(__name__).info("UQpy: Successful execution of HOSVD!")
 
         return reconstructed_solutions
 
