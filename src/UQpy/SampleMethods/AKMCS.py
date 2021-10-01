@@ -7,6 +7,7 @@ from UQpy.SampleMethods.LHS import LHS
 #                                  Adaptive Kriging-Monte Carlo Simulation (AK-MCS)
 ########################################################################################################################
 
+
 class AKMCS:
     """
     Adaptively sample for construction of a Kriging surrogate for different objectives including reliability,
@@ -133,7 +134,8 @@ class AKMCS:
                 raise NotImplementedError("UQpy Error: Dimension of samples and distribution are inconsistent.")
 
         if self.learning_function not in ['EFF', 'U', 'Weighted-U', 'EIF', 'EIGF']:
-            raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
+            if not callable(self.learning_function):
+                raise NotImplementedError("UQpy Error: The provided learning function is not recognized.")
         elif self.learning_function == 'EIGF':
             self.learning_function = self.eigf
         elif self.learning_function == 'EIF':
@@ -169,8 +171,8 @@ class AKMCS:
 
         self.random_state = random_state
         if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            self.random_state = np.random.default_rng(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random._generator.Generator)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if hasattr(krig_object, 'fit') and hasattr(krig_object, 'predict'):
