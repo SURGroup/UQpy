@@ -32,7 +32,7 @@ class OrthoMatrixPoints(ManifoldProjection):
         self.data = input_points
         self.p_planes_dimensions = p0
 
-    def evaluate_kernel_matrix(self, kernel: Kernel):
+    def evaluate_matrix(self, kernel: Kernel):
         return self.__estimate_kernel(self.data, p_dim=self.p_planes_dimensions, kernel=kernel)
 
     def interpolate(self, karcher_mean, interpolator, coordinates, point, element_wise=True):

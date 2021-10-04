@@ -1,7 +1,6 @@
 import logging
-from typing import Union
 from UQpy.dimension_reduction.SVD import SVD
-
+from UQpy.utilities.ValidationTypes import *
 import numpy as np
 
 
@@ -9,7 +8,7 @@ class HigherOrderSVD:
 
     def __init__(self,
                  solution_snapshots: Union[np.ndarray, list],
-                 modes: int = 10 ** 10,
+                 modes: PositiveInteger = 10 ** 10,
                  reconstruction_percentage: float = 10 ** 10):
 
         self.solution_snapshots = solution_snapshots
@@ -32,21 +31,9 @@ class HigherOrderSVD:
         kronecker_product = np.kron(u1, u2)
         s3 = np.array(np.dot(hold, np.linalg.inv(kronecker_product.T)))
 
-        if self.modes <= 0:
-            self.logger.warning('Invalid input, the number of modes must be positive.')
-            return [], []
-
-        elif self.reconstruction_percentage <= 0:
-            self.logger.warning('Invalid input, the reconstruction percentage is defined in the range (0,100].')
-            return [], []
-
-        elif self.modes != 10**10 and self.reconstruction_percentage != 10**10:
+        if self.modes != 10**10 and self.reconstruction_percentage != 10**10:
             self.logger.warning('Either a number of modes or a reconstruction percentage must be chosen, not both.')
-            return [], []
-
-        elif type(self.modes) != int:
-            self.logger.warning('The number of modes must be an integer.')
-            return [], []
+            return [], [], [], [], [], []
 
         else:
 
@@ -113,7 +100,6 @@ class HigherOrderSVD:
 
     @staticmethod
     def reconstruct(u1, u2,  u3hat, s3hat):
-
         b = np.kron(u1, u2)
         c = np.dot(s3hat, b.T)
         d = np.dot(u3hat[:, :], c)
@@ -127,4 +113,3 @@ class HigherOrderSVD:
             reconstructed_solutions[0:rows, 0:columns, i] = d[i, :].reshape((rows, columns))
 
         return reconstructed_solutions
-

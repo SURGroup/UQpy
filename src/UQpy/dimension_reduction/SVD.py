@@ -11,17 +11,17 @@ class SVD:
         ui, si, vi = np.linalg.svd(matrix, full_matrices=full_matrices, hermitian=hermitian)
         si = np.diag(si)
         vi = vi.T
-        if rank:
+        if rank is None:
             rank = np.linalg.matrix_rank(matrix) if tolerance is None \
                 else np.linalg.matrix_rank(matrix, tol=tolerance)
             left_eigenvectors = ui[:, :rank]
             eigenvalues = si[:rank, :rank]
             right_eigenvectors = vi[:, :rank]
-
-        elif not rank:
-            left_eigenvectors = ui
-            eigenvalues = si
-            right_eigenvectors = vi
+        #
+        # elif not rank:
+        #     left_eigenvectors = ui
+        #     eigenvalues = si
+        #     right_eigenvectors = vi
 
         else:
             left_eigenvectors = ui[:, :rank]

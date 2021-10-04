@@ -13,6 +13,7 @@ from UQpy.dimension_reduction.grassman.manifold_projections.SvdProjection import
 from UQpy.dimension_reduction.grassman.optimization_methods.GradientDescent import GradientDescent
 from UQpy.dimension_reduction.kernels.grassmanian.ProjectionKernel import ProjectionKernel
 from UQpy.dimension_reduction.euclidean.Euclidean import Euclidean
+from UQpy.dimension_reduction.grassman.Interpolation import Interpolation
 
 def test_log_exp():
     D1 = 6
@@ -105,7 +106,7 @@ def test_distances():
     assert value == 5.672445010189097
 
 
-def test_interpolation():
+def test_solution_reconstruction():
     nodes = np.array([[0, 0], [1, 0], [1, 1], [0, 1]])  # node_0, node_1, node_2.
     point = np.array([0.1, 0.1])  # Point to interpolate.
 
@@ -127,14 +128,14 @@ def test_interpolation():
 
     manifold_projection = SvdProjection(Solutions, p_planes_dimensions=sys.maxsize)
 
-    # optimization_method = GradientDescent(acceleration=False, error_tolerance=1e-3, max_iterations=1000)
-    # karcher = KarcherMean(distance=GrassmannDistance(), optimization_method=optimization_method,
-    #                       p_planes_dimensions=manifold_projection.p_planes_dimensions)
-    # interpolated_solution = manifold_projection.interpolate(karcher_mean=karcher, interpolator=LinearInterpolation(),
-    #                                                         coordinates=nodes, point=point, element_wise=False)
+    optimization_method = GradientDescent(acceleration=False, error_tolerance=1e-3, max_iterations=1000)
+    karcher = KarcherMean(distance=GrassmannDistance(), optimization_method=optimization_method,
+                          p_planes_dimensions=manifold_projection.p_planes_dimensions)
 
-    manifold = Grassmann(manifold_projection)
-    interpolated_solution = manifold.interpolate(coordinates=nodes, point=point, element_wise=False)
+    interpolation = Interpolation(LinearInterpolation())
+
+    interpolated_solution=manifold_projection.reconstruct_solution(karcher, interpolation, nodes,
+                                                                   point, False)
     assert interpolated_solution[0, 0] == 0.6155684900619302
 
 
@@ -160,7 +161,6 @@ def test_kernel():
     kernel = manifold.evaluate_kernel_matrix(kernel=ProjectionKernel())
 
     assert kernel[0, 1] == 2.740411439218967
-
 
 
 def test_dmaps():

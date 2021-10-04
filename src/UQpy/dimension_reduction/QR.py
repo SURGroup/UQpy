@@ -7,7 +7,7 @@ class QR:
     TODO: Add test
     """
     @staticmethod
-    def factorize(matrix, rank=False, mode='reduced'):
+    def factorize(matrix, rank=None, mode='reduced'):
         # matrix size: MxN
         # if mode is "reduced" : q MxK, r KxN
         # if mode is "complete": q MxM, r MxN

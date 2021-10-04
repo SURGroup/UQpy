@@ -1,8 +1,5 @@
-import itertools
-from typing import Union
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsl
-import scipy.spatial.distance as sd
 from UQpy.utilities.Utilities import *
 from UQpy.utilities.Utilities import _nn_coord
 from beartype import beartype
@@ -102,7 +99,6 @@ class DiffusionMaps:
 
         if kernel_matrix is not None:
             self.kernel_matrix = kernel_matrix
-
 
     def mapping(self):
 
