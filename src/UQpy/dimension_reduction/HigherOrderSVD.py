@@ -18,13 +18,29 @@ class HigherOrderSVD:
 
     def factorize(self, get_error: bool = False):
 
+        if self.modes <= 0:
+            print('Warning: Invalid input, the number of modes must be positive.')
+            return [], [], [], [], [], []
+
+        elif self.reconstruction_percentage <= 0:
+            print('Warning: Invalid input, the reconstruction percentage is defined in the range (0,100].')
+            return [], [], [], [], [], []
+
+        elif self.modes != 10**10 and self.reconstruction_percentage != 10**10:
+            print('Warning: Either a number of modes or a reconstruction percentage must be chosen, not both.')
+            return [], [], [], [], [], []
+
+        elif type(self.modes) != int:
+            print('Warning: The number of modes must be an integer.')
+            return [], [], [], [], [], []
+
         rows = self.solution_snapshots[0].shape[0]
 
         a1, a2, a3 = HigherOrderSVD.unfold3d(self.solution_snapshots)
 
-        u1, sig_1, v1 = SVD.factorize(a1)
-        u2, sig_2, v2 = SVD.factorize(a2)
-        u3, sig_3, v3 = SVD.factorize(a3)
+        u1, sig_1, v1 = np.linalg.svd(a1, full_matrices=True)
+        u2, sig_2, v2 = np.linalg.svd(a2, full_matrices=True)
+        u3, sig_3, v3 = np.linalg.svd(a3, full_matrices=True)
 
         sig_3_ = np.diag(sig_3)
         hold = np.dot(np.linalg.inv(u3), a3)

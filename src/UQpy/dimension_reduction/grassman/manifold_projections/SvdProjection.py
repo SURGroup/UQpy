@@ -3,8 +3,6 @@ import sys
 import scipy.spatial.distance as sd
 
 from UQpy.dimension_reduction.SVD import SVD
-from UQpy.dimension_reduction.grassman.Grassman import Grassmann
-from UQpy.dimension_reduction.grassman.interpolations import LinearInterpolation
 from UQpy.dimension_reduction.grassman.manifold_projections.KernelComposition import KernelComposition, \
     CompositionAction
 from UQpy.dimension_reduction.grassman.manifold_projections.baseclass.ManifoldProjection import ManifoldProjection

@@ -1,4 +1,4 @@
-from UQpy import PositiveInteger
+from UQpy.utilities.ValidationTypes import PositiveInteger
 import numpy as np
 
 from UQpy.dimension_reduction.grassman.methods.KarcherMean import KarcherMean

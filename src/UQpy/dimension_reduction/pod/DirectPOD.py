@@ -29,8 +29,8 @@ class DirectPOD:
                  modes: int = 10 ** 10,
                  reconstruction_percentage: float = 10 ** 10):
         self.logger = logging.getLogger(__name__)
-        super().__init__(solution_snapshots)
         self.modes = modes
+        self.solution_snapshots=solution_snapshots
         self.reconstruction_percentage = reconstruction_percentage
 
     def run(self):

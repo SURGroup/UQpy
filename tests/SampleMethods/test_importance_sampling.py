@@ -44,7 +44,8 @@ def test_resampling():
     is_input.random_state = 123
     w = ImportanceSampling(is_input=is_input, samples_number=2000)
     w.resample(samples_number=1000)
-    assert np.all(np.round(w.unweighted_samples[-1], 3) == [-4.912, 23.106])
+    result=w.unweighted_samples[-1]
+    assert np.all(np.round(result, 3) == [-4.912, 23.106])
 
 
 def test_resampling2():

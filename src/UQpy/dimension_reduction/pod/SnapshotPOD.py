@@ -30,7 +30,7 @@ class SnapshotPOD:
                  modes: int = 10 ** 10,
                  reconstruction_percentage: float = 10 ** 10):
 
-        super().__init__(solution_snapshots)
+        self.solution_snapshots = solution_snapshots
         self.logger = logging.getLogger(__name__)
         self.modes = modes
         self.reconstruction_percentage = reconstruction_percentage

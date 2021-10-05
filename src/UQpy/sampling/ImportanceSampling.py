@@ -174,7 +174,7 @@ class ImportanceSampling:
         if samples_number is None:
             samples_number = self.samples.shape[0]
         if method == 'multinomial':
-            multinomial_run = np.random.multinomial(samples_number, self.weights, size=1)[0]
+            multinomial_run = self.random_state.multinomial(samples_number, self.weights, size=1)[0]
             idx = list()
             for j in range(self.samples.shape[0]):
                 if multinomial_run[j] > 0:

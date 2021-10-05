@@ -111,7 +111,7 @@ class LatinHypercubeSampling:
         self.logger.info('UQpy: Running Latin Hypercube sampling...')
         self.criterion.create_bins(self.samples)
 
-        u_lhs = self.criterion.generate_samples(self.samples)
+        u_lhs = self.criterion.generate_samples()
         self.samplesU01 = u_lhs
 
         if isinstance(self.dist_object, list):

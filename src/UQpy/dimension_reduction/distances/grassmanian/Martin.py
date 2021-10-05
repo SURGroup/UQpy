@@ -1,14 +1,13 @@
-from UQpy.dimension_reduction_v4.kernel_based.distances.baseclass.RiemannianDistance import RiemannianDistance, \
-    check_points
 import numpy as np
 from numpy.linalg import svd
 import sys
+from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
 
 
 class Martin(RiemannianDistance):
 
     def compute_distance(self, point1, point2):
-        point1, point2 = check_points(point1, point2)
+        point1, point2 = RiemannianDistance.check_points(point1, point2)
 
         l = min(np.shape(point1))
         k = min(np.shape(point2))
