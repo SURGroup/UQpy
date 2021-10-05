@@ -1,9 +1,9 @@
 import copy
 from UQpy import PositiveInteger
 import numpy as np
-
-from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
-from UQpy.dimension_reduction.grassman.KarcherMean import KarcherMean
+from UQpy.dimension_reduction.grassman.methods.LogMap import log_map
+from UQpy.dimension_reduction.grassman.methods.ExpMap import exp_map
+from UQpy.dimension_reduction.grassman.methods.KarcherMean import KarcherMean
 
 
 class GradientDescent:
@@ -40,8 +40,8 @@ class GradientDescent:
         _gamma = []
         from UQpy.dimension_reduction.grassman.Grassman import Grassmann
         if self.acceleration:
-            _gamma = Grassmann.log_map(points_grassmann=data_points,
-                                       reference_point=np.asarray(mean_element))
+            _gamma = log_map(points_grassmann=data_points,
+                             reference_point=np.asarray(mean_element))
 
             avg_gamma.fill(0)
             for i in range(points_number):
@@ -50,8 +50,8 @@ class GradientDescent:
 
         # Main loop
         while counter_iteration <= self.max_iterations:
-            _gamma = Grassmann.log_map(points_grassmann=data_points,
-                                       reference_point=np.asarray(mean_element))
+            _gamma = log_map(points_grassmann=data_points,
+                             reference_point=np.asarray(mean_element))
             avg_gamma.fill(0)
 
             for i in range(points_number):
@@ -72,8 +72,7 @@ class GradientDescent:
             else:
                 step = alpha * avg_gamma
 
-            x = Grassmann.exp_map(points_tangent=[step],
-                                  reference_point=np.asarray(mean_element))
+            x = exp_map(points_tangent=[step], reference_point=np.asarray(mean_element))
 
             test_1 = np.linalg.norm(x[0] - mean_element, 'fro')
 

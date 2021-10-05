@@ -8,6 +8,8 @@ from UQpy.dimension_reduction.grassman.interpolations import LinearInterpolation
 from UQpy.dimension_reduction.grassman.manifold_projections.KernelComposition import KernelComposition, \
     CompositionAction
 from UQpy.dimension_reduction.grassman.manifold_projections.baseclass.ManifoldProjection import ManifoldProjection
+from UQpy.dimension_reduction.grassman.methods.ExpMap import exp_map
+from UQpy.dimension_reduction.grassman.methods.LogMap import log_map
 from UQpy.dimension_reduction.kernels.grassmanian.baseclass.Kernel import Kernel
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 from UQpy.utilities.Utilities import *
@@ -89,8 +91,8 @@ class SvdProjection(ManifoldProjection):
             sigma_m.append(np.diag(self.sigma[i]))
 
         # Project the points on the manifold to the tangent space created over the Karcher mean.
-        gamma_psi = Grassmann.log_map(points_grassmann=self.psi, reference_point=ref_psi)
-        gamma_phi = Grassmann.log_map(points_grassmann=self.phi, reference_point=ref_phi)
+        gamma_psi = log_map(points_grassmann=self.psi, reference_point=ref_psi)
+        gamma_phi = log_map(points_grassmann=self.phi, reference_point=ref_phi)
 
         # Perform the interpolation in the tangent space.
         interp_psi = interpolation \
@@ -104,8 +106,8 @@ class SvdProjection(ManifoldProjection):
                                 point=point, element_wise=element_wise)
 
         # Map the interpolated point back to the manifold.
-        psi_tilde = Grassmann.exp_map(points_tangent=[interp_psi], reference_point=ref_psi)
-        phi_tilde = Grassmann.exp_map(points_tangent=[interp_phi], reference_point=ref_phi)
+        psi_tilde = exp_map(points_tangent=[interp_psi], reference_point=ref_psi)
+        phi_tilde = exp_map(points_tangent=[interp_phi], reference_point=ref_phi)
 
         # Estimate the interpolated solution.
         psi_tilde = np.array(psi_tilde[0])

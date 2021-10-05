@@ -1,8 +1,10 @@
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator
 
+from UQpy.dimension_reduction.grassman.interpolations.baseclass.InterpolationMethod import InterpolationMethod
 
-class LinearInterpolation:
+
+class LinearInterpolation(InterpolationMethod):
 
     def interpolate(self, coordinates, samples, point):
 

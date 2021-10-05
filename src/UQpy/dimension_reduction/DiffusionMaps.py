@@ -3,7 +3,7 @@ import scipy.sparse.linalg as spsl
 from UQpy.utilities.Utilities import *
 from UQpy.utilities.Utilities import _nn_coord
 from beartype import beartype
-from typing import Annotated
+from typing import Annotated, Union
 from beartype.vale import Is
 
 
@@ -79,7 +79,7 @@ class DiffusionMaps:
     **Methods:**
 
     """
-    AlphaType = Annotated[float, Is[lambda number: 0 <= number <= 1]]
+    AlphaType = Annotated[Union[float, int], Is[lambda number: 0 <= number <= 1]]
     IntegerLargerThanUnityType = Annotated[int, Is[lambda number: number >= 1]]
 
     @beartype

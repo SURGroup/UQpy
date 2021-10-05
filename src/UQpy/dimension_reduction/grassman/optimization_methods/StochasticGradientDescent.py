@@ -1,8 +1,7 @@
 from UQpy import PositiveInteger
 import numpy as np
 
-from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
-from UQpy.dimension_reduction.grassman.KarcherMean import KarcherMean
+from UQpy.dimension_reduction.grassman.methods.KarcherMean import KarcherMean
 
 
 class StochasticGradientDescent:
