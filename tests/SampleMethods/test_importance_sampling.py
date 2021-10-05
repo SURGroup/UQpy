@@ -37,11 +37,8 @@ def test_log_pdf_target():
 
 
 def test_resampling():
-    is_input = ISInput()
-    is_input.log_pdf_target = log_rosenbrock
-    is_input.args_target = (20,)
-    is_input.proposal = proposal
-    is_input.random_state = 123
+    is_input = ISInput(log_pdf_target=log_rosenbrock, args_target=(20,),
+                       proposal=proposal, random_state=123)
     w = ImportanceSampling(is_input=is_input, samples_number=2000)
     w.resample(samples_number=1000)
     result=w.unweighted_samples[-1]
@@ -49,22 +46,16 @@ def test_resampling():
 
 
 def test_resampling2():
-    is_input = ISInput()
-    is_input.log_pdf_target = log_rosenbrock
-    is_input.args_target = (20,)
-    is_input.proposal = proposal
-    is_input.random_state = 123
+    is_input = ISInput(log_pdf_target=log_rosenbrock, args_target=(20,),
+                       proposal=proposal, random_state=123)
     w = ImportanceSampling(is_input=is_input, samples_number=2000)
     w.resample()
     assert w.unweighted_samples.shape == (2000, 2)
 
 
 def test_rerun():
-    is_input = ISInput()
-    is_input.log_pdf_target = log_rosenbrock
-    is_input.args_target = (20,)
-    is_input.proposal = proposal
-    is_input.random_state = 123
+    is_input = ISInput(log_pdf_target=log_rosenbrock, args_target=(20,),
+                       proposal=proposal, random_state=123)
     w = ImportanceSampling(is_input=is_input)
     w.run(samples_number=1000)
     w.resample(samples_number=1000)
@@ -73,11 +64,8 @@ def test_rerun():
 
 
 def test_proposal():
-    is_input = ISInput()
-    is_input.log_pdf_target = log_rosenbrock
-    is_input.args_target = (20,)
-    is_input.proposal = proposal2
-    is_input.random_state = 123
+    is_input = ISInput(log_pdf_target=log_rosenbrock, args_target=(20,),
+                       proposal=proposal2, random_state=123)
     w = ImportanceSampling(is_input=is_input,
                            samples_number=2000)
     assert (w.weights.shape == (2000,) and np.all(np.round(w.samples[-1], 3) == [-6.434, 27.373]))

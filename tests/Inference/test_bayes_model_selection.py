@@ -34,26 +34,9 @@ def test_models():
                  JointIndependent([Normal(0, 1), Normal(0, 1)]),
                  JointIndependent([Normal(0, 1), Normal(0, 2), Normal(0.025)])]
 
-    mh_input1 = MhInput()
-    mh_input1.jump = 1
-    mh_input1.burn_length = 500
-    mh_input1.proposal = proposals[0]
-    mh_input1.random_state = 0
-    mh_input1.seed = [0.]
-
-    mh_input2 = MhInput()
-    mh_input2.jump = 1
-    mh_input2.burn_length = 500
-    mh_input2.proposal = proposals[1]
-    mh_input2.random_state = 0
-    mh_input2.seed = [0., 0.]
-
-    mh_input3 = MhInput()
-    mh_input3.jump = 1
-    mh_input3.burn_length = 500
-    mh_input3.proposal = proposals[2]
-    mh_input3.random_state = 0
-    mh_input3.seed = [0., 0., 0.]
+    mh_input1 = MhInput(jump=1, burn_length=500, proposal=proposals[0], random_state=0, seed=[0.])
+    mh_input2 = MhInput(jump=1, burn_length=500, proposal=proposals[1], random_state=0, seed=[0., 0.])
+    mh_input3 = MhInput(jump=1, burn_length=500, proposal=proposals[2], random_state=0, seed=[0., 0., 0.])
 
     selection = BayesModelSelection(candidate_models=[model1, model2, model3],
                                     data=data_ex1,

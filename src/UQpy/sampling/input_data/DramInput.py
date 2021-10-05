@@ -9,15 +9,15 @@ from UQpy.utilities.ValidationTypes import *
 
 @dataclass
 class DramInput(SamplingInput):
-    pdf_target = None
-    log_pdf_target = None
-    args_target = None
+    pdf_target: callable = None
+    log_pdf_target: callable = None
+    args_target: tuple = None
     burn_length: Annotated[int, Is[lambda x: x >= 0]] = 0
     jump: PositiveInteger = 1
     dimension: int = None
-    seed = None
-    save_log_pdf = False
-    concatenate_chains = True
+    seed: list = None
+    save_log_pdf: bool = False
+    concatenate_chains: bool = True
     initial_covariance: float = None
     covariance_update_rate: float = 100
     scale_parameter: float = None

@@ -31,8 +31,7 @@ def test_probability_model_importance_sampling():
     # create an instance of class Model
     candidate_model = DistributionModel(distributions=Normal(loc=None, scale=None),
                                         parameters_number=2, prior=prior)
-    is_input = ISInput()
-    is_input.random_state=1
+    is_input = ISInput(random_state=1)
     bayes_estimator = BayesParameterEstimation \
         .create_with_importance_sampling(inference_model=candidate_model,
                                          is_input=is_input,
@@ -59,10 +58,7 @@ def test_probability_model_mcmc():
     candidate_model = DistributionModel(distributions=Normal(loc=None, scale=None),
                                         parameters_number=2, prior=prior)
 
-    mh_input = MhInput()
-    mh_input.jump = 10
-    mh_input.burn_length = 10
-    mh_input.seed = np.array([1.0, 0.2])
+    mh_input = MhInput(jump=10, burn_length=10, seed=[1.0, 0.2])
 
     bayes_estimator = BayesParameterEstimation \
         .create_with_mcmc_sampling(mcmc_input=mh_input,

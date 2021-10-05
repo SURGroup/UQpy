@@ -44,11 +44,7 @@ def test_infomodelselection_aicc():
 
 
 def test_bayes_mcmc():
-    mh_input = MhInput()
-    mh_input.jump = 2
-    mh_input.burn_length = 5
-    mh_input.random_state = 123
-    mh_input.seed = [1., ]
+    mh_input = MhInput(jump=2, burn_length=5, seed=[1., ], random_state=123)
     bayes_estimator = BayesParameterEstimation\
         .create_with_mcmc_sampling(mcmc_input=mh_input,
                                    inference_model=candidate_model_no_prior,
@@ -58,8 +54,7 @@ def test_bayes_mcmc():
 
 
 def test_bayes_is():
-    is_input = ISInput()
-    is_input.random_state = 123
+    is_input = ISInput(random_state=123)
     bayes_estimator = BayesParameterEstimation\
         .create_with_importance_sampling(inference_model=candidate_model,
                                          is_input=is_input,
@@ -69,24 +64,16 @@ def test_bayes_is():
 
 
 def test_bayes_selection():
-    mh_input = MhInput()
-    mh_input.random_state = 123
-    mh_input.chains_number = 2
-    mh_input1 = MhInput()
-    mh_input1.random_state = 123
-    mh_input1.chains_number = 2
+    mh_input = MhInput(random_state=123, chains_number=2)
+    mh_input1 = MhInput(random_state=123, chains_number=2)
     selection = BayesModelSelection(data=data, candidate_models=[candidate_model, candidate_model2],
                                     samples_number=[50, 50], sampling_class_inputs=[mh_input, mh_input1])
     assert round(selection.probabilities[0], 3) == 1.000
 
 
 def test_bayes_selection2():
-    mh_input = MhInput()
-    mh_input.random_state = 123
-    mh_input.chains_number = 2
-    mh_input1 = MhInput()
-    mh_input1.random_state = 123
-    mh_input1.chains_number = 2
+    mh_input = MhInput(random_state=123, chains_number=2)
+    mh_input1 = MhInput(random_state=123, chains_number=2)
     selection = BayesModelSelection(
         data=data, candidate_models=[candidate_model, candidate_model2],
         samples_per_chain_number=[25, 25], sampling_class_inputs=[mh_input, mh_input1])

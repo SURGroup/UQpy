@@ -43,7 +43,7 @@ def test_rss_simple_voronoi():
     assert y.samples[17, 1] == 0.17076741629044234
 
 
-def test_rss2():
+def test_gradient_enhanced_refinement_rectangular():
     from UQpy.surrogates.kriging.regression_models.Linear import Linear
     from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential
     marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
