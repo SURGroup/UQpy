@@ -16,7 +16,7 @@ class SimpleRefinement(Refinement):
                        random_state, index, dimension, samples_u01, training_points):
         points_to_add = min(samples_per_iteration, samples_number - index)
 
-        strata_metrics = self.strata.calculate_strata_metrics()
+        strata_metrics = self.strata.calculate_strata_metrics(index)
 
         bins2break = self.identify_bins(strata_metrics=strata_metrics,
                                         points_to_add=points_to_add,
