@@ -114,51 +114,7 @@ class SvdProjection(ManifoldProjection):
 
         return interpolated
 
-    def evaluate_matrix(self, operator: Kernel):
-        kernel_psi = self.__apply_operator(self.psi, p_dim=self.p_planes_dimensions, operator=operator)
-        kernel_phi = self.__apply_operator(self.phi, p_dim=self.p_planes_dimensions, operator=operator)
+    def evaluate_matrix(self, kernel_operator: callable):
+        kernel_psi = self.kernel_operator(self.psi, p_dim=self.p_planes_dimensions)
+        kernel_phi = self.kernel_operator(self.phi, p_dim=self.p_planes_dimensions)
         return CompositionAction[self.kernel_composition.name](kernel_psi, kernel_phi)
-
-    def __apply_operator(self, points, p_dim, operator):
-
-        # Check points for type and shape consistency.
-        # -----------------------------------------------------------
-        if not isinstance(points, list) and not isinstance(points, np.ndarray):
-            raise TypeError('UQpy: `points` must be either list or numpy.ndarray.')
-
-        nargs = len(points)
-
-        if nargs < 2:
-            raise ValueError('UQpy: At least two matrices must be provided.')
-        # ------------------------------------------------------------
-
-        # Define the pairs of points to compute the entries of the kernel matrix.
-        indices = range(nargs)
-        pairs = list(itertools.combinations(indices, 2))
-
-        # Estimate off-diagonal entries of the kernel matrix.
-        kernel_list = []
-        for id_pair in range(np.shape(pairs)[0]):
-            ii = pairs[id_pair][0]  # Point i
-            jj = pairs[id_pair][1]  # Point j
-
-            x0 = np.asarray(points[ii])[:, :p_dim]
-            x1 = np.asarray(points[jj])[:, :p_dim]
-
-            ker = operator.apply_method(x0, x1)
-            kernel_list.append(ker)
-
-        # Diagonal entries of the kernel matrix.
-        kernel_diag = []
-        for id_elem in range(nargs):
-            xd = np.asarray(points[id_elem])
-            xd = xd[:, :p_dim]
-
-            kerd = operator.apply_method(xd, xd)
-            kernel_diag.append(kerd)
-
-        # Add the diagonals and off-diagonal entries of the Kernel matrix.
-        kernel_matrix = sd.squareform(np.array(kernel_list)) + np.diag(kernel_diag)
-
-        # Return the kernel matrix.
-        return kernel_matrix
