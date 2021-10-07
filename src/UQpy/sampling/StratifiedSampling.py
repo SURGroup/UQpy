@@ -3,6 +3,7 @@ from beartype import beartype
 from UQpy.distributions import DistributionContinuous1D, JointIndependent
 from UQpy.utilities.strata.baseclass import Strata
 from UQpy.utilities.ValidationTypes import *
+from UQpy.utilities.Utilities import process_random_state
 
 
 class StratifiedSampling:
@@ -12,15 +13,20 @@ class StratifiedSampling:
                  distributions: Union[DistributionContinuous1D, JointIndependent, list[DistributionContinuous1D]],
                  strata_object: Strata,
                  samples_per_stratum_number: Union[int, list[int]] = None,
-                 samples_number: int = None):
+                 samples_number: int = None,
+                 random_state=None):
 
         self.logger = logging.getLogger(__name__)
         self.weights = None
         self.strata_object = strata_object
+
         self.samples_per_stratum_number = samples_per_stratum_number
         self.samples_number = samples_number
         self.samplesU01, self.samples = None, None
         self.distributions = distributions
+        self.random_state = process_random_state(random_state)
+
+        self.strata_object.stratify(self.random_state)
 
         self.logger.info("UQpy: Stratified_sampling object is created")
 
@@ -117,6 +123,7 @@ class StratifiedSampling:
             self.samples_per_stratum_number = [1] * self.strata_object.volume.shape[0]
 
     def create_unit_hypercube_samples(self):
-        samples_in_strata, weights = self.strata_object.sample_strata(self.samples_per_stratum_number)
+        samples_in_strata, weights = self.strata_object.sample_strata(self.samples_per_stratum_number,
+                                                                      self.random_state)
         self.weights = np.array(weights)
         self.samplesU01 = np.concatenate(samples_in_strata, axis=0)

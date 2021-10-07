@@ -26,3 +26,4 @@ from UQpy.sampling.LatinHypercubeSampling import LatinHypercubeSampling
 from UQpy.sampling.MonteCarloSampling import MonteCarloSampling
 from UQpy.sampling.SimplexSampling import SimplexSampling
 from UQpy.sampling.StratifiedSampling import StratifiedSampling
+from UQpy.sampling.RefinedStratifiedSampling import RefinedStratifiedSampling

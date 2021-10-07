@@ -11,9 +11,9 @@ import shutil
 
 def test_rss_simple_rectangular():
     marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
-    strata = Rectangular(strata_number=[4, 4], random_state=1)
+    strata = Rectangular(strata_number=[4, 4])
     x = StratifiedSampling(distributions=marginals, strata_object=strata,
-                           samples_per_stratum_number=1)
+                           samples_per_stratum_number=1, random_state=1)
     algorithm = SimpleRefinement(strata)
     y = RefinedStratifiedSampling(stratified_sampling=x,
                                   samples_number=18,
@@ -28,9 +28,9 @@ def test_rss_simple_rectangular():
 
 def test_rss_simple_voronoi():
     marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
-    strata = Voronoi(seeds_number=16, dimension=2, random_state=1)
+    strata = Voronoi(seeds_number=16, dimension=2)
     x = StratifiedSampling(distributions=marginals, strata_object=strata,
-                           samples_per_stratum_number=1)
+                           samples_per_stratum_number=1, random_state=1)
     algorithm = SimpleRefinement(strata)
     y = RefinedStratifiedSampling(stratified_sampling=x,
                                   samples_number=18,
@@ -47,9 +47,9 @@ def test_gradient_enhanced_refinement_rectangular():
     from UQpy.surrogates.kriging.regression_models.Linear import Linear
     from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential
     marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
-    strata = Rectangular(strata_number=[4, 4], random_state=1)
+    strata = Rectangular(strata_number=[4, 4])
     x = StratifiedSampling(distributions=marginals, strata_object=strata,
-                           samples_per_stratum_number=1)
+                           samples_per_stratum_number=1, random_state=1)
     initial_samples = x.samples.copy()
     rmodel1 = RunModel(model_script='python_model_function.py', vec=False)
     rmodel1.run(samples=x.samples)
