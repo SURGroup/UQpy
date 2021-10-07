@@ -21,6 +21,7 @@ from UQpy.dimension_reduction.grassman.interpolations.Interpolation import Inter
 
 from UQpy.dimension_reduction.DiffusionMaps import DiffusionMaps
 from UQpy.dimension_reduction.kernels.grassmanian.baseclass.Kernel import Kernel
+from UQpy.dimension_reduction.kernels.euclidean.Gaussian import Gaussian
 
 
 def test_log_exp():
@@ -191,8 +192,8 @@ def test_dmaps_swiss_roll():
 
     swiss_roll = np.array([X0, Y0, Z0]).transpose()
 
-    kernel = Euclidean(data=swiss_roll, epsilon=0.03)
-    kernel_matrix = kernel.evaluate_kernel_matrix()
+    kernel = Euclidean(data=swiss_roll)
+    kernel_matrix = kernel.evaluate_kernel_matrix(kernel=Gaussian(epsilon=0.03))
 
     dmaps = DiffusionMaps(alpha=0.5, eigenvectors_number=3,
                           is_sparse=True, neighbors_number=100,
@@ -228,8 +229,8 @@ def test_dmaps_circular():
 
     X = np.array([x, y, z]).transpose()
 
-    kernel = Euclidean(data=X, epsilon=0.3)
-    kernel_matrix = kernel.evaluate_kernel_matrix()
+    kernel = Euclidean(data=X)
+    kernel_matrix = kernel.evaluate_kernel_matrix(kernel=Gaussian(epsilon=0.3))
 
     dmaps = DiffusionMaps(alpha=1, eigenvectors_number=3,
                           kernel_matrix=kernel_matrix)
