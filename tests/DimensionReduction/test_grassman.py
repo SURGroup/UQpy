@@ -20,7 +20,7 @@ from UQpy.dimension_reduction.euclidean.Euclidean import Euclidean
 from UQpy.dimension_reduction.grassman.interpolations.Interpolation import Interpolation
 
 from UQpy.dimension_reduction.DiffusionMaps import DiffusionMaps
-from UQpy.dimension_reduction.kernels.grassmanian.baseclass.Kernel import Kernel
+from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
 from UQpy.dimension_reduction.kernels.euclidean.Gaussian import Gaussian
 
 

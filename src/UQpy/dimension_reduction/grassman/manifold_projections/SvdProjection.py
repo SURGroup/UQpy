@@ -1,6 +1,4 @@
-import itertools
 import sys
-import scipy.spatial.distance as sd
 
 from UQpy.dimension_reduction.SVD import SVD
 from UQpy.dimension_reduction.grassman.manifold_projections.KernelComposition import KernelComposition, \
@@ -8,7 +6,7 @@ from UQpy.dimension_reduction.grassman.manifold_projections.KernelComposition im
 from UQpy.dimension_reduction.grassman.manifold_projections.baseclass.ManifoldProjection import ManifoldProjection
 from UQpy.dimension_reduction.grassman.methods.ExpMap import exp_map
 from UQpy.dimension_reduction.grassman.methods.LogMap import log_map
-from UQpy.dimension_reduction.kernels.grassmanian.baseclass.Kernel import Kernel
+from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 from UQpy.utilities.Utilities import *
 

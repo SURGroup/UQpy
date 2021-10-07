@@ -3,7 +3,7 @@ import itertools
 import numpy as np
 import scipy.spatial.distance as sd
 
-from UQpy.dimension_reduction.kernels.grassmanian.baseclass.Kernel import Kernel
+from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
 
 
 class Gaussian(Kernel):

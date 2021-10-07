@@ -2,7 +2,7 @@ import itertools
 
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 from UQpy.dimension_reduction.grassman.manifold_projections.baseclass.ManifoldProjection import ManifoldProjection
-from UQpy.dimension_reduction.kernels.grassmanian.baseclass.Kernel import Kernel
+from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
 import numpy as np
 import scipy.spatial.distance as sd
 

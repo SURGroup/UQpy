@@ -1,6 +1,6 @@
 import numpy as np
 
-from UQpy.dimension_reduction.kernels.grassmanian.baseclass.Kernel import Kernel
+from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
 
 
 class ProjectionKernel(Kernel):

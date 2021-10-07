@@ -2,7 +2,7 @@ import itertools
 
 from UQpy.dimension_reduction.QR import QR
 from UQpy.dimension_reduction.grassman.manifold_projections.baseclass.ManifoldProjection import ManifoldProjection
-from UQpy.dimension_reduction.kernels.grassmanian.baseclass.Kernel import Kernel
+from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 import numpy as np
 import sys
