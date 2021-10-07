@@ -308,23 +308,26 @@ def test_grassman_kernel():
 
     class UserKernel(Kernel):
 
-        def apply_method(self, point1, point2):
+        def apply_method(self, data):
+            data.evaluate_matrix(self, self.kernel_operator)
+
+        def pointwise_operator(self, point1, point2):
             """
-                User defined kernel.
+                            User defined kernel.
 
-                **Input:**
+                            **Input:**
 
-                * **x0** (`list` or `ndarray`)
-                    Point on the Grassmann manifold.
+                            * **x0** (`list` or `ndarray`)
+                                Point on the Grassmann manifold.
 
-                * **x1** (`list` or `ndarray`)
-                    Point on the Grassmann manifold.
+                            * **x1** (`list` or `ndarray`)
+                                Point on the Grassmann manifold.
 
-                **Output/Returns:**
+                            **Output/Returns:**
 
-                * **distance** (`float`)
-                    Kernel value for x0 and x1.
-                """
+                            * **distance** (`float`)
+                                Kernel value for x0 and x1.
+                            """
 
             if not isinstance(point1, list) and not isinstance(point1, np.ndarray):
                 raise TypeError('UQpy: x0 must be either list or numpy.ndarray.')
@@ -340,6 +343,7 @@ def test_grassman_kernel():
             det = np.linalg.det(r)
             ker = det * det
             return ker
+
 
     kernel_user_psi = manifold.evaluate_kernel_matrix(kernel=UserKernel())
 

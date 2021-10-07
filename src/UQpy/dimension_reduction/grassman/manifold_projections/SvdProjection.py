@@ -114,7 +114,7 @@ class SvdProjection(ManifoldProjection):
 
         return interpolated
 
-    def evaluate_matrix(self, kernel_operator: callable):
-        kernel_psi = self.kernel_operator(self.psi, p_dim=self.p_planes_dimensions)
-        kernel_phi = self.kernel_operator(self.phi, p_dim=self.p_planes_dimensions)
+    def evaluate_matrix(self, kernel: Kernel):
+        kernel_psi = kernel.kernel_operator(self.psi, p_dim=self.p_planes_dimensions)
+        kernel_phi = kernel.kernel_operator(self.phi, p_dim=self.p_planes_dimensions)
         return CompositionAction[self.kernel_composition.name](kernel_psi, kernel_phi)

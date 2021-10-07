@@ -8,6 +8,9 @@ from UQpy.dimension_reduction.kernels.grassmanian.baseclass.Kernel import Kernel
 
 class Gaussian(Kernel):
 
+    def pointwise_operator(self, point1, point2):
+        pass
+
     def __init__(self, epsilon: float = None):
         self.epsilon = epsilon
 
