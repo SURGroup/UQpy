@@ -1,7 +1,8 @@
 from UQpy.utilities.ValidationTypes import PositiveInteger
 import numpy as np
-
-from UQpy.dimension_reduction.grassman.methods.KarcherMean import KarcherMean
+from UQpy.dimension_reduction.grassman.methods.FrechetVariance import frechet_variance
+from UQpy.dimension_reduction.grassman.methods.LogMap import log_map
+from UQpy.dimension_reduction.grassman.methods.ExpMap import exp_map
 
 
 class StochasticGradientDescent:
@@ -25,7 +26,7 @@ class StochasticGradientDescent:
 
         fmean = []
         for i in range(n_mat):
-            fmean.append(KarcherMean.frechet_variance(data_points[i]))
+            fmean.append(frechet_variance(data_points[i]))
 
         index_0 = fmean.index(min(fmean))
 
@@ -43,11 +44,11 @@ class StochasticGradientDescent:
             for i in range(len(indices)):
                 alpha = 0.5 / k
                 idx = indices[i]
-                _gamma = Grassmann.log_map(points_grassmann=[data_points[idx]], ref=np.asarray(mean_element))
+                _gamma = log_map(points_grassmann=[data_points[idx]], reference_point=np.asarray(mean_element))
 
                 step = 2 * alpha * _gamma[0]
 
-                X = Grassmann.exp_map(points_tangent=[step], ref=np.asarray(mean_element))
+                X = exp_map(points_tangent=[step], reference_point=np.asarray(mean_element))
 
                 _gamma = []
                 mean_element = X[0]

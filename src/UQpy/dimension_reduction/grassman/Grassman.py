@@ -1,5 +1,4 @@
 from UQpy.dimension_reduction.distances.grassmanian.GrassmanDistance import GrassmannDistance
-from UQpy.dimension_reduction.grassman.methods.KarcherMean import KarcherMean
 from UQpy.dimension_reduction.grassman.interpolations.LinearInterpolation import LinearInterpolation
 from UQpy.dimension_reduction.grassman.manifold_projections.baseclass.ManifoldProjection import ManifoldProjection
 from UQpy.dimension_reduction.grassman.optimization_methods.GradientDescent import GradientDescent

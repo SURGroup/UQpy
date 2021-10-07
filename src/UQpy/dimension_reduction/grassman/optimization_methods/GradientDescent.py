@@ -3,7 +3,7 @@ from UQpy.utilities.ValidationTypes import PositiveInteger
 import numpy as np
 from UQpy.dimension_reduction.grassman.methods.LogMap import log_map
 from UQpy.dimension_reduction.grassman.methods.ExpMap import exp_map
-from UQpy.dimension_reduction.grassman.methods.KarcherMean import KarcherMean
+from UQpy.dimension_reduction.grassman.methods.FrechetVariance import frechet_variance
 
 
 class GradientDescent:
@@ -26,7 +26,7 @@ class GradientDescent:
         max_rank = max(rank)
         fmean = []
         for i in range(points_number):
-            fmean.append(KarcherMean.frechet_variance(data_points[i], data_points, distance))
+            fmean.append(frechet_variance(data_points[i], data_points, distance))
 
         index_0 = fmean.index(min(fmean))
         mean_element = data_points[index_0].tolist()

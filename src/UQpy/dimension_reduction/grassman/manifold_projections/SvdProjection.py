@@ -5,6 +5,7 @@ from UQpy.dimension_reduction.grassman.manifold_projections.KernelComposition im
     CompositionAction
 from UQpy.dimension_reduction.grassman.manifold_projections.baseclass.ManifoldProjection import ManifoldProjection
 from UQpy.dimension_reduction.grassman.methods.ExpMap import exp_map
+from UQpy.dimension_reduction.grassman.methods.KarcherMean import karcher_mean
 from UQpy.dimension_reduction.grassman.methods.LogMap import log_map
 from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
@@ -76,10 +77,18 @@ class SvdProjection(ManifoldProjection):
         self.points_number = points_number
         self.max_rank = int(np.max(ranks))
 
-    def reconstruct_solution(self, karcher_mean, interpolation, coordinates, point, element_wise=True):
+    def reconstruct_solution(self, interpolation, coordinates, point,
+                             p_planes_dimensions, optimization_method, distance, element_wise=True):
         # Find the Karcher mean.
-        ref_psi = karcher_mean.compute_mean(self.psi)
-        ref_phi = karcher_mean.compute_mean(self.phi)
+        ref_psi = karcher_mean(points_grassmann=self.psi,
+                               p_planes_dimensions=p_planes_dimensions,
+                               optimization_method=optimization_method,
+                               distance=distance)
+
+        ref_phi = karcher_mean(points_grassmann=self.phi,
+                               p_planes_dimensions=p_planes_dimensions,
+                               optimization_method=optimization_method,
+                               distance=distance)
 
         # Reshape the vector containing the singular values as a diagonal matrix.
         sigma_m = []

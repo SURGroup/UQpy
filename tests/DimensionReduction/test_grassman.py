@@ -8,11 +8,12 @@ from UQpy.dimension_reduction.distances.grassmanian.GrassmanDistance import Gras
 from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
 from UQpy.dimension_reduction.grassman.Grassman import Grassmann
 from UQpy.dimension_reduction.grassman.methods.ExpMap import exp_map
-from UQpy.dimension_reduction.grassman.methods.KarcherMean import KarcherMean
 from UQpy.dimension_reduction.grassman.interpolations.LinearInterpolation import LinearInterpolation
 from UQpy.dimension_reduction.grassman.interpolations.baseclass.InterpolationMethod import InterpolationMethod
 from UQpy.dimension_reduction.grassman.manifold_projections.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassman.methods.FrechetVariance import frechet_variance
 from UQpy.dimension_reduction.grassman.methods.LogMap import log_map
+from UQpy.dimension_reduction.grassman.methods.KarcherMean import karcher_mean
 from UQpy.dimension_reduction.grassman.optimization_methods.GradientDescent import GradientDescent
 from UQpy.dimension_reduction.grassman.optimization_methods.baseclass.OptimizationMethod import OptimizationMethod
 from UQpy.dimension_reduction.kernels.grassmanian.ProjectionKernel import ProjectionKernel
@@ -80,11 +81,15 @@ def test_karcher():
     manifold_projection = SvdProjection(matrices, p_planes_dimensions=sys.maxsize)
 
     optimization_method = GradientDescent(acceleration=True, error_tolerance=1e-4, max_iterations=1000)
-    karcher = KarcherMean(distance=GrassmannDistance(), optimization_method=optimization_method,
-                          p_planes_dimensions=manifold_projection.p_planes_dimensions)
+    psi_mean = karcher_mean(points_grassmann=manifold_projection.psi,
+                            p_planes_dimensions=manifold_projection.p_planes_dimensions,
+                            optimization_method=optimization_method,
+                            distance=GrassmannDistance())
 
-    psi_mean = karcher.compute_mean(manifold_projection.psi)
-    phi_mean = karcher.compute_mean(manifold_projection.phi)
+    phi_mean = karcher_mean(points_grassmann=manifold_projection.phi,
+                            p_planes_dimensions=manifold_projection.p_planes_dimensions,
+                            optimization_method=optimization_method,
+                            distance=GrassmannDistance())
 
     assert psi_mean[0, 0] == -0.3992313564023919
     assert phi_mean[0, 0] == -0.3820923720323338
@@ -138,13 +143,14 @@ def test_solution_reconstruction():
     manifold_projection = SvdProjection(Solutions, p_planes_dimensions=sys.maxsize)
 
     optimization_method = GradientDescent(acceleration=False, error_tolerance=1e-3, max_iterations=1000)
-    karcher = KarcherMean(distance=GrassmannDistance(), optimization_method=optimization_method,
-                          p_planes_dimensions=manifold_projection.p_planes_dimensions)
-
     interpolation = Interpolation(LinearInterpolation())
 
-    interpolated_solution = manifold_projection.reconstruct_solution(karcher, interpolation, nodes,
-                                                                     point, False)
+    interpolated_solution = manifold_projection.reconstruct_solution(interpolation=interpolation, coordinates=nodes,
+                                                                     point=point,
+                                                                     p_planes_dimensions=manifold_projection.p_planes_dimensions,
+                                                                     optimization_method=optimization_method,
+                                                                     distance=GrassmannDistance(),
+                                                                     element_wise=False)
     assert interpolated_solution[0, 0] == 0.6155684900619302
 
 
@@ -375,8 +381,6 @@ def test_user_interpolation():
     manifold_projection = SvdProjection(Solutions, p_planes_dimensions=sys.maxsize)
 
     optimization_method = GradientDescent(acceleration=False, error_tolerance=1e-3, max_iterations=1000)
-    karcher = KarcherMean(distance=GrassmannDistance(), optimization_method=optimization_method,
-                          p_planes_dimensions=manifold_projection.p_planes_dimensions)
 
     class UserInterpolation(InterpolationMethod):
 
@@ -424,8 +428,14 @@ def test_user_interpolation():
 
     interpolation = Interpolation(UserInterpolation())
 
-    interpolated_solution = manifold_projection.reconstruct_solution(karcher, interpolation, nodes,
-                                                                     point, False)
+    interpolated_solution = manifold_projection.reconstruct_solution(interpolation=interpolation, coordinates=nodes,
+                                                                     point=point,
+                                                                     p_planes_dimensions=manifold_projection.p_planes_dimensions,
+                                                                     optimization_method=optimization_method,
+                                                                     distance=GrassmannDistance(),
+                                                                     element_wise=False)
+
+
     assert interpolated_solution[0, 0] == 0.6155684900619302
 
 
@@ -468,7 +478,7 @@ def test_user_karcher():
             max_rank = max(rank)
             fmean = []
             for i in range(points_number):
-                fmean.append(KarcherMean.frechet_variance(data_points[i], data_points, distance))
+                fmean.append(frechet_variance(data_points[i], data_points, distance))
 
             index_0 = fmean.index(min(fmean))
             mean_element = data_points[index_0].tolist()
@@ -482,8 +492,8 @@ def test_user_karcher():
             _gamma = []
             from UQpy.dimension_reduction.grassman.Grassman import Grassmann
             if self.acceleration:
-                _gamma = Grassmann.log_map(points_grassmann=data_points,
-                                           reference_point=np.asarray(mean_element))
+                _gamma = log_map(points_grassmann=data_points,
+                                 reference_point=np.asarray(mean_element))
 
                 avg_gamma.fill(0)
                 for i in range(points_number):
@@ -492,8 +502,8 @@ def test_user_karcher():
 
             # Main loop
             while counter_iteration <= self.max_iterations:
-                _gamma = Grassmann.log_map(points_grassmann=data_points,
-                                           reference_point=np.asarray(mean_element))
+                _gamma = log_map(points_grassmann=data_points,
+                                 reference_point=np.asarray(mean_element))
                 avg_gamma.fill(0)
 
                 for i in range(points_number):
@@ -514,8 +524,7 @@ def test_user_karcher():
                 else:
                     step = alpha * avg_gamma
 
-                x = Grassmann.exp_map(points_tangent=[step],
-                                      reference_point=np.asarray(mean_element))
+                x = exp_map(points_tangent=[step], reference_point=np.asarray(mean_element))
 
                 test_1 = np.linalg.norm(x[0] - mean_element, 'fro')
 
@@ -584,14 +593,11 @@ def test_user_karcher():
             return distance
 
     manifold_projection = SvdProjection(matrices, p_planes_dimensions=sys.maxsize)
-    # karcher = KarcherMean(distance=UserDistance(),
-    #                       optimization_method=UserOptimizationMethod(acceleration=True, error_tolerance=1e-4),
-    #                       p_planes_dimensions=manifold_projection.p_planes_dimensions)
-    karcher = KarcherMean(distance=GrassmannDistance(),
-                          optimization_method=GradientDescent(acceleration=True, error_tolerance=1e-4,
+    psi_mean = karcher_mean(points_grassmann=manifold_projection.psi,
+                            p_planes_dimensions=manifold_projection.p_planes_dimensions,
+                            optimization_method=GradientDescent(acceleration=True, error_tolerance=1e-4,
                                                               max_iterations=1000),
-                          p_planes_dimensions=manifold_projection.p_planes_dimensions)
+                            distance=GrassmannDistance())
 
-    psi_mean = karcher.compute_mean(manifold_projection.psi)
 
     assert psi_mean[0, 0] == -0.3992313564023919
