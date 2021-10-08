@@ -1,9 +1,6 @@
 import copy
 from UQpy.utilities.ValidationTypes import PositiveInteger
 import numpy as np
-from UQpy.dimension_reduction.grassman.methods.LogMap import log_map
-from UQpy.dimension_reduction.grassman.methods.ExpMap import exp_map
-from UQpy.dimension_reduction.grassman.methods.FrechetVariance import frechet_variance
 
 
 class GradientDescent:
@@ -23,10 +20,11 @@ class GradientDescent:
         for i in range(points_number):
             rank.append(min(np.shape(data_points[i])))
 
+        from UQpy.dimension_reduction.grassman.Grassman import Grassmann
         max_rank = max(rank)
         fmean = []
         for i in range(points_number):
-            fmean.append(frechet_variance(data_points[i], data_points, distance))
+            fmean.append(Grassmann.frechet_variance(data_points[i], data_points, distance))
 
         index_0 = fmean.index(min(fmean))
         mean_element = data_points[index_0].tolist()
@@ -38,9 +36,8 @@ class GradientDescent:
         l = 0
         avg = []
         _gamma = []
-        from UQpy.dimension_reduction.grassman.Grassman import Grassmann
         if self.acceleration:
-            _gamma = log_map(points_grassmann=data_points,
+            _gamma = Grassmann.log_map(points_grassmann=data_points,
                              reference_point=np.asarray(mean_element))
 
             avg_gamma.fill(0)
@@ -50,7 +47,7 @@ class GradientDescent:
 
         # Main loop
         while counter_iteration <= self.max_iterations:
-            _gamma = log_map(points_grassmann=data_points,
+            _gamma = Grassmann.log_map(points_grassmann=data_points,
                              reference_point=np.asarray(mean_element))
             avg_gamma.fill(0)
 
@@ -72,7 +69,7 @@ class GradientDescent:
             else:
                 step = alpha * avg_gamma
 
-            x = exp_map(points_tangent=[step], reference_point=np.asarray(mean_element))
+            x = Grassmann.exp_map(points_tangent=[step], reference_point=np.asarray(mean_element))
 
             test_1 = np.linalg.norm(x[0] - mean_element, 'fro')
 
