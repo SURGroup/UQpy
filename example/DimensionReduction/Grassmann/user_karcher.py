@@ -9,7 +9,7 @@ def my_karcher(data_points, distance_fun, kwargs):
         **Input:**
 
         * **data_points** (`list`)
-            Points on the Grassmann manifold.
+            Points on the grassman manifold.
             
         * **distance_fun** (`callable`)
             Distance function.
@@ -60,11 +60,11 @@ def my_karcher(data_points, distance_fun, kwargs):
             for i in range(len(indices)):
                 alpha = 0.5 / k
                 idx = indices[i]
-                _gamma = Grassmann.log_map(points_grassmann=[data_points[idx]], ref=np.asarray(mean_element))
+                _gamma = Grassmann.log_map(points_grassmann=[data_points[idx]], reference_point=np.asarray(mean_element))
 
                 step = 2 * alpha * _gamma[0]
 
-                X = Grassmann.exp_map(points_tangent=[step], ref=np.asarray(mean_element))
+                X = Grassmann.exp_map(points_tangent=[step], reference_point=np.asarray(mean_element))
 
                 _gamma = []
                 mean_element = X[0]
