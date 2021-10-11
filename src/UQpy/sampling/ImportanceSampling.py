@@ -16,7 +16,10 @@ class ImportanceSampling:
 
     **Inputs:**
 
-    * **nsamples** (`int`):
+    ** ISInput** data class:
+        Class containing the following input data for the ``ImportanceSampling`` class.
+
+    * **samples_number** (`int`):
         Number of samples to generate - see ``run`` method. If not `None`, the `run` method is called when the object is
         created. Default is None.
 
@@ -35,15 +38,11 @@ class ImportanceSampling:
         Proposal to sample from. This ``UQpy.distributions`` object must have an rvs method and a log_pdf (or pdf)
         method.
 
-    * **verbose** (`boolean`)
-        Set ``verbose = True`` to print status messages to the terminal during execution.
-
     * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
         Random seed used to initialize the pseudo-random number generator. Default is None.
 
         If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
         object itself can be passed directly.
-
 
     **Attributes:**
 
@@ -109,13 +108,13 @@ class ImportanceSampling:
 
         **Inputs:**
 
-        * **nsamples** (`int`)
+        * **samples_number** (`int`)
             Number of weighted samples to generate.
 
         * **Output/Returns:**
 
         This function has no returns, but it updates the output attributes `samples`, `unnormalized_log_weights` and
-        `weights` of the ``IS`` object.
+        `weights` of the ``ImportanceSampling`` object.
         """
 
         self.logger.info('UQpy: Running Importance Sampling...')
@@ -151,14 +150,14 @@ class ImportanceSampling:
         Utility function that creates a set of un-weighted samples from a set of weighted samples. Can be useful for
         plotting for instance.
 
-        The ``resample`` method is not called automatically when instantiating the ``IS`` class or when invoking its
-        ``run`` method.
+        The ``resample`` method is not called automatically when instantiating the ``ImportanceSampling`` class or when
+        invoking its ``run`` method.
 
         **Inputs:**
 
         * **method** (`str`)
             Resampling method, as of V3 only multinomial resampling is supported. Default: 'multinomial'.
-        * **nsamples** (`int`)
+        * **samples_number** (`int`)
             Number of un-weighted samples to generate. Default: None (sets `nsamples` equal to the number of
             existing weighted samples).
 
@@ -222,13 +221,3 @@ class ImportanceSampling:
         else:
             raise ValueError('UQpy: log_pdf_target or pdf_target should be provided.')
         return evaluate_log_pdf
-
-    def __copy__(self):
-        new = self.__class__(pdf_target=self._pdf_target,
-                             log_pdf_target=self._log_pdf_target,
-                             args_target=self._args_target,
-                             proposal=self.proposal,
-                             random_state=self.random_state)
-        new.__dict__.update(self.__dict__)
-
-        return new

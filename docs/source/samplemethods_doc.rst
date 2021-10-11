@@ -1,6 +1,6 @@
 .. _samplemethods_doc:
 
-		  		   
+
 SampleMethods
 =============
 
@@ -12,7 +12,7 @@ Monte Carlo Sampling
 
 The ``MonteCarloSampling`` class generates random samples from a specified probability distribution(s).  The ``MonteCarloSampling`` class utilizes the ``Distributions`` class to define probability distributions.  The advantage of using the ``MonteCarloSampling`` class for ``UQpy`` operations, as opposed to simply generating samples with the ``scipy.stats`` package, is that it allows building an object containing the samples and their distributions for integration with other ``UQpy`` modules.
 
-MCS Class Descriptions
+MonteCarloSampling Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.sampling.MonteCarloSampling
@@ -25,7 +25,7 @@ The ``LatinHypercubeSampling`` class generates random samples from a specified p
 
 Adding New Latin Hypercube Design Criteria
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-	 
+
 The ``LatinHypercubeSampling`` class offers a variety of methods for pairing the samples in a Latin hypercube design. These are specified by the `criterion` parameter (i.e. 'random', 'centered', 'minmax', 'correlate'). However, adding a new method is straightforward. This is done by creating a new method that contains the algorithm for pairing the samples. This method takes as input the randomly generated samples in equal probability bins in each dimension and returns a set of samples that is paired according to the user's desired criterion. The user may also pass criterion-specific parameters into the custom method. These parameters are input to the ``LHS`` class through the `**kwargs`. The output of this function should be a numpy array of at least two-dimensions with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined criterion is given below:
 
 
@@ -108,22 +108,22 @@ Strata Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.SampleMethods.Strata
-	:members:
-	
+    :members:
+
 .. autoclass:: UQpy.SampleMethods.RectangularStrata
-	:members:
-	
+    :members:
+
 .. autoclass:: UQpy.SampleMethods.VoronoiStrata
-	:members:
-	
+    :members:
+
 .. autoclass:: UQpy.SampleMethods.DelaunayStrata
-	:members:
-	
+    :members:
+
 Adding a new ``Strata`` class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Adding a new type of stratification requires creating a new subclass of the ``Strata`` class that defines the desired geometric decomposition. This subclass must have a ``stratify`` method that overwrites the corresponding method in the parent class and performs the stratification.
-	
+
 
 STS Class
 ^^^^^^^^^^^
@@ -134,16 +134,16 @@ STS Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.SampleMethods.STS
-	:members:
+    :members:
 
 .. autoclass:: UQpy.SampleMethods.RectangularSTS
-	:members:
-	
+    :members:
+
 .. autoclass:: UQpy.SampleMethods.VoronoiSTS
-	:members:
-	
+    :members:
+
 .. autoclass:: UQpy.SampleMethods.DelaunaySTS
-	:members:
+    :members:
 
 
 Adding a new ``STS`` class
@@ -169,14 +169,14 @@ RSS Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.SampleMethods.RSS
-	:members:
-	
+    :members:
+
 .. autoclass:: UQpy.SampleMethods.RectangularRSS
-	:members:
+    :members:
 
 .. autoclass:: UQpy.SampleMethods.VoronoiRSS
-	:members:
-	
+    :members:
+
 Adding a new ``RSS`` class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -204,7 +204,7 @@ Simplex Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.SampleMethods.Simplex
-	:members:
+    :members:
 
 
 AKMCS
@@ -311,7 +311,7 @@ AKMCS Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.SampleMethods.AKMCS
-	:members:
+    :members:
 
 
 MCMC
@@ -363,36 +363,36 @@ MH
 ~~~~~
 
 .. autoclass:: UQpy.SampleMethods.MH
-	:members:
+    :members:
 
 MMH
 ~~~~~
    
 .. autoclass:: UQpy.SampleMethods.MMH
-	:members:
+    :members:
 
 Stretch
 ~~~~~~~~
    
 .. autoclass:: UQpy.SampleMethods.Stretch
-	:members:
+    :members:
 
 DRAM
 ~~~~~~~
    
 .. autoclass:: UQpy.SampleMethods.DRAM
-	:members:
+    :members:
 
 DREAM
 ~~~~~~~
    
 .. autoclass:: UQpy.SampleMethods.DREAM
-	:members:
+    :members:
 
 
 
    
-IS
+ImportanceSampling
 ----
 
 Importance sampling (IS) is based on the idea of sampling from an alternate distribution and reweighting the samples to be representative of the target distribution (perhaps concentrating sampling in certain regions of the input space that are of greater importance). This often enables efficient evaluations of expectations :math:`E_{ \textbf{x} \sim p} [ f(\textbf{x}) ]` where :math:`f( \textbf{x})` is small outside of a small region of the input space. To this end, a sample :math:`\textbf{x}` is drawn from a proposal distribution :math:`q(\textbf{x})` and re-weighted to correct for the discrepancy between the sampling distribution :math:`q` and the true distribution :math:`p`. The weight of the sample is computed as 
@@ -407,10 +407,10 @@ If :math:`p` is only known up to a constant, i.e., one can only evaluate :math:`
    :align: center
    
    
-IS Class Descriptions
+ImportanceSampling Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    
-.. autoclass:: UQpy.SampleMethods.IS
+.. autoclass:: UQpy.sampling.ImportanceSampling
    :members:
    
 .. [1] Gelman et al., "Bayesian data analysis", Chapman and Hall/CRC, 2013
@@ -431,5 +431,4 @@ IS Class Descriptions
 
 
 
-	
-	
+

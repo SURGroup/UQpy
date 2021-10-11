@@ -35,24 +35,12 @@ class LatinHypercubeSampling:
                 4. 'MinCorrelation' - minimizing the correlation between the points. \n
                 5. User-defined method.
 
-    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
-
-        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-        object itself can be passed directly.
-
-    * **verbose** (`Boolean`):
-        A boolean declaring whether to write text to the terminal.
-
-    * ****kwargs**
-        Additional arguments to be passed to the method specified by `criterion`
-
     **Attributes:**
 
     * **samples** (`ndarray`):
         The generated LHS samples.
 
-    * **samples_U01** (`ndarray`):
+    * **samplesU01** (`ndarray`):
         The generated LHS samples on the unit hypercube.
 
     **Methods**
@@ -87,14 +75,14 @@ class LatinHypercubeSampling:
         """
         Execute the random sampling in the ``LHS`` class.
 
-        The ``run`` method is the function that performs random sampling in the ``LHS`` class. If `nsamples` is
-        provided, the ``run`` method is automatically called when the ``LHS`` object is defined. The user may also call
-        the ``run`` method directly to generate samples. The ``run`` method of the ``LHS`` class cannot be invoked
-        multiple times for sample size extension.
+        The ``run`` method is the function that performs random sampling in the ``LatinHypercubeSampling`` class. If
+        `samples_number` is provided, the ``run`` method is automatically called when the ``LatinHypercubeSampling``
+        object is defined. The user may also call the ``run`` method directly to generate samples. The ``run`` method of
+        the ``LatinHypercubeSampling`` class cannot be invoked multiple times for sample size extension.
 
         **Input:**
 
-        * **nsamples** (`int`):
+        * **samples_number** (`int`):
             Number of samples to be drawn from each distribution.
 
             If the ``run`` method is invoked multiple times, the newly generated samples will overwrite the existing
@@ -102,8 +90,8 @@ class LatinHypercubeSampling:
 
         **Output/Returns:**
 
-        The ``run`` method has no returns, although it creates and/or appends the `samples` and `samples_U01` attributes
-        of the ``LHS`` object.
+        The ``run`` method has no returns, although it creates and/or appends the `samples` and `samplesU01` attributes
+        of the ``LatinHypercubeSampling`` object.
 
         """
 

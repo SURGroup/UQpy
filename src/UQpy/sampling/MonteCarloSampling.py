@@ -31,10 +31,6 @@ class MonteCarloSampling:
         If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
         object itself can be passed directly.
 
-    * **verbose** (Boolean):
-        A boolean declaring whether to write text to the terminal.
-
-
     **Attributes:**
 
     * **samples** (`ndarray` or `list`):
