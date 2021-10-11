@@ -23,16 +23,40 @@ class Distribution(ABC):
 
     **Attributes:**
 
-    * **order_params** (`list`):
+    * **ordered_parameters** (`list`):
         Ordered list of parameter names, useful when parameter values are stored in vectors and must be passed to the
-        ``update_params`` method.
+        ``update_parameters`` method.
 
-    * **params** (`dict`):
+    * **kwargs** (`dict`):
         Parameters of the distribution. Note: this attribute is not defined for certain ``Distribution`` objects such as
-        those of type ``JointInd`` or ``JointCopula``. The user is advised to use the ``get_params`` method to access
-        the parameters.
+        those of type ``JointIndependent`` or ``JointCopula``. The user is advised to use the ``get_parameters`` method
+        to access the parameters.
 
     **Methods:**
+
+    **update_parameters** *(kwargs)*
+        Update the parameters of a ``distributions`` object.
+
+        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a
+        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
+        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
+
+        **Input:**
+
+        * keyword arguments:
+            Parameters to be updated, designated by their respective keywords.
+
+    **get_parameters** *()*
+        Return the parameters of a ``distributions`` object.
+
+        To update the parameters of a ``JointIndependent`` or a ``JointCopula`` distribution, each parameter is assigned
+        a unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
+        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
+
+        **Output/Returns:**
+
+        * (`dict`):
+            Parameters of the distribution.
 
     **cdf** *(x)*
         Evaluate the cumulative distribution function.
@@ -61,18 +85,6 @@ class Distribution(ABC):
         * (`ndarray`):
             Evaluated pdf values, `ndarray` of shape `(npoints,)`.
 
-    **pmf** *(x)*
-        Evaluate the probability mass function of a discrete distribution.
-
-        **Input:**
-
-        * **x** (`ndarray`):
-            Point(s) at which to evaluate the `pmf`, must be of shape `(npoints, dimension)`.
-
-        **Output/Returns:**
-
-        * (`ndarray`):
-            Evaluated pmf values, `ndarray` of shape `(npoints,)`.
 
     **log_pdf** *(x)*
         Evaluate the logarithm of the probability density function of a continuous or multivariate mixed
@@ -88,18 +100,6 @@ class Distribution(ABC):
         * (`ndarray`):
             Evaluated log-pdf values, `ndarray` of shape `(npoints,)`.
 
-    **log_pmf** *(x)*
-        Evaluate the logarithm of the probability mass function of a discrete distribution.
-
-        **Input:**
-
-        * **x** (`ndarray`):
-            Point(s) at which to evaluate the `log_pmf`, must be of shape `(npoints, dimension)`.
-
-        **Output/Returns:**
-
-        * (`ndarray`):
-            Evaluated log-pmf values, `ndarray` of shape `(npoints,)`.
 
     **icdf** *(x)*
         Evaluate the inverse cumulative distribution function for univariate distributions.
@@ -164,7 +164,6 @@ class Distribution(ABC):
 
         * (`dict`):
             Maximum-likelihood parameter estimates.
-
     """
     def __init__(self, ordered_parameters: list = None, **kwargs):
         self.parameters = kwargs
@@ -175,36 +174,10 @@ class Distribution(ABC):
             raise ValueError('Inconsistent dimensions between order_params tuple and params dictionary.')
 
     def update_parameters(self, **kwargs):
-        """
-        Update the parameters of a ``distributions`` object.
-
-        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a
-        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
-        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
-
-        **Input:**
-
-        * keyword arguments:
-            Parameters to be updated, designated by their respective keywords.
-
-        """
         for key in kwargs.keys():
             if key not in self.get_parameters().keys():
                 raise ValueError('Wrong parameter name.')
             self.parameters[key] = kwargs[key]
 
     def get_parameters(self):
-        """
-        Return the parameters of a ``distributions`` object.
-
-        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a
-        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
-        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
-
-        **Output/Returns:**
-
-        * (`dict`):
-            Parameters of the distribution.
-
-        """
         return self.parameters

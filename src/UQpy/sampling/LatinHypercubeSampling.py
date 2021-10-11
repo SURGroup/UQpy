@@ -16,24 +16,24 @@ class LatinHypercubeSampling:
 
     **Input:**
 
-    * **dist_object** ((list of) ``Distribution`` object(s)):
+    * **distributions** ((list of) ``Distribution`` object(s)):
         List of ``Distribution`` objects corresponding to each random variable.
 
         All distributions in ``LHS`` must be independent. ``LHS`` does not generate correlated random variables.
         Therefore, for multi-variate designs the `dist_object` must be a list of ``DistributionContinuous1D`` objects
         or an object of the ``JointInd`` class.
 
-    * **nsamples** (`int`):
+    * **samples_number** (`int`):
         Number of samples to be drawn from each distribution.
 
-    * **criterion** (`str` or `callable`):
+    * **criterion** (`Criterion`):
         The criterion for pairing the generating sample points
             Options:
-                1. 'random' - completely random. \n
-                2. 'centered' - points only at the centre. \n
-                3. 'maximin' - maximizing the minimum distance between points. \n
-                4. 'correlate' - minimizing the correlation between the points. \n
-                5. `callable` - User-defined method.
+                1. 'Random' - completely random. \n
+                2. 'Centered' - points only at the centre. \n
+                3. 'MaxiMin' - maximizing the minimum distance between points. \n
+                4. 'MinCorrelation' - minimizing the correlation between the points. \n
+                5. User-defined method.
 
     * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
         Random seed used to initialize the pseudo-random number generator. Default is None.

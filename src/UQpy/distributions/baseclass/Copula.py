@@ -10,54 +10,13 @@ class Copula(ABC):
 
     **Attributes:**
 
-    * **params** (`dict`):
+    * **kwargs** (`dict`):
         Parameters of the copula.
 
-    * **order_params** (`list`):
+    * **ordered_parameters** (`list`):
         List of parameter names
 
     **Methods:**
-
-    **evaluate_cdf** *(unif)*
-        Compute the copula cdf :math:`C(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.
-
-        For a generic multivariate distribution with marginal cdfs :math:`F_1, ..., F_d` the joint cdf is computed as:
-
-        :math:`F(x_1, ..., x_d) = C(u_1, u_2, ..., u_d)`
-
-        where :math:`u_i = F_i(x_i)` is uniformly distributed. This computation is performed in the ``JointCopula.cdf``
-        method.
-
-        **Input:**
-
-        * **unif** (`ndarray`):
-            Points (uniformly distributed) at which to evaluate the copula cdf, must be of shape `(npoints, dimension)`.
-
-        **Output/Returns:**
-
-        * (`tuple`):
-            Values of the cdf, `ndarray` of shape `(npoints, )`.
-
-    **evaluate_pdf** *(unif)*
-        Compute the copula pdf :math:`c(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.
-
-        For a generic multivariate distribution with marginals pdfs :math:`f_1, ..., f_d` and marginals cdfs
-        :math:`F_1, ..., F_d`, the joint pdf is computed as:
-
-        :math:`f(x_1, ..., x_d) = c(u_1, u_2, ..., u_d) f_1(x_1) ... f_d(x_d)`
-
-        where :math:`u_i = F_i(x_i)` is uniformly distributed. This computation is performed in the ``JointCopula.pdf``
-        method.
-
-        **Input:**
-
-        * **unif** (`ndarray`):
-            Points (uniformly distributed) at which to evaluate the copula pdf, must be of shape `(npoints, dimension)`.
-
-        **Output/Returns:**
-
-        * (`tuple`):
-            Values of the copula pdf term, ndarray of shape `(npoints, )`.
 
     **check_marginals** *(marginals)*
         Perform some checks on the marginals, raise errors if necessary.
@@ -67,13 +26,31 @@ class Copula(ABC):
 
         **Input:**
 
-        * **unif** (ndarray):
-            Points (uniformly distributed) at which to evaluate the copula pdf, must be of shape
-            ``(npoints, dimension)``.
+        * **marginals** (list[DistributionContinuous1D]):
+            List of 1D continuous distributions.
 
         **Output/Returns:**
 
         No outputs, this code raises errors if necessary.
+
+    **get_parameters** *()*
+
+        **Output/Returns:**
+
+        A list containing the parameter names.
+
+    **update_parameters** *(**kwargs)*
+        Given a dictionary with keys the names and values the new parameter values,
+        the method updates the current values.
+
+        **Input:**
+
+        * **kwargs**:
+            Dictionary containing the updated parameter values.
+
+        **Output/Returns:**
+
+        A list containing the parameter names.
     """
     def __init__(self, ordered_parameters: dict = None, **kwargs):
         self.parameters = kwargs

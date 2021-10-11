@@ -3,7 +3,7 @@
 Distributions
 =============
 
-.. automodule:: UQpy.Distributions
+.. automodule:: UQpy.distributions
 
 Note that the various classes of the ``Distributions`` module are written to be consistent with distribuitons in the
 ``scipy.stats`` package [1]_, to the extent possible while maintaining an extensible, object oriented architecture that is
@@ -13,80 +13,80 @@ convenient for operating with the other ``UQpy`` modules. All existing distribut
 Parent Distribution Class
 ----------------------------------
 
-.. autoclass:: UQpy.Distributions.Distribution
-	:members:
-	
-	
+.. autoclass:: UQpy.distributions.baseclass.Distribution
+    :members:
+
+
 1D Continuous Distributions
 ---------------------------------------
 
 In ``UQpy``, univariate continuous distributions inherit from the ``DistributionContinuous1D`` class:
 
-.. autoclass:: UQpy.Distributions.DistributionContinuous1D
+.. autoclass:: UQpy.distributions.baseclass.DistributionContinuous1D
     :members: 
-	
+
 List of 1D Continuous Distributions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	
+
 The following is a list of all 1D continuous distributions currently available in ``UQpy``.
 
-.. autoclass:: UQpy.Distributions.Beta
+.. autoclass:: UQpy.distributions.collections.Beta
 
-.. autoclass:: UQpy.Distributions.Cauchy
+.. autoclass:: UQpy.distributions.collection.Cauchy
 
-.. autoclass:: UQpy.Distributions.ChiSquare
+.. autoclass:: UQpy.distributions.collection.ChiSquare
 
-.. autoclass:: UQpy.Distributions.Exponential
+.. autoclass:: UQpy.distributions.collection.Exponential
 
-.. autoclass:: UQpy.Distributions.Gamma
+.. autoclass:: UQpy.distributions.collection.Gamma
 
-.. autoclass:: UQpy.Distributions.GenExtreme
+.. autoclass:: UQpy.distributions.collection.GenExtreme
 
-.. autoclass:: UQpy.Distributions.InvGauss
+.. autoclass:: UQpy.distributions.collection.InvGauss
 
-.. autoclass:: UQpy.Distributions.Laplace
+.. autoclass:: UQpy.distributions.collection.Laplace
 
-.. autoclass:: UQpy.Distributions.Levy
+.. autoclass:: UQpy.distributions.collection.Levy
 
-.. autoclass:: UQpy.Distributions.Logistic
+.. autoclass:: UQpy.distributions.collection.Logistic
 
-.. autoclass:: UQpy.Distributions.Lognormal
+.. autoclass:: UQpy.distributions.collection.Lognormal
 
-.. autoclass:: UQpy.Distributions.Maxwell
+.. autoclass:: UQpy.distributions.collection.Maxwell
 
-.. autoclass:: UQpy.Distributions.Normal
+.. autoclass:: UQpy.distributions.collection.Normal
 
-.. autoclass:: UQpy.Distributions.Pareto
+.. autoclass:: UQpy.distributions.collection.Pareto
 
-.. autoclass:: UQpy.Distributions.Rayleigh
+.. autoclass:: UQpy.distributions.collection.Rayleigh
 
-.. autoclass:: UQpy.Distributions.TruncNorm
+.. autoclass:: UQpy.distributions.collection.TruncNorm
 
-.. autoclass:: UQpy.Distributions.Uniform
+.. autoclass:: UQpy.distributions.collection.Uniform
 
 1D Discrete Distributions
 ----------------------------------
 
 In ``UQpy``, univariate discrete distributions inherit from the ``DistributionDiscrete1D`` class:
 
-.. autoclass:: UQpy.Distributions.DistributionDiscrete1D
+.. autoclass:: UQpy.distributions.baseclass.DistributionDiscrete1D
     :members: 
-	
+
 List of 1D Discrete Distributions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	
+
 The following is a list of all 1D continuous distributions currently available in ``UQpy``.
 
-.. autoclass:: UQpy.Distributions.Binomial
+.. autoclass:: UQpy.distributions.collection.Binomial
 
-.. autoclass:: UQpy.Distributions.Poisson
-	
+.. autoclass:: UQpy.distributions.collection.Poisson
+
 Multivariate Distributions
 ----------------------------------
 
 In ``UQpy``, multivariate distributions inherit from the ``DistributionND`` class:
 
-.. autoclass:: UQpy.Distributions.DistributionND
+.. autoclass:: UQpy.distributions.baseclass.DistributionND
 
 
 ``UQpy`` has some inbuilt multivariate distributions, which are directly child classes of ``DistributionND``. Additionally, joint distributions can be built from their marginals through the use of the ``JointInd`` and ``JointCopula`` classes described below.
@@ -94,37 +94,36 @@ In ``UQpy``, multivariate distributions inherit from the ``DistributionND`` clas
 List of Multivariate Distributions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: UQpy.Distributions.Multinomial
+.. autoclass:: UQpy.distributions.collection.Multinomial
 
-.. autoclass:: UQpy.Distributions.MVNormal
+.. autoclass:: UQpy.distributions.collection.MultivariateNormal
     
 Joint from independent marginals
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: UQpy.Distributions.JointInd
+.. autoclass:: UQpy.distributions.collection.JointIndependent
 
 Joint from marginals and copula
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: UQpy.Distributions.JointCopula	
+.. autoclass:: UQpy.distributions.collection.JointCopula
 
 
 Copula
 -----------
 
-.. autoclass:: UQpy.Distributions.Copula
-	:members:
-	
+.. autoclass:: UQpy.distributions.baseclass.Copula
+
 
 
 List of Copulas
 ~~~~~~~~~~~~~~~~
 
-.. autoclass:: UQpy.Distributions.Gumbel
+.. autoclass:: UQpy.distributions.copulas.Gumbel
 
-.. autoclass:: UQpy.Distributions.Clayton
+.. autoclass:: UQpy.distributions.copulas.Clayton
 
-.. autoclass:: UQpy.Distributions.Frank
+.. autoclass:: UQpy.distributions.copulas.Frank
 
 
 User-defined Distributions and Copulas
@@ -139,5 +138,4 @@ Custom copulas can be similarly defined by subclassing the ``Copula`` class and 
 
 .. [1] https://docs.scipy.org/doc/scipy/reference/stats.html
 
-	
-	
+

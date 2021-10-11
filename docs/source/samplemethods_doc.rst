@@ -4,45 +4,55 @@
 SampleMethods
 =============
 
-.. automodule:: UQpy.SampleMethods
+.. automodule:: UQpy.sampling
 
 
-MCS
+Monte Carlo Sampling
 ----
 
-The ``MCS`` class generates random samples from a specified probability distribution(s).  The ``MCS`` class utilizes the ``Distributions`` class to define probability distributions.  The advantage of using the ``MCS`` class for ``UQpy`` operations, as opposed to simply generating samples with the ``scipy.stats`` package, is that it allows building an object containing the samples and their distributions for integration with other ``UQpy`` modules.
+The ``MonteCarloSampling`` class generates random samples from a specified probability distribution(s).  The ``MonteCarloSampling`` class utilizes the ``Distributions`` class to define probability distributions.  The advantage of using the ``MonteCarloSampling`` class for ``UQpy`` operations, as opposed to simply generating samples with the ``scipy.stats`` package, is that it allows building an object containing the samples and their distributions for integration with other ``UQpy`` modules.
 
 MCS Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.SampleMethods.MCS
-	:members:
+.. autoclass:: UQpy.sampling.MonteCarloSampling
 
 
-LHS
+Latin Hypercube Sampling
 ----
 
-The ``LHS`` class generates random samples from a specified probability distribution(s) using Latin hypercube sampling. LHS has the advantage that the samples generated are uniformly distributed over each marginal distribution. LHS is perfomed by dividing the range of each random variable into N bins with equal probability mass, where N is the required number of samples, generating one sample per bin, and then randomly pairing the samples.
+The ``LatinHypercubeSampling`` class generates random samples from a specified probability distribution(s) using Latin hypercube sampling. LHS has the advantage that the samples generated are uniformly distributed over each marginal distribution. LHS is perfomed by dividing the range of each random variable into N bins with equal probability mass, where N is the required number of samples, generating one sample per bin, and then randomly pairing the samples.
 
 Adding New Latin Hypercube Design Criteria
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 	 
-The ``LHS`` class offers a variety of methods for pairing the samples in a Latin hypercube design. These are specified by the `criterion` parameter (i.e. 'random', 'centered', 'minmax', 'correlate'). However, adding a new method is straightforward. This is done by creating a new method that contains the algorithm for pairing the samples. This method takes as input the randomly generated samples in equal probability bins in each dimension and returns a set of samples that is paired according to the user's desired criterion. The user may also pass criterion-specific parameters into the custom method. These parameters are input to the ``LHS`` class through the `**kwargs`. The output of this function should be a numpy array of at least two-dimensions with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined criterion is given below:
-
-	
->>> def criterion(samples):
->>> 	lhs_samples = np.zeros_like(samples)
->>> 	for j in range(samples.shape[1]):
->>> 		order = np.random.permutation(samples.shape[0])
->>> 		lhs_samples[:, j] = samples[order, j]
->>> 	return lhs_samples
+The ``LatinHypercubeSampling`` class offers a variety of methods for pairing the samples in a Latin hypercube design. These are specified by the `criterion` parameter (i.e. 'random', 'centered', 'minmax', 'correlate'). However, adding a new method is straightforward. This is done by creating a new method that contains the algorithm for pairing the samples. This method takes as input the randomly generated samples in equal probability bins in each dimension and returns a set of samples that is paired according to the user's desired criterion. The user may also pass criterion-specific parameters into the custom method. These parameters are input to the ``LHS`` class through the `**kwargs`. The output of this function should be a numpy array of at least two-dimensions with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined criterion is given below:
 
 
-LHS Class Descriptions
+>>> class UserCriterion(Criterion):
+>>>
+>>>     def __init__(self, random_state: RandomStateType = None):
+>>>         super().__init__(random_state)
+>>>
+>>>     def generate_samples(self):
+>>>         lhs_samples = np.zeros_like(self.samples)
+>>>         samples_number = len(self.samples)
+>>>         for j in range(self.samples.shape[1]):
+>>>             if self.random_state is not None:
+>>>                 order = self.random_state.permutation(samples_number)
+>>>             else:
+>>>                 order = np.random.permutation(samples_number)
+>>>             lhs_samples[:, j] = self.samples[order, j]
+>>>
+>>>         return lhs_samples
+
+
+LatinHypercubeSampling Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.SampleMethods.LHS
-	:members:
+.. autoclass:: UQpy.sampling.LatinHypercubeSampling
+    :members:
+
 
 
 Stratified Sampling

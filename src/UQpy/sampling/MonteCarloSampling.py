@@ -15,15 +15,15 @@ class MonteCarloSampling:
 
     **Input:**
 
-    * **dist_object** ((list of) ``Distribution`` object(s)):
+    * **distributions** ((list of) ``Distribution`` object(s)):
         Probability distribution of each random variable. Must be an object (or a list of objects) of the
         ``Distribution`` class.
 
-    * **nsamples** (`int`):
+    * **samples_number** (`int`):
         Number of samples to be drawn from each distribution.
 
-        The ``run`` method is automatically called if `nsamples` is provided. If `nsamples` is not provided, then the
-        ``MCS`` object is created but samples are not generated.
+        The ``run`` method is automatically called if `samples_number` is provided. If `samples_number` is not provided,
+         then the ``MonteCarloSampling`` object is created but samples are not generated.
 
     * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
         Random seed used to initialize the pseudo-random number generator. Default is None.
@@ -60,6 +60,46 @@ class MonteCarloSampling:
 
     **Methods**
 
+    **run** *(samples_number, random_state)*
+        Execute the random sampling in the ``MonteCarloSampling`` class.
+
+        The ``run`` method is the function that performs random sampling in the ``MonteCarloSampling`` class. If
+        `nsamples` is provided, the ``run`` method is automatically called when the ``MonteCarloSampling`` object is
+        defined. The user may also call the ``run`` method directly to generate samples. The ``run`` method of the
+        ``MonteCarloSampling`` class can be  invoked many times and each time the generated samples are appended to the
+        existing samples.
+
+        **Input:**
+
+        * **samples_number** (`int`):
+            Number of samples to be drawn from each distribution.
+
+            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
+            existing samples.
+
+        * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
+            Random seed used to initialize the pseudo-random number generator. Default is None.
+
+            If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+            object itself can be passed directly.
+
+        **Output/Returns:**
+
+        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the
+        ``MonteCarloSampling`` class.
+
+    **transform_u01** *()*
+    Transform random samples to uniform on the unit hypercube.
+
+        **Input:**
+
+        The ``transform_u01`` method is an instance method that perform the transformation on an existing
+        ``MonteCarloSampling`` object. It takes no input.
+
+        **Output/Returns:**
+
+        The ``transform_u01`` method has no returns, although it creates and/or appends the `samplesU01` attribute of
+        the ``MonteCarloSampling`` class.
     """
     @beartype
     def __init__(self,
@@ -107,34 +147,6 @@ class MonteCarloSampling:
 
     @beartype
     def run(self, samples_number: PositiveInteger, random_state: RandomStateType = None):
-        """
-        Execute the random sampling in the ``MCS`` class.
-
-        The ``run`` method is the function that performs random sampling in the ``MCS`` class. If `nsamples` is
-        provided, the ``run`` method is automatically called when the ``MCS`` object is defined. The user may also call
-        the ``run`` method directly to generate samples. The ``run`` method of the ``MCS`` class can be invoked many
-        times and each time the generated samples are appended to the existing samples.
-
-        ** Input:**
-
-        * **nsamples** (`int`):
-            Number of samples to be drawn from each distribution.
-
-            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
-            existing samples.
-
-        * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-            Random seed used to initialize the pseudo-random number generator. Default is None.
-
-            If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-            object itself can be passed directly.
-
-        **Output/Returns:**
-
-        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``MCS``
-        class.
-
-        """
 
         # Check if a random_state is provided.
         self.random_state = process_random_state(random_state) if random_state is not None else self.random_state
@@ -178,20 +190,6 @@ class MonteCarloSampling:
         self.logger.info('UQpy: Monte Carlo Sampling Complete.')
 
     def transform_u01(self):
-        """
-        Transform random samples to uniform on the unit hypercube.
-
-        **Input:**
-
-        The ``transform_u01`` method is an instance method that perform the transformation on an existing ``MCS``
-        object. It takes no input.
-
-        **Output/Returns:**
-
-        The ``transform_u01`` method has no returns, although it creates and/or appends the `samplesU01` attribute of
-        the ``MCS`` class.
-
-        """
 
         if isinstance(self.dist_object, list) and self.array is True:
             zi = np.zeros_like(self.samples)
@@ -227,10 +225,3 @@ class MonteCarloSampling:
                     y[j] = zi
                 temp_samples_u01.append(np.array(y))
             self.samplesU01 = temp_samples_u01
-
-    def __copy__(self):
-        new = self.__class__(distributions=self.dist_object,
-                             random_state=self.random_state)
-        new.__dict__.update(self.__dict__)
-
-        return new

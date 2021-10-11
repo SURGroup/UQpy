@@ -22,6 +22,26 @@ class Clayton(Copula):
     * ``evaluate_cdf`` and ``check_copula``
 
     (``check_copula`` checks that `marginals` consist of solely 2 continuous univariate distributions).
+
+    **evaluate_cdf** *(unif)*
+        Compute the copula cdf :math:`C(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.
+
+        For a generic multivariate distribution with marginal cdfs :math:`F_1, ..., F_d` the joint cdf is computed as:
+
+        :math:`F(x_1, ..., x_d) = C(u_1, u_2, ..., u_d)`
+
+        where :math:`u_i = F_i(x_i)` is uniformly distributed. This computation is performed in the ``JointCopula.cdf``
+        method.
+
+        **Input:**
+
+        * **unif** (`ndarray`):
+            Points (uniformly distributed) at which to evaluate the copula cdf, must be of shape `(npoints, dimension)`.
+
+        **Output/Returns:**
+
+        * (`tuple`):
+            Values of the cdf, `ndarray` of shape `(npoints, )`.
     """
     @beartype
     def __init__(self, theta: float):

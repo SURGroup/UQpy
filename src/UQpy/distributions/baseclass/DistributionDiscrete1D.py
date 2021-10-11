@@ -7,6 +7,31 @@ class DistributionDiscrete1D(Distribution1D, ABC):
     """
     Parent class for univariate discrete distributions.
 
+    **pmf** *(x)*
+        Evaluate the probability mass function of a discrete distribution.
+
+        **Input:**
+
+        * **x** (`ndarray`):
+            Point(s) at which to evaluate the `pmf`, must be of shape `(npoints, dimension)`.
+
+        **Output/Returns:**
+
+        * (`ndarray`):
+            Evaluated pmf values, `ndarray` of shape `(npoints,)`.
+
+    **log_pmf** *(x)*
+        Evaluate the logarithm of the probability mass function of a discrete distribution.
+
+        **Input:**
+
+        * **x** (`ndarray`):
+            Point(s) at which to evaluate the `log_pmf`, must be of shape `(npoints, dimension)`.
+
+        **Output/Returns:**
+
+        * (`ndarray`):
+            Evaluated log-pmf values, `ndarray` of shape `(npoints,)`.
     """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
