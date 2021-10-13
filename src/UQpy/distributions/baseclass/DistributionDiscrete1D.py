@@ -33,10 +33,15 @@ class DistributionDiscrete1D(Distribution1D, ABC):
         * (`ndarray`):
             Evaluated log-pmf values, `ndarray` of shape `(npoints,)`.
     """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def _construct_from_scipy(self, scipy_name=stats.rv_discrete):
-        self.pmf = lambda x: scipy_name.pmf(k=self.check_x_dimension(x), **self.parameters)
-        self.log_pmf = lambda x: scipy_name.logpmf(k=self.check_x_dimension(x), **self.parameters)
+        self.pmf = lambda x: scipy_name.pmf(
+            k=self.check_x_dimension(x), **self.parameters
+        )
+        self.log_pmf = lambda x: scipy_name.logpmf(
+            k=self.check_x_dimension(x), **self.parameters
+        )
         self._retrieve_1d_data_from_scipy(scipy_name, is_continuous=False)

@@ -3,7 +3,6 @@ import numpy as np
 
 
 class Correlation(ABC):
-
     @abstractmethod
     def c(self, x, s, params, dt=False, dx=False):
         pass
@@ -12,9 +11,9 @@ class Correlation(ABC):
     def check_samples_and_return_stack(x, s):
         x_, s_ = np.atleast_2d(x), np.atleast_2d(s)
         # Create stack matrix, where each block is x_i with all s
-        stack = np.tile(np.swapaxes(np.atleast_3d(x_), 1, 2), (1, np.size(s_, 0), 1)) - np.tile(s_, (
-            np.size(x_, 0),
-            1, 1))
+        stack = np.tile(
+            np.swapaxes(np.atleast_3d(x_), 1, 2), (1, np.size(s_, 0), 1)
+        ) - np.tile(s_, (np.size(x_, 0), 1, 1))
         return stack
 
     @staticmethod

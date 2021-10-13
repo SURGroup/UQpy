@@ -5,7 +5,6 @@ import scipy.spatial.distance as sd
 
 
 class Kernel(ABC):
-
     @abstractmethod
     def apply_method(self, data):
         pass
@@ -15,12 +14,12 @@ class Kernel(ABC):
         # Check points for type and shape consistency.
         # -----------------------------------------------------------
         if not isinstance(points, list) and not isinstance(points, np.ndarray):
-            raise TypeError('UQpy: `points` must be either list or numpy.ndarray.')
+            raise TypeError("UQpy: `points` must be either list or numpy.ndarray.")
 
         nargs = len(points)
 
         if nargs < 2:
-            raise ValueError('UQpy: At least two matrices must be provided.')
+            raise ValueError("UQpy: At least two matrices must be provided.")
         # ------------------------------------------------------------
 
         # Define the pairs of points to compute the entries of the kernel matrix.

@@ -165,18 +165,21 @@ class Distribution(ABC):
         * (`dict`):
             Maximum-likelihood parameter estimates.
     """
+
     def __init__(self, ordered_parameters: list = None, **kwargs):
         self.parameters = kwargs
         self.ordered_parameters = ordered_parameters
         if self.ordered_parameters is None:
             self.ordered_parameters = tuple(kwargs.keys())
         if len(self.ordered_parameters) != len(self.parameters):
-            raise ValueError('Inconsistent dimensions between order_params tuple and params dictionary.')
+            raise ValueError(
+                "Inconsistent dimensions between order_params tuple and params dictionary."
+            )
 
     def update_parameters(self, **kwargs):
         for key in kwargs.keys():
             if key not in self.get_parameters().keys():
-                raise ValueError('Wrong parameter name.')
+                raise ValueError("Wrong parameter name.")
             self.parameters[key] = kwargs[key]
 
     def get_parameters(self):

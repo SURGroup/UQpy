@@ -1,4 +1,6 @@
-from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import LearningFunction
+from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import (
+    LearningFunction,
+)
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
@@ -50,7 +52,10 @@ class ExpectedImprovementGlobalFit(LearningFunction):
                 EIGF learning function evaluated at the new sample points.
 
             """
-    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
+
+    def evaluate_function(
+        self, distributions, n_add, surrogate, population, qoi=None, samples=None
+    ):
         g, sig = surrogate.predict(population, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array
@@ -69,7 +74,7 @@ class ExpectedImprovementGlobalFit(LearningFunction):
 
         # Compute the learning function at every point in the population.
         u = np.square(g - qoi_array) + np.square(sig)
-        rows = u[:, 0].argsort()[(np.size(g) - n_add):]
+        rows = u[:, 0].argsort()[(np.size(g) - n_add) :]
 
         stopping_criteria_indicator = False
         new_samples = population[rows, :]

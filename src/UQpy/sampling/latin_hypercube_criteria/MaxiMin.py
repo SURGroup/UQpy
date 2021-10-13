@@ -39,9 +39,14 @@ class MaxiMin(Criterion):
                 The maximin set of LHS samples.
 
             """
+
     @beartype
-    def __init__(self, random_state: RandomStateType = None, iterations: int = 100,
-                 metric: DistanceMetric = DistanceMetric.EUCLIDEAN):
+    def __init__(
+        self,
+        random_state: RandomStateType = None,
+        iterations: int = 100,
+        metric: DistanceMetric = DistanceMetric.EUCLIDEAN,
+    ):
         super().__init__(random_state)
         self.random_state = random_state
         self.iterations = iterations
@@ -72,6 +77,9 @@ class MaxiMin(Criterion):
                 lhs_samples = copy.deepcopy(samples_try)
             i = i + 1
 
-        self.logger.info('UQpy: Achieved maximum distance of %(distance)s' % {"distance": maximized_minimum_distance})
+        self.logger.info(
+            "UQpy: Achieved maximum distance of %(distance)s"
+            % {"distance": maximized_minimum_distance}
+        )
 
         return lhs_samples

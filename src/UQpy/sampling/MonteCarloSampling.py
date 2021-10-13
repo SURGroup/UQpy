@@ -97,11 +97,14 @@ class MonteCarloSampling:
         The ``transform_u01`` method has no returns, although it creates and/or appends the `samplesU01` attribute of
         the ``MonteCarloSampling`` class.
     """
+
     @beartype
-    def __init__(self,
-                 distributions: Union[Distribution, list[Distribution]],
-                 samples_number: Optional[int] = None,
-                 random_state: RandomStateType = None):
+    def __init__(
+        self,
+        distributions: Union[Distribution, list[Distribution]],
+        samples_number: Optional[int] = None,
+        random_state: RandomStateType = None,
+    ):
         self.logger = logging.getLogger(__name__)
         self.random_state = process_random_state(random_state)
 
@@ -124,7 +127,9 @@ class MonteCarloSampling:
             add_continuous_nd = 0
             for i in range(len(distributions)):
                 if not isinstance(distributions[i], Distribution):
-                    raise TypeError('UQpy: A UQpy.Distribution object must be provided.')
+                    raise TypeError(
+                        "UQpy: A UQpy.Distribution object must be provided."
+                    )
                 if isinstance(distributions[i], DistributionContinuous1D):
                     add_continuous_1d = add_continuous_1d + 1
                 elif isinstance(distributions[i], DistributionND):
@@ -142,21 +147,30 @@ class MonteCarloSampling:
             self.array = True
 
     @beartype
-    def run(self, samples_number: PositiveInteger, random_state: RandomStateType = None):
+    def run(
+        self, samples_number: PositiveInteger, random_state: RandomStateType = None
+    ):
 
         # Check if a random_state is provided.
-        self.random_state = process_random_state(random_state) if random_state is not None else self.random_state
+        self.random_state = (
+            process_random_state(random_state)
+            if random_state is not None
+            else self.random_state
+        )
 
-        self.logger.info('UQpy: Running Monte Carlo Sampling.')
+        self.logger.info("UQpy: Running Monte Carlo Sampling.")
 
         if isinstance(self.dist_object, list):
             temp_samples = list()
             for i in range(len(self.dist_object)):
-                if hasattr(self.dist_object[i], 'rvs'):
-                    temp_samples.append(self.dist_object[i].rvs(nsamples=samples_number,
-                                                                random_state=self.random_state))
+                if hasattr(self.dist_object[i], "rvs"):
+                    temp_samples.append(
+                        self.dist_object[i].rvs(
+                            nsamples=samples_number, random_state=self.random_state
+                        )
+                    )
                 else:
-                    raise ValueError('UQpy: rvs method is missing.')
+                    raise ValueError("UQpy: rvs method is missing.")
             self.x = list()
             for j in range(samples_number):
                 y = list()
@@ -164,8 +178,10 @@ class MonteCarloSampling:
                     y.append(temp_samples[k][j])
                 self.x.append(np.array(y))
         else:
-            if hasattr(self.dist_object, 'rvs'):
-                temp_samples = self.dist_object.rvs(nsamples=samples_number, random_state=self.random_state)
+            if hasattr(self.dist_object, "rvs"):
+                temp_samples = self.dist_object.rvs(
+                    nsamples=samples_number, random_state=self.random_state
+                )
                 self.x = temp_samples
 
         if self.samples is None:
@@ -176,14 +192,16 @@ class MonteCarloSampling:
         else:
             # If self.samples already has existing samples, append the new samples to the existing attribute.
             if isinstance(self.dist_object, list) and self.array is True:
-                self.samples = np.concatenate([self.samples, np.hstack(np.array(self.x)).T], axis=0)
+                self.samples = np.concatenate(
+                    [self.samples, np.hstack(np.array(self.x)).T], axis=0
+                )
             elif isinstance(self.dist_object, Distribution):
                 self.samples = np.vstack([self.samples, self.x])
             else:
                 self.samples = np.vstack([self.samples, self.x])
         self.samples_number = len(self.samples)
 
-        self.logger.info('UQpy: Monte Carlo Sampling Complete.')
+        self.logger.info("UQpy: Monte Carlo Sampling Complete.")
 
     def transform_u01(self):
 
@@ -192,21 +210,23 @@ class MonteCarloSampling:
             for i in range(self.samples_number):
                 z = self.samples[i, :]
                 for j in range(len(self.dist_object)):
-                    if hasattr(self.dist_object[j], 'cdf'):
+                    if hasattr(self.dist_object[j], "cdf"):
                         zi[i, j] = self.dist_object[j].cdf(z[j])
                     else:
-                        raise ValueError('UQpy: All distributions must have a cdf method.')
+                        raise ValueError(
+                            "UQpy: All distributions must have a cdf method."
+                        )
             self.samplesU01 = zi
 
         elif isinstance(self.dist_object, Distribution):
-            if hasattr(self.dist_object, 'cdf'):
+            if hasattr(self.dist_object, "cdf"):
                 zi = np.zeros_like(self.samples)
                 for i in range(self.samples_number):
                     z = self.samples[i, :]
                     zi[i, :] = self.dist_object.cdf(z)
                 self.samplesU01 = zi
             else:
-                raise ValueError('UQpy: All distributions must have a cdf method.')
+                raise ValueError("UQpy: All distributions must have a cdf method.")
 
         elif isinstance(self.dist_object, list) and self.list is True:
             temp_samples_u01 = list()
@@ -214,10 +234,12 @@ class MonteCarloSampling:
                 z = self.samples[i][:]
                 y = [None] * len(self.dist_object)
                 for j in range(len(self.dist_object)):
-                    if hasattr(self.dist_object[j], 'cdf'):
+                    if hasattr(self.dist_object[j], "cdf"):
                         zi = self.dist_object[j].cdf(z[j])
                     else:
-                        raise ValueError('UQpy: All distributions must have a cdf method.')
+                        raise ValueError(
+                            "UQpy: All distributions must have a cdf method."
+                        )
                     y[j] = zi
                 temp_samples_u01.append(np.array(y))
             self.samplesU01 = temp_samples_u01

@@ -1,5 +1,7 @@
 import numpy as np
-from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
+from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import (
+    RiemannianDistance,
+)
 
 
 class ArcLength(RiemannianDistance):
@@ -7,6 +9,7 @@ class ArcLength(RiemannianDistance):
     TODO: Add description of ArcLength distance (This should reflect on the documentation).
     TODO: Validate results.
     """
+
     def compute_distance(self, point1, point2) -> float:
         """
         TODO: Add description of compute_distance method.

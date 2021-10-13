@@ -43,18 +43,20 @@ class Clayton(Copula):
         * (`tuple`):
             Values of the cdf, `ndarray` of shape `(npoints, )`.
     """
+
     @beartype
     def __init__(self, theta: float):
         super().__init__(theta=theta)
 
     def evaluate_cdf(self, unit_uniform_samples):
         theta, u, v = self.extract_data(unit_uniform_samples)
-        cdf_val = (np.maximum(u ** (-theta) +
-                              v ** (-theta) - 1., 0.)) ** (-1. / theta)
+        cdf_val = (np.maximum(u ** (-theta) + v ** (-theta) - 1.0, 0.0)) ** (
+            -1.0 / theta
+        )
         return cdf_val
 
     def extract_data(self, unit_uniform_samples):
         u = unit_uniform_samples[:, 0]
         v = unit_uniform_samples[:, 1]
-        theta = self.parameters['theta']
+        theta = self.parameters["theta"]
         return theta, u, v

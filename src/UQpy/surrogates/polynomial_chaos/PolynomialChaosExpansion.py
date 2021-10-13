@@ -2,7 +2,9 @@ import logging
 
 from beartype import beartype
 
-from UQpy.surrogates.polynomial_chaos.regressions.LeastSquares import LeastSquareRegression
+from UQpy.surrogates.polynomial_chaos.regressions.LeastSquares import (
+    LeastSquareRegression,
+)
 from UQpy.surrogates.polynomial_chaos.regressions.Ridge import RidgeRegression
 from UQpy.surrogates.polynomial_chaos.regressions.Lasso import LassoRegression
 from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
@@ -21,6 +23,7 @@ class PolynomialChaosExpansion:
     **Methods:**
 
     """
+
     @beartype
     def __init__(self, regression_method: Regression):
         self.regression_method = regression_method
@@ -48,16 +51,18 @@ class PolynomialChaosExpansion:
         polynomial_chaos coefficients.
         """
 
-        self.logger.info('UQpy: Running polynomial_chaos.fit')
+        self.logger.info("UQpy: Running polynomial_chaos.fit")
 
         if type(self.regression_method) == LeastSquareRegression:
             self.C = self.regression_method.run(x, y)
 
-        elif type(self.regression_method) == LassoRegression or \
-                type(self.regression_method) == RidgeRegression:
+        elif (
+            type(self.regression_method) == LassoRegression
+            or type(self.regression_method) == RidgeRegression
+        ):
             self.C, self.b = self.regression_method.run(x, y)
 
-        self.logger.info('UQpy: polynomial_chaos fit complete.')
+        self.logger.info("UQpy: polynomial_chaos fit complete.")
 
     def predict(self, points):
 
@@ -82,8 +87,10 @@ class PolynomialChaosExpansion:
         if type(self.regression_method) == LeastSquareRegression:
             y = a.dot(self.C)
 
-        elif type(self.regression_method) == LassoRegression or \
-                type(self.regression_method) == RidgeRegression:
+        elif (
+            type(self.regression_method) == LassoRegression
+            or type(self.regression_method) == RidgeRegression
+        ):
             y = a.dot(self.C) + self.b
 
         return y

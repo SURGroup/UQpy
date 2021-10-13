@@ -1,11 +1,12 @@
 import numpy as np
-from  numpy.linalg import svd
+from numpy.linalg import svd
 
-from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
+from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import (
+    RiemannianDistance,
+)
 
 
 class Procrustes(RiemannianDistance):
-
     def compute_distance(self, point1, point2):
 
         point1, point2 = RiemannianDistance.check_points(point1, point2)

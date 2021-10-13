@@ -46,11 +46,14 @@ class LatinHypercubeSampling:
     **Methods**
 
     """
+
     @beartype
-    def __init__(self,
-                 distributions: Union[Distribution, list[Distribution]],
-                 samples_number: PositiveInteger,
-                 criterion: Criterion = Random()):
+    def __init__(
+        self,
+        distributions: Union[Distribution, list[Distribution]],
+        samples_number: PositiveInteger,
+        criterion: Criterion = Random(),
+    ):
 
         self.dist_object = distributions
         self.criterion = criterion
@@ -62,7 +65,9 @@ class LatinHypercubeSampling:
         elif isinstance(self.dist_object, DistributionContinuous1D):
             self.samples = np.zeros([self.samples_number, 1])
         elif isinstance(self.dist_object, JointIndependent):
-            self.samples = np.zeros([self.samples_number, len(self.dist_object.marginals)])
+            self.samples = np.zeros(
+                [self.samples_number, len(self.dist_object.marginals)]
+            )
 
         self.samplesU01 = np.zeros_like(self.samples)
 
@@ -96,7 +101,7 @@ class LatinHypercubeSampling:
         """
 
         self.samples_number = samples_number
-        self.logger.info('UQpy: Running Latin Hypercube sampling...')
+        self.logger.info("UQpy: Running Latin Hypercube sampling...")
         self.criterion.create_bins(self.samples)
 
         u_lhs = self.criterion.generate_samples()
@@ -104,16 +109,16 @@ class LatinHypercubeSampling:
 
         if isinstance(self.dist_object, list):
             for j in range(len(self.dist_object)):
-                if hasattr(self.dist_object[j], 'icdf'):
+                if hasattr(self.dist_object[j], "icdf"):
                     self.samples[:, j] = self.dist_object[j].icdf(u_lhs[:, j])
 
         elif isinstance(self.dist_object, JointIndependent):
-            if all(hasattr(m, 'icdf') for m in self.dist_object.marginals):
+            if all(hasattr(m, "icdf") for m in self.dist_object.marginals):
                 for j in range(len(self.dist_object.marginals)):
                     self.samples[:, j] = self.dist_object.marginals[j].icdf(u_lhs[:, j])
 
         elif isinstance(self.dist_object, DistributionContinuous1D):
-            if hasattr(self.dist_object, 'icdf'):
+            if hasattr(self.dist_object, "icdf"):
                 self.samples = self.dist_object.icdf(u_lhs)
 
-        self.logger.info('Successful execution of LHS design.')
+        self.logger.info("Successful execution of LHS design.")

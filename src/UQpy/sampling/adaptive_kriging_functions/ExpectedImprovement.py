@@ -1,6 +1,8 @@
 from typing import Union
 from beartype import beartype
-from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import LearningFunction
+from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import (
+    LearningFunction,
+)
 import scipy.stats as stats
 import numpy as np
 
@@ -52,11 +54,14 @@ class ExpectedImprovement(LearningFunction):
             * **eif_lf** (`ndarray`)
                 EIF learning function evaluated at the new sample points.
             """
+
     @beartype
     def __init__(self, eif_stop: Union[float, int] = 0.01):
         self.eif_stop = eif_stop
 
-    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
+    def evaluate_function(
+        self, distributions, n_add, surrogate, population, qoi=None, samples=None
+    ):
         g, sig = surrogate.predict(population, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array
@@ -64,8 +69,10 @@ class ExpectedImprovement(LearningFunction):
         sig = sig.reshape([population.shape[0], 1])
 
         fm = min(qoi)
-        eif = (fm - g) * stats.norm.cdf((fm - g) / sig) + sig * stats.norm.pdf((fm - g) / sig)
-        rows = eif[:, 0].argsort()[(np.size(g) - n_add):]
+        eif = (fm - g) * stats.norm.cdf((fm - g) / sig) + sig * stats.norm.pdf(
+            (fm - g) / sig
+        )
+        rows = eif[:, 0].argsort()[(np.size(g) - n_add) :]
 
         stopping_criteria_indicator = False
         if max(eif[:, 0]) / abs(fm) <= self.eif_stop:

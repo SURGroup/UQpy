@@ -3,7 +3,9 @@ from beartype import beartype
 from UQpy.RunModel import RunModel
 from UQpy.distributions.baseclass import Distribution
 from UQpy.sampling.LatinHypercubeSampling import LatinHypercubeSampling
-from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import LearningFunction
+from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import (
+    LearningFunction,
+)
 from UQpy.distributions import DistributionContinuous1D, JointIndependent
 from UQpy.sampling.latin_hypercube_criteria import Random
 from UQpy.surrogates.kriging import Kriging
@@ -90,18 +92,21 @@ class AdaptiveKriging:
     **Methods:**
 
     """
+
     @beartype
-    def __init__(self,
-                 distributions: Union[Distribution, list[Distribution]],
-                 runmodel_object: RunModel,
-                 surrogate: Union[Kriging, PolynomialChaosExpansion],
-                 learning_function: LearningFunction,
-                 samples=None,
-                 samples_number: PositiveInteger = None,
-                 learning_samples_number: PositiveInteger = None,
-                 qoi_name: str = None,
-                 n_add: int = 1,
-                 random_state: RandomStateType = None):
+    def __init__(
+        self,
+        distributions: Union[Distribution, list[Distribution]],
+        runmodel_object: RunModel,
+        surrogate: Union[Kriging, PolynomialChaosExpansion],
+        learning_function: LearningFunction,
+        samples=None,
+        samples_number: PositiveInteger = None,
+        learning_samples_number: PositiveInteger = None,
+        qoi_name: str = None,
+        n_add: int = 1,
+        random_state: RandomStateType = None,
+    ):
 
         # Initialize the internal variables of the class.
         self.runmodel_object = runmodel_object
@@ -130,39 +135,57 @@ class AdaptiveKriging:
 
         if samples is not None:
             if self.dimension != self.samples.shape[1]:
-                raise NotImplementedError("UQpy Error: Dimension of samples and distribution are inconsistent.")
+                raise NotImplementedError(
+                    "UQpy Error: Dimension of samples and distribution are inconsistent."
+                )
 
         if isinstance(distributions, list):
             for i in range(len(distributions)):
                 if not isinstance(distributions[i], DistributionContinuous1D):
-                    raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
+                    raise TypeError(
+                        "UQpy: A DistributionContinuous1D object must be provided."
+                    )
         else:
-            if not isinstance(distributions, (DistributionContinuous1D, JointIndependent)):
-                raise TypeError('UQpy: A DistributionContinuous1D or JointInd object must be provided.')
+            if not isinstance(
+                distributions, (DistributionContinuous1D, JointIndependent)
+            ):
+                raise TypeError(
+                    "UQpy: A DistributionContinuous1D or JointInd object must be provided."
+                )
 
         self.random_state = process_random_state(random_state)
 
         self.surrogate = surrogate
 
-        self.logger.info('UQpy: AKMCS - Running the initial sample set using RunModel.')
+        self.logger.info("UQpy: AKMCS - Running the initial sample set using RunModel.")
 
         # Evaluate model at the training points
         if len(self.runmodel_object.qoi_list) == 0 and samples is not None:
             self.runmodel_object.run(samples=self.samples, append_samples=False)
         if samples is not None:
             if len(self.runmodel_object.qoi_list) != self.samples.shape[0]:
-                raise NotImplementedError("UQpy: There should be no model evaluation or Number of samples and model "
-                                          "evaluation in RunModel object should be same.")
+                raise NotImplementedError(
+                    "UQpy: There should be no model evaluation or Number of samples and model "
+                    "evaluation in RunModel object should be same."
+                )
 
         if self.samples_number is not None:
-            if self.samples_number <= 0 or type(self.samples_number).__name__ != 'int':
-                raise NotImplementedError("UQpy: Number of samples to be generated 'nsamples' should be a positive "
-                                          "integer.")
+            if self.samples_number <= 0 or type(self.samples_number).__name__ != "int":
+                raise NotImplementedError(
+                    "UQpy: Number of samples to be generated 'nsamples' should be a positive "
+                    "integer."
+                )
 
             if samples is not None:
                 self.run(samples_number=self.samples_number)
 
-    def run(self, samples_number, samples=None, append_samples=True, initial_samples_number=None):
+    def run(
+        self,
+        samples_number,
+        samples=None,
+        append_samples=True,
+        initial_samples_number=None,
+    ):
         """
         Execute the ``Adaptivekriging`` learning iterations.
 
@@ -214,23 +237,31 @@ class AdaptiveKriging:
                 self.samples = np.array(samples)
                 self.runmodel_object.qoi_list = []
 
-            self.logger.info('UQpy: AKMCS - Evaluating the model at the sample set using RunModel.')
+            self.logger.info(
+                "UQpy: AKMCS - Evaluating the model at the sample set using RunModel."
+            )
 
             self.runmodel_object.run(samples=samples, append_samples=append_samples)
         else:
             if len(self.samples.shape) == 0:
                 if self.initial_samples_number is None:
-                    raise NotImplementedError("UQpy: User should provide either 'samples' or 'nstart' value.")
-                self.logger.info('UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling.')
+                    raise NotImplementedError(
+                        "UQpy: User should provide either 'samples' or 'nstart' value."
+                    )
+                self.logger.info(
+                    "UQpy: AKMCS - Generating the initial sample set using Latin hypercube sampling."
+                )
 
                 random_criterion = Random(random_state=self.random_state)
-                latin_hypercube_sampling = \
-                    LatinHypercubeSampling(distributions=self.dist_object, samples_number=2,
-                                           criterion=random_criterion)
+                latin_hypercube_sampling = LatinHypercubeSampling(
+                    distributions=self.dist_object,
+                    samples_number=2,
+                    criterion=random_criterion,
+                )
                 self.samples = latin_hypercube_sampling.samples
                 self.runmodel_object.run(samples=self.samples)
 
-        self.logger.info('UQpy: Performing AK-MCS design...')
+        self.logger.info("UQpy: Performing AK-MCS design...")
 
         # If the quantity of interest is a dictionary, convert it to a list
         self._convert_qoi_tolist()
@@ -247,25 +278,34 @@ class AdaptiveKriging:
             # Initialize the population of samples at which to evaluate the learning function and from which to draw
             # in the sampling.
             random_criterion = Random(random_state=self.random_state)
-            lhs = \
-                LatinHypercubeSampling(distributions=self.dist_object, samples_number=self.learning_samples_number,
-                                       criterion=random_criterion)
+            lhs = LatinHypercubeSampling(
+                distributions=self.dist_object,
+                samples_number=self.learning_samples_number,
+                criterion=random_criterion,
+            )
 
             self.learning_set = lhs.samples.copy()
 
             # Find all of the points in the population that have not already been integrated into the training set
-            rest_pop = np.array([x for x in self.learning_set.tolist() if x not in self.samples.tolist()])
+            rest_pop = np.array(
+                [
+                    x
+                    for x in self.learning_set.tolist()
+                    if x not in self.samples.tolist()
+                ]
+            )
 
             # Apply the learning function to identify the new point to run the model.
 
             # new_point, lf, ind = self.learning_function(self.krig_model, rest_pop, **kwargs)
-            new_point, lf, ind = self.learning_function\
-                .evaluate_function(distributions=self.dist_object,
-                                   n_add=self.n_add,
-                                   surrogate=self.surrogate,
-                                   population=rest_pop,
-                                   qoi=self.qoi,
-                                   samples=self.samples)
+            new_point, lf, ind = self.learning_function.evaluate_function(
+                distributions=self.dist_object,
+                n_add=self.n_add,
+                surrogate=self.surrogate,
+                population=rest_pop,
+                qoi=self.qoi,
+                samples=self.samples,
+            )
 
             # Add the new points to the training set and to the sample set.
             self.samples = np.vstack([self.samples, np.atleast_2d(new_point)])
@@ -282,12 +322,15 @@ class AdaptiveKriging:
 
             # Exit the loop, if error criteria is satisfied
             if ind:
-                self.logger.info("UQpy: Learning stops at iteration: %(iteration)s" % {'iteration': i})
+                self.logger.info(
+                    "UQpy: Learning stops at iteration: %(iteration)s"
+                    % {"iteration": i}
+                )
                 break
 
-            self.logger.info("Iteration: %(iteration)s" % {'iteration': i})
+            self.logger.info("Iteration: %(iteration)s" % {"iteration": i})
 
-        self.logger.info('UQpy: AKMCS complete')
+        self.logger.info("UQpy: AKMCS complete")
 
     def _convert_qoi_tolist(self):
         self.qoi = [None] * len(self.runmodel_object.qoi_list)

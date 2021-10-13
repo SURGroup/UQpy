@@ -4,7 +4,6 @@ import numpy as np
 
 
 class Centered(Criterion):
-
     def __init__(self, random_state: RandomStateType = None):
         super().__init__(random_state)
 

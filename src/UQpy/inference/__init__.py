@@ -21,4 +21,3 @@ from UQpy.inference.BayesModelSelection import *
 from UQpy.inference.InformationModelSelection import *
 from UQpy.inference.BayesParameterEstimation import *
 from UQpy.inference.MLE import *
-

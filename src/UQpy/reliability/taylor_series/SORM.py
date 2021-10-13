@@ -26,23 +26,38 @@ class SORM(TaylorSeries):
         Second-order reliability index.
     **Methods:**
     """
-    @beartype
-    def __init__(self,
-                 form_object: FORM,
-                 distributions: Optional[Union[None, Distribution, list[Distribution]]] = None,
-                 seed_u: np.ndarray = None,
-                 seed_x: np.ndarray = None,
-                 runmodel_object: RunModel = None,
-                 df_step: Union[float, int] = 0.01,
-                 corr_x: np.ndarray = None,
-                 corr_z: np.ndarray = None,
-                 iterations_number: int = None,
-                 tol1: Union[float, int] = None,
-                 tol2: Union[float, int] = None,
-                 tol3: Union[float, int] = None):
 
-        super().__init__(distributions, runmodel_object, form_object, corr_x, corr_z, seed_x, seed_u, iterations_number,
-                         tol1, tol2, tol3, df_step)
+    @beartype
+    def __init__(
+        self,
+        form_object: FORM,
+        distributions: Optional[Union[None, Distribution, list[Distribution]]] = None,
+        seed_u: np.ndarray = None,
+        seed_x: np.ndarray = None,
+        runmodel_object: RunModel = None,
+        df_step: Union[float, int] = 0.01,
+        corr_x: np.ndarray = None,
+        corr_z: np.ndarray = None,
+        iterations_number: int = None,
+        tol1: Union[float, int] = None,
+        tol2: Union[float, int] = None,
+        tol3: Union[float, int] = None,
+    ):
+
+        super().__init__(
+            distributions,
+            runmodel_object,
+            form_object,
+            corr_x,
+            corr_z,
+            seed_x,
+            seed_u,
+            iterations_number,
+            tol1,
+            tol2,
+            tol3,
+            df_step,
+        )
         self.logger = logging.getLogger(__name__)
         self.beta_form = None
         self.DesignPoint_U = None
@@ -73,7 +88,7 @@ class SORM(TaylorSeries):
         This is an instance method that runs SORM.
         """
 
-        self.logger.info('UQpy: Calculating SORM correction...')
+        self.logger.info("UQpy: Calculating SORM correction...")
 
         self.beta_form = self.form_object.beta_form[-1]
         self.nataf_object = self.form_object.nataf_object
@@ -112,21 +127,33 @@ class SORM(TaylorSeries):
             q[:, i] = normalize(ai)
 
         r1 = np.fliplr(q).T
-        self.logger.info('UQpy: Calculating the hessian for SORM..')
+        self.logger.info("UQpy: Calculating the hessian for SORM..")
 
-        hessian_g = self.derivatives(point_u=self.DesignPoint_U, point_x=self.DesignPoint_X,
-                                     runmodel_object=model, nataf_object=self.nataf_object,
-                                     order='second', df_step=self.df_step, point_qoi=self.g_record[-1][-1])
+        hessian_g = self.derivatives(
+            point_u=self.DesignPoint_U,
+            point_x=self.DesignPoint_X,
+            runmodel_object=model,
+            nataf_object=self.nataf_object,
+            order="second",
+            df_step=self.df_step,
+            point_qoi=self.g_record[-1][-1],
+        )
 
         matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(dg_u_record[-1])
-        kappa = np.linalg.eig(matrix_b[:self.dimension-1, :self.dimension-1])
+        kappa = np.linalg.eig(matrix_b[: self.dimension - 1, : self.dimension - 1])
         if self.call is None:
-            self.failure_probability = [stats.norm.cdf(-1 * self.beta_form) *
-                                        np.prod(1 / (1 + self.beta_form * kappa[0]) ** 0.5)]
+            self.failure_probability = [
+                stats.norm.cdf(-1 * self.beta_form)
+                * np.prod(1 / (1 + self.beta_form * kappa[0]) ** 0.5)
+            ]
             self.beta_sorm = [-stats.norm.ppf(self.failure_probability)]
         else:
-            self.failure_probability = self.failure_probability + [stats.norm.cdf(-1 * self.beta_form) *
-                                                                   np.prod(1 / (1 + self.beta_form * kappa[0]) ** 0.5)]
-            self.beta_sorm = self.beta_sorm + [-stats.norm.ppf(self.failure_probability)]
+            self.failure_probability = self.failure_probability + [
+                stats.norm.cdf(-1 * self.beta_form)
+                * np.prod(1 / (1 + self.beta_form * kappa[0]) ** 0.5)
+            ]
+            self.beta_sorm = self.beta_sorm + [
+                -stats.norm.ppf(self.failure_probability)
+            ]
 
         self.call = True

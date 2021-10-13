@@ -1,7 +1,9 @@
 import numpy as np
 from beartype import beartype
 
-from UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion import PolynomialChaosExpansion
+from UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion import (
+    PolynomialChaosExpansion,
+)
 
 
 class ErrorEstimation:
@@ -16,9 +18,9 @@ class ErrorEstimation:
 
     **Methods:**
     """
+
     @beartype
-    def __init__(self,
-                 pce_surrogate: PolynomialChaosExpansion):
+    def __init__(self, pce_surrogate: PolynomialChaosExpansion):
         self.pce_surrogate = pce_surrogate
 
     def validation(self, x, y):
@@ -46,8 +48,14 @@ class ErrorEstimation:
 
         n_samples = x.shape[0]
         mu_yval = (1 / n_samples) * np.sum(y, axis=0)
-        eps_val = (n_samples - 1) / n_samples * (
-                (np.sum((y - y_val) ** 2, axis=0)) / (np.sum((y - mu_yval) ** 2, axis=0)))
+        eps_val = (
+            (n_samples - 1)
+            / n_samples
+            * (
+                (np.sum((y - y_val) ** 2, axis=0))
+                / (np.sum((y - mu_yval) ** 2, axis=0))
+            )
+        )
 
         if y.ndim == 1 or y.shape[1] == 1:
             eps_val = float(eps_val)

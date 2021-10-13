@@ -25,10 +25,9 @@ class Correlate:
         (:math:`\mathbf{C_Z}`).
 
     """
+
     @beartype
-    def __init__(self,
-                 samples_u: np.ndarray,
-                 corr_z: np.ndarray):
+    def __init__(self, samples_u: np.ndarray, corr_z: np.ndarray):
         self.samples_y = samples_u
         self.corr_z = corr_z
         self.H = cholesky(self.corr_z, lower=True)

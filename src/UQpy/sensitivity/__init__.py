@@ -9,4 +9,4 @@ The module currently contains the following classes:
 from UQpy.sensitivity.MorrisSensitivity import MorrisSensitivity
 from UQpy.sensitivity.MorrisSensitivity import *
 
-from . import (MorrisSensitivity)
+from . import MorrisSensitivity

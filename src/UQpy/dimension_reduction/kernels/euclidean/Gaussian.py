@@ -7,7 +7,6 @@ from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
 
 
 class Gaussian(Kernel):
-
     def pointwise_operator(self, point1, point2):
         pass
 
@@ -28,7 +27,7 @@ class Gaussian(Kernel):
         self.distance_pairs = []
         if len(np.shape(data)) == 2:
             # Set of 1-D arrays
-            self.distance_pairs = sd.pdist(data, 'euclidean')
+            self.distance_pairs = sd.pdist(data, "euclidean")
         elif len(np.shape(data)) == 3:
             # Set of 2-D arrays
             # Check arguments: verify the consistency of input arguments.
@@ -44,11 +43,13 @@ class Gaussian(Kernel):
                 x0 = data[ii]
                 x1 = data[jj]
 
-                distance = np.linalg.norm(x0 - x1, 'fro')
+                distance = np.linalg.norm(x0 - x1, "fro")
 
                 self.distance_pairs.append(distance)
         else:
-            raise TypeError('UQpy: The size of the input data is not consistent with this method.')
+            raise TypeError(
+                "UQpy: The size of the input data is not consistent with this method."
+            )
 
         self.epsilon = self.compute_default_epsilon(self.epsilon)
 

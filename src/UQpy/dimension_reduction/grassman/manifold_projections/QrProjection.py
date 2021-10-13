@@ -1,5 +1,7 @@
 import itertools
-from UQpy.dimension_reduction.grassman.manifold_projections.baseclass.ManifoldProjection import ManifoldProjection
+from UQpy.dimension_reduction.grassman.manifold_projections.baseclass.ManifoldProjection import (
+    ManifoldProjection,
+)
 from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 import numpy as np
@@ -8,9 +10,7 @@ import scipy.spatial.distance as sd
 
 
 class QrProjection(ManifoldProjection):
-
-    def __init__(self, input_points: list[Numpy2DFloatArray],
-                 p_planes_dimensions: int):
+    def __init__(self, input_points: list[Numpy2DFloatArray], p_planes_dimensions: int):
         self.data = input_points
 
         points_number = len(input_points)
@@ -21,11 +21,11 @@ class QrProjection(ManifoldProjection):
             n_left.append(max(np.shape(input_points[i])))
             n_right.append(min(np.shape(input_points[i])))
 
-        bool_left = (n_left.count(n_left[0]) != len(n_left))
-        bool_right = (n_right.count(n_right[0]) != len(n_right))
+        bool_left = n_left.count(n_left[0]) != len(n_left)
+        bool_right = n_right.count(n_right[0]) != len(n_right)
 
         if bool_left and bool_right:
-            raise TypeError('UQpy: The shape of the input matrices must be the same.')
+            raise TypeError("UQpy: The shape of the input matrices must be the same.")
         else:
             n_psi = n_left[0]
             n_phi = n_right[0]
@@ -42,7 +42,8 @@ class QrProjection(ManifoldProjection):
             for i in range(points_number):
                 if min(np.shape(input_points[i])) < p_planes_dimensions:
                     raise ValueError(
-                        'UQpy: The dimension of the input data is not consistent with `p` of G(n,p).')  # write something that makes sense
+                        "UQpy: The dimension of the input data is not consistent with `p` of G(n,p)."
+                    )  # write something that makes sense
 
         ranks = np.ones(points_number) * [int(p_planes_dimensions)]
         ranks = ranks.tolist()
@@ -61,21 +62,23 @@ class QrProjection(ManifoldProjection):
         self.ranks = ranks
         self.points_number = points_number
         self.max_rank = int(np.max(ranks))
-            
+
     def evaluate_matrix(self, operator: Kernel):
-        return self.__apply_operator(self.q, p_dim=self.p_planes_dimensions, operator=operator)
+        return self.__apply_operator(
+            self.q, p_dim=self.p_planes_dimensions, operator=operator
+        )
 
     def __apply_operator(self, points, p_dim, operator):
 
         # Check points for type and shape consistency.
         # -----------------------------------------------------------
         if not isinstance(points, list) and not isinstance(points, np.ndarray):
-            raise TypeError('UQpy: `points` must be either list or numpy.ndarray.')
+            raise TypeError("UQpy: `points` must be either list or numpy.ndarray.")
 
         nargs = len(points)
 
         if nargs < 2:
-            raise ValueError('UQpy: At least two matrices must be provided.')
+            raise ValueError("UQpy: At least two matrices must be provided.")
         # ------------------------------------------------------------
 
         # Define the pairs of points to compute the entries of the kernel matrix.
@@ -109,5 +112,7 @@ class QrProjection(ManifoldProjection):
         # Return the kernel matrix.
         return kernel_matrix
 
-    def reconstruct_solution(self, karcher_mean, interpolation, coordinates, point, element_wise=True):
+    def reconstruct_solution(
+        self, karcher_mean, interpolation, coordinates, point, element_wise=True
+    ):
         pass

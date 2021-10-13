@@ -71,52 +71,72 @@ class BayesParameterEstimation(metaclass=NoPublicConstructor):
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
     @beartype
-    def __init__(self,
-                 inference_model: InferenceModel, data,
-                 sampling_class: Union[MCMC, ImportanceSampling] = None,
-                 samples_number: Union[None, int] = None,
-                 samples_number_per_chain: Union[None, int] = None):
+    def __init__(
+        self,
+        inference_model: InferenceModel,
+        data,
+        sampling_class: Union[MCMC, ImportanceSampling] = None,
+        samples_number: Union[None, int] = None,
+        samples_number_per_chain: Union[None, int] = None,
+    ):
 
         self.inference_model = inference_model
         self.data = data
         self.logger = logging.getLogger(__name__)
         self.sampler = sampling_class
         if (samples_number is not None) or (samples_number_per_chain is not None):
-            self.run(samples_number=samples_number, samples_number_per_chain=samples_number_per_chain)
+            self.run(
+                samples_number=samples_number,
+                samples_number_per_chain=samples_number_per_chain,
+            )
 
     @classmethod
     @beartype
-    def create_with_mcmc_sampling(cls,
-                                  mcmc_input: Union[DramInput, DreamInput, MhInput, MmhInput, StretchInput],
-                                  inference_model: InferenceModel,
-                                  data,
-                                  samples_number: int = None,
-                                  samples_number_per_chain: Union[None, int] = None):
+    def create_with_mcmc_sampling(
+        cls,
+        mcmc_input: Union[DramInput, DreamInput, MhInput, MmhInput, StretchInput],
+        inference_model: InferenceModel,
+        data,
+        samples_number: int = None,
+        samples_number_per_chain: Union[None, int] = None,
+    ):
         class_type = type(mcmc_input)
         sampling_class = BayesParameterEstimation.input_to_class[class_type]
         if mcmc_input.seed is None:
-            if inference_model.prior is None or not hasattr(inference_model.prior, 'rvs'):
-                raise ValueError('UQpy: A prior with a rvs method must be provided for the InferenceModel'
-                                 ' or a seed must be provided for MCMC.')
+            if inference_model.prior is None or not hasattr(
+                inference_model.prior, "rvs"
+            ):
+                raise ValueError(
+                    "UQpy: A prior with a rvs method must be provided for the InferenceModel"
+                    " or a seed must be provided for MCMC."
+                )
             else:
-                mcmc_input.seed = inference_model.prior.rvs(nsamples=mcmc_input.chains_number,
-                                                            random_state=mcmc_input.random_state)
+                mcmc_input.seed = inference_model.prior.rvs(
+                    nsamples=mcmc_input.chains_number,
+                    random_state=mcmc_input.random_state,
+                )
         mcmc_input.log_pdf_target = inference_model.evaluate_log_posterior
-        mcmc_input.args_target = (data, )
+        mcmc_input.args_target = (data,)
         sampler = sampling_class(mcmc_input)
-        return cls._create(inference_model, data, sampler, samples_number, samples_number_per_chain)
+        return cls._create(
+            inference_model, data, sampler, samples_number, samples_number_per_chain
+        )
 
     @classmethod
     @beartype
-    def create_with_importance_sampling(cls,
-                                        inference_model: InferenceModel,
-                                        data,
-                                        is_input: ISInput,
-                                        samples_number: int = None):
+    def create_with_importance_sampling(
+        cls,
+        inference_model: InferenceModel,
+        data,
+        is_input: ISInput,
+        samples_number: int = None,
+    ):
         if is_input.proposal is None:
             if inference_model.prior is None:
-                raise NotImplementedError('UQpy: A proposal density of the ImportanceSampling'
-                                          ' or a prior to the Inference model  must be provided.')
+                raise NotImplementedError(
+                    "UQpy: A proposal density of the ImportanceSampling"
+                    " or a prior to the Inference model  must be provided."
+                )
             is_input.proposal = inference_model.prior
         is_input.log_pdf_target = inference_model.evaluate_log_posterior
         is_input.args_target = (data,)
@@ -128,18 +148,22 @@ class BayesParameterEstimation(metaclass=NoPublicConstructor):
         DreamInput: DREAM,
         MhInput: MetropolisHastings,
         MmhInput: ModifiedMetropolisHastings,
-        StretchInput: Stretch
+        StretchInput: Stretch,
     }
 
     sampling_actions = {
-        MCMC: lambda sampler, nsamples, nsamples_per_chain:
-        sampler.run(samples_number=nsamples, samples_number_per_chain=nsamples_per_chain),
-        ImportanceSampling: lambda sampler, nsamples, nsamples_per_chain:
-        sampler.run(samples_number=nsamples)
+        MCMC: lambda sampler, nsamples, nsamples_per_chain: sampler.run(
+            samples_number=nsamples, samples_number_per_chain=nsamples_per_chain
+        ),
+        ImportanceSampling: lambda sampler, nsamples, nsamples_per_chain: sampler.run(
+            samples_number=nsamples
+        ),
     }
 
     @beartype
-    def run(self, samples_number: PositiveInteger = None, samples_number_per_chain=None):
+    def run(
+        self, samples_number: PositiveInteger = None, samples_number_per_chain=None
+    ):
         """
         Run the Bayesian inference procedure, i.e., sample from the parameter posterior distribution.
 
@@ -156,7 +180,12 @@ class BayesParameterEstimation(metaclass=NoPublicConstructor):
 
         """
         method = MCMC if isinstance(self.sampler, MCMC) else ImportanceSampling
-        BayesParameterEstimation.sampling_actions[method](self.sampler, samples_number, samples_number_per_chain)
+        BayesParameterEstimation.sampling_actions[method](
+            self.sampler, samples_number, samples_number_per_chain
+        )
 
-        self.logger.info('UQpy: Parameter estimation with '
-                         + self.sampler.__class__.__name__ + ' completed successfully!')
+        self.logger.info(
+            "UQpy: Parameter estimation with "
+            + self.sampler.__class__.__name__
+            + " completed successfully!"
+        )

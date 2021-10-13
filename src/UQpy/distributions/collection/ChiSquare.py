@@ -30,9 +30,15 @@ class ChiSquare(DistributionContinuous1D):
 
     * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
     """
+
     @beartype
-    def __init__(self, df: Union[None, float, int], loc: Union[None, float, int] = 0.,
-                 scale: Union[None, float, int] = 1.):
-        super().__init__(df=df, loc=loc, scale=scale,
-                         ordered_parameters=('df', 'loc', 'scale'))
+    def __init__(
+        self,
+        df: Union[None, float, int],
+        loc: Union[None, float, int] = 0.0,
+        scale: Union[None, float, int] = 1.0,
+    ):
+        super().__init__(
+            df=df, loc=loc, scale=scale, ordered_parameters=("df", "loc", "scale")
+        )
         self._construct_from_scipy(scipy_name=stats.chi2)

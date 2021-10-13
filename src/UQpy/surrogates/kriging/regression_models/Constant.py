@@ -3,7 +3,6 @@ from UQpy.surrogates.kriging.regression_models.baseclass.Regression import Regre
 
 
 class Constant(Regression):
-
     def r(self, s):
         s = np.atleast_2d(s)
         fx = np.ones([np.size(s, 0), 1])

@@ -26,6 +26,7 @@ class Multinomial(DistributionND):
 
     * ``pmf``, ``log_pmf``, ``rvs``, ``moments``.
     """
+
     @beartype
     def __init__(self, n: Union[None, int], p):
         super().__init__(n=n, p=p)
@@ -40,24 +41,33 @@ class Multinomial(DistributionND):
 
     def rvs(self, nsamples=1, random_state=None):
         if not (isinstance(nsamples, int) and nsamples >= 1):
-            raise ValueError('Input nsamples must be an integer > 0.')
+            raise ValueError("Input nsamples must be an integer > 0.")
         return stats.multinomial.rvs(
-            size=nsamples, random_state=random_state, **self.parameters).reshape((nsamples, -1))
+            size=nsamples, random_state=random_state, **self.parameters
+        ).reshape((nsamples, -1))
 
-    def moments(self, moments2return='mv'):
-        n = self.get_parameters()['n']
-        p = np.array(self.get_parameters()['p'])
+    def moments(self, moments2return="mv"):
+        n = self.get_parameters()["n"]
+        p = np.array(self.get_parameters()["p"])
         d = len(p)
-        if moments2return == 'm':
+        if moments2return == "m":
             mean = n * np.array(p)
             return mean
-        elif moments2return == 'v':
-            cov = - n * np.tile(p[np.newaxis, :], [d, 1]) * np.tile(p[:, np.newaxis], [1, d])
-            np.fill_diagonal(cov, n * p * (1. - p))
+        elif moments2return == "v":
+            cov = (
+                -n
+                * np.tile(p[np.newaxis, :], [d, 1])
+                * np.tile(p[:, np.newaxis], [1, d])
+            )
+            np.fill_diagonal(cov, n * p * (1.0 - p))
             return cov
-        elif moments2return == 'mv':
-            cov = - n * np.tile(p[np.newaxis, :], [d, 1]) * np.tile(p[:, np.newaxis], [1, d])
-            np.fill_diagonal(cov, n * p * (1. - p))
+        elif moments2return == "mv":
+            cov = (
+                -n
+                * np.tile(p[np.newaxis, :], [d, 1])
+                * np.tile(p[:, np.newaxis], [1, d])
+            )
+            np.fill_diagonal(cov, n * p * (1.0 - p))
             mean = n * np.array(p)
             return mean, cov
         else:

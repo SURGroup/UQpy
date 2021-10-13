@@ -26,10 +26,9 @@ class Decorrelate:
         (:math:`\mathbf{C_Z}`).
 
     """
+
     @beartype
-    def __init__(self,
-                 samples_z: np.ndarray,
-                 corr_z: np.ndarray):
+    def __init__(self, samples_z: np.ndarray, corr_z: np.ndarray):
         self.samples_z = samples_z
         self.corr_z = corr_z
         self.H = cholesky(self.corr_z, lower=True)

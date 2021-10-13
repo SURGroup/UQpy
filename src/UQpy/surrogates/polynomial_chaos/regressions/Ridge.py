@@ -16,11 +16,13 @@ class RidgeRegression(Regression):
      **Methods:**
      """
 
-    def __init__(self,
-                 polynomials: Polynomials,
-                 learning_rate: float = 0.01,
-                 iterations: int = 1000,
-                 penalty: float = 1):
+    def __init__(
+        self,
+        polynomials: Polynomials,
+        learning_rate: float = 0.01,
+        iterations: int = 1000,
+        penalty: float = 1,
+    ):
         self.polynomials = polynomials
         self.learning_rate = learning_rate
         self.iterations = iterations
@@ -70,7 +72,7 @@ class RidgeRegression(Regression):
                 y_pred = (xx.dot(w) + b).reshape(-1, 1)
 
                 dw = (-(2 * xx.T.dot(y - y_pred)) + (2 * self.penalty * w)) / m
-                db = - 2 * np.sum(y - y_pred) / m
+                db = -2 * np.sum(y - y_pred) / m
 
                 w = w - self.learning_rate * dw
                 b = b - self.learning_rate * db
@@ -81,10 +83,10 @@ class RidgeRegression(Regression):
             b = np.zeros(n_out_dim).reshape(1, -1)
 
             for _ in range(self.iterations):
-                y_pred = (xx.dot(w) + b)
+                y_pred = xx.dot(w) + b
 
                 dw = (-(2 * xx.T.dot(y - y_pred)) + (2 * self.penalty * w)) / m
-                db = - 2 * np.sum((y - y_pred), axis=0).reshape(1, -1) / m
+                db = -2 * np.sum((y - y_pred), axis=0).reshape(1, -1) / m
 
                 w = w - self.learning_rate * dw
                 b = b - self.learning_rate * db

@@ -22,10 +22,9 @@ class Polynomials:
 
     **Methods:**
     """
+
     @beartype
-    def __init__(self,
-                 distributions,
-                 degree: int):
+    def __init__(self, distributions, degree: int):
         self.distribution = distributions
         self.degree = degree + 1
 
@@ -115,8 +114,13 @@ class Polynomials:
         m = np.zeros((degree, degree))
         for i in range(degree):
             for j in range(degree):
-                int_res = integrate.quad(lambda k: p[i](k) * p[j](k) * pdf_st(k),
-                                         a, b, epsabs=1e-15, epsrel=1e-15)
+                int_res = integrate.quad(
+                    lambda k: p[i](k) * p[j](k) * pdf_st(k),
+                    a,
+                    b,
+                    epsabs=1e-15,
+                    epsrel=1e-15,
+                )
                 m[i, j] = int_res[0]
             pol_normed.append(p[i] / np.sqrt(m[i, i]))
 
@@ -131,28 +135,28 @@ class Polynomials:
         """
         Returns a `float` with the mean of the UQpy distribution object.
         """
-        m = self.distribution.moments(moments2return='m')
+        m = self.distribution.moments(moments2return="m")
         return m
 
     def get_std(self):
         """
         Returns a `float` with the variance of the UQpy distribution object.
         """
-        s = np.sqrt(self.distribution.moments(moments2return='v'))
+        s = np.sqrt(self.distribution.moments(moments2return="v"))
         return s
 
     def location(self):
         """
         Returns a `float` with the location of the UQpy distribution object.
         """
-        m = self.distribution.__dict__['parameters']['location']
+        m = self.distribution.__dict__["parameters"]["location"]
         return m
 
     def scale(self):
         """
         Returns a `float` with the scale of the UQpy distribution object.
         """
-        s = self.distribution.__dict__['parameters']['scale']
+        s = self.distribution.__dict__["parameters"]["scale"]
         return s
 
     def evaluate(self, x):
@@ -174,15 +178,19 @@ class Polynomials:
         if not type(self.distribution) == JointIndependent:
             if type(self.distribution) == Normal:
                 from UQpy.surrogates.polynomial_chaos.polynomials.Hermite import Hermite
+
                 return Hermite(self.degree, self.distribution).get_polys(x)[0]
                 # design matrix (second_order_tensor x polynomials)
 
             if type(self.distribution) == Uniform:
-                from UQpy.surrogates.polynomial_chaos.polynomials.Legendre import Legendre
+                from UQpy.surrogates.polynomial_chaos.polynomials.Legendre import (
+                    Legendre,
+                )
+
                 return Legendre(self.degree, self.distribution).get_polys(x)[0]
 
             else:
-                raise TypeError('Warning: This distribution is not supported.')
+                raise TypeError("Warning: This distribution is not supported.")
 
         else:
 
@@ -190,17 +198,29 @@ class Polynomials:
             for i in range(len(self.distribution.marginals)):
 
                 if isinstance(self.distribution.marginals[i], Normal):
-                    from UQpy.surrogates.polynomial_chaos.polynomials.Hermite import Hermite
-                    a.append(Hermite(self.degree,
-                                     self.distribution.marginals[i]).get_polys(x[:, i])[0])
+                    from UQpy.surrogates.polynomial_chaos.polynomials.Hermite import (
+                        Hermite,
+                    )
+
+                    a.append(
+                        Hermite(self.degree, self.distribution.marginals[i]).get_polys(
+                            x[:, i]
+                        )[0]
+                    )
 
                 elif isinstance(self.distribution.marginals[i], Uniform):
-                    from UQpy.surrogates.polynomial_chaos.polynomials.Legendre import Legendre
-                    a.append(Legendre(self.degree,
-                                      self.distribution.marginals[i]).get_polys(x[:, i])[0])
+                    from UQpy.surrogates.polynomial_chaos.polynomials.Legendre import (
+                        Legendre,
+                    )
+
+                    a.append(
+                        Legendre(self.degree, self.distribution.marginals[i]).get_polys(
+                            x[:, i]
+                        )[0]
+                    )
 
                 else:
-                    raise TypeError('Warning: This distribution is not supported.')
+                    raise TypeError("Warning: This distribution is not supported.")
 
             # Compute all possible valid combinations
             m = len(a)  # number of variables

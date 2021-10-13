@@ -50,13 +50,16 @@ class Frank(Copula):
 
     def evaluate_cdf(self, unit_uniform_samples):
         theta, u, v = self.extract_data(unit_uniform_samples)
-        tmp_ratio = (np.exp(-theta * u) - 1.) * \
-                    (np.exp(-theta * v) - 1.) / (np.exp(-theta) - 1.)
-        cdf_val = -1. / theta * np.log(1. + tmp_ratio)
+        tmp_ratio = (
+            (np.exp(-theta * u) - 1.0)
+            * (np.exp(-theta * v) - 1.0)
+            / (np.exp(-theta) - 1.0)
+        )
+        cdf_val = -1.0 / theta * np.log(1.0 + tmp_ratio)
         return cdf_val
 
     def extract_data(self, unit_uniform_samples):
         u = unit_uniform_samples[:, 0]
         v = unit_uniform_samples[:, 1]
-        theta = self.parameters['theta']
+        theta = self.parameters["theta"]
         return theta, u, v

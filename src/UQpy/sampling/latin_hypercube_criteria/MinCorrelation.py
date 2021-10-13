@@ -27,6 +27,7 @@ class MinCorrelation(Criterion):
                 The minimum correlation set of LHS samples.
 
             """
+
     @beartype
     def __init__(self, random_state: RandomStateType = None, iterations: int = 100):
 
@@ -56,6 +57,6 @@ class MinCorrelation(Criterion):
                 min_corr = np.max(np.abs(r1))
                 lhs_samples = copy.deepcopy(samples_try)
             i = i + 1
-        self.logger.info('UQpy: Achieved minimum correlation of ', min_corr)
+        self.logger.info("UQpy: Achieved minimum correlation of ", min_corr)
 
         return lhs_samples

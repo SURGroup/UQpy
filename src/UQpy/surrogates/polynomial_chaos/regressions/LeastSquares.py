@@ -18,8 +18,7 @@ class LeastSquareRegression(Regression):
 
     """
 
-    def __init__(self,
-                 polynomials: Polynomials):
+    def __init__(self, polynomials: Polynomials):
         self.polynomials = polynomials
 
     def run(self, x, y):

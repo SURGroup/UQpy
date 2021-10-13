@@ -52,15 +52,18 @@ class InferenceModel(ABC):
     **Methods:**
 
     """
+
     # Last Modified: 05/13/2020 by Audrey Olivier
-    def __init__(self,
-                 parameters_number: PositiveInteger,
-                 runmodel_object: RunModel = None,
-                 log_likelihood=None,
-                 distributions=None,
-                 name: str = '',
-                 error_covariance: float = 1.0,
-                 prior: Distribution = None):
+    def __init__(
+        self,
+        parameters_number: PositiveInteger,
+        runmodel_object: RunModel = None,
+        log_likelihood=None,
+        distributions=None,
+        name: str = "",
+        error_covariance: float = 1.0,
+        prior: Distribution = None,
+    ):
 
         # Initialize some parameters
         self.parameters_number = parameters_number
@@ -72,37 +75,63 @@ class InferenceModel(ABC):
         self.log_likelihood = log_likelihood
         self.distributions = distributions
         # Perform checks on inputs runmodel_object, log_likelihood, distribution_object that define the inference model
-        if (self.runmodel_object is None) and (self.log_likelihood is None) and (self.distributions is None):
-            raise ValueError('UQpy: One of runmodel_object, log_likelihood or dist_object inputs must be provided.')
-        if self.runmodel_object is not None and (not isinstance(self.runmodel_object, RunModel)):
-            raise TypeError('UQpy: Input runmodel_object should be an object of class RunModel.')
+        if (
+            (self.runmodel_object is None)
+            and (self.log_likelihood is None)
+            and (self.distributions is None)
+        ):
+            raise ValueError(
+                "UQpy: One of runmodel_object, log_likelihood or dist_object inputs must be provided."
+            )
+        if self.runmodel_object is not None and (
+            not isinstance(self.runmodel_object, RunModel)
+        ):
+            raise TypeError(
+                "UQpy: Input runmodel_object should be an object of class RunModel."
+            )
         if (self.log_likelihood is not None) and (not callable(self.log_likelihood)):
-            raise TypeError('UQpy: Input log_likelihood should be a callable.')
+            raise TypeError("UQpy: Input log_likelihood should be a callable.")
         if self.distributions is not None:
             if (self.runmodel_object is not None) or (self.log_likelihood is not None):
-                raise ValueError('UQpy: Input dist_object cannot be provided concurrently with log_likelihood '
-                                 'or runmodel_object.')
+                raise ValueError(
+                    "UQpy: Input dist_object cannot be provided concurrently with log_likelihood "
+                    "or runmodel_object."
+                )
             if not isinstance(self.distributions, Distribution):
-                raise TypeError('UQpy: Input dist_object should be an object of class Distribution.')
-            if not hasattr(self.distributions, 'log_pdf'):
-                if not hasattr(self.distributions, 'pdf'):
-                    raise AttributeError('UQpy: dist_object should have a log_pdf or pdf method.')
+                raise TypeError(
+                    "UQpy: Input dist_object should be an object of class Distribution."
+                )
+            if not hasattr(self.distributions, "log_pdf"):
+                if not hasattr(self.distributions, "pdf"):
+                    raise AttributeError(
+                        "UQpy: dist_object should have a log_pdf or pdf method."
+                    )
                 self.distributions.log_pdf = lambda x: np.log(self.distributions.pdf(x))
             # Check which parameters need to be updated (i.e., those set as None)
             init_params = self.distributions.get_parameters()
-            self.list_params = [key for key in self.distributions.ordered_parameters if init_params[key] is None]
+            self.list_params = [
+                key
+                for key in self.distributions.ordered_parameters
+                if init_params[key] is None
+            ]
             if len(self.list_params) != self.parameters_number:
-                raise TypeError('UQpy: Incorrect dimensions between parameters_number and number'
-                                ' of inputs set to None.')
+                raise TypeError(
+                    "UQpy: Incorrect dimensions between parameters_number and number"
+                    " of inputs set to None."
+                )
 
         # Define prior if it is given
         self.prior = prior
         if self.prior is not None:
             if not isinstance(self.prior, Distribution):
-                raise TypeError('UQpy: Input prior should be an object of class Distribution.')
-            if not hasattr(self.prior, 'log_pdf'):
-                if not hasattr(self.prior, 'pdf'):
-                    raise AttributeError('UQpy: Input prior should have a log_pdf or pdf method.')
+                raise TypeError(
+                    "UQpy: Input prior should be an object of class Distribution."
+                )
+            if not hasattr(self.prior, "log_pdf"):
+                if not hasattr(self.prior, "pdf"):
+                    raise AttributeError(
+                        "UQpy: Input prior should have a log_pdf or pdf method."
+                    )
                 self.prior.log_pdf = lambda x: np.log(self.prior.pdf(x))
 
     @abstractmethod
@@ -156,7 +185,9 @@ class InferenceModel(ABC):
 
         """
         # Compute log likelihood
-        log_likelihood_eval = self.evaluate_log_likelihood(params=parameter_vector, data=data)
+        log_likelihood_eval = self.evaluate_log_likelihood(
+            params=parameter_vector, data=data
+        )
 
         # If the prior is not provided it is set to an non-informative prior p(theta)=1, log_posterior = log_likelihood
         if self.prior is None:

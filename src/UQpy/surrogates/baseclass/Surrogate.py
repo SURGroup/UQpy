@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 
 
 class Surrogate(ABC):
-
     @abstractmethod
     def fit(self, samples, values):
         pass

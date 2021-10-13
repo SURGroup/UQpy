@@ -2,7 +2,9 @@ import scipy.special as special
 from beartype import beartype
 
 from UQpy.distributions import Uniform
-from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import Polynomials
+from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import (
+    Polynomials,
+)
 
 
 class Legendre(Polynomials):
@@ -20,10 +22,9 @@ class Legendre(Polynomials):
 
     **Methods:**
     """
+
     @beartype
-    def __init__(self,
-                 degree: int,
-                 distributions):
+    def __init__(self, degree: int, distributions):
         super().__init__(distributions, degree)
         self.degree = degree
         self.pdf = self.distribution.pdf

@@ -3,7 +3,9 @@ from UQpy.surrogates.kriging.correlation_models.baseclass.Correlation import *
 
 class Cubic(Correlation):
     def c(self, x, s, params, dt=False, dx=False):
-        zeta_matrix, dtheta_derivs, dx_derivs = Correlation.derivatives(x_=x, s_=s, params=params)
+        zeta_matrix, dtheta_derivs, dx_derivs = Correlation.derivatives(
+            x_=x, s_=s, params=params
+        )
         # Initial matrices containing derivates for all values in array. Note since
         # dtheta_s and dx_s already accounted for where derivative should be zero, all
         # that must be done is multiplying the |dij| or thetaj matrix on top of a

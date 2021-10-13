@@ -30,8 +30,13 @@ class Binomial(DistributionDiscrete1D):
 
     * ``cdf``, ``pmf``, ``log_pmf``, ``icdf``, ``rvs``, ``moments``.
     """
+
     @beartype
-    def __init__(self, n: Union[None, int], p: Union[None, float, int], loc: Union[None, float, int] = 0.):
-        super().__init__(n=n, p=p, loc=loc,
-                         ordered_parameters=('n', 'p', 'loc'))
+    def __init__(
+        self,
+        n: Union[None, int],
+        p: Union[None, float, int],
+        loc: Union[None, float, int] = 0.0,
+    ):
+        super().__init__(n=n, p=p, loc=loc, ordered_parameters=("n", "p", "loc"))
         self._construct_from_scipy(scipy_name=stats.binom)

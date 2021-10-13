@@ -80,15 +80,19 @@ class DiffusionMaps:
     **Methods:**
 
     """
+
     AlphaType = Annotated[Union[float, int], Is[lambda number: 0 <= number <= 1]]
     IntegerLargerThanUnityType = Annotated[int, Is[lambda number: number >= 1]]
 
     @beartype
-    def __init__(self, alpha: AlphaType = 0.5,
-                 eigenvectors_number: IntegerLargerThanUnityType = 2,
-                 is_sparse: bool = False,
-                 neighbors_number: IntegerLargerThanUnityType = 1,
-                 kernel_matrix=None,):
+    def __init__(
+        self,
+        alpha: AlphaType = 0.5,
+        eigenvectors_number: IntegerLargerThanUnityType = 2,
+        is_sparse: bool = False,
+        neighbors_number: IntegerLargerThanUnityType = 1,
+        kernel_matrix=None,
+    ):
 
         self.alpha = alpha
         self.eigenvectors_number = eigenvectors_number
@@ -100,16 +104,23 @@ class DiffusionMaps:
             self.kernel_matrix = kernel_matrix
 
     @classmethod
-    def create_from_data(cls, data,
-                         alpha: AlphaType = 0.5,
-                         eigenvectors_number: IntegerLargerThanUnityType = 2,
-                         is_sparse: bool = False,
-                         neighbors_number: IntegerLargerThanUnityType = 1,
-                         kernel=Gaussian()):
+    def create_from_data(
+        cls,
+        data,
+        alpha: AlphaType = 0.5,
+        eigenvectors_number: IntegerLargerThanUnityType = 2,
+        is_sparse: bool = False,
+        neighbors_number: IntegerLargerThanUnityType = 1,
+        kernel=Gaussian(),
+    ):
         kernel_matrix = kernel.apply_method(data)
-        return cls(alpha=alpha, eigenvectors_number=eigenvectors_number,
-                   is_sparse=is_sparse,neighbors_number=neighbors_number,
-                   kernel_matrix=kernel_matrix)
+        return cls(
+            alpha=alpha,
+            eigenvectors_number=eigenvectors_number,
+            is_sparse=is_sparse,
+            neighbors_number=neighbors_number,
+            kernel_matrix=kernel_matrix,
+        )
 
     def mapping(self):
 
@@ -166,7 +177,9 @@ class DiffusionMaps:
 
         d_star, d_star_inv = self.__diagonal_matrix(l_star, 1.0)
         if sparse:
-            d_star_invd = sps.spdiags(d_star_inv, 0, d_star_inv.shape[0], d_star_inv.shape[0])
+            d_star_invd = sps.spdiags(
+                d_star_inv, 0, d_star_inv.shape[0], d_star_inv.shape[0]
+            )
         else:
             d_star_invd = np.diag(d_star_inv)
 
@@ -174,7 +187,9 @@ class DiffusionMaps:
 
         # Find the eigenvalues and eigenvectors of Ps.
         if sparse:
-            eigenvalues, eigenvectors = spsl.eigs(transition_matrix, k=(eigenvectors_number + 1), which='LR')
+            eigenvalues, eigenvectors = spsl.eigs(
+                transition_matrix, k=(eigenvectors_number + 1), which="LR"
+            )
         else:
             eigenvalues, eigenvectors = np.linalg.eig(transition_matrix)
 
@@ -232,7 +247,9 @@ class DiffusionMaps:
             index = _nn_coord(row_data, neighbors_number)
             kernel_matrix[i, index] = 0
             if sum(kernel_matrix[i, :]) <= 0:
-                raise ValueError('UQpy: Consider increasing `neighbors_number` to have a connected graph.')
+                raise ValueError(
+                    "UQpy: Consider increasing `neighbors_number` to have a connected graph."
+                )
 
         sparse_kernel_matrix = sps.csc_matrix(kernel_matrix)
 
@@ -295,8 +312,11 @@ class DiffusionMaps:
         """
 
         rows = inverse_diagonal_matrix.shape[0]
-        d_alpha = sps.spdiags(inverse_diagonal_matrix, 0, rows, rows) if self.is_sparse \
+        d_alpha = (
+            sps.spdiags(inverse_diagonal_matrix, 0, rows, rows)
+            if self.is_sparse
             else np.diag(inverse_diagonal_matrix)
+        )
 
         normalized_kernel = d_alpha.dot(kernel_matrix.dot(d_alpha))
 

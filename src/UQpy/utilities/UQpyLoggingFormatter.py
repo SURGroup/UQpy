@@ -1,23 +1,22 @@
 import logging
 
-'''Based on https://stackoverflow.com/questions/14844970/
-modifying-logging-message-format-based-on-message-logging-level-in-python3'''
+"""Based on https://stackoverflow.com/questions/14844970/
+modifying-logging-message-format-based-on-message-logging-level-in-python3"""
 
 
 class UQpyLoggingFormatter(logging.Formatter):
-
     def __init__(self):
-        super().__init__(fmt="%(levelno)d: %(msg)s", datefmt=None, style='%')
+        super().__init__(fmt="%(levelno)d: %(msg)s", datefmt=None, style="%")
         self.format_dictionary = {
             logging.NOTSET: "%(message)s",
             logging.DEBUG: "%(message)s",
             logging.INFO: "[%(levelname)s] - %(asctime)s - %(message)s",
             logging.WARNING: "[%(levelname)s] - %(asctime)s - File: %(filename)s - %(message)s",
             logging.WARN: "[%(levelname)s] - %(asctime)s - File: %(filename)s - %(message)s",
-            logging.ERROR: '[%(levelname)s] - %(asctime)s - File: %(filename)s - Method: %(funcName)s -'
-                           ' Line: %(lineno)s - %(message)s',
+            logging.ERROR: "[%(levelname)s] - %(asctime)s - File: %(filename)s - Method: %(funcName)s -"
+            " Line: %(lineno)s - %(message)s",
             logging.CRITICAL: "[%(levelname)s] - %(asctime)s - File: %(filename)s - Method: %(funcName)s -"
-                              " Line: %(lineno)s - %(message)s"
+            " Line: %(lineno)s - %(message)s",
         }
 
     def format(self, record):

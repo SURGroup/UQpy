@@ -24,13 +24,15 @@ class DirectPOD:
     **Methods:**
     """
 
-    def __init__(self,
-                 solution_snapshots: Union[np.ndarray, list],
-                 modes: int = 10 ** 10,
-                 reconstruction_percentage: float = 10 ** 10):
+    def __init__(
+        self,
+        solution_snapshots: Union[np.ndarray, list],
+        modes: int = 10 ** 10,
+        reconstruction_percentage: float = 10 ** 10,
+    ):
         self.logger = logging.getLogger(__name__)
         self.modes = modes
-        self.solution_snapshots=solution_snapshots
+        self.solution_snapshots = solution_snapshots
         self.reconstruction_percentage = reconstruction_percentage
 
     def run(self):
@@ -74,50 +76,66 @@ class DirectPOD:
         a = np.dot(u, phi)
 
         if self.modes <= 0:
-            self.logger.warning('Invalid input, the number of modes must be positive.')
+            self.logger.warning("Invalid input, the number of modes must be positive.")
             return [], []
 
         elif self.reconstruction_percentage <= 0:
-            self.logger\
-                .warning('Invalid input, the reconstruction percentage is defined in the range (0,100].')
+            self.logger.warning(
+                "Invalid input, the reconstruction percentage is defined in the range (0,100]."
+            )
             return [], []
 
-        elif self.modes != 10**10 and self.reconstruction_percentage != 10**10:
-            self.logger\
-                .warning('Warning: Either a number of modes or a reconstruction percentage must be chosen, not both.')
+        elif self.modes != 10 ** 10 and self.reconstruction_percentage != 10 ** 10:
+            self.logger.warning(
+                "Warning: Either a number of modes or a reconstruction percentage must be chosen, not both."
+            )
             return [], []
 
         elif type(self.modes) != int:
-            self.logger.warning('Warning: The number of modes must be an integer.')
+            self.logger.warning("Warning: The number of modes must be an integer.")
             return [], []
 
         else:
 
             percentages = []
             for i in range(rows * columns):
-                percentages.append((real_eigenvalues[:i + 1].sum() / real_eigenvalues .sum()) * 100)
+                percentages.append(
+                    (real_eigenvalues[: i + 1].sum() / real_eigenvalues.sum()) * 100
+                )
 
-            minimum_percentage = min(percentages, key=lambda x: abs(x - self.reconstruction_percentage))
+            minimum_percentage = min(
+                percentages, key=lambda x: abs(x - self.reconstruction_percentage)
+            )
 
-            if self.modes == 10**10:
+            if self.modes == 10 ** 10:
                 self.modes = percentages.index(minimum_percentage) + 1
             else:
                 if self.modes > rows * columns:
-                    self.logger.warning("A number of modes greater than the number of dimensions was given."
-                                        "Number of dimensions is {}".format(rows * columns))
+                    self.logger.warning(
+                        "A number of modes greater than the number of dimensions was given."
+                        "Number of dimensions is {}".format(rows * columns)
+                    )
 
-            reconstructed_solutions_ = np.dot(a[:, :self.modes], phi[:, :self.modes].T)
-            reduced_solutions = np.dot(u, phi[:, :self.modes])
+            reconstructed_solutions_ = np.dot(
+                a[:, : self.modes], phi[:, : self.modes].T
+            )
+            reduced_solutions = np.dot(u, phi[:, : self.modes])
 
-            reconstructed_solutions = np.zeros((rows, columns, snapshot_number ))
+            reconstructed_solutions = np.zeros((rows, columns, snapshot_number))
             for i in range(snapshot_number):
-                reconstructed_solutions[0:rows, 0:columns, i] = reconstructed_solutions_[i, :].reshape((rows , columns))
+                reconstructed_solutions[
+                    0:rows, 0:columns, i
+                ] = reconstructed_solutions_[i, :].reshape((rows, columns))
 
             self.logger.info("UQpy: Successful execution of Direct POD!")
 
             if snapshot_number < rows * columns and rows * columns > 1000:
                 self.logger.warning("Snapshot POD is recommended.")
 
-            self.logger.info('Dataset reconstruction: {:.3%}'.format(percentages[self.modes - 1] / 100))
+            self.logger.info(
+                "Dataset reconstruction: {:.3%}".format(
+                    percentages[self.modes - 1] / 100
+                )
+            )
 
             return reconstructed_solutions, reduced_solutions

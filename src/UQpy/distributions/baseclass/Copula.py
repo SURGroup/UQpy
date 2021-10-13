@@ -1,4 +1,6 @@
-from UQpy.distributions.baseclass.DistributionContinuous1D import DistributionContinuous1D
+from UQpy.distributions.baseclass.DistributionContinuous1D import (
+    DistributionContinuous1D,
+)
 from abc import ABC
 
 
@@ -52,13 +54,16 @@ class Copula(ABC):
 
         A list containing the parameter names.
     """
+
     def __init__(self, ordered_parameters: dict = None, **kwargs):
         self.parameters = kwargs
         self.ordered_parameters = ordered_parameters
         if self.ordered_parameters is None:
             self.ordered_parameters = tuple(kwargs.keys())
         if len(self.ordered_parameters) != len(self.parameters):
-            raise ValueError('Inconsistent dimensions between ordered_parameters tuple and parameters dictionary.')
+            raise ValueError(
+                "Inconsistent dimensions between ordered_parameters tuple and parameters dictionary."
+            )
 
     def get_parameters(self):
         return self.parameters
@@ -66,7 +71,7 @@ class Copula(ABC):
     def update_parameters(self, **kwargs):
         for key in kwargs.keys():
             if key not in self.parameters.keys():
-                raise ValueError('Wrong parameter name.')
+                raise ValueError("Wrong parameter name.")
             self.parameters[key] = kwargs[key]
 
     @staticmethod
@@ -75,6 +80,6 @@ class Copula(ABC):
         Check that marginals contains 2 continuous univariate distributions.
         """
         if len(marginals) != 2:
-            raise ValueError('Maximum dimension for the Copula is 2.')
+            raise ValueError("Maximum dimension for the Copula is 2.")
         if not all(isinstance(m, DistributionContinuous1D) for m in marginals):
-            raise ValueError('Marginals should be 1d continuous distributions.')
+            raise ValueError("Marginals should be 1d continuous distributions.")

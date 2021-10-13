@@ -6,7 +6,7 @@ from UQpy.utilities.ValidationTypes import *
 
 @dataclass
 class ISInput(SamplingInput):
-    pdf_target:  callable = None
+    pdf_target: callable = None
     log_pdf_target: callable = None
     args_target: tuple = None
     proposal: Union[None, Distribution] = None

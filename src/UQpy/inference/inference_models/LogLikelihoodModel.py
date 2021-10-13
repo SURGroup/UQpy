@@ -5,10 +5,9 @@ from UQpy.inference.inference_models.baseclass.InferenceModel import *
 
 class LogLikelihoodModel(InferenceModel):
     @beartype
-    def __init__(self,
-                 parameters_number: PositiveInteger,
-                 log_likelihood,
-                 name: str = ''):
+    def __init__(
+        self, parameters_number: PositiveInteger, log_likelihood, name: str = ""
+    ):
 
         self.name = name
         self.log_likelihood = log_likelihood
@@ -19,5 +18,7 @@ class LogLikelihoodModel(InferenceModel):
         if not isinstance(log_like_values, np.ndarray):
             log_like_values = np.array(log_like_values)
         if log_like_values.shape != (params.shape[0],):
-            raise ValueError('UQpy: Likelihood function should output a (nsamples, ) ndarray of likelihood values.')
+            raise ValueError(
+                "UQpy: Likelihood function should output a (nsamples, ) ndarray of likelihood values."
+            )
         return log_like_values

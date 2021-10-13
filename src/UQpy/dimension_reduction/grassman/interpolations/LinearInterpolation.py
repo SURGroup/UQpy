@@ -1,11 +1,12 @@
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator
 
-from UQpy.dimension_reduction.grassman.interpolations.baseclass.InterpolationMethod import InterpolationMethod
+from UQpy.dimension_reduction.grassman.interpolations.baseclass.InterpolationMethod import (
+    InterpolationMethod,
+)
 
 
 class LinearInterpolation(InterpolationMethod):
-
     def interpolate(self, coordinates, samples, point):
 
         """
@@ -32,18 +33,20 @@ class LinearInterpolation(InterpolationMethod):
 
         """
 
-        if not isinstance(coordinates, list) and not isinstance(coordinates, np.ndarray):
-            raise TypeError('UQpy: `coordinates` must be either list or ndarray.')
+        if not isinstance(coordinates, list) and not isinstance(
+            coordinates, np.ndarray
+        ):
+            raise TypeError("UQpy: `coordinates` must be either list or ndarray.")
         else:
             coordinates = np.array(coordinates)
 
         if not isinstance(samples, list) and not isinstance(samples, np.ndarray):
-            raise TypeError('UQpy: `samples` must be either list or ndarray.')
+            raise TypeError("UQpy: `samples` must be either list or ndarray.")
         else:
             samples = np.array(samples)
 
         if not isinstance(point, list) and not isinstance(point, np.ndarray):
-            raise TypeError('UQpy: `point` must be either list or ndarray.')
+            raise TypeError("UQpy: `point` must be either list or ndarray.")
         else:
             point = np.array(point)
 

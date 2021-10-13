@@ -28,7 +28,8 @@ class Poisson(DistributionDiscrete1D):
 
     * ``cdf``, ``pmf``, ``log_pmf``, ``icdf``, ``rvs``, ``moments``.
     """
+
     @beartype
-    def __init__(self, mu: Union[None, float, int], loc: Union[None, float, int] = 0.):
-        super().__init__(mu=mu, loc=loc, ordered_parameters=('mu', 'loc'))
+    def __init__(self, mu: Union[None, float, int], loc: Union[None, float, int] = 0.0):
+        super().__init__(mu=mu, loc=loc, ordered_parameters=("mu", "loc"))
         self._construct_from_scipy(scipy_name=stats.poisson)

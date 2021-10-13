@@ -3,12 +3,18 @@ from UQpy.surrogates.kriging.regression_models.baseclass.Regression import Regre
 
 
 class Quadratic(Regression):
-
     def r(self, s):
         s = np.atleast_2d(s)
-        fx = np.zeros([np.size(s, 0), int((np.size(s, 1) + 1) * (np.size(s, 1) + 2) / 2)])
+        fx = np.zeros(
+            [np.size(s, 0), int((np.size(s, 1) + 1) * (np.size(s, 1) + 2) / 2)]
+        )
         jf = np.zeros(
-            [np.size(s, 0), np.size(s, 1), int((np.size(s, 1) + 1) * (np.size(s, 1) + 2) / 2)])
+            [
+                np.size(s, 0),
+                np.size(s, 1),
+                int((np.size(s, 1) + 1) * (np.size(s, 1) + 2) / 2),
+            ]
+        )
         for i in range(np.size(s, 0)):
             temp = np.hstack((1, s[i, :]))
             for j in range(np.size(s, 1)):
@@ -25,5 +31,7 @@ class Quadratic(Regression):
                     h_ = tmp[:, j::]
                 else:
                     h_ = np.hstack((h_, tmp[:, j::]))
-            jf[i, :, :] = np.hstack((np.zeros([np.size(s, 1), 1]), np.eye(np.size(s, 1)), h_))
+            jf[i, :, :] = np.hstack(
+                (np.zeros([np.size(s, 1), 1]), np.eye(np.size(s, 1)), h_)
+            )
         return fx, jf

@@ -2,7 +2,6 @@ from UQpy.surrogates.kriging.correlation_models.baseclass.Correlation import *
 
 
 class Spline(Correlation):
-
     def c(self, x, s, params, dt=False, dx=False):
         # x_, s_ = np.atleast_2d(x_), np.atleast_2d(s_)
         # # Create stack matrix, where each block is x_i with all s
@@ -18,8 +17,12 @@ class Spline(Correlation):
         dx_derivs = np.sign(stack) * params
 
         # Initialize empty sigma and dsigma matrices
-        sigma = np.ones((zeta_matrix.shape[0], zeta_matrix.shape[1], zeta_matrix.shape[2]))
-        dsigma = np.ones((zeta_matrix.shape[0], zeta_matrix.shape[1], zeta_matrix.shape[2]))
+        sigma = np.ones(
+            (zeta_matrix.shape[0], zeta_matrix.shape[1], zeta_matrix.shape[2])
+        )
+        dsigma = np.ones(
+            (zeta_matrix.shape[0], zeta_matrix.shape[1], zeta_matrix.shape[2])
+        )
 
         # Loop over cases to create zeta_matrix and subsequent dR matrices
         for i in range(zeta_matrix.shape[0]):
