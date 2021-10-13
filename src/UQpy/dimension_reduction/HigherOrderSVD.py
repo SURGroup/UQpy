@@ -1,5 +1,4 @@
 import logging
-from UQpy.dimension_reduction.SVD import SVD
 from UQpy.utilities.ValidationTypes import *
 import numpy as np
 

@@ -21,7 +21,7 @@ class Nataf:
 
     **Inputs:**
 
-    * **dist_object** ((list of ) ``Distribution`` object(s)):
+    * **distributions** ((list of ) ``Distribution`` object(s)):
         Probability distribution of each random variable. Must be an object of type
         ``DistributionContinuous1D`` or ``JointInd``.
 
@@ -83,10 +83,6 @@ class Nataf:
 
         Default: 100
 
-    * **verbose** (`Boolean`):
-        A boolean declaring whether to write text to the terminal.
-
-        Default: ``False``
 
     **Attributes:**
 

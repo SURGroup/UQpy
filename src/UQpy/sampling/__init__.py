@@ -3,15 +3,14 @@ This module contains functionality for all the sampling methods supported in ``U
 
 The module currently contains the following classes:
 
-- ``MCS``: Class to perform Monte Carlo sampling.
-- ``LHS``: Class to perform Latin hypercube sampling.
-- ``mcmc``: Class to perform Markov Chain Monte Carlo sampling.
-- ``IS``: Class to perform Importance sampling.
-- ``AKMCS``: Class to perform adaptive kriging Monte Carlo sampling.
+- ``MonteCarloSampling``: Class to perform Monte Carlo sampling.
+- ``LatinHypercubeSampling``: Class to perform Latin hypercube sampling.
+- ``MCMC``: Class to perform Markov Chain Monte Carlo sampling.
+- ``ImportanceSampling``: Class to perform Importance sampling.
+- ``AdaptiveKriging``: Class to perform adaptive kriging Monte Carlo sampling.
 - ``StratifiedSampling``: Class to perform stratified sampling.
-- ``refined_stratified_sampling``: Class to perform refined stratified sampling.
-- ``strata``: Class to perform stratification of the unit hypercube.
-- ``Simplex``: Class to uniformly sample from a simplex.
+- ``RefinedStratifiedSampling``: Class to perform refined stratified sampling.
+- ``SimplexSampling``: Class to uniformly sample from a simplex.
 """
 
 from UQpy.sampling.mcmc import *

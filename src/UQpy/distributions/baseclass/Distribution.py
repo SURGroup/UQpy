@@ -11,8 +11,8 @@ class Distribution(ABC):
     inverse, drawing random samples, computing moments and parameter fitting. However, for user-defined distributions,
     any desired method can be constructed into the child class structure.
 
-    For bookkeeping purposes, all ``Distribution`` objects possesses ``get_params`` and ``update_params`` methods. These
-    are described in more detail below.
+    For bookkeeping purposes, all ``Distribution`` objects possesses ``get_parameters`` and ``update_parameters``
+    methods. These are described in more detail below.
 
     Any ``Distribution`` further inherits from one of the following classes:
 
@@ -34,11 +34,11 @@ class Distribution(ABC):
 
     **Methods:**
 
-    **update_parameters** *(kwargs)*
+    **update_parameters** *(**kwargs)*
         Update the parameters of a ``distributions`` object.
 
-        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a
-        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
+        To update the parameters of a ``JointIndependent`` or a ``JointCopula`` distribution, each parameter is assigned
+        a unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
         marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
         **Input:**

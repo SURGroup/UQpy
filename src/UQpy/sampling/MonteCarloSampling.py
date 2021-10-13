@@ -23,7 +23,7 @@ class MonteCarloSampling:
         Number of samples to be drawn from each distribution.
 
         The ``run`` method is automatically called if `samples_number` is provided. If `samples_number` is not provided,
-         then the ``MonteCarloSampling`` object is created but samples are not generated.
+        then the ``MonteCarloSampling`` object is created but samples are not generated.
 
     * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
         Random seed used to initialize the pseudo-random number generator. Default is None.
@@ -36,17 +36,17 @@ class MonteCarloSampling:
     * **samples** (`ndarray` or `list`):
         Generated samples.
 
-        If a list of ``DistributionContinuous1D`` objects is provided for ``dist_object``, then `samples` is an
-        `ndarray` with ``samples.shape=(nsamples, len(dist_object))``.
+        If a list of ``DistributionContinuous1D`` objects is provided for ``distributions``, then `samples` is an
+        `ndarray` with ``samples.shape=(samples_number, len(distributions))``.
 
-        If a ``DistributionContinuous1D`` object is provided for ``dist_object`` then `samples` is an array with
-        `samples.shape=(nsamples, 1)``.
+        If a ``DistributionContinuous1D`` object is provided for ``distributions`` then `samples` is an array with
+        `samples.shape=(samples_number, 1)``.
 
-        If a ``DistributionContinuousND`` object is provided for ``dist_object`` then `samples` is an array with
-        ``samples.shape=(nsamples, ND)``.
+        If a ``DistributionContinuousND`` object is provided for ``distributions`` then `samples` is an array with
+        ``samples.shape=(samples_number, ND)``.
 
         If a list of mixed ``DistributionContinuous1D`` and ``DistributionContinuousND`` objects is provided then
-        `samples` is a list with ``len(samples)=nsamples`` and ``len(samples[i]) = len(dist_object)``.
+        `samples` is a list with ``len(samples)=samples_number`` and ``len(samples[i]) = len(distributions)``.
 
     * **samplesU01** (`ndarray` (`list`)):
         Generated samples transformed to the unit hypercube.
@@ -60,8 +60,8 @@ class MonteCarloSampling:
         Execute the random sampling in the ``MonteCarloSampling`` class.
 
         The ``run`` method is the function that performs random sampling in the ``MonteCarloSampling`` class. If
-        `nsamples` is provided, the ``run`` method is automatically called when the ``MonteCarloSampling`` object is
-        defined. The user may also call the ``run`` method directly to generate samples. The ``run`` method of the
+        `samples_number` is provided, the ``run`` method is automatically called when the ``MonteCarloSampling`` object
+        is defined. The user may also call the ``run`` method directly to generate samples. The ``run`` method of the
         ``MonteCarloSampling`` class can be  invoked many times and each time the generated samples are appended to the
         existing samples.
 

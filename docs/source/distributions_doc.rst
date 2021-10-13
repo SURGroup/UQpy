@@ -75,7 +75,7 @@ In ``UQpy``, univariate discrete distributions inherit from the ``DistributionDi
 List of 1D Discrete Distributions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The following is a list of all 1D continuous distributions currently available in ``UQpy``.
+The following is a list of all 1D discrete distributions currently available in ``UQpy``.
 
 .. autoclass:: UQpy.distributions.collection.Binomial
 
@@ -89,7 +89,7 @@ In ``UQpy``, multivariate distributions inherit from the ``DistributionND`` clas
 .. autoclass:: UQpy.distributions.baseclass.DistributionND
 
 
-``UQpy`` has some inbuilt multivariate distributions, which are directly child classes of ``DistributionND``. Additionally, joint distributions can be built from their marginals through the use of the ``JointInd`` and ``JointCopula`` classes described below.
+``UQpy`` has some inbuilt multivariate distributions, which are directly child classes of ``DistributionND``. Additionally, joint distributions can be built from their marginals through the use of the ``JointIndependent`` and ``JointCopula`` classes described below.
 
 List of Multivariate Distributions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

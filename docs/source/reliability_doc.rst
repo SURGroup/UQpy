@@ -30,7 +30,7 @@ and in the second stage is accepted/rejected based on whether the sample belongs
 SubsetSimulation Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.Reliability.SubsetSimulation
+.. autoclass:: UQpy.reliability.SubsetSimulation
     :members: 
 
 
@@ -73,26 +73,26 @@ where :math:`\kappa_i` is the `i-th`  curvature.
 
 The ``TaylorSeries`` class is the parent class of the ``FORM`` and ``SORM`` classes that perform the FORM and SORM, respectively. These classes can be imported in a python script using the following command:
 
->>> from UQpy.Reliability import FORM, SORM
+>>> from UQpy.reliability.taylor_series import FORM, SORM
 
 
 TaylorSeries Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.Reliability.TaylorSeries
+.. autoclass:: UQpy.reliability.taylor_series.baseclass.TaylorSeries
     :members: 
 
 FORM
 ~~~~~~~~~~
 
-.. autoclass:: UQpy.Reliability.FORM
+.. autoclass:: UQpy.reliability.taylor_series.FORM
     :members: 
 	
 SORM
 ~~~~~~~~~~
 
 
-.. autoclass:: UQpy.Reliability.SORM
+.. autoclass:: UQpy.reliability.taylor_series.SORM
     :members: 
 	
 **References:**

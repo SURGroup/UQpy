@@ -6,9 +6,9 @@ The module currently contains the following classes:
 - ``stochastic_reduced_order_models``: Class to estimate a discrete approximation for a continuous random variable using
     Stochastic Reduced Order Model.
 
-- ``kriging``: Class to generate an approximate surrogate model using kriging.
+- ``Kriging``: Class to generate an approximate surrogate model using kriging.
 
-- ``polynomial_chaos``: Class to generate an approximate surrogate model using Polynomial chaos.
+- ``PolynomialChaosExpansion``: Class to generate an approximate surrogate model using Polynomial chaos.
 
 """
 

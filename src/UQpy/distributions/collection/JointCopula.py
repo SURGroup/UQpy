@@ -25,10 +25,10 @@ class JointCopula(DistributionND):
     (i.e., if the copula possesses the necessary ``evaluate_cdf`` and ``evaluate_pdf`` methods).
 
     The parameters of the distribution are only stored as attributes of the marginals/copula objects. However, the
-    ``get_params`` and ``update_params`` methods can still be used for the joint. Note that each parameter of the joint
-    is assigned a unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of
-    the marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`); and `key_c` for copula
-    parameters.
+    ``get_parameters`` and ``update_parameters`` methods can still be used for the joint. Note that each parameter of
+    the joint is assigned a unique string identifier as `key_index` - where `key` is the parameter name and `index` the
+    index of the marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`); and `key_c` for
+    copula parameters.
 
     """
     @beartype
@@ -94,8 +94,8 @@ class JointCopula(DistributionND):
         """
         Return the parameters of a ``distributions`` object.
 
-        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a
-        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
+        To update the parameters of a ``JointIndependent`` or a ``JointCopula`` distribution, each parameter is assigned
+        a unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
         marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
         **Output/Returns:**
@@ -116,8 +116,8 @@ class JointCopula(DistributionND):
         """
         Update the parameters of a ``distributions`` object.
 
-        To update the parameters of a ``JointInd`` or a ``JointCopula`` distribution, each parameter is assigned a
-        unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
+        To update the parameters of a ``JointIndependent`` or a ``JointCopula`` distribution, each parameter is assigned
+        a unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
         marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
         **Input:**

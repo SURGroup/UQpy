@@ -14,7 +14,7 @@ class SROM:
     * **samples** (`ndarray`):
         An array/list of samples corresponding to the points at which the stochastic_reduced_order_models is defined.
 
-    * **target_dist_object** ((list of) ``Distribution`` object(s)):
+    * **target_distributions** ((list of) ``Distribution`` object(s)):
         A list of distribution objects for each random variable.
 
     * **moments** (`list` of `float`):

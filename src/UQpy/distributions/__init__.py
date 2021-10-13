@@ -10,6 +10,7 @@ The module contains the following parent classes - probability distributions are
 classes:
 
 - ``Distribution``: Parent class to all distributions.
+- ``Distribution1D``: Parent class to all univariate distributions.
 - ``DistributionContinuous1D``: Parent class to 1-dimensional continuous probability distributions.
 - ``DistributionDiscrete1D``: Parent class to 1-dimensional discrete probability distributions.
 - ``DistributionND``: Parent class to multivariate probability distributions.

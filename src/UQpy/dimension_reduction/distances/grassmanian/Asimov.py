@@ -1,29 +1,16 @@
+from typing import Union
+
 import numpy as np
 
 from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
 
 
 class Asimov(RiemannianDistance):
+    """
 
-    def compute_distance(self, point1, point2):
-        """
-                Projection distance.
+    """
 
-                **Input:**
-
-                * **x0** (`list` or `ndarray`)
-                    Point on the Grassmann manifold.
-
-                * **x1** (`list` or `ndarray`)
-                    Point on the Grassmann manifold.
-
-                **Output/Returns:**
-
-                * **distance** (`float`)
-                    Projection distance between x0 and x1.
-
-                """
-
+    def compute_distance(self, point1: Union[list, float], point2)->float:
         point1, point2 = RiemannianDistance.check_points(point1, point2)
 
         rank1 = min(np.shape(point1))

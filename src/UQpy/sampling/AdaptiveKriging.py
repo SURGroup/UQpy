@@ -20,7 +20,7 @@ class AdaptiveKriging:
 
     **Inputs:**
 
-    * **dist_object** ((list of) ``Distribution`` object(s)):
+    * **distributions** ((list of) ``Distribution`` object(s)):
         List of ``Distribution`` objects corresponding to each random variable.
 
     * **runmodel_object** (``RunModel`` object):
@@ -31,36 +31,36 @@ class AdaptiveKriging:
 
         Either `samples` or `nstart` must be provided.
 
-    * **krig_object** (`class` object):
+    * **surrogate** (`class` object):
         A kriging surrogate model, this object must have ``fit`` and ``predict`` methods.
 
         May be an object of the ``UQpy`` ``kriging`` class or an object of the ``scikit-learn``
         ``GaussianProcessRegressor``
 
-    * **nsamples** (`int`):
+    * **samples_number** (`int`):
         Total number of samples to be drawn (including the initial samples).
 
-        If `nsamples` and `samples` are provided when instantiating the class, the ``run`` method will automatically be
-        called. If either `nsamples` or `samples` is not provided, ``AKMCS`` can be executed by invoking the ``run``
-        method and passing `nsamples`.
+        If `samples_number` and `samples` are provided when instantiating the class, the ``run`` method will
+        automatically be called. If either `samples_number` or `samples` is not provided, ``AdaptiveKriging`` can be
+        executed by invoking the ``run`` method and passing `samples_number`.
 
-    * **nlearn** (`int`):
+    * **learning_samples_number** (`int`):
         Number of samples generated for evaluation of the learning function. Samples for the learning set are drawn
-        using ``LHS``.
+        using ``LatinHypercubeSampling``.
 
     * **qoi_name** (`dict`):
         Name of the quantity of interest. If the quantity of interest is a dictionary, this is used to convert it to
         a list
 
-    * **learning_function** (`str` or `function`):
+    * **learning_function** (`LearningFunction`):
         Learning function used as the selection criteria to identify new samples.
 
         Built-in options:
-                    1. 'U' - U-function \n
-                    2. 'EFF' - Expected Feasibility Function \n
-                    3. 'Weighted-U' - Weighted-U function \n
-                    4. 'EIF' - Expected Improvement Function \n
-                    5. 'EGIF' - Expected Global Improvement Fit \n
+                    1. UFunction \n
+                    2. ExpectedFeasibility \n
+                    3. WeightedUFunction \n
+                    4. ExpectedImprovement \n
+                    5. ExpectedGlobalImprovementFit \n
 
         `learning_function` may also be passed as a user-defined callable function. This function must accept a kriging
         surrogate model object with ``fit`` and ``predict`` methods, the set of learning points at which to evaluate the
@@ -77,19 +77,6 @@ class AdaptiveKriging:
 
         If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
         object itself can be passed directly.
-
-    * **verbose** (`Boolean`):
-        A boolean declaring whether to write text to the terminal.
-
-        Default value: False.
-
-    * **kwargs**
-        Used to pass parameters to `learning_function`.
-
-        For built-in `learning_functions`, see the requisite inputs in the method list below.
-
-        For user-defined `learning_functions`, these will be defined by the requisite inputs to the user-defined method.
-
 
     **Attributes:**
 
@@ -177,22 +164,22 @@ class AdaptiveKriging:
 
     def run(self, samples_number, samples=None, append_samples=True, initial_samples_number=None):
         """
-        Execute the ``AKMCS`` learning iterations.
+        Execute the ``Adaptivekriging`` learning iterations.
 
-        The ``run`` method is the function that performs iterations in the ``AKMCS`` class. If `nsamples` is
-        provided when defining the ``AKMCS`` object, the ``run`` method is automatically called. The user may also
-        call the ``run`` method directly to generate samples. The ``run`` method of the ``AKMCS`` class can be invoked
-        many times.
+        The ``run`` method is the function that performs iterations in the ``Adaptivekriging`` class. If
+        `samples_number` is provided when defining the ``Adaptivekriging`` object, the ``run`` method is automatically
+        called. The user may also call the ``run`` method directly to generate samples. The ``run`` method of the
+        ``Adaptivekriging`` class can be invoked many times.
 
         **Inputs:**
 
-        * **nsamples** (`int`):
+        * **samples_number** (`int`):
             Total number of samples to be drawn (including the initial samples).
 
         * **samples** (`ndarray`):
             Samples at which to evaluate the model.
 
-        * **nstart** (`int`):
+        * **initial_samples_number** (`int`):
             Number of initial samples, randomly generated using ``LHS`` class.
 
             Either `samples` or `nstart` must be provided.
@@ -209,7 +196,7 @@ class AdaptiveKriging:
         **Output/Returns:**
 
         The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the
-        ``AKMCS`` class.
+        ``AdaptiveKriging`` class.
 
         """
 

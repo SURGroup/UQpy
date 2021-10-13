@@ -1,6 +1,4 @@
 import itertools
-
-from UQpy.dimension_reduction.QR import QR
 from UQpy.dimension_reduction.grassman.manifold_projections.baseclass.ManifoldProjection import ManifoldProjection
 from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
@@ -54,8 +52,7 @@ class QrProjection(ManifoldProjection):
         q = []
         r = []
         for i in range(points_number):
-            orthonormal_matrix, upper_triangular = \
-                QR.factorize(input_points[i], int(ranks[i]))
+            orthonormal_matrix, upper_triangular = np.linalg.qr(input_points[i])
             q.append(orthonormal_matrix)
             r.append(upper_triangular)
         self.q = q

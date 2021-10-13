@@ -14,7 +14,7 @@ from UQpy.reliability.taylor_series.baseclass.TaylorSeries import TaylorSeries
 class SORM(TaylorSeries):
     """
     A class to perform the Second Order reliability Method. This class is used to correct the estimated FORM probability
-     using second-order information.
+    using second-order information.
     ``SORM`` is a child class of the ``taylor_series`` class.
     **Input:**
     The ``SORM`` class requires an object of type ``FORM`` as input.

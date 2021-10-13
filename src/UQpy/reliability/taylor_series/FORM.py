@@ -14,10 +14,13 @@ class FORM(TaylorSeries):
     """
     A class perform the First Order reliability Method. The ``run`` method of the ``FORM`` class can be invoked many
     times and each time the results are appended to the existing ones.
-    This is a child class of the ``taylor_series`` class.
+    This is a child class of the ``Taylor_series`` class.
+
     **Input:**
-    See ``taylor_series`` class.
+
+    See ``Taylor_series`` class.
     **Attributes:**
+
     * **Pf_form** (`float`):
         First-order probability of failure estimate.
     * **beta_form** (`float`):

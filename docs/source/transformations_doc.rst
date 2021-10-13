@@ -37,7 +37,7 @@ The ``Nataf`` class also allows for the inverse of the Nataf transformation, i.e
 Nataf Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.Transformations.Nataf
+.. autoclass:: UQpy.transformations.Nataf
     :members: 
 
 
@@ -53,7 +53,7 @@ where :math:`\mathbf{H}` is the lower triangular matrix resulting from the Chole
 Correlate Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.Transformations.Correlate
+.. autoclass:: UQpy.transformations.Correlate
     :members:
 	
 Decorrelate
@@ -66,7 +66,7 @@ Decorrelate
 Decorrelate Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.Transformations.Decorrelate
+.. autoclass:: UQpy.transformations.Decorrelate
     :members:
 
 

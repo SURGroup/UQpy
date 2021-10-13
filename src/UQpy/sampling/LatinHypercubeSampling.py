@@ -12,16 +12,16 @@ from UQpy.distributions import DistributionContinuous1D, JointIndependent
 class LatinHypercubeSampling:
 
     """
-    Perform Latin hypercube sampling (MCS) of random variables.
+    Perform Latin hypercube sampling (LHS) of random variables.
 
     **Input:**
 
     * **distributions** ((list of) ``Distribution`` object(s)):
         List of ``Distribution`` objects corresponding to each random variable.
 
-        All distributions in ``LHS`` must be independent. ``LHS`` does not generate correlated random variables.
-        Therefore, for multi-variate designs the `dist_object` must be a list of ``DistributionContinuous1D`` objects
-        or an object of the ``JointInd`` class.
+        All distributions in ``LatinHypercubeSampling`` must be independent. ``LatinHypercubeSampling`` does not
+        generate correlated random variables. Therefore, for multi-variate designs the `dist_object` must be a list of
+        ``DistributionContinuous1D`` objects or an object of the ``JointInd`` class.
 
     * **samples_number** (`int`):
         Number of samples to be drawn from each distribution.
@@ -33,7 +33,7 @@ class LatinHypercubeSampling:
                 2. 'Centered' - points only at the centre. \n
                 3. 'MaxiMin' - maximizing the minimum distance between points. \n
                 4. 'MinCorrelation' - minimizing the correlation between the points. \n
-                5. User-defined method.
+                5. User-defined criterion class.
 
     **Attributes:**
 
@@ -73,7 +73,7 @@ class LatinHypercubeSampling:
     def run(self, samples_number: PositiveInteger):
 
         """
-        Execute the random sampling in the ``LHS`` class.
+        Execute the random sampling in the ``LatinHypercubeSampling`` class.
 
         The ``run`` method is the function that performs random sampling in the ``LatinHypercubeSampling`` class. If
         `samples_number` is provided, the ``run`` method is automatically called when the ``LatinHypercubeSampling``

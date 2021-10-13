@@ -21,12 +21,17 @@ MonteCarloSampling Class Descriptions
 Latin Hypercube Sampling
 ----
 
-The ``LatinHypercubeSampling`` class generates random samples from a specified probability distribution(s) using Latin hypercube sampling. LHS has the advantage that the samples generated are uniformly distributed over each marginal distribution. LHS is perfomed by dividing the range of each random variable into N bins with equal probability mass, where N is the required number of samples, generating one sample per bin, and then randomly pairing the samples.
+The ``LatinHypercubeSampling`` class generates random samples from a specified probability distribution(s) using Latin hypercube sampling. LatinHypercubeSampling has the advantage that the samples generated are uniformly distributed over each marginal distribution. LatinHypercubeSampling is perfomed by dividing the range of each random variable into N bins with equal probability mass, where N is the required number of samples, generating one sample per bin, and then randomly pairing the samples.
 
 Adding New Latin Hypercube Design Criteria
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``LatinHypercubeSampling`` class offers a variety of methods for pairing the samples in a Latin hypercube design. These are specified by the `criterion` parameter (i.e. 'random', 'centered', 'minmax', 'correlate'). However, adding a new method is straightforward. This is done by creating a new method that contains the algorithm for pairing the samples. This method takes as input the randomly generated samples in equal probability bins in each dimension and returns a set of samples that is paired according to the user's desired criterion. The user may also pass criterion-specific parameters into the custom method. These parameters are input to the ``LHS`` class through the `**kwargs`. The output of this function should be a numpy array of at least two-dimensions with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined criterion is given below:
+The ``LatinHypercubeSampling`` class offers a variety of methods for pairing the samples in a Latin hypercube design. These are specified by the `criterion` parameter (i.e. Random, Centered, MaxiMin, MinCorrelation).
+Each one of the Criteria classes can be found in ``latin_hypercube_criteria`` folder, with the ``Criterion`` baseclass defining their common interface. As a result, adding a new method is straightforward.
+This is done by creating a new class that implements the ``Criterion`` abstract baseclass. The base class requires the creation of a ``generate_samples`` method that contains the algorithm for pairing the samples.
+This method retrieves the randomly generated samples generated in the baseclass in equal probability bins in each dimension and returns a set of samples that is paired according to the user's desired criterion.
+The user may also pass criterion-specific parameters into the ``__init__`` method of the generated class.
+The output of this function should be a numpy array of at least two-dimensions with the first dimension being the number of samples and the second dimension being the number of variables . An example user-defined criterion is given below:
 
 
 >>> class UserCriterion(Criterion):
@@ -71,29 +76,22 @@ where :math:`V_{i}\le 1` is the volume of stratum :math:`i` in the unit hypercub
 
 ``UQpy`` supports several stratified sampling variations that vary from conventional stratified sampling designs to advanced gradient informed methods for adaptive stratified sampling. Stratified sampling capabilities are built in ``UQpy`` from three sets of classes. These class structures facilitate a highly flexible and varied range of stratified sampling designs that can be extended in a straightforward way. Specifically, the existing classes allow stratification of n-dimensional parameter spaces based on three common spatial discretizations: a rectilinear decomposition into hyper-rectangles (orthotopes), a Voronoi decomposition, and a Delaunay decomposition. The three parent classes are:
 
-1. The ``Strata`` class defines the geometric structure of the stratification of the parameter space and it has three existing subclasses - ``RectangularStrata``, ``VoronoiStrata``, and ``DelaunayStrata`` that correspond to geometric decompositions of the parameter space based on rectilinear strata of orthotopes, strata composed of Voronoi cells, and strata composed of Delaunay simplexes respectively.
+1. The ``Strata`` class defines the geometric structure of the stratification of the parameter space and it has three existing subclasses - ``Rectangular``, ``Voronoi``, and ``Delaunay`` that correspond to geometric decompositions of the parameter space based on rectilinear strata of orthotopes, strata composed of Voronoi cells, and strata composed of Delaunay simplexes respectively. These classes live in the ``UQpy.utilities.strata`` folder.
 
-2. The ``STS`` class defines a set of subclasses used to draw samples from strata defined by a ``Strata`` class object.
+2. The ``StratifiedSampling`` class defines a set of subclasses used to draw samples from strata defined by a ``Strata`` class object.
 
-3. The ``RSS`` class defines a set of subclasses for refinement of ``STS`` stratified sampling designs.
+3. The ``RefinedStratifiedSampling`` class defines a set of subclasses for refinement of ``StratifiedSampling`` stratified sampling designs.
 
 New Stratified Sampling Methods
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Extension of the stratified sampling capabilities in ``UQpy`` can be performed through subclassing from the three main classes. First, the user can define a new geometric decomposition of the parameter space by creating a new subclass of the ``Strata`` class. To draw samples from this  new stratification, the user can define a new subclass of the ``STS`` class. Finally, to enable refinement of the strata based on any user-specified criteria the user can define a new subclass of the ``RSS`` class. 
+Extension of the stratified sampling capabilities in ``UQpy`` can be performed through subclassing from the three main classes. First, the user can define a new geometric decomposition of the parameter space by creating a new subclass of the ``Strata`` class. To draw samples from this  new stratification, the user can define a new subclass of the ``StratifiedSampling`` class. Finally, to enable refinement of the strata based on any user-specified criteria the user can define a new subclass of the ``RefinedStratifiedSampling`` class.
 
 In summary:
 
-To implement a new stratified sampling method based on a new stratification, the user must write two new classes:
+To implement a new stratified sampling method based on a new stratification, the user must write one new class:
 
 1. A new subclass of the ``Strata`` class defining the new decomposition.
-2. A new subclass of the ``STS`` class to perform the sampling from the newly design ``Strata`` class.
-
-To implement a new refined stratified sampling method based on a new stratified, the user must write three new classes:
-
-1. A new subclass of the ``Strata`` class defining the new decomposition.
-2. A new subclass of the ``STS`` class to perform the sampling from the newly design ``Strata`` class.
-3. A new subclass of the ``RSS`` class to perform the stratum refinement and subsequent sampling.
 
 The details of these subclasses and their requirements are outlined in the sections below discussing the respective classes.
 
@@ -101,22 +99,22 @@ The details of these subclasses and their requirements are outlined in the secti
 Strata Class
 ^^^^^^^^^^^^^
 
-The ``Strata`` class is the parent class that defines the geometric decomposition of the parameter space. All geometric decompositions in the ``Strata`` class are performed on the `n`-dimensional unit :math:`[0, 1]^n` hypercube. Specific stratifications are performed by subclassing the ``Strata`` class. There are currently three stratifications available in the ``Strata`` class, defined through the subclasses ``RectangularStrata``, ``VoronoiStrata``, and ``DelaunayStrata``. 
+The ``Strata`` class is the parent class that defines the geometric decomposition of the parameter space. All geometric decompositions in the ``Strata`` class are performed on the `n`-dimensional unit :math:`[0, 1]^n` hypercube. Specific stratifications are performed by subclassing the ``Strata`` class. There are currently three stratifications available in the ``Strata`` class, defined through the subclasses ``Rectangular``, ``Voronoi``, and ``Delaunay``.
 
 
 Strata Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.SampleMethods.Strata
+.. autoclass:: UQpy.utilities.strata.baseclass.strata
     :members:
 
-.. autoclass:: UQpy.SampleMethods.RectangularStrata
+.. autoclass:: UQpy.utilities.strata.Rectangular
     :members:
 
-.. autoclass:: UQpy.SampleMethods.VoronoiStrata
+.. autoclass:: UQpy.utilities.strata.Voronoi
     :members:
 
-.. autoclass:: UQpy.SampleMethods.DelaunayStrata
+.. autoclass:: UQpy.utilities.strata.Delaunay
     :members:
 
 Adding a new ``Strata`` class
@@ -125,64 +123,37 @@ Adding a new ``Strata`` class
 Adding a new type of stratification requires creating a new subclass of the ``Strata`` class that defines the desired geometric decomposition. This subclass must have a ``stratify`` method that overwrites the corresponding method in the parent class and performs the stratification.
 
 
-STS Class
+StratifiedSampling Class
 ^^^^^^^^^^^
 
-The ``STS`` class is the parent class for stratified sampling. The various ``STS`` classes generate random samples from a specified probability distribution(s) using stratified sampling with strata specified by an object of one of the ``Strata`` classes. The ``STS`` class currently has three child classes - ``RectangularSTS``, ``VoronoiSTS``, and ``DelaunaySTS`` - corresponding to stratified sampling methods based rectangular, Voronoi, and Delaunay strata respectively. The following details these classes.
+The ``StratifiedSampling`` class is the parent class for stratified sampling. The various ``StratifiedSampling`` classes generate random samples from a specified probability distribution(s) using stratified sampling with strata specified by an object of one of the ``Strata`` classes.
 
-STS Class Descriptions
+StratifiedSampling Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.SampleMethods.STS
+.. autoclass:: UQpy.sampling.StratifiedSampling
     :members:
-
-.. autoclass:: UQpy.SampleMethods.RectangularSTS
-    :members:
-
-.. autoclass:: UQpy.SampleMethods.VoronoiSTS
-    :members:
-
-.. autoclass:: UQpy.SampleMethods.DelaunaySTS
-    :members:
-
-
-Adding a new ``STS`` class
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Adding a new stratified sampling method first requires that an appropriate ``Strata`` class exists. If the new method is based on rectangular, Voronoi, or Delaunay stratification one of the existing ``Strata`` classes can be used. If it relies on a different type of stratification, then a new ``Strata`` class must be written first. Next, the new stratified sampling method must be written as a new subclass of the ``STS`` class containing a ``create_samplesu01`` method that performs the stratified sampling on the unit hypercube. This method must take input that are consistent with the ``create_samplesu01`` method described in the ``STS`` class above.
 
 
 Refined Stratified Sampling
 -----------------------------
 
-Refined Stratified Sampling (RSS) is a sequential sampling procedure that adaptively refines the stratification of the parameter space to add samples. There are four variations of RSS currently available in ``UQpy``. First, the procedure works with either rectangular stratification (i.e. using ``RectangularStrata``) or Voronoi stratification (i.e. using ``VoronoiStrata``). For each of these, two refinement procedures are available. The first is a randomized algorithm where strata are selected at random according to their probability weight. This algorithm is described in [10]_. The second is a gradient-enhanced version (so-called GE-RSS) that draws samples in stata that possess both large probability weight and have high variance. This algorithm is described in [11]_.
+Refined Stratified Sampling (RSS) is a sequential sampling procedure that adaptively refines the stratification of the parameter space to add samples. There are four variations of RSS currently available in ``UQpy``. First, the procedure works with either rectangular stratification (i.e. using ``Rectangular``) or Voronoi stratification (i.e. using ``Voronoi``). For each of these, two refinement procedures are available. The first is a randomized algorithm where strata are selected at random according to their probability weight. This algorithm is described in [10]_. The second is a gradient-enhanced version (so-called GE-RSS) that draws samples in stata that possess both large probability weight and have high variance. This algorithm is described in [11]_.
 
-RSS Class
+Refined Stratified Sampling Class
 ^^^^^^^^^^
 
-All variations of Refined Stratifed Sampling are implemented in the ``RSS`` class. ``RSS`` is the parent class that includes all Refined Stratified Sampling algorithms, which are implemented as child class, specifically ``RectangularRSS`` and ``VoronoiRSS``. The details of these classes are provided below. 
+All variations of Refined Stratifed Sampling are implemented in the ``RefinedStratifiedSampling`` class.
 
-Extension of the RSS class for new algorithms can be accomplished by adding new a new child class with the appropriate algorithm. Depending on the type of stratification, this may require the additional development of new ``Strata`` and ``STS`` classes to accommodate the RSS. This is discussed in more details below.
+Extension of the RSS class for new algorithms can be accomplished by adding new a new strata that implements the appropriate methods.
 
 
-RSS Class Descriptions
+RefinedStratifiedSampling Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.SampleMethods.RSS
+.. autoclass:: UQpy.sampling.RefinedStratifiedSampling
     :members:
 
-.. autoclass:: UQpy.SampleMethods.RectangularRSS
-    :members:
-
-.. autoclass:: UQpy.SampleMethods.VoronoiRSS
-    :members:
-
-Adding a new ``RSS`` class
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-New refined stratified sampling methods can be implemented by subclassing the ``RSS`` class. The subclass should inherit inputs from the parent class and may also take additional inputs as necessary. Any ``RSS`` subclass must have a ``run_rss`` method that is invoked by the ``RSS.run`` method. The ``run_rss`` method is an instance method that should not take any additional arguments and executes the refined stratifed sampling algorithm.
-
-It is noted that any new ``RSS`` class must have a corresponding ``Strata`` object that defines the type of stratification and may also require a corresponding ``STS`` class. New ``RSS`` algorithms that do not utilize the existing ``Strata`` classes (``RectangularStrata``, ``VoronoiStrata``, or ``DelaunayStrata``) will require that a new ``Strata`` subclass be written.
 
 Simplex
 -------
@@ -203,19 +174,19 @@ Additional details can be found in [8]_.
 Simplex Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.SampleMethods.Simplex
+.. autoclass:: UQpy.sampling.SimplexSampling
     :members:
 
 
-AKMCS
+AdaptiveKriging
 -----
 
-The ``AKMCS`` class generates samples adaptively using a specified Kriging-based learning function in a general Adaptive Kriging-Monte Carlo Sampling (AKMCS) framework. Based on the specified learning function, different objectives can be achieved. In particular, the ``AKMCS`` class has learning functions for reliabliity analysis (probability of failure estimation), global optimization, best global fit surrogate models, and can also accept user-defined learning functions for these and other objectives.  Note that the term AKMCS is adopted from [3]_ although the procedure is referred to by different names depending on the specific learning function employed. For example, when applied for optimization the algorithm leverages the expected improvement function and is known under the name Efficient Global Optimization (EGO) [4]_. 
+The ``AdaptiveKriging`` class generates samples adaptively using a specified Kriging-based learning function in a general Adaptive Kriging-Monte Carlo Sampling (AKMCS) framework. Based on the specified learning function, different objectives can be achieved. In particular, the ``AdaptiveKriging`` class has learning functions for reliabliity analysis (probability of failure estimation), global optimization, best global fit surrogate models, and can also accept user-defined learning functions for these and other objectives.  Note that the term AKMCS is adopted from [3]_ although the procedure is referred to by different names depending on the specific learning function employed. For example, when applied for optimization the algorithm leverages the expected improvement function and is known under the name Efficient Global Optimization (EGO) [4]_.
 
 
 Learning Functions
 ^^^^^^^^^^^^^^^^^^^^
-``AKMCS`` provides a number of built-in learning functions as well as allowing the user to proviee a custom learning function. These learning functions are described below.
+``AdaptiveKriging`` provides a number of built-in learning functions as well as allowing the user to proviee a custom learning function. These learning functions are described below.
 
 
 U-Function
@@ -227,7 +198,7 @@ The U-function is a learning function adopted for Kriging-based reliability anal
 
 This point can be interpreted as the point in :math:`S` where the Kriging model has the highest probabability of incorrectly identifying the sign of the performance function (i.e. incorrectly predicting the safe/fail state of the system).
 
-The ``AKMCS`` then adds the corresponding point to the training set, re-fits the Kriging model and repeats the procedure until the following stopping criterion in met:
+The ``AdaptiveKriging`` then adds the corresponding point to the training set, re-fits the Kriging model and repeats the procedure until the following stopping criterion in met:
 
 .. math:: \min(U(\mathbf{x})) > \epsilon_u
 
@@ -243,7 +214,7 @@ The probability weighted U-function is a learning function for reliability analy
 
 where :math:`p(\mathbf{x})` is the probability density function of :math:`\mathbf{x}`. This has the effect of decreasing the learning function for points that have higher probability of occurrence. Thus, given two points with identical values of :math:`U(x)`, the weighted learning function will select the point with higher probability of occurrence.
 
-As with the standard U-function, ``AKMCS`` with the weighted U-function iterates until :math:`\min(U(\mathbf{x})) > \epsilon_u` (the same stopping criterion as the U-function).
+As with the standard U-function, ``AdaptiveKriging`` with the weighted U-function iterates until :math:`\min(U(\mathbf{x})) > \epsilon_u` (the same stopping criterion as the U-function).
 
 
 Expected Feasibility Function
@@ -285,32 +256,42 @@ The Expected Improvement for Global Fit (EIGF) learning function aims to build t
 
 where :math:`\mathbf{x}_*` is the point in the training set closest in distance to the point :math:`\mathbf{x}` and :math:`y(\mathbf{x}_*)` is the model response at that point.
 
-No stopping criterion is suggested by the authors of [7]_, thus its implementation in ``AKMCS`` uses a fixed number of iterations.
+No stopping criterion is suggested by the authors of [7]_, thus its implementation in ``AdaptiveKriging`` uses a fixed number of iterations.
 
 
 User-Defined Learning Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``AKMCS`` class also allows new, user-defined learning functions to be specified in a straightforward way. This is done by creating a new method that contains the algorithm for selecting a new samples. This method takes as input the surrogate model, the randomly generated learning points, the number of points to be added in each iteration, any requisite parameters including a stopping criterion, existing samples, model evaluate at samples and distribution object. It returns a set of samples that are selected according to the user's desired learning function and the corresponding learning function values. The outputs of this function should be (1) a numpy array of samples to be added; (2) the learning function values at the new sample points, and (3) a boolean stopping criterion indicating whether the iterations should continue (`False`) or stop (`True`). The numpy array of samples should be a two-dimensional array with the first dimension being the number of samples and the second dimension being the number of variables. An example user-defined learning function is given below:
+The ``AdaptiveKriging`` class also allows new, user-defined learning functions to be specified in a straightforward way. This is done by creating a new method that contains the algorithm for selecting a new samples. This method takes as input the surrogate model, the randomly generated learning points, the number of points to be added in each iteration, any requisite parameters including a stopping criterion, existing samples, model evaluate at samples and distribution object. It returns a set of samples that are selected according to the user's desired learning function and the corresponding learning function values. The outputs of this function should be (1) a numpy array of samples to be added; (2) the learning function values at the new sample points, and (3) a boolean stopping criterion indicating whether the iterations should continue (`False`) or stop (`True`). The numpy array of samples should be a two-dimensional array with the first dimension being the number of samples and the second dimension being the number of variables. An example user-defined learning function is given below:
 
 
->>> def u_function(surr, pop, n_add, parameters, samples, qoi, dist_object):
->>> 	g, sig = surr(pop, True)
->>> 	g = g.reshape([pop.shape[0], 1])
->>> 	sig = sig.reshape([pop.shape[0], 1])
->>> 	u = abs(g) / sig
->>>     rows = u[:, 0].argsort()[:n_add]
->>> 	new_samples = pop[rows, :]
->>>     u_lf = u[rows, 0]
->>>     indicator = False
->>>     if min(u[:, 0]) >= parameters['u_stop']:
->>>         indicator = True
->>> 	return new_samples, u_lf, indicator
+>>> class UserLearningFunction(LearningFunction):
+>>>
+>>>    def __init__(self, u_stop: int = 2):
+>>>        self.u_stop = u_stop
+>>>
+>>>    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
+>>>        # AKMS class use these inputs to compute the learning function
+>>>
+>>>        g, sig = surrogate.predict(population, True)
+>>>
+>>>        # Remove the inconsistency in the shape of 'g' and 'sig' array
+>>>        g = g.reshape([population.shape[0], 1])
+>>>        sig = sig.reshape([population.shape[0], 1])
+>>>
+>>>        u = abs(g) / sig
+>>>        rows = u[:, 0].argsort()[:n_add]
+>>>
+>>>        indicator = False
+>>>        if min(u[:, 0]) >= self.u_stop:
+>>>            indicator = True
+>>>
+>>>        return population[rows, :], u[rows, 0], indicator
 
-AKMCS Class Descriptions
+AdaptiveKriging Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.SampleMethods.AKMCS
+.. autoclass:: UQpy.sampling.AdaptiveKriging
     :members:
 
 
@@ -356,37 +337,37 @@ MCMC Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-.. autoclass:: UQpy.SampleMethods.MCMC
+.. autoclass:: UQpy.sampling.mcmc.MCMC
    :members:
 
-MH
+MetropolisHastings
 ~~~~~
 
-.. autoclass:: UQpy.SampleMethods.MH
+.. autoclass:: UQpy.sampling.mcmc.MetropolisHastings
     :members:
 
-MMH
+ModifiedMetropolisHastings
 ~~~~~
    
-.. autoclass:: UQpy.SampleMethods.MMH
+.. autoclass:: UQpy.sampling.mcmc.ModifiedMetropolisHastings
     :members:
 
 Stretch
 ~~~~~~~~
    
-.. autoclass:: UQpy.SampleMethods.Stretch
+.. autoclass:: UQpy.sampling.mcmc.Stretch
     :members:
 
 DRAM
 ~~~~~~~
    
-.. autoclass:: UQpy.SampleMethods.DRAM
+.. autoclass:: UQpy.sampling.mcmc.DRAM
     :members:
 
 DREAM
 ~~~~~~~
    
-.. autoclass:: UQpy.SampleMethods.DREAM
+.. autoclass:: UQpy.sampling.mcmc.DREAM
     :members:
 
 

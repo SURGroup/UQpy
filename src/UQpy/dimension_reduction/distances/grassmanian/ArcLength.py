@@ -1,6 +1,5 @@
 import numpy as np
 from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
-from UQpy.dimension_reduction.SVD import SVD
 
 
 class ArcLength(RiemannianDistance):
@@ -20,7 +19,7 @@ class ArcLength(RiemannianDistance):
         rank = min(rank1, rank2)
 
         r = np.dot(point1.T, point2)
-        (ui, si, vi) = SVD(r, rank=rank).run()
+        (ui, si, vi) = np.linalg.svd(r, full_matrices=True)
         si[np.where(si > 1)] = 1.0
         theta = np.arccos(np.diag(si))
         d = np.sqrt(abs(rank1 - rank2) * np.pi ** 2 / 4 + np.sum(theta ** 2))

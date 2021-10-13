@@ -11,7 +11,7 @@ class TaylorSeries:
     Perform First and Second Order reliability (FORM/SORM) methods.
     This is the parent class to all Taylor series expansion algorithms.
     **Input:**
-    * **dist_object** ((list of ) ``Distribution`` object(s)):
+    * **distributions** ((list of ) ``Distribution`` object(s)):
         Marginal probability distributions of each random variable. Must be an object of type
         ``DistributionContinuous1D`` or ``JointInd``.
     * **runmodel_object** (``RunModel`` object):
@@ -39,14 +39,12 @@ class TaylorSeries:
     * **tol3** (`float`):
          Convergence threshold for criterion `e3` of the  `HLRF` algorithm.
          Default: 1.0e-3
-    * **n_iter** (`int`):
+    * **iterations_number** (`int`):
          Maximum number of iterations for the `HLRF` algorithm.
          Default: 100
     * **df_step** ('float'):
          Finite difference step in standard normal space.
          Default: 0.01 (see `derivatives` class)
-    * **verbose** (`Boolean`):
-        A boolean declaring whether to write text to the terminal.
     **Methods:**
     """
     @beartype
@@ -130,8 +128,7 @@ class TaylorSeries:
         * **df_step** (`float`):
             Finite difference step in standard normal space.
             Default: 0.01
-        * **verbose** (Boolean):
-            A boolean declaring whether to write text to the terminal.
+
         **Output/Returns:**
         * **du_dj** (`ndarray`):
             Vector of first-order derivatives (if order = 'first').

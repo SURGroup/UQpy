@@ -15,12 +15,12 @@ class SimplexSampling:
     * **nodes** (`ndarray` or `list`):
         The vertices of the simplex.
 
-    * **nsamples** (`int`):
+    * **samples_number** (`int`):
         The number of samples to be generated inside the simplex.
 
-        If `nsamples` is provided when the object is defined, the ``run`` method will be called automatically. If
-        `nsamples` is not provided when the object is defined, the user must invoke the ``run`` method and specify
-        `nsamples`.
+        If `samples_number` is provided when the object is defined, the ``run`` method will be called automatically. If
+        `samples_number` is not provided when the object is defined, the user must invoke the ``run`` method and specify
+        `samples_number`.
 
     * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
         Random seed used to initialize the pseudo-random number generator. Default is None.
@@ -57,14 +57,14 @@ class SimplexSampling:
         """
         Execute the random sampling in the ``Simplex`` class.
 
-        The ``run`` method is the function that performs random sampling in the ``Simplex`` class. If `nsamples` is
-        provided called when the ``Simplex`` object is defined, the ``run`` method is automatically. The user may also
-        call the ``run`` method directly to generate samples. The ``run`` method of the ``Simplex`` class can be invoked
-        many times and each time the generated samples are appended to the existing samples.
+        The ``run`` method is the function that performs random sampling in the ``Simplex`` class. If `samples_number`
+        is provided called when the ``Simplex`` object is defined, the ``run`` method is automatically. The user may
+        also call the ``run`` method directly to generate samples. The ``run`` method of the ``Simplex`` class can be
+        invoked many times and each time the generated samples are appended to the existing samples.
 
         **Input:**
 
-        * **nsamples** (`int`):
+        * **samples_number** (`int`):
             Number of samples to be generated inside the simplex.
 
             If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the

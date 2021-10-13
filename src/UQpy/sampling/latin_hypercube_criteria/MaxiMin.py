@@ -1,10 +1,9 @@
 import logging
-from typing import Union
 
 from beartype import beartype
 
 from UQpy.sampling.latin_hypercube_criteria import Criterion, Random
-from UQpy.sampling.latin_hypercube_criteria.DistanceMetric import DistanceMetric
+from UQpy.utilities.DistanceMetric import DistanceMetric
 from scipy.spatial.distance import pdist
 import numpy as np
 import copy

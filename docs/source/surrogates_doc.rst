@@ -4,13 +4,13 @@
 Surrogates
 ==========
 
-.. automodule:: UQpy.Surrogates
+.. automodule:: UQpy.surrogates
 
 
 Stochatic Reduced Order Models - SROMs
 ----------------------------------------
 
-An SROM is a sample-based surrogate for probability models. An SROM takes a set of samples and attributes of a distribution and optimizes the sample probability weights according to the method in [1]_. More specifically, an SROM constructs a reduce order model for arbitrary random variables `X` as follows.
+A SROM is a sample-based surrogate for probability models. An SROM takes a set of samples and attributes of a distribution and optimizes the sample probability weights according to the method in [1]_. More specifically, an SROM constructs a reduce order model for arbitrary random variables `X` as follows.
 
 .. math:: \tilde{X} =  \begin{cases} x_1 & probability \text{  }p_1^{(opt)} \\ & \vdots \\ x_m & probability \text{  }p_m^{(opt)} \end{cases}
 
@@ -26,7 +26,7 @@ Here, :math:`F(x_{k,i})` and :math:`\hat{F}(x_{k,i})` denote the marginal cumula
 
 SROM Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: UQpy.Surrogates.SROM
+.. autoclass:: UQpy.surrogates.stochastic_reduced_order_models.SROM
     :members:
 
 
@@ -65,7 +65,7 @@ The final predictor function is then given by:
 Regression Models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``Kriging`` class offers a variety of built-in regression models, specified by the `reg_model` input described below.
+The ``Kriging`` class offers a variety of built-in regression models, specified by the `regression` input described below.
 
 
 Ordinary Kriging
@@ -91,7 +91,8 @@ and the quadratic regression model given by:
 User-Defined Regression Model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Adding a new regression model to the ``Kriging`` class is straightforward. This is done by creating a new method that evaluates the basis functions and the Jacobian. This method may be passed directly as a callable to the `reg_model` input of the ``Kriging`` class. This new method should takes as input the samples points at which to evaluate the model and return two arrays containing the value of the basis functions and the Jacobian at these sample points. 
+Adding a new regression model to the ``Kriging`` class is straightforward. This is done by creating a new method that evaluates the basis functions and the Jacobian. This method may be passed directly as an object to the `regression` input of the ``Kriging`` class.
+This new class must have a method ``r(self,s)`` that takes as input the samples points at which to evaluate the model and return two arrays containing the value of the basis functions and the Jacobian at these sample points.
 
 The first output of this function should be a two dimensional numpy array with the first dimension being the number of samples and the second dimension being the number of basis functions. 
 
@@ -100,15 +101,19 @@ The second output (i.e. Jacobian of basis function) is a three dimensional numpy
 An example user-defined model is given below:
 
 
->>> def constant(points):
->>> 	fx = np.ones([points.shape[0], 1])
->>> 	jf = np.zeros([points.shape[0], points.shape[1], 1])
->>> 	return fx, jf
+>>> class UserRegression(Regression):
+>>>
+>>>    def r(self, s):
+>>>        s = np.atleast_2d(s)
+>>>        fx = np.ones([np.size(s, 0), 1])
+>>>        jf = np.zeros([np.size(s, 0), np.size(s, 1), 1])
+>>>        return fx, jf
+
 
 Correlation Models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``Kriging`` class offers a variety of built-in correlation models, specified by the `corr_model` input described below. 
+The ``Kriging`` class offers a variety of built-in correlation models, specified by the `correlation_model` input described below.
 
 Exponential Correlation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -174,7 +179,8 @@ User-Defined Correlation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Adding a new correlation model to the ``Kriging`` class is straightforward. This is done by creating a new method that evaluates the correlation matrix, it's derivative with respect to the variables and it's derivative with respect to the hyperparameters. This method takes as input the new points, training points, hyperparameters and two indicators for the computation of the derivative of correlation matrix (i.e. `dt` and `dx`). 
+Adding a new correlation model to the ``Kriging`` class is straightforward. This is done by creating a new class that extends the Correlation abstract base class.
+This requires a method takes as input the new points, training points, hyperparameters and two indicators for the computation of the derivative of correlation matrix (i.e. dt and dx). This method evaluates the correlation matrix, its derivative with respect to the variables and its derivative with respect to the hyperparameters.
 
 If both indicators are false, then the method should return correlation matrix, i.e. a 2-D array with first dimension being the number of points and second dimension being the number of training points. 
 
@@ -185,24 +191,24 @@ If `dt` is True, then the method should return the correlation matrix and it's d
 An example user-defined model is given below:
 
 
->>> def Gaussian(x, s, params, dt=False, dx=False):
->>>     x, s = np.atleast_2d(x), np.atleast_2d(s)
->>>     # Create stack matrix, where each block is x_i with all s
->>>     stack = - np.tile(np.swapaxes(np.atleast_3d(x), 1, 2), (1, np.size(s, 0), 1)) + np.tile(s, (np.size(x, 0), 1, 1))
->>>     rx = np.exp(np.sum(-params * (stack ** 2), axis=2))
->>>     if dt:
->>>         drdt = -(stack ** 2) * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
->>>         return rx, drdt
->>>     if dx:
->>>         drdx = 2 * params * stack * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
->>>         return rx, drdx
->>>     return rx
+>>> class Gaussian(Correlation):
+>>>
+>>>    def c(self, x, s, params, dt=False, dx=False):
+>>>        stack = Correlation.check_samples_and_return_stack(x, s)
+>>>        rx = np.exp(np.sum(-params * (stack ** 2), axis=2))
+>>>        if dt:
+>>>            drdt = -(stack ** 2) * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
+>>>            return rx, drdt
+>>>        if dx:
+>>>            drdx = - 2 * params * stack * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
+>>>            return rx, drdx
+>>>        return rx
 
 Kriging Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.Surrogates.Kriging
-	:members:
+.. autoclass:: UQpy.surrogates.kriging.Kriging
+    :members:
 
 
 Polynomial Chaos Expansion - PCE
@@ -229,7 +235,7 @@ which are also orthonormal.
 
 PCE Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: UQpy.Surrogates.PCE
+.. autoclass:: UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion
     :members:
 
 Univariate Orthonormal Polynomials
@@ -239,23 +245,23 @@ Different families of univariate polynomials can be used for the PCE method. The
 
 Polynomials Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: UQpy.Surrogates.Polynomials
+.. autoclass:: UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials
     :members:
     
 Legendre Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: UQpy.Surrogates.Legendre
+.. autoclass:: UQpy.surrogates.polynomial_chaos.polynomials.Legendre
     :members:
     
 Hermite Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: UQpy.Surrogates.Hermite
+.. autoclass:: UQpy.surrogates.polynomial_chaos.polynomials.Hermite
     :members:
 
 
 Calculation of the PCE coefficients
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Several methods exist for the calculation of the PCE coefficients. In UQpy, three non-intrusive methods can be used, namely the Least Squares regression (``PolyChaosLstsq`` class), the LASSO regression (``PolyChaosLasso`` class) and Ridge regression (``PolyChaosRidge`` class) methods. 
+Several methods exist for the calculation of the PCE coefficients. In UQpy, three non-intrusive methods can be used, namely the Least Squares regression (``LeastSquares`` class), the LASSO regression (``Lasso`` class) and Ridge regression (``Ridge`` class) methods.
 
 
 Least Squares Regression 
@@ -272,9 +278,9 @@ where :math:`\| \cdot \|_{2}` is the standard :math:`L^{2}` norm in the :math:`n
 The equation may be under-, well-, or over-determined. In the context of Polynomial Chaos Expansion (PCE) the computed vector corresponds to the polynomial coefficients. The above method can be used from the class ``PolyChaosLstsq``.
 
 
-PolyChaosLstsq Class Descriptions
+LeastSquares Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: UQpy.Surrogates.PolyChaosLstsq
+.. autoclass:: UQpy.surrogates.polynomial_chaos.PolyChaosLstsq
     :members:
 
 
@@ -373,5 +379,4 @@ MomentEstimation Class Descriptions
     :maxdepth: 2
 
 
-	
-	
+
