@@ -79,9 +79,14 @@ class LHS:
 
         self.random_state = random_state
         if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            self.random_state = np.random.default_rng(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random._generator.Generator)):
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+
+        # if isinstance(self.random_state, int):
+        #     self.random_state = np.random.RandomState(self.random_state)
+        # elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+        #     raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         if isinstance(criterion, str):
             if criterion not in ['random', 'centered', 'maximin', 'correlate']:
@@ -109,8 +114,7 @@ class LHS:
 
         self.samplesU01 = np.zeros_like(self.samples)
 
-        if self.nsamples is not None:
-            self.run(self.nsamples)
+        self.run(self.nsamples)
 
     def run(self, nsamples):
 
@@ -137,8 +141,10 @@ class LHS:
 
         """
 
-        if self.nsamples is None:
+        if isinstance(nsamples, int):
             self.nsamples = nsamples
+        else:
+            raise ValueError('UQpy: number of samples must be specified.')
 
         if self.verbose:
             print('UQpy: Running Latin Hypercube sampling...')

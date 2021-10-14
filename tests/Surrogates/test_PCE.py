@@ -57,7 +57,8 @@ def test_4():
     """
     Test Error Estimation class
     """
-    x_val = x + np.random.rand(1)
+    rng = np.random.default_rng(1)
+    x_val = x + rng.random()
     y_val = func(x_val)
     error = ErrorEstimation(surr_object=pce_model(polys, x, y))
-    assert round(error.validation(x_val, y_val), 3) == 0.432
+    assert round(error.validation(x_val, y_val), 3) == 0.423
