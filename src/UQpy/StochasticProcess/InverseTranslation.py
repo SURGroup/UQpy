@@ -67,10 +67,11 @@ class InverseTranslation:
 
     def __init__(self, dist_object, time_interval, frequency_interval, number_time_intervals,
                  number_frequency_intervals, correlation_function_non_gaussian=None,
-                 power_spectrum_non_gaussian=None, samples_non_gaussian=None):
+                 power_spectrum_non_gaussian=None, samples_non_gaussian=None, percentage_error=5.0):
         self.dist_object = dist_object
         self.frequency = np.arange(0, number_frequency_intervals) * frequency_interval
         self.time = np.arange(0, number_time_intervals) * time_interval
+        self.error = percentage_error
         if correlation_function_non_gaussian is None and power_spectrum_non_gaussian is None:
             print('Either the Power Spectrum or the Autocorrelation function should be specified')
         if correlation_function_non_gaussian is None:
@@ -125,7 +126,7 @@ class InverseTranslation:
             err1 = np.sum((target_S - S_ng_iterate) ** 2)
             err2 = np.sum(target_S ** 2)
 
-            if 100 * np.sqrt(err1 / err2) < 1:
+            if 100 * np.sqrt(err1 / err2) < self.error:
                 i_converge = 1
 
             ratio = target_S/S_ng_iterate

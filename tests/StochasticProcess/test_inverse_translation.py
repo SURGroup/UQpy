@@ -40,7 +40,8 @@ R_ng = Translate_object.scaled_correlation_function_non_gaussian
 
 InverseTranslate_object = InverseTranslation(dist_object=distribution, time_interval=dt, frequency_interval=dw,
                                              number_time_intervals=nt, number_frequency_intervals=nw,
-                                             correlation_function_non_gaussian=R_ng, samples_non_gaussian=samples_ng)
+                                             correlation_function_non_gaussian=R_ng, samples_non_gaussian=samples_ng,
+                                             percentage_error=5.0)
 samples_g = InverseTranslate_object.samples_gaussian
 S_g = InverseTranslate_object.power_spectrum_gaussian
 R_g = InverseTranslate_object.auto_correlation_function_gaussian
@@ -56,4 +57,4 @@ def test_samples_g_value():
 
 
 def test_R_g_value():
-    assert np.isclose(R_g[42], -0.0007525497536971386)
+    assert np.isclose(R_g[42], 0.06893298630483506)
