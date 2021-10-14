@@ -27,6 +27,41 @@ Alternatively, in case of anaconda distributions
 >
 > black {uqpy_src_path}
 
+### Logging
+___
+
+Since version 4.0.0 UQpy, has transitioned from the legacy verbose flag, to using the logging module of Python. Logging allows the developer to track in several levels of detail the events during code execution. Each one of the levels implies a different level of event severity, ranging from debug message, up to errors that disrupt the execution of the code. Specifically the severity levels are the following:
+
+- Debug
+- Info
+- Warning
+- Critical
+- Error
+
+A simple example of using the logging module is by invoking a logger object and calling the function named after the desired level of message severity. 
+
+> self.logger = logging.getLogger(__name__)
+> 
+> self.logger.info("UQpy: Log an informational message.")
+
+The current logging level of UQpy is set to **ERROR**, meaning that all data logged in lower severity levels are not displayed. A change of the logging level is performed using the following python code:
+
+> logger.setLevel(logging.INFO)
+
+The input of the set level function is an enumeration, with values the logging severities. The default output of the predefined logger  configuration is the console, but python supports using multiple logging output sinks such as files or databases. In order to append a new output type to the existing logging configuration, to log messages and warnings to files the following code can be used:
+
+> formatter = UQpyLoggingFormatter() 
+> 
+> file_handler = logging.FileHandler('UQpy.log')
+> 
+> file_handler.setFormatter(formatter)
+> 
+> logger.addHandler(file_handler)
+
+The latter summarize the basic usage of logging framework utilized in UQpy. For a detailed breakdown of the logging module can be found [here](https://docs.python.org/3/howto/logging-cookbook.html "Logging documentation").
+
+### Type hints
+
 ### Docstrings
 ___
 Before uploading a code make sure all new classes and methods added are accompanied by the required docstrings. The [PEP 257](https://www.python.org/dev/peps/pep-0257/ "Docstring conventions") guideline contains the specifications for creating and maintaining the respective code documentation.
