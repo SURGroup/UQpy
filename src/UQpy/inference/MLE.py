@@ -6,7 +6,9 @@ from beartype import beartype
 
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
 from UQpy.inference.inference_models.optimization.Optimizer import Optimizer
-from UQpy.inference.inference_models.optimization.MinizeOptimizer import MinimizeOptimizer
+from UQpy.inference.inference_models.optimization.MinimizeOptimizer import (
+    MinimizeOptimizer,
+)
 from UQpy.utilities.Utilities import process_random_state
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
@@ -69,13 +71,15 @@ class MLE:
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
     @beartype
-    def __init__(self,
-                 inference_model: InferenceModel,
-                 data: Union[list, np.ndarray],
-                 optimizations_number: Union[None, int] = None,
-                 initial_guess=None,
-                 optimizer: Optimizer = MinimizeOptimizer(),
-                 random_state=None):
+    def __init__(
+        self,
+        inference_model: InferenceModel,
+        data: Union[list, np.ndarray],
+        optimizations_number: Union[None, int] = None,
+        initial_guess=None,
+        optimizer: Optimizer = MinimizeOptimizer(),
+        random_state=None,
+    ):
 
         # Initialize variables
         self.inference_model = inference_model
@@ -85,14 +89,18 @@ class MLE:
         self.optimizer = optimizer
         self.mle = None
         self.max_log_like = None
-        self.logger.info('UQpy: Initialization of MLEstimation object completed.')
+        self.logger.info("UQpy: Initialization of MLEstimation object completed.")
 
         # Run the optimization procedure
         if (optimizations_number is not None) or (initial_guess is not None):
-            self.run(optimizations_number=optimizations_number, initial_guess=initial_guess)
+            self.run(
+                optimizations_number=optimizations_number, initial_guess=initial_guess
+            )
 
     @beartype
-    def run(self, optimizations_number: Union[None, PositiveInteger] = 1, initial_guess=None):
+    def run(
+        self, optimizations_number: Union[None, PositiveInteger] = 1, initial_guess=None
+    ):
         """
         Run the maximum likelihood estimation procedure.
 
@@ -118,13 +126,16 @@ class MLE:
 
         """
         # Run optimization (use x0 if provided, otherwise sample starting point from [0, 1] or bounds)
-        self.logger.info('UQpy: Evaluating maximum likelihood estimate for inference model '
-                         + self.inference_model.name)
+        self.logger.info(
+            "UQpy: Evaluating maximum likelihood estimate for inference model "
+            + self.inference_model.name
+        )
 
-        use_distribution_fit = \
-            hasattr(self.inference_model, 'distributions') and \
-            self.inference_model.distributions is not None and \
-            hasattr(self.inference_model.distributions, 'fit')
+        use_distribution_fit = (
+            hasattr(self.inference_model, "distributions")
+            and self.inference_model.distributions is not None
+            and hasattr(self.inference_model.distributions, "fit")
+        )
 
         if use_distribution_fit:
             self._run_distribution_fit(optimizations_number)
@@ -134,11 +145,15 @@ class MLE:
     def _run_distribution_fit(self, optimizations_number):
         for _ in range(optimizations_number):
             self.inference_model.distributions.update_parameters(
-                **{key: None for key in self.inference_model.list_params})
+                **{key: None for key in self.inference_model.list_params}
+            )
             mle_dict = self.inference_model.distributions.fit(data=self.data)
-            mle_tmp = np.array([mle_dict[key] for key in self.inference_model.list_params])
+            mle_tmp = np.array(
+                [mle_dict[key] for key in self.inference_model.list_params]
+            )
             max_log_like_tmp = self.inference_model.evaluate_log_likelihood(
-                params=mle_tmp[np.newaxis, :], data=self.data)[0]
+                params=mle_tmp[np.newaxis, :], data=self.data
+            )[0]
             # Save result
             if self.mle is None:
                 self.mle = mle_tmp
@@ -150,23 +165,30 @@ class MLE:
     def _run_optimization(self, initial_guess, optimizations_number):
         if initial_guess is None:
             from UQpy.distributions import Uniform
-            initial_guess = Uniform().rvs(
-                nsamples=optimizations_number * self.inference_model.parameters_number,
-                random_state=self.random_state) \
+
+            initial_guess = (
+                Uniform()
+                .rvs(
+                    nsamples=optimizations_number
+                    * self.inference_model.parameters_number,
+                    random_state=self.random_state,
+                )
                 .reshape((optimizations_number, self.inference_model.parameters_number))
+            )
             if self.optimizer.bounds is not None:
                 bounds = np.array(self.optimizer.bounds)
-                initial_guess = \
-                    bounds[:, 0].reshape((1, -1)) + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) \
-                    * initial_guess
+                initial_guess = (
+                    bounds[:, 0].reshape((1, -1))
+                    + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) * initial_guess
+                )
         else:
             initial_guess = np.atleast_2d(initial_guess)
             if initial_guess.shape[1] != self.inference_model.parameters_number:
-                raise ValueError('UQpy: Wrong dimensions in x0')
+                raise ValueError("UQpy: Wrong dimensions in x0")
         for x0_ in initial_guess:
             res = self.optimizer.optimize(self._evaluate_func_to_minimize, x0_)
             mle_tmp = res.x
-            max_log_like_tmp = (-1.) * res.fun
+            max_log_like_tmp = (-1.0) * res.fun
             # Save result
             if self.mle is None:
                 self.mle = mle_tmp
@@ -174,7 +196,7 @@ class MLE:
             elif max_log_like_tmp > self.max_log_like:
                 self.mle = mle_tmp
                 self.max_log_like = max_log_like_tmp
-        self.logger.info('UQpy: ML estimation completed.')
+        self.logger.info("UQpy: ML estimation completed.")
 
     @beartype
     def _evaluate_func_to_minimize(self, one_param: np.ndarray):
@@ -195,5 +217,10 @@ class MLE:
             Value of negative log-likelihood.
         """
 
-        a = -1 * self.inference_model.evaluate_log_likelihood(params=one_param.reshape((1, -1)), data=self.data)[0]
+        a = (
+            -1
+            * self.inference_model.evaluate_log_likelihood(
+                params=one_param.reshape((1, -1)), data=self.data
+            )[0]
+        )
         return a

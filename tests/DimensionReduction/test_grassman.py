@@ -7,17 +7,12 @@ from scipy.interpolate import LinearNDInterpolator
 from UQpy.dimension_reduction.distances.grassmanian.GrassmanDistance import GrassmannDistance
 from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
 from UQpy.dimension_reduction.grassman.Grassman import Grassmann
-from UQpy.dimension_reduction.grassman.methods.ExpMap import exp_map
 from UQpy.dimension_reduction.grassman.interpolations.LinearInterpolation import LinearInterpolation
 from UQpy.dimension_reduction.grassman.interpolations.baseclass.InterpolationMethod import InterpolationMethod
 from UQpy.dimension_reduction.grassman.manifold_projections.SvdProjection import SvdProjection
-from UQpy.dimension_reduction.grassman.methods.FrechetVariance import frechet_variance
-from UQpy.dimension_reduction.grassman.methods.LogMap import log_map
-from UQpy.dimension_reduction.grassman.methods.KarcherMean import karcher_mean
 from UQpy.dimension_reduction.grassman.optimization_methods.GradientDescent import GradientDescent
 from UQpy.dimension_reduction.grassman.optimization_methods.baseclass.OptimizationMethod import OptimizationMethod
 from UQpy.dimension_reduction.kernels.grassmanian.ProjectionKernel import ProjectionKernel
-from UQpy.dimension_reduction.euclidean.Euclidean import Euclidean
 from UQpy.dimension_reduction.grassman.interpolations.Interpolation import Interpolation
 
 from UQpy.dimension_reduction.DiffusionMaps import DiffusionMaps
@@ -44,16 +39,16 @@ def test_log_exp():
 
     manifold_projection = SvdProjection(matrices, p_planes_dimensions=sys.maxsize)
 
-    points_tangent = log_map(points_grassmann=manifold_projection.psi,
-                             reference_point=manifold_projection.psi[0])
+    points_tangent = Grassmann.log_map(points_grassmann=manifold_projection.psi,
+                                       reference_point=manifold_projection.psi[0])
 
     assert points_tangent[0][0][0] == 0.0
     assert points_tangent[1][0][0] == -0.002899719618992682
     assert points_tangent[2][0][0] == 0.012574949291454723
     assert points_tangent[3][0][0] == 0.017116995689638644
 
-    points_grassmann = exp_map(points_tangent=points_tangent,
-                               reference_point=manifold_projection.psi[0])
+    points_grassmann = Grassmann.exp_map(points_tangent=points_tangent,
+                                         reference_point=manifold_projection.psi[0])
 
     assert points_grassmann[0][0][0] == -0.4984521191998955
     assert points_grassmann[1][0][0] == -0.5013644537794977
@@ -81,15 +76,15 @@ def test_karcher():
     manifold_projection = SvdProjection(matrices, p_planes_dimensions=sys.maxsize)
 
     optimization_method = GradientDescent(acceleration=True, error_tolerance=1e-4, max_iterations=1000)
-    psi_mean = karcher_mean(points_grassmann=manifold_projection.psi,
-                            p_planes_dimensions=manifold_projection.p_planes_dimensions,
-                            optimization_method=optimization_method,
-                            distance=GrassmannDistance())
+    psi_mean = Grassmann.karcher_mean(points_grassmann=manifold_projection.psi,
+                                      p_planes_dimensions=manifold_projection.p_planes_dimensions,
+                                      optimization_method=optimization_method,
+                                      distance=GrassmannDistance())
 
-    phi_mean = karcher_mean(points_grassmann=manifold_projection.phi,
-                            p_planes_dimensions=manifold_projection.p_planes_dimensions,
-                            optimization_method=optimization_method,
-                            distance=GrassmannDistance())
+    phi_mean = Grassmann.karcher_mean(points_grassmann=manifold_projection.phi,
+                                      p_planes_dimensions=manifold_projection.p_planes_dimensions,
+                                      optimization_method=optimization_method,
+                                      distance=GrassmannDistance())
 
     assert psi_mean[0, 0] == -0.3992313564023919
     assert phi_mean[0, 0] == -0.3820923720323338
@@ -198,12 +193,10 @@ def test_dmaps_swiss_roll():
 
     swiss_roll = np.array([X0, Y0, Z0]).transpose()
 
-    kernel = Euclidean(data=swiss_roll)
-    kernel_matrix = kernel.evaluate_kernel_matrix(kernel=Gaussian(epsilon=0.03))
-
-    dmaps = DiffusionMaps(alpha=0.5, eigenvectors_number=3,
-                          is_sparse=True, neighbors_number=100,
-                          kernel_matrix=kernel_matrix)
+    dmaps = DiffusionMaps.create_from_data(data=swiss_roll,
+                                           alpha=0.5, eigenvectors_number=3,
+                                           is_sparse=True, neighbors_number=100,
+                                           kernel=Gaussian(epsilon=0.03))
 
     diff_coords, evals, evecs = dmaps.mapping()
 
@@ -235,11 +228,7 @@ def test_dmaps_circular():
 
     X = np.array([x, y, z]).transpose()
 
-    kernel = Euclidean(data=X)
-    kernel_matrix = kernel.evaluate_kernel_matrix(kernel=Gaussian(epsilon=0.3))
-
-    dmaps = DiffusionMaps(alpha=1, eigenvectors_number=3,
-                          kernel_matrix=kernel_matrix)
+    dmaps = DiffusionMaps.create_from_data(data=X, alpha=1, eigenvectors_number=3, kernel=Gaussian(epsilon=0.3))
 
     diff_coords, evals, evecs = dmaps.mapping()
 
@@ -278,11 +267,7 @@ def test_diff_matrices():
 
         samples.append(M)
 
-    kernel = Euclidean(data=samples)
-    kernel_matrix = kernel.evaluate_kernel_matrix()
-
-    dmaps = DiffusionMaps(alpha=0.5, eigenvectors_number=10,
-                          kernel_matrix=kernel_matrix)
+    dmaps = DiffusionMaps.create_from_data(data=samples, alpha=0.5, eigenvectors_number=10)
 
     diff_coords, evals, evecs = dmaps.mapping()
 
@@ -350,7 +335,6 @@ def test_grassman_kernel():
             det = np.linalg.det(r)
             ker = det * det
             return ker
-
 
     kernel_user_psi = manifold.evaluate_kernel_matrix(kernel=UserKernel())
 
@@ -435,7 +419,6 @@ def test_user_interpolation():
                                                                      distance=GrassmannDistance(),
                                                                      element_wise=False)
 
-
     assert interpolated_solution[0, 0] == 0.6155684900619302
 
 
@@ -475,10 +458,11 @@ def test_user_karcher():
             for i in range(points_number):
                 rank.append(min(np.shape(data_points[i])))
 
+            from UQpy.dimension_reduction.grassman.Grassman import Grassmann
             max_rank = max(rank)
             fmean = []
             for i in range(points_number):
-                fmean.append(frechet_variance(data_points[i], data_points, distance))
+                fmean.append(Grassmann.frechet_variance(data_points[i], data_points, distance))
 
             index_0 = fmean.index(min(fmean))
             mean_element = data_points[index_0].tolist()
@@ -492,8 +476,8 @@ def test_user_karcher():
             _gamma = []
             from UQpy.dimension_reduction.grassman.Grassman import Grassmann
             if self.acceleration:
-                _gamma = log_map(points_grassmann=data_points,
-                                 reference_point=np.asarray(mean_element))
+                _gamma = Grassmann.log_map(points_grassmann=data_points,
+                                           reference_point=np.asarray(mean_element))
 
                 avg_gamma.fill(0)
                 for i in range(points_number):
@@ -502,8 +486,8 @@ def test_user_karcher():
 
             # Main loop
             while counter_iteration <= self.max_iterations:
-                _gamma = log_map(points_grassmann=data_points,
-                                 reference_point=np.asarray(mean_element))
+                _gamma = Grassmann.log_map(points_grassmann=data_points,
+                                           reference_point=np.asarray(mean_element))
                 avg_gamma.fill(0)
 
                 for i in range(points_number):
@@ -524,7 +508,7 @@ def test_user_karcher():
                 else:
                     step = alpha * avg_gamma
 
-                x = exp_map(points_tangent=[step], reference_point=np.asarray(mean_element))
+                x = Grassmann.exp_map(points_tangent=[step], reference_point=np.asarray(mean_element))
 
                 test_1 = np.linalg.norm(x[0] - mean_element, 'fro')
 
@@ -593,11 +577,10 @@ def test_user_karcher():
             return distance
 
     manifold_projection = SvdProjection(matrices, p_planes_dimensions=sys.maxsize)
-    psi_mean = karcher_mean(points_grassmann=manifold_projection.psi,
-                            p_planes_dimensions=manifold_projection.p_planes_dimensions,
-                            optimization_method=GradientDescent(acceleration=True, error_tolerance=1e-4,
-                                                              max_iterations=1000),
-                            distance=GrassmannDistance())
-
+    psi_mean = Grassmann.karcher_mean(points_grassmann=manifold_projection.psi,
+                                      p_planes_dimensions=manifold_projection.p_planes_dimensions,
+                                      optimization_method=GradientDescent(acceleration=True, error_tolerance=1e-4,
+                                                                          max_iterations=1000),
+                                      distance=GrassmannDistance())
 
     assert psi_mean[0, 0] == -0.3992313564023919

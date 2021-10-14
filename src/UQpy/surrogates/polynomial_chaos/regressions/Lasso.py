@@ -12,18 +12,21 @@ class LassoRegression(Regression):
 
     **Inputs:**
 
-    * **poly_object** ('class'):
+    * **polynomials** ('class'):
         Object from the 'Polynomial' class
 
     **Methods:**
 
     """
+
     @beartype
-    def __init__(self,
-                 polynomials: list[Polynomials],
-                 learning_rate: float = 0.01,
-                 iterations: int = 1000,
-                 penalty: float = 1):
+    def __init__(
+        self,
+        polynomials: Polynomials,
+        learning_rate: float = 0.01,
+        iterations: int = 1000,
+        penalty: float = 1,
+    ):
         self.polynomials = polynomials
         self.learning_rate = learning_rate
         self.iterations = iterations
@@ -70,7 +73,7 @@ class LassoRegression(Regression):
             b = 0
 
             for _ in range(self.iterations):
-                y_pred = (xx.dot(w) + b)
+                y_pred = xx.dot(w) + b
 
                 for i in range(n):
                     if w[i] > 0:
@@ -78,7 +81,7 @@ class LassoRegression(Regression):
                     else:
                         dw[i] = (-(2 * (xx.T[i, :]).dot(y - y_pred)) - self.penalty) / m
 
-                db = - 2 * np.sum(y - y_pred) / m
+                db = -2 * np.sum(y - y_pred) / m
 
                 w = w - self.learning_rate * dw
                 b = b - self.learning_rate * db
@@ -89,10 +92,10 @@ class LassoRegression(Regression):
             b = np.zeros(n_out_dim).reshape(1, -1)
 
             for _ in range(self.iterations):
-                y_pred = (xx.dot(w) + b)
+                y_pred = xx.dot(w) + b
 
                 dw = (-(2 * xx.T.dot(y - y_pred)) - self.penalty) / m
-                db = - 2 * np.sum((y - y_pred), axis=0).reshape(1, -1) / m
+                db = -2 * np.sum((y - y_pred), axis=0).reshape(1, -1) / m
 
                 w = w - self.learning_rate * dw
                 b = b - self.learning_rate * db

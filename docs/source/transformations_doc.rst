@@ -3,7 +3,7 @@
 Transformations
 ================
 
-.. automodule:: UQpy.Transformations
+.. automodule:: UQpy.transformations
 
 Nataf
 -----------------
@@ -77,8 +77,3 @@ Decorrelate Class Descriptions
 .. [2] R. Lebrun and A. Dutfoy, An innovating analysis of the Nataf transformation from the copula viewpoint,
    Prob. Eng. Mech.,  vol. 24, pp. 312-320, 2009.
 .. [3] Kim, H. and Shields, M.D. (2015). "Modeling strongly non-Gaussian non-stationary stochastic processes using the Iterative Translation Approximation Method and Karhunen-Loeve Expansion," Computers and Structures. 161: 31-42.
-
-
-
-	
-	

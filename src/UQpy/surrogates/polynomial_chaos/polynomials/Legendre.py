@@ -17,7 +17,7 @@ class Legendre(Polynomials):
     * **degree** ('int'):
         Maximum degree of the polynomials.
 
-    * **dist_object** ('class'):
+    * **distributions** ('class'):
         Distribution object of the generated samples.
 
     **Methods:**

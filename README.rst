@@ -1,4 +1,4 @@
-|AzureDevops| |PyPIdownloads| |PyPI| |CondaSURG| |CondaPlatforms| |GithubRelease| |Binder| |Docs|
+|AzureDevops| |PyPIdownloads| |PyPI| |CondaSURG| |CondaPlatforms| |GithubRelease| |Binder| |Docs| |bear-ified|
 
 .. |Docs| image:: https://img.shields.io/readthedocs/uqpy?style=plastic  :alt: Read the Docs
 .. |CondaSURG| image:: https://img.shields.io/conda/vn/SURG_JHU/uqpy?style=plastic   :alt: Conda (channel only)
@@ -9,6 +9,11 @@
 .. |PyPI| image:: https://img.shields.io/pypi/v/UQpy?style=plastic   :alt: PyPI
 .. |Binder| image:: https://mybinder.org/badge_logo.svg
  :target: https://mybinder.org/v2/gh/SURGroup/UQpy/master
+
+.. |bear-ified| image:: https://raw.githubusercontent.com/beartype/beartype-assets/main/badge/bear-ified.svg
+   :align: top
+   :target: https://beartype.rtfd.io
+   :alt: bear-ified
 
 
 *******************************************

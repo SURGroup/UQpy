@@ -4,7 +4,7 @@
 Sensitivity
 ===============
 
-.. automodule:: UQpy.Sensitivity
+.. automodule:: UQpy.sensitivity
 
 
 Sensitivity analysis comprises techniques focused on determining how the variations of input variables :math:`X=\left[ X_{1}, X_{2},…,X_{d} \right]` of a mathematical model influence the response value :math:`Y=h(X)`.
@@ -43,10 +43,10 @@ Morris Class Description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-.. autoclass:: UQpy.Sensitivity.Morris
-	:members:
-	
-	
+.. autoclass:: UQpy.sensitivity.MorrisSensitivity
+    :members:
+
+
 **Note: subclassing the Morris class**
 
 The user can subclass the Morris class to implement algorithms with better sampling of the trajectories for instance. In order to do so, the user can simply overwrite the `sample_trajectories` method, which should take as inputs the number of trajectories `ntrajectories` and any other user-defined input (transferred from the `run` method as kwargs).	
@@ -58,5 +58,4 @@ The user can subclass the Morris class to implement algorithms with better sampl
 
 
 
-	
-	
+

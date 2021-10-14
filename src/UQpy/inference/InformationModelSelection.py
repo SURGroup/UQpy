@@ -1,7 +1,9 @@
 import logging
 from typing import Union
 from beartype import beartype
-from UQpy.inference.inference_models.optimization.MinizeOptimizer import MinimizeOptimizer
+from UQpy.inference.inference_models.optimization.MinimizeOptimizer import (
+    MinimizeOptimizer,
+)
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
 from UQpy.inference.MLE import MLE
 from UQpy.inference.inference_models.optimization.Optimizer import Optimizer
@@ -75,21 +77,27 @@ class InformationModelSelection:
     **Methods:**
 
     """
+
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
     @beartype
-    def __init__(self,
-                 candidate_models: list[InferenceModel],
-                 data: Union[list, np.ndarray],
-                 optimizer: Optimizer = MinimizeOptimizer(),
-                 criterion: InformationTheoreticCriterion = InformationTheoreticCriterion.AIC,
-                 random_state: RandomStateType = None,
-                 optimizations_number: Union[PositiveInteger, None] = None,
-                 initial_guess: list[np.ndarray] = None):
+    def __init__(
+        self,
+        candidate_models: list[InferenceModel],
+        data: Union[list, np.ndarray],
+        optimizer: Optimizer = MinimizeOptimizer(),
+        criterion: InformationTheoreticCriterion = InformationTheoreticCriterion.AIC,
+        random_state: RandomStateType = None,
+        optimizations_number: Union[PositiveInteger, None] = None,
+        initial_guess: list[np.ndarray] = None,
+    ):
 
-        if not isinstance(candidate_models, (list, tuple)) or not all(isinstance(model, InferenceModel)
-                                                                      for model in candidate_models):
-            raise TypeError('UQpy: Input candidate_models must be a list of InferenceModel objects.')
+        if not isinstance(candidate_models, (list, tuple)) or not all(
+            isinstance(model, InferenceModel) for model in candidate_models
+        ):
+            raise TypeError(
+                "UQpy: Input candidate_models must be a list of InferenceModel objects."
+            )
         self.models_number = len(candidate_models)
         self.candidate_models = candidate_models
         self.data = data
@@ -102,20 +110,26 @@ class InformationModelSelection:
         self._initialize_ml_estimators()
 
         # Initialize the outputs
-        self.criterion_values = [None, ] * self.models_number
-        self.penalty_terms = [None, ] * self.models_number
-        self.probabilities = [None, ] * self.models_number
+        self.criterion_values = [None,] * self.models_number
+        self.penalty_terms = [None,] * self.models_number
+        self.probabilities = [None,] * self.models_number
 
         # Run the model selection procedure
         if (optimizations_number is not None) or (initial_guess is not None):
-            self.run(optimizations_number=optimizations_number, initial_guess=initial_guess)
+            self.run(
+                optimizations_number=optimizations_number, initial_guess=initial_guess
+            )
 
     def _initialize_ml_estimators(self):
         for i, inference_model in enumerate(self.candidate_models):
-            ml_estimator = MLE(inference_model=inference_model, data=self.data,
-                               random_state=self.random_state, initial_guess=None,
-                               optimizations_number=None,
-                               optimizer=self.optimizer)
+            ml_estimator = MLE(
+                inference_model=inference_model,
+                data=self.data,
+                random_state=self.random_state,
+                initial_guess=None,
+                optimizations_number=None,
+                optimizer=self.optimizer,
+            )
             self.ml_estimators.append(ml_estimator)
 
     def run(self, optimizations_number: PositiveInteger = 1, initial_guess=None):
@@ -136,17 +150,31 @@ class InformationModelSelection:
             `x0` is not provided. Default is 1. See ``MLEstimation`` class.
 
         """
-        initial_guess, optimizations_number = self._check_input_data(initial_guess, optimizations_number)
+        initial_guess, optimizations_number = self._check_input_data(
+            initial_guess, optimizations_number
+        )
 
         # Loop over all the models
-        for i, (inference_model, ml_estimator) in enumerate(zip(self.candidate_models, self.ml_estimators)):
+        for i, (inference_model, ml_estimator) in enumerate(
+            zip(self.candidate_models, self.ml_estimators)
+        ):
             # First evaluate ML estimate for all models, do several iterations if demanded
-            ml_estimator.run(optimizations_number=optimizations_number[i], initial_guess=initial_guess[i])
+            ml_estimator.run(
+                optimizations_number=optimizations_number[i],
+                initial_guess=initial_guess[i],
+            )
 
             # Then minimize the criterion
-            self.criterion_values[i], self.penalty_terms[i] = self._minimize_info_criterion(
-                criterion=self.criterion, data=self.data, inference_model=inference_model,
-                max_log_like=ml_estimator.max_log_like, return_penalty=True)
+            (
+                self.criterion_values[i],
+                self.penalty_terms[i],
+            ) = self._minimize_info_criterion(
+                criterion=self.criterion,
+                data=self.data,
+                inference_model=inference_model,
+                max_log_like=ml_estimator.max_log_like,
+                return_penalty=True,
+            )
 
         # Compute probabilities from criterion values
         self.probabilities = self._compute_probabilities(self.criterion_values)
@@ -154,12 +182,21 @@ class InformationModelSelection:
     def _check_input_data(self, initial_guess, optimizations_number):
         if isinstance(optimizations_number, int) or optimizations_number is None:
             optimizations_number = [optimizations_number] * self.models_number
-        if not (isinstance(optimizations_number, list) and len(optimizations_number) == self.models_number):
-            raise ValueError('UQpy: nopt should be an int or list of length models_number')
+        if not (
+            isinstance(optimizations_number, list)
+            and len(optimizations_number) == self.models_number
+        ):
+            raise ValueError(
+                "UQpy: nopt should be an int or list of length models_number"
+            )
         if initial_guess is None:
             initial_guess = [None] * self.models_number
-        if not (isinstance(initial_guess, list) and len(initial_guess) == self.models_number):
-            raise ValueError('UQpy: x0 should be a list of length models_number (or None).')
+        if not (
+            isinstance(initial_guess, list) and len(initial_guess) == self.models_number
+        ):
+            raise ValueError(
+                "UQpy: x0 should be a list of length models_number (or None)."
+            )
         return initial_guess, optimizations_number
 
     def sort_models(self):
@@ -182,8 +219,13 @@ class InformationModelSelection:
         self.probabilities = [self.probabilities[i] for i in sort_idx]
 
     @staticmethod
-    def _minimize_info_criterion(criterion: InformationTheoreticCriterion, data, inference_model,
-                                 max_log_like, return_penalty=False):
+    def _minimize_info_criterion(
+        criterion: InformationTheoreticCriterion,
+        data,
+        inference_model,
+        max_log_like,
+        return_penalty=False,
+    ):
         """
         Compute the criterion value for a given model, given a max_log_likelihood value.
 

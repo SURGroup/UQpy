@@ -5,7 +5,6 @@ from UQpy.utilities import DistanceMetric
 
 
 class Euclidean:
-    @beartype
     def __init__(self, metric: DistanceMetric):
         metric_str = str(metric.name).lower()
         self.distance_function = lambda x: pdist(x, metric=metric_str)

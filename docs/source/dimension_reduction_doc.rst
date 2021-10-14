@@ -3,11 +3,11 @@
 DimensionReduction
 ====================
 
-.. automodule:: UQpy.DimensionReduction
+.. automodule:: UQpy.dimension_reduction
 
 This module contains the classes and methods to perform the point-wise and multi point data-based dimensionality reduction via projection onto the Grassmann manifold and Diffusion Maps, respectively. Further, interpolation in the tangent space centered at a given point on the Grassmann manifold can be performed. In addition, dataset reconstruction and dimension reduction can be performed via the Proper Orthogonal Decomposition method and the Higher-order Singular Value Decomposition for solution snapshots in the form of second-order tensors.
 
-The module ``UQpy.DimensionReduction`` currently contains the following classes:
+The module ``UQpy.dimension_reduction`` currently contains the following classes:
 
 * ``Grassmann``: Class for for analysis of samples on the Grassmann manifold.
 
@@ -59,11 +59,11 @@ Grassmann Class Descriptions
 
 The ``Grassmann`` class is imported using the following command:
 
->>> from DimensionReduction import Grassmann
+>>> from UQpy.dimension_reduction import Grassmann
 
 One can use the following command to instantiate the class ``Grassmann``
 
-.. autoclass:: UQpy.DimensionReduction.Grassmann
+.. autoclass:: UQpy.dimension_reduction.grassman.Grassman
     :members:  
 
 DiffusionMaps
@@ -99,11 +99,11 @@ Diffusion Maps Class Descriptions
 
 The ``DiffusionMaps`` class is imported using the following command:
 
->>> from DimensionReduction import DiffusionMaps
+>>> from UQpy.dimension_reduction import DiffusionMaps
 
 One can use the following command to instantiate the class ``DiffusionMaps``
 
-.. autoclass:: UQpy.DimensionReduction.DiffusionMaps
+.. autoclass:: UQpy.dimension_reduction.DiffusionMaps
     :members:  
 
 POD
@@ -120,13 +120,8 @@ POD Class Descriptions
 
 The ``POD`` class is imported using the following command:
 
->>> from DimensionReduction import POD
 
 One can use the following command to instantiate the class ``POD``
-
-.. autoclass:: UQpy.DimensionReduction.POD
-    :members: 
-
 
 DirectPOD
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -170,11 +165,11 @@ DirectPOD Class Descriptions
 
 The ``DirectPOD`` class is imported using the following command:
 
->>> from DimensionReduction import DirectPOD
+>>> from UQpy.dimension_reduction.pod.DirectPOD import DirectPOD
 
 One can use the following command to instantiate the class ``DirectPOD``
 
-.. autoclass:: UQpy.DimensionReduction.DirectPOD
+.. autoclass:: UQpy.dimension_reduction.pod.DirectPOD
     :members: 
     
     
@@ -201,11 +196,11 @@ SnapshotPOD Class Descriptions
 
 The ``SnapshotPOD`` class is imported using the following command:
 
->>> from DimensionReduction import SnapshotPOD
+>>> from UQpy.dimension_reduction.pod.SnapshotPOD import SnapshotPOD
 
 One can use the following command to instantiate the class ``SnapshotPOD``
 
-.. autoclass:: UQpy.DimensionReduction.SnapshotPOD
+.. autoclass:: UQpy.dimension_reduction.pod.SnapshotPOD
     :members: 
 
 
@@ -249,11 +244,11 @@ HOSVD Class Descriptions
 
 The ``HOSVD`` class is imported using the following command:
 
->>> from DimensionReduction import HOSVD
+>>> from UQpy.dimension_reduction.HigherOrderSVD import HigherOrderSVD
 
 One can use the following command to instantiate the class ``HOSVD``
 
-.. autoclass:: UQpy.DimensionReduction.HOSVD
+.. autoclass:: UQpy.dimension_reduction.HigherOrderSVD
     :members: 
 
 |

@@ -14,7 +14,7 @@ class Polynomials:
 
     **Inputs:**
 
-    * **dist_object** ('class'):
+    * **distributions** ('class'):
         Object from a distribution class.
 
     * **degree** ('int'):

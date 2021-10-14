@@ -11,6 +11,7 @@ The module currently contains the following classes:
 """
 import logging
 import numpy as np
+from scipy.linalg import cholesky
 import scipy.stats as stats
 from beartype import beartype
 from UQpy.utilities.ValidationTypes import RandomStateType
@@ -25,22 +26,18 @@ class Kriging:
 
     **Inputs:**
 
-    * **reg_model** (`str` or `function`):
-        `reg_model` specifies and evaluates the basis functions and their coefficients, which defines the trend of
-        the model.
+    * **regression_model** (Class of type `Regression`):
+        `regression_model` specifies and evaluates the basis functions and their coefficients, which defines the trend
+        of the model.
 
-        Built-in options (string input): 'Constant', 'Linear', 'Quadratic'
+        Built-in options: Constant, Linear, Quadratic
 
-        The user may also pass a callable function as defined in `User-Defined Regression Model` above.
-
-    * **corr_model** (`str` or `function`):
+    * **correlation_model** (Class of type `Correlation`):
         `corr_model` specifies and evaluates the correlation function.
 
-        Built-in options (string input): 'Exponential', 'Gaussian', 'Linear', 'Spherical', 'Cubic', 'Spline'
+        Built-in options: Exponential, Gaussian, Linear, Spherical, Cubic, Spline
 
-        The user may also pass a callable function as defined in `User-Defined Correlation` above.
-
-    * **corr_model_params** (`ndarray` or `list of floats`):
+    * **correlation_model_parameters** (`ndarray` or `list of floats`):
         List or array of initial values for the correlation model hyperparameters/scale parameters.
 
     * **bounds** (`list` of `float`):
@@ -49,21 +46,16 @@ class Kriging:
 
         Default: [0.001, 10**7] for each hyperparameter.
 
-    * **op** (`boolean`):
+    * **optimize** (`boolean`):
         Indicator to solve MLE problem or not. If 'True' corr_model_params will be used as initial solution for
         optimization problem. Otherwise, corr_model_params will be directly use as the hyperparamters.
 
         Default: True.
 
-    * **nopt** (`int`):
+    * **optimization_number** (`int`):
             Number of times MLE optimization problem is to be solved with a random starting point.
 
             Default: 1.
-
-    * **verbose** (`Boolean`):
-            A boolean declaring whether to write text to the terminal.
-
-            Default value: False
 
     **Attributes:**
 
@@ -81,17 +73,19 @@ class Kriging:
     """
 
     @beartype
-    def __init__(self,
-                 regression_model: Regression,
-                 correlation_model: Correlation,
-                 bounds=None,
-                 optimize: bool = True,
-                 optimizations_number: int = 1,
-                 normalize: bool = True,
-                 correlation_model_parameters=None,
-                 optimizer=None,
-                 random_state: RandomStateType = None,
-                 **kwargs_optimizer):
+    def __init__(
+        self,
+        regression_model: Regression,
+        correlation_model: Correlation,
+        correlation_model_parameters: list,
+        bounds=None,
+        optimize: bool = True,
+        optimizations_number: int = 1,
+        normalize: bool = True,
+        optimizer=None,
+        random_state: RandomStateType = None,
+        **kwargs_optimizer
+    ):
 
         self.regression_model = regression_model
         self.correlation_model = correlation_model
@@ -126,14 +120,19 @@ class Kriging:
             raise NotImplementedError("UQpy: corr_model_params is not defined.")
 
         if self.bounds is None:
-            self.bounds = [[0.001, 10 ** 7]] * self.correlation_model_parameters.shape[0]
+            self.bounds = [[0.001, 10 ** 7]] * self.correlation_model_parameters.shape[
+                0
+            ]
 
         if self.optimizer is None:
             from scipy.optimize import fmin_l_bfgs_b
+
             self.optimizer = fmin_l_bfgs_b
-            self.kwargs_optimizer = {'bounds': self.bounds}
+            self.kwargs_optimizer = {"bounds": self.bounds}
         elif not callable(self.optimizer):
-            raise TypeError('UQpy: Input optimizer should be None (set to scipy.optimize.minimize) or a callable.')
+            raise TypeError(
+                "UQpy: Input optimizer should be None (set to scipy.optimize.minimize) or a callable."
+            )
 
         if not isinstance(self.regression_model, Regression):
             raise NotImplementedError("UQpy: Doesn't recognize the Regression model.")
@@ -144,9 +143,17 @@ class Kriging:
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            raise TypeError(
+                "UQpy: random_state must be None, an int or an np.random.RandomState object."
+            )
 
-    def fit(self, samples, values, optimizations_number=None, correlation_model_parameters=None):
+    def fit(
+        self,
+        samples,
+        values,
+        optimizations_number=None,
+        correlation_model_parameters=None,
+    ):
         """
         Fit the surrogate model using the training samples and the corresponding model values.
 
@@ -169,68 +176,13 @@ class Kriging:
         ``kriging`` class.
 
         """
-        from scipy.linalg import cholesky
+        self.logger.info("UQpy: Running kriging.fit")
 
-        self.logger.info('UQpy: Running kriging.fit')
-
-        def log_likelihood(p0, cm, s, f, y):
-            # Return the log-likelihood function and it's gradient. Gradient is calculate using Central Difference
-            m = s.shape[0]
-            n = s.shape[1]
-            r__, dr_ = cm.c(x=s, s=s, params=p0, dt=True)
-            try:
-                cc = cholesky(r__ + 2 ** (-52) * np.eye(m), lower=True)
-            except np.linalg.LinAlgError:
-                return np.inf, np.zeros(n)
-
-            # Product of diagonal terms is negligible sometimes, even when cc exists.
-            if np.prod(np.diagonal(cc)) == 0:
-                return np.inf, np.zeros(n)
-
-            cc_inv = np.linalg.inv(cc)
-            r_inv = np.matmul(cc_inv.T, cc_inv)
-            f__ = cc_inv.dot(f)
-            y__ = cc_inv.dot(y)
-
-            q__, g__ = np.linalg.qr(f__)  # Eq: 3.11, DACE
-
-            # Check if F is a full rank matrix
-            if np.linalg.matrix_rank(g__) != min(np.size(f__, 0), np.size(f__, 1)):
-                raise NotImplementedError("Chosen regression functions are not sufficiently linearly independent")
-
-            # Design parameters
-            beta_ = np.linalg.solve(g__, np.matmul(np.transpose(q__), y__))
-
-            # Computing the process variance (Eq: 3.13, DACE)
-            sigma_ = np.zeros(y.shape[1])
-
-            ll = 0
-            for out_dim in range(y.shape[1]):
-                sigma_[out_dim] = (1 / m) * (np.linalg.norm(y__[:, out_dim] - np.matmul(f__, beta_[:, out_dim])) ** 2)
-                # Objective function:= log(det(sigma**2 * R)) + constant
-                ll = ll + (np.log(np.linalg.det(sigma_[out_dim] * r__)) + m * (np.log(2 * np.pi) + 1)) / 2
-
-            # Gradient of loglikelihood
-            # Reference: C. E. Rasmussen & C. K. I. Williams, Gaussian Processes for Machine Learning, the MIT Press,
-            # 2006, ISBN 026218253X. (Page 114, Eq.(5.9))
-            residual = y - np.matmul(f, beta_)
-            gamma = np.matmul(r_inv, residual)
-            grad_mle = np.zeros(n)
-            for in_dim in range(n):
-                r_inv_derivative = np.matmul(r_inv, np.matmul(dr_[:, :, in_dim], r_inv))
-                tmp = np.matmul(residual.T, np.matmul(r_inv_derivative, residual))
-                for out_dim in range(y.shape[1]):
-                    alpha = gamma / sigma_[out_dim]
-                    tmp1 = np.matmul(alpha, alpha.T) - r_inv / sigma_[out_dim]
-                    cov_der = sigma_[out_dim] * dr_[:, :, in_dim] + tmp * r__ / m
-                    grad_mle[in_dim] = grad_mle[in_dim] - 0.5 * np.trace(np.matmul(tmp1, cov_der))
-
-            return ll, grad_mle
 
         if optimizations_number is not None:
             self.optimizations_number = optimizations_number
         if correlation_model_parameters is not None:
-            self.correlation_model_parameters = correlation_model_parameters
+            self.correlation_model_parameters = np.array(correlation_model_parameters)
         self.samples = np.array(samples)
 
         # Number of samples and dimensions of samples and values
@@ -239,7 +191,7 @@ class Kriging:
 
         self.values = np.array(values).reshape(nsamples, output_dim)
 
-        # Normalizing the second_order_tensor
+        # Normalizing the data
         if self.normalize:
             self.sample_mean, self.sample_std = np.mean(self.samples, 0), np.std(self.samples, 0)
             self.value_mean, self.value_std = np.mean(self.values, 0), np.std(self.values, 0)
@@ -254,18 +206,21 @@ class Kriging:
         # Maximum Likelihood Estimation : Solving optimization problem to calculate hyperparameters
         if self.optimize:
             starting_point = self.correlation_model_parameters
-            minimizer, fun_value = \
-                np.zeros([self.optimizations_number, input_dim]), \
-                np.zeros([self.optimizations_number, 1])
+            minimizer, fun_value = np.zeros([self.optimizations_number, input_dim]),\
+                                   np.zeros([self.optimizations_number, 1])
             for i__ in range(self.optimizations_number):
-                p_ = self.optimizer(log_likelihood, starting_point, args=(self.correlation_model, s_, self.F, y_),
-                                    **self.kwargs_optimizer)
+                p_ = self.optimizer(
+                    Kriging.log_likelihood,
+                    starting_point,
+                    args=(self.correlation_model, s_, self.F, y_),
+                    **self.kwargs_optimizer)
                 minimizer[i__, :] = p_[0]
                 fun_value[i__, 0] = p_[1]
                 # Generating new starting points using log-uniform distribution
                 if i__ != self.optimizations_number - 1:
                     starting_point = stats.reciprocal.rvs([j[0] for j in self.bounds], [j[1] for j in self.bounds], 1,
                                                           random_state=self.random_state)
+
             if min(fun_value) == np.inf:
                 raise NotImplementedError("Maximum likelihood estimator failed: Choose different starting point or "
                                           "increase nopt")
@@ -275,7 +230,8 @@ class Kriging:
         # Updated Correlation matrix corresponding to MLE estimates of hyperparameters
         self.R = self.correlation_model.c(x=s_, s=s_, params=self.correlation_model_parameters)
         # Compute the regression coefficient (solving this linear equation: F * beta = Y)
-        c = np.linalg.cholesky(self.R)  # Eq: 3.8, DACE
+        # Eq: 3.8, DACE
+        c = cholesky(self.R + (10 + nsamples) * 2 ** (-52) * np.eye(nsamples), lower=True, check_finite=False)
         c_inv = np.linalg.inv(c)
         f_dash = np.linalg.solve(c, self.F)
         y_dash = np.linalg.solve(c, y_)
@@ -296,7 +252,7 @@ class Kriging:
 
         self.F_dash, self.C_inv, self.G = f_dash, c_inv, g_
 
-        self.logger.info('UQpy: kriging fit complete.')
+        self.logger.info("UQpy: kriging fit complete.")
 
     def predict(self, points, return_std=False):
         """
@@ -307,7 +263,7 @@ class Kriging:
 
         **Inputs:**
 
-        * **x** (`list` or `numpy array`):
+        * **** (`list` or `numpy array`):
             Points at which to predict the model response.
 
         * **return_std** (`Boolean`):
@@ -329,8 +285,12 @@ class Kriging:
         else:
             s_ = self.samples
         fx, jf = self.regression_model.r(x_)
-        rx = self.correlation_model.c(x=x_, s=s_, params=self.correlation_model_parameters)
-        y = np.einsum('ij,jk->ik', fx, self.beta) + np.einsum('ij,jk->ik', rx, self.gamma)
+        rx = self.correlation_model.c(
+            x=x_, s=s_, params=self.correlation_model_parameters
+        )
+        y = np.einsum("ij,jk->ik", fx, self.beta) + np.einsum(
+            "ij,jk->ik", rx, self.gamma
+        )
         if self.normalize:
             y = self.value_mean + y * self.value_std
         if x_.shape[1] == 1:
@@ -340,9 +300,9 @@ class Kriging:
             u = np.matmul(self.F_dash.T, r_dash) - fx.T
             norm1 = np.linalg.norm(r_dash, 2, 0)
             norm2 = np.linalg.norm(np.linalg.solve(self.G, u), 2, 0)
-            mse = self.err_var * np.atleast_2d(1 + norm2 - norm1).T
+            mse = np.sqrt(self.err_var * np.atleast_2d(1 + norm2 - norm1).T)
             if self.normalize:
-                mse = self.value_std * np.sqrt(mse)
+                mse = self.value_std * mse
             if x_.shape[1] == 1:
                 mse = mse.flatten()
             return y, mse
@@ -375,10 +335,84 @@ class Kriging:
             s_ = self.samples
 
         fx, jf = self.regression_model.r(x_)
-        rx, drdx = self.correlation_model.c(x=x_, s=s_, params=self.correlation_model_parameters, dx=True)
-        y_grad = np.einsum('ikj,jm->ik', jf, self.beta) + np.einsum('ijk,jm->ki', drdx.T, self.gamma)
+        rx, drdx = self.correlation_model.c(
+            x=x_, s=s_, params=self.correlation_model_parameters, dx=True
+        )
+        y_grad = np.einsum("ikj,jm->ik", jf, self.beta) + np.einsum(
+            "ijk,jm->ki", drdx.T, self.gamma
+        )
         if self.normalize:
             y_grad = y_grad * self.value_std / self.sample_std
         if x_.shape[1] == 1:
             y_grad = y_grad.flatten()
         return y_grad
+
+    @staticmethod
+    def log_likelihood(p0, cm, s, f, y):
+        # Return the log-likelihood function and it's gradient. Gradient is calculate using Central Difference
+        m = s.shape[0]
+        n = s.shape[1]
+        r__, dr_ = cm.c(x=s, s=s, params=p0, dt=True)
+        try:
+            cc = cholesky(r__ + 2 ** (-52) * np.eye(m), lower=True)
+        except np.linalg.LinAlgError:
+            return np.inf, np.zeros(n)
+
+        # Product of diagonal terms is negligible sometimes, even when cc exists.
+        if np.prod(np.diagonal(cc)) == 0:
+            return np.inf, np.zeros(n)
+
+        cc_inv = np.linalg.inv(cc)
+        r_inv = np.matmul(cc_inv.T, cc_inv)
+        f__ = cc_inv.dot(f)
+        y__ = cc_inv.dot(y)
+
+        q__, g__ = np.linalg.qr(f__)  # Eq: 3.11, DACE
+
+        # Check if F is a full rank matrix
+        if np.linalg.matrix_rank(g__) != min(np.size(f__, 0), np.size(f__, 1)):
+            raise NotImplementedError(
+                "Chosen regression functions are not sufficiently linearly independent"
+            )
+
+        # Design parameters
+        beta_ = np.linalg.solve(g__, np.matmul(np.transpose(q__), y__))
+
+        # Computing the process variance (Eq: 3.13, DACE)
+        sigma_ = np.zeros(y.shape[1])
+
+        ll = 0
+        for out_dim in range(y.shape[1]):
+            sigma_[out_dim] = (1 / m) * (
+                    np.linalg.norm(y__[:, out_dim] - np.matmul(f__, beta_[:, out_dim]))
+                    ** 2
+            )
+            # Objective function:= log(det(sigma**2 * R)) + constant
+            ll = (
+                    ll
+                    + (
+                            np.log(np.linalg.det(sigma_[out_dim] * r__))
+                            + m * (np.log(2 * np.pi) + 1)
+                    )
+                    / 2
+            )
+
+        # Gradient of loglikelihood
+        # Reference: C. E. Rasmussen & C. K. I. Williams, Gaussian Processes for Machine Learning, the MIT Press,
+        # 2006, ISBN 026218253X. (Page 114, Eq.(5.9))
+        residual = y - np.matmul(f, beta_)
+        gamma = np.matmul(r_inv, residual)
+        grad_mle = np.zeros(n)
+        for in_dim in range(n):
+            r_inv_derivative = np.matmul(r_inv, np.matmul(dr_[:, :, in_dim], r_inv))
+            tmp = np.matmul(residual.T, np.matmul(r_inv_derivative, residual))
+            for out_dim in range(y.shape[1]):
+                alpha = gamma / sigma_[out_dim]
+                tmp1 = np.matmul(alpha, alpha.T) - r_inv / sigma_[out_dim]
+                cov_der = sigma_[out_dim] * dr_[:, :, in_dim] + tmp * r__ / m
+                grad_mle[in_dim] = grad_mle[in_dim] - 0.5 * np.trace(
+                    np.matmul(tmp1, cov_der)
+                )
+
+        return ll, grad_mle
+

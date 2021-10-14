@@ -48,3 +48,12 @@ def example4(samples=None):
     for i in range(samples.shape[0]):
         g[i] = samples[i, 0] * samples[i, 1] - 80
     return g
+
+
+def RunPythonModel(samples, b_eff, d):
+
+    qoi = list()
+    for i in range(samples.shape[0]):
+        qoi.append(b_eff * np.sqrt(d) - np.sum(samples[i, :]))
+    return qoi
+

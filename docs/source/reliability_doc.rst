@@ -11,7 +11,7 @@ Reliability of a system refers to the assessment of its probability of failure (
 
 where :math:`g(\textbf{X})` is the so-called performance function. The reliability problem is often formulated in the standard normal space :math:`\textbf{U}\sim \mathcal{N}(\textbf{0}, \textbf{I}_n)`, which means that a nonlinear isoprobabilistic  transformation from the generally non-normal parameter space :math:`\textbf{X}\sim f_{\textbf{X}}(\cdot)` to the standard normal is required (see the ``Tansformations`` module). The performance function in the standard normal space is denoted :math:`G(\textbf{U})`. ``UQpy`` does not require this transformation and can support reliability analysis for problems with arbitrarily distributed parameters.
 
-.. automodule:: UQpy.Reliability
+.. automodule:: UQpy.reliability
 
 
 Subset Simulation

@@ -4,7 +4,6 @@ from UQpy.inference.inference_models.optimization.Optimizer import Optimizer
 
 
 class MinimizeOptimizer(Optimizer):
-
     def __init__(self, method=None, bounds=None):
         self.optimization = minimize
         self.method = method

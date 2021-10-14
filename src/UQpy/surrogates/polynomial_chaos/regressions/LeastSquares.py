@@ -11,7 +11,7 @@ class LeastSquareRegression(Regression):
 
     **Inputs:**
 
-    * **poly_object** ('class'):
+    * **polynomials** ('class'):
         Object from the 'Polynomial' class
 
     **Methods:**

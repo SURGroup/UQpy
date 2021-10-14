@@ -16,14 +16,21 @@ class SORM(TaylorSeries):
     A class to perform the Second Order reliability Method. This class is used to correct the estimated FORM probability
     using second-order information.
     ``SORM`` is a child class of the ``taylor_series`` class.
+
     **Input:**
+
     The ``SORM`` class requires an object of type ``FORM`` as input.
+
     **Output/Returns:**
+
     The ``SORM`` class has the same outputs as the ``FORM`` class plus
+
     * **Pf_sorm** (`float`):
         Second-order probability of failure estimate.
+
     * **beta_sorm** (`float`):
         Second-order reliability index.
+
     **Methods:**
     """
 

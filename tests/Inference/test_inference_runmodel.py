@@ -1,4 +1,5 @@
 from UQpy.RunModel import RunModel
+from UQpy.inference.inference_models.optimization.MinimizeOptimizer import MinimizeOptimizer
 from UQpy.inference.inference_models.ComputationalModel import *
 from UQpy.inference.inference_models.LogLikelihoodModel import *
 from UQpy.inference.MLE import *

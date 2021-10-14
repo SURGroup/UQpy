@@ -8,7 +8,7 @@ SampleMethods
 
 
 Monte Carlo Sampling
-----
+--------------------
 
 The ``MonteCarloSampling`` class generates random samples from a specified probability distribution(s).  The ``MonteCarloSampling`` class utilizes the ``Distributions`` class to define probability distributions.  The advantage of using the ``MonteCarloSampling`` class for ``UQpy`` operations, as opposed to simply generating samples with the ``scipy.stats`` package, is that it allows building an object containing the samples and their distributions for integration with other ``UQpy`` modules.
 
@@ -19,7 +19,7 @@ MonteCarloSampling Class Descriptions
 
 
 Latin Hypercube Sampling
-----
+------------------------
 
 The ``LatinHypercubeSampling`` class generates random samples from a specified probability distribution(s) using Latin hypercube sampling. LatinHypercubeSampling has the advantage that the samples generated are uniformly distributed over each marginal distribution. LatinHypercubeSampling is perfomed by dividing the range of each random variable into N bins with equal probability mass, where N is the required number of samples, generating one sample per bin, and then randomly pairing the samples.
 
@@ -53,7 +53,7 @@ The output of this function should be a numpy array of at least two-dimensions w
 
 
 LatinHypercubeSampling Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.sampling.LatinHypercubeSampling
     :members:
@@ -105,7 +105,7 @@ The ``Strata`` class is the parent class that defines the geometric decompositio
 Strata Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.utilities.strata.baseclass.strata
+.. autoclass:: UQpy.utilities.strata.baseclass.Strata
     :members:
 
 .. autoclass:: UQpy.utilities.strata.Rectangular
@@ -124,7 +124,7 @@ Adding a new type of stratification requires creating a new subclass of the ``St
 
 
 StratifiedSampling Class
-^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``StratifiedSampling`` class is the parent class for stratified sampling. The various ``StratifiedSampling`` classes generate random samples from a specified probability distribution(s) using stratified sampling with strata specified by an object of one of the ``Strata`` classes.
 
@@ -141,7 +141,7 @@ Refined Stratified Sampling
 Refined Stratified Sampling (RSS) is a sequential sampling procedure that adaptively refines the stratification of the parameter space to add samples. There are four variations of RSS currently available in ``UQpy``. First, the procedure works with either rectangular stratification (i.e. using ``Rectangular``) or Voronoi stratification (i.e. using ``Voronoi``). For each of these, two refinement procedures are available. The first is a randomized algorithm where strata are selected at random according to their probability weight. This algorithm is described in [10]_. The second is a gradient-enhanced version (so-called GE-RSS) that draws samples in stata that possess both large probability weight and have high variance. This algorithm is described in [11]_.
 
 Refined Stratified Sampling Class
-^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 All variations of Refined Stratifed Sampling are implemented in the ``RefinedStratifiedSampling`` class.
 
@@ -149,7 +149,7 @@ Extension of the RSS class for new algorithms can be accomplished by adding new 
 
 
 RefinedStratifiedSampling Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.sampling.RefinedStratifiedSampling
     :members:
@@ -179,7 +179,7 @@ Simplex Class Descriptions
 
 
 AdaptiveKriging
------
+---------------
 
 The ``AdaptiveKriging`` class generates samples adaptively using a specified Kriging-based learning function in a general Adaptive Kriging-Monte Carlo Sampling (AKMCS) framework. Based on the specified learning function, different objectives can be achieved. In particular, the ``AdaptiveKriging`` class has learning functions for reliabliity analysis (probability of failure estimation), global optimization, best global fit surrogate models, and can also accept user-defined learning functions for these and other objectives.  Note that the term AKMCS is adopted from [3]_ although the procedure is referred to by different names depending on the specific learning function employed. For example, when applied for optimization the algorithm leverages the expected improvement function and is known under the name Efficient Global Optimization (EGO) [4]_.
 
@@ -341,13 +341,13 @@ MCMC Class Descriptions
    :members:
 
 MetropolisHastings
-~~~~~
+~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: UQpy.sampling.mcmc.MetropolisHastings
     :members:
 
 ModifiedMetropolisHastings
-~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
    
 .. autoclass:: UQpy.sampling.mcmc.ModifiedMetropolisHastings
     :members:
@@ -374,7 +374,7 @@ DREAM
 
    
 ImportanceSampling
-----
+------------------
 
 Importance sampling (IS) is based on the idea of sampling from an alternate distribution and reweighting the samples to be representative of the target distribution (perhaps concentrating sampling in certain regions of the input space that are of greater importance). This often enables efficient evaluations of expectations :math:`E_{ \textbf{x} \sim p} [ f(\textbf{x}) ]` where :math:`f( \textbf{x})` is small outside of a small region of the input space. To this end, a sample :math:`\textbf{x}` is drawn from a proposal distribution :math:`q(\textbf{x})` and re-weighted to correct for the discrepancy between the sampling distribution :math:`q` and the true distribution :math:`p`. The weight of the sample is computed as 
 

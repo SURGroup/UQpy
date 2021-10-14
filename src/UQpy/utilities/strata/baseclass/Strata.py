@@ -19,15 +19,8 @@ class Strata:
     * **seeds** (`ndarray`)
         Define the seed points for the strata. See specific subclass for definition of the seed points.
 
-    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
-
-        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-        object itself can be passed directly.
-
     * **verbose** (`Boolean`):
         A boolean declaring whether to write text to the terminal.
-
 
     **Attributes:**
 
@@ -36,24 +29,15 @@ class Strata:
 
     **Methods:**
     """
+
     @beartype
-    def __init__(self,
-                 seeds: Union[None, np.ndarray] = None,
-                 random_state: RandomStateType = None):
+    def __init__(self, seeds: Union[None, np.ndarray] = None):
 
         self.seeds = seeds
         self.volume = None
 
-        self.random_state = random_state
-        if isinstance(self.random_state, int):
-            self.random_state = np.random.RandomState(self.random_state)
-        elif self.random_state is None:
-            self.random_state = np.random.RandomState()
-        elif not isinstance(self.random_state, np.random.RandomState):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
-
     @abc.abstractmethod
-    def stratify(self):
+    def stratify(self, random_state):
         """
         Perform the stratification of the unit hypercube. It is overwritten by the subclass. This method must exist in
         any subclass of the ``strata`` class.
@@ -67,7 +51,7 @@ class Strata:
         pass
 
     @abc.abstractmethod
-    def sample_strata(self, samples_per_stratum_number):
+    def sample_strata(self, samples_per_stratum_number, random_state):
         pass
 
     @abc.abstractmethod
@@ -80,7 +64,8 @@ class Strata:
     def extend_weights(self, samples_per_stratum_number, index, weights):
         if int(samples_per_stratum_number[index]) != 0:
             weights.extend(
-                [self.volume[index] / samples_per_stratum_number[index]] *
-                int(samples_per_stratum_number[index]))
+                [self.volume[index] / samples_per_stratum_number[index]]
+                * int(samples_per_stratum_number[index])
+            )
         else:
             weights.extend([0] * int(samples_per_stratum_number[index]))

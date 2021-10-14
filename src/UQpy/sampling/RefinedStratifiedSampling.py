@@ -30,49 +30,59 @@ class RefinedStratifiedSampling:
         ``GaussianProcessRegressor``
         `krig_object` is only used to compute the gradient in gradient-enhanced refined stratified sampling. It must
         be provided if a `runmodel_object` is provided.
+
     * **local** (`Boolean`):
         In gradient enhanced refined stratified sampling, the gradient is updated after each new sample is added.
         This parameter is used to determine whether the gradient is updated for every stratum or only locally in the
         strata nearest the refined stratum.
         If `local = True`, gradients are only updated in localized regions around the refined stratum.
         Used only in gradient-enhanced refined stratified sampling.
+
     * **max_train_size** (`int`):
         In gradient enhanced refined stratified sampling, if `local=True` `max_train_size` specifies the number of
         nearest points at which to update the gradient.
         Used only in gradient-enhanced refined stratified sampling.
+
     * **step_size** (`float`)
         Defines the size of the step to use for gradient estimation using central difference method.
         Used only in gradient-enhanced refined stratified sampling.
+
     * **qoi_name** (`dict`):
         Name of the quantity of interest from the `runmodel_object`. If the quantity of interest is a dictionary,
         this is used to convert it to a list
         Used only in gradient-enhanced refined stratified sampling.
+
     * **n_add** (`int`):
         Number of samples to be added per iteration.
         Default: 1.
+
     * **nsamples** (`int`):
         Total number of samples to be drawn (including the initial samples).
         If `nsamples` is provided when instantiating the class, the ``run`` method will automatically be called. If
         `nsamples` is not provided, an ``RSS`` subclass can be executed by invoking the ``run`` method and passing
         `nsamples`.
+
     * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
         Random seed used to initialize the pseudo-random number generator. Default is None.
         If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
         object itself can be passed directly.
-    * **verbose** (`Boolean`):
-        A boolean declaring whether to write text to the terminal.
-        Default value: False
+
     **Attributes:**
     Each of the above inputs are saved as attributes, in addition to the following created attributes.
+
         * **samples** (`ndarray`):
             The generated stratified samples following the prescribed distribution.
+
         * **samplesU01** (`ndarray`)
             The generated samples on the unit hypercube.
+
         * **weights** (`ndarray`)
             Individual sample weights.
+
         * **strata_object** (Object of ``Strata`` subclass)
             Defines the stratification of the unit hypercube. This is an object of the ``Strata`` subclass
             corresponding to the appropriate strata type.
+
         **Methods:**
         """
 

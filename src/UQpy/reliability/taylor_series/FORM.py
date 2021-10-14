@@ -23,30 +23,43 @@ class FORM(TaylorSeries):
 
     * **Pf_form** (`float`):
         First-order probability of failure estimate.
+
     * **beta_form** (`float`):
         Hasofer-Lind reliability index.
+
     * **DesignPoint_U** (`ndarray`):
         Design point in the uncorrelated standard normal space **U**.
+
     * **DesignPoint_X** (`ndarray`):
         Design point in the parameter space **X**.
+
     * **alpha** (`ndarray`):
         Direction cosine.
+
     * **form_iterations** (`int`):
         Number of model evaluations.
+
     * **u_record** (`list`):
         Record of all iteration points in the standard normal space **U**.
+
     * **x_record** (`list`):
         Record of all iteration points in the parameter space **X**.
+
     * **beta_record** (`list`):
         Record of all Hasofer-Lind reliability index values.
+
     * **dg_u_record** (`list`):
         Record of the model's gradient  in the standard normal space.
+
     * **alpha_record** (`list`):
         Record of the alpha (directional cosine).
+
     * **g_record** (`list`):
         Record of the performance function.
+
     * **error_record** (`list`):
         Record of the error defined by criteria `e1, e2, e3`.
+
     **Methods:**
      """
 
@@ -124,7 +137,7 @@ class FORM(TaylorSeries):
         This is an instance method that runs FORM.
         **Input:**
         * **seed_u** or **seed_x** (`ndarray`):
-            See ``taylor_series`` parent class.
+        See ``taylor_series`` parent class.
         """
         self.logger.info("UQpy: Running FORM...")
         if seed_u is None and seed_x is None:

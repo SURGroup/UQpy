@@ -3,7 +3,7 @@
 Inference
 =============
 
-.. automodule:: UQpy.Inference
+.. automodule:: UQpy.inference
 
 The goal in inference can be twofold: 1) given a model, parameterized by parameter vector :math:`\theta`, and some data :math:`\mathcal{D}`, learn the value of the parameter vector that best explains the data; 2) given a set of candidate models :math:`\lbrace m_{i} \rbrace_{i=1:M}` and some data :math:`\mathcal{D}`, learn which model best explains the data. ``UQpy`` currently supports the following inference algorithms for parameter estimation (see e.g. [1]_ for theory on parameter estimation in frequentist vs. Bayesian frameworks):
 
@@ -51,7 +51,7 @@ The critical component of the ``InferenceModel`` class is the evaluation of the 
 InferenceModel Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    
-.. autoclass:: UQpy.Inference.InferenceModel
+.. autoclass:: UQpy.inference.inference_models.baseclass.InferenceModel
    :members:
    
 Parameter estimation
@@ -73,7 +73,7 @@ A numerical optimization procedure is performed to compute the MLE. By default, 
 MLEstimation Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.Inference.MLEstimation
+.. autoclass:: UQpy.inference.MLE
    :members:
    
 **Note on subclassing** ``MLEstimation``
@@ -96,7 +96,7 @@ The ``BayesParameterEstimation`` leverages the ``MCMC`` or ``IS`` classes of the
 BayesParameterEstimation Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.Inference.BayesParameterEstimation
+.. autoclass:: UQpy.inference.BayesParameterEstimation
     :members: 
 
 Model Selection
@@ -120,7 +120,7 @@ A probability can be defined for each model as :math:`P(m_{i}) \propto \exp\left
 InfoModelSelection Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.Inference.InfoModelSelection
+.. autoclass:: UQpy.inference.InformationModelSelection
     :members: 
 	
 BayesModelSelection
@@ -143,7 +143,7 @@ where :math:`\theta_{1,\cdots,B}` are samples from the posterior pdf of :math:`\
 BayesModelSelection Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: UQpy.Inference.BayesModelSelection
+.. autoclass:: UQpy.inference.BayesModelSelection
     :members: 
 
 .. [1] R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
@@ -152,8 +152,3 @@ BayesModelSelection Class Descriptions
 
 .. toctree::
     :maxdepth: 2
-
-
-
-	
-	

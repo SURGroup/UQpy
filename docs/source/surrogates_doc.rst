@@ -280,7 +280,7 @@ The equation may be under-, well-, or over-determined. In the context of Polynom
 
 LeastSquares Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: UQpy.surrogates.polynomial_chaos.PolyChaosLstsq
+.. autoclass:: UQpy.surrogates.polynomial_chaos.regressions.LeastSquareRegression
     :members:
 
 
@@ -303,9 +303,9 @@ The Lasso regression model needs to be trained on the data, and for this gradien
 where :math:`i` is the iteration step, and :math:`\epsilon` is the learning rate (gradient descent step) with a value larger than zero.
 
 
-PolyChaosLasso Class Descriptions
+Lasso Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: UQpy.Surrogates.PolyChaosLasso
+.. autoclass:: UQpy.surrogates.polynomial_chaos.regressions.LassoRegression
     :members:
     
     
@@ -323,7 +323,7 @@ Due to the penalization of terms, Ridge regression constructs models that are le
 
 PolyChaosRidge Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: UQpy.Surrogates.PolyChaosRidge
+.. autoclass:: UQpy.surrogates.polynomial_chaos.regressions.RidgeRegression
     :members:
 
 
@@ -341,7 +341,7 @@ In case where the computational model is very expensive, the use of an alternati
 
 ErrorEstimation Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: UQpy.Surrogates.ErrorEstimation
+.. autoclass:: UQpy.surrogates.polynomial_chaos.ErrorEstimation
     :members:
 
 
@@ -365,7 +365,7 @@ where :math:`p` is the number of polynomials (first PCE coefficient is excluded)
 
 MomentEstimation Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: UQpy.Surrogates.MomentEstimation
+.. autoclass:: UQpy.surrogates.polynomial_chaos.MomentEstimation
     :members:
     
 

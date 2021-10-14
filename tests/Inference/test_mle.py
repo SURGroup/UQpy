@@ -1,6 +1,6 @@
 import numpy as np
 
-from UQpy.inference.inference_models.optimization.MinizeOptimizer import MinimizeOptimizer
+from UQpy.inference.inference_models.optimization.MinimizeOptimizer import MinimizeOptimizer
 from UQpy.distributions.collection import Normal, JointCopula, JointIndependent
 from UQpy.distributions.copulas.Gumbel import Gumbel
 from UQpy.inference.inference_models.DistributionModel import DistributionModel
@@ -49,3 +49,4 @@ def test_regression_model():
     assert ml_estimator.mle[1] == 2.0030767805841143
 
     shutil.rmtree(h_func.model_dir)
+

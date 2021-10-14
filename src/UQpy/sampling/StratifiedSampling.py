@@ -1,7 +1,7 @@
 import logging
 from beartype import beartype
 from UQpy.distributions import DistributionContinuous1D, JointIndependent
-from UQpy.utilities.strata.baseclass import Strata
+from UQpy.utilities.strata.baseclass.Strata import Strata
 from UQpy.utilities.ValidationTypes import *
 from UQpy.utilities.Utilities import process_random_state
 

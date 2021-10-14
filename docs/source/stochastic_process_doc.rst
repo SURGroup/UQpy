@@ -12,7 +12,7 @@ such that the process can be expressed in terms of a set of uncorrelated random 
 
 The ``stochastic_process`` module supports simulation of uni-variate, multi-variate, multi-dimensional, Gaussian and non-Gaussian stochastic processes. Gaussian stochasitc processes can be simulated using the widely-used Spectral Representation Method ([1]_, [2]_, [3]_, [4]_) and the Karhunen-Loeve Expansion ([5]_, [6]_, [7]_). Non-Gaussian stochastic processes can be generated through higher-order spectral representations ([8]_, [9]_, [10]_) or through a nonlinear transformation from a Gaussian stochastic process to a prescribed marginal distribution using translation process theory [11]_. Modeling of arbitrarily distributed random processes with specified correlation and/or power spectrum can be performed using the Iterative Translation Approximation Method (ITAM) ([12]_, [13]_) for inverse translation process modeling.
 
-.. automodule:: UQpy.StochasticProcess
+.. automodule:: UQpy.stochastic_process
 
 As with other modules of ``UQpy``, adding simulation methods requires the user to build a new class to support the desired functionality. It does not require modification of any existing classes or methods.
 
@@ -26,7 +26,7 @@ The Spectral Representation Method (SRM) expands the stochastic process in a Fou
 where :math:`S(\omega_i)` is the discretized power spectrum at frequency :math:`\omega_i`, :math:`\Delta\omega` is the frequency discretization, and :math:`\phi_i` are random phase angles uniformly distributed in :math:`[0, 2\pi]`. For computational efficiency, the SRM is implemented using the Fast Fourier Transform (FFT).
 
 SpectralRepresentation Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.stochastic_process.SpectralRepresentation
     :members:
@@ -38,7 +38,7 @@ Third-order Spectral Representation Method
 The third-order Spectral Representation Method (or Bispectral Representation Method) is a generalization of the SpectralRepresentation for processes posessing a known power spectrum and bispectrum. Implementation follows from references [8]_ and [9]_. The multi-variate formulation from reference [10]_ is not currently implemented.
 
 BispectralRepresentation Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.stochastic_process.BispectralRepresentation
     :members:

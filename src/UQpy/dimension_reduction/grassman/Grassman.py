@@ -1,14 +1,21 @@
 import itertools
 
-from UQpy.dimension_reduction.distances.grassmanian.GrassmanDistance import GrassmannDistance
-from UQpy.dimension_reduction.grassman.interpolations.LinearInterpolation import LinearInterpolation
-from UQpy.dimension_reduction.grassman.manifold_projections.baseclass.ManifoldProjection import ManifoldProjection
-from UQpy.dimension_reduction.grassman.optimization_methods.GradientDescent import GradientDescent
+from UQpy.dimension_reduction.distances.grassmanian.GrassmanDistance import (
+    GrassmannDistance,
+)
+from UQpy.dimension_reduction.grassman.interpolations.LinearInterpolation import (
+    LinearInterpolation,
+)
+from UQpy.dimension_reduction.grassman.manifold_projections.baseclass.ManifoldProjection import (
+    ManifoldProjection,
+)
+from UQpy.dimension_reduction.grassman.optimization_methods.GradientDescent import (
+    GradientDescent,
+)
 import numpy as np
 
 
 class Grassmann:
-
     def __init__(self, manifold_projected_points: ManifoldProjection):
         self.manifold_projected_points = manifold_projected_points
 
@@ -20,15 +27,19 @@ class Grassmann:
     def log_map(points_grassmann=None, reference_point=None):
         # Show an error message if points_grassmann is not provided.
         if points_grassmann is None:
-            raise TypeError('UQpy: No input data is provided.')
+            raise TypeError("UQpy: No input data is provided.")
 
         # Show an error message if ref is not provided.
         if reference_point is None:
-            raise TypeError('UQpy: No reference point is provided.')
+            raise TypeError("UQpy: No reference point is provided.")
 
         # Check points_grassmann for type consistency.
-        if not isinstance(points_grassmann, list) and not isinstance(points_grassmann, np.ndarray):
-            raise TypeError('UQpy: `points_grassmann` must be either a list or numpy.ndarray.')
+        if not isinstance(points_grassmann, list) and not isinstance(
+            points_grassmann, np.ndarray
+        ):
+            raise TypeError(
+                "UQpy: `points_grassmann` must be either a list or numpy.ndarray."
+            )
 
         # Get the number of matrices in the set.
         points_number = len(points_grassmann)
@@ -40,10 +51,12 @@ class Grassmann:
             shape = np.shape(points_grassmann[i])
             p_dim.append(min(np.shape(np.array(points_grassmann[i]))))
             if shape != shape_0:
-                raise Exception('The input points are in different manifold.')
+                raise Exception("The input points are in different manifold.")
 
             if shape != shape_ref:
-                raise Exception('The ref and points_grassmann are in different manifolds.')
+                raise Exception(
+                    "The ref and points_grassmann are in different manifolds."
+                )
 
         p0 = p_dim[0]
 
@@ -103,15 +116,19 @@ class Grassmann:
 
         # Show an error message if points_tangent is not provided.
         if points_tangent is None:
-            raise TypeError('UQpy: No input data is provided.')
+            raise TypeError("UQpy: No input data is provided.")
 
         # Show an error message if ref is not provided.
         if reference_point is None:
-            raise TypeError('UQpy: No reference point is provided.')
+            raise TypeError("UQpy: No reference point is provided.")
 
         # Test points_tangent for type consistency.
-        if not isinstance(points_tangent, list) and not isinstance(points_tangent, np.ndarray):
-            raise TypeError('UQpy: `points_tangent` must be either list or numpy.ndarray.')
+        if not isinstance(points_tangent, list) and not isinstance(
+            points_tangent, np.ndarray
+        ):
+            raise TypeError(
+                "UQpy: `points_tangent` must be either list or numpy.ndarray."
+            )
 
         # Number of input matrices.
         nargs = len(points_tangent)
@@ -123,10 +140,12 @@ class Grassmann:
             shape = np.shape(points_tangent[i])
             p_dim.append(min(np.shape(np.array(points_tangent[i]))))
             if shape != shape_0:
-                raise Exception('The input points are in different manifold.')
+                raise Exception("The input points are in different manifold.")
 
             if shape != shape_ref:
-                raise Exception('The ref and points_grassmann are in different manifolds.')
+                raise Exception(
+                    "The ref and points_grassmann are in different manifolds."
+                )
 
         p0 = p_dim[0]
 
@@ -141,8 +160,11 @@ class Grassmann:
             ui, si, vi = np.linalg.svd(utrunc, full_matrices=False)
 
             # Exponential mapping.
-            x0 = np.dot(np.dot(np.dot(reference_point, vi.T), np.diag(np.cos(si))) + np.dot(ui, np.diag(np.sin(si))),
-                        vi)
+            x0 = np.dot(
+                np.dot(np.dot(reference_point, vi.T), np.diag(np.cos(si)))
+                + np.dot(ui, np.diag(np.sin(si))),
+                vi,
+            )
 
             # Test orthogonality.
             xtest = np.dot(x0.T, x0)
@@ -163,11 +185,13 @@ class Grassmann:
         points_number = len(points_grassmann)
 
         if points_number < 2:
-            raise ValueError('UQpy: At least two input matrices must be provided.')
+            raise ValueError("UQpy: At least two input matrices must be provided.")
 
         variance_nominator = 0
         for i in range(points_number):
-            distances = Grassmann.__estimate_distance([reference_point, points_grassmann[i]], p_dim, distance)
+            distances = Grassmann.__estimate_distance(
+                [reference_point, points_grassmann[i]], p_dim, distance
+            )
             variance_nominator += distances[0] ** 2
 
         frechet_variance = variance_nominator / points_number
@@ -179,12 +203,14 @@ class Grassmann:
         # Check points for type and shape consistency.
         # -----------------------------------------------------------
         if not isinstance(points, list) and not isinstance(points, np.ndarray):
-            raise TypeError('UQpy: The input matrices must be either list or numpy.ndarray.')
+            raise TypeError(
+                "UQpy: The input matrices must be either list or numpy.ndarray."
+            )
 
         nargs = len(points)
 
         if nargs < 2:
-            raise ValueError('UQpy: At least two matrices must be provided.')
+            raise ValueError("UQpy: At least two matrices must be provided.")
 
         # ------------------------------------------------------------
 
@@ -212,15 +238,21 @@ class Grassmann:
         return distance_list
 
     @staticmethod
-    def karcher_mean(points_grassmann, p_planes_dimensions, optimization_method, distance):
+    def karcher_mean(
+        points_grassmann, p_planes_dimensions, optimization_method, distance
+    ):
         # Test the input data for type consistency.
-        if not isinstance(points_grassmann, list) and not isinstance(points_grassmann, np.ndarray):
-            raise TypeError('UQpy: `points_grassmann` must be either list or numpy.ndarray.')
+        if not isinstance(points_grassmann, list) and not isinstance(
+            points_grassmann, np.ndarray
+        ):
+            raise TypeError(
+                "UQpy: `points_grassmann` must be either list or numpy.ndarray."
+            )
 
         # Compute and test the number of input matrices necessary to compute the Karcher mean.
         nargs = len(points_grassmann)
         if nargs < 2:
-            raise ValueError('UQpy: At least two matrices must be provided.')
+            raise ValueError("UQpy: At least two matrices must be provided.")
 
         # Test the dimensionality of the input data.
         p = []
@@ -228,13 +260,42 @@ class Grassmann:
             p.append(min(np.shape(np.array(points_grassmann[i]))))
 
         if p.count(p[0]) != len(p):
-            raise TypeError('UQpy: The input points do not belong to the same manifold.')
+            raise TypeError(
+                "UQpy: The input points do not belong to the same manifold."
+            )
         else:
             p0 = p[0]
             if p0 != p_planes_dimensions:
-                raise ValueError('UQpy: The input points do not belong to the manifold G(n,p).')
+                raise ValueError(
+                    "UQpy: The input points do not belong to the manifold G(n,p)."
+                )
 
         kr_mean = optimization_method.optimize(points_grassmann, distance)
 
         return kr_mean
 
+    @staticmethod
+    def calculate_pairwise_distances(distance_method, points_grassmann):
+        if isinstance(points_grassmann, np.ndarray):
+            points_grassmann = points_grassmann.tolist()
+
+        n_size = max(np.shape(points_grassmann[0]))
+        for i in range(len(points_grassmann)):
+            if n_size != max(np.shape(points_grassmann[i])):
+                raise TypeError(
+                    "UQpy: The shape of the input matrices must be the same."
+                )
+
+        # if points_grasssmann is provided, use the shape of the input matrices to define
+        # the dimension of the p-planes defining the manifold of each individual input matrix.
+        p_dim = []
+        for i in range(len(points_grassmann)):
+            p_dim.append(min(np.shape(np.array(points_grassmann[i]))))
+
+        # Compute the pairwise distances.
+        points_distance = Grassmann.__estimate_distance(
+            points_grassmann, p_dim, distance_method
+        )
+
+        # Return the pairwise distances.
+        return points_distance

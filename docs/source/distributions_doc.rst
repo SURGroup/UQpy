@@ -30,7 +30,7 @@ List of 1D Continuous Distributions
 
 The following is a list of all 1D continuous distributions currently available in ``UQpy``.
 
-.. autoclass:: UQpy.distributions.collections.Beta
+.. autoclass:: UQpy.distributions.collection.Beta
 
 .. autoclass:: UQpy.distributions.collection.Cauchy
 
@@ -40,9 +40,9 @@ The following is a list of all 1D continuous distributions currently available i
 
 .. autoclass:: UQpy.distributions.collection.Gamma
 
-.. autoclass:: UQpy.distributions.collection.GenExtreme
+.. autoclass:: UQpy.distributions.collection.GeneralizedExtremeValue
 
-.. autoclass:: UQpy.distributions.collection.InvGauss
+.. autoclass:: UQpy.distributions.collection.InverseGaussian
 
 .. autoclass:: UQpy.distributions.collection.Laplace
 
@@ -60,7 +60,7 @@ The following is a list of all 1D continuous distributions currently available i
 
 .. autoclass:: UQpy.distributions.collection.Rayleigh
 
-.. autoclass:: UQpy.distributions.collection.TruncNorm
+.. autoclass:: UQpy.distributions.collection.TruncatedNormal
 
 .. autoclass:: UQpy.distributions.collection.Uniform
 

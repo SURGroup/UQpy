@@ -12,7 +12,7 @@ class MomentEstimation:
 
     **Inputs:**
 
-    * **surr_object** ('class'):
+    * **pce_surrogate** ('class'):
         Object that defines the surrogate model.
 
     **Methods:**

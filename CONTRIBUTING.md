@@ -61,6 +61,28 @@ The input of the set level function is an enumeration, with values the logging s
 The latter summarize the basic usage of logging framework utilized in UQpy. For a detailed breakdown of the logging module can be found [here](https://docs.python.org/3/howto/logging-cookbook.html "Logging documentation").
 
 ### Type hints
+___
+
+In [PEP484](https://www.python.org/dev/peps/pep-0484/), Python introduced type hints. Type hints are a way to loosely suggest the type of variables as well as input and output parameters to method. The intention of this syntactic annotation is to suggest the type of variables in order to aid the user/ developer, rather than strictly impose their type.
+In case of UQpy, type hints are utilized mainly in the initializers of objects. In versions before 4.0.0, UQpy allowed the user to provide any values and the raised an error is the input value did not had the expected format. This type checking is not replaced with beartype. With the aid of type hinted variables, beartype enforced type safety to functions  and method.
+The only code addition required for perforing run type checking with beartype is adding the decorator @beartype before method signatures, as illustrated below:
+
+> @beartype
+> 
+> def method(a: float, b: bool, c: int)
+>   
+>    pass
+> 
+
+As can be observed in the function above, variable types are defined by using semicolon, followed by the variable type. The type can be any of the built-in primitive or object data types of Python, or user defined class. In addition, multiple data type can be allowed at the same time by using the Union construct as follows  
+
+
+> def method(a: float, b: bool, c: Union[int, float, None])
+>   
+>    pass
+> 
+
+Even more refined combination of data types are allowed in python type hints. For more information, please refer to [Python Type Hints](https://docs.python.org/3/library/typing.html).
 
 ### Docstrings
 ___
