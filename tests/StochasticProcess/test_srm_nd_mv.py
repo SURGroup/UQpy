@@ -46,7 +46,7 @@ for i in range(m):
     g_jk[i, i] = np.ones_like(S_jk[0, 0])
 S_nd_mv = S_jk * g_jk
 
-SRM_object = SRM(n_sim, S_nd_mv, [dt, dt], [dw, dw], [nt, nt], [nw, nw], verbose=False, random_state=128)
+SRM_object = SRM(n_sim, S_nd_mv, [dt, dt], dw, [nt, nt], [nw, nw], verbose=False, random_state=128)
 samples_nd_mv = SRM_object.samples
 
 
@@ -55,4 +55,4 @@ def test_samples_nd_mv_shape():
 
 
 def test_samples_nd_mv_values():
-    assert (samples_nd_mv[3, 1, 31, 79] * 100, 0.015496833065877607 * 100)
+    assert np.isclose(samples_nd_mv[3, 1, 31, 79], 0.7922504882569233)

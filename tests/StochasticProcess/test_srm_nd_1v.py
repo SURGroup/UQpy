@@ -16,7 +16,7 @@ x_list = [np.linspace(0, W[i] - dw[i], nw) for i in range(n)]
 xy_list = np.array(np.meshgrid(*x_list, indexing='ij'))
 
 S_nd_1v = 125 / 4 * np.linalg.norm(xy_list, axis=0) ** 2 * np.exp(-5 * np.linalg.norm(xy_list, axis=0))
-SRM_object = SRM(n_sim, S_nd_1v, [dt, dt], [dw, dw], [nt, nt], [nw, nw], verbose=True, random_state=128)
+SRM_object = SRM(n_sim, S_nd_1v, [dt, dt], dw, [nt, nt], [nw, nw], verbose=True, random_state=128)
 samples_nd_1v = SRM_object.samples
 
 
@@ -25,4 +25,4 @@ def test_samples_nd_1v_shape():
 
 
 def test_samples_nd_1v_values():
-    assert np.isclose(0.012774176108231962, samples_nd_1v[4, 0, 107, 59])
+    assert np.isclose(1.0430071116540038, samples_nd_1v[4, 0, 107, 59])
