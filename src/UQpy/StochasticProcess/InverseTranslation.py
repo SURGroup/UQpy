@@ -105,29 +105,33 @@ class InverseTranslation:
     def _itam_power_spectrum(self):
         target_S = self.power_spectrum_non_gaussian
         i_converge = 0
-        max_iter = 100
+        max_iter = 500
         target_R = wiener_khinchin_transform(target_S, self.frequency, self.time)
         R_g_iterate = target_R
         S_g_iterate = target_S
         R_ng_iterate = np.zeros_like(R_g_iterate)
         r_ng_iterate = np.zeros_like(R_g_iterate)
         S_ng_iterate = np.zeros_like(S_g_iterate)
+        non_gaussian_moments = getattr(self.dist_object, 'moments')()
 
         for _ in range(max_iter):
             R_g_iterate = wiener_khinchin_transform(S_g_iterate, self.frequency, self.time)
             for i in range(len(target_R)):
                 r_ng_iterate[i] = correlation_distortion(dist_object=self.dist_object,
                                                          rho=R_g_iterate[i] / R_g_iterate[0])
-            R_ng_iterate = r_ng_iterate * target_R[0]
+            R_ng_iterate = r_ng_iterate * non_gaussian_moments[1] + non_gaussian_moments[0] ** 2
             S_ng_iterate = inverse_wiener_khinchin_transform(R_ng_iterate, self.frequency, self.time)
 
             err1 = np.sum((target_S - S_ng_iterate) ** 2)
             err2 = np.sum(target_S ** 2)
 
-            if 100 * np.sqrt(err1 / err2) < 1.5:
+            if 100 * np.sqrt(err1 / err2) < 1:
                 i_converge = 1
 
-            S_g_next_iterate = ((target_S / S_ng_iterate) ** 1.3) * S_g_iterate
+            ratio = target_S/S_ng_iterate
+            ratio = np.nan_to_num(ratio, nan=0.0, posinf=0.0, neginf=0.0)
+
+            S_g_next_iterate = (ratio ** 1.3) * S_g_iterate
 
             # Eliminate Numerical error of Upgrading Scheme
             S_g_next_iterate[S_g_next_iterate < 0] = 0

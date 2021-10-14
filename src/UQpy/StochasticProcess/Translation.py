@@ -131,5 +131,5 @@ class Translation:
             non_gaussian_moments = getattr(self.dist_object, 'moments')()
         else:
             raise AttributeError('UQpy: The marginal dist_object needs to have defined moments.')
-        scaled_correlation_function_non_gaussian = correlation_function_non_gaussian * non_gaussian_moments[1]
+        scaled_correlation_function_non_gaussian = correlation_function_non_gaussian * non_gaussian_moments[1] + non_gaussian_moments[0] ** 2
         return correlation_function_non_gaussian, scaled_correlation_function_non_gaussian
