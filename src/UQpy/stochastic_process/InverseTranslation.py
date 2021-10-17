@@ -71,10 +71,12 @@ class InverseTranslation:
         correlation_function_non_gaussian=None,
         power_spectrum_non_gaussian=None,
         samples_non_gaussian=None,
+        percentage_error=5.0
     ):
         self.distributions = distributions
         self.frequency = np.arange(0, number_frequency_intervals) * frequency_interval
         self.time = np.arange(0, number_time_intervals) * time_interval
+        self.error = percentage_error
         if (
             correlation_function_non_gaussian is None
             and power_spectrum_non_gaussian is None
@@ -121,40 +123,41 @@ class InverseTranslation:
         return samples_g
 
     def _itam_power_spectrum(self):
-        target_s = self.power_spectrum_non_gaussian
+        target_S = self.power_spectrum_non_gaussian
         i_converge = 0
-        max_iter = 100
-        target_r = wiener_khinchin_transform(target_s, self.frequency, self.time)
-        r_g_iterate = target_r
-        s_g_iterate = target_s
-        r_ng_iterate = np.zeros_like(target_r)
-        s_ng_iterate = np.zeros_like(target_s)
+        max_iter = 500
+        target_R = wiener_khinchin_transform(target_S, self.frequency, self.time)
+        R_g_iterate = target_R
+        S_g_iterate = target_S
+        R_ng_iterate = np.zeros_like(R_g_iterate)
+        r_ng_iterate = np.zeros_like(R_g_iterate)
+        S_ng_iterate = np.zeros_like(S_g_iterate)
+        non_gaussian_moments = getattr(self.distributions, 'moments')()
 
         for _ in range(max_iter):
-            r_g_iterate = wiener_khinchin_transform(
-                s_g_iterate, self.frequency, self.time
-            )
-            for i in range(len(target_r)):
-                r_ng_iterate[i] = correlation_distortion(
-                    dist_object=self.distributions, rho=r_g_iterate[i] / r_g_iterate[0]
-                )
-            s_ng_iterate = inverse_wiener_khinchin_transform(
-                r_ng_iterate, self.frequency, self.time
-            )
+            R_g_iterate = wiener_khinchin_transform(S_g_iterate, self.frequency, self.time)
+            for i in range(len(target_R)):
+                r_ng_iterate[i] = correlation_distortion(dist_object=self.distributions,
+                                                         rho=R_g_iterate[i] / R_g_iterate[0])
+            R_ng_iterate = r_ng_iterate * non_gaussian_moments[1] + non_gaussian_moments[0] ** 2
+            S_ng_iterate = inverse_wiener_khinchin_transform(R_ng_iterate, self.frequency, self.time)
 
-            err1 = np.sum((target_s - s_ng_iterate) ** 2)
-            err2 = np.sum(target_s ** 2)
+            err1 = np.sum((target_S - S_ng_iterate) ** 2)
+            err2 = np.sum(target_S ** 2)
 
-            if 100 * np.sqrt(err1 / err2) < 0.0005:
+            if 100 * np.sqrt(err1 / err2) < self.error:
                 i_converge = 1
 
-            s_g_next_iterate = (target_s / s_ng_iterate) * s_g_iterate
+            ratio = target_S / S_ng_iterate
+            ratio = np.nan_to_num(ratio, nan=0.0, posinf=0.0, neginf=0.0)
+
+            S_g_next_iterate = (ratio ** 1.3) * S_g_iterate
 
             # Eliminate Numerical error of Upgrading Scheme
-            s_g_next_iterate[s_g_next_iterate < 0] = 0
-            s_g_iterate = s_g_next_iterate
+            S_g_next_iterate[S_g_next_iterate < 0] = 0
+            S_g_iterate = S_g_next_iterate
 
             if i_converge:
                 break
 
-        return s_g_iterate
+        return S_g_iterate

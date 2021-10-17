@@ -1,5 +1,5 @@
 import itertools
-
+import numpy as np
 from UQpy.utilities import *
 
 
@@ -149,6 +149,7 @@ class BispectralRepresentation:
 
         if self.number_of_dimensions == len(self.power_spectrum.shape):
             self.case = "uni"
+            self._compute_bicoherence_uni()
         else:
             self.number_of_variables = self.power_spectrum.shape[0]
             self.case = "multi"
@@ -205,9 +206,7 @@ class BispectralRepresentation:
                         / (
                             self.pure_power_sepctrum[(*wi, *[])]
                             * self.pure_power_sepctrum[(*wj, *[])]
-                            * self.power_spectrum[(*wk, *[])]
-                        )
-                        * self.frequency_interval ** self.number_of_dimensions
+                            * self.power_spectrum[(*wk, *[])]) * np.prod(self.frequency_interval)
                     )
                     self.sum_bc2[(*wk, *[])] = (
                         self.sum_bc2[(*wk, *[])] + self.bc2[(*wi, *wj)]
@@ -233,11 +232,7 @@ class BispectralRepresentation:
             )
 
     def _simulate_bsrm_uni(self, phi):
-        coeff = np.sqrt(
-            (2 ** (self.number_of_dimensions + 1))
-            * self.power_spectrum
-            * self.frequency_interval ** self.number_of_dimensions
-        )
+        coeff = np.sqrt((2 ** (self.number_of_dimensions + 1)) * self.power_spectrum * np.prod(self.frequency_interval))
         phi_e = np.exp(phi * 1.0j)
         biphase_e = np.exp(self.biphase * 1.0j)
         b = np.sqrt(1 - self.sum_bc2) * phi_e

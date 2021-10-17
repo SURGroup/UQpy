@@ -69,15 +69,15 @@ class Translation:
     """
 
     def __init__(
-        self,
-        distributions,
-        time_interval,
-        frequency_interval,
-        number_time_intervals,
-        number_frequency_intervals,
-        power_spectrum_gaussian=None,
-        correlation_function_gaussian=None,
-        samples_gaussian=None,
+            self,
+            distributions,
+            time_interval,
+            frequency_interval,
+            number_time_intervals,
+            number_frequency_intervals,
+            power_spectrum_gaussian=None,
+            correlation_function_gaussian=None,
+            samples_gaussian=None,
     ):
         self.distributions = distributions
         self.time_interval = time_interval
@@ -150,9 +150,8 @@ class Translation:
             raise AttributeError(
                 "UQpy: The marginal dist_object needs to have defined moments."
             )
-        scaled_correlation_function_non_gaussian = (
-            correlation_function_non_gaussian * non_gaussian_moments[1]
-        )
+        scaled_correlation_function_non_gaussian = correlation_function_non_gaussian * non_gaussian_moments[1] + \
+                                                   non_gaussian_moments[0] ** 2
         return (
             correlation_function_non_gaussian,
             scaled_correlation_function_non_gaussian,
