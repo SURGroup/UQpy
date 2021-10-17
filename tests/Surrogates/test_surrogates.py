@@ -49,8 +49,8 @@ def test_kriging_linear_gaussian():
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
                 optimizations_number=20, correlation_model_parameters=[1, 1])
     K.fit(samples=x.samples, values=rmodel.qoi_list)
-    assert round(K.correlation_model_parameters[0], 3) == 52.625
-    assert round(K.correlation_model_parameters[1], 3) == 3.027
+    assert round(K.correlation_model_parameters[0], 2) == 52.63
+    assert round(K.correlation_model_parameters[1], 2) == 3.03
     shutil.rmtree(rmodel.model_dir)
 
 
