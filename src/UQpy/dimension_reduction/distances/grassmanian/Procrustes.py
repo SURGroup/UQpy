@@ -5,7 +5,7 @@ from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance
 )
 
 
-class Chordal(RiemannianDistance):
+class Procrustes(RiemannianDistance):
     """
     A class to calculate the Chordal (or Procrustes) distance between two  Grassmann points defined as:
 
@@ -33,7 +33,7 @@ class Chordal(RiemannianDistance):
         (ui, si, vi) = np.linalg.svd(r, full_matrices=True)
         si[np.where(si > 1)] = 1.0
         theta = np.arccos(si)
-        sin_sq = np.sin(theta) ** 2
-        d = np.sqrt(abs(rank_i - rank_j) + np.sum(sin_sq))
+        sin_sq = np.sin(theta / 2) ** 2
+        d = np.sqrt(abs(rank_i - rank_j) + 2 * np.sum(sin_sq))
 
         return d
