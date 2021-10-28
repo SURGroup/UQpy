@@ -26,10 +26,13 @@ class Projection(RiemannianDistance):
         """
         RiemannianDistance.check_points(xi, xj)
 
+        rank_i = xi.shape[1]
+        rank_j = xj.shape[1]
+
         r = np.dot(xi.T, xj)
         (ui, si, vi) = np.linalg.svd(r, full_matrices=True)
         si[np.where(si > 1)] = 1.0
         theta = np.arccos(si)
-        d = np.sqrt(np.sum(np.sin(theta) ** 2))
+        d = np.sqrt(abs(rank_i - rank_j) + np.sum(np.sin(theta) ** 2))
 
         return d

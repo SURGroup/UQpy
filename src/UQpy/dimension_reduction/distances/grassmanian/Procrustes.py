@@ -7,19 +7,19 @@ from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance
 
 class Procrustes(RiemannianDistance):
     """
-    A class to calculate the Chordal (or Procrustes) distance between two  Grassmann points defined as:
+    A class to calculate the Procrustes (chordal) distance between two  Grassmann points defined as:
 
     .. math::
         x_j' x_i = UΣV
 
         \Theta = cos^{-1}(Σ)
 
-        d_{C}(x_i, x_j) = [\sum_{l}\sin^2(\Theta_l)]^{1/2}
+        d_{C}(x_i, x_j) = 2[\sum_{l}\sin^2(\Theta_l/2)]^{1/2}
 
     """
     def compute_distance(self, xi, xj) -> float:
         """
-        Compute the chordal distance between two points on the Grassmann manifold
+        Compute the Procrustes (chordal) distance between two points on the Grassmann manifold
         :param numpy.array xi: Orthonormal matrix representing the first point.
         :param numpy.array xj: Orthonormal matrix representing the first point.
         :rtype float
@@ -34,6 +34,6 @@ class Procrustes(RiemannianDistance):
         si[np.where(si > 1)] = 1.0
         theta = np.arccos(si)
         sin_sq = np.sin(theta / 2) ** 2
-        d = np.sqrt(abs(rank_i - rank_j) + 2 * np.sum(sin_sq))
+        d = 2 * np.sqrt(abs(rank_i - rank_j) + np.sum(sin_sq))
 
         return d
