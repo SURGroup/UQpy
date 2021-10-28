@@ -7,6 +7,7 @@ from UQpy.dimension_reduction.distances.grassmanian.Martin import Martin
 from UQpy.dimension_reduction.distances.grassmanian.Projection import Projection
 from UQpy.dimension_reduction.distances.grassmanian.Spectral import Spectral
 from UQpy.dimension_reduction.distances.grassmanian.BinetCauchy import BinetCauchy
+from UQpy.dimension_reduction.distances.grassmanian.Procrustes import Procrustes
 from UQpy.utilities.DistanceMetric import DistanceMetric
 import numpy as np
 
@@ -45,6 +46,13 @@ def test_chordal_distance():
     xi = np.array([[-np.sqrt(2)/2, -np.sqrt(2)/4], [np.sqrt(2)/2, -np.sqrt(2)/4], [0, -np.sqrt(3)/2]])
     xj = np.array([[0, np.sqrt(2)/2], [1, 0], [0, -np.sqrt(2)/2]])
     distance = np.round(Chordal().compute_distance(xi, xj), 6)
+    assert distance == 0.996838
+
+
+def test_procrustes_distance():
+    xi = np.array([[-np.sqrt(2)/2, -np.sqrt(2)/4], [np.sqrt(2)/2, -np.sqrt(2)/4], [0, -np.sqrt(3)/2]])
+    xj = np.array([[0, np.sqrt(2)/2], [1, 0], [0, -np.sqrt(2)/2]])
+    distance = np.round(Procrustes().compute_distance(xi, xj), 6)
     assert distance == 0.959448
 
 
