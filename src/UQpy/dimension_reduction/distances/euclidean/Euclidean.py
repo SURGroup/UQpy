@@ -1,7 +1,7 @@
 from typing import Union
 import numpy as np
 from scipy.spatial.distance import pdist
-from UQpy.utilities import DistanceMetric
+from UQpy.utilities.DistanceMetric import DistanceMetric
 
 
 class Euclidean:
@@ -18,9 +18,9 @@ class Euclidean:
     def compute_distance(self, points: np.array) -> Union[float, np.ndarray]:
         """
 
-        :param numpy.ndarray points: Array holding the coordinates of the points
-        :return float or numpy.ndarray: Euclidean Distance
-        :rtype float or numpy.ndarray
+        :param numpy.array points: Array holding the coordinates of the points
+        :return float or numpy.array: Euclidean Distance
+        :rtype float or numpy.array
         """
         d = self.distance_function(points)
         return d

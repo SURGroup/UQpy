@@ -6,12 +6,23 @@ from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance
 
 
 class FubiniStudy(RiemannianDistance):
+    """
+    A class to calculate the Fubini-Study distance between two  Grassmann points defined as:
+
+    .. math::
+        x_j' x_i = UΣV
+
+        \Theta = cos^{-1}(Σ)
+
+        d_{C}(x_i, x_j) = cos^{-1}(\prod_{l}\cos(\Theta_l))
+
+    """
     def compute_distance(self, xi, xj) -> float:
         """
-        Fubini Study distance
-        :param xi:
-        :param xj:
-        :return:
+        Compute the Fubini-Study distance between two points on the Grassmann manifold
+        :param numpy.array xi: Orthonormal matrix representing the first point.
+        :param numpy.array xj: Orthonormal matrix representing the first point.
+        :rtype float
         """
         RiemannianDistance.check_points(xi, xj)
 

@@ -8,16 +8,23 @@ from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance
 
 class Geodesic(RiemannianDistance):
     """
-    TODO: Add description of ArcLength distance (This should reflect on the documentation).
-    TODO: Validate results.
+    A class to calculate the geodesic (or Grassmann) distance between two Grassmann points defined as:
+
+    .. math::
+        x_j' x_i = UΣV
+
+        \Theta = cos^{-1}(Σ)
+
+        d_{C}(x_i, x_j) = (\sum \Theta^2_l)^{1/2}
+
     """
 
     def compute_distance(self, xi, xj) -> float:
         """
-        Geodesic (or arc length or Grassmann) distance
-        :param xi:
-        :param xj:
-        :return:
+        Compute the geodesic (or Grassmann) distance between two points on the Grassmann manifold
+        :param numpy.array xi: Orthonormal matrix representing the first point.
+        :param numpy.array xj: Orthonormal matrix representing the first point.
+        :rtype float
         """
         RiemannianDistance.check_points(xi, xj)
 
@@ -28,6 +35,6 @@ class Geodesic(RiemannianDistance):
         (ui, si, vi) = np.linalg.svd(r, full_matrices=True)
         si[np.where(si > 1)] = 1.0
         theta = np.arccos(si)
-        distance = (np.sqrt(abs(rank_i - rank_j) * np.pi ** 2 / 4 + np.sum(theta ** 2)))
+        distance = (np.sqrt(abs(rank_i - rank_j) * np.pi ** 2 / 4 + np.sqrt(np.sum(theta ** 2))))
 
         return distance
