@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.linalg import svd
 import sys
 from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import (
     RiemannianDistance,
