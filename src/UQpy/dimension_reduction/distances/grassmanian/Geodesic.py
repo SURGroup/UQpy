@@ -35,6 +35,6 @@ class Geodesic(RiemannianDistance):
         (ui, si, vi) = np.linalg.svd(r, full_matrices=True)
         si[np.where(si > 1)] = 1.0
         theta = np.arccos(si)
-        distance = (np.sqrt(abs(rank_i - rank_j) * np.pi ** 2 / 4 + np.sqrt(np.sum(theta ** 2))))
+        distance = (np.sqrt(abs(rank_i - rank_j) * np.pi ** 2 / 4 + np.sum(theta ** 2)))
 
         return distance

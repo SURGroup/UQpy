@@ -52,7 +52,7 @@ def test_projection_distance():
     xi = np.array([[-np.sqrt(2)/2, -np.sqrt(2)/4], [np.sqrt(2)/2, -np.sqrt(2)/4], [0, -np.sqrt(3)/2]])
     xj = np.array([[0, np.sqrt(2)/2], [1, 0], [0, -np.sqrt(2)/2]])
     distance = np.round(Projection().compute_distance(xi, xj), 6)
-    assert distance == 0.993686
+    assert distance == 0.996838
 
 
 def test_binet_cauchy_distance():
