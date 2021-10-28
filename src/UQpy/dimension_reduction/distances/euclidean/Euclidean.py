@@ -1,8 +1,6 @@
 from typing import Union
 import numpy as np
 from scipy.spatial.distance import pdist
-
-from UQpy import Numpy2DFloatArray
 from UQpy.utilities import DistanceMetric
 
 
@@ -17,7 +15,7 @@ class Euclidean:
         metric_str = str(metric.name).lower()
         self.distance_function = lambda x: pdist(x, metric=metric_str)
 
-    def compute_distance(self, points: Numpy2DFloatArray) -> Union[float, np.ndarray]:
+    def compute_distance(self, points: np.array) -> Union[float, np.ndarray]:
         """
 
         :param numpy.ndarray points: Array holding the coordinates of the points

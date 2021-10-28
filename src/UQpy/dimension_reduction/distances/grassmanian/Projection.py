@@ -6,27 +6,15 @@ from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance
 )
 
 
-class ProjectionDistance(RiemannianDistance):
-    def compute_distance(self, point1, point2):
+class Projection(RiemannianDistance):
+    def compute_distance(self, xi, xj) -> float:
 
-        point1, point2 = RiemannianDistance.check_points(point1, point2)
+        RiemannianDistance.check_points(xi, xj)
 
-        l = min(np.shape(point1))
-        k = min(np.shape(point2))
-
-        if l != k:
-            raise NotImplementedError(
-                "UQpy: distance not implemented for manifolds with distinct dimensions."
-            )
-
-        rank = min(l, k)
-
-        r = np.dot(point1.T, point2)
-        (ui, si, vi) = svd(r, rank)
-
-        index = np.where(si > 1)
-        si[index] = 1.0
-        theta = np.arccos(np.diag(si))
-        d = np.sin(np.max(theta))
+        r = np.dot(xi.T, xj)
+        (ui, si, vi) = np.linalg.svd(r, full_matrices=True)
+        si[np.where(si > 1)] = 1.0
+        theta = np.arccos(si)
+        d = np.sum(np.sin(theta) ** 2)
 
         return d

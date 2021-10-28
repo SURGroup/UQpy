@@ -1,15 +1,20 @@
-import numpy as np
-from numpy.linalg import svd
+from typing import Union
 
+import numpy as np
 from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import (
     RiemannianDistance,
 )
 
 
-class Chordal(RiemannianDistance):
+class Geodesic(RiemannianDistance):
+    """
+    TODO: Add description of ArcLength distance (This should reflect on the documentation).
+    TODO: Validate results.
+    """
+
     def compute_distance(self, xi, xj) -> float:
         """
-        Chordal (or Procrustes distance)
+        Geodesic (or arc length or Grassmann) distance
         :param xi:
         :param xj:
         :return:
@@ -23,7 +28,6 @@ class Chordal(RiemannianDistance):
         (ui, si, vi) = np.linalg.svd(r, full_matrices=True)
         si[np.where(si > 1)] = 1.0
         theta = np.arccos(si)
-        sin_sq = np.sin(theta / 2) ** 2
-        d = np.sqrt(abs(rank_i - rank_j) + 2 * np.sum(sin_sq))
+        distance = (np.sqrt(abs(rank_i - rank_j) * np.pi ** 2 / 4 + np.sum(theta ** 2)))
 
-        return d
+        return distance
