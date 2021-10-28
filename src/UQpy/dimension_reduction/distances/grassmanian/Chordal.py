@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.linalg import svd
 
 from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import (
     RiemannianDistance,
@@ -7,20 +6,34 @@ from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance
 
 
 class Chordal(RiemannianDistance):
-    def compute_distance(self, point1, point2):
+    """
+    A class to calculate the Chordal (or Procrustes) distance between two  Grassmann points defined as:
 
-        point1, point2 = RiemannianDistance.check_points(point1, point2)
+    .. math::
+        x_j' x_i = UΣV
 
-        l = min(np.shape(point1))
-        k = min(np.shape(point2))
-        rank = min(l, k)
+        \Theta = cos^{-1}(Σ)
 
-        r_star = np.dot(point2.T, point2)
-        (ui, si, vi) = svd(r_star, rank)
-        index = np.where(si > 1)
-        si[index] = 1.0
-        theta = np.arccos(np.diag(si))
-        sin_sq = np.sin(theta) ** 2
-        d = np.sqrt(abs(k - l) + np.sum(sin_sq))
+        d_{C}(x_i, x_j) = [\sum_{l}\sin^2(\Theta_l)]^{1/2}
+
+    """
+    def compute_distance(self, xi, xj) -> float:
+        """
+        Compute the chordal distance between two points on the Grassmann manifold
+        :param numpy.array xi: Orthonormal matrix representing the first point.
+        :param numpy.array xj: Orthonormal matrix representing the first point.
+        :rtype float
+        """
+        RiemannianDistance.check_points(xi, xj)
+
+        rank_i = xi.shape[1]
+        rank_j = xj.shape[1]
+
+        r = np.dot(xi.T, xj)
+        (ui, si, vi) = np.linalg.svd(r, full_matrices=True)
+        si[np.where(si > 1)] = 1.0
+        theta = np.arccos(si)
+        sin_sq = np.sin(theta / 2) ** 2
+        d = np.sqrt(abs(rank_i - rank_j) + 2 * np.sum(sin_sq))
 
         return d

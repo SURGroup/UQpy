@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.linalg import svd
 
 from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import (
     RiemannianDistance,
@@ -7,26 +6,30 @@ from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance
 
 
 class Spectral(RiemannianDistance):
-    def compute_distance(self, point1, point2):
+    """
+    A class to calculate the Projection distance between two Grassmann points defined as:
 
-        point1, point2 = RiemannianDistance.check_points(point1, point2)
+    .. math::
+        x_j' x_i = UΣV
 
-        l = min(np.shape(point1))
-        k = min(np.shape(point2))
+        \Theta = cos^{-1}(Σ)
 
-        if l != k:
-            raise NotImplementedError(
-                "UQpy: distance not implemented for manifolds with distinct dimensions."
-            )
+        d_{C}(x_i, x_j) =  2\sin( \max(\Theta_l)/2)
 
-        rank = min(l, k)
+    """
+    def compute_distance(self, xi, xj) -> float:
+        """
+        Compute the Spectral distance between two points on the Grassmann manifold
+        :param numpy.array xi: Orthonormal matrix representing the first point.
+        :param numpy.array xj: Orthonormal matrix representing the first point.
+        :rtype float
+        """
+        RiemannianDistance.check_points(xi, xj)
 
-        r = np.dot(point1.T, point2)
-        (ui, si, vi) = svd(r, rank)
-
-        index = np.where(si > 1)
-        si[index] = 1.0
-        theta = np.arccos(np.diag(si))
+        r = np.dot(xi.T, xj)
+        (ui, si, vi) = np.linalg.svd(r, full_matrices=True)
+        si[np.where(si > 1)] = 1.0
+        theta = np.arccos(si)
         d = 2 * np.sin(np.max(theta) / 2)
 
         return d

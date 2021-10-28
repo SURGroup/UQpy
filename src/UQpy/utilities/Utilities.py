@@ -394,7 +394,7 @@ def _nn_coord(x, k):
 
     dim = np.shape(x)
 
-    if len(dim) is not 1:
+    if len(dim) != 1:
         raise ValueError("k MUST be a vector.")
 
     if not isinstance(k, int):

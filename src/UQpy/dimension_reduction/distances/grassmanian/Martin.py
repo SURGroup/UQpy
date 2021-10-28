@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.linalg import svd
 import sys
 from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import (
     RiemannianDistance,
@@ -7,23 +6,19 @@ from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance
 
 
 class Martin(RiemannianDistance):
-    def compute_distance(self, point1, point2):
-        point1, point2 = RiemannianDistance.check_points(point1, point2)
+    def compute_distance(self, xi, xj) -> float:
+        """
+        Compute the Martin distance between two points on the Grassmann manifold
+        :param numpy.array xi: Orthonormal matrix representing the first point.
+        :param numpy.array xj: Orthonormal matrix representing the first point.
+        :rtype float
+        """
+        RiemannianDistance.check_points(xi, xj)
 
-        l = min(np.shape(point1))
-        k = min(np.shape(point2))
-
-        if l != k:
-            raise NotImplementedError(
-                "UQpy: distance not implemented for manifolds with distinct dimensions."
-            )
-
-        r = np.dot(point1.T, point2)
-        (ui, si, vi) = svd(r, k)
-
-        index = np.where(si > 1)
-        si[index] = 1.0
-        theta = np.arccos(np.diag(si))
+        r = np.dot(xi.T, xj)
+        (ui, si, vi) = np.linalg.svd(r, full_matrices=True)
+        si[np.where(si > 1)] = 1.0
+        theta = np.arccos(si)
         cos_sq = np.cos(theta) ** 2
         float_min = sys.float_info.min
         index = np.where(cos_sq < float_min)
