@@ -1,25 +1,26 @@
 import numpy as np
-
 from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
 
 
 class ProjectionKernel(Kernel):
-    def apply_method(self, data):
-        data.evaluate_matrix(self, self.kernel_operator)
+    """
+    A class to calculate the Projection kernel defined as:
 
-    def pointwise_operator(self, point1, point2):
+    .. math::
+        k_p(x_j, x_i) = (||x_j'\cdot xj||_F)^2
 
-        if not isinstance(point1, list) and not isinstance(point2, np.ndarray):
-            raise TypeError("UQpy: x0 must be either list or numpy.ndarray.")
-        else:
-            point1 = np.array(point1)
+    """
+    def apply_method(self, points):
+        points.evaluate_matrix(self, self.kernel_operator)
 
-        if not isinstance(point2, list) and not isinstance(point2, np.ndarray):
-            raise TypeError("UQpy: x1 must be either list or numpy.ndarray.")
-        else:
-            point2 = np.array(point2)
-
-        r = np.dot(point1.T, point2)
+    def kernel_entry(self, xi, xj):
+        """
+        Compute the Projection kernel entry for two points on the Grassmann manifold
+        :param numpy.array xi: Orthonormal matrix representing the first point.
+        :param numpy.array xj: Orthonormal matrix representing the first point.
+        :rtype float
+        """
+        r = np.dot(xi.T, xj)
         n = np.linalg.norm(r, "fro")
-        ker = n * n
-        return ker
+        kij = n * n
+        return kij

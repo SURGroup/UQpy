@@ -1,1 +1,1 @@
-from UQpy.dimension_reduction.kernels.euclidean.Gaussian import Gaussian
+from UQpy.dimension_reduction.kernels.euclidean.GaussianKernel import GaussianKernel
