@@ -5,7 +5,7 @@ from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance
 )
 
 
-class Procrustes(RiemannianDistance):
+class ProcrustesDistance(RiemannianDistance):
     """
     A class to calculate the Procrustes (chordal) distance between two  Grassmann points defined as:
 
