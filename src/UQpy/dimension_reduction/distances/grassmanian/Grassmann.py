@@ -6,9 +6,9 @@ from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance
 )
 
 
-class Geodesic(RiemannianDistance):
+class Grassmann(RiemannianDistance):
     """
-    A class to calculate the geodesic (or Grassmann) distance between two Grassmann points defined as:
+    A class to calculate the Grassmann distance between two Grassmann points defined as:
 
     .. math::
         x_j' x_i = UΣV
@@ -21,7 +21,7 @@ class Geodesic(RiemannianDistance):
 
     def compute_distance(self, xi, xj) -> float:
         """
-        Compute the geodesic (or Grassmann) distance between two points on the Grassmann manifold
+        Compute the Grassmann distance between two points on the Grassmann manifold
         :param numpy.array xi: Orthonormal matrix representing the first point.
         :param numpy.array xj: Orthonormal matrix representing the first point.
         :rtype float

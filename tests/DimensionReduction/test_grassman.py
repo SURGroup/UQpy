@@ -4,7 +4,7 @@ import sys
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator
 
-from UQpy.dimension_reduction.distances.grassmanian.Geodesic import Geodesic
+from UQpy.dimension_reduction.distances.grassmanian.Grassmann import Geodesic
 from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
 from UQpy.dimension_reduction.grassman.Grassman import Grassmann
 from UQpy.dimension_reduction.grassman.interpolations.LinearInterpolation import LinearInterpolation

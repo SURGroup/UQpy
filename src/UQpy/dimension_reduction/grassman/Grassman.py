@@ -1,7 +1,7 @@
 import itertools
 
-from UQpy.dimension_reduction.distances.grassmanian.Geodesic import (
-    Geodesic,
+from UQpy.dimension_reduction.distances.grassmanian.Grassmann import (
+    Grassmann,
 )
 from UQpy.dimension_reduction.grassman.interpolations.LinearInterpolation import (
     LinearInterpolation,
