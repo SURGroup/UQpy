@@ -17,7 +17,7 @@ from UQpy.dimension_reduction.grassman.interpolations.Interpolation import Inter
 
 from UQpy.dimension_reduction.DiffusionMaps import DiffusionMaps
 from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
-from UQpy.dimension_reduction.kernels.euclidean.Gaussian import Gaussian
+from UQpy.dimension_reduction.kernels.euclidean.GaussianKernel import Gaussian
 
 
 def test_log_exp():

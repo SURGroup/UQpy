@@ -1,7 +1,8 @@
 import itertools
 from abc import ABC, abstractmethod
 import numpy as np
-import scipy.spatial.distance as sd
+
+from UQpy.dimension_reduction.distances.grassmanian.baseclass import RiemannianDistance
 
 
 class Kernel(ABC):
@@ -9,50 +10,48 @@ class Kernel(ABC):
     def apply_method(self, data):
         pass
 
-    def kernel_operator(self, points, p_dim):
+    @abstractmethod
+    def kernel_entry(self, xi, xj):
+        pass
 
-        # Check points for type and shape consistency.
-        # -----------------------------------------------------------
+    @staticmethod
+    def check_data(points):
         if not isinstance(points, list) and not isinstance(points, np.ndarray):
-            raise TypeError("UQpy: `points` must be either list or numpy.ndarray.")
-
-        nargs = len(points)
-
+            raise TypeError("UQpy: Data points must be provided either as a list or a numpy.ndarray.")
+        elif isinstance(points, np.ndarray):
+            if len(points.shape) != 3:
+                raise TypeError("UQpy: Data points must be provided as a 3D numpy.ndarray.")
+            else:
+                nargs = points.shape[0]
+        else:
+            nargs = len(points)
         if nargs < 2:
             raise ValueError("UQpy: At least two matrices must be provided.")
-        # ------------------------------------------------------------
 
+        return nargs
+
+    def kernel_operator(self, points, p=None):
+
+        nargs = Kernel.check_data(points)
         # Define the pairs of points to compute the entries of the kernel matrix.
         indices = range(nargs)
-        pairs = list(itertools.combinations(indices, 2))
+        pairs = list(itertools.combinations_with_replacement(indices, 2))
 
-        # Estimate off-diagonal entries of the kernel matrix.
-        kernel_list = []
+        # Estimate entries of the kernel matrix.
+        kernel = np.zeros((nargs, nargs))
         for id_pair in range(np.shape(pairs)[0]):
-            ii = pairs[id_pair][0]  # Point i
-            jj = pairs[id_pair][1]  # Point j
+            i = pairs[id_pair][0]  # Point i
+            j = pairs[id_pair][1]  # Point j
+            if not p:
+                xi = points[i]
+                xj = points[j]
+            else:
+                xi = points[i][:, :p]
+                xj = points[j][:, :p]
 
-            x0 = np.asarray(points[ii])[:, :p_dim]
-            x1 = np.asarray(points[jj])[:, :p_dim]
+            RiemannianDistance.check_points(xi, xj)
+            kernel[i, j] = self.kernel_entry(xi, xj)
+            kernel[j, i] = kernel[i, j]
 
-            ker = self.pointwise_operator(x0, x1)
-            kernel_list.append(ker)
+        return kernel
 
-        # Diagonal entries of the kernel matrix.
-        kernel_diag = []
-        for id_elem in range(nargs):
-            xd = np.asarray(points[id_elem])
-            xd = xd[:, :p_dim]
-
-            kerd = self.pointwise_operator(xd, xd)
-            kernel_diag.append(kerd)
-
-        # Add the diagonals and off-diagonal entries of the Kernel matrix.
-        kernel_matrix = sd.squareform(np.array(kernel_list)) + np.diag(kernel_diag)
-
-        # Return the kernel matrix.
-        return kernel_matrix
-
-    @abstractmethod
-    def pointwise_operator(self, point1, point2):
-        pass

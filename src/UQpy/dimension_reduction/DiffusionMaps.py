@@ -5,7 +5,7 @@ from UQpy.utilities.Utilities import _nn_coord
 from beartype import beartype
 from typing import Annotated, Union
 from beartype.vale import Is
-from UQpy.dimension_reduction.kernels.euclidean.Gaussian import Gaussian
+from UQpy.dimension_reduction.kernels.euclidean.GaussianKernel import GaussianKernel
 
 
 class DiffusionMaps:
@@ -111,7 +111,7 @@ class DiffusionMaps:
         eigenvectors_number: IntegerLargerThanUnityType = 2,
         is_sparse: bool = False,
         neighbors_number: IntegerLargerThanUnityType = 1,
-        kernel=Gaussian(),
+        kernel=GaussianKernel(),
     ):
         kernel_matrix = kernel.apply_method(data)
         return cls(
