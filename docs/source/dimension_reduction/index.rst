@@ -15,5 +15,11 @@ The module ``UQpy.dimension_reduction`` currently contains the following classes
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+   :hidden:
    :caption: Dimension Reduction
+
+    POD <pod>
+    HOSVD <hosvd>
+    Diffusion Maps <diffusion_maps>
+    Grassmann <grassmann>

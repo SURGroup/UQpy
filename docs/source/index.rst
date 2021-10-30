@@ -16,6 +16,7 @@ Table of contents
 	
    installation_doc
    runmodel_doc
+   /dimension_reduction/index
    /distributions/index
    /inference/index
    /reliability/index

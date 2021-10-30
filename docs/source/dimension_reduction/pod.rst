@@ -1,0 +1,125 @@
+POD
+--------------------------------
+
+The ``POD`` class is the parent class of the ``DirectPOD``, ``SnapshotPOD`` and ``HOSVD`` classes that perform the Direct POD, Snapshot POD and Higher-order Singular Value Decomposition (HOSVD) respectively.
+
+The Proper Orthogonal Decomposition (POD) is a post-processing technique which takes a given dataset and extracts a set of orthogonal basis functions and the corresponding coefficients. The idea of this method, is to analyze large amounts of data in order to gain a better understanding of the simulated processes and reduce noise. POD method has two variants, the Direct POD and Snapshot POD. In cases where the dataset is large, the Snapshot POD is recommended as it is much faster.
+
+The Higher-order Singular Value Decomposition (HOSVD) is the generalization of the matrix SVD, also called an orthogonal Tucker decomposition. HOSVD is used in cases where the solution snapshots are most naturally condensed into generalized matrices (tensors) and do not lend themselves naturally to vectorization.
+
+POD Class Descriptions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``POD`` class is imported using the following command:
+
+>>> from DimensionReduction import POD
+
+One can use the following command to instantiate the class ``POD``
+
+.. autoclass:: UQpy.DimensionReduction.POD
+    :members:
+
+
+DirectPOD
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Direct Proper Orthogonal Decomposition (POD) is the first variant of the POD method and is used for the extraction of a set of orthogonal spatial basis functions and corresponding time coefficients from a dataset. The ``DirectPOD`` class is used for dimensionality reduction of datasets obtained by numerical simulations, given a desired level of accuracy.
+
+Let us consider the solution of a numerical model of a differential equation :math:`\mathbf{u}(\mathtt{x},t)`, where :math:`\mathtt{x} = (x,y,z)` is the position vector where the function is evaluated and :math:`t` is the time. The idea behind the POD is to decompose the random vector field :math:`\mathbf{u}(\mathtt{x},t)`, into a set of deterministic spatial functions :math:`\Phi_{k}{\mathtt{x}}`, multiplied by random time coefficients :math:`\alpha_{k}(t)`, so that:
+
+.. math:: \mathbf{u}(\mathtt{x},t) =  \sum_{k=1}^{\infty}\alpha_{k}(t)\Phi_{k}{\mathtt{x}}
+
+where :math:`\Phi_{k}{\mathtt{x}}` are the spatial POD modes and :math:`\alpha_{k}(t)` are the time coefficients.
+
+The above decomposition is achieved by maximizing the energy that can be captured by the first :math:`n` spatial POD modes [9]_. POD modes are orthonormal and thus one can write
+
+.. math::  \iiint_{\mathtt{x}} \Phi_{k_{1}}{\mathtt{x}} \Phi_{k_{2}}{\mathtt{x}} d\mathtt{x} = \begin{cases}
+    1, & \text{if $k_1 = k_2$}.\\
+    0, & \text{if $k_1 \ne k_2$}
+  \end{cases}
+
+Furthermore, at each time coefficient :math:`\alpha_{k}(t)` only depends on the spatial mode :math:`\Phi_{k}{\mathtt{x}}`. By multiplying the decomposition equation with :math:`\Phi_{k}{\mathtt{x}}` and integrating over space one obtains the following
+
+.. math:: \alpha_{k}(t) = \iiint_{\mathtt{x}} \mathbf{u}(\mathtt{x},t) \Phi_{k}{\mathtt{x}} d\mathtt{x}
+
+The POD method, often called Principal Component Analysis (PCA) in the field of statistics, is traditionally applied to datasets obtained by numerical simulations for engineering problems (e.g. fluid mechanics, mechanics of materials, aerodynamics) which produce finite-dimensional data containing the evolution of problem solutions in time.
+
+For the Direct POD method, a two-dimensional dataset :math:`\mathbf{U}` is constructed where the :math:`m` is the number of snapshots and :math:`n` is the number of problem dimensions. The covariance matrix is computed as follows
+
+.. math:: \mathbf{C} = \frac{1}{m-1} \mathbf{U}^T \mathbf{U}
+
+Next, the eigenvalue problem is solved for the covariance matrix as
+
+.. math:: \mathbf{C} \Phi = \lambda \Phi
+
+In total, :math:`n` eigenvalues :math:`\lambda_1,... \lambda_n` and a corresponding set of eigenvectors, arranged as columns in an :math:`n \times n` matrix :math:`\Phi`. The :math:`n` columns of this matrix are the proper orthogonal modes of the dataset. The original snapshot matrix :math:`\mathbf{U}`, can be expressed as the sum of the contributions of the :math:`n` deterministic modes. The temporal coefficients are calculated as :math:`A = \mathbf{U} \Phi`. A predefined number of :math:`k` POD spatial modes (eigenvectors) and temporal coefficients can be considered for the reconstruction of data as follows
+
+.. math:: \mathbf{\sim{u}}(\mathtt{x},t) =  \sum_{i=1}^{k}A(t)\Phi{\mathtt{x}}
+
+
+DirectPOD Class Descriptions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``DirectPOD`` class is imported using the following command:
+
+>>> from DimensionReduction import DirectPOD
+
+One can use the following command to instantiate the class ``DirectPOD``
+
+.. autoclass:: UQpy.DimensionReduction.DirectPOD
+    :members:
+
+
+SnapshotPOD
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Snapshot Proper Orthogonal Decomposition (POD) method is the second variant of the POD method which considers the decomposition of a dataset into deterministic temporal modes and random spatial coefficients. Essentially, this method interchanges the time and position. In most problems the number of solution snapshots :math:`n` is less than the number of dimensions :math:`m = N_x \times N_y` where :math:`N_x, N_y` are the grid dimensions. Thus, by using the ``SnapshotPOD`` class one can reconstruct solutions much faster [10]_.
+
+For the Snapshot POD the covariance matrix :math:`\mathbf{C_s}`, is calculated as follows
+
+.. math:: \mathbf{C_s} = \frac{1}{m-1} \mathbf{U} \mathbf{U}^T
+
+The eigenvalue problem is solved and the temporal modes (eigenvectors) are calculated as
+
+.. math:: \mathbf{C} A_s = \lambda A_s
+
+Spatial coefficients are therefore calculated as :math:`\Phi_s = \mathbf{U}^T A_s`. Finally, a predefined number of :math:`k`-POD temporal modes and spatial coefficients can be considered for the reconstruction of data as follows
+
+.. math:: \mathbf{\sim{u}}(\mathtt{x},t) = \sum_{i=1}^{k} A_s(t) \Phi_s \mathtt{x}
+
+
+SnapshotPOD Class Descriptions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``SnapshotPOD`` class is imported using the following command:
+
+>>> from DimensionReduction import SnapshotPOD
+
+One can use the following command to instantiate the class ``SnapshotPOD``
+
+.. autoclass:: UQpy.DimensionReduction.SnapshotPOD
+    :members:
+
+.. [1] J. Maruskin, Introduction to Dynamical Systems and Geometric Mechanics, Solar Crest Publishing, LLC, 2012:p.165.
+
+.. [2] B. Wang, Y. Hu, J. Gao, Y. Sun, B. Yin, Low rank represen6tation on Grassmann   manifolds: An extrinsic perspective, 2015, 167arXiv:1504.01807.168.
+
+.. [3] S. Sommer, T. Fletcher, X. Pennec, 1 - introduction to differential and Riemannian  geometry, in: X. Pennec, S. Sommer, T. Fletcher (Eds.), Riemannian Geometric Statistics in Medical Image Analysis, Academic Press, 2020, p.3–37.
+
+.. [4] D. Giovanis, M. Shields, Uncertainty  quantification for complex systems with very high dimensional response using Grassmann manifold variations, Journal of Computational Physics, 2018, 364, p.393–415.
+
+.. [5] B. Wang, Y. Hu, J. Gao, Y. Sun, B. Yin, Low rank representation on Grassmann manifolds: An extrinsic perspective, 2015, 167arXiv:1504.01807.
+
+.. [6] M. T. Harandi, M. Salzmann, S. Jayasumana, R. Hartley, H. Li, Expanding the family of Grassmannian kernels: An embedding perspective, 2014, 1622014.arXiv:1407.1123.
+
+.. [7] R. R. Coifman, S. Lafon. Diffusion maps. Applied Computational Harmonic Analysis, 2006, 21(1), p.5–30.
+
+.. [8] R. R. Coifman, I. G. Kevrekidis, S. Lafon, M. Maggioni, and B. Nadler, Diffusionmaps, reduction coordinates, and low dimensional representation of stochastic systems, Multiscale Modeling and Simulation, 2008, 7(2), p.842–864.
+
+.. [9] J. Weiss. A tutorial on the proper orthogonal decomposition. In: AIAA Aviation 2019 Forum. 2019. p. 3333.
+
+.. [10] L. Sirovich. Turbulence and the dynamics of coherent structures. I. Coherent structures. Quarterly of applied mathematics, 1987, 45(3), 561-571.
+
+.. [11] D. Giovanis, M. Shields. Variance‐based simplex stochastic collocation with model order reduction for high‐dimensional systems. International Journal for Numerical Methods in Engineering, 2019, 117(11), 1079-1116.
+
+.. [12] L. De Lathauwer, B. De Moor, J. Vandewalle. A multilinear singular value decomposition. SIAM journal on Matrix Analysis and Applications, 2000, 21(4), 1253-1278.

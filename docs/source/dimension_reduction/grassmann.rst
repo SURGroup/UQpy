@@ -1,0 +1,49 @@
+Grassmann
+--------------------------------
+	
+In differential geometry the Grassmann manifold :math:`\mathcal{G}_{n,p}` refers to a collection of :math:`p`-dimensional subspaces embedded in a :math:`n`-dimensional vector space. The ``Grassmann`` class contains methods to perform the projection of matrices onto the Grassmann manifold via singular value decomposition (SVD), where their dimensionality are reduced. Further, a tangent space, where standard interpolation can be performed, is constructed at a given reference point. Therefore, the mapping from the Grassmann manifold to the tangent space and from the tangent space to the manifold are performed via the logarithmic and exponential mapping, respectively. Moreover, additional quantities such as the Karcher mean, which correspond to the point on the Grassmann manifold minimizing the squared distances to the other points on the same manifold. Further, the kernel defined on the Grassmann manifold is implemented to estimate an affinity matrix to be used in kernel-based machine learning techniques.
+
+A tangent space :math:`\mathcal{T}_{\mathcal{X}}\mathcal{G}(p,n)`, which is a flat inner-product space, is defined as a set of all tangent vectors at :math:`\mathcal{X}` [1]_, [2]_, [3]_; such as 
+
+.. math:: \mathcal{T}_{\mathcal{X}}\mathcal{G}(p,n) = \{\mathbf{\Gamma} \in \mathbb{R}^{n \times p} : \mathbf{\Gamma}^T\mathbf{\Psi}=\mathbf{0}\}
+
+Where a point :math:`\mathcal{X} = \mathrm{span}\left(\mathbf{\Psi}\right) \in \mathcal{G}(p,n)` is invariant to the choice of basis such that :math:`\mathrm{span}\left(\mathbf{\Psi}\right) = \mathrm{span}\left(\mathbf{R\Psi}\right)`, with :math:`\mathbf{R} \in SO(p)`, where :math:`SO(p)` is the special orthogonal group.
+
+One can write the exponential map (from the tangent space to the manifold) locally as ([4]_, [5]_)
+
+.. math:: \mathrm{exp}_{\mathcal{X}_0}(\mathbf{\Gamma}) = \mathbf{\Psi}_1
+
+Denoting :math:`\mathbf{\Gamma}` by its singular value decomposition :math:`\mathbf{\Gamma} = \mathbf{U}\mathbf{S}\mathbf{V}^T` one can write a point on the Grassmann manifold :math:`\mathbf{\Psi}_1`, considering a reference point :math:`\mathbf{\Psi}_0`, as
+
+.. math:: \mathbf{\Psi}_1 = \mathrm{exp}_{\mathcal{X}_0}(\mathbf{U}\mathbf{S}\mathbf{V}^T) = \mathbf{\Psi}_0\mathbf{V}\mathrm{cos}\left(\mathbf{S}\right)\mathbf{Q}^T+\mathbf{U}\mathrm{sin}\left(\mathbf{S}\right)\mathbf{Q}^T
+
+
+Equivalently, the logarithmic map :math:`\mathrm{log}_\mathcal{X}:\mathcal{G}(p,n) \rightarrow \mathcal{T}_{\mathcal{X}}\mathcal{G}(p,n)` is defined locally as
+
+.. math:: \mathrm{log}_\mathcal{X}(\mathbf{\Psi}_1) = \mathbf{U}\mathrm{tan}^{-1}\left(\mathbf{S}\right)\mathbf{V}^T
+
+One can write the geodesic as
+
+.. math:: \gamma(t)=\mathrm{span}\left[\left(\mathbf{\Psi}_0\mathbf{V}\mathrm{cos}(t\mathbf{S})+\mathbf{U}\mathrm{sin}(t\mathbf{S})\right)\mathbf{V}^T\right]
+
+where :math:`\mathbf{\Psi}_0`, if :math:`t=0`, and :math:`\mathbf{\Psi}_1`, :math:`t=1`.
+
+The geodesic distance :math:`d_{\mathcal{G}(p,n)}\left(\mathbf{\Psi}_0,\mathbf{\Psi}_1\right)` between two points on $\mathcal{G}(p,n)$ corresponds to the distance over the geodesic :math:`\gamma(t)` and it is given by
+
+.. math:: d_{\mathcal{G}(p,n)}\left(\mathbf{\Psi}_0,\mathbf{\Psi}_1\right) = ||\mathbf{\Theta}||_2
+
+where :math:`\mathbf{\Theta} = \left(\theta_1, \theta_2, \dots, \theta_p \right)` contains the principal angles. Several definitions of distance on :math:`\mathcal{G}(p,n)` can be found in the literature.
+
+In several applications the use of subspaces is essential to describe the underlying geometry of data. However, it is well-known that subspaces do not follow the Euclidean geometry because they lie on the Grassmann manifold. Therefore, working with subspaces requires the definition of an embedding structure of the Grassmann manifold into a Hilbert space. Thus, using positive definite kernels is studied as a solution to this problem. In this regard, a real-valued positive definite kernel is defined as a symmetric function :math:`k:\mathcal{X}\times \mathcal{X} \rightarrow \mathbb{R}` if and only if :math:`\sum^n_{I,j=1}c_i c_j k(x_i,x_j) \leq 0` for :math:`n \in \mathbb{N}`, :math:`x_i in \mathcal{X}` and :math:`c_i \in \mathbb{R}`. Further, the Grassmann kernel can be defined as a function :math:`k:\mathcal{G}(p,n)\times \mathcal{G}(p,n) \rightarrow \mathbb{R}` if it is well-defined and positive definite [6]_.
+
+Grassmann Class Descriptions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``Grassmann`` class is imported using the following command:
+
+>>> from DimensionReduction import Grassmann
+
+One can use the following command to instantiate the class ``Grassmann``
+
+.. autoclass:: UQpy.DimensionReduction.Grassmann
+    :members:  
