@@ -4,7 +4,7 @@ from scipy.spatial.distance import pdist
 from UQpy.utilities.DistanceMetric import DistanceMetric
 
 
-class Euclidean:
+class EuclideanDistance:
     def __init__(self, metric: DistanceMetric):
         """
         A class that calculates the Euclidean distance between points.

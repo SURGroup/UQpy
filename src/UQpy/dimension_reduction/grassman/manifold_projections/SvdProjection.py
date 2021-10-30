@@ -113,10 +113,10 @@ class SvdProjection(ManifoldProjection):
 
         # Project the points on the manifold to the tangent space created over the Karcher mean.
         gamma_psi = Grassmann.log_map(
-            points_grassmann=self.psi, reference_point=ref_psi
+            manifold_points=self.psi, reference_point=ref_psi
         )
         gamma_phi = Grassmann.log_map(
-            points_grassmann=self.phi, reference_point=ref_phi
+            manifold_points=self.phi, reference_point=ref_phi
         )
 
         # Perform the interpolation in the tangent space.
@@ -141,10 +141,10 @@ class SvdProjection(ManifoldProjection):
 
         # Map the interpolated point back to the manifold.
         psi_tilde = Grassmann.exp_map(
-            points_tangent=[interp_psi], reference_point=ref_psi
+            tangent_points=[interp_psi], reference_point=ref_psi
         )
         phi_tilde = Grassmann.exp_map(
-            points_tangent=[interp_phi], reference_point=ref_phi
+            tangent_points=[interp_phi], reference_point=ref_phi
         )
 
         # Estimate the interpolated solution.
@@ -155,6 +155,6 @@ class SvdProjection(ManifoldProjection):
         return interpolated
 
     def evaluate_matrix(self, kernel: Kernel):
-        kernel_psi = kernel.kernel_operator(self.psi, p_dim=self.p_planes_dimensions)
-        kernel_phi = kernel.kernel_operator(self.phi, p_dim=self.p_planes_dimensions)
+        kernel_psi = kernel.kernel_operator(self.psi, p=self.p_planes_dimensions)
+        kernel_phi = kernel.kernel_operator(self.phi, p=self.p_planes_dimensions)
         return CompositionAction[self.kernel_composition.name](kernel_psi, kernel_phi)

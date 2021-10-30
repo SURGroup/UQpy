@@ -3,6 +3,8 @@ import sys
 
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator
+
+from UQpy.dimension_reduction.distances.grassmanian.GrassmannDistance import Grassmann
 from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
 from UQpy.dimension_reduction.grassman.Grassman import Grassmann
 from UQpy.dimension_reduction.grassman.interpolations.LinearInterpolation import LinearInterpolation
@@ -15,7 +17,7 @@ from UQpy.dimension_reduction.grassman.interpolations.Interpolation import Inter
 
 from UQpy.dimension_reduction.DiffusionMaps import DiffusionMaps
 from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
-from UQpy.dimension_reduction.kernels.euclidean.GaussianKernel import Gaussian
+from UQpy.dimension_reduction.kernels.euclidean.GaussianKernel import GaussianKernel
 
 
 def test_log_exp():
@@ -37,7 +39,7 @@ def test_log_exp():
 
     manifold_projection = SvdProjection(matrices, p_planes_dimensions=sys.maxsize)
 
-    points_tangent = Grassmann.log_map(points_grassmann=manifold_projection.psi,
+    points_tangent = Grassmann.log_map(manifold_points=manifold_projection.psi,
                                        reference_point=manifold_projection.psi[0])
 
     assert points_tangent[0][0][0] == 0.0
@@ -45,7 +47,7 @@ def test_log_exp():
     assert points_tangent[2][0][0] == 0.012574949291454723
     assert points_tangent[3][0][0] == 0.017116995689638644
 
-    points_grassmann = Grassmann.exp_map(points_tangent=points_tangent,
+    points_grassmann = Grassmann.exp_map(tangent_points=points_tangent,
                                          reference_point=manifold_projection.psi[0])
 
     assert points_grassmann[0][0][0] == -0.4984521191998955
@@ -77,12 +79,12 @@ def test_karcher():
     psi_mean = Grassmann.karcher_mean(points_grassmann=manifold_projection.psi,
                                       p_planes_dimensions=manifold_projection.p_planes_dimensions,
                                       optimization_method=optimization_method,
-                                      distance=GrassmannDistance())
+                                      distance=Grassmann())
 
     phi_mean = Grassmann.karcher_mean(points_grassmann=manifold_projection.phi,
                                       p_planes_dimensions=manifold_projection.p_planes_dimensions,
                                       optimization_method=optimization_method,
-                                      distance=GrassmannDistance())
+                                      distance=Grassmann())
 
     assert psi_mean[0, 0] == -0.3992313564023919
     assert phi_mean[0, 0] == -0.3820923720323338
@@ -97,20 +99,17 @@ def test_distances():
 
     np.random.seed(1111)  # For reproducibility.
     # Solutions: original space.
-    Sol0 = np.dot(np.random.rand(3, 2), np.random.rand(2, 3))
-    Sol1 = np.dot(np.random.rand(3, 2), np.random.rand(2, 3))
-    Sol2 = np.dot(np.random.rand(3, 2), np.random.rand(2, 3))
-    Sol3 = np.dot(np.random.rand(3, 2), np.random.rand(2, 3))
+    Sol0 = np.dot(np.random.rand(D1, r0), np.random.rand(r0, D1))
+    Sol1 = np.dot(np.random.rand(D1, r1), np.random.rand(r1, D1))
+    Sol2 = np.dot(np.random.rand(D1, r2), np.random.rand(r2, D1))
+    Sol3 = np.dot(np.random.rand(D1, r3), np.random.rand(r3, D1))
 
     # Creating a list of matrices.
     matrices = [Sol0, Sol1, Sol2, Sol3]
 
     manifold_projection = SvdProjection(matrices, p_planes_dimensions=sys.maxsize)
 
-    a = np.matmul(manifold_projection.phi[0].T, manifold_projection.phi[0])
-    b = np.matmul(manifold_projection.phi[1].T, manifold_projection.phi[1])
-
-    distance_metric = GrassmannDistance()
+    distance_metric = Grassmann()
     value = distance_metric.compute_distance(manifold_projection.psi[0], manifold_projection.psi[1])
 
     assert value == 5.672445010189097
@@ -145,7 +144,7 @@ def test_solution_reconstruction():
                                                                      point=point,
                                                                      p_planes_dimensions=manifold_projection.p_planes_dimensions,
                                                                      optimization_method=optimization_method,
-                                                                     distance=GrassmannDistance(),
+                                                                     distance=Grassmann(),
                                                                      element_wise=False)
     assert interpolated_solution[0, 0] == 0.6155684900619302
 
@@ -193,11 +192,10 @@ def test_dmaps_swiss_roll():
     Y0 = 1. / 6 * (phi + sigma * xi) * np.cos(phi)
 
     swiss_roll = np.array([X0, Y0, Z0]).transpose()
-
     dmaps = DiffusionMaps.create_from_data(data=swiss_roll,
                                            alpha=0.5, eigenvectors_number=3,
                                            is_sparse=True, neighbors_number=100,
-                                           kernel=Gaussian(epsilon=0.03))
+                                           kernel=GaussianKernel(epsilon=0.03))
 
     diff_coords, evals, evecs = dmaps.mapping()
 

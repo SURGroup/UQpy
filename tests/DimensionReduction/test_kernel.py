@@ -45,3 +45,4 @@ def test_kernel_gaussian_2d():
 
     assert np.allclose(np.matrix.round(kernel, 4), np.array([[1., 0.8834, 0.7788], [0.8834, 1., 0.6937], [0.7788, 0.6937, 1.]]))
     assert np.round(epsilon, 4) == 3.7538
+
