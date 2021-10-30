@@ -1,4 +1,6 @@
 import numpy as np
+
+from UQpy import GrassmannDistance
 from UQpy.dimension_reduction.grassman.manifold_projections.SvdProjection import SvdProjection
 from UQpy.dimension_reduction.grassman.Grassman import Grassmann
 import sys
@@ -6,7 +8,7 @@ from UQpy.dimension_reduction.grassman.optimization_methods.GradientDescent impo
 
 
 def test_karcher():
-    np.random.seed(1111)  # For reproducibility.
+    np.random.seed(1111)
     # Solutions: original space.
     sol0 = np.dot(np.random.rand(6, 2), np.random.rand(2, 6))
     sol1 = np.dot(np.random.rand(6, 3), np.random.rand(3, 6))
@@ -21,12 +23,12 @@ def test_karcher():
     psi_mean = Grassmann.karcher_mean(manifold_points=manifold_projection.psi,
                                       p_planes_dimensions=manifold_projection.p_planes_dimensions,
                                       optimization_method=optimization_method,
-                                      distance=Grassmann())
+                                      distance=GrassmannDistance())
 
     phi_mean = Grassmann.karcher_mean(manifold_points=manifold_projection.phi,
                                       p_planes_dimensions=manifold_projection.p_planes_dimensions,
                                       optimization_method=optimization_method,
-                                      distance=Grassmann())
+                                      distance=GrassmannDistance())
 
-    assert psi_mean[0, 0] == -0.3992313564023919
-    assert phi_mean[0, 0] == -0.3820923720323338
+    assert round(psi_mean[0, 0], 9) == -0.399231356
+    assert round(phi_mean[0, 0], 9) == -0.382092372

@@ -28,7 +28,8 @@ class GradientDescent:
         fmean = []
         for i in range(points_number):
             fmean.append(
-                Grassmann.frechet_variance(data_points[i], data_points, distance)
+                Grassmann.frechet_variance(reference_point=data_points[i], manifold_points=data_points,
+                                           distance=distance)
             )
 
         index_0 = fmean.index(min(fmean))
@@ -43,7 +44,7 @@ class GradientDescent:
         _gamma = []
         if self.acceleration:
             _gamma = Grassmann.log_map(
-                points_grassmann=data_points, reference_point=np.asarray(mean_element)
+                manifold_points=data_points, reference_point=np.asarray(mean_element)
             )
 
             avg_gamma.fill(0)
@@ -54,7 +55,7 @@ class GradientDescent:
         # Main loop
         while counter_iteration <= self.max_iterations:
             _gamma = Grassmann.log_map(
-                points_grassmann=data_points, reference_point=np.asarray(mean_element)
+                manifold_points=data_points, reference_point=np.asarray(mean_element)
             )
             avg_gamma.fill(0)
 
@@ -79,7 +80,7 @@ class GradientDescent:
                 step = alpha * avg_gamma
 
             x = Grassmann.exp_map(
-                points_tangent=[step], reference_point=np.asarray(mean_element)
+                tangent_points=[step], reference_point=np.asarray(mean_element)
             )
 
             test_1 = np.linalg.norm(x[0] - mean_element, "fro")
