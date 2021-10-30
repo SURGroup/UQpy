@@ -113,7 +113,7 @@ class DiffusionMaps:
         neighbors_number: IntegerLargerThanUnityType = 1,
         kernel=GaussianKernel(),
     ):
-        kernel_matrix = kernel.apply_method(data)
+        kernel_matrix = kernel.kernel_operator(points=data)
         return cls(
             alpha=alpha,
             eigenvectors_number=eigenvectors_number,

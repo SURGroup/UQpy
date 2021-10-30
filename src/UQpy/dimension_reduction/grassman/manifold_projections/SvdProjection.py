@@ -93,14 +93,14 @@ class SvdProjection(ManifoldProjection):
         from UQpy.dimension_reduction.grassman.Grassman import Grassmann
 
         ref_psi = Grassmann.karcher_mean(
-            points_grassmann=self.psi,
+            manifold_points=self.psi,
             p_planes_dimensions=p_planes_dimensions,
             optimization_method=optimization_method,
             distance=distance,
         )
 
         ref_phi = Grassmann.karcher_mean(
-            points_grassmann=self.phi,
+            manifold_points=self.phi,
             p_planes_dimensions=p_planes_dimensions,
             optimization_method=optimization_method,
             distance=distance,

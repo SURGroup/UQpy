@@ -14,6 +14,12 @@ class GaussianKernel(Kernel):
         k(x_j, x_i) = \exp[-(x_j - xj)^2/4\epsilon]
 
     """
+    def __init__(self, epsilon=None):
+        """
+
+        :param float epsilon: Scale parameter of the Gaussian kernel
+        """
+        self.epsilon = epsilon
 
     def apply_method(self, data):
         pass
@@ -32,11 +38,10 @@ class GaussianKernel(Kernel):
         epsilon = np.median(np.array(distance_pairs) ** 2)
         return epsilon
 
-    def kernel_operator(self, points, epsilon=None):
+    def kernel_operator(self, points, p=None):
         """
         Compute the Gaussian kernel entry for two points on the Euclidean space.
         :param list or numpy.array points:
-        :param float epsilon: Scale parameter of the Gaussian kernel
         :rtype np.ndarray
         """
         distance_pairs = None
@@ -57,9 +62,9 @@ class GaussianKernel(Kernel):
 
                 distance_pairs.append(np.linalg.norm(xi - xj, "fro"))
 
-        if epsilon is None:
-            epsilon = self.compute_default_epsilon(distance_pairs)
+        if self.epsilon is None:
+            self.epsilon = self.compute_default_epsilon(distance_pairs)
 
-        kernel = np.exp(-sd.squareform(distance_pairs) ** 2 / (4 * epsilon))
+        kernel = np.exp(-sd.squareform(distance_pairs) ** 2 / (4 * self.epsilon))
 
-        return kernel, epsilon
+        return kernel
