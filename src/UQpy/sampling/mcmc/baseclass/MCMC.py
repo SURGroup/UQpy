@@ -7,104 +7,6 @@ from abc import ABC
 
 
 class MCMC(ABC):
-    """
-    Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
-
-    This is the parent class for all mcmc algorithms. This parent class only provides the framework for
-    mcmc and cannot be used directly for sampling. Sampling is done by calling the child class for the specific
-    mcmc algorithm.
-
-
-    **Inputs:**
-
-    * **dimension** (`int`):
-        A scalar value defining the dimension of target density function. Either `dimension` and `nchains` or `seed`
-        must be provided.
-
-    * **pdf_target** ((`list` of) callables):
-        Target density function from which to draw random samples. Either `pdf_target` or `log_pdf_target` must be
-        provided (the latter should be preferred for better numerical stability).
-
-        If `pdf_target` is a callable, it refers to the joint pdf to sample from, it must take at least one input `x`,
-        which are the point(s) at which to evaluate the pdf. Within mcmc the `pdf_target` is evaluated as:
-        ``p(x) = pdf_target(x, *args_target)``
-
-        where `x` is a ndarray of shape (nsamples, dimension) and `args_target` are additional positional arguments that
-        are provided to mcmc via its `args_target` input.
-
-        If `pdf_target` is a list of callables, it refers to independent marginals to sample from. The marginal in
-        dimension `j` is evaluated as: ``p_j(xj) = pdf_target[j](xj, *args_target[j])`` where `x` is a ndarray of shape
-        (nsamples, dimension)
-
-    * **log_pdf_target** ((`list` of) callables):
-        Logarithm of the target density function from which to draw random samples. Either `pdf_target` or
-        `log_pdf_target` must be provided (the latter should be preferred for better numerical stability).
-
-        Same comments as for input `pdf_target`.
-
-    * **args_target** ((`list` of) `tuple`):
-        Positional arguments of the pdf / log-pdf target function. See `pdf_target`
-
-    * **seed** (`ndarray`):
-        Seed of the Markov chain(s), shape ``(nchains, dimension)``. Default: zeros(`nchains` x `dimension`).
-
-        If `seed` is not provided, both `nchains` and `dimension` must be provided.
-
-    * **nburn** (`int`):
-        Length of burn-in - i.e., number of samples at the beginning of the chain to discard (note: no thinning during
-        burn-in). Default is 0, no burn-in.
-
-    * **jump** (`int`):
-        Thinning parameter, used to reduce correlation between samples. Setting `jump=n` corresponds to	skipping `n-1`
-        states between accepted states of the chain. Default is 1 (no thinning).
-
-    * **nchains** (`int`):
-        The number of Markov chains to generate. Either `dimension` and `nchains` or `seed` must be provided.
-
-    * **save_log_pdf** (`bool`):
-        Boolean that indicates whether to save log-pdf values along with the samples. Default: False
-
-    * **verbose** (`boolean`)
-        Set ``verbose = True`` to print status messages to the terminal during execution.
-
-    * **concat_chains** (`bool`):
-        Boolean that indicates whether to concatenate the chains after a run, i.e., samples are stored as an `ndarray`
-        of shape (nsamples * nchains, dimension) if True, (nsamples, nchains, dimension) if False. Default: True
-
-    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
-
-        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-        object itself can be passed directly.
-
-
-    **Attributes:**
-
-    * **samples** (`ndarray`)
-        Set of mcmc samples following the target distribution, `ndarray` of shape
-        (`nsamples` * `nchains`, `dimension`) or (nsamples, nchains, dimension) (see input `concat_chains`).
-
-    * **log_pdf_values** (`ndarray`)
-        Values of the log pdf for the accepted samples, `ndarray` of shape (nchains * nsamples,) or (nsamples, nchains)
-
-    * **nsamples** (`list`)
-        Total number of samples; The `nsamples` attribute tallies the total number of generated samples. After each
-        iteration, it is updated by 1. At the end of the simulation, the `nsamples` attribute equals the user-specified
-        value for input `nsamples` given to the child class.
-
-    * **nsamples_per_chain** (`list`)
-        Total number of samples per chain; Similar to the attribute `nsamples`, it is updated during iterations as new
-        samples are saved.
-
-    * **niterations** (`list`)
-        Total number of iterations, updated on-the-fly as the algorithm proceeds. It is related to number of samples as
-        niterations=nburn+jump*nsamples_per_chain.
-
-    * **acceptance_rate** (`list`)
-        Acceptance ratio of the mcmc chains, computed separately for each chain.
-
-    **Methods:**
-    """
 
     # Last Modified: 10/05/20 by Audrey Olivier
     @beartype
@@ -122,7 +24,45 @@ class MCMC(ABC):
         concatenate_chains: bool = True,
         random_state: RandomStateType = None,
     ):
+        """
+        Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
 
+        This is the parent class for all mcmc algorithms. This parent class only provides the framework for
+        mcmc and cannot be used directly for sampling. Sampling is done by calling the child class for the specific
+        mcmc algorithm.
+
+        :param dimension: A scalar value defining the dimension of target density function. Either `dimension` and
+         `nchains` or `seed` must be provided.
+        :param pdf_target: Target density function from which to draw random samples. Either `pdf_target` or
+         `log_pdf_target` must be provided (the latter should be preferred for better numerical stability).
+         If `pdf_target` is a callable, it refers to the joint pdf to sample from, it must take at least one input `x`,
+         which are the point(s) at which to evaluate the pdf. Within mcmc the `pdf_target` is evaluated as:
+         ``p(x) = pdf_target(x, *args_target)`` where `x` is a ndarray of shape (nsamples, dimension) and `args_target`
+         are additional positional arguments that are provided to mcmc via its `args_target` input.
+         If `pdf_target` is a list of callables, it refers to independent marginals to sample from. The marginal in
+         dimension `j` is evaluated as: ``p_j(xj) = pdf_target[j](xj, *args_target[j])`` where `x` is a ndarray of shape
+         (nsamples, dimension)
+        :param log_pdf_target: Logarithm of the target density function from which to draw random samples. Either
+         `pdf_target` or `log_pdf_target` must be provided (the latter should be preferred for better numerical
+         stability).
+        :param args_target: Positional arguments of the pdf / log-pdf target function. See `pdf_target`
+        :param seed: Seed of the Markov chain(s), shape ``(nchains, dimension)``. Default: zeros(`nchains` x
+         `dimension`). If `seed` is not provided, both `nchains` and `dimension` must be provided.
+        :param burn_length: Length of burn-in - i.e., number of samples at the beginning of the chain to discard (note:
+         no thinning during burn-in). Default is 0, no burn-in.
+        :param jump: Thinning parameter, used to reduce correlation between samples. Setting `jump=n` corresponds to
+         skipping `n-1` states between accepted states of the chain. Default is 1 (no thinning).
+        :param chains_number: The number of Markov chains to generate. Either `dimension` and `nchains` or `seed` must
+         be provided.
+        :param save_log_pdf: Boolean that indicates whether to save log-pdf values along with the samples.
+         Default: False
+        :param concatenate_chains: Boolean that indicates whether to concatenate the chains after a run, i.e., samples
+         are stored as an `ndarray` of shape (nsamples * nchains, dimension) if True, (nsamples, nchains, dimension) if
+         False. Default: True
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
+         If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+         object itself can be passed directly.
+        """
         self.burn_length, self.jump = burn_length, jump
         self.seed = self._preprocess_seed(
             seed=seed, dimensions=dimension, chains_number=chains_number
@@ -163,18 +103,13 @@ class MCMC(ABC):
         This function samples from the mcmc chains and appends samples to existing ones (if any).
         This method leverages the ``run_iterations`` method that is specific to each algorithm.
 
-        **Inputs:**
-
-        * **nsamples** (`int`):
-            Number of samples to generate.
-
-        * **nsamples_per_chain** (`int`)
-            Number of samples to generate per chain.
+        :param samples_number: Number of samples to generate.
+        :param samples_number_per_chain: number of samples to generate per chain.
 
         Either `nsamples` or `nsamples_per_chain` must be provided (not both). Not that if `nsamples` is not a multiple
         of `nchains`, `nsamples` is set to the next largest integer that is a multiple of `nchains`.
-
         """
+
         # Initialize the runs: allocate space for the new samples and log pdf values
         (
             final_nsamples,
@@ -223,22 +158,9 @@ class MCMC(ABC):
         This method is over-written for each different mcmc algorithm. It must return the new state and
         associated log-pdf, which will be passed as inputs to the ``run_one_iteration`` method at the next iteration.
 
-        **Inputs:**
-
-        * **current_state** (`ndarray`):
-            Current state of the chain(s), `ndarray` of shape ``(nchains, dimension)``.
-
-        * **current_log_pdf** (`ndarray`):
-            Log-pdf of the current state of the chain(s), `ndarray` of shape ``(nchains, )``.
-
-        **Outputs/Returns:**
-
-        * **new_state** (`ndarray`):
-            New state of the chain(s), `ndarray` of shape ``(nchains, dimension)``.
-
-        * **new_log_pdf** (`ndarray`):
-            Log-pdf of the new state of the chain(s), `ndarray` of shape ``(nchains, )``.
-
+        :param current_state: Current state of the chain(s), `ndarray` of shape ``(nchains, dimension)``.
+        :param current_log_pdf: Log-pdf of the current state of the chain(s), `ndarray` of shape ``(nchains, )``.
+        :return: New state of the chain(s) and Log-pdf of the new state of the chain(s)
         """
         return [], []
 
@@ -248,9 +170,6 @@ class MCMC(ABC):
 
         Utility function that reshapes (in place) attribute samples from (nsamples, nchains, dimension) to
         (nsamples * nchains, dimension), and log_pdf_values from (nsamples, nchains) to (nsamples * nchains, ).
-
-        No input / output.
-
         """
         self.samples = self.samples.reshape((-1, self.dimension), order="C")
         if self.save_log_pdf:
@@ -263,9 +182,6 @@ class MCMC(ABC):
 
         Utility function that reshapes (in place) attribute samples from (nsamples * nchains, dimension) to
         (nsamples, nchains, dimension), and log_pdf_values from (nsamples * nchains) to (nsamples, nchains).
-
-        No input / output.
-
         """
         self.samples = self.samples.reshape(
             (-1, self.chains_number, self.dimension), order="C"
@@ -284,17 +200,9 @@ class MCMC(ABC):
         acceptance ratio. If some samples already exist, allocate space to append new samples to the old ones. Computes
         the number of forward iterations nsims to be run (depending on burnin and jump parameters).
 
-        **Inputs:**
-
-        * nchains (int): number of chains run in parallel
-        * nsamples (int): number of samples to be generated
-        * nsamples_per_chain (int): number of samples to be generated per chain
-
-        **Output/Returns:**
-
-        * nsims (int): Number of iterations to perform
-        * current_state (ndarray of shape (nchains, dim)): Current state of the chain to start from.
-
+        :param number_of_samples: number of samples to be generated
+        :param samples_per_chain_number: number of samples to be generated per chain
+        :return: Number of iterations to perform, Current state of the chain to start from
         """
         if (
             (number_of_samples is not None) and (samples_per_chain_number is not None)
@@ -378,11 +286,7 @@ class MCMC(ABC):
 
         Utility function, uses an iterative function to update the acceptance rate of all the chains separately.
 
-        **Inputs:**
-
-        * new_accept (list (length nchains) of bool): indicates whether the current state was accepted (for each chain
-          separately).
-
+        :param chain_state_acceptance: indicates whether the current state was accepted (for each chain separately).
         """
         self.acceptance_rate = [
             na / self.iterations_number
@@ -399,19 +303,13 @@ class MCMC(ABC):
         log_pdf_target(x) for a given x. If the target is given as a list of callables (marginal pdfs), the list of
         log margianals is also returned.
 
-        **Inputs:**
-
-        * log_pdf_ ((list of) callables): Log of the target density function from which to draw random samples. Either
-          pdf_target or log_pdf_target must be provided.
-        * pdf_ ((list of) callables): Target density function from which to draw random samples. Either pdf_target or
-          log_pdf_target must be provided.
-        * args (tuple): Positional arguments of the pdf target.
-
-        **Output/Returns:**
-
-        * evaluate_log_pdf (callable): Callable that computes the log of the target density function
-        * evaluate_log_pdf_marginals (list of callables): List of callables to compute the log pdf of the marginals
-
+        :param log_pdf_: Log of the target density function from which to draw random samples. Either
+                  pdf_target or log_pdf_target must be provided.
+        :param pdf_: Target density function from which to draw random samples. Either pdf_target or
+                  log_pdf_target must be provided.
+        :param args: Positional arguments of the pdf target.
+        :return: Callable that computes the log of the target density function, List of callables to compute the log pdf
+         of the marginals
         """
         # log_pdf is provided
         if log_pdf_ is not None:
@@ -494,20 +392,13 @@ class MCMC(ABC):
     @staticmethod
     def _preprocess_seed(seed, dimensions, chains_number):
         """
-        Preprocess input seed.
-
+        Preprocess input seed.s
         Utility function (static method), that checks the dimension of seed, assign [0., 0., ..., 0.] if not provided.
 
-        **Inputs:**
-
-        * seed (ndarray): seed for mcmc
-        * dim (int): dimension of target density
-
-        **Output/Returns:**
-
-        * seed (ndarray): seed for mcmc
-        * dim (int): dimension of target density
-
+        :param seed: seed for mcmc
+        :param dimensions: dimension of target density
+        :param chains_number: number of chains
+        :return: seed for mcmc, dimension of target density
         """
         if seed is None:
             if dimensions is None or chains_number is None:
@@ -540,10 +431,7 @@ class MCMC(ABC):
         log pdf or pdf method. If a pdf method exists but no log_pdf, the log_pdf methods is added to the proposal
         object. Used in the MH and MMH initializations.
 
-        **Inputs:**
-
-        * proposal (Distribution object): proposal distribution
-
+        :param proposal_distribution: proposal distribution
         """
         if not isinstance(proposal_distribution, Distribution):
             raise TypeError("UQpy: Proposal should be a Distribution object")

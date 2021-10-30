@@ -5,50 +5,31 @@ from UQpy.distributions.baseclass import Copula
 
 
 class Frank(Copula):
-    """
-    Frank copula having cumulative distribution function
+    @beartype
+    def __init__(self, theta: float):
+        """
 
-    :math:`F(u_1, u_2) = -\dfrac{1}{\Theta} \log(1+\dfrac{(\exp(-\Theta u_1)-1)(\exp(-\Theta u_2)-1)}{\exp(-\Theta)-1})`
+        :param float theta: Parameter of the copula, real number in R
+        """
+        super().__init__(theta=theta)
 
-    where :math:`u_1 = F_1(x_1), u_2 = F_2(x_2)` are uniformly distributed on the interval `[0, 1]`.
-
-    **Input:**
-
-    * **theta** (`float`):
-        Parameter of the copula, real number in R\{0}.
-
-    This copula possesses the following methods:
-
-    * ``evaluate_cdf`` and ``check_copula``
-
-    (``check_copula`` checks that `marginals` consist of solely 2 continuous univariate distributions).
-
-    **evaluate_cdf** *(unif)*
+    def evaluate_cdf(self, unit_uniform_samples):
+        """
         Compute the copula cdf :math:`C(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.
 
         For a generic multivariate distribution with marginal cdfs :math:`F_1, ..., F_d` the joint cdf is computed as:
 
         :math:`F(x_1, ..., x_d) = C(u_1, u_2, ..., u_d)`
 
-        where :math:`u_i = F_i(x_i)` is uniformly distributed. This computation is performed in the ``JointCopula.cdf``
-        method.
+        where :math:`u_i = F_i(x_i)` is uniformly distributed. This computation is performed in the
+        :meth:`.JointCopula.cdf` method.
 
-        **Input:**
+        :param unit_uniform_samples: Points (uniformly distributed) at which to evaluate the copula cdf, must be of
+         shape `(npoints, dimension)`.
 
-        * **unif** (`ndarray`):
-            Points (uniformly distributed) at which to evaluate the copula cdf, must be of shape `(npoints, dimension)`.
-
-        **Output/Returns:**
-
-        * (`tuple`):
-            Values of the cdf, `ndarray` of shape `(npoints, )`.
-    """
-
-    @beartype
-    def __init__(self, theta: float):
-        super().__init__(theta=theta)
-
-    def evaluate_cdf(self, unit_uniform_samples):
+        :return: Values of the cdf.
+        :rtype: numpy.ndarray
+        """
         theta, u, v = self.extract_data(unit_uniform_samples)
         tmp_ratio = (
             (np.exp(-theta * u) - 1.0)

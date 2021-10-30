@@ -10,43 +10,6 @@ from UQpy.distributions import DistributionContinuous1D, JointIndependent
 
 
 class LatinHypercubeSampling:
-
-    """
-    Perform Latin hypercube sampling (LHS) of random variables.
-
-    **Input:**
-
-    * **distributions** ((list of) ``Distribution`` object(s)):
-        List of ``Distribution`` objects corresponding to each random variable.
-
-        All distributions in ``LatinHypercubeSampling`` must be independent. ``LatinHypercubeSampling`` does not
-        generate correlated random variables. Therefore, for multi-variate designs the `dist_object` must be a list of
-        ``DistributionContinuous1D`` objects or an object of the ``JointInd`` class.
-
-    * **samples_number** (`int`):
-        Number of samples to be drawn from each distribution.
-
-    * **criterion** (`Criterion`):
-        The criterion for pairing the generating sample points
-            Options:
-                1. 'Random' - completely random. \n
-                2. 'Centered' - points only at the centre. \n
-                3. 'MaxiMin' - maximizing the minimum distance between points. \n
-                4. 'MinCorrelation' - minimizing the correlation between the points. \n
-                5. User-defined criterion class.
-
-    **Attributes:**
-
-    * **samples** (`ndarray`):
-        The generated LHS samples.
-
-    * **samplesU01** (`ndarray`):
-        The generated LHS samples on the unit hypercube.
-
-    **Methods**
-
-    """
-
     @beartype
     def __init__(
         self,
@@ -54,7 +17,25 @@ class LatinHypercubeSampling:
         samples_number: PositiveInteger,
         criterion: Criterion = Random(),
     ):
+        """
+        Perform Latin hypercube sampling (LHS) of random variables.
 
+        All distributions in ``LatinHypercubeSampling`` must be independent. ``LatinHypercubeSampling`` does not
+        generate correlated random variables. Therefore, for multi-variate designs the `dist_object` must be a list of
+        ``DistributionContinuous1D`` objects or an object of the ``JointIndependent`` class.
+
+
+        :param Union[Distribution, list[Distribution]] distributions: List of ``Distribution`` objects corresponding to
+         each random variable.
+        :param int samples_number: Number of samples to be drawn from each distribution.
+        :param Criterion criterion: The criterion for pairing the generating sample points.
+         Options:
+                1. 'Random' - completely random. \n
+                2. 'Centered' - points only at the centre. \n
+                3. 'MaxiMin' - maximizing the minimum distance between points. \n
+                4. 'MinCorrelation' - minimizing the correlation between the points. \n
+                5. User-defined criterion class.
+        """
         self.dist_object = distributions
         self.criterion = criterion
         self.samples_number = samples_number
@@ -76,30 +57,20 @@ class LatinHypercubeSampling:
 
     @beartype
     def run(self, samples_number: PositiveInteger):
-
         """
         Execute the random sampling in the ``LatinHypercubeSampling`` class.
+
+        :param int samples_number: If the ``run`` method is invoked multiple times, the newly generated samples will
+         overwrite the existing samples.
 
         The ``run`` method is the function that performs random sampling in the ``LatinHypercubeSampling`` class. If
         `samples_number` is provided, the ``run`` method is automatically called when the ``LatinHypercubeSampling``
         object is defined. The user may also call the ``run`` method directly to generate samples. The ``run`` method of
         the ``LatinHypercubeSampling`` class cannot be invoked multiple times for sample size extension.
 
-        **Input:**
-
-        * **samples_number** (`int`):
-            Number of samples to be drawn from each distribution.
-
-            If the ``run`` method is invoked multiple times, the newly generated samples will overwrite the existing
-            samples.
-
-        **Output/Returns:**
-
         The ``run`` method has no returns, although it creates and/or appends the `samples` and `samplesU01` attributes
         of the ``LatinHypercubeSampling`` object.
-
         """
-
         self.samples_number = samples_number
         self.logger.info("UQpy: Running Latin Hypercube sampling...")
         self.criterion.create_bins(self.samples)

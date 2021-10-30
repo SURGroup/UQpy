@@ -20,58 +20,6 @@ from UQpy.surrogates.kriging.regression_models.baseclass.Regression import Regre
 
 
 class Kriging:
-    """
-    kriging generates an Gaussian process regression-based surrogate model to predict the model output at new sample
-    points.
-
-    **Inputs:**
-
-    * **regression_model** (Class of type `Regression`):
-        `regression_model` specifies and evaluates the basis functions and their coefficients, which defines the trend
-        of the model.
-
-        Built-in options: Constant, Linear, Quadratic
-
-    * **correlation_model** (Class of type `Correlation`):
-        `corr_model` specifies and evaluates the correlation function.
-
-        Built-in options: Exponential, Gaussian, Linear, Spherical, Cubic, Spline
-
-    * **correlation_model_parameters** (`ndarray` or `list of floats`):
-        List or array of initial values for the correlation model hyperparameters/scale parameters.
-
-    * **bounds** (`list` of `float`):
-        Bounds on the hyperparameters used to solve optimization problem to estimate maximum likelihood estimator.
-        This should be a closed bound.
-
-        Default: [0.001, 10**7] for each hyperparameter.
-
-    * **optimize** (`boolean`):
-        Indicator to solve MLE problem or not. If 'True' corr_model_params will be used as initial solution for
-        optimization problem. Otherwise, corr_model_params will be directly use as the hyperparamters.
-
-        Default: True.
-
-    * **optimization_number** (`int`):
-            Number of times MLE optimization problem is to be solved with a random starting point.
-
-            Default: 1.
-
-    **Attributes:**
-
-    * **beta** (`ndarray`):
-            Regression coefficients.
-
-    * **err_var** (`ndarray`):
-            Variance of the Gaussian random process.
-
-    * **C_inv** (`ndarray`):
-            Inverse Cholesky decomposition of the correlation matrix.
-
-    **Methods:**
-
-    """
-
     @beartype
     def __init__(
         self,
@@ -86,7 +34,29 @@ class Kriging:
         random_state: RandomStateType = None,
         **kwargs_optimizer
     ):
+        """
+        Κriging generates an Gaussian process regression-based surrogate model to predict the model output at new sample
+        points.
 
+        :param regression_model: `regression_model` specifies and evaluates the basis functions and their coefficients,
+         which defines the trend of the model. Built-in options: Constant, Linear, Quadratic
+        :param correlation_model: `corr_model` specifies and evaluates the correlation function.
+         Built-in options: Exponential, Gaussian, Linear, Spherical, Cubic, Spline
+        :param correlation_model_parameters: List or array of initial values for the correlation model
+         hyperparameters/scale parameters.
+        :param bounds: Bounds on the hyperparameters used to solve optimization problem to estimate maximum likelihood
+         estimator. This should be a closed bound.
+         Default: [0.001, 10**7] for each hyperparameter.
+        :param optimize: Indicator to solve MLE problem or not. If 'True' corr_model_params will be used as initial
+         solution for optimization problem. Otherwise, corr_model_params will be directly use as the hyperparamters.
+         Default: True.
+        :param optimizations_number: Number of times MLE optimization problem is to be solved with a random starting
+         point. Default: 1.
+        :param normalize:
+        :param optimizer:
+        :param random_state:
+        :param kwargs_optimizer:
+        """
         self.regression_model = regression_model
         self.correlation_model = correlation_model
         self.correlation_model_parameters = np.array(correlation_model_parameters)
@@ -162,19 +132,13 @@ class Kriging:
         This method updates the samples and parameters of the ``kriging`` object. This method uses `corr_model_params`
         from previous run as the starting point for MLE problem unless user provides a new starting point.
 
-        **Inputs:**
-
-        * **samples** (`ndarray`):
-            `ndarray` containing the training points.
-
-        * **values** (`ndarray`):
-            `ndarray` containing the model evaluations at the training points.
-
-        **Output/Return:**
+        :param samples: `ndarray` containing the training points.
+        :param values: `ndarray` containing the model evaluations at the training points.
+        :param optimizations_number:
+        :param correlation_model_parameters:
 
         The ``fit`` method has no returns, although it creates the `beta`, `err_var` and `C_inv` attributes of the
         ``kriging`` class.
-
         """
         self.logger.info("UQpy: Running kriging.fit")
 
@@ -261,22 +225,9 @@ class Kriging:
         This method evaluates the regression and correlation model at new sample points. Then, it predicts the function
         value and standard deviation.
 
-        **Inputs:**
-
-        * **** (`list` or `numpy array`):
-            Points at which to predict the model response.
-
-        * **return_std** (`Boolean`):
-            Indicator to estimate standard deviation.
-
-        **Outputs:**
-
-        * **f_x** (`numpy array`):
-            Predicted values at the new points.
-
-        * **std_f_x** (`numpy array`):
-            Standard deviation of predicted values at the new points.
-
+        :param points: Points at which to predict the model response.
+        :param  bool return_std: Indicator to estimate standard deviation.
+        :return: Predicted values at the new points, Standard deviation of predicted values at the new points
         """
         x_ = np.atleast_2d(points)
         if self.normalize:
@@ -316,16 +267,8 @@ class Kriging:
         This method evaluates the regression and correlation model at new sample point. Then, it predicts the gradient
         using the regression coefficients and the training second_order_tensor.
 
-        **Input:**
-
-        * **x** (`list` or `numpy array`):
-            Points at which to evaluate the gradient.
-
-        **Output:**
-
-        * **grad_x** (`list` or `numpy array`):
-            Gradient of the surrogate model evaluated at the new points.
-
+        :param points: Points at which to evaluate the gradient.
+        :return: Gradient of the surrogate model evaluated at the new points.
         """
         x_ = np.atleast_2d(points)
         if self.normalize:

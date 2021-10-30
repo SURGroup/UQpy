@@ -15,59 +15,6 @@ from UQpy.sampling import MCMC, ImportanceSampling, MetropolisHastings
 
 
 class BayesParameterEstimation(metaclass=NoPublicConstructor):
-    """
-    Estimate the parameter posterior density given some data.
-
-    This class generates samples from the parameter posterior distribution using Markov Chain Monte Carlo or Importance
-    Sampling. It leverages the ``mcmc`` and ``IS`` classes from the ``sampling`` module.
-
-
-    **Inputs:**
-
-    * **inference_model** (object of class ``InferenceModel``):
-        The inference model that defines the likelihood function.
-
-    * **data** (`ndarray`):
-        Available data, `ndarray` of shape consistent with log-likelihood function in ``InferenceModel``
-
-    * **sampling_class** (class instance):
-        Class instance, must be a subclass of ``mcmc`` or ``IS``.
-
-    * **kwargs_sampler**:
-        Keyword arguments of the sampling class, see ``sampling.mcmc`` or ``sampling.IS``.
-
-        Note on the seed for ``mcmc``: if input `seed` is not provided, a seed (`ndarray` of shape
-        `(nchains, dimension)`) is sampled from the prior pdf, which must have an `rvs` method.
-
-        Note on the proposal for ``IS``: if no input `proposal` is provided, the prior is used as proposal.
-
-    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
-
-        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-        object itself can be passed directly.
-
-    * **nsamples** (`int`):
-        Number of samples used in mcmc/IS, see `run` method.
-
-    * **samples_per_chain** (`int`):
-        Number of samples per chain used in mcmc, see `run` method.
-
-    If both `nsamples` and `nsamples_per_chain` are `None`, the object is created but the sampling procedure is not run,
-    one must call the ``run`` method.
-
-    **Attributes:**
-
-    * **sampler** (object of ``sampling`` class specified by `sampling_class`):
-        Sampling method object, contains e.g. the posterior samples.
-
-        This object is created along with the ``BayesParameterEstimation`` object, and its `run` method is called
-        whenever the `run` method of the ``BayesParameterEstimation`` is called.
-
-    **Methods:**
-
-    """
-
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
     @beartype
@@ -79,7 +26,18 @@ class BayesParameterEstimation(metaclass=NoPublicConstructor):
         samples_number: Union[None, int] = None,
         samples_number_per_chain: Union[None, int] = None,
     ):
+        """
+        Estimate the parameter posterior density given some data.
 
+        This class generates samples from the parameter posterior distribution using Markov Chain Monte Carlo or
+        Importance Sampling. It leverages the ``mcmc`` and ``IS`` classes from the ``sampling`` module.
+
+        :param inference_model: The inference model that defines the likelihood function.
+        :param data: Available data, `ndarray` of shape consistent with log-likelihood function in ``InferenceModel``
+        :param sampling_class: Class instance, must be a subclass of ``mcmc`` or ``IS``.
+        :param samples_number: Number of samples used in mcmc/IS, see `run` method.
+        :param samples_number_per_chain: Number of samples per chain used in mcmc, see `run` method.
+        """
         self.inference_model = inference_model
         self.data = data
         self.logger = logging.getLogger(__name__)
@@ -170,14 +128,8 @@ class BayesParameterEstimation(metaclass=NoPublicConstructor):
         This function calls the ``run`` method of the `sampler` attribute to generate samples from the parameter
         posterior distribution.
 
-        **Inputs:**
-
-        * **nsamples** (`int`):
-            Number of samples used in ``mcmc``/``IS``
-
-        * **samples_per_chain** (`int`):
-            Number of samples per chain used in ``mcmc``
-
+        :param samples_number: Number of samples used in ``mcmc``/``IS``
+        :param samples_number_per_chain: Number of samples per chain used in ``mcmc``
         """
         method = MCMC if isinstance(self.sampler, MCMC) else ImportanceSampling
         BayesParameterEstimation.sampling_actions[method](

@@ -7,30 +7,6 @@ from UQpy.distributions.baseclass import DistributionContinuous1D
 
 
 class ChiSquare(DistributionContinuous1D):
-    """
-    Chi-square distribution having probability density:
-
-    .. math:: f(x|k) = \dfrac{1}{2^{k/2}\Gamma(k/2)}x^{k/2-1}\exp{(-x/2)}
-
-    for :math:`x\ge 0`, :math:`k>0`. Here :math:`\Gamma(\cdot)` refers to the Gamma function.
-
-    In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
-    this is equivalent to computing :math:`f(y|k)` where :math:`y=(x-loc)/scale`.
-
-    **Inputs:**
-
-    * **df** (`float`):
-        shape parameter (degrees of freedom) (given by `k` in the equation above)
-    * **loc** (`float`):
-        location parameter
-    * **scale** (`float`):
-        scale parameter
-
-    The following methods are available for ``ChiSquare``:
-
-    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
-    """
-
     @beartype
     def __init__(
         self,
@@ -38,6 +14,12 @@ class ChiSquare(DistributionContinuous1D):
         loc: Union[None, float, int] = 0.0,
         scale: Union[None, float, int] = 1.0,
     ):
+        """
+
+        :param float df: shape parameter (degrees of freedom) (given by k in the equation)
+        :param float loc: location parameter
+        :param float scale: scale parameter
+        """
         super().__init__(
             df=df, loc=loc, scale=scale, ordered_parameters=("df", "loc", "scale")
         )

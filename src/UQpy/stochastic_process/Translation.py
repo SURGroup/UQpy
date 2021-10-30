@@ -11,63 +11,6 @@ from UQpy.stochastic_process.supportive import (
 
 
 class Translation:
-    """
-    A class to translate Gaussian Stochastic Processes to non-Gaussian Stochastic Processes
-
-    **Input:**
-
-    * **distributions** (`list or numpy.ndarray`):
-        An instance of the UQpy ``Distributions`` class defining the marginal distribution to which the Gaussian
-        stochastic process should be translated to.
-
-    * **time_interval** (`float`):
-        The value of time discretization.
-
-    * **frequency_interval** (`float`):
-        The value of frequency discretization.
-
-    * **number_time_intervals** (`int`):
-        The number of time discretizations.
-
-    * **number_frequency_intervals** (`int`):
-        The number of frequency discretizations.
-
-    * **power_spectrum_gaussian** ('list or numpy.ndarray'):
-        The power spectrum of the gaussian stochastic process to be translated.
-
-        `power_spectrum_gaussian` must be of size (`number_frequency_intervals`).
-
-    * **correlation_function_gaussian** ('list or numpy.ndarray'):
-        The auto correlation function of the Gaussian stochastic process to be translated.
-
-        Either the power spectrum or the auto correlation function of the gaussian stochastic process needs to be
-        defined.
-
-        `correlation_function_gaussian` must be of size (`number_time_intervals`).
-
-    * **samples_gaussian** (`list or numpy.ndarray`):
-        Samples of Gaussian stochastic process to be translated.
-
-        `samples_gaussian` is optional. If no samples are passed, the ``Translation`` class will compute the correlation
-        distortion.
-
-    **Attributes:**
-
-    * **samples_non_gaussian** (`numpy.ndarray`):
-        Translated non-Gaussian stochastic process from Gaussian samples.
-
-    * **power_spectrum_non_gaussian** (`numpy.ndarray`):
-        The power spectrum of the translated non-Gaussian stochastic processes.
-
-    * **correlation_function_non_gaussian** (`numpy.ndarray`):
-        The correlation function of the translated non-Gaussian stochastic processes obtained by distorting the Gaussian
-        correlation function.
-
-    * **scaled_correlation_function_non_gaussian** (`numpy.ndarray`):
-        This obtained by scaling the correlation function of the non-Gaussian stochastic processes to make the
-        correlation at '0' lag to be 1
-    """
-
     def __init__(
             self,
             distributions,
@@ -79,6 +22,24 @@ class Translation:
             correlation_function_gaussian=None,
             samples_gaussian=None,
     ):
+        """
+        A class to translate Gaussian Stochastic Processes to non-Gaussian Stochastic Processes
+
+        :param distributions: An instance of the UQpy :class:`.Distribution` class defining the marginal distribution to
+         which the Gaussian stochastic process should be translated to.
+        :param time_interval: The value of time discretization.
+        :param frequency_interval: The value of frequency discretization.
+        :param number_time_intervals: The number of time discretizations.
+        :param number_frequency_intervals: The number of frequency discretizations.
+        :param power_spectrum_gaussian: The power spectrum of the gaussian stochastic process to be translated.
+         `power_spectrum_gaussian` must be of size (`number_frequency_intervals`).
+        :param correlation_function_gaussian: The auto correlation function of the Gaussian stochastic process to be
+         translated. Either the power spectrum or the auto correlation function of the gaussian stochastic process needs
+         to be defined. `correlation_function_gaussian` must be of size (`number_time_intervals`).
+        :param samples_gaussian: Samples of Gaussian stochastic process to be translated.
+         `samples_gaussian` is optional. If no samples are passed, the :class:`.Translation` class will compute the
+         correlation distortion.
+        """
         self.distributions = distributions
         self.time_interval = time_interval
         self.frequency_interval = frequency_interval

@@ -7,60 +7,6 @@ from UQpy.stochastic_process.supportive import (
 
 
 class InverseTranslation:
-    """
-    A class to perform Iterative Translation Approximation Method to find the underlying  Gaussian Stochastic Processes
-    which upon translation would yield the necessary non-Gaussian Stochastic Processes.
-
-    **Input:**
-
-    * **distributions** (`list or numpy.ndarray`):
-        An instance of the ``UQpy`` ``Distributions`` class defining the marginal distribution of the non-Gaussian
-        stochastic process.
-
-    * **time_interval** (`float`):
-        The value of time discretization.
-
-    * **frequency_interval** (`float`):
-        The value of frequency discretization.
-
-    * **number_time_intervals** (`int`):
-        The number of time discretizations.
-
-    * **number_frequency_intervals** (`int`):
-        The number of frequency discretizations.
-
-    * **power_spectrum_non_gaussian** ('list or numpy.ndarray'):
-        The power spectrum of the non-Gaussian stochastic processes.
-
-    * **correlation_function_non_gaussian** ('list or numpy.ndarray'):
-        The auto correlation function of the non-Gaussian stochastic processes.
-
-        Either the power spectrum or the auto correlation function of the Gaussian stochastic process needs to be
-        defined.
-
-    * **samples_non_gaussian** (`list or numpy.ndarray`):
-        Samples of non-Gaussian stochastic processes.
-
-        `samples_non_gaussian` is optional. If no samples are passed, the ``InverseTranslation`` class will compute the
-        underlying Gaussian correlation using the ITAM.
-
-    **Attributes:**
-
-    * **samples_gaussian** (`numpy.ndarray`):
-        The inverse translated Gaussian samples from the non-Gaussian samples.
-
-    * **power_spectrum_gaussian** (`numpy.ndarray`):
-        The power spectrum of the inverse translated Gaussian stochastic processes.
-
-    * **correlation_function_gaussian** (`numpy.ndarray`):
-        The correlation function of the inverse translated Gaussian stochastic processes.
-
-    * **scaled_correlation_function_non_gaussian** (`numpy.ndarray`):
-        This obtained by scaling the correlation function of the Gaussian stochastic processes to make the correlation
-        at '0' distance to be 1
-
-    """
-
     def __init__(
         self,
         distributions,
@@ -73,6 +19,25 @@ class InverseTranslation:
         samples_non_gaussian=None,
         percentage_error=5.0
     ):
+        """
+        A class to perform Iterative Translation Approximation Method to find the underlying  Gaussian Stochastic
+        Processes which upon translation would yield the necessary non-Gaussian Stochastic Processes.
+
+        :param distributions: An instance of the :py:mod:`UQpy` :class:`.Distributions` class defining the marginal
+         distribution of the non-Gaussian stochastic process.
+        :param time_interval: The value of time discretization.
+        :param frequency_interval: The value of frequency discretization.
+        :param number_time_intervals: The number of time discretizations.
+        :param number_frequency_intervals: The number of frequency discretizations.
+        :param correlation_function_non_gaussian: The auto correlation function of the non-Gaussian stochastic
+         processes. Either the power spectrum or the auto correlation function of the Gaussian stochastic process needs
+         to be defined.
+        :param power_spectrum_non_gaussian: The power spectrum of the non-Gaussian stochastic processes.
+        :param samples_non_gaussian: Samples of non-Gaussian stochastic processes.
+         `samples_non_gaussian` is optional. If no samples are passed, the :class:`.InverseTranslation` class will
+         compute the underlying Gaussian correlation using the ITAM.
+        :param percentage_error:
+        """
         self.distributions = distributions
         self.frequency = np.arange(0, number_frequency_intervals) * frequency_interval
         self.time = np.arange(0, number_time_intervals) * time_interval

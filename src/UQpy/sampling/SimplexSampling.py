@@ -5,37 +5,6 @@ from UQpy.utilities.Utilities import process_random_state
 
 
 class SimplexSampling:
-    """
-    Generate uniform random samples inside an n-dimensional simplex.
-
-
-    **Inputs:**
-
-    * **nodes** (`ndarray` or `list`):
-        The vertices of the simplex.
-
-    * **samples_number** (`int`):
-        The number of samples to be generated inside the simplex.
-
-        If `samples_number` is provided when the object is defined, the ``run`` method will be called automatically. If
-        `samples_number` is not provided when the object is defined, the user must invoke the ``run`` method and specify
-        `samples_number`.
-
-    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
-
-        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-        object itself can be passed directly.
-
-    **Attributes:**
-
-    * **samples** (`ndarray`):
-        New random samples distributed uniformly inside the simplex.
-
-    **Methods:**
-
-    """
-
     @beartype
     def __init__(
         self,
@@ -43,6 +12,18 @@ class SimplexSampling:
         samples_number: PositiveInteger = None,
         random_state: RandomStateType = None,
     ):
+        """
+        Generate uniform random samples inside an n-dimensional simplex.
+
+        :param nodes: The vertices of the simplex.
+        :param samples_number: The number of samples to be generated inside the simplex.
+         If `samples_number` is provided when the object is defined, the ``run`` method will be called automatically. If
+         `samples_number` is not provided when the object is defined, the user must invoke the ``run`` method and specify
+         `samples_number`.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
+         If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+         object itself can be passed directly.
+        """
         self.nodes = np.atleast_2d(nodes)
         self.samples_number = samples_number
 
@@ -60,25 +41,16 @@ class SimplexSampling:
     def run(self, samples_number: PositiveInteger):
         """
         Execute the random sampling in the ``Simplex`` class.
-
         The ``run`` method is the function that performs random sampling in the ``Simplex`` class. If `samples_number`
         is provided called when the ``Simplex`` object is defined, the ``run`` method is automatically. The user may
         also call the ``run`` method directly to generate samples. The ``run`` method of the ``Simplex`` class can be
         invoked many times and each time the generated samples are appended to the existing samples.
 
-        **Input:**
-
-        * **samples_number** (`int`):
-            Number of samples to be generated inside the simplex.
-
-            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
-            existing samples.
-
-        **Output/Return:**
-
-        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the ``Simplex``
-        class.
-
+        :param samples_number: Number of samples to be generated inside the simplex.
+         If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
+         existing samples.
+        :return: The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the
+         ``Simplex`` class.
         """
         self.samples_number = samples_number
         dimension = self.nodes.shape[1]

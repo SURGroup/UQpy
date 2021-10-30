@@ -16,69 +16,43 @@ from UQpy.utilities.Utilities import process_random_state
 
 class AdaptiveKriging:
     """
-    Adaptively sample for construction of a kriging surrogate for different objectives including reliability,
-    optimization, and global fit.
+
 
 
     **Inputs:**
 
     * **distributions** ((list of) ``Distribution`` object(s)):
-        List of ``Distribution`` objects corresponding to each random variable.
+
 
     * **runmodel_object** (``RunModel`` object):
-        A ``RunModel`` object, which is used to evaluate the model.
+
 
     * **samples** (`ndarray`):
-        The initial samples at which to evaluate the model.
 
-        Either `samples` or `nstart` must be provided.
 
     * **surrogate** (`class` object):
-        A kriging surrogate model, this object must have ``fit`` and ``predict`` methods.
 
-        May be an object of the ``UQpy`` ``kriging`` class or an object of the ``scikit-learn``
-        ``GaussianProcessRegressor``
 
     * **samples_number** (`int`):
-        Total number of samples to be drawn (including the initial samples).
 
-        If `samples_number` and `samples` are provided when instantiating the class, the ``run`` method will
-        automatically be called. If either `samples_number` or `samples` is not provided, ``AdaptiveKriging`` can be
-        executed by invoking the ``run`` method and passing `samples_number`.
 
     * **learning_samples_number** (`int`):
-        Number of samples generated for evaluation of the learning function. Samples for the learning set are drawn
-        using ``LatinHypercubeSampling``.
+
 
     * **qoi_name** (`dict`):
-        Name of the quantity of interest. If the quantity of interest is a dictionary, this is used to convert it to
-        a list
+
 
     * **learning_function** (`LearningFunction`):
-        Learning function used as the selection criteria to identify new samples.
-
-        Built-in options:
-                    1. UFunction \n
-                    2. ExpectedFeasibility \n
-                    3. WeightedUFunction \n
-                    4. ExpectedImprovement \n
-                    5. ExpectedGlobalImprovementFit \n
-
-        `learning_function` may also be passed as a user-defined callable function. This function must accept a kriging
-        surrogate model object with ``fit`` and ``predict`` methods, the set of learning points at which to evaluate the
-        learning function, and it may also take an arbitrary number of additional parameters that are passed to
-        ``AKMCS`` as `**kwargs`.
 
     * **n_add** (`int`):
-            Number of samples to be added per iteration.
+
 
             Default: 1.
 
     * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
 
-        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-        object itself can be passed directly.
+
+
 
     **Attributes:**
 
@@ -107,7 +81,31 @@ class AdaptiveKriging:
         n_add: int = 1,
         random_state: RandomStateType = None,
     ):
+        """
+        Adaptively sample for construction of a kriging surrogate for different objectives including reliability,
+        optimization, and global fit.
 
+        :param distributions: List of ``Distribution`` objects corresponding to each random variable.
+        :param runmodel_object: A ``RunModel`` object, which is used to evaluate the model.
+        :param surrogate: A kriging surrogate model, this object must have ``fit`` and ``predict`` methods.
+         May be an object of the ``UQpy`` ``kriging`` class or an object of the ``scikit-learn``
+         ``GaussianProcessRegressor``
+        :param learning_function: Learning function used as the selection criteria to identify new samples.
+        :param samples: The initial samples at which to evaluate the model.
+         Either `samples` or `nstart` must be provided.
+        :param samples_number: Total number of samples to be drawn (including the initial samples).
+         If `samples_number` and `samples` are provided when instantiating the class, the ``run`` method will
+         automatically be called. If either `samples_number` or `samples` is not provided, ``AdaptiveKriging`` can be
+         executed by invoking the ``run`` method and passing `samples_number`.
+        :param learning_samples_number: Number of samples generated for evaluation of the learning function. Samples for
+         the learning set are drawn using ``LatinHypercubeSampling``.
+        :param qoi_name: Name of the quantity of interest. If the quantity of interest is a dictionary, this is used to
+         convert it to a list
+        :param n_add: Number of samples to be added per iteration.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
+         If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+         object itself can be passed directly.
+        """
         # Initialize the internal variables of the class.
         self.runmodel_object = runmodel_object
         self.samples = np.array(samples)
@@ -194,33 +192,18 @@ class AdaptiveKriging:
         called. The user may also call the ``run`` method directly to generate samples. The ``run`` method of the
         ``Adaptivekriging`` class can be invoked many times.
 
-        **Inputs:**
-
-        * **samples_number** (`int`):
-            Total number of samples to be drawn (including the initial samples).
-
-        * **samples** (`ndarray`):
-            Samples at which to evaluate the model.
-
-        * **initial_samples_number** (`int`):
-            Number of initial samples, randomly generated using ``LHS`` class.
-
-            Either `samples` or `nstart` must be provided.
-
-        * **append_samples** (`boolean`)
-            Append new samples and model evaluations to the existing samples and model evaluations.
-
-            If ``append_samples = False``, all previous samples and the corresponding quantities of interest from their
-            model evaluations are deleted.
-
-            If ``append_samples = True``, samples and their resulting quantities of interest are appended to the
-            existing ones.
-
-        **Output/Returns:**
-
         The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the
         ``AdaptiveKriging`` class.
 
+        :param samples_number: Total number of samples to be drawn (including the initial samples).
+        :param samples: Samples at which to evaluate the model.
+        :param append_samples: Append new samples and model evaluations to the existing samples and model evaluations.
+         If ``append_samples = False``, all previous samples and the corresponding quantities of interest from their
+         model evaluations are deleted.
+         If ``append_samples = True``, samples and their resulting quantities of interest are appended to the
+         existing ones.
+        :param initial_samples_number: Number of initial samples, randomly generated using ``LatinHypercubeSampling``
+         class.
         """
 
         self.samples_number = samples_number

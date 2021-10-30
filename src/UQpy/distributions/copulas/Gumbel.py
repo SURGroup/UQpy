@@ -1,5 +1,6 @@
 from typing import Union
 
+import numpy as np
 from beartype import beartype
 
 from UQpy.distributions.baseclass import Copula
@@ -7,71 +8,31 @@ from numpy import log, exp
 
 
 class Gumbel(Copula):
-    """
-    Gumbel copula having cumulative distribution function
+    @beartype
+    def __init__(self, theta: Union[None, float]):
+        """
 
-    .. math:: F(u_1, u_2) = \exp(-(-\log(u_1))^{\Theta} + (-\log(u_2))^{\Theta})^{1/{\Theta}}
+        :param float theta: Parameter of the Gumbel copula, real number in :math:`[1, +\infty)`.
+        """
+        super().__init__(theta=theta)
 
-    where :math:`u_1 = F_1(x_1), u_2 = F_2(x_2)` are uniformly distributed on the interval `[0, 1]`.
-
-    **Input:**
-
-    * **theta** (`float`):
-        Parameter of the Gumbel copula, real number in :math:`[1, +\infty)`.
-
-    This copula possesses the following methods:
-
-    * ``evaluate_cdf``, ``evaluate_pdf`` and ``check_copula``
-
-    (``check_copula`` checks that `marginals` consist of solely 2 continuous univariate distributions).
-
-    **evaluate_pdf** *(unif)*
-        Compute the copula pdf :math:`c(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.
-
-        For a generic multivariate distribution with marginals pdfs :math:`f_1, ..., f_d` and marginals cdfs
-        :math:`F_1, ..., F_d`, the joint pdf is computed as:
-
-        :math:`f(x_1, ..., x_d) = c(u_1, u_2, ..., u_d) f_1(x_1) ... f_d(x_d)`
-
-        where :math:`u_i = F_i(x_i)` is uniformly distributed. This computation is performed in the ``JointCopula.pdf``
-        method.
-
-        **Input:**
-
-        * **unif** (`ndarray`):
-            Points (uniformly distributed) at which to evaluate the copula pdf, must be of shape `(npoints, dimension)`.
-
-        **Output/Returns:**
-
-        * (`tuple`):
-            Values of the copula pdf term, ndarray of shape `(npoints, )`.
-
-    **evaluate_cdf** *(unif)*
+    def evaluate_cdf(self, unit_uniform_samples) -> np.ndarray:
+        """
         Compute the copula cdf :math:`C(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.
 
         For a generic multivariate distribution with marginal cdfs :math:`F_1, ..., F_d` the joint cdf is computed as:
 
         :math:`F(x_1, ..., x_d) = C(u_1, u_2, ..., u_d)`
 
-        where :math:`u_i = F_i(x_i)` is uniformly distributed. This computation is performed in the ``JointCopula.cdf``
-        method.
+        where :math:`u_i = F_i(x_i)` is uniformly distributed. This computation is performed in the
+        :meth:`.JointCopula.cdf` method.
 
-        **Input:**
+        :param unit_uniform_samples: Points (uniformly distributed) at which to evaluate the copula cdf, must be of
+         shape `(npoints, dimension)`.
 
-        * **unif** (`ndarray`):
-            Points (uniformly distributed) at which to evaluate the copula cdf, must be of shape `(npoints, dimension)`.
-
-        **Output/Returns:**
-
-        * (`tuple`):
-            Values of the cdf, `ndarray` of shape `(npoints, )`.
-    """
-
-    @beartype
-    def __init__(self, theta: Union[None, float]):
-        super().__init__(theta=theta)
-
-    def evaluate_cdf(self, unit_uniform_samples):
+        :return: Values of the cdf.
+        :rtype: numpy.ndarray
+        """
         if unit_uniform_samples.shape[1] > 2:
             raise ValueError("Maximum dimension for the Gumbel Copula is 2")
 
@@ -82,6 +43,23 @@ class Gumbel(Copula):
         return cdf_val
 
     def evaluate_pdf(self, unit_uniform_samples):
+        """
+        Compute the copula pdf :math:`c(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.
+
+        For a generic multivariate distribution with marginals pdfs :math:`f_1, ..., f_d` and marginals cdfs
+        :math:`F_1, ..., F_d`, the joint pdf is computed as:
+
+        :math:`f(x_1, ..., x_d) = c(u_1, u_2, ..., u_d) f_1(x_1) ... f_d(x_d)`
+
+        where :math:`u_i = F_i(x_i)` is uniformly distributed. This computation is performed in the
+        :meth:`.JointCopula.pdf` method.
+
+        :param unit_uniform_samples: Points (uniformly distributed) at which to evaluate the copula pdf, must be of
+         shape `(npoints, dimension)`.
+
+        :return: Values of the copula pdf term.
+        :rtype: numpy.ndarray
+        """
         theta, u, v = self.extract_data(unit_uniform_samples)
         c = exp(-(((-log(u)) ** theta + (-log(v)) ** theta) ** (1 / theta)))
 

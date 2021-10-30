@@ -5,82 +5,6 @@ from UQpy.distributions import DistributionContinuous1D
 
 
 class SROM:
-    """
-    Stochastic Reduced Order Model(stochastic_reduced_order_models) provide a low-dimensional, discrete approximation of
-    a given random quantity.
-
-    **Inputs:**
-
-    * **samples** (`ndarray`):
-        An array/list of samples corresponding to the points at which the stochastic_reduced_order_models is defined.
-
-    * **target_distributions** ((list of) ``Distribution`` object(s)):
-        A list of distribution objects for each random variable.
-
-    * **moments** (`list` of `float`):
-        A list containing first and second order moment about origin of all random variables.
-
-    * **weights_errors** (`list` of `float`):
-        A list of weights associated with the error in distribution, moments and correlation.
-
-        This corresponds to a list of the values :math:`a_{u}` in the objective function above.
-
-        Default: weights_errors = [1, 0.2, 0]
-
-    * **properties** (`list` of `booleans`):
-        A list of booleans declaring the properties to be matched in the reduced order model.
-
-        `properties[0] = True` matches the marginal distributions
-
-        `properties[1] = True` matches the mean values
-
-        `properties[2] = True` matches the mean square
-
-        `properties[3] = True` matches the correlation
-
-    * **weights_distribution** (`ndarray` or `list` of `float`):
-        A list or array containing weights associated with matching the distribution at each sample value.
-
-        `weights_distribution` is an array or list of shape `(m, d)` where each weight corresponds to the weight
-        :math:`w_F(x_{k,i}; i)` assigned for matching the distribution of component `i` at sample point
-        :math:`x_{k,i}`.
-
-        If `weights_distribution` is `(1, d)`, it is assumed that each sample sample is equally weighted according
-        to the corresponding weight for its distribution.
-
-        Default: `weights_distribution` = An array of shape `(m, d)` with all elements equal to 1.
-
-    * **weights_moments** (`ndarray` or `list` of `float`):
-        An list or array containing weights associated with matching the moments about the origin for each
-        component.
-
-        `weights_moments` is a list or array of shape `(2, d), where each weight corresponds to the weight
-        :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component `i`.
-
-        If `weights_moments` is `(1, d)`, it is assumed that moments of all order are equally weighted.
-
-        Default: `weights_moments` = [[1/(moment[0][i]^2)], [1/(moment[1][i]^2)]] for i = 1, 2, ..., d.
-
-    * **weights_correlation** (`ndarray` or `list` of `float`):
-        A list or array containing weights associated with matching the correlation of the random variables.
-
-        `weights_correlation` is a list or array of shape `(d, d)` where each weight corresponds to the weight
-        :math:`w_R(i, j)` assigned for matching the correlation between component `i` and component `j`
-
-        Default: `weights_correlation` = `(d, d)` array with all elements equal to 1.
-
-    * **correlation** (`ndarray` or `list of floats`):
-        Correlation matrix between random variables.
-
-    **Attribute:**
-
-    * **sample_weights** (`ndarray`):
-        The probability weights defining discrete approximation of continuous random variables.
-
-    **Methods:**
-
-    """
-
     def __init__(
         self,
         samples: Union[list, np.ndarray],
@@ -93,7 +17,42 @@ class SROM:
         properties=None,
         correlation=None,
     ):
+        """
+        Stochastic Reduced Order Model(stochastic_reduced_order_models) provide a low-dimensional, discrete
+        approximation of a given random quantity.
 
+        :param samples: An array/list of samples corresponding to the points at which the
+         stochastic_reduced_order_models is defined.
+        :param target_distributions: A list of distribution objects for each random variable.
+        :param moments: A list containing first and second order moment about origin of all random variables.
+        :param weights_errors: A list of weights associated with the error in distribution, moments and correlation.
+         This corresponds to a list of the values :math:`a_{u}` in the objective function above.
+         Default: weights_errors = [1, 0.2, 0]
+        :param weights_distribution: A list or array containing weights associated with matching the distribution at
+         each sample value.
+         `weights_distribution` is an array or list of shape `(m, d)` where each weight corresponds to the weight
+         :math:`w_F(x_{k,i}; i)` assigned for matching the distribution of component `i` at sample point
+         :math:`x_{k,i}`.
+         If `weights_distribution` is `(1, d)`, it is assumed that each sample sample is equally weighted according
+         to the corresponding weight for its distribution.
+         Default: `weights_distribution` = An array of shape `(m, d)` with all elements equal to 1.
+        :param weights_moments: An list or array containing weights associated with matching the moments about the
+         origin for each component.
+         `weights_moments` is a list or array of shape `(2, d), where each weight corresponds to the weight
+         :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component `i`.
+         If `weights_moments` is `(1, d)`, it is assumed that moments of all order are equally weighted.
+         Default: `weights_moments` = [[1/(moment[0][i]^2)], [1/(moment[1][i]^2)]] for i = 1, 2, ..., d.
+        :param weights_correlation: A list or array containing weights associated with matching the correlation of the
+         random variables. `weights_correlation` is a list or array of shape `(d, d)` where each weight corresponds to
+         the weight :math:`w_R(i, j)` assigned for matching the correlation between component `i` and component `j`
+         Default: `weights_correlation` = `(d, d)` array with all elements equal to 1.
+        :param properties: A list of booleans declaring the properties to be matched in the reduced order model.
+         `properties[0] = True` matches the marginal distributions
+         `properties[1] = True` matches the mean values
+         `properties[2] = True` matches the mean square
+         `properties[3] = True` matches the correlation
+        :param correlation: Correlation matrix between random variables.
+        """
         self.target_distributions = target_distributions
         self.correlation = correlation
         self.moments = moments
@@ -155,57 +114,33 @@ class SROM:
         of the ``stochastic_reduced_order_models`` class can be invoked many times with different weights parameters and
         each time computed probability weights are overwritten.
 
-        **Inputs:**
-
-        * **weights_errors** (`list` of `float`):
-            A list of weights associated with the error in distribution, moments and correlation.
-
-            This corresponds to a list of the values :math:`a_{u}` in the objective function above.
-
-            Default: weights_errors = [1, 0.2, 0]
-
-        * **properties** (`list` of `booleans`):
-            A list of booleans declaring the properties to be matched in the reduced order model.
-
-            `properties[0] = True` matches the marginal distributions
-
-            `properties[1] = True` matches the mean values
-
-            `properties[2] = True` matches the mean square
-
-            `properties[3] = True` matches the correlation
-
-        * **weights_distribution** (`ndarray` or `list` of `float`):
-            A list or array containing weights associated with matching the distribution at each sample value.
-
-            `weights_distribution` is an array or list of shape `(m, d)` where each weight corresponds to the weight
-            :math:`w_F(x_{k,i}; i)` assigned for matching the distribution of component `i` at sample point
-            :math:`x_{k,i}`.
-
-            If `weights_distribution` is `(1, d)`, it is assumed that each sample sample is equally weighted according
-            to the corresponding weight for its distribution.
-
-            Default: `weights_distribution` = An array of shape `(m, d)` with all elements equal to 1.
-
-        * **weights_moments** (`ndarray` or `list` of `float`):
-            An list or array containing weights associated with matching the moments about the origin for each
-            component.
-
-            `weights_moments` is a list or array of shape `(2, d), where each weight corresponds to the weight
-            :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component `i`.
-
-            If `weights_moments` is `(1, d)`, it is assumed that moments of all order are equally weighted.
-
-            Default: `weights_moments` = [[1/(moment[0][i]^2)], [1/(moment[1][i]^2)]] for i = 1, 2, ..., d.
-
-        * **weights_correlation** (`ndarray` or `list` of `float`):
-            A list or array containing weights associated with matching the correlation of the random variables.
-
-            `weights_correlation` is a list or array of shape `(d, d)` where each weight corresponds to the weight
-            :math:`w_R(i, j)` assigned for matching the correlation between component `i` and component `j`
-
-            Default: `weights_correlation` = `(d, d)` array with all elements equal to 1.
-
+        :param weights_errors: A list of weights associated with the error in distribution, moments and correlation.
+         This corresponds to a list of the values :math:`a_{u}` in the objective function above.
+         Default: weights_errors = [1, 0.2, 0]
+        :param weights_distribution: A list or array containing weights associated with matching the distribution at
+         each sample value.
+         `weights_distribution` is an array or list of shape `(m, d)` where each weight corresponds to the weight
+         :math:`w_F(x_{k,i}; i)` assigned for matching the distribution of component `i` at sample point
+         :math:`x_{k,i}`.
+         If `weights_distribution` is `(1, d)`, it is assumed that each sample sample is equally weighted according
+         to the corresponding weight for its distribution.
+         Default: `weights_distribution` = An array of shape `(m, d)` with all elements equal to 1.
+        :param weights_moments: An list or array containing weights associated with matching the moments about the
+         origin for each component.
+         `weights_moments` is a list or array of shape `(2, d), where each weight corresponds to the weight
+         :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component `i`.
+         If `weights_moments` is `(1, d)`, it is assumed that moments of all order are equally weighted.
+         Default: `weights_moments` = [[1/(moment[0][i]^2)], [1/(moment[1][i]^2)]] for i = 1, 2, ..., d.
+        :param weights_correlation: A list or array containing weights associated with matching the correlation of the
+         random variables.
+         `weights_correlation` is a list or array of shape `(d, d)` where each weight corresponds to the weight
+         :math:`w_R(i, j)` assigned for matching the correlation between component `i` and component `j`
+         Default: `weights_correlation` = `(d, d)` array with all elements equal to 1.
+        :param properties: A list of booleans declaring the properties to be matched in the reduced order model.
+         `properties[0] = True` matches the marginal distributions
+         `properties[1] = True` matches the mean values
+         `properties[2] = True` matches the mean square
+         `properties[3] = True` matches the correlation
         """
         from scipy import optimize
 

@@ -10,60 +10,17 @@ import numpy as np
 
 
 class ImportanceSampling:
-    """
-    Sample from a user-defined target density using importance sampling.
-
-
-    **Inputs:**
-
-    ** ISInput** data class:
-        Class containing the following input data for the ``ImportanceSampling`` class.
-
-    * **samples_number** (`int`):
-        Number of samples to generate - see ``run`` method. If not `None`, the `run` method is called when the object is
-        created. Default is None.
-
-    * **pdf_target** (callable):
-        Callable that evaluates the pdf of the target distribution. Either log_pdf_target or pdf_target must be
-        specified (the former is preferred).
-
-    * **log_pdf_target** (callable)
-        Callable that evaluates the log-pdf of the target distribution. Either log_pdf_target or pdf_target must be
-        specified (the former is preferred).
-
-    * **args_target** (`tuple`):
-        Positional arguments of the target log_pdf / pdf callable.
-
-    * **proposal** (``Distribution`` object):
-        Proposal to sample from. This ``UQpy.distributions`` object must have an rvs method and a log_pdf (or pdf)
-        method.
-
-    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
-
-        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-        object itself can be passed directly.
-
-    **Attributes:**
-
-    * **samples** (`ndarray`):
-        Set of samples, `ndarray` of shape (nsamples, dim)
-
-    * **unnormalized_log_weights** (`ndarray`)
-        Unnormalized log weights, i.e., log_w(x) = log_target(x) - log_proposal(x), `ndarray` of shape (nsamples, )
-
-    * **weights** (`ndarray`):
-        Importance weights, weighted so that they sum up to 1, `ndarray` of shape (nsamples, )
-
-    * **unweighted_samples** (`ndarray`):
-        Set of un-weighted samples (useful for instance for plotting), computed by calling the `resample` method
-
-    **Methods:**
-    """
 
     # Last Modified: 10/05/2020 by Audrey Olivier
     @beartype
     def __init__(self, is_input: ISInput, samples_number: PositiveInteger = None):
+        """
+        Sample from a user-defined target density using importance sampling.
+
+        :param ISInput is_input: Object that contains input data to the ImportanceSampling class
+        :param samples_number: Number of samples to generate - see ``run`` method. If not `None`, the `run` method is
+         called when the object is created. Default is None.
+        """
         # Initialize proposal: it should have an rvs and log pdf or pdf method
         self.proposal = is_input.proposal
         if not isinstance(self.proposal, Distribution):
@@ -109,12 +66,7 @@ class ImportanceSampling:
         This function samples from the proposal and appends samples to existing ones (if any). It then weights the
         samples as log_w_unnormalized) = log(target)-log(proposal).
 
-        **Inputs:**
-
-        * **samples_number** (`int`)
-            Number of weighted samples to generate.
-
-        * **Output/Returns:**
+        :param samples_number: Number of weighted samples to generate.
 
         This function has no returns, but it updates the output attributes `samples`, `unnormalized_log_weights` and
         `weights` of the ``ImportanceSampling`` object.
@@ -166,21 +118,14 @@ class ImportanceSampling:
         The ``resample`` method is not called automatically when instantiating the ``ImportanceSampling`` class or when
         invoking its ``run`` method.
 
-        **Inputs:**
-
-        * **method** (`str`)
-            Resampling method, as of V3 only multinomial resampling is supported. Default: 'multinomial'.
-        * **samples_number** (`int`)
-            Number of un-weighted samples to generate. Default: None (sets `nsamples` equal to the number of
-            existing weighted samples).
-
-        **Output/Returns:**
+        :param method: Resampling method, as of V3 only multinomial resampling is supported. Default: 'multinomial'.
+        :param samples_number: Number of un-weighted samples to generate. Default: None (sets `nsamples` equal to the
+         number of existing weighted samples).
 
         The method has no returns, but it computes the following attribute of the ``IS`` object.
 
         * **unweighted_samples** (`ndarray`)
             Un-weighted samples that represent the target pdf, `ndarray` of shape (nsamples, dimension)
-
         """
 
         if samples_number is None:
@@ -205,17 +150,11 @@ class ImportanceSampling:
         Utility function (static method), that transforms the log_pdf, pdf, args inputs into a function that evaluates
         log_pdf_target(x) for a given x.
 
-        **Inputs:**
-
-        * log_pdf_ ((list of) callables): Log of the target density function from which to draw random samples. Either
-          pdf_target or log_pdf_target must be provided
-        * pdf_ ((list of) callables): Target density function from which to draw random samples.
-        * args (tuple): Positional arguments of the pdf target
-
-        **Output/Returns:**
-
-        * evaluate_log_pdf (callable): Callable that computes the log of the target density function
-
+        :param log_pdf_: Log of the target density function from which to draw random samples. Either
+         pdf_target or log_pdf_target must be provided
+        :param pdf_: Target density function from which to draw random samples.
+        :param args: Positional arguments of the pdf target
+        :return: Callable that computes the log of the target density function
         """
         # log_pdf is provided
         if log_pdf_ is not None:

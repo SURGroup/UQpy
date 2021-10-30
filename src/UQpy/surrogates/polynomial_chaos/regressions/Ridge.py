@@ -5,16 +5,6 @@ from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Re
 
 
 class RidgeRegression(Regression):
-    """
-     Class to calculate the polynomial_chaos coefficients with the Ridge regression method.
-
-     **Inputs:**
-
-     * **polynomials** ('class'):
-        Object from the 'Polynomial' class
-
-     **Methods:**
-     """
 
     def __init__(
         self,
@@ -23,6 +13,17 @@ class RidgeRegression(Regression):
         iterations: int = 1000,
         penalty: float = 1,
     ):
+        """
+        Class to calculate the polynomial_chaos coefficients with the Ridge regression method.
+
+        :param polynomials: Object from the 'Polynomial' class
+        :param learning_rate: Size of steps for the gradient descent.
+        :param iterations: Number of iterations of the optimization algorithm.
+        :param penalty: Penalty parameter controls the strength of regularization. When it
+         is close to zero, then the ridge regression converges to the linear
+         regression, while when it goes to infinity, polynomial_chaos coefficients
+         converge to zero.
+        """
         self.polynomials = polynomials
         self.learning_rate = learning_rate
         self.iterations = iterations
@@ -33,33 +34,10 @@ class RidgeRegression(Regression):
         """
         Implements the LASSO method to compute the polynomial_chaos coefficients.
 
-        **Inputs:**
-
-        * **poly_object** (`object`):
-            Polynomial object.
-
-        * **learning_rate** (`float`):
-            Size of steps for the gradient descent.
-
-        * **iterations** (`int`):
-            Number of iterations of the optimization algorithm.
-
-        * **penalty** (`float`):
-            Penalty parameter controls the strength of regularization. When it
-            is close to zero, then the ridge regression converges to the linear
-            regression, while when it goes to infinity, polynomial_chaos coefficients
-            converge to zero.
-
-        **Outputs:**
-
-        * **w** (`ndarray`):
-            Returns the weights (polynomial_chaos coefficients) of the regressor.
-
-        * **b** (`float`):
-            Returns the bias of the regressor.
-
+        :param x:
+        :param y:
+        :return: Weights (polynomial_chaos coefficients)  and Bias of the regressor
         """
-
         xx = self.polynomials.evaluate(x)
         m, n = xx.shape
 

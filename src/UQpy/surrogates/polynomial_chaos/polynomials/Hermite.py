@@ -9,23 +9,14 @@ import scipy.special as special
 
 
 class Hermite(Polynomials):
-    """
-    Class of univariate polynomials appropriate for data generated from a
-    normal distribution.
-
-    **Inputs:**
-
-    * **degree** ('int'):
-        Maximum degree of the polynomials.
-
-    * **distributions** ('class'):
-        Distribution object of the generated samples.
-
-    **Methods:**
-    """
-
     @beartype
     def __init__(self, degree: int, distribution):
+        """
+        Class of univariate polynomials appropriate for data generated from a normal distribution.
+
+        :param degree: Maximum degree of the polynomials.
+        :param distribution: Distribution object of the generated samples.
+        """
         super().__init__(distribution, degree)
         self.degree = degree
         self.pdf = self.distribution.pdf
@@ -34,16 +25,9 @@ class Hermite(Polynomials):
         """
         Calculates the normalized Hermite polynomials evaluated at sample points.
 
-        **Inputs:**
-
-        * **x** (`ndarray`):
-            `ndarray` containing the samples.
-
-        **Outputs:**
-
-        (`list`):
-            Returns a list of 'ndarrays' with the design matrix and the
-            normalized polynomials.
+        :param x: `ndarray` containing the samples.
+        :return: Α list of 'ndarrays' with the design matrix and the
+                    normalized polynomials.
         """
         a, b = -np.inf, np.inf
         mean_ = Polynomials.get_mean(self)

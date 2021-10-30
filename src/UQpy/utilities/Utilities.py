@@ -1,20 +1,3 @@
-# UQpy is distributed under the MIT license.
-#
-# Copyright (C) 2018  -- Michael D. Shields
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
-# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
-# persons to whom the Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
-# Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 import numpy as np
 import scipy.stats as stats
 from UQpy.utilities.ValidationTypes import RandomStateType
@@ -76,23 +59,10 @@ def nearest_psd(input_matrix, iterations=10):
     """
     A function to compute the nearest positive semi-definite matrix of a given matrix [3]_.
 
-    **Inputs:**
-
-    * **input_matrix** (`ndarray`):
-        Matrix to find the nearest PD.
-
-    * **iterations** (`int`):
-        Number of iterations to perform.
-
-        Default: 10
-
-    **Output/Returns:**
-
-    * **psd_matrix** (`ndarray`):
-        Nearest PSD matrix to input_matrix.
-
+    :param numpy.ndarray input_matrix: Matrix to find the nearest PD.
+    :param iterations: Number of iterations to perform. Default: 10
+    :return: Nearest PSD matrix to input_matrix.
     """
-
     n = input_matrix.shape[0]
     w = np.identity(n)
     # w is the matrix used for the norm (assumed to be Identity matrix here)
@@ -113,18 +83,9 @@ def nearest_pd(input_matrix):
     """
     This is a method to find the nearest positive-definite matrix to input ([1]_, [2]_).
 
-    **Inputs:**
-
-    * **input_matrix** (`ndarray`):
-        Matrix to find the nearest PD.
-
-    **Output/Returns:**
-
-    * **pd_matrix** (`ndarray`):
-        Nearest PD matrix to input_matrix.
-
+    :param numpy.ndarray input_matrix: Matrix to find the nearest PD.
+    :return: Nearest PD matrix to input_matrix.
     """
-
     b = (input_matrix + input_matrix.T) / 2
     _, s, v = np.linalg.svd(b)
 
@@ -157,7 +118,7 @@ def _is_pd(input_matrix):
 
 def run_parallel_python(model_script, model_object_name, sample, dict_kwargs=None):
     """
-    Method needed by ``RunModel`` to execute a python model in parallel
+    Method needed by :class:`.RunModel` to execute a python model in parallel
     """
     _ = sample
     exec("from " + model_script[:-3] + " import " + model_object_name)
@@ -175,35 +136,13 @@ def gradient(runmodel_object=None, point=None, order="first", df_step=None):
     This method estimates the gradients (1st, 2nd, mixed) of a function using a finite difference scheme in the
     standard normal space. First order gradients are calculated using central finite differences.
 
-    **Inputs:**
-
-    * **runmodel_object** (``RunModel`` object or a `callable` ):
-        The numerical model. It should be of type `RunModel` (see ``RunModel`` class) or a `callable`.
-
-    * **point** (`ndarray`):
-        The point to evaluate the gradient with shape ``point``.shape=(1, dimension)
-
-    * **order** (`str`):
-        Order of the gradient. Available options: 'first', 'second', 'mixed'.
-
-        Default: 'First'.
-
-    * **df_step** (`float`):
-        Finite difference step.
-
-        Default: 0.001.
-
-    **Output/Returns:**
-
-    * **du_dj** (`ndarray`):
-        Vector of first-order gradients (if order = 'first').
-
-    * **d2u_dj** (`ndarray`):
-        Vector of second-order gradients (if order = 'second').
-
-    * **d2u_dij** (`ndarray`):
-        Vector of mixed gradients (if order = 'mixed').
-
+    :param runmodel_object: The numerical model. It should be of type :class:`.RunModel` or a
+     `callable`.
+    :param point: The point to evaluate the gradient with shape ``point``.shape=(1, dimension)
+    :param order: Order of the gradient. Available options: 'first', 'second', 'mixed'. Default: 'First'.
+    :param df_step: Finite difference step. Default: 0.001.
+    :return: Vector of first-order gradients (if order = 'first'). Vector of second-order gradients
+     (if order = 'second'). Vector of mixed gradients (if order = 'mixed').
     """
     point = np.atleast_2d(point)
 
@@ -319,34 +258,6 @@ def bi_variate_normal_pdf(x1, x2, rho):
         * np.exp(-1 / (2 * (1 - rho ** 2)) * (x1 ** 2 - 2 * rho * x1 * x2 + x2 ** 2))
     )
 
-
-# def estimate_psd(samples, nt, t):
-#
-#     """
-#         Description: A function to estimate the Power Spectrum of a stochastic process given an ensemble of samples
-#
-#         Input:
-#             :param samples: Samples of the stochastic process
-#             :param nt: Number of time discretisations in the time domain
-#             :param t: Total simulation time
-#
-#         Output:
-#             :return: Power Spectrum
-#             :rtype: ndarray
-#
-#     """
-#
-#     sample_size = nt
-#     sample_max_time = t
-#     dt = t / (nt - 1)
-#     x_w = np.fft.fft(samples, sample_size, axis=1)
-#     x_w = x_w[:, 0: int(sample_size / 2)]
-#     m_ps = np.mean(np.absolute(x_w) ** 2 * sample_max_time / sample_size ** 2, axis=0)
-#     num = int(t / (2 * dt))
-#
-#     return np.linspace(0, (1 / (2 * dt) - 1 / t), num), m_ps
-
-
 def _get_a_plus(a):
     eig_val, eig_vec = np.linalg.eig(a)
     q = np.matrix(eig_vec)
@@ -368,27 +279,16 @@ def _get_pu(a, w=None):
 
 
 def _nn_coord(x, k):
-
     """
     Select k elements close to x.
-
     Select k elements close to x to be used to construct a sparse kernel
     matrix to be used in the diffusion maps.
 
-    **Input:**
-
-    :param x: Matrices to be tested.
-    :type  x: list or numpy array
-    
-    :param k: Number of points close to x.
-    :type  k: int
-
-    **Output/Returns:**
-
-    :return idx: Indices of the closer points.
-    :rtype  idx: int
+    :param Union[list, numpy.ndarray] x: Matrices to be tested.
+    :param int k: Number of points close to x.
+    :return: Indices of the closer points.
+    :rtype: int
     """
-
     if isinstance(x, list):
         x = np.array(x)
 
@@ -409,23 +309,15 @@ def _nn_coord(x, k):
 
 def correlation_distortion(dist_object, rho):
     """
-        This method computes the corelation distortion from Gaussian distribution to any other distribution defined in
-        UQpy.distributions
+    This method computes the correlation distortion from Gaussian distribution to any other distribution defined in
+    UQpy.distributions
 
-        **Inputs:**
+    :param Distribution dist_object: The object of the Distribution the correlation needs to be calculated.
+    :param float rho: The Gaussian  correlation value.
+    :return: The distorted correlation value.
+    :rtype: float
+    """
 
-        * **dist_object** (``Distribution`` object):
-            The object of the Distribution the corelation needs to be calculated.
-
-        * **rho** (`float`):
-            The Gaussian  correlation value.
-
-        **Output/Returns:**
-
-        * **rho_non** (`float`):
-            The distorted correlation value.
-
-        """
     if rho == 1.0:
         rho = 0.999
     n = 1024
@@ -468,17 +360,16 @@ def process_random_state(random_state: RandomStateType):
 def calculate_gradient(krig_object, step_size, x, y, xt):
     """
     Estimating gradients with a Kriging metamodel (surrogate).
-    **Inputs:**
-    * **x** (`ndarray`):
-        Samples in the training data.
-    * **y** (`ndarray`):
-        Function values evaluated at the samples in the training data.
-    * **xt** (`ndarray`):
-        Samples where gradients need to be evaluated.
-    **Outputs:**
-    * **gr** (`ndarray`):
-        First-order gradient evaluated at the points 'xt' using central difference.
+
+    :param krig_object:
+    :param step_size:
+    :param numpy.ndarray x: Samples in the training data.
+    :param numpy.ndarray y: Function values evaluated at the samples in the training data.
+    :param numpy.ndarray xt: Samples where gradients need to be evaluated.
+    :return: First-order gradient evaluated at the points 'xt' using central difference.
+    :rtype: numpy.ndarray
     """
+
     if krig_object is not None:
         krig_object.fit(x, y)
         krig_object.nopt = 1

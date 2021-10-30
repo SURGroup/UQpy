@@ -1,103 +1,8 @@
 import itertools
-import numpy as np
 from UQpy.utilities import *
 
 
 class BispectralRepresentation:
-    """
-    A class to simulate non-Gaussian stochastic processes from a given power spectrum and bispectrum based on the 3-rd
-    order Spectral Representation Method. This class can simulate uni-variate, one-dimensional and multi-dimensional
-    stochastic processes.
-
-    **Input:**
-
-    * **samples_number** (`int`):
-        Number of samples of the stochastic process to be simulated.
-
-        The ``run`` method is automatically called if `samples_number` is provided. If `samples_number` is not provided,
-        then the ``BispectralRepresentation`` object is created but samples are not generated.
-
-    * **power_spectrum** (`list or numpy.ndarray`):
-        The discretized power spectrum.
-
-        For uni-variate, one-dimensional processes `power_spectrum` will be `list` or `ndarray` of length
-        `number_frequency_intervals`.
-
-        For uni-variate, multi-dimensional processes, `power_spectrum` will be a `list` or `ndarray` of size
-        (`number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`)
-
-    * **bispectrum** (`list or numpy.ndarray`):
-        The prescribed bispectrum.
-
-        For uni-variate, one-dimensional processes, `bispectrum` will be a `list` or `ndarray` of size
-        (`number_frequency_intervals`, `number_frequency_intervals`)
-
-        For uni-variate, multi-dimensional processes, `bispectrum` will be a `list` or `ndarray` of size
-        (`number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`,
-        `number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`)
-
-    * **time_interval** (`list or numpy.ndarray`):
-        Length of time discretizations (:math:`\Delta t`) for each dimension of size `number_of_dimensions`.
-
-    * **frequency_interval** (`list or numpy.ndarray`):
-        Length of frequency discretizations (:math:`\Delta \omega`) for each dimension of size `number_of_dimensions`.
-
-    * **number_frequency_intervals** (`list or numpy.ndarray`):
-        Number of frequency discretizations for each dimension of size `number_of_dimensions`.
-
-    * **number_time_intervals** (`list or numpy.ndarray`):
-        Number of time discretizations for each dimensions of size `number_of_dimensions`.
-
-    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
-
-        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-        object itself can be passed directly.
-
-    **Attributes:**
-
-    * **samples** (`ndarray`):
-        Generated samples.
-
-        The shape of the samples is (`nsamples`, `number_of_variables`, `number_time_intervals[0]`, ...,
-        `number_time_intervals[number_of_dimensions-1]`)
-
-    * **number_of_dimensions** (`int`):
-        The dimensionality of the stochastic process.
-
-    * **number_of_variables** (`int`):
-        Number of variables in the stochastic process.
-
-    * **phi** (`ndarray`):
-        The random phase angles used in the simulation of the stochastic process.
-
-        The shape of the phase angles (`nsamples`, `number_of_variables`, `number_frequency_intervals[0]`, ...,
-        `number_frequency_intervals[number_of_dimensions-1]`)
-
-    * **b_ampl** (`ndarray`):
-        The amplitude of the bispectrum.
-
-    * **b_real** (`ndarray`):
-        The real part of the bispectrum.
-
-    * **b_imag** (`ndarray`):
-        The imaginary part of the bispectrum.
-
-    * **biphase** (`ndarray`):
-        The biphase values of the bispectrum.
-
-    * **pure_power_spectrum** (`ndarray`):
-        The pure part of the power spectrum.
-
-    * **bc2** (`ndarray`):
-        The bicoherence values of the power spectrum and bispectrum.
-
-    * **sum_bc2** (`ndarray`):
-        The sum of the bicoherence values for single frequencies.
-
-    **Methods**
-    """
-
     def __init__(
         self,
         samples_number,
@@ -110,6 +15,36 @@ class BispectralRepresentation:
         case="uni",
         random_state=None,
     ):
+        """
+        A class to simulate non-Gaussian stochastic processes from a given power spectrum and bispectrum based on the
+        3-rd order Spectral Representation Method. This class can simulate uni-variate, one-dimensional and
+        multi-dimensional stochastic processes.
+
+        :param samples_number: Number of samples of the stochastic process to be simulated.
+         The :meth:`run` method is automatically called if `samples_number` is provided. If `samples_number` is not
+         provided, then the :class:`.BispectralRepresentation` object is created but samples are not generated.
+        :param power_spectrum: The discretized power spectrum.
+         For uni-variate, one-dimensional processes `power_spectrum` will be `list` or `ndarray` of length
+         `number_frequency_intervals`.
+         For uni-variate, multi-dimensional processes, `power_spectrum` will be a `list` or `ndarray` of size
+         (`number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`)
+        :param bispectrum: The prescribed bispectrum.
+         For uni-variate, one-dimensional processes, `bispectrum` will be a `list` or `ndarray` of size
+         (`number_frequency_intervals`, `number_frequency_intervals`)
+         For uni-variate, multi-dimensional processes, `bispectrum` will be a `list` or `ndarray` of size
+         (`number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`,
+         `number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`)
+        :param time_interval: Length of time discretizations (:math:`\Delta t`) for each dimension of size
+         `number_of_dimensions`.
+        :param frequency_interval: Length of frequency discretizations (:math:`\Delta \omega`) for each dimension of
+         size `number_of_dimensions`.
+        :param number_time_intervals: Number of time discretizations for each dimensions of size `number_of_dimensions`.
+        :param number_frequency_intervals: Number of frequency discretizations for each dimension of size
+         `number_of_dimensions`.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
+         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+         the object itself can be passed directly.
+        """
         self.nsamples = samples_number
         self.number_frequency_intervals = np.array(number_frequency_intervals)
         self.number_time_intervals = np.array(number_time_intervals)
@@ -265,29 +200,21 @@ class BispectralRepresentation:
 
     def run(self, samples_number):
         """
-        Execute the random sampling in the ``BispectralRepresentation`` class.
+        Execute the random sampling in the :class:`.BispectralRepresentation` class.
 
-        The ``run`` method is the function that performs random sampling in the ``BispectralRepresentation`` class. If
-        `samples_number` is provided, the ``run`` method is automatically called when the ``BispectralRepresentation``
-        object is defined. The user may also call the ``run`` method directly to generate samples. The ``run`` method of
-        the ``BispectralRepresentation`` class can be invoked many times and each time the generated samples are
-        appended to the existing samples.
+        The :meth:`run` method is the function that performs random sampling in the :class:`.BispectralRepresentation`
+        class. If `samples_number` is provided, the :meth:`run` method is automatically called when the
+        :class:`.BispectralRepresentation` object is defined. The user may also call the :meth:`run` method directly to
+        generate samples. The :meth:`run` method of the :class:`.BispectralRepresentation` class can be invoked many
+        times and each time the generated samples are appended to the existing samples.
 
-        ** Input:**
+        :param samples_number: Number of samples of the stochastic process to be simulated.
+         If the :meth:`run` method is invoked multiple times, the newly generated samples will be appended to the
+         existing samples.
 
-        * **samples_number** (`int`):
-            Number of samples of the stochastic process to be simulated.
-
-            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
-            existing samples.
-
-        **Output/Returns:**
-
-            The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the
-            ``BispectralRepresentation`` class.
-
+        The :meth:`run` method has no returns, although it creates and/or appends the `samples` attribute of the
+        :class:`.BispectralRepresentation` class.
         """
-
         if samples_number is None:
             raise ValueError(
                 "UQpy: Stochastic Process: Number of samples must be defined."

@@ -14,60 +14,6 @@ from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
 class MLE:
-    """
-    Estimate the maximum likelihood parameters of a model given some data.
-
-    **Inputs:**
-
-    * **inference_model** (object of class ``InferenceModel``):
-        The inference model that defines the likelihood function.
-
-    * **data** (`ndarray`):
-        Available data, `ndarray` of shape consistent with log likelihood function in ``InferenceModel``
-
-    * **optimizer** (callable):
-        Optimization algorithm used to compute the mle.
-
-        | This callable takes in as first input the function to be minimized and as second input an initial guess
-          (`ndarray` of shape (n_params, )), along with optional keyword arguments if needed, i.e., it is called within
-          the code as:
-        | `optimizer(func, x0, **kwargs_optimizer)`
-
-        It must return an object with attributes `x` (minimizer) and `fun` (minimum function value).
-
-        Default is `scipy.optimize.minimize`.
-
-    * **kwargs_optimizer**:
-        Keyword arguments that will be transferred to the optimizer.
-
-    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
-
-        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-        object itself can be passed directly.
-
-    * **x0** (`ndarray`):
-        Starting point(s) for optimization, see `run_estimation`. Default is `None`.
-
-    * **nopt** (`int`):
-        Number of iterations that the optimization is run, starting at random initial guesses. See `run_estimation`.
-        Default is `None`.
-
-    If both `x0` and `nopt` are `None`, the object is created but the optimization procedure is not run, one must
-    call the ``run`` method.
-
-    **Attributes:**
-
-    * **mle** (`ndarray`):
-        Value of parameter vector that maximizes the likelihood function.
-
-    * **max_log_like** (`float`):
-        Value of the likelihood function at the MLE.
-
-    **Methods:**
-
-    """
-
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
     @beartype
@@ -80,7 +26,24 @@ class MLE:
         optimizer: Optimizer = MinimizeOptimizer(),
         random_state=None,
     ):
+        """
+        Estimate the maximum likelihood parameters of a model given some data.
 
+        :param inference_model: The inference model that defines the likelihood function.
+        :param data: Available data, `ndarray` of shape consistent with log likelihood function in ``InferenceModel``
+        :param optimizations_number: Optimization algorithm used to compute the mle.
+        :param initial_guess: Starting point(s) for optimization, see `run_estimation`. Default is `None`.
+        :param optimizer:
+        | This callable takes in as first input the function to be minimized and as second input an initial guess
+        |  (`ndarray` of shape (n_params, )), along with optional keyword arguments if needed, i.e., it is called within
+        | the code as:
+        | `optimizer(func, x0, **kwargs_optimizer)`
+
+        It must return an object with attributes `x` (minimizer) and `fun` (minimum function value).
+
+        Default is `scipy.optimize.minimize`.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
+        """
         # Initialize variables
         self.inference_model = inference_model
         self.data = data
@@ -109,21 +72,14 @@ class MLE:
         `x0` or `nopt` are given when creating the ``MLEstimation`` object, this method is called automatically when the
         object is created.
 
-        **Inputs:**
-
-        * **x0** (`ndarray`):
-            Initial guess(es) for optimization, `ndarray` of shape `(nstarts, nparams)` or `(nparams, )`, where
-            `nstarts` is the number of times the optimizer will be called. Alternatively, the user can provide input
-            `nopt` to randomly sample initial guess(es). The identified MLE is the one that yields the maximum log
-            likelihood over all calls of the optimizer.
-
-        * **nopt** (`int`):
-            Number of iterations that the optimization is run, starting at random initial guesses. It is only used if
-            `x0` is not provided. Default is 1.
-
-            The random initial guesses are sampled uniformly between 0 and 1, or uniformly between user-defined bounds
-            if an input bounds is provided as a keyword argument to the ``MLEstimation`` object.
-
+        :param optimizations_number: Initial guess(es) for optimization, `ndarray` of shape `(nstarts, nparams)` or
+         `(nparams, )`, where `nstarts` is the number of times the optimizer will be called. Alternatively, the user can
+         provide input `nopt` to randomly sample initial guess(es). The identified MLE is the one that yields the
+         maximum log likelihood over all calls of the optimizer.
+        :param initial_guess: Number of iterations that the optimization is run, starting at random initial guesses. It
+         is only used if `x0` is not provided. Default is 1.
+         The random initial guesses are sampled uniformly between 0 and 1, or uniformly between user-defined bounds
+         if an input bounds is provided as a keyword argument to the ``MLEstimation`` object.
         """
         # Run optimization (use x0 if provided, otherwise sample starting point from [0, 1] or bounds)
         self.logger.info(
@@ -206,17 +162,9 @@ class MLE:
         This is the function to be minimized in the optimization procedure. This is a utility function that will not be
         called by the user.
 
-        **Inputs:**
-
-        * **one_param** (`ndarray`):
-            A parameter vector, `ndarray` of shape (nparams, ).
-
-        **Output/Returns:**
-
-        * (`float`):
-            Value of negative log-likelihood.
+        :param one_param: A parameter vector, `ndarray` of shape (nparams, ).
+        :return: Value of negative log-likelihood.
         """
-
         a = (
             -1
             * self.inference_model.evaluate_log_likelihood(

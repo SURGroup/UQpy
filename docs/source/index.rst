@@ -16,15 +16,14 @@ Table of contents
 	
    installation_doc
    runmodel_doc
-   distributions_doc
-   samplemethods_doc
-   transformations_doc
-   stochastic_process_doc
-   surrogates_doc
-   reliability_doc
-   inference_doc
-   dimension_reduction_doc
-   sensitivity_doc
+   /distributions/index
+   /inference/index
+   /reliability/index
+   /sampling/index
+   /sensitivity/index
+   /stochastic_process/index
+   /surrogates/index
+   /transformations/index
    utilities_doc
    news_doc
 

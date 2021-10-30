@@ -3,8 +3,6 @@ import sys
 
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator
-
-from UQpy.dimension_reduction.distances.grassmanian.Grassmann import Geodesic
 from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
 from UQpy.dimension_reduction.grassman.Grassman import Grassmann
 from UQpy.dimension_reduction.grassman.interpolations.LinearInterpolation import LinearInterpolation
@@ -99,15 +97,18 @@ def test_distances():
 
     np.random.seed(1111)  # For reproducibility.
     # Solutions: original space.
-    Sol0 = np.dot(np.random.rand(D1, r0), np.random.rand(r0, D1))
-    Sol1 = np.dot(np.random.rand(D1, r1), np.random.rand(r1, D1))
-    Sol2 = np.dot(np.random.rand(D1, r2), np.random.rand(r2, D1))
-    Sol3 = np.dot(np.random.rand(D1, r3), np.random.rand(r3, D1))
+    Sol0 = np.dot(np.random.rand(3, 2), np.random.rand(2, 3))
+    Sol1 = np.dot(np.random.rand(3, 2), np.random.rand(2, 3))
+    Sol2 = np.dot(np.random.rand(3, 2), np.random.rand(2, 3))
+    Sol3 = np.dot(np.random.rand(3, 2), np.random.rand(2, 3))
 
     # Creating a list of matrices.
     matrices = [Sol0, Sol1, Sol2, Sol3]
 
     manifold_projection = SvdProjection(matrices, p_planes_dimensions=sys.maxsize)
+
+    a = np.matmul(manifold_projection.phi[0].T, manifold_projection.phi[0])
+    b = np.matmul(manifold_projection.phi[1].T, manifold_projection.phi[1])
 
     distance_metric = GrassmannDistance()
     value = distance_metric.compute_distance(manifold_projection.psi[0], manifold_projection.psi[1])

@@ -5,63 +5,6 @@ from UQpy.sampling import *
 
 
 class SubsetSimulation:
-    """
-    Perform Subset Simulation to estimate probability of failure.
-
-    This class estimates probability of failure for a user-defined model using Subset Simulation. The class can
-    use one of several mcmc algorithms to draw conditional samples.
-
-    **Input:**
-
-    * **runmodel_object** (``RunModel`` object):
-        The computational model. It should be of type `RunModel` (see ``RunModel`` class).
-
-    * **mcmc_input** (Class of either ``MhInput``, ``MmhInput``, ``DreamInput``, ``DramInput``,``StretchInput``, type)
-        Specifies the mcmc algorithm.
-
-        Must be a child class of the ``SamplingInput`` parent class.
-
-    * **samples_init** (`ndarray`)
-        A set of samples from the specified probability distribution. These are the samples from the original
-        distribution. They are not conditional samples. The samples must be an array of size
-        `samples_number_per_subset x dimension`.
-
-        If `samples_init` is not specified, the Subset_Simulation class will use the mcmc class created with the aid of
-        `mcmc_input` to draw the initial samples.
-
-    * **conditional_probability** (`float`):
-        Conditional probability for each conditional level.
-
-    * **samples_number_per_subset** (`int`)
-        Number of samples to draw in each conditional level.
-
-    * **max_level** (`int`)
-        Maximum number of allowable conditional levels.
-
-
-    **Attributes:**
-
-    * **samples** (`list` of `ndarrays`)
-         A list of arrays containing the samples in each conditional level.
-
-    * **g** (`list` of `ndarrays`)
-        A list of arrays containing the evaluation of the performance function at each sample in each conditional level.
-
-    * **g_level** (`list`)
-        Threshold value of the performance function for each conditional level
-
-    * **failure_probability** (`float`)
-        Probability of failure estimate
-
-    * **probability_cov_ινdependent** (`float`)
-        Coefficient of variation of the probability of failure estimate assuming independent chains
-
-    * **probability_cov_dependent** (`float`)
-        Coefficient of variation of the probability of failure estimate with dependent chains. From [4]_
-
-
-    **Methods:**
-    """
 
     @beartype
     def __init__(
@@ -75,6 +18,23 @@ class SubsetSimulation:
         samples_number_per_subset: int = 1000,
         max_level: int = 10,
     ):
+        """
+        Perform Subset Simulation to estimate probability of failure.
+
+        This class estimates probability of failure for a user-defined model using Subset Simulation. The class can
+        use one of several mcmc algorithms to draw conditional samples.
+
+        :param runmodel_object: The computational model. It should be of type `RunModel` (see :class:`.RunModel` class).
+        :param mcmc_input: Specifies the mcmc algorithm. Must be a child class of the :class:`.SamplingInput` parent class.
+        :param samples_init: A set of samples from the specified probability distribution. These are the samples from
+         the original distribution. They are not conditional samples. The samples must be an array of size
+         `samples_number_per_subset x dimension`.
+         If `samples_init` is not specified, the Subset_Simulation class will use the mcmc class created with the aid of
+         `mcmc_input` to draw the initial samples.
+        :param conditional_probability: Conditional probability for each conditional level.
+        :param samples_number_per_subset: Number of samples to draw in each conditional level.
+        :param max_level: Maximum number of allowable conditional levels.
+        """
         # Initialize other attributes
 
         class_type = type(mcmc_input)
@@ -122,20 +82,7 @@ class SubsetSimulation:
 
         This is an instance method that runs subset simulation. It is automatically called when the SubsetSimulation
         class is instantiated.
-
-        **Output/Returns:**
-
-        * **failure_probability** (`float`)
-            Probability of failure estimate
-
-        * **probability_cov_independent** (`float`)
-            Coefficient of variation of the probability of failure estimate assuming independent chains
-
-        * **probability_cov_dependent** (`float`)
-            Coefficient of variation of the probability of failure estimate with dependent chains. From [4]_
-
         """
-
         step = 0
         n_keep = int(self.conditional_probability * self.samples_number_per_subset)
         d12 = list()
@@ -292,27 +239,16 @@ class SubsetSimulation:
     # Support functions for subset simulation
 
     def _compute_coefficient_of_variation(self, step):
-
         """
         Compute the coefficient of variation of the samples in a conditional level
 
         This is an instance method that is called after each conditional level is complete to compute the coefficient
         of variation of the conditional probability in that level.
 
-        **Input:**
-
         :param step: Specifies the conditional level
-        :type step: int
-
-        **Output/Returns:**
-
-        :param independent_chains_cov: Coefficient of variation in conditional level assuming independent chains
-        :type independent_chains_cov: float
-
-        :param dependent_chains_cov: Coefficient of variation in conditional level with dependent chains
-        :type dependent_chains_cov: float
+        :return: Coefficient of variation in conditional level assuming independent chains, Coefficient of variation in
+         conditional level with dependent chains
         """
-
         # Here, we assume that the initial samples are drawn to be uncorrelated such that the correction factors do not
         # need to be computed.
         if step == 0:
@@ -360,25 +296,13 @@ class SubsetSimulation:
         variation of the conditional probability estimate from a given conditional level. This method is called
         automatically within the _cov_sus method.
 
-        **Input:**
-
         :param indicator: An array of booleans indicating whether the performance function is below the threshold for
-                          the conditional probability.
-        :type indicator: boolean array
-
-        :param n_s: Number of samples drawn from each Markov chain in each conditional level
-        :type n_s: int
-
-        :param n_c: Number of Markov chains in each conditional level
-        :type n_c: int
-
-        **Output/Returns:**
-
-        :param gam: Gamma factor in coefficient of variation estimate
-        :type gam: float
-
+         the conditional probability.
+        :param int n_s: Number of samples drawn from each Markov chain in each conditional level
+        :param int n_c: Number of Markov chains in each conditional level
+        :return: Gamma factor in coefficient of variation estimate
+        :rtype float
         """
-
         gam = np.zeros(n_s - 1)
         r = np.zeros(n_s)
 
@@ -405,22 +329,12 @@ class SubsetSimulation:
         variation of the conditional probability estimate from a given conditional level. This method is called
         automatically within the _cov_sus method.
 
-        **Input:**
-
-        :param g: An array containing the performance function evaluation at all points in the current conditional
-                  level.
-        :type g: numpy array
-
-        :param step: Current conditional level
-        :type step: int
-
-        **Output/Returns:**
-
-        :param beta: Beta factor in coefficient of variation estimate
-        :type beta: float
-
+        :param numpy.ndarray g: An array containing the performance function evaluation at all points in the current
+         conditional level.
+        :param int step: Current conditional level
+        :return: Beta factor in coefficient of variation estimate
+        :rtype float
         """
-
         beta = 0
         for i in range(np.shape(g)[1]):
             for j in range(i + 1, np.shape(g)[1]):

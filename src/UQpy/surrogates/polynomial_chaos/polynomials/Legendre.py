@@ -8,23 +8,15 @@ from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import (
 
 
 class Legendre(Polynomials):
-    """
-    Class of univariate polynomials appropriate for data generated from a
-    uniform distribution.
-
-    **Inputs:**
-
-    * **degree** ('int'):
-        Maximum degree of the polynomials.
-
-    * **distributions** ('class'):
-        Distribution object of the generated samples.
-
-    **Methods:**
-    """
 
     @beartype
     def __init__(self, degree: int, distributions):
+        """
+        Class of univariate polynomials appropriate for data generated from a uniform distribution.
+
+        :param degree: Maximum degree of the polynomials.
+        :param distributions: Distribution object of the generated samples.
+        """
         super().__init__(distributions, degree)
         self.degree = degree
         self.pdf = self.distribution.pdf
@@ -33,20 +25,9 @@ class Legendre(Polynomials):
         """
         Calculates the normalized Legendre polynomials evaluated at sample points.
 
-        **Inputs:**
-
-        * **x** (`ndarray`):
-            `ndarray` containing the samples.
-
-        * **y** (`ndarray`):
-            `ndarray` containing the samples.
-
-        **Outputs:**
-
-        (`list`):
-            Returns a list of 'ndarrays' with the design matrix and the
-            normalized polynomials.
-
+        :param x: `ndarray` containing the samples.
+        :return: Α list of 'ndarrays' with the design matrix and the
+                    normalized polynomials.
         """
         a, b = -1, 1
         m, scale = Polynomials.get_mean(self), Polynomials.scale(self)

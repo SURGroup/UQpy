@@ -7,27 +7,6 @@ from UQpy.distributions.baseclass import DistributionContinuous1D
 
 
 class TruncatedNormal(DistributionContinuous1D):
-    """
-    Truncated normal distribution
-
-    The standard form of this distribution (i.e, loc=0., scale=1) is a standard normal truncated to the range [a, b].
-    Note that a and b are defined over the domain of the standard normal.
-
-    **Inputs:**
-
-    * **a** (`float`):
-        shape parameter
-    * **b** (`float`):
-        shape parameter
-    * **loc** (`float`):
-        location parameter
-    * **scale** (`float`):
-        scale parameter
-
-    The following methods are available for ``TruncNorm``:
-
-    * ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``.
-    """
 
     @beartype
     def __init__(
@@ -37,6 +16,13 @@ class TruncatedNormal(DistributionContinuous1D):
         loc: Union[None, float, int] = 0.0,
         scale: Union[None, float, int] = 1.0,
     ):
+        """
+
+        :param float a: shape parameter
+        :param float b: shape parameter
+        :param float loc: location parameter
+        :param float scale: scale parameter
+        """
         super().__init__(
             a=a,
             b=b,

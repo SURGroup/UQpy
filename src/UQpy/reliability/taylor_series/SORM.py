@@ -89,12 +89,9 @@ class SORM(TaylorSeries):
         self._run()
 
     def _run(self):
-
         """
-        Run SORM
-        This is an instance method that runs SORM.
+        Runs SORM
         """
-
         self.logger.info("UQpy: Calculating SORM correction...")
 
         self.beta_form = self.form_object.beta_form[-1]

@@ -5,57 +5,15 @@ from abc import ABC
 
 
 class Copula(ABC):
-    """
-    Define a copula for a multivariate distribution whose dependence structure is defined with a copula.
-
-    This class is used in support of the ``JointCopula`` distribution class.
-
-    **Attributes:**
-
-    * **kwargs** (`dict`):
-        Parameters of the copula.
-
-    * **ordered_parameters** (`list`):
-        List of parameter names
-
-    **Methods:**
-
-    **check_marginals** *(marginals)*
-        Perform some checks on the marginals, raise errors if necessary.
-
-        As an example, Archimedian copula are only defined for bi-variate continuous distributions, thus this method
-        checks that marginals is of length 2 and continuous, and raise an error if that is not the case.
-
-        **Input:**
-
-        * **marginals** (list[DistributionContinuous1D]):
-            List of 1D continuous distributions.
-
-        **Output/Returns:**
-
-        No outputs, this code raises errors if necessary.
-
-    **get_parameters** *()*
-
-        **Output/Returns:**
-
-        A list containing the parameter names.
-
-    **update_parameters** *(**kwargs)*
-        Given a dictionary with keys the names and values the new parameter values,
-        the method updates the current values.
-
-        **Input:**
-
-        * **kwargs**:
-            Dictionary containing the updated parameter values.
-
-        **Output/Returns:**
-
-        A list containing the parameter names.
-    """
 
     def __init__(self, ordered_parameters: dict = None, **kwargs):
+        """
+        Define a copula for a multivariate distribution whose dependence structure is defined with a copula.
+        This class is used in support of the :class:`.JointCopula`: distribution class.
+
+        :param ordered_parameters: List of parameter names
+        :param kwargs: Parameters of the copula.
+        """
         self.parameters = kwargs
         self.ordered_parameters = ordered_parameters
         if self.ordered_parameters is None:
@@ -66,18 +24,33 @@ class Copula(ABC):
             )
 
     def get_parameters(self):
+        """
+        :return: A list containing the parameter names.
+        :rtype: list
+        """
         return self.parameters
 
     def update_parameters(self, **kwargs):
+        """
+        Given a dictionary with keys the names and values the new parameter values,
+        the method updates the current values.
+
+        :param dict kwargs: Dictionary containing the updated parameter values.
+        """
         for key in kwargs.keys():
             if key not in self.parameters.keys():
                 raise ValueError("Wrong parameter name.")
             self.parameters[key] = kwargs[key]
 
     @staticmethod
-    def check_marginals(marginals):
+    def check_marginals(marginals: list[DistributionContinuous1D]):
         """
-        Check that marginals contains 2 continuous univariate distributions.
+        Perform some checks on the marginals, raise errors if necessary.
+
+        As an example, Archimedian copula are only defined for bi-variate continuous distributions, thus this method
+        checks that marginals is of length 2 and continuous, and raise an error if that is not the case.
+
+        :param list[DistributionContinuous1D] marginals: List of 1D continuous distributions.
         """
         if len(marginals) != 2:
             raise ValueError("Maximum dimension for the Copula is 2.")

@@ -11,57 +11,6 @@ from UQpy.transformations import Decorrelate
 
 
 class FORM(TaylorSeries):
-    """
-    A class perform the First Order reliability Method. The ``run`` method of the ``FORM`` class can be invoked many
-    times and each time the results are appended to the existing ones.
-    This is a child class of the ``Taylor_series`` class.
-
-    **Input:**
-
-    See ``Taylor_series`` class.
-    **Attributes:**
-
-    * **Pf_form** (`float`):
-        First-order probability of failure estimate.
-
-    * **beta_form** (`float`):
-        Hasofer-Lind reliability index.
-
-    * **DesignPoint_U** (`ndarray`):
-        Design point in the uncorrelated standard normal space **U**.
-
-    * **DesignPoint_X** (`ndarray`):
-        Design point in the parameter space **X**.
-
-    * **alpha** (`ndarray`):
-        Direction cosine.
-
-    * **form_iterations** (`int`):
-        Number of model evaluations.
-
-    * **u_record** (`list`):
-        Record of all iteration points in the standard normal space **U**.
-
-    * **x_record** (`list`):
-        Record of all iteration points in the parameter space **X**.
-
-    * **beta_record** (`list`):
-        Record of all Hasofer-Lind reliability index values.
-
-    * **dg_u_record** (`list`):
-        Record of the model's gradient  in the standard normal space.
-
-    * **alpha_record** (`list`):
-        Record of the alpha (directional cosine).
-
-    * **g_record** (`list`):
-        Record of the performance function.
-
-    * **error_record** (`list`):
-        Record of the error defined by criteria `e1, e2, e3`.
-
-    **Methods:**
-     """
 
     @beartype
     def __init__(
@@ -79,7 +28,31 @@ class FORM(TaylorSeries):
         tol2: Union[float, int] = None,
         tol3: Union[float, int] = None,
     ):
+        """
+        A class perform the First Order reliability Method. The :meth:`run` method of the :class:`.FORM` class can be invoked many
+        times and each time the results are appended to the existing ones.
+        This is a child class of the :class:`.TaylorSeries` class.
 
+        :param distributions:Marginal probability distributions of each random variable. Must be an object of type
+         :class:`.DistributionContinuous1D` or :class:`.JointIndependent`.
+        :param runmodel_object: The computational model. It should be of type :class:`RunModel`.
+        :param form_object: It should be of type :class:`FORM`. Used to calculate SORM correction.
+        :param seed_u: The initial starting point for the `Hasofer-Lind` algorithm.
+         Either `seed_u` or `seed_x` must be provided.
+         If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
+         If `seed_x` is provided, it should be a point in the parameter space of **X**.
+         Default: `seed_u = (0, 0, ..., 0)`
+        :param df_step: Finite difference step in standard normal space. Default: 0.01 (see `derivatives` class)
+        :param corr_z: Covariance matrix
+         If `corr_x` is provided, it is the correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
+         If `corr_z` is provided, it is the correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal random
+         vector **Z** .
+         Default: `corr_z` is specified as the identity matrix.
+        :param iterations_number: Maximum number of iterations for the `HLRF` algorithm. Default: 100
+        :param tol1: Convergence threshold for criterion `e1` of the `HLRF` algorithm. Default: 1.0e-3
+        :param tol2: Convergence threshold for criterion `e2` of the `HLRF` algorithm. Default: 1.0e-3
+        :param tol3: Convergence threshold for criterion `e3` of the  `HLRF` algorithm. Default: 1.0e-3
+        """
         super().__init__(
             distributions,
             runmodel_object,
@@ -133,11 +106,9 @@ class FORM(TaylorSeries):
 
     def run(self, seed_x=None, seed_u=None):
         """
-        Run FORM
-        This is an instance method that runs FORM.
-        **Input:**
-        * **seed_u** or **seed_x** (`ndarray`):
-        See ``taylor_series`` parent class.
+        Runs FORM
+
+        :param seed_x: See :class:`.TaylorSeries` parent class.
         """
         self.logger.info("UQpy: Running FORM...")
         if seed_u is None and seed_x is None:

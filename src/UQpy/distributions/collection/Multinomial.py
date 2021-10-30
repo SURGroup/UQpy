@@ -1,5 +1,4 @@
 from typing import Union
-
 import numpy as np
 import scipy.stats as stats
 from beartype import beartype
@@ -8,27 +7,14 @@ from UQpy.distributions.baseclass import DistributionND
 
 
 class Multinomial(DistributionND):
-    """
-    Multinomial distribution having probability mass function
-
-    .. math:: f(x) = \dfrac{n!}{x_1!\dots x_k!}p_1^{x_1}\dots p_k^{x_k}
-
-    for :math:`x=\{x_1,\dots,x_k\}` where each :math:`x_i` is a non-negative integer and :math:`\sum_i x_i = n`.
-
-    **Inputs:**
-
-    * **n** (`int`):
-        number of trials
-    * **p** (`array_like`):
-        probability of a trial falling into each category; should sum to 1
-
-    The following methods are available for ``Multinomial``:
-
-    * ``pmf``, ``log_pmf``, ``rvs``, ``moments``.
-    """
 
     @beartype
     def __init__(self, n: Union[None, int], p):
+        """
+
+        :param int n: number of trials
+        :param Union[list[float], numpy.ndarray] p: probability of a trial falling into each category; should sum to 1
+        """
         super().__init__(n=n, p=p)
 
     def pmf(self, x):

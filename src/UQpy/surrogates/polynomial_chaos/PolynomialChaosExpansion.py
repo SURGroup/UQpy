@@ -11,21 +11,14 @@ from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Re
 
 
 class PolynomialChaosExpansion:
-    """
-    Constructs a surrogate model based on the Polynomial Chaos Expansion (polynomial_chaos)
-    method.
-
-    **Inputs:**
-
-    * **method** (class):
-        object for the method used for the calculation of the polynomial_chaos coefficients.
-
-    **Methods:**
-
-    """
 
     @beartype
     def __init__(self, regression_method: Regression):
+        """
+        Constructs a surrogate model based on the Polynomial Chaos Expansion (polynomial_chaos) method.
+
+        :param regression_method: object for the method used for the calculation of the polynomial_chaos coefficients.
+        """
         self.regression_method = regression_method
         self.logger = logging.getLogger(__name__)
         self.C = None
@@ -33,24 +26,15 @@ class PolynomialChaosExpansion:
 
     def fit(self, x, y):
         """
-        Fit the surrogate model using the training samples and the
-        corresponding model values. This method calls the 'run' method of the
-        input method class.
+        Fit the surrogate model using the training samples and the corresponding model values. This method calls the
+        'run' method of the input method class.
 
-        **Inputs:**
-
-        * **x** (`ndarray`):
-            `ndarray` containing the training points.
-
-        * **y** (`ndarray`):
-            `ndarray` containing the model evaluations at the training points.
-
-        **Output/Return:**
+        :param x: `ndarray` containing the training points.
+        :param y: `ndarray` containing the model evaluations at the training points.
 
         The ``fit`` method has no returns and it creates an `ndarray` with the
         polynomial_chaos coefficients.
         """
-
         self.logger.info("UQpy: Running polynomial_chaos.fit")
 
         if type(self.regression_method) == LeastSquareRegression:
@@ -65,23 +49,13 @@ class PolynomialChaosExpansion:
         self.logger.info("UQpy: polynomial_chaos fit complete.")
 
     def predict(self, points):
-
         """
         Predict the model response at new points.
         This method evaluates the polynomial_chaos model at new sample points.
 
-        **Inputs:**
-
-        * **x_test** (`ndarray`):
-            Points at which to predict the model response.
-
-        **Outputs:**
-
-        * **y** (`ndarray`):
-            Predicted values at the new points.
-
+        :param points: Points at which to predict the model response.
+        :return: Predicted values at the new points.
         """
-
         a = self.regression_method.polynomials.evaluate(points)
 
         if type(self.regression_method) == LeastSquareRegression:

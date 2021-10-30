@@ -8,25 +8,6 @@ from UQpy.distributions.baseclass import DistributionND
 
 
 class MultivariateNormal(DistributionND):
-    """
-    Multivariate normal distribution having probability density function
-
-    .. math:: f(x) = \dfrac{1}{\sqrt{(2\pi)^k\det\Sigma}}\exp{-\dfrac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)}
-
-    where :math:`\mu` is the mean vector, :math:`\Sigma` is the covariance matrix, and :math:`k` is the dimension of
-    `x`.
-
-    **Inputs:**
-
-    * **mean** (`ndarray`):
-        mean vector, `ndarray` of shape `(dimension, )`
-    * **cov** (`float` or `ndarray`):
-        covariance, `float` or `ndarray` of shape `(dimension, )` or `(dimension, dimension)`. Default is 1.
-
-    The following methods are available for ``MVNormal``:
-
-    * ``cdf``, ``pdf``, ``log_pdf``, ``rvs``, ``fit``, ``moments``.
-    """
 
     @beartype
     def __init__(
@@ -34,6 +15,11 @@ class MultivariateNormal(DistributionND):
         mean: Union[None, np.ndarray, list],
         cov: Union[None, int, float, np.ndarray, list[list]] = 1.0,
     ):
+        """
+
+        :param mean: mean vector, `ndarray` of shape `(dimension, )`
+        :param cov: covariance, `float` or `ndarray` of shape `(dimension, )` or `(dimension, dimension)`. Default is 1.
+        """
         if mean is not None and cov is not None:
             if isinstance(cov, (int, float)):
                 pass

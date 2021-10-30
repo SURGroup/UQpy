@@ -4,44 +4,6 @@ from UQpy.utilities import *
 
 
 class KarhunenLoeveExpansion:
-    """
-    A class to simulate stochastic processes from a given auto-correlation function based on the Karhunen-Loeve
-    Expansion
-
-    **Input:**
-
-    * **samples_number** (`int`):
-        Number of samples of the stochastic process to be simulated.
-
-        The ``run`` method is automatically called if `samples_number` is provided. If `samples_number` is not provided,
-        then the ``KarhunenLoeveExpansion`` object is created but samples are not generated.
-
-    * **correlation_function** (`list or numpy.ndarray`):
-        The correlation function of the stochastic process of size (`number_time_intervals`, `number_time_intervals`)
-
-    * **time_interval** (`float`):
-        The length of time discretization.
-
-    * **threshold** (`int`):
-        The threshold number of eigenvalues to be used in the expansion.
-
-    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
-
-        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-        object itself can be passed directly.
-
-    **Attributes:**
-
-    * **samples** (`ndarray`):
-        Array of generated samples.
-
-    * **xi** (`ndarray`):
-        The independent gaussian random variables used in the expansion.
-
-    **Methods**
-    """
-
     # TODO: Test this for non-stationary processes.
 
     def __init__(
@@ -52,6 +14,20 @@ class KarhunenLoeveExpansion:
         threshold=None,
         random_state=None,
     ):
+        """
+        A class to simulate stochastic processes from a given auto-correlation function based on the Karhunen-Loeve
+        Expansion
+
+        :param samples_number: Number of samples of the stochastic process to be simulated.
+         The :meth:`run` method is automatically called if `samples_number` is provided. If `samples_number` is not
+         provided, then the :class:`.KarhunenLoeveExpansion` object is created but samples are not generated.
+        :param correlation_function: The correlation function of the stochastic process of size
+         (`number_time_intervals`, `number_time_intervals`)
+        :param time_interval: The length of time discretization.
+        :param threshold: The threshold number of eigenvalues to be used in the expansion.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
+
+        """
         self.correlation_function = correlation_function
         self.time_interval = time_interval
         if threshold:
@@ -89,29 +65,21 @@ class KarhunenLoeveExpansion:
 
     def run(self, samples_number):
         """
-        Execute the random sampling in the ``KarhunenLoeveExpansion`` class.
+        Execute the random sampling in the :class:`.KarhunenLoeveExpansion` class.
 
-        The ``run`` method is the function that performs random sampling in the ``KLE`` class. If `samples_number` is
-        provided when the ``KarhunenLoeveExpansion`` object is defined, the ``run`` method is automatically called. The
-        user may also call the ``run`` method directly to generate samples. The ``run`` method of the
-        ``KarhunenLoeveExpansion`` class can be invoked many times and each time the generated samples are appended to
+        The :meth:`run` method is the function that performs random sampling in the :class:`.KarhunenLoeveExpansion`` class. If `samples_number` is
+        provided when the :class:`.KarhunenLoeveExpansion` object is defined, the :meth:`run` method is automatically called. The
+        user may also call the :meth:`run` method directly to generate samples. The :meth:`run`` method of the
+        :class:`.KarhunenLoeveExpansion` class can be invoked many times and each time the generated samples are appended to
         the existing samples.
 
-        ** Input:**
+        :param samples_number: Number of samples of the stochastic process to be simulated.
+         If the :meth:`run` method is invoked multiple times, the newly generated samples will be appended to the
+         existing samples.
 
-        * **samples_number** (`int`):
-            Number of samples of the stochastic process to be simulated.
-
-            If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
-            existing samples.
-
-        **Output/Returns:**
-
-            The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the
-            ``KarhunenLoeveExpansion`` class.
-
+        The :meth:`run` method has no returns, although it creates and/or appends the `samples` attribute of the
+        :class:`KarhunenLoeveExpansion` class.
         """
-
         if samples_number is None:
             raise ValueError(
                 "UQpy: Stochastic Process: Number of samples must be defined."

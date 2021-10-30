@@ -7,40 +7,25 @@ from UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion import (
 
 
 class ErrorEstimation:
-    """
-    Class for estimating the error of a polynomial_chaos surrogate, based on a validation
-    dataset.
-
-    **Inputs:**
-
-    * **pce_surrogate** ('class'):
-        Object that defines the surrogate model.
-
-    **Methods:**
-    """
 
     @beartype
     def __init__(self, pce_surrogate: PolynomialChaosExpansion):
+        """
+        Class for estimating the error of a polynomial_chaos surrogate, based on a validation dataset.
+
+        :param pce_surrogate: Object that defines the surrogate model.
+        """
         self.pce_surrogate = pce_surrogate
 
     def validation(self, x, y):
         """
         Returns the validation error.
 
-        **Inputs:**
-
-        * **x** (`ndarray`):
-            `ndarray` containing the samples of the validation dataset.
-
-        * **y** (`ndarray`):
-            `ndarray` containing model evaluations for the validation dataset.
-
-        **Outputs:**
-
-        * **eps_val** (`float`)
-            Validation error.
-
+        :param x: `ndarray` containing the samples of the validation dataset.
+        :param y: `ndarray` containing model evaluations for the validation dataset.
+        :return: Validation error.
         """
+
         if y.ndim == 1 or y.shape[1] == 1:
             y = y.reshape(-1, 1)
 

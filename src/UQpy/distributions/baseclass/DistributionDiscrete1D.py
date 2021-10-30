@@ -5,6 +5,8 @@ from abc import ABC
 
 class DistributionDiscrete1D(Distribution1D, ABC):
     """
+    TODO: Rewrite documentation for this class
+
     Parent class for univariate discrete distributions.
 
     **pmf** *(x)*

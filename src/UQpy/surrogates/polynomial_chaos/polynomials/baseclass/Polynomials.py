@@ -9,107 +9,55 @@ from UQpy.distributions import *
 
 
 class Polynomials:
-    """
-    Class for polynomials used for the polynomial_chaos method.
-
-    **Inputs:**
-
-    * **distributions** ('class'):
-        Object from a distribution class.
-
-    * **degree** ('int'):
-        Maximum degree of the polynomials.
-
-    **Methods:**
-    """
 
     @beartype
     def __init__(self, distributions, degree: int):
+        """
+        Class for polynomials used for the polynomial_chaos method.
+
+        :param distributions: Object from a distribution class.
+        :param degree: Maximum degree of the polynomials.
+        """
         self.distribution = distributions
         self.degree = degree + 1
 
     @staticmethod
     def standardize_normal(tensor, mean, std):
         """
-        Static method: Standardize data based on the standard normal
-        distribution N(0,1).
+        Static method: Standardize data based on the standard normal distribution N(0,1).
 
-        **Input:**
-
-        * **x** (`ndarray`)
-            Input data generated from a normal distribution.
-
-        * **mean** (`list`)
-            Mean value of the original normal distribution.
-
-        * **std** (`list`)
-            Standard deviation of the original normal distribution.
-
-        **Output/Returns:**
-
-        `ndarray`
-            Standardized data.
-
+        :param tensor: Input data generated from a normal distribution.
+        :param mean: Mean value of the original normal distribution.
+        :param std: Standard deviation of the original normal distribution.
+        :return: Standardized data.
         """
         return (tensor - mean) / std
 
     @staticmethod
     def standardize_uniform(tensor, m, scale):
         """
-        Static method: Standardize data based on the uniform distribution
-        U(-1,1).
+        Static method: Standardize data based on the uniform distribution U(-1,1).
 
-        **Input:**
-
-        * **x** (`ndarray`)
-            Input data generated from a normal distribution.
-
-        * **m** (`float`)
-            Mean value of the original uniform distribution.
-
-        * **b** (`list`)
-            Scale of the original uniform distribution.
-
-        **Output/Returns:**
-
-        `ndarray`
-            Standardized data.
-
+        :param tensor: Input data generated from a normal distribution.
+        :param m: Mean value of the original uniform distribution.
+        :param scale: Scale of the original uniform distribution.
+        :return: Standardized data.
         """
         return (tensor - m) / (scale / 2)
 
     @staticmethod
     def normalized(degree, samples, a, b, pdf_st, p):
         """
-        Static method: Calculates design matrix and normalized polynomials.
+        Calculates design matrix and normalized polynomials.
 
-        **Input:**
-
-        * **x** (`ndarray`)
-            Input samples.
-
-        * **a** (`float`)
-            Left bound of the support the distribution.
-
-        * **b** (`floar`)
-            Right bound of the support of the distribution.
-
-        * **pdf_st** (`function`)
-            Pdf function generated from UQpy distribution object.
-
-        * **p** (`list`)
-            List containing the orthogonal polynomials generated with scipy.
-
-        **Output/Returns:**
-
-        * **a** (`ndarray`)
-            Returns the design matrix
-
-        * **pol_normed** (`ndarray`)
-            Returns the normalized polynomials.
-
+        :param degree:
+        :param samples:  Input samples.
+        :param a: Left bound of the support the distribution.
+        :param b: Right bound of the support of the distribution.
+        :param pdf_st: Pdf function generated from UQpy distribution object.
+        :param p: List containing the orthogonal polynomials generated with scipy.
+        :return: Design matrix,normalized polynomials
         """
-
         pol_normed = []
         m = np.zeros((degree, degree))
         for i in range(degree):
@@ -165,15 +113,8 @@ class Polynomials:
         columns the multiplied polynomials whose degree must not exceed the
         maximum degree of polynomials.
 
-        **Inputs:**
-
-        * **x** (`ndarray`):
-            `ndarray` containing the samples.
-
-        **Outputs:**
-
-        * **design** (`ndarray`):
-            Returns an array with the design matrix.
+        :param x: `ndarray` containing the samples.
+        :return: Returns an array with the design matrix.
         """
         if not type(self.distribution) == JointIndependent:
             if type(self.distribution) == Normal:

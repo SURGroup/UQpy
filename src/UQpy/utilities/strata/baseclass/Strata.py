@@ -6,33 +6,17 @@ from UQpy.utilities.ValidationTypes import RandomStateType
 
 
 class Strata:
-    """
-    Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling strata.
-
-    This is the parent class for all spatial stratified_sampling. This parent class only provides the framework for
-    stratification and cannot be used directly for the stratification. Stratification is done by calling the child
-    class for the desired stratification.
-
-
-    **Inputs:**
-
-    * **seeds** (`ndarray`)
-        Define the seed points for the strata. See specific subclass for definition of the seed points.
-
-    * **verbose** (`Boolean`):
-        A boolean declaring whether to write text to the terminal.
-
-    **Attributes:**
-
-    * **seeds** (`ndarray`)
-        Seed points for the strata. See specific subclass for definition of the seed points.
-
-    **Methods:**
-    """
-
     @beartype
     def __init__(self, seeds: Union[None, np.ndarray] = None):
+        """
+        Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling strata.
 
+        This is the parent class for all spatial stratified_sampling. This parent class only provides the framework for
+        stratification and cannot be used directly for the stratification. Stratification is done by calling the child
+        class for the desired stratification.
+
+        :param seeds: Define the seed points for the strata. See specific subclass for definition of the seed points.
+        """
         self.seeds = seeds
         self.volume = None
 
@@ -42,12 +26,8 @@ class Strata:
         Perform the stratification of the unit hypercube. It is overwritten by the subclass. This method must exist in
         any subclass of the ``strata`` class.
 
-        **Outputs/Returns:**
-
-        The method has no returns, but it modifies the relevant attributes of the subclass.
-
+        :param random_state: A random state of either int or numpy.RandomState object required for stratification
         """
-
         pass
 
     @abc.abstractmethod

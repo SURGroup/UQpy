@@ -33,7 +33,6 @@ def test_kriging_constant_exponential():
 
     shutil.rmtree(rmodel.model_dir)
 
-
 def test_kriging_linear_gaussian():
     from UQpy.surrogates.kriging.regression_models.Linear import Linear
     from UQpy.surrogates.kriging.correlation_models.Gaussian import Gaussian

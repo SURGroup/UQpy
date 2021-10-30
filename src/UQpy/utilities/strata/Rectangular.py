@@ -8,73 +8,6 @@ import scipy.stats as stats
 
 
 class Rectangular(Strata):
-    """
-    Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling
-    rectangular strata.
-    ``Rectangular`` is a child class of the ``Strata`` class
-
-    **Inputs:**
-
-    * **strata_number** (`list` of `int`):
-        A list of length `n` defining the number of strata in each of the `n` dimensions. Creates an equal
-        stratification with strata widths equal to 1/`strata_number`. The total number of strata, `N`, is the product
-        of the terms of `strata_number`.
-
-        Example: `strata_number` = [2, 3, 2] creates a 3-dimensional stratification with:\n
-                2 strata in dimension 0 with stratum widths 1/2\n
-                3 strata in dimension 1 with stratum widths 1/3\n
-                2 strata in dimension 2 with stratum widths 1/2\n
-
-        The user must pass one of `strata_number` OR `input_file` OR `seeds` and `widths`
-
-    * **input_file** (`str`):
-        File path to an input file specifying stratum seeds and stratum widths.
-        This is typically used to define irregular stratified designs.
-        The user must pass one of `strata_number` OR `input_file` OR `seeds` and `widths`
-
-    * **seeds** (`ndarray`):
-        An array of dimension `N x n` specifying the seeds of all strata. The seeds of the strata are the
-        coordinates of the stratum orthotope nearest the global origin.
-
-        Example: A 2-dimensional stratification with 2 equal strata in each dimension:
-            `origins` = [[0, 0], [0, 0.5], [0.5, 0], [0.5, 0.5]]
-
-        The user must pass one of `strata_number` OR `input_file` OR `seeds` and `widths`
-
-    * **widths** (`ndarray`):
-        An array of dimension `N x n` specifying the widths of all strata in each dimension
-
-        Example: A 2-dimensional stratification with 2 strata in each dimension
-            `widths` = [[0.5, 0.5], [0.5, 0.5], [0.5, 0.5], [0.5, 0.5]]
-
-        The user must pass one of `strata_number` OR `input_file` OR `seeds` and `widths`
-
-    * **stratification_criterion** (`StratificationCriterion`):
-        An enumeration of type ``StratificationCriterion`` defining the stratification type
-
-
-    **Attributes:**
-
-    * **strata_number** (`list` of `int`):
-        A list of length `n` defining the number of strata in each of the `n` dimensions. Creates an equal
-        stratification with strata widths equal to 1/`strata_number`. The total number of strata, `N`, is the product
-        of the terms of `strata_number`.
-
-    * **seeds** (`ndarray`):
-        An array of dimension `N x n` specifying the seeds of all strata. The seeds of the strata are the
-        coordinates of the stratum orthotope nearest the global origin.
-
-    * **widths** (`ndarray`):
-        An array of dimension `N x n` specifying the widths of all strata in each dimension
-
-    * **volume** (`ndarray`):
-        An array of dimension `(strata_number, )` containing the volume of each stratum. Stratum volumes are equal to
-        the product of the strata widths.
-
-    **Methods:**
-
-    """
-
     @beartype
     def __init__(
         self,
@@ -84,6 +17,30 @@ class Rectangular(Strata):
         widths=None,
         stratification_criterion: StratificationCriterion = StratificationCriterion.RANDOM,
     ):
+        """
+        :param strata_number: A list of length `n` defining the number of strata in each of the `n` dimensions. Creates
+         an equal stratification with strata widths equal to 1/`strata_number`. The total number of strata, `N`, is the
+         product of the terms of `strata_number`.
+        :param input_file: File path to an input file specifying stratum seeds and stratum widths.
+         This is typically used to define irregular stratified designs.
+         The user must pass one of `strata_number` OR `input_file` OR `seeds` and `widths`
+        :param seeds: An array of dimension `N x n` specifying the seeds of all strata. The seeds of the strata are the
+         coordinates of the stratum orthotope nearest the global origin.
+        :param widths: An array of dimension `N x n` specifying the widths of all strata in each dimension
+        :param stratification_criterion: An enumeration of type ``StratificationCriterion`` defining the stratification
+         type
+
+        **Example:**
+         A 2-dimensional stratification with 2 strata in each dimension
+         `widths` = [[0.5, 0.5], [0.5, 0.5], [0.5, 0.5], [0.5, 0.5]]
+
+        **Example:** `strata_number` = [2, 3, 2] creates a 3-dimensional stratification with:\n
+                2 strata in dimension 0 with stratum widths 1/2\n
+                3 strata in dimension 1 with stratum widths 1/3\n
+                2 strata in dimension 2 with stratum widths 1/2\n
+
+        The user must pass one of `strata_number` OR `input_file` OR `seeds` and `widths`
+        """
         super().__init__(seeds=seeds)
 
         self.gradients = None
@@ -96,6 +53,8 @@ class Rectangular(Strata):
     def stratify(self, random_state):
         """
         Performs the rectangular stratification.
+
+        :param random_state: A random state of either int or numpy.RandomState object required for stratification
         """
         self.logger.info("UQpy: Creating Rectangular stratification ...")
 
@@ -134,9 +93,11 @@ class Rectangular(Strata):
 
     @staticmethod
     def fullfact(levels):
-
         """
         Create a full-factorial design
+
+        :param levels: A list of integers that indicate the number of levels of each input design factor.
+        :return: Full-factorial design matrix.
 
         Note: This function has been modified from pyDOE, released under BSD License (3-Clause)\n
         Copyright (C) 2012 - 2013 - Michael Baudin\n
@@ -151,15 +112,6 @@ class Rectangular(Strata):
         or\n
         https://github.com/tisimst/pyDOE/\n
 
-        **Input:**
-
-        * **levels** (`list`):
-            A list of integers that indicate the number of levels of each input design factor.
-
-        **Output:**
-
-        * **ff** (`ndarray`):
-            Full-factorial design matrix.
         """
         # Number of factors
         n_factors = len(levels)

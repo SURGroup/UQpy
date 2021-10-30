@@ -7,60 +7,6 @@ from UQpy.utilities.Utilities import process_random_state
 
 
 class StratifiedSampling:
-    """
-        Class for Stratified Sampling ([9]_).
-
-        This is the parent class for all stratified sampling methods. This parent class only provides the framework for
-        stratified sampling and cannot be used directly for the sampling. Sampling is done by calling the child
-        class for the desired stratification.
-
-        **Inputs:**
-
-        * **distributions** ((list of) ``Distribution`` object(s)):
-            List of ``Distribution`` objects corresponding to each random variable.
-
-        * **strata_object** (``Strata`` object)
-            Defines the stratification of the unit hypercube. This must be provided and must be an object of a
-            ``Strata`` child class: ``Rectangular``, ``Voronoi``, or ``Delaunay``.
-
-        * **samples_per_stratum_number** (`int` or `list`):
-            Specifies the number of samples in each stratum. This must be either an integer, in which case an equal
-            number of samples are drawn from each stratum, or a list. If it is provided as a list, the length of the
-            list must be equal to the number of strata.
-
-            If `samples_per_stratum_number` is provided when the class is defined, the ``run`` method will be executed
-            automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided when the class is
-            defined, the user must call the ``run`` method to perform stratified sampling.
-
-        * **samples_number** (`int`):
-            Specify the total number of samples. If `samples_number` is specified, the samples will be drawn in
-            proportion to the volume of the strata. Thus, each stratum will contain :math:`round(V_i*samples_number)`
-            samples.
-
-            If `samples_number` is provided when the class is defined, the ``run`` method will be executed
-            automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided when the class is
-            defined, the user must call the ``run`` method to perform stratified sampling.
-
-        * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-            Random seed used to initialize the pseudo-random number generator. Default is None.
-
-            If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-            object itself can be passed directly.
-
-        **Attributes:**
-
-        * **samples** (`ndarray`):
-            The generated samples following the prescribed distribution.
-
-        * **samplesU01** (`ndarray`)
-            The generated samples on the unit hypercube.
-
-        * **weights** (`ndarray`)
-            Individual sample weights.
-
-        **Methods:**
-        """
-
     @beartype
     def __init__(
         self,
@@ -70,9 +16,30 @@ class StratifiedSampling:
         strata_object: Strata,
         samples_per_stratum_number: Union[int, list[int]] = None,
         samples_number: int = None,
-        random_state=None,
+        random_state: RandomStateType = None,
     ):
+        """
+        Class for Stratified Sampling ([9]_).
 
+        :param distributions: List of ``Distribution`` objects corresponding to each random variable.
+        :param strata_object: Defines the stratification of the unit hypercube. This must be provided and must be an object of a
+         ``Strata`` child class: ``Rectangular``, ``Voronoi``, or ``Delaunay``.
+        :param samples_per_stratum_number: Specifies the number of samples in each stratum. This must be either an
+         integer, in which case an equal number of samples are drawn from each stratum, or a list. If it is provided as
+         a list, the length of the list must be equal to the number of strata.
+         If `samples_per_stratum_number` is provided when the class is defined, the ``run`` method will be executed
+         automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided when the class is
+         defined, the user must call the ``run`` method to perform stratified sampling.
+        :param samples_number: Specify the total number of samples. If `samples_number` is specified, the samples will
+         be drawn in proportion to the volume of the strata. Thus, each stratum will contain
+         :math:`round(V_i*samples_number)` samples.
+         If `samples_number` is provided when the class is defined, the ``run`` method will be executed
+         automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided when the class is
+         defined, the user must call the ``run`` method to perform stratified sampling.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
+         If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+         object itself can be passed directly.
+        """
         self.logger = logging.getLogger(__name__)
         self.weights = None
         self.strata_object = strata_object
@@ -100,17 +67,9 @@ class StratifiedSampling:
         """
         Transform samples in the unit hypercube :math:`[0, 1]^n` to the prescribed distribution using the inverse CDF.
 
-        **Inputs:**
-
-        * **samplesU01** (`ndarray`):
-            `ndarray` containing the generated samples on [0, 1]^dimension.
-
-        **Outputs:**
-
-        * **samples** (`ndarray`):
-            `ndarray` containing the generated samples following the prescribed distribution.
+        :param samples01: `ndarray` containing the generated samples on [0, 1]^dimension.
+        :return `ndarray` containing the generated samples following the prescribed distribution.
         """
-
         samples_u_to_x = np.zeros_like(samples01)
         for j in range(0, samples01.shape[1]):
             samples_u_to_x[:, j] = self.distributions[j].icdf(samples01[:, j])
@@ -136,29 +95,19 @@ class StratifiedSampling:
         will be executed automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided when
         the class is defined, the user must call the ``run`` method to perform stratified sampling.
 
-        **Input:**
-
-        * **samples_per_stratum_number** (`int` or `list`):
-            Specifies the number of samples in each stratum. This must be either an integer, in which case an equal
-            number of samples are drawn from each stratum, or a list. If it is provided as a list, the length of the
-            list must be equal to the number of strata.
-
-            If `samples_per_stratum_number` is provided when the class is defined, the ``run`` method will be executed
-            automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided when the class is
-            defined, the user must call the ``run`` method to perform stratified sampling.
-
-        * **samples_number** (`int`):
-            Specify the total number of samples. If `samples_number` is specified, the samples will be drawn in
-            proportion to the volume of the strata. Thus, each stratum will contain :math:`round(V_i*samples_number)`
-            samples where :math:`V_i \le 1` is the volume of stratum `i` in the unit hypercube.
-
-            If `samples_number` is provided when the class is defined, the ``run`` method will be executed
-            automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided when the class is
-            defined, the user must call the ``run`` method to perform stratified sampling.
-
-        **Outputs:**
-
-        The ``run`` method has no output, although it modifies the `samples`, `samplesu01`, and `weights` attributes.
+        :param samples_per_stratum_number: Specifies the number of samples in each stratum. This must be either an
+         integer, in which case an equal number of samples are drawn from each stratum, or a list. If it is provided as
+         a list, the length of the list must be equal to the number of strata.
+         If `samples_per_stratum_number` is provided when the class is defined, the ``run`` method will be executed
+         automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided when the class is
+         defined, the user must call the ``run`` method to perform stratified sampling.
+        :param samples_number: Specify the total number of samples. If `samples_number` is specified, the samples will
+         be drawn in proportion to the volume of the strata. Thus, each stratum will contain
+         :math:`round(V_i*samples_number)` samples where :math:`V_i \le 1` is the volume of stratum `i` in the unit
+         hypercube.
+         If `samples_number` is provided when the class is defined, the ``run`` method will be executed
+         automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided when the class is
+         defined, the user must call the ``run`` method to perform stratified sampling.
         """
 
         self.samples_per_stratum_number = samples_per_stratum_number

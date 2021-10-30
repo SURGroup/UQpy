@@ -18,107 +18,6 @@ DistributionList = Annotated[
 
 
 class Nataf:
-    """
-    Transform random variables using the Nataf or Inverse Nataf transformation
-
-    **Inputs:**
-
-    * **distributions** ((list of ) ``Distribution`` object(s)):
-        Probability distribution of each random variable. Must be an object of type
-        ``DistributionContinuous1D`` or ``JointInd``.
-
-    * **corr_x** (`ndarray`):
-        The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
-
-        Default: The identity matrix.
-
-        If ``corr_x`` is specified, the ``Nataf`` class invokes the ITAM to compute ``corr_z``.
-
-    * **corr_z** (`ndarray`):
-        The correlation  matrix (:math:`\mathbf{C_Z}`) of the standard normal random vector **Z** .
-
-        Default: The identity matrix.
-
-        If ``corr_z`` is specified, the ``Nataf`` class computes the correlation distortion integral above to solve for
-        ``corr_x``.
-
-    * **itam_threshold1** (`float`):
-        If ``corr_x`` is specified, this specifies the threshold value for the error in the `ITAM` method (see
-        ``utilities`` module) given by:
-
-        .. math:: \epsilon_1 = ||\mathbf{C_X}^{target} - \mathbf{C_X}^{computed}||
-
-        Default: 0.001
-
-    * **itam_threshold2** (`float`):
-        If ``corr_x`` is specified, this specifies the threshold value for the error difference between iterations in
-        the `ITAM` method (see ``utilities`` module) given by:
-
-        .. math:: \epsilon_1^{i} - \epsilon_1^{i-1}
-
-        for iteration :math:`i`.
-
-        Default: 0.01
-
-    * **itam_beta** (`float`):
-        A parameter selected to optimize convergence speed and desired accuracy of the ITAM method.
-
-        Default: 1.0
-
-    * **samples_x** (`ndarray`):
-            Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.
-
-            If `samples_x` is provided, the ``Nataf`` class transforms them to `samples_z`.
-
-    * **samples_z** (`ndarray`):
-            Standard normal random vector of shape ``(nsamples, dimension)``
-
-            If `samples_z` is provided, the ``Nataf`` class transforms them to `samples_x`.
-
-    * **jacobian** ('Boolean'):
-            A boolean whether to return the jacobian of the transformation.
-
-            Default: False
-
-    * **itam_max_iter** (`int`):
-        Maximum number of iterations for the ITAM method.
-
-        Default: 100
-
-
-    **Attributes:**
-
-    * **corr_z** (`ndarray`):
-        Distorted correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal vector **Z**.
-
-    * **corr_x** (`ndarray`):
-        Distorted correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X**.
-
-    * **H** (`ndarray`):
-        The lower triangular matrix resulting from the Cholesky decomposition of the correlation matrix
-        :math:`\mathbf{C_Z}`.
-
-    * **itam_error1** (`list`)
-        List of ITAM errors for each iteration
-
-    * **itam_error2** (`list`)
-        List of ITAM difference errors for each iteration
-
-    * **samples_x** (`ndarray`):
-        Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.
-
-    * **samples_z** (`ndarray`):
-        Standard normal random vector of shape ``(nsamples, dimension)``
-
-    * **jxz** (`ndarray`):
-        The Jacobian of the transformation of shape ``(dimension, dimension)``.
-
-    * **jzx** (`ndarray`):
-        The Jacobian of the transformation of shape ``(dimension, dimension)``.
-
-
-    **Methods:**
-    """
 
     @beartype
     def __init__(
@@ -134,6 +33,36 @@ class Nataf:
         itam_threshold2: Union[float, int] = 0.1,
         itam_max_iter: int = 100,
     ):
+        """
+        Transform random variables using the Nataf or Inverse Nataf transformation
+
+        :param distributions: Probability distribution of each random variable. Must be an object of type
+         :class:`.DistributionContinuous1D` or :class:`.JointIndependent`.
+        :param samples_x: Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.
+         If `samples_x` is provided, the :class:`.Nataf` class transforms them to `samples_z`.
+        :param samples_z: Standard normal random vector of shape ``(nsamples, dimension)``
+         If `samples_z` is provided, the :class:`.Nataf` class transforms them to `samples_x`.
+        :param jacobian: A boolean whether to return the jacobian of the transformation. Default: False
+        :param corr_z: The correlation  matrix (:math:`\mathbf{C_Z}`) of the standard normal random vector **Z** .
+         Default: The identity matrix.
+         If ``corr_z`` is specified, the :class:`.Nataf` class computes the correlation distortion integral above to
+         solve for ``corr_x``.
+        :param corr_x: The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
+         Default: The identity matrix.
+         If ``corr_x`` is specified, the :class:`.Nataf` class invokes the ITAM to compute ``corr_z``.
+        :param itam_beta: A parameter selected to optimize convergence speed and desired accuracy of the ITAM method.
+         Default: 1.0
+        :param itam_threshold1: If ``corr_x`` is specified, this specifies the threshold value for the error in the
+         `ITAM` method (see :py:mod:`.utilities` module) given by
+         :math:`\epsilon_1 = ||\mathbf{C_X}^{target} - \mathbf{C_X}^{computed}||`
+         Default: 0.001
+        :param itam_threshold2: If ``corr_x`` is specified, this specifies the threshold value for the error difference
+         between iterations in the `ITAM` method (see :py:mod:`.utilities` module) given by
+         :math:`\epsilon_1^{i} - \epsilon_1^{i-1}`
+         for iteration :math:`i`.
+         Default: 0.01
+        :param itam_max_iter: Maximum number of iterations for the ITAM method. Default: 100
+        """
         self.dimension = 0
         if isinstance(distributions, list):
             for i in range(len(distributions)):
@@ -193,21 +122,12 @@ class Nataf:
     ):
         """
         Execute the Nataf transformation or its inverse.
+        If `samples_x` is provided, the :meth:`run` method performs the Nataf transformation. If `samples_z` is
+        provided, the :meth:`run` method performs the inverse Nataf transformation.
 
-        If `samples_x` is provided, the ``run`` method performs the Nataf transformation. If `samples_z` is provided, \
-        the ``run`` method performs the inverse Nataf transformation.
-
-        ** Input:**
-
-        * **samples_x** or **samples_z** (`ndarray`):
-            Random vector **X**  with prescribed probability distributions or standard normal random vector **Z** of
-            shape``(nsamples, dimension)``.
-
-        * **jacobian** (`Boolean`):
-            The jacobian of the transformation of shape ``(dimension, dimension)``.
-
-            Default: ``False``
-
+        :param samples_x: Random vector **X**  with prescribed probability distributions or standard normal random
+         vector **Z** of shape``(nsamples, dimension)``.
+        :param jacobian: The jacobian of the transformation of shape ``(dimension, dimension)``. Default: False
         """
         self.jacobian = jacobian
 
@@ -253,68 +173,23 @@ class Nataf:
         :math:`\mathbf{Z}` given the correlation matrix :math:`\mathbf{C_X}` of the random vector :math:`\mathbf{X}`
         using the `ITAM` method [3]_.
 
-        **Inputs:**
-
-        * **dist_object** ((list of ) ``Distribution`` object(s)):
-            Probability distribution of each random variable. Must be an object of type
-            ``DistributionContinuous1D`` or ``JointInd``.
-
-            `dist_object` must have a ``cdf`` method.
-
-        * **corr_x** (`ndarray`):
-            The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
-
-            Default: The ``identity`` matrix.
-
-        * **itam_threshold1** (`float`):
-            If ``corr_x`` is specified, this specifies the threshold value for the error in the `ITAM` method (see
-            ``utilities`` module) given by:
-
-            .. math:: \epsilon_1 = ||\mathbf{C_X}^{target} - \mathbf{C_X}^{computed}||
-        * **itam_max_iter** (`int`):
-            Maximum number of iterations for the ITAM method.
-
-            Default: 100
-
-        * **itam_threshold1** (`float`):
-            A threshold value for the relative difference between the non-Gaussian correlation function and the
-            underlying Gaussian.
-
-            Default: 0.001
-
-        * **itam_threshold2** (`float`):
-            If ``corr_x`` is specified, this specifies the threshold value for the error difference between iterations
-            in the `ITAM` method (see ``utilities`` module) given by:
-
-            .. math:: \epsilon_1^{i} - \epsilon_1^{i-1}
-
-            for iteration :math:`i`.
-
-            Default: 0.01
-
-        * **itam_beta** (`float`):
-            A parameters selected to optimize convergence speed and desired accuracy of the ITAM method (see [2]_).
-
-            Default: 1.0
-
-        * **verbose** (`Boolean`):
-            A boolean declaring whether to write text to the terminal.
-
-            Default: False
-
-        **Output/Returns:**
-
-        * **corr_z** (`ndarray`):
-            Distorted correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal vector **Z**.
-
-        * **itam_error1** (`list`)
-            List of ITAM errors for each iteration
-
-        * **itam_error2** (`list`)
-            List of ITAM difference errors for each iteration
-
+        :param distributions:  Probability distribution of each random variable. Must be an object of type
+         :class:`.DistributionContinuous1D` or :class:`.JointIndependent`.
+         `dist_object` must have a ``cdf`` method.
+        :param corr_x: The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
+         Default: The ``identity`` matrix.
+        :param itam_max_iter: Maximum number of iterations for the ITAM method. Default: 100
+        :param itam_beta: A parameters selected to optimize convergence speed and desired accuracy of the ITAM method
+         (see [2]_). Default: 1.0
+        :param itam_threshold1: A threshold value for the relative difference between the non-Gaussian correlation
+         function and the underlying Gaussian. Default: 0.001
+        :param itam_threshold2: If ``corr_x`` is specified, this specifies the threshold value for the error difference
+         between iterations in the `ITAM` method (see :py:mod:`.utilities` module) given by:
+         .. math:: \epsilon_1^{i} - \epsilon_1^{i-1}
+         for iteration :math:`i`. Default: 0.01
+        :return: Distorted correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal vector **Z**,
+         List of ITAM errors for each iteration, List of ITAM difference errors for each iteration
         """
-
         # Initial Guess
         corr_z0 = corr_x
         corr_z = np.zeros_like(corr_z0)
@@ -367,31 +242,13 @@ class Nataf:
         :math:`\mathbf{x}`  given the correlation matrix :math:`\mathbf{C_z}` of the standard normal random vector
         :math:`\mathbf{z}`.
 
-        This method is part of the ``Nataf`` class.
-
-        **Inputs:**
-
-        * **dist_object** ((list of ) ``Distribution`` object(s)):
-                Probability distribution of each random variable. Must be an object of type
-                ``DistributionContinuous1D`` or ``JointInd``.
-
-                **dist_object** must have an ``icdf`` method.
-
-        * **corr_z** (`ndarray`):
-            The correlation  matrix (:math:`\mathbf{C_z}`) of the standard normal vector **Z** .
-
-            Default: The ``identity`` matrix.
-
-        * **verbose** (`Boolean`):
-            A boolean declaring whether to write text to the terminal.
-
-            Default: ``False``
-
-        **Output/Returns:**
-
-        * **corr_x** (`ndarray`):
-            Distorted correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X**.
-
+        :param distributions: This is a method to calculate the correlation matrix :math:`\mathbf{C_x}` of the random vector
+         :math:`\mathbf{x}`  given the correlation matrix :math:`\mathbf{C_z}` of the standard normal random vector
+         :math:`\mathbf{z}`.
+         This method is part of the :class:`.Nataf` class.
+        :param corr_z: The correlation  matrix (:math:`\mathbf{C_z}`) of the standard normal vector **Z** .
+         Default: The ``identity`` matrix.
+        :return: Distorted correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X**.
         """
         logger = logging.getLogger(__name__)
         z_max = 8
@@ -451,26 +308,11 @@ class Nataf:
         samples  according to: :math:`Z_{i}=\Phi^{-1}(F_i(X_{i}))`, where :math:`\Phi` is the cumulative
         distribution function of a standard  normal variable.
 
-        This method is part of the ``Nataf`` class.
-
-        **Inputs:**
-
-        * **samples_x** (`ndarray`):
-            Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.
-
-        * **jacobian** ('Boolean'):
-            A boolean whether to return the jacobian of the transformation.
-
-            Default: False
-
-        **Outputs:**
-
-        * **samples_z** (`ndarray`):
-            Standard normal random vector of shape ``(nsamples, dimension)``.
-
-        * **jxz** (`ndarray`):
-            The jacobian of the transformation of shape ``(dimension, dimension)``.
-
+        :param samples_x: Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.
+        :param jacobian: A boolean whether to return the jacobian of the transformation.
+         Default: False
+        :return: Standard normal random vector of shape ``(nsamples, dimension)``, the jacobian of the transformation of
+         shape ``(dimension, dimension)``.
         """
 
         m, n = np.shape(samples_x)
@@ -513,28 +355,11 @@ class Nataf:
         :math:`F_i(x_i)` to samples  according to: :math:`Z_{i}=\Phi^{-1}(F_i(X_{i}))`, where :math:`\Phi` is the
         cumulative distribution function of a standard  normal variable.
 
-        This method is part of the ``Nataf`` class.
-
-        **Inputs:**
-
-        * **samples_z** (`ndarray`):
-            Standard normal random vector of shape ``(nsamples, dimension)``
-
-        * **jacobian** (`Boolean`):
-            A boolean whether to return the jacobian of the transformation.
-
-            Default: False
-
-        **Outputs:**
-
-        * **samples_x** (`ndarray`):
-            Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.
-
-        * **jzx** (`ndarray`):
-            The jacobian of the transformation of shape ``(dimension, dimension)``.
-
+        :param samples_z: Standard normal random vector of shape ``(nsamples, dimension)``
+        :param jacobian: A boolean whether to return the jacobian of the transformation. Default: False
+        :return: Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions,
+         The jacobian of the transformation of shape ``(dimension, dimension)``.
         """
-
         m, n = np.shape(samples_z)
         h = cholesky(self.corr_z, lower=True)
         # samples_z = (h @ samples_y.T).T
@@ -573,16 +398,8 @@ class Nataf:
         """
         Generate realizations from the joint pdf of the random vector **X**.
 
-        **Inputs:**
-
-        * **nsamples** (`int`):
-            Number of samples to generate.
-
-        **Outputs:**
-
-        * **samples_x** (`ndarray`):
-            Random vector in the parameter space of shape ``(nsamples, dimension)``.
-
+        :param samples_number: Number of samples to generate.
+        :return: Random vector in the parameter space of shape ``(nsamples, dimension)``.
         """
         h = cholesky(self.corr_z, lower=True)
         n = int(samples_number)

@@ -13,70 +13,6 @@ from UQpy.inference.InformationTheoreticCriterion import *
 
 
 class InformationModelSelection:
-    """
-    Perform model selection using information theoretic criteria.
-
-    Supported criteria are BIC, AIC (default), AICc. This class leverages the ``MLEstimation`` class for maximum
-    likelihood estimation, thus inputs to ``MLEstimation`` can also be provided to ``InfoModelSelection``, as lists of
-    length equal to the number of models.
-
-
-    **Inputs:**
-
-    * **candidate_models** (`list` of ``InferenceModel`` objects):
-        Candidate models
-
-    * **data** (`ndarray`):
-        Available data
-
-    * **criterion** (`str`):
-        Criterion to be used ('AIC', 'BIC', 'AICc'). Default is 'AIC'
-
-    * **kwargs**:
-        Additional keyword inputs to the maximum likelihood estimators.
-
-        Keys must refer to input names to the ``MLEstimation`` class, and values must be lists of length `nmodels`,
-        ordered in the same way as input `candidate_models`. For example, setting
-        `kwargs={`method': [`Nelder-Mead', `Powell']}` means that the Nelder-Mead minimization algorithm will be used
-        for ML estimation of the first candidate model, while the Powell method will be used for the second candidate
-        model.
-
-    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
-
-        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-        object itself can be passed directly.
-
-    * **x0** (`list` of `ndarrays`):
-        Starting points for optimization - see ``MLEstimation``
-
-    * **nopt** (`list` of `int`):
-        Number of iterations for the maximization procedure - see ``MLEstimation``
-
-    If `x0` and `nopt` are both `None`, the object is created but the model selection procedure is not run, one
-    must then call the ``run`` method.
-
-    **Attributes:**
-
-    * **ml_estimators** (`list` of `MLEstimation` objects):
-        ``MLEstimation`` results for each model (contains e.g. fitted parameters)
-
-    * **criterion_values** (`list` of `floats`):
-        Value of the criterion for all models.
-
-    * **penalty_terms** (`list` of `floats`):
-        Value of the penalty term for all models. Data fit term is then criterion_value - penalty_term.
-
-    * **probabilities** (`list` of `floats`):
-        Value of the model probabilities, computed as
-
-        .. math:: P(M_i|d) = \dfrac{\exp(-\Delta_i/2)}{\sum_i \exp(-\Delta_i/2)}
-
-        where :math:`\Delta_i = criterion_i - min_i(criterion)`
-
-    **Methods:**
-
-    """
 
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
@@ -91,7 +27,21 @@ class InformationModelSelection:
         optimizations_number: Union[PositiveInteger, None] = None,
         initial_guess: list[np.ndarray] = None,
     ):
+        """
+        Perform model selection using information theoretic criteria.
 
+        Supported criteria are BIC, AIC (default), AICc. This class leverages the ``MLEstimation`` class for maximum
+        likelihood estimation, thus inputs to ``MLEstimation`` can also be provided to ``InfoModelSelection``, as lists of
+        length equal to the number of models.
+
+        :param candidate_models: Candidate models
+        :param data: Available data
+        :param optimizer:
+        :param criterion: Criterion to be used ('AIC', 'BIC', 'AICc'). Default is 'AIC'
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
+        :param optimizations_number: Number of iterations for the maximization procedure - see ``MLEstimation``
+        :param initial_guess: Starting points for optimization - see ``MLEstimation``
+        """
         if not isinstance(candidate_models, (list, tuple)) or not all(
             isinstance(model, InferenceModel) for model in candidate_models
         ):
@@ -139,16 +89,10 @@ class InformationModelSelection:
         This function calls the ``run`` method of the ``MLEstimation`` object for each model to compute the maximum
         log-likelihood, then computes the criterion value and probability for each model.
 
-        **Inputs:**
-
-        * **x0** (`list` of `ndarrays`):
-            Starting point(s) for optimization for all models. Default is `None`. If not provided, see `nopt`. See
-            ``MLEstimation`` class.
-
-        * **nopt** (`int` or `list` of `ints`):
-            Number of iterations that the optimization is run, starting at random initial guesses. It is only used if
-            `x0` is not provided. Default is 1. See ``MLEstimation`` class.
-
+        :param optimizations_number: Number of iterations that the optimization is run, starting at random initial
+         guesses. It is only used if `x0` is not provided. Default is 1. See ``MLEstimation`` class.
+        :param initial_guess: Starting point(s) for optimization for all models. Default is `None`. If not provided, see
+         `nopt`. See ``MLEstimation`` class.
         """
         initial_guess, optimizations_number = self._check_input_data(
             initial_guess, optimizations_number
@@ -232,30 +176,20 @@ class InformationModelSelection:
         The criterion value is -2 * max_log_like + penalty, the penalty depends on the chosen criterion. This function
         is a utility function (static method), called within the run_estimation method.
 
-        **Inputs:**
-
         :param criterion: Chosen criterion.
         :type criterion: str
-
         :param data: Available data.
         :type data: ndarray
-
         :param inference_model: inference model.
         :type inference_model: object of class InferenceModel
-
         :param max_log_like: Value of likelihood function at MLE.
         :type max_log_like: float
-
-        :param return_penalty: Boolean that sets whether to return the penalty term as additional output.
-
-                               Default is False
+        :param return_penalty: Boolean that sets whether to return the penalty term as additional output. Default is
+         False
         :type return_penalty: bool
-
-        **Output/Returns:**
 
         :return criterion_value: Value of criterion.
         :rtype criterion_value: float
-
         :return penalty_term: Value of penalty term.
         :rtype penalty_term: float
 
@@ -276,13 +210,8 @@ class InformationModelSelection:
         Model probability is proportional to exp(-criterion/2), model probabilities over all models sum up to 1. This
         function is a utility function (static method), called within the run_estimation method.
 
-        **Inputs:**
-
         :param criterion_values: Values of criterion for all models.
         :type criterion_values: list (length nmodels) of floats
-
-        **Output/Returns:**
-
         :return probabilities: Values of model probabilities
         :rtype probabilities: list (length nmodels) of floats
 

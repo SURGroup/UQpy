@@ -7,58 +7,6 @@ from UQpy.transformations import *
 
 
 class TaylorSeries:
-    """
-    Perform First and Second Order reliability (FORM/SORM) methods.
-    This is the parent class to all Taylor series expansion algorithms.
-
-    **Input:**
-
-    * **distributions** ((list of ) ``Distribution`` object(s)):
-        Marginal probability distributions of each random variable. Must be an object of type
-        ``DistributionContinuous1D`` or ``JointInd``.
-
-    * **runmodel_object** (``RunModel`` object):
-        The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).
-
-    * **form_object** (``FORM`` object):
-        It should be of type ``FORM`` (see ``FORM`` class). Used to calculate SORM correction.
-
-    * **corr_z** or **corr_x** (`ndarray`):
-        Covariance matrix
-        If `corr_x` is provided, it is the correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
-        If `corr_z` is provided, it is the correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal random
-        vector **Z** .
-        Default: `corr_z` is specified as the identity matrix.
-
-    * **seed_u** or **seed_x** (`ndarray`):
-        The initial starting point for the `Hasofer-Lind` algorithm.
-        Either `seed_u` or `seed_x` must be provided.
-        If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
-        If `seed_x` is provided, it should be a point in the parameter space of **X**.
-        Default: `seed_u = (0, 0, ..., 0)`
-
-    * **tol1** (`float`):
-        Convergence threshold for criterion `e1` of the `HLRF` algorithm.
-        Default: 1.0e-3
-
-    * **tol2** (`float`):
-        Convergence threshold for criterion `e2` of the `HLRF` algorithm.
-        Default: 1.0e-3
-
-    * **tol3** (`float`):
-        Convergence threshold for criterion `e3` of the  `HLRF` algorithm.
-        Default: 1.0e-3
-
-    * **iterations_number** (`int`):
-        Maximum number of iterations for the `HLRF` algorithm.
-        Default: 100
-
-    * **df_step** ('float'):
-        Finite difference step in standard normal space.
-        Default: 0.01 (see `derivatives` class)
-
-    **Methods:**
-    """
 
     @beartype
     def __init__(
@@ -76,7 +24,30 @@ class TaylorSeries:
         tol3: Union[None, float, int] = None,
         df_step: Union[None, float, int] = None,
     ):
+        """
+        Perform First and Second Order reliability (FORM/SORM) methods.
+        This is the parent class to all Taylor series expansion algorithms.
 
+        :param distributions: Marginal probability distributions of each random variable. Must be an object of type
+         :class:`.DistributionContinuous1D` or :class:`.JointIndependent`.
+        :param runmodel_object: The computational model. It should be of type :class:`RunModel`.
+        :param form_object: It should be of type :class:`FORM`. Used to calculate SORM correction.
+        :param corr_x: Covariance matrix
+         If `corr_x` is provided, it is the correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
+         If `corr_z` is provided, it is the correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal random
+         vector **Z** .
+         Default: `corr_z` is specified as the identity matrix.
+        :param seed_u: The initial starting point for the `Hasofer-Lind` algorithm.
+         Either `seed_u` or `seed_x` must be provided.
+         If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
+         If `seed_x` is provided, it should be a point in the parameter space of **X**.
+         Default: `seed_u = (0, 0, ..., 0)`
+        :param iterations_number: Maximum number of iterations for the `HLRF` algorithm. Default: 100
+        :param tol1: Convergence threshold for criterion `e1` of the `HLRF` algorithm. Default: 1.0e-3
+        :param tol2: Convergence threshold for criterion `e2` of the `HLRF` algorithm. Default: 1.0e-3
+        :param tol3: Convergence threshold for criterion `e3` of the  `HLRF` algorithm. Default: 1.0e-3
+        :param df_step: Finite difference step in standard normal space. Default: 0.01 (see `derivatives` class)
+        """
         if form_object is None:
             if isinstance(distributions, list):
                 self.dimension = len(distributions)
@@ -134,53 +105,24 @@ class TaylorSeries:
     ):
         """
         A method to estimate the derivatives (1st-order, 2nd-order, mixed) of a function using a central difference
-        scheme after transformation to the standard normal space.
-        This is a static method of the ``FORM`` class.
+        scheme after transformation to the standard normal space. This is a static method of the :class:`.FORM` class.
 
-        **Inputs:**
-
-        * **point_u** (`ndarray`):
-            Point in the uncorrelated standard normal space at which to evaluate the gradient with shape
-            `samples.shape=(1, dimension)`.
-            Either `point_u` or `point_x` must be specified. If `point_u` is specified, the derivatives are computed
-            directly.
-
-        * **point_x** (`ndarray`):
-            Point in the parameter space at which to evaluate the model with shape
-            `samples.shape=(1, dimension)`.
-            Either `point_u` or `point_x` must be specified. If `point_x` is specified, the variable is transformed to
-            standard normal using the ``Nataf`` transformation and derivatives are computed.
-
-        * **runmodel_object** (``RunModel`` object):
-            The computational model. It should be of type ``RunModel`` (see ``RunModel`` class).
-
-        * **nataf_object** (``Nataf`` object):
-            An object of the ``Nataf`` class (see ``Nataf`` class).
-
-        * **order** (`str`):
-            Order of the derivative. Available options: 'first', 'second', 'mixed'.
-            Default: 'first'.
-
-        * **point_qoi** (`float`):
-            Value of the model evaluated at ``point_u``. Used only for second derivatives.
-
-        * **df_step** (`float`):
-            Finite difference step in standard normal space.
-            Default: 0.01
-
-        **Output/Returns:**
-
-        * **du_dj** (`ndarray`):
-            Vector of first-order derivatives (if order = 'first').
-
-        * **d2u_dj** (`ndarray`):
-            Vector of second-order derivatives (if order = 'second').
-
-        * **d2u_dij** (`ndarray`):
-            Vector of mixed derivatives (if order = 'mixed').
-
+        :param point_u: Point in the uncorrelated standard normal space at which to evaluate the gradient with shape
+         `samples.shape=(1, dimension)`. Either `point_u` or `point_x` must be specified. If `point_u` is specified,
+          the derivatives are computed directly.
+        :param runmodel_object: The computational model. It should be of type :class:`RunModel` .
+        :param nataf_object: An object of the :class:`.Nataf` class .
+        :param order: Order of the derivative. Available options: 'first', 'second', 'mixed'. Default: 'first'.
+        :param point_x: Point in the parameter space at which to evaluate the model with shape
+         `samples.shape=(1, dimension)`. Either `point_u` or `point_x` must be specified. If `point_x` is specified,
+         the variable is transformed to standard normal using the :class:`.Nataf` transformation and derivatives are computed.
+        :param point_qoi: Value of the model evaluated at ``point_u``. Used only for second derivatives.
+        :param df_step: Finite difference step in standard normal space. Default: 0.01
+        :return:
+         Vector of first-order derivatives (if order = 'first').
+         Vector of second-order derivatives (if order = 'second').
+         Vector of mixed derivatives (if order = 'mixed').
         """
-
         if point_u is None and point_x is None:
             raise TypeError("UQpy: Either `point_u` or `point_x` must be specified.")
 

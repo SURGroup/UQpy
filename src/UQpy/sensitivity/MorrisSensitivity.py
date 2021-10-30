@@ -18,60 +18,6 @@ from scipy.stats import randint
 
 
 class MorrisSensitivity:
-    """
-    Compute sensitivity indices based on the Morris screening method.
-
-    **Inputs:**
-
-    * **runmodel_object** (``RunModel`` object):
-        The computational model. It should be of type ``RunModel`` (see ``RunModel`` class). The output QoI can be a
-        scalar or vector of length `ny`, then the sensitivity indices of all `ny` outputs are computed independently.
-
-    * **dist_object** ((list of) ``Distribution`` object(s)):
-        List of ``Distribution`` objects corresponding to each random variable, or ``JointInd`` object (multivariate RV
-        with independent marginals).
-
-    * **nlevels** (`int`):
-        Number of levels that define the grid over the hypercube where evaluation points are sampled. Must be an
-        integer >= 3.
-
-    * **delta** (`float`):
-        Size of the jump between two consecutive evaluation points, must be a multiple of delta should be in
-        `{1/(nlevels-1), ..., 1-1/(nlevels-1)}`.
-
-        Default: :math:`delta=\\frac{nlevels}{2 * (nlevels-1)}` if nlevels is even, delta=0.5 if nlevels is odd.
-
-    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
-
-    * **ntrajectories** (`int`):
-        Number of random trajectories, usually chosen between 5 and 10. The number of model evaluations is
-        `ntrajectories * (d+1)`. If None, the `Morris` object is created but not run (see `run` method)
-
-    * **kwargs**:
-        Additional key-word arguments transferred to the ``sample_trajectories`` method that samples trajectories where
-        to evaluate the model.
-
-    **Attributes:**
-
-    * **elementary_effects** (`ndarray`):
-        Elementary effects :math:`EE_{k}`, `ndarray` of shape `(ntrajectories, d, ny)`.
-
-    * **mustar_indices** (`ndarray`):
-        First Morris sensitivity index :math:`\mu_{k}^{\star}`, `ndarray` of shape `(d, ny)`
-
-    * **sigma_indices** (`ndarray`):
-        Second Morris sensitivity index :math:`\sigma_{k}`, `ndarray` of shape `(d, ny)`
-
-    * **trajectories_unit_hypercube** (`ndarray`):
-        Trajectories in the unit hypercube, `ndarray` of shape `(ntrajectories, d+1, d)`
-
-    * **trajectories_physical_space** (`ndarray`):
-        Trajectories in the physical space, `ndarray` of shape `(ntrajectories, d+1, d)`
-
-    **Methods:**
-    """
-
     @beartype
     def __init__(
         self,
@@ -83,7 +29,24 @@ class MorrisSensitivity:
         trajectories_number: PositiveInteger = None,
         maximize_dispersion: bool = False,
     ):
+        """
+        Compute sensitivity indices based on the Morris screening method.
 
+        :param runmodel_object: The computational model. It should be of type :class:`.RunModel`. The
+         output QoI can be a scalar or vector of length `ny`, then the sensitivity indices of all `ny` outputs are
+         computed independently.
+        :param distributions: List of :class:`.Distribution` objects corresponding to each random variable, or
+         :class:`.JointIndependent` object (multivariate RV with independent marginals).
+        :param levels_number: Number of levels that define the grid over the hypercube where evaluation points are
+         sampled. Must be an integer >= 3.
+        :param delta: Size of the jump between two consecutive evaluation points, must be a multiple of delta should be
+         in `{1/(nlevels-1), ..., 1-1/(nlevels-1)}`.
+         Default: :math:`delta=\\frac{nlevels}{2 * (nlevels-1)}` if nlevels is even, delta=0.5 if nlevels is odd.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
+        :param trajectories_number: Number of random trajectories, usually chosen between 5 and 10. The number of model
+         evaluations is `ntrajectories * (d+1)`. If None, the `Morris` object is created but not run (see `run` method)
+        :param maximize_dispersion:
+        """
         # Check RunModel object and distributions
         self.runmodel_object = runmodel_object
         marginals = (
@@ -147,13 +110,8 @@ class MorrisSensitivity:
         `sample_trajectories`), then runs the forward model to compute the elementary effects (method
         `_compute_elementary_effects`), and finally computes the sensitivity indices (method `_compute_indices`).
 
-        **Inputs:**
-
-        * **ntrajectories** (`int`):
-            Number of random trajectories. Usually chosen between 5 and 10. The number of model evaluations is
-            `ntrajectories * (d+1)`.
-
-
+        :param trajectories_number: Number of random trajectories. Usually chosen between 5 and 10. The number of model
+         evaluations is `trajectories_number * (d+1)`.
         """
         # Compute trajectories and elementary effects - append if any already exist
         (
@@ -201,16 +159,12 @@ class MorrisSensitivity:
         """
         Create the trajectories, first in the unit hypercube then transform them in the physical space.
 
-        * **ntrajectories** (`int`):
-            Number of random trajectories. Usually chosen between 5 and 10. The number of model evaluations is
-            `ntrajectories * (d+1)`.
-
-        * **maximize_dispersion** (`bool`):
-            If True, generate a large number of design trajectories and keep the ones that maximize dispersion between
-            all trajectories, allows for a better coverage of the input space.
-
-            Default False.
+        :param trajectories_number: Number of random trajectories. Usually chosen between 5 and 10. The number of model
+         evaluations is `trajectories_number * (d+1)`.
+        :param maximize_dispersion: If True, generate a large number of design trajectories and keep the ones that
+         maximize dispersion between all trajectories, allows for a better coverage of the input space. Default False.
         """
+
         trajectories_unit_hypercube = []
         perms_indices = []
         ntrajectories_all = (

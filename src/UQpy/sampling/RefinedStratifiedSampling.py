@@ -6,17 +6,12 @@ from UQpy.utilities.Utilities import process_random_state
 
 class RefinedStratifiedSampling:
     """
-    Parent class for Refined Stratified Sampling [10]_, [11]_.
-    This is the parent class for all refined stratified sampling methods. This parent class only provides the
-    framework for refined stratified sampling and cannot be used directly for the sampling. Sampling is done by
-    calling the child class for the desired algorithm.
+
 
     **Inputs:**
 
     * **sample_object** (``SampleMethods`` object(s)):
-        Generally, this must be an object of a ``UQpy.SampleMethods`` class. Each child class of ``RefinedStratifiedSampling`` has it's
-        own constraints on which specific types of ``SampleMethods`` it can accept. These are described in the child
-        class documentation below.
+
 
     * **runmodel_object** (``RunModel`` object):
         A ``RunModel`` object, which is used to evaluate the model.
@@ -53,19 +48,14 @@ class RefinedStratifiedSampling:
         Used only in gradient-enhanced refined stratified sampling.
 
     * **n_add** (`int`):
-        Number of samples to be added per iteration.
+
         Default: 1.
 
     * **nsamples** (`int`):
-        Total number of samples to be drawn (including the initial samples).
-        If `nsamples` is provided when instantiating the class, the ``run`` method will automatically be called. If
-        `nsamples` is not provided, an ``RSS`` subclass can be executed by invoking the ``run`` method and passing
-        `nsamples`.
+        .
 
     * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
-        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-        object itself can be passed directly.
+
 
     **Attributes:**
     Each of the above inputs are saved as attributes, in addition to the following created attributes.
@@ -95,6 +85,21 @@ class RefinedStratifiedSampling:
         samples_per_iteration: int = 1,
         random_state: RandomStateType = None,
     ):
+        """
+
+        :param stratified_sampling: Generally, this must be an object of a ``UQpy.SampleMethods`` class. Each child
+         class of ``RefinedStratifiedSampling`` has it's own constraints on which specific types of ``SampleMethods``
+         it can accept. These are described in the child class documentation below.
+        :param refinement_algorithm: TODO
+        :param samples_number: Total number of samples to be drawn (including the initial samples).
+         If `samples_number` is provided when instantiating the class, the ``run`` method will automatically be called.
+         If `samples_number` is not provided, an ``RSS`` subclass can be executed by invoking the ``run`` method and
+         passing `samples_number`
+        :param samples_per_iteration: Number of samples to be added per iteration.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
+         If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+         object itself can be passed directly.
+        """
         self.stratified_sampling = stratified_sampling
         self.samples_per_iteration = samples_per_iteration
         self.refinement_algorithm = refinement_algorithm

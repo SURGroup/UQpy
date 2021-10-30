@@ -13,35 +13,19 @@ from UQpy.distributions.baseclass import (
 
 
 class JointCopula(DistributionND):
-    """
-    Define a joint distribution from a list of marginals and a copula to introduce dependency. ``JointCopula`` is a
-    child class of ``DistributionND``.
-
-    **Inputs:**
-
-    * **marginals** (`list`):
-        `list` of ``DistributionContinuous1D`` or ``DistributionDiscrete1D`` objects that define the marginals
-
-    * **copula** (`object`):
-        object of class ``Copula``
-
-    A ``JointCopula`` distribution may possess a ``cdf``, ``pdf`` and ``log_pdf`` methods if the copula allows for it
-    (i.e., if the copula possesses the necessary ``evaluate_cdf`` and ``evaluate_pdf`` methods).
-
-    The parameters of the distribution are only stored as attributes of the marginals/copula objects. However, the
-    ``get_parameters`` and ``update_parameters`` methods can still be used for the joint. Note that each parameter of
-    the joint is assigned a unique string identifier as `key_index` - where `key` is the parameter name and `index` the
-    index of the marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`); and `key_c` for
-    copula parameters.
-
-    """
-
     @beartype
     def __init__(
         self,
         marginals: Union[list[DistributionContinuous1D], list[DistributionDiscrete1D]],
         copula: Copula,
     ):
+        """
+
+        :param list[Union[DistributionContinuous1D, DistributionDiscrete1D]] marginals:
+         list of distribution objects that define the marginals
+
+        :param Copula copula: copula object
+        """
         super().__init__()
         self.ordered_parameters = []
         for i, m in enumerate(marginals):
@@ -142,17 +126,14 @@ class JointCopula(DistributionND):
 
     def get_parameters(self):
         """
-        Return the parameters of a ``distributions`` object.
+        Return the parameters of a :class:`.Distributions` object.
 
-        To update the parameters of a ``JointIndependent`` or a ``JointCopula`` distribution, each parameter is assigned
-        a unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
-        marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
+        To update the parameters of a :class:`.JointIndependent` or a :class:`.JointCopula` distribution, each parameter
+        is assigned a unique string identifier as `key_index` - where `key` is the parameter name and `index` the index
+        of the marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
-        **Output/Returns:**
-
-        * (`dict`):
-            Parameters of the distribution.
-
+        :return: Parameters of the distribution.
+        :rtype: dict
         """
         params = {}
         for i, m in enumerate(self.marginals):
@@ -164,17 +145,14 @@ class JointCopula(DistributionND):
 
     def update_parameters(self, **kwargs):
         """
-        Update the parameters of a ``distributions`` object.
+        Update the parameters of a :class:`.Distributions` object.
 
         To update the parameters of a ``JointIndependent`` or a ``JointCopula`` distribution, each parameter is assigned
         a unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
         marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
-        **Input:**
-
-        * keyword arguments:
-            Parameters to be updated
-
+        :param dict kwargs: Parameters to be updated
+        :raises ValueError: if kwargs contains key that does not already exist.
         """
         # check arguments
         all_keys = self.get_parameters().keys()

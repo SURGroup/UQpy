@@ -47,7 +47,8 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx_autodoc_typehints"
 ]
-
+autoclass_content = 'init'
+napoleon_use_param = True
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
@@ -65,7 +66,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 language = None
 pygments_style = None
 
-html_theme = "alabaster"
+html_theme = "sphinx_rtd_theme"
 
 html_theme_options = {
     "github_user": "SURG",
@@ -174,4 +175,5 @@ epub_exclude_files = ["search.html"]
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "numpy": ("https://docs.scipy.org/doc/numpy/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
 }
