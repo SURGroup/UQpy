@@ -22,11 +22,11 @@ class MonteCarloSampling:
         Perform Monte Carlo sampling (MCS) of random variables.
 
         :param Union[Distribution, list[Distribution]] distributions: Probability distribution of each random variable.
-        :param samples_number: Number of samples to be drawn from each distribution. The ``run`` method is automatically
-         called if `samples_number` is provided. If `samples_number` is not provided,
-         then the ``MonteCarloSampling`` object is created but samples are not generated.
+        :param samples_number: Number of samples to be drawn from each distribution. The :meth:`run` method is
+         automatically called if `samples_number` is provided. If `samples_number` is not provided,
+         then the :class:`.MonteCarloSampling` object is created but samples are not generated.
         :param random_state: Random seed used to initialize the pseudo-random number generator. If an integer is
-         provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+         provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
          object itself can be passed directly.
 
 
@@ -77,17 +77,17 @@ class MonteCarloSampling:
         self, samples_number: PositiveInteger, random_state: RandomStateType = None
     ):
         """
-        Execute the random sampling in the ``MonteCarloSampling`` class.
+        Execute the random sampling in the :class:`.MonteCarloSampling` class.
 
-        The ``run`` method is the function that performs random sampling in the ``MonteCarloSampling`` class. If
-        `samples_number` is provided, the ``run`` method is automatically called when the ``MonteCarloSampling`` object
-        is defined. The user may also call the ``run`` method directly to generate samples. The ``run`` method of the
-        ``MonteCarloSampling`` class can be  invoked many times and each time the generated samples are appended to the
-        existing samples.
+        The :meth:`run` method is the function that performs random sampling in the :class:`.MonteCarloSampling` class.
+        If `samples_number` is provided, the :meth:`run` method is automatically called when the
+        :class:`MonteCarloSampling` object is defined. The user may also call the :meth:`run` method directly to
+        generate samples. The :meth:`run` method of the :class:`.MonteCarloSampling` class can be  invoked many times
+        and each time the generated samples are appended to the existing samples.
 
         :param samples_number: Number of samples to be drawn from each distribution.
 
-         If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
+         If the :meth:`run` method is invoked multiple times, the newly generated samples will be appended to the
          existing samples.
         :param random_state: Random seed used to initialize the pseudo-random number generator.
         """
@@ -147,8 +147,8 @@ class MonteCarloSampling:
         """
         Transform random samples to uniform on the unit hypercube.
 
-        The ``transform_u01`` method has no returns, although it creates and/or appends the `samplesU01` attribute of
-        the ``MonteCarloSampling`` class.
+        The :meth:`transform_u01` method has no returns, although it creates and/or appends the `samplesU01` attribute
+        of the :meth:`.MonteCarloSampling` class.
         """
         if isinstance(self.dist_object, list) and self.array is True:
             zi = np.zeros_like(self.samples)

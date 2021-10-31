@@ -20,21 +20,22 @@ class LatinHypercubeSampling:
         """
         Perform Latin hypercube sampling (LHS) of random variables.
 
-        All distributions in ``LatinHypercubeSampling`` must be independent. ``LatinHypercubeSampling`` does not
-        generate correlated random variables. Therefore, for multi-variate designs the `dist_object` must be a list of
-        ``DistributionContinuous1D`` objects or an object of the ``JointIndependent`` class.
+        All distributions in :class:`LatinHypercubeSampling` must be independent. :class:`.LatinHypercubeSampling` does
+        not generate correlated random variables. Therefore, for multi-variate designs the `distributions` must be a
+        list of :class:`.DistributionContinuous1D` objects or an object of the :class:`.JointIndependent` class.
 
 
-        :param Union[Distribution, list[Distribution]] distributions: List of ``Distribution`` objects corresponding to
-         each random variable.
+        :param Union[Distribution, list[Distribution]] distributions: List of :class:`.Distribution` objects
+         corresponding to each random variable.
         :param int samples_number: Number of samples to be drawn from each distribution.
-        :param Criterion criterion: The criterion for pairing the generating sample points.
+        :param Criterion criterion: The criterion for pairing the generating sample points. This parameter must be of
+         type :class:`.Criterion`.
          Options:
                 1. 'Random' - completely random. \n
                 2. 'Centered' - points only at the centre. \n
                 3. 'MaxiMin' - maximizing the minimum distance between points. \n
                 4. 'MinCorrelation' - minimizing the correlation between the points. \n
-                5. User-defined criterion class.
+                5. User-defined criterion class, by providing an implementation of the abstract class :class:`Criterion`
         """
         self.dist_object = distributions
         self.criterion = criterion
@@ -58,18 +59,19 @@ class LatinHypercubeSampling:
     @beartype
     def run(self, samples_number: PositiveInteger):
         """
-        Execute the random sampling in the ``LatinHypercubeSampling`` class.
+        Execute the random sampling in the :class:`.LatinHypercubeSampling` class.
 
-        :param int samples_number: If the ``run`` method is invoked multiple times, the newly generated samples will
+        :param int samples_number: If the :meth:`run` method is invoked multiple times, the newly generated samples will
          overwrite the existing samples.
 
-        The ``run`` method is the function that performs random sampling in the ``LatinHypercubeSampling`` class. If
-        `samples_number` is provided, the ``run`` method is automatically called when the ``LatinHypercubeSampling``
-        object is defined. The user may also call the ``run`` method directly to generate samples. The ``run`` method of
-        the ``LatinHypercubeSampling`` class cannot be invoked multiple times for sample size extension.
+        The :meth:`run` method is the function that performs random sampling in the :class:`.LatinHypercubeSampling`
+        class. If `samples_number` is provided, the :meth:`run` method is automatically called when the
+        :class:`.LatinHypercubeSampling` object is defined. The user may also call the :meth:`run` method directly to
+        generate samples. The :meth:`run` method of the :class:`.LatinHypercubeSampling` class cannot be invoked
+        multiple times for sample size extension.
 
-        The ``run`` method has no returns, although it creates and/or appends the `samples` and `samplesU01` attributes
-        of the ``LatinHypercubeSampling`` object.
+        The :meth:`run` method has no returns, although it creates and/or appends the `samples` and `samplesU01`
+        attributes of the :class:`.LatinHypercubeSampling` object.
         """
         self.samples_number = samples_number
         self.logger.info("UQpy: Running Latin Hypercube sampling...")

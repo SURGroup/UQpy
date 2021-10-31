@@ -1,4 +1,4 @@
-StochasticProcess
+Stochastic Process
 =================
 
 The :py:mod:`.stochastic_process` module consists of classes and functions to generate samples of stochastic processes from

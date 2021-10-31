@@ -17,9 +17,10 @@ class ImportanceSampling:
         """
         Sample from a user-defined target density using importance sampling.
 
-        :param ISInput is_input: Object that contains input data to the ImportanceSampling class
-        :param samples_number: Number of samples to generate - see ``run`` method. If not `None`, the `run` method is
-         called when the object is created. Default is None.
+        :param ISInput is_input: Object that contains input data to the :class:`ImportanceSampling` class.
+         (See :class:`.ISInput`)
+        :param samples_number: Number of samples to generate - see :meth:`run` method. If not `None`, the `run` method
+         is called when the object is created. Default is None.
         """
         # Initialize proposal: it should have an rvs and log pdf or pdf method
         self.proposal = is_input.proposal
@@ -69,7 +70,7 @@ class ImportanceSampling:
         :param samples_number: Number of weighted samples to generate.
 
         This function has no returns, but it updates the output attributes `samples`, `unnormalized_log_weights` and
-        `weights` of the ``ImportanceSampling`` object.
+        `weights` of the :class:`.ImportanceSampling` object.
         """
 
         self.logger.info("UQpy: Running Importance Sampling...")
@@ -115,14 +116,14 @@ class ImportanceSampling:
         Utility function that creates a set of un-weighted samples from a set of weighted samples. Can be useful for
         plotting for instance.
 
-        The ``resample`` method is not called automatically when instantiating the ``ImportanceSampling`` class or when
-        invoking its ``run`` method.
+        The :meth:`resample` method is not called automatically when instantiating the :class:`.ImportanceSampling`
+        class or when invoking its :meth:`run` method.
 
         :param method: Resampling method, as of V3 only multinomial resampling is supported. Default: 'multinomial'.
         :param samples_number: Number of un-weighted samples to generate. Default: None (sets `nsamples` equal to the
          number of existing weighted samples).
 
-        The method has no returns, but it computes the following attribute of the ``IS`` object.
+        The method has no returns, but it computes the following attribute of the :class:`ImportanceSampling` object.
 
         * **unweighted_samples** (`ndarray`)
             Un-weighted samples that represent the target pdf, `ndarray` of shape (nsamples, dimension)

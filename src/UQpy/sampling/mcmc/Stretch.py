@@ -7,24 +7,6 @@ from UQpy.utilities.ValidationTypes import *
 
 
 class Stretch(MCMC):
-    """
-    Affine-invariant sampler with Stretch moves, parallel implementation.
-
-    **References:**
-
-    1. J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
-       no. 1, pp. 65–80, 2010.
-    2. Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. "emcee: The mcmc Hammer".
-       Publications of the Astronomical Society of the Pacific, 125(925):306–312,2013.
-
-    **Algorithm-specific inputs:**
-
-    * **scale** (`float`):
-        Scale parameter. Default: 2.
-
-    **Methods:**
-
-    """
 
     @beartype
     def __init__(
@@ -33,7 +15,21 @@ class Stretch(MCMC):
         samples_number: PositiveInteger = None,
         samples_number_per_chain: PositiveInteger = None,
     ):
+        """
+        Affine-invariant sampler with Stretch moves, parallel implementation.
 
+        **References:**
+
+        1. J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
+           no. 1, pp. 65–80, 2010.
+        2. Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. "emcee: The mcmc Hammer".
+           Publications of the Astronomical Society of the Pacific, 125(925):306–312,2013.
+
+        :param stretch_input: Object that contains input data to the :class:`.Stretch` class.
+         (See :class:`.StretchInput`)
+        :param samples_number: Number of samples to generate.
+        :param samples_number_per_chain: Number of samples to generate per chain.
+        """
         flag_seed = False
         if stretch_input.seed is None:
             if stretch_input.dimension is None or stretch_input.chains_number is None:
@@ -93,7 +89,7 @@ class Stretch(MCMC):
     def run_one_iteration(self, current_state, current_log_pdf):
         """
         Run one iteration of the mcmc chain for Stretch algorithm, starting at current state -
-        see ``mcmc`` class.
+        see :class:`.MCMC` class.
         """
         # Start the loop over nsamples - this code uses the parallel version of the stretch algorithm
         all_inds = np.arange(self.chains_number)

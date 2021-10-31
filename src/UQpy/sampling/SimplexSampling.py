@@ -17,12 +17,12 @@ class SimplexSampling:
 
         :param nodes: The vertices of the simplex.
         :param samples_number: The number of samples to be generated inside the simplex.
-         If `samples_number` is provided when the object is defined, the ``run`` method will be called automatically. If
-         `samples_number` is not provided when the object is defined, the user must invoke the ``run`` method and specify
-         `samples_number`.
+         If `samples_number` is provided when the object is defined, the :meth:`run` method will be called
+         automatically. If `samples_number` is not provided when the object is defined, the user must invoke the
+         :meth:`run` method and specify `samples_number`.
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
-         If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-         object itself can be passed directly.
+         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+         the object itself can be passed directly.
         """
         self.nodes = np.atleast_2d(nodes)
         self.samples_number = samples_number
@@ -40,17 +40,18 @@ class SimplexSampling:
     @beartype
     def run(self, samples_number: PositiveInteger):
         """
-        Execute the random sampling in the ``Simplex`` class.
-        The ``run`` method is the function that performs random sampling in the ``Simplex`` class. If `samples_number`
-        is provided called when the ``Simplex`` object is defined, the ``run`` method is automatically. The user may
-        also call the ``run`` method directly to generate samples. The ``run`` method of the ``Simplex`` class can be
+        Execute the random sampling in the :class:`.SimplexSampling` class.
+        The :meth:`run` method is the function that performs random sampling in the :class:`.SimplexSampling`` class.
+        If `samples_number` is provided called when the :class:`.SimplexSampling` object is defined, the
+        :meth:`run` method is automatically. The user may also call the :meth:`run` method directly to generate samples.
+        The :meth:`run` method of the :class:`.SimplexSampling` class can be
         invoked many times and each time the generated samples are appended to the existing samples.
 
         :param samples_number: Number of samples to be generated inside the simplex.
-         If the ``run`` method is invoked multiple times, the newly generated samples will be appended to the
+         If the :meth:`run` method is invoked multiple times, the newly generated samples will be appended to the
          existing samples.
-        :return: The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the
-         ``Simplex`` class.
+        :return: The :meth:`run` method has no returns, although it creates and/or appends the `samples` attribute of the
+         :class:`.SimplexSampling` class.
         """
         self.samples_number = samples_number
         dimension = self.nodes.shape[1]

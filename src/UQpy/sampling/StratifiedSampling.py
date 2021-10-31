@@ -21,24 +21,24 @@ class StratifiedSampling:
         """
         Class for Stratified Sampling ([9]_).
 
-        :param distributions: List of ``Distribution`` objects corresponding to each random variable.
-        :param strata_object: Defines the stratification of the unit hypercube. This must be provided and must be an object of a
-         ``Strata`` child class: ``Rectangular``, ``Voronoi``, or ``Delaunay``.
+        :param distributions: List of :class:`.Distribution` objects corresponding to each random variable.
+        :param strata_object: Defines the stratification of the unit hypercube. This must be provided and must be an
+         object of a :class:`.Strata` child class: :class:`.Rectangular`, :class:`.Voronoi`, or :class:`.Delaunay`.
         :param samples_per_stratum_number: Specifies the number of samples in each stratum. This must be either an
          integer, in which case an equal number of samples are drawn from each stratum, or a list. If it is provided as
          a list, the length of the list must be equal to the number of strata.
-         If `samples_per_stratum_number` is provided when the class is defined, the ``run`` method will be executed
+         If `samples_per_stratum_number` is provided when the class is defined, the :meth:`run` method will be executed
          automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided when the class is
-         defined, the user must call the ``run`` method to perform stratified sampling.
+         defined, the user must call the :meth:`run` method to perform stratified sampling.
         :param samples_number: Specify the total number of samples. If `samples_number` is specified, the samples will
          be drawn in proportion to the volume of the strata. Thus, each stratum will contain
          :math:`round(V_i*samples_number)` samples.
-         If `samples_number` is provided when the class is defined, the ``run`` method will be executed
+         If `samples_number` is provided when the class is defined, the :meth:`run` method will be executed
          automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided when the class is
-         defined, the user must call the ``run`` method to perform stratified sampling.
+         defined, the user must call the :meth:`run` method to perform stratified sampling.
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
-         If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-         object itself can be passed directly.
+         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+         the object itself can be passed directly.
         """
         self.logger = logging.getLogger(__name__)
         self.weights = None
@@ -86,28 +86,28 @@ class StratifiedSampling:
         Executes stratified sampling.
 
         This method performs the sampling for each of the child classes by running two methods:
-        ``create_samplesu01``, and ``transform_samples``. The ``create_samplesu01`` method is
+        :meth:`create_samplesu01`, and :meth:`transform_samples`. The :meth:`create_samplesu01` method is
         unique to each child class and therefore must be overwritten when a new child class is defined. The
-        ``transform_samples`` method is common to all stratified sampling classes and is therefore defined by the parent
-        class. It does not need to be modified.
+        :meth:`transform_samples` method is common to all stratified sampling classes and is therefore defined by the
+        parent class. It does not need to be modified.
 
-        If `samples_number` or `samples_per_stratum_number` is provided when the class is defined, the ``run`` method
-        will be executed automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided when
-        the class is defined, the user must call the ``run`` method to perform stratified sampling.
+        If `samples_number` or `samples_per_stratum_number` is provided when the class is defined, the :meth:`run`
+        method will be executed automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided
+        when the class is defined, the user must call the :meth:`run` method to perform stratified sampling.
 
         :param samples_per_stratum_number: Specifies the number of samples in each stratum. This must be either an
          integer, in which case an equal number of samples are drawn from each stratum, or a list. If it is provided as
          a list, the length of the list must be equal to the number of strata.
-         If `samples_per_stratum_number` is provided when the class is defined, the ``run`` method will be executed
+         If `samples_per_stratum_number` is provided when the class is defined, the :meth:`run` method will be executed
          automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided when the class is
-         defined, the user must call the ``run`` method to perform stratified sampling.
+         defined, the user must call the :meth:`run` method to perform stratified sampling.
         :param samples_number: Specify the total number of samples. If `samples_number` is specified, the samples will
          be drawn in proportion to the volume of the strata. Thus, each stratum will contain
          :math:`round(V_i*samples_number)` samples where :math:`V_i \le 1` is the volume of stratum `i` in the unit
          hypercube.
-         If `samples_number` is provided when the class is defined, the ``run`` method will be executed
+         If `samples_number` is provided when the class is defined, the :meth:`run` method will be executed
          automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided when the class is
-         defined, the user must call the ``run`` method to perform stratified sampling.
+         defined, the user must call the :meth:`run` method to perform stratified sampling.
         """
 
         self.samples_per_stratum_number = samples_per_stratum_number

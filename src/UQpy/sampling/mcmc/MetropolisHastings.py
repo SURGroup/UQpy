@@ -10,27 +10,7 @@ from UQpy.utilities.ValidationTypes import *
 
 
 class MetropolisHastings(MCMC):
-    """
-    Metropolis-Hastings algorithm
 
-    **References**
-
-    1. Gelman et al., "Bayesian data analysis", Chapman and Hall/CRC, 2013
-    2. R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
-
-
-    **Algorithm-specific inputs:**
-
-    * **proposal** (``Distribution`` object):
-        Proposal distribution, must have a log_pdf/pdf and rvs method. Default: standard multivariate normal
-
-    * **proposal_is_symmetric** (`bool`):
-        Indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
-        Default: False, set to True if default proposal is used
-
-    **Methods:**
-
-    """
 
     @beartype
     def __init__(
@@ -39,7 +19,18 @@ class MetropolisHastings(MCMC):
         samples_number: PositiveInteger = None,
         samples_number_per_chain: PositiveInteger = None,
     ):
+        """
+        Metropolis-Hastings algorithm
 
+        References
+        1. Gelman et al., “Bayesian data analysis”, Chapman and Hall/CRC, 2013
+        2. R.C. Smith, “Uncertainty Quantification - Theory, Implementation and Applications”, CS&E, 2014
+
+        :param mh_input: Object that contains input data to the :class:`.MetropolisHastings` class.
+         (See :class:`.MhInput`)
+        :param samples_number: Number of samples to generate.
+        :param samples_number_per_chain: Number of samples to generate per chain.
+        """
         super().__init__(
             pdf_target=mh_input.pdf_target,
             log_pdf_target=mh_input.log_pdf_target,
@@ -86,7 +77,7 @@ class MetropolisHastings(MCMC):
     def run_one_iteration(self, current_state, current_log_pdf):
         """
         Run one iteration of the mcmc chain for MH algorithm, starting at current state -
-        see ``mcmc`` class.
+        see :class:`MCMC` class.
         """
         # Sample candidate
         candidate = current_state + self.proposal.rvs(

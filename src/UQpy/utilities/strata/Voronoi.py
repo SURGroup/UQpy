@@ -35,8 +35,8 @@ class Voronoi(Strata):
          If :math: `decomposition_iterations \ge 1`, the seed points are moved to the centroids of the Voronoi cells
          in each iteration and the a new Voronoi decomposition is performed. This process is repeated
          `decomposition iterations` times to create a Centroidal Voronoi decomposition.
-        :param stratification_criterion: An enumeration of type ``StratificationCriterion`` defining the stratification
-         type
+        :param stratification_criterion: An enumeration of type :class:`.StratificationCriterion` defining the
+         stratification type
         """
         super().__init__(seeds=seeds)
 

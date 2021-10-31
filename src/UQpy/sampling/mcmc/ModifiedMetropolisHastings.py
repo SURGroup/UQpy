@@ -10,35 +10,6 @@ from UQpy.utilities.ValidationTypes import *
 
 
 class ModifiedMetropolisHastings(MCMC):
-    """
-
-    Component-wise Modified Metropolis-Hastings algorithm.
-
-    In this algorithm, candidate samples are drawn separately in each dimension, thus the proposal consists of a list
-    of 1d distributions. The target pdf can be given as a joint pdf or a list of marginal pdfs in all dimensions. This
-    will trigger two different algorithms.
-
-    **References:**
-
-    1. S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
-       Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
-
-    **Algorithm-specific inputs:**
-
-    * **proposal** ((`list` of) ``Distribution`` object(s)):
-        Proposal distribution(s) in one dimension, must have a log_pdf/pdf and rvs method.
-
-        The proposal object may be a list of ``DistributionContinuous1D`` objects or a ``JointInd`` object.
-        Default: standard normal
-
-    * **proposal_is_symmetric** ((`list` of) `bool`):
-        Indicates whether the proposal distribution is symmetric, affects computation of acceptance probability alpha
-        Default: False, set to True if default proposal is used
-
-    **Methods:**
-
-    """
-
     @beartype
     def __init__(
         self,
@@ -46,7 +17,23 @@ class ModifiedMetropolisHastings(MCMC):
         samples_number: PositiveInteger = None,
         samples_number_per_chain: PositiveInteger = None,
     ):
+        """
+        Component-wise Modified Metropolis-Hastings algorithm.
 
+        In this algorithm, candidate samples are drawn separately in each dimension, thus the proposal consists of a list
+        of 1d distributions. The target pdf can be given as a joint pdf or a list of marginal pdfs in all dimensions. This
+        will trigger two different algorithms.
+
+        **References:**
+
+        1. S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
+           Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
+
+        :param mmh_input: Object that contains input data to the :class:`ΜοδιφιεδMetropolisHastings` class.
+         (See :class:`.MμhInput`)
+        :param samples_number: Number of samples to generate.
+        :param samples_number_per_chain: Number of samples to generate per chain.
+        """
         super().__init__(
             pdf_target=mmh_input.pdf_target,
             log_pdf_target=mmh_input.log_pdf_target,
@@ -126,7 +113,7 @@ class ModifiedMetropolisHastings(MCMC):
     def run_one_iteration(self, current_state, current_log_pdf):
         """
         Run one iteration of the mcmc chain for MMH algorithm, starting at current state -
-        see ``mcmc`` class.
+        see :class:`MCMC` class.
         """
         # The target pdf is provided via its marginals
         accept_vec = np.zeros((self.chains_number,))

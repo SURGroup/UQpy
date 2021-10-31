@@ -32,7 +32,7 @@ class MCMC(ABC):
         mcmc algorithm.
 
         :param dimension: A scalar value defining the dimension of target density function. Either `dimension` and
-         `nchains` or `seed` must be provided.
+         `chains_number` or `seed` must be provided.
         :param pdf_target: Target density function from which to draw random samples. Either `pdf_target` or
          `log_pdf_target` must be provided (the latter should be preferred for better numerical stability).
          If `pdf_target` is a callable, it refers to the joint pdf to sample from, it must take at least one input `x`,
@@ -60,8 +60,8 @@ class MCMC(ABC):
          are stored as an `ndarray` of shape (nsamples * nchains, dimension) if True, (nsamples, nchains, dimension) if
          False. Default: True
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
-         If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-         object itself can be passed directly.
+         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+         the object itself can be passed directly.
         """
         self.burn_length, self.jump = burn_length, jump
         self.seed = self._preprocess_seed(
@@ -101,7 +101,7 @@ class MCMC(ABC):
         Run the mcmc algorithm.
 
         This function samples from the mcmc chains and appends samples to existing ones (if any).
-        This method leverages the ``run_iterations`` method that is specific to each algorithm.
+        This method leverages the :meth:`run_iterations` method that is specific to each algorithm.
 
         :param samples_number: Number of samples to generate.
         :param samples_number_per_chain: number of samples to generate per chain.
@@ -156,7 +156,8 @@ class MCMC(ABC):
         Run one iteration of the mcmc algorithm, starting at `current_state`.
 
         This method is over-written for each different mcmc algorithm. It must return the new state and
-        associated log-pdf, which will be passed as inputs to the ``run_one_iteration`` method at the next iteration.
+        associated log-pdf, which will be passed as inputs to the :meth:`run_one_iteration` method at the next
+        iteration.
 
         :param current_state: Current state of the chain(s), `ndarray` of shape ``(nchains, dimension)``.
         :param current_log_pdf: Log-pdf of the current state of the chain(s), `ndarray` of shape ``(nchains, )``.

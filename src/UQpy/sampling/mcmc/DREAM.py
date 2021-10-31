@@ -10,45 +10,6 @@ from UQpy.utilities.ValidationTypes import *
 
 
 class DREAM(MCMC):
-    """
-    DiffeRential Evolution Adaptive Metropolis algorithm
-
-    **References:**
-
-    1. J.A. Vrugt et al. "Accelerating Markov chain Monte Carlo simulation by differential evolution with
-       self-adaptive randomized subspace sampling". International Journal of Nonlinear Sciences and Numerical
-       Simulation, 10(3):273–290, 2009.[68]
-    2. J.A. Vrugt. "Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and
-       MATLAB implementation". Environmental Modelling & Software, 75:273–316, 2016.
-
-    **Algorithm-specific inputs:**
-
-    * **delta** (`int`):
-        Jump rate. Default: 3
-
-    * **c** (`float`):
-        Differential evolution parameter. Default: 0.1
-
-    * **c_star** (`float`):
-        Differential evolution parameter, should be small compared to width of target. Default: 1e-6
-
-    * **n_cr** (`int`):
-        Number of crossover probabilities. Default: 3
-
-    * **p_g** (`float`):
-        Prob(gamma=1). Default: 0.2
-
-    * **adapt_cr** (`tuple`):
-        (iter_max, rate) governs adaptation of crossover probabilities (adapts every rate iterations if iter<iter_max).
-        Default: (-1, 1), i.e., no adaptation
-
-    * **check_chains** (`tuple`):
-        (iter_max, rate) governs discarding of outlier chains (discard every rate iterations if iter<iter_max).
-        Default: (-1, 1), i.e., no check on outlier chains
-
-    **Methods:**
-
-    """
 
     @beartype
     def __init__(
@@ -57,7 +18,22 @@ class DREAM(MCMC):
         samples_number: int = None,
         samples_number_per_chain: int = None,
     ):
+        """
+        DiffeRential Evolution Adaptive Metropolis algorithm
 
+        **References:**
+
+        1. J.A. Vrugt et al. "Accelerating Markov chain Monte Carlo simulation by differential evolution with
+           self-adaptive randomized subspace sampling". International Journal of Nonlinear Sciences and Numerical
+           Simulation, 10(3):273–290, 2009.[68]
+        2. J.A. Vrugt. "Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and
+           MATLAB implementation". Environmental Modelling & Software, 75:273–316, 2016.
+
+        :param dream_input: Object that contains input data to the :class:`.DREAM` class.
+         (See :class:`.DreamInput`)
+        :param samples_number: Number of samples to generate.
+        :param samples_number_per_chain: Number of samples to generate per chain.
+        """
         super().__init__(
             pdf_target=dream_input.pdf_target,
             log_pdf_target=dream_input.log_pdf_target,
@@ -142,7 +118,7 @@ class DREAM(MCMC):
     def run_one_iteration(self, current_state, current_log_pdf):
         """
         Run one iteration of the mcmc chain for DREAM algorithm, starting at current state -
-        see ``mcmc`` class.
+        see :class:`MCMC` class.
         """
         r_diff = np.array(
             [

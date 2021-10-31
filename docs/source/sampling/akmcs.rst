@@ -1,12 +1,20 @@
 AdaptiveKriging
 ---------------
 
-The ``AdaptiveKriging`` class generates samples adaptively using a specified Kriging-based learning function in a general Adaptive Kriging-Monte Carlo Sampling (AKMCS) framework. Based on the specified learning function, different objectives can be achieved. In particular, the ``AdaptiveKriging`` class has learning functions for reliabliity analysis (probability of failure estimation), global optimization, best global fit surrogate models, and can also accept user-defined learning functions for these and other objectives.  Note that the term AKMCS is adopted from [3]_ although the procedure is referred to by different names depending on the specific learning function employed. For example, when applied for optimization the algorithm leverages the expected improvement function and is known under the name Efficient Global Optimization (EGO) [4]_.
+The :class:`.AdaptiveKriging` class generates samples adaptively using a specified Kriging-based learning function in a
+general Adaptive Kriging-Monte Carlo Sampling (AKMCS) framework. Based on the specified learning function, different
+objectives can be achieved. In particular, the :class:`.AdaptiveKriging` class has learning functions for reliability analysis
+(probability of failure estimation), global optimization, best global fit surrogate models, and can also accept
+user-defined learning functions for these and other objectives.  Note that the term AKMCS is adopted from [3]_ although
+the procedure is referred to by different names depending on the specific learning function employed. For example,
+when applied for optimization the algorithm leverages the expected improvement function and is known under the name
+Efficient Global Optimization (EGO) [4]_.
 
 
 Learning Functions
 ^^^^^^^^^^^^^^^^^^^^
-``AdaptiveKriging`` provides a number of built-in learning functions as well as allowing the user to proviee a custom learning function. These learning functions are described below.
+:class:`.AdaptiveKriging` provides a number of built-in learning functions as well as allowing the user to provide a
+custom learning function. These learning functions are described below.
 
 
 U-Function
@@ -18,7 +26,7 @@ The U-function is a learning function adopted for Kriging-based reliability anal
 
 This point can be interpreted as the point in :math:`S` where the Kriging model has the highest probabability of incorrectly identifying the sign of the performance function (i.e. incorrectly predicting the safe/fail state of the system).
 
-The ``AdaptiveKriging`` then adds the corresponding point to the training set, re-fits the Kriging model and repeats the procedure until the following stopping criterion in met:
+The :class:`.AdaptiveKriging` then adds the corresponding point to the training set, re-fits the Kriging model and repeats the procedure until the following stopping criterion in met:
 
 .. math:: \min(U(\mathbf{x})) > \epsilon_u
 
@@ -34,7 +42,7 @@ The probability weighted U-function is a learning function for reliability analy
 
 where :math:`p(\mathbf{x})` is the probability density function of :math:`\mathbf{x}`. This has the effect of decreasing the learning function for points that have higher probability of occurrence. Thus, given two points with identical values of :math:`U(x)`, the weighted learning function will select the point with higher probability of occurrence.
 
-As with the standard U-function, ``AdaptiveKriging`` with the weighted U-function iterates until :math:`\min(U(\mathbf{x})) > \epsilon_u` (the same stopping criterion as the U-function).
+As with the standard U-function, :class:`.AdaptiveKriging` with the weighted U-function iterates until :math:`\min(U(\mathbf{x})) > \epsilon_u` (the same stopping criterion as the U-function).
 
 
 Expected Feasibility Function
@@ -76,13 +84,13 @@ The Expected Improvement for Global Fit (EIGF) learning function aims to build t
 
 where :math:`\mathbf{x}_*` is the point in the training set closest in distance to the point :math:`\mathbf{x}` and :math:`y(\mathbf{x}_*)` is the model response at that point.
 
-No stopping criterion is suggested by the authors of [7]_, thus its implementation in ``AdaptiveKriging`` uses a fixed number of iterations.
+No stopping criterion is suggested by the authors of [7]_, thus its implementation in :class:`.AdaptiveKriging` uses a fixed number of iterations.
 
 
 User-Defined Learning Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``AdaptiveKriging`` class also allows new, user-defined learning functions to be specified in a straightforward way. This is done by creating a new method that contains the algorithm for selecting a new samples. This method takes as input the surrogate model, the randomly generated learning points, the number of points to be added in each iteration, any requisite parameters including a stopping criterion, existing samples, model evaluate at samples and distribution object. It returns a set of samples that are selected according to the user's desired learning function and the corresponding learning function values. The outputs of this function should be (1) a numpy array of samples to be added; (2) the learning function values at the new sample points, and (3) a boolean stopping criterion indicating whether the iterations should continue (`False`) or stop (`True`). The numpy array of samples should be a two-dimensional array with the first dimension being the number of samples and the second dimension being the number of variables. An example user-defined learning function is given below:
+The :class:`.AdaptiveKriging` class also allows new, user-defined learning functions to be specified in a straightforward way. This is done by creating a new method that contains the algorithm for selecting a new samples. This method takes as input the surrogate model, the randomly generated learning points, the number of points to be added in each iteration, any requisite parameters including a stopping criterion, existing samples, model evaluate at samples and distribution object. It returns a set of samples that are selected according to the user's desired learning function and the corresponding learning function values. The outputs of this function should be (1) a numpy array of samples to be added; (2) the learning function values at the new sample points, and (3) a boolean stopping criterion indicating whether the iterations should continue (`False`) or stop (`True`). The numpy array of samples should be a two-dimensional array with the first dimension being the number of samples and the second dimension being the number of variables. An example user-defined learning function is given below:
 
 
 >>> class UserLearningFunction(LearningFunction):
@@ -113,3 +121,10 @@ AdaptiveKriging Class Descriptions
 
 .. autoclass:: UQpy.sampling.AdaptiveKriging
     :members:
+
+
+.. [3] B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.
+.. [4] Jones, D. R., Schonlau, M., & Welch, W. J. "Efficient global optimization of expensive black-box functions." Journal of Global optimization, 13(4), 455-492, 1998.
+.. [5] V.S. Sundar and Shields, M.D. "Reliablity analysis using adaptive Kriging surrogates and multimodel inference." ASCE-ASME Journal of Risk and Uncertainty in Engineering Systems. Part A: Civil Engineering. 5(2): 04019004, 2019.
+.. [6] B.J. Bichon, M.S. Eldred, L.P. Swiler, S. Mahadevan, and J.M. McFarland. "Efficient global reliablity analysis for nonlinear implicit performance functions." AIAA Journal. 46(10) 2459-2468, (2008).
+.. [7] C.Q. Lam. "Sequential adaptive designs in computer experiments for response surface model fit." PhD diss., The Ohio State University, 2008.

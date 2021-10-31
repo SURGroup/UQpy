@@ -27,8 +27,8 @@ class Rectangular(Strata):
         :param seeds: An array of dimension `N x n` specifying the seeds of all strata. The seeds of the strata are the
          coordinates of the stratum orthotope nearest the global origin.
         :param widths: An array of dimension `N x n` specifying the widths of all strata in each dimension
-        :param stratification_criterion: An enumeration of type ``StratificationCriterion`` defining the stratification
-         type
+        :param stratification_criterion: An enumeration of type :class:`.StratificationCriterion` defining the
+         stratification type
 
         **Example:**
          A 2-dimensional stratification with 2 strata in each dimension
@@ -136,8 +136,8 @@ class Rectangular(Strata):
         """
         Plot the rectangular stratification.
 
-        This is an instance method of the ``RectangularStrata`` class that can be called to plot the boundaries of a
-        two-dimensional ``RectangularStrata`` object on :math:`[0, 1]^2`.
+        This is an instance method of the :class:`.Rectangular` class that can be called to plot the boundaries of a
+        two-dimensional :class:`.Rectangular` object on :math:`[0, 1]^2`.
         """
         import matplotlib.pyplot as plt
         import matplotlib.patches as patches

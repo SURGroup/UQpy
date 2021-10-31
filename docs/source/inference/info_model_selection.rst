@@ -1,7 +1,8 @@
 InfoModelSelection
 --------------------
 
-The ``InfoModelSelection`` class employs information-theoretic criteria for model selection. Several simple information theoretic criteria can be used to compute a model's quality and perform model selection [2]_. ``UQpy`` implements three criteria:
+The :class:`InformationModelSelection` class employs information-theoretic criteria for model selection. Several simple information
+theoretic criteria can be used to compute a model's quality and perform model selection [2]_. :py:mod:`UQpy` implements three criteria:
 
 * Bayesian information criterion,  :math:`BIC = \ln(n) k - 2 \ln(\hat{L})`
 * Akaike information criterion, :math:`AIC = 2 k - 2 \ln (\hat{L})`
@@ -16,3 +17,5 @@ InfoModelSelection Class Descriptions
 
 .. autoclass:: UQpy.inference.InformationModelSelection
     :members:
+
+.. [2] Burnham, K. P. and Anderson, D. R., "Model Selection and Multimodel Inference: A Practical Information-Theoretic Approach", Springer-Verlag, 2002

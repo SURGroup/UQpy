@@ -7,39 +7,6 @@ from UQpy.utilities.ValidationTypes import *
 
 
 class DRAM(MCMC):
-    """
-    Delayed Rejection Adaptive Metropolis algorithm
-
-    In this algorithm, the proposal density is Gaussian and its covariance C is being updated from samples as
-    C = sp * C_sample where C_sample is the sample covariance. Also, the delayed rejection scheme is applied, i.e,
-    if a candidate is not accepted another one is generated from the proposal with covariance gamma_2 ** 2 * C.
-
-    **References:**
-
-    1. Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive mcmc".
-       Statistics and Computing, 16(4):339–354, 2006
-    2. R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
-
-    **Algorithm-specific inputs:**
-
-    * **initial_cov** (`ndarray`):
-        Initial covariance for the gaussian proposal distribution. Default: I(dim)
-
-    * **k0** (`int`):
-        Rate at which covariance is being updated, i.e., every k0 iterations. Default: 100
-
-    * **sp** (`float`):
-        Scale parameter for covariance updating. Default: 2.38 ** 2 / dim
-
-    * **gamma_2** (`float`):
-        Scale parameter for delayed rejection. Default: 1 / 5
-
-    * **save_cov** (`bool`):
-        If True, updated covariance is saved in attribute `adaptive_covariance`. Default: False
-
-    **Methods:**
-
-    """
 
     @beartype
     def __init__(
@@ -48,7 +15,25 @@ class DRAM(MCMC):
         samples_number: int = None,
         samples_number_per_chain: int = None,
     ):
+        """
+        Delayed Rejection Adaptive Metropolis algorithm
 
+        In this algorithm, the proposal density is Gaussian and its covariance C is being updated from samples as
+        C = sp * C_sample where C_sample is the sample covariance. Also, the delayed rejection scheme is applied, i.e,
+        if a candidate is not accepted another one is generated from the proposal with covariance gamma_2 ** 2 * C.
+
+        **References:**
+
+        1. Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive mcmc".
+           Statistics and Computing, 16(4):339–354, 2006
+        2. R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
+
+
+        :param dram_input: Object that contains input data to the :class:`DRAM` class.
+         (See :class:`.DramInput`)
+        :param samples_number: Number of samples to generate.
+        :param samples_number_per_chain: Number of samples to generate per chain.
+        """
         super().__init__(
             pdf_target=dram_input.pdf_target,
             log_pdf_target=dram_input.log_pdf_target,
@@ -123,7 +108,7 @@ class DRAM(MCMC):
     def run_one_iteration(self, current_state, current_log_pdf):
         """
         Run one iteration of the mcmc chain for DRAM algorithm, starting at current state -
-        see ``mcmc`` class.
+        see :class:`MCMC` class.
         """
         from UQpy.distributions import MultivariateNormal
 

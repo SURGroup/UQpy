@@ -20,7 +20,7 @@ class Delaunay(Strata):
     ):
         """
         Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling
-         Delaunay strata of n-dimensional simplexes. ``Delaunay`` is a child class of the ``strata`` class.
+         Delaunay strata of n-dimensional simplexes. :class:`.Delaunay` is a child class of the :class:`.Strata` class.
 
         :param seeds: An array of dimension `N x n` specifying the seeds of all strata. The seeds of the strata are the
          coordinates of the vertices of the Delaunay cells. The user must provide `seeds` or `seeds_number` and

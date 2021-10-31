@@ -1,7 +1,11 @@
 Monte Carlo Sampling
 --------------------
 
-The ``MonteCarloSampling`` class generates random samples from a specified probability distribution(s).  The ``MonteCarloSampling`` class utilizes the ``Distributions`` class to define probability distributions.  The advantage of using the ``MonteCarloSampling`` class for ``UQpy`` operations, as opposed to simply generating samples with the ``scipy.stats`` package, is that it allows building an object containing the samples and their distributions for integration with other ``UQpy`` modules.
+The :class:`.MonteCarloSampling` class generates random samples from a specified probability distribution(s).
+The :class:`.MonteCarloSampling` class utilizes the :class:`.Distribution` class to define probability distributions.
+The advantage of using the :class:`.MonteCarloSampling` class for :py:mod:`UQpy` operations, as opposed to simply generating samples
+with the :py:mod:`scipy.stats` package, is that it allows building an object containing the samples and their distributions
+for integration with other :py:mod:`UQpy` modules.
 
 Monte Carlo Sampling Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

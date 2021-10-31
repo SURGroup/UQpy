@@ -39,7 +39,7 @@ class SROM:
         :param weights_moments: An list or array containing weights associated with matching the moments about the
          origin for each component.
          `weights_moments` is a list or array of shape `(2, d), where each weight corresponds to the weight
-         :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component `i`.
+          :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component `i`.
          If `weights_moments` is `(1, d)`, it is assumed that moments of all order are equally weighted.
          Default: `weights_moments` = [[1/(moment[0][i]^2)], [1/(moment[1][i]^2)]] for i = 1, 2, ..., d.
         :param weights_correlation: A list or array containing weights associated with matching the correlation of the
@@ -106,12 +106,12 @@ class SROM:
         properties=None,
     ):
         """
-        Execute the stochastic reduced order model in the ``stochastic_reduced_order_models`` class.
+        Execute the stochastic reduced order model in the :class:`.SROM` class.
 
-        The ``run`` method is the function that computes the probability weights corresponding to the sample. If
-        `properties` is provided, the ``run`` method is automatically called when the ``stochastic_reduced_order_models`
-        ` object is defined. The user may also call the ``run`` method directly to generate samples. The ``run`` method
-        of the ``stochastic_reduced_order_models`` class can be invoked many times with different weights parameters and
+        The :meth:`run` method is the function that computes the probability weights corresponding to the sample. If
+        `properties` is provided, the :meth:`run` method is automatically called when the :class:`.SROM`
+        object is defined. The user may also call the :meth:`run` method directly to generate samples. The :meth:`run`
+         method of the :class:`.SROM` class can be invoked many times with different weights parameters and
         each time computed probability weights are overwritten.
 
         :param weights_errors: A list of weights associated with the error in distribution, moments and correlation.
@@ -128,7 +128,7 @@ class SROM:
         :param weights_moments: An list or array containing weights associated with matching the moments about the
          origin for each component.
          `weights_moments` is a list or array of shape `(2, d), where each weight corresponds to the weight
-         :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component `i`.
+          :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component `i`.
          If `weights_moments` is `(1, d)`, it is assumed that moments of all order are equally weighted.
          Default: `weights_moments` = [[1/(moment[0][i]^2)], [1/(moment[1][i]^2)]] for i = 1, 2, ..., d.
         :param weights_correlation: A list or array containing weights associated with matching the correlation of the

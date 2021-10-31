@@ -2,11 +2,11 @@ import logging
 
 from beartype import beartype
 
-from UQpy.surrogates.polynomial_chaos.regressions.LeastSquares import (
+from UQpy.surrogates.polynomial_chaos.regressions.LeastSquareRegression import (
     LeastSquareRegression,
 )
-from UQpy.surrogates.polynomial_chaos.regressions.Ridge import RidgeRegression
-from UQpy.surrogates.polynomial_chaos.regressions.Lasso import LassoRegression
+from UQpy.surrogates.polynomial_chaos.regressions.RidgeRegression import RidgeRegression
+from UQpy.surrogates.polynomial_chaos.regressions.LassoRegression import LassoRegression
 from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
 
 
@@ -32,7 +32,7 @@ class PolynomialChaosExpansion:
         :param x: `ndarray` containing the training points.
         :param y: `ndarray` containing the model evaluations at the training points.
 
-        The ``fit`` method has no returns and it creates an `ndarray` with the
+        The :meth:`fit` method has no returns and it creates an `ndarray` with the
         polynomial_chaos coefficients.
         """
         self.logger.info("UQpy: Running polynomial_chaos.fit")

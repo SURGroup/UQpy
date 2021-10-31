@@ -30,12 +30,14 @@ class BayesParameterEstimation(metaclass=NoPublicConstructor):
         Estimate the parameter posterior density given some data.
 
         This class generates samples from the parameter posterior distribution using Markov Chain Monte Carlo or
-        Importance Sampling. It leverages the ``mcmc`` and ``IS`` classes from the ``sampling`` module.
+        Importance Sampling. It leverages the :class:`.MCMC` and :class:`.ImportanceSampling` classes from the
+        :py:mod:`.sampling` module.
 
         :param inference_model: The inference model that defines the likelihood function.
-        :param data: Available data, `ndarray` of shape consistent with log-likelihood function in ``InferenceModel``
-        :param sampling_class: Class instance, must be a subclass of ``mcmc`` or ``IS``.
-        :param samples_number: Number of samples used in mcmc/IS, see `run` method.
+        :param data: Available data, `ndarray` of shape consistent with log-likelihood function in
+         :class:`.InferenceModel`
+        :param sampling_class: Class instance, must be a subclass of :class:`.MCMC` or :class:`.ImportanceSampling`.
+        :param samples_number: Number of samples used in MCMC/IS, see :meth:`run` method.
         :param samples_number_per_chain: Number of samples per chain used in mcmc, see `run` method.
         """
         self.inference_model = inference_model
@@ -58,6 +60,17 @@ class BayesParameterEstimation(metaclass=NoPublicConstructor):
         samples_number: int = None,
         samples_number_per_chain: Union[None, int] = None,
     ):
+        """
+        One of the two possible ways to create a :class:`BayesParameterEstimation` object when the user wants to use
+        MCMC sampling.
+
+        :param mcmc_input: Class instance, must be a class of :class:`.SamplingInput` used by the MCMC algorithms
+        :param inference_model: The inference model that defines the likelihood function.
+        :param data: Available data, `ndarray` of shape consistent with log-likelihood function in
+         :class:`.InferenceModel`
+        :param samples_number: Number of samples used in MCMC/IS, see :meth:`run` method.
+        :param samples_number_per_chain: Number of samples per chain used in mcmc, see `run` method.
+        """
         class_type = type(mcmc_input)
         sampling_class = BayesParameterEstimation.input_to_class[class_type]
         if mcmc_input.seed is None:
@@ -89,6 +102,17 @@ class BayesParameterEstimation(metaclass=NoPublicConstructor):
         is_input: ISInput,
         samples_number: int = None,
     ):
+        """
+        The second alternative to create a :class:`BayesParameterEstimation` object when the user wants to use
+        ImpostanceSampling sampling.
+
+        :param inference_model: The inference model that defines the likelihood function.
+        :param data: Available data, `ndarray` of shape consistent with log-likelihood function in
+         :class:`.InferenceModel`
+        :param is_input: Class instance, must be a class of :class:`.SamplingInput` used by the ImportanceSampling
+         algorithm
+        :param samples_number: Number of samples used in MCMC/IS, see :meth:`run` method.
+        """
         if is_input.proposal is None:
             if inference_model.prior is None:
                 raise NotImplementedError(
@@ -125,11 +149,11 @@ class BayesParameterEstimation(metaclass=NoPublicConstructor):
         """
         Run the Bayesian inference procedure, i.e., sample from the parameter posterior distribution.
 
-        This function calls the ``run`` method of the `sampler` attribute to generate samples from the parameter
+        This function calls the :meth:`run` method of the `sampler` attribute to generate samples from the parameter
         posterior distribution.
 
-        :param samples_number: Number of samples used in ``mcmc``/``IS``
-        :param samples_number_per_chain: Number of samples per chain used in ``mcmc``
+        :param samples_number: Number of samples used in :class:`.MCMC`/:class:`.ImportanceSampling`
+        :param samples_number_per_chain: Number of samples per chain used in :class:`.MCMC`
         """
         method = MCMC if isinstance(self.sampler, MCMC) else ImportanceSampling
         BayesParameterEstimation.sampling_actions[method](

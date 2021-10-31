@@ -14,70 +14,6 @@ from UQpy.utilities.ValidationTypes import PositiveInteger
 
 class BayesModelSelection:
 
-    """
-    Perform model selection via Bayesian inference, i.e., compute model posterior probabilities given data.
-
-    This class leverages the ``BayesParameterEstimation`` class to get samples from the parameter posterior densities.
-    These samples are then used to compute the model evidence `p(data|model)` for all models and the model posterior
-    probabilities.
-
-    **References:**
-
-    1. A.E. Raftery, M.A. Newton, J.M. Satagopan, and P.N. Krivitsky. "Estimating the integrated likelihood via
-       posterior simulation using the harmonic mean identity". In Bayesian Statistics 8, pages 1–45, 2007.
-
-    **Inputs:**
-
-    * **candidate_models** (`list` of ``InferenceModel`` objects):
-        Candidate models
-
-    * **data** (`ndarray`):
-        Available data
-
-    * **prior_probabilities** (`list` of `floats`):
-        Prior probabilities of each model, default is [1/nmodels, ] * nmodels
-
-    * **method_evidence_computation** (`str`):
-        as of v3, only the harmonic mean method is supported
-
-    * **kwargs**:
-        Keyword arguments to the ``BayesParameterEstimation`` class, for each model.
-
-        Keys must refer to names of inputs to the ``MLEstimation`` class, and values should be lists of length
-        `nmodels`, ordered in the same way as input candidate_models. For example, setting
-        `kwargs={`sampling_class': [MH, Stretch]}` means that the MH algorithm will be used for sampling from the
-        parameter posterior pdf of the 1st candidate model, while the Stretch algorithm will be used for the 2nd model.
-
-    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
-
-        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-        object itself can be passed directly.
-
-    * **nsamples** (`list` of `int`):
-        Number of samples used in ``mcmc``/``IS``, for each model
-
-    * **samples_per_chain** (`list` of `int`):
-        Number of samples per chain used in ``mcmc``, for each model
-
-    If `nsamples` and `nsamples_per_chain` are both `None`, the object is created but the model selection procedure is
-    not run, one must then call the ``run`` method.
-
-    **Attributes:**
-
-    * **bayes_estimators** (`list` of ``BayesParameterEstimation`` objects):
-        Results of the Bayesian parameter estimation
-
-    * **self.evidences** (`list` of `floats`):
-        Value of the evidence for all models
-
-    * **probabilities** (`list` of `floats`):
-        Posterior probability for all models
-
-    **Methods:**
-
-    """
-
     # Authors: Audrey Olivier, Yuchen Zhou
     # Last modified: 01/24/2020 by Audrey Olivier
     @beartype
@@ -91,7 +27,22 @@ class BayesModelSelection:
         samples_number: list[PositiveInteger] = None,
         samples_per_chain_number: list[PositiveInteger] = None,
     ):
+        """
+        Perform model selection via Bayesian inference, i.e., compute model posterior probabilities given data.
 
+        This class leverages the :class:`.BayesParameterEstimation` class to get samples from the parameter posterior
+        densities. These samples are then used to compute the model evidence `p(data|model)` for all models and the
+        model posterior probabilities.
+
+        :param candidate_models: Candidate models
+        :param data: Available data
+        :param sampling_class_inputs: List of class instances, that implement the of :class:`.SamplingInput` abstract
+         class
+        :param prior_probabilities: Prior probabilities of each model, default is [1/nmodels, ] * nmodels
+        :param method_evidence_computation: as of v3, only the harmonic mean method is supported
+        :param samples_number: Number of samples used in :class:`.MCMC`/:class:`.ImportanceSampling``, for each model
+        :param samples_per_chain_number: Number of samples per chain used in :class:`.MCMC`, for each model
+        """
         self.candidate_models = candidate_models
         self.models_number = len(candidate_models)
         self.data = data
@@ -153,20 +104,14 @@ class BayesModelSelection:
         """
         Run the Bayesian model selection procedure, i.e., compute model posterior probabilities.
 
-        This function calls the ``run_estimation`` method of the ``BayesParameterEstimation`` object for each model to
-        sample from the parameter posterior probability, then computes the model evidence and model posterior
-        probability. This function updates attributes `bayes_estimators`, `evidences` and `probabilities`. If `nsamples`
-        or `nsamples_per_chain` are given when creating the object, this method is called directly when the object is
-        created. It can also be called separately.
+        This function calls the :math:`run_estimation` method of the :class:`.BayesParameterEstimation` object for each
+        model to sample from the parameter posterior probability, then computes the model evidence and model posterior
+        probability. This function updates attributes `bayes_estimators`, `evidences` and `probabilities`. If
+        `samples_number` or `samples_number_per_chain` are given when creating the object, this method is called
+        directly when the object is created. It can also be called separately.
 
-        **Inputs:**
-
-        * **nsamples** (`list` of `int`):
-            Number of samples used in ``mcmc``/``IS``, for each model
-
-        * **samples_per_chain** (`list` of `int`):
-            Number of samples per chain used in ``mcmc``, for each model
-
+        :param samples_number: umber of samples used in :class:`.MCMC`/:class:`.ImportanceSampling``, for each model
+        :param samples_number_per_chain: Number of samples per chain used in :class:`.MCMC`, for each model
         """
         self.logger.info("UQpy: Running Bayesian Model Selection.")
         # Perform mcmc for all candidate models

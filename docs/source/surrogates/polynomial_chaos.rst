@@ -1,7 +1,10 @@
 Polynomial Chaos Expansion - PCE
 ----------------------------------------
 
-Polynomial Chaos Expansions (PCE) represent a class of methods which employ orthonormal polynomials to construct approximate response surfaces (metamodels or surrogate models) to identify a mapping between inputs and outputs of a numerical model [2]_. PCE methods can be directly used for moment estimation and sensitivity analysis (Sobol indices). A PCE object can be instantiated from the class ``PCE``. The method can be used for models of both one-dimensional and multi-dimensional outputs.
+Polynomial Chaos Expansions (PCE) represent a class of methods which employ orthonormal polynomials to construct
+approximate response surfaces (metamodels or surrogate models) to identify a mapping between inputs and outputs of a
+numerical model [2]_. :class:`.PolynomialChaosExpansion` methods can be directly used for moment estimation and sensitivity analysis (Sobol indices).
+A PCE object can be instantiated from the class :class:`.PolynomialChaosExpansion`. The method can be used for models of both one-dimensional and multi-dimensional outputs.
 
 Let us consider a computational model :math:`Y = \mathcal{M}(x)`, with :math:`Y \in \mathbb{R}` and a random vector with independent components :math:`X \in \mathbb{R}^M` described by the joint probability density function :math:`f_X`. The polynomial chaos expansion of :math:`\mathcal{M}(x)` is
 
@@ -28,7 +31,10 @@ PCE Class Descriptions
 Univariate Orthonormal Polynomials
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Different families of univariate polynomials can be used for the PCE method. These polynomials must always be orthonormal with respect to the arbitrary distribution. In UQpy, two families of polynomials are currently available that can be used from their corresponding classes, namely the ``Legendre`` and ``Hermite`` polynomial class, appropriate for data generated from a Uniform and a Normal distribution respectively.
+Different families of univariate polynomials can be used for the PCE method. These polynomials must always be orthonormal
+with respect to the arbitrary distribution. In UQpy, two families of polynomials are currently available that can be
+used from their corresponding classes, namely the :class:`.Legendre` and :class:`.Hermite` polynomial class, appropriate for
+data generated from a Uniform and a Normal distribution respectively.
 
 Polynomials Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -48,7 +54,10 @@ Hermite Class Descriptions
 
 Calculation of the PCE coefficients
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Several methods exist for the calculation of the PCE coefficients. In UQpy, three non-intrusive methods can be used, namely the Least Squares regression (``LeastSquares`` class), the LASSO regression (``Lasso`` class) and Ridge regression (``Ridge`` class) methods.
+Several methods exist for the calculation of the PCE coefficients. In UQpy, three non-intrusive methods can be used,
+namely the Least Squares regression (:class:`.LeastSquaresRegression` class), the LASSO regression
+(:class:`.LassoRegression` class) and Ridge
+regression (:class:`.RidgeRegression` class) methods.
 
 
 Least Squares Regression
@@ -62,7 +71,8 @@ If we assume that the system cannot be solved exactly, since the number of equat
 
 where :math:`\| \cdot \|_{2}` is the standard :math:`L^{2}` norm in the :math:`n`-dimensional Eucledian space :math:`\mathbb{R}^{n}`. The above function is also known as the cost function of the linear regression.
 
-The equation may be under-, well-, or over-determined. In the context of Polynomial Chaos Expansion (PCE) the computed vector corresponds to the polynomial coefficients. The above method can be used from the class ``PolyChaosLstsq``.
+The equation may be under-, well-, or over-determined. In the context of Polynomial Chaos Expansion (PCE) the computed
+vector corresponds to the polynomial coefficients. The above method can be used from the class :class:`.LeastSquaresRegression`.
 
 
 LeastSquares Class Descriptions
@@ -74,7 +84,11 @@ LeastSquares Class Descriptions
 Lasso Regression
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A drawback of using Least Squares regression for calculating the PCE coefficients, is that this method considers all the features (polynomials) to be equally relevant for the prediction. This technique often results to overfitting and complex models that do not have the ability to generalize well on unseen data. For this reason, the Least Absolute Shrinkage and Selection Operator or LASSO can be employed (from the ``PolyChaosLasso`` class). This method, introduces an :math:`L_{1}` penalty term (which encourages sparcity) in the loss function of linear regression as follows
+A drawback of using Least Squares regression for calculating the PCE coefficients, is that this method considers all the
+features (polynomials) to be equally relevant for the prediction. This technique often results to overfitting and
+complex models that do not have the ability to generalize well on unseen data. For this reason, the Least Absolute
+Shrinkage and Selection Operator or LASSO can be employed (from the :class:`LassoRegression` class). This method,
+introduces an :math:`L_{1}` penalty term (which encourages sparsity) in the loss function of linear regression as follows
 
 .. math:: \hat{\beta} = \underset{\beta}{\arg\min} \{ \frac{1}{N} \| y - X \beta \|_{2} + \lambda \| \beta \|_{1} \}
 
@@ -105,7 +119,9 @@ Ridge regression (also known as :math:`L_{2}` regularization) is another variati
 
 where :math:`\lambda` is called the regularization strength.
 
-Due to the penalization of terms, Ridge regression constructs models that are less prone to overfitting. The level of penalization is similarly controlled by the hyperparameter :math:`\lambda` and the coefficients are optimized with gradient descent. The Ridge regression method can be used from the ``PolyChaosRidge`` class.
+Due to the penalization of terms, Ridge regression constructs models that are less prone to overfitting. The level of
+penalization is similarly controlled by the hyperparameter :math:`\lambda` and the coefficients are optimized with
+gradient descent. The Ridge regression method can be used from the `.RidgeRegression` class.
 
 
 PolyChaosRidge Class Descriptions
@@ -117,7 +133,7 @@ PolyChaosRidge Class Descriptions
 Error Estimation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``ErrorEstimation`` class can be used to estimate the accuracy of the PCE predictor. Here, we compute the generalization error  in the form of the relative mean squared error normalized by the model variance. The user must create an independent validation dataset :math:`[x_{val}, y_{val} = M(x_{val})]` (i.e. a set of inputs and outputs of the computational model). The validation error is computed as
+The :class:`.ErrorEstimation` class can be used to estimate the accuracy of the PCE predictor. Here, we compute the generalization error  in the form of the relative mean squared error normalized by the model variance. The user must create an independent validation dataset :math:`[x_{val}, y_{val} = M(x_{val})]` (i.e. a set of inputs and outputs of the computational model). The validation error is computed as
 
 .. math:: \epsilon_{val} = \frac{N-1}{N} \Bigg[\frac{\sum_{i=1}^{N} (M(x_{val}^{(i)}) - M^{PCE}(x_{val}^{(i)}) )^{2} }{\sum_{i=1}^{N} (M(x_{val}^{(i)}) - \hat{\mu}_{Y_{val}})^{2}} \Bigg]
 
@@ -135,7 +151,7 @@ ErrorEstimation Class Descriptions
 Moment Estimation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``MomentEstimation`` class can be used for the calculation of the first two moments of the PCE model directly from the PCE coefficients. This is possible due to the orthonormality of the polynomial basis.
+The :class:`.MomentEstimation` class can be used for the calculation of the first two moments of the PCE model directly from the PCE coefficients. This is possible due to the orthonormality of the polynomial basis.
 
 The first moment (mean value) is calculated as
 
@@ -154,3 +170,7 @@ MomentEstimation Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: UQpy.surrogates.polynomial_chaos.MomentEstimation
     :members:
+
+
+
+.. [2] N. Lüthen, S. Marelli, B. Sudret, “Sparse Polynomial Chaos Expansions: Solvers, Basis Adaptivity and Meta-selection“, Available at arXiv:2009.04800v1 [stat.CO], 2020.

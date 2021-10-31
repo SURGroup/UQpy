@@ -1,14 +1,3 @@
-"""This module contains functionality for all the surrogate methods supported in UQpy.
-
-The module currently contains the following classes:
-
-- ``stochastic_reduced_order_models``: Class to estimate a discrete approximation for a continuous random variable using
-    Stochastic Reduced Order Model.
-
-- ``kriging``: Class to generate an approximate surrogate model using kriging.
-
-- ``polynomial_chaos``: Class to generate an approximate surrogate model using Polynomial Chaos Expansion.
-"""
 import logging
 import numpy as np
 from scipy.linalg import cholesky
@@ -52,10 +41,11 @@ class Kriging:
          Default: True.
         :param optimizations_number: Number of times MLE optimization problem is to be solved with a random starting
          point. Default: 1.
-        :param normalize:
-        :param optimizer:
-        :param random_state:
-        :param kwargs_optimizer:
+        :param bool normalize: Boolean flag used in case data normalization is required.
+        :param optimizer: String of the :class:`scipy.stats` optimizer used during the Kriging surrogate.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. If an integer is
+         provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+         object itself can be passed directly.
         """
         self.regression_model = regression_model
         self.correlation_model = correlation_model
@@ -127,18 +117,20 @@ class Kriging:
         """
         Fit the surrogate model using the training samples and the corresponding model values.
 
-        The user can run this method multiple time after initiating the ``kriging`` class object.
+        The user can run this method multiple time after initiating the :class:`.Kriging` class object.
 
-        This method updates the samples and parameters of the ``kriging`` object. This method uses `corr_model_params`
-        from previous run as the starting point for MLE problem unless user provides a new starting point.
+        This method updates the samples and parameters of the `:class:`.Kriging` object. This method uses
+        `corr_model_params` from previous run as the starting point for MLE problem unless user provides a new starting
+        point.
 
         :param samples: `ndarray` containing the training points.
         :param values: `ndarray` containing the model evaluations at the training points.
-        :param optimizations_number:
-        :param correlation_model_parameters:
+        :param optimizations_number: number of optimization iterations
+        :param correlation_model_parameters: List or array of initial values for the correlation model
+         hyperparameters/scale parameters.
 
-        The ``fit`` method has no returns, although it creates the `beta`, `err_var` and `C_inv` attributes of the
-        ``kriging`` class.
+        The :meth:`fit` method has no returns, although it creates the `beta`, `err_var` and `C_inv` attributes of the
+        :class:`.Kriging` class.
         """
         self.logger.info("UQpy: Running kriging.fit")
 

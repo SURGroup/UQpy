@@ -20,3 +20,6 @@ SROM Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: UQpy.surrogates.stochastic_reduced_order_models.SROM
     :members:
+
+
+.. [1] M. Grigoriu, “Reduced order models for random functions. Application to stochastic problems”, Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.

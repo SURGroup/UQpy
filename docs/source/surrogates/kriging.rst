@@ -1,7 +1,7 @@
 Gaussian Process Regression / Kriging
 ---------------------------------------
 
-The ``Kriging`` class defines an approximate surrogate model or response surface which can be used to predict the model response and its uncertainty at points where the model has not been previously evaluated. Kriging gives the best unbiased linear predictor at the interpolated points. This class generates a model :math:`\hat{y}` that express the response as a realization of regression model and Gaussian random process as:
+The :class:`.Kriging` class defines an approximate surrogate model or response surface which can be used to predict the model response and its uncertainty at points where the model has not been previously evaluated. Kriging gives the best unbiased linear predictor at the interpolated points. This class generates a model :math:`\hat{y}` that express the response as a realization of regression model and Gaussian random process as:
 
 .. math:: \hat{y}(x) = \mathcal{F}(\beta, x) + z(x).
 
@@ -33,7 +33,7 @@ The final predictor function is then given by:
 Regression Models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``Kriging`` class offers a variety of built-in regression models, specified by the `regression` input described below.
+The :class:`.Kriging` class offers a variety of built-in regression models, specified by the `regression` input described below.
 
 
 Ordinary Kriging
@@ -47,7 +47,8 @@ In ordinary Kriging, the regression model is assumed to take a constant value su
 Universal Kriging
 ~~~~~~~~~~~~~~~~~~~~~
 
-In universal Kriging, the regression model is assumed to take a general functional form. The ``Kriging`` class currenly supports two univeral Kriging models, the linear regression model given by:
+In universal Kriging, the regression model is assumed to take a general functional form. The :class:`.Kriging` class
+currenly supports two univeral Kriging models, the linear regression model given by:
 
 .. math:: \mathcal{F}(\beta, x) = \beta_0 = \sum_{i=1}^d \beta_i x_i
 
@@ -59,7 +60,9 @@ and the quadratic regression model given by:
 User-Defined Regression Model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Adding a new regression model to the ``Kriging`` class is straightforward. This is done by creating a new method that evaluates the basis functions and the Jacobian. This method may be passed directly as an object to the `regression` input of the ``Kriging`` class.
+Adding a new regression model to the :class:`.Kriging` class is straightforward. This is done by creating a new method
+that evaluates the basis functions and the Jacobian. This method may be passed directly as an object to the `regression`
+input of the :class:`.Kriging` class.
 This new class must have a method ``r(self,s)`` that takes as input the samples points at which to evaluate the model and return two arrays containing the value of the basis functions and the Jacobian at these sample points.
 
 The first output of this function should be a two dimensional numpy array with the first dimension being the number of samples and the second dimension being the number of basis functions.
@@ -81,7 +84,7 @@ An example user-defined model is given below:
 Correlation Models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``Kriging`` class offers a variety of built-in correlation models, specified by the `correlation_model` input described below.
+The :class:`.Kriging` class offers a variety of built-in correlation models, specified by the `correlation_model` input described below.
 
 Exponential Correlation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -147,7 +150,7 @@ User-Defined Correlation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Adding a new correlation model to the ``Kriging`` class is straightforward. This is done by creating a new class that extends the Correlation abstract base class.
+Adding a new correlation model to the :class:`.Kriging` class is straightforward. This is done by creating a new class that extends the Correlation abstract base class.
 This requires a method takes as input the new points, training points, hyperparameters and two indicators for the computation of the derivative of correlation matrix (i.e. dt and dx). This method evaluates the correlation matrix, its derivative with respect to the variables and its derivative with respect to the hyperparameters.
 
 If both indicators are false, then the method should return correlation matrix, i.e. a 2-D array with first dimension being the number of points and second dimension being the number of training points.

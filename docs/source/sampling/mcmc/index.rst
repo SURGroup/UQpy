@@ -19,21 +19,26 @@ The transition probability :math:`Q` is chosen by the user (see input `proposal`
 
 Finally, samples from the target distribution will be generated only when the chain has converged to its stationary distribution, after a so-called burn-in period. Thus the user would often reject the first few samples (see input `nburn`). Also, the chain yields correlated samples; thus to obtain i.i.d. samples from the target distribution, the user should keep only one out of n samples (see input `jump`). This means that the code will perform in total nburn + jump * N evaluations of the target pdf to yield N i.i.d. samples from the target distribution (for the MH algorithm with a single chain).
 
-The parent class for all MCMC algorithms is the ``MCMC class``, which defines the inputs that are common to all MCMC algorithms, along with the ``run`` method that is being called to run the chain. Any given MCMC algorithm is a child class of MCMC that overwrites the main ``run_one_iteration`` method.
+The parent class for all MCMC algorithms is the :class:`.MCMC` class, which defines the inputs that are common to all
+MCMC algorithms, along with the :meth:`run` method that is being called to run the chain. Any given MCMC algorithm is a
+child class of MCMC that overwrites the main :meth:`run_one_iteration` method.
 
 Adding New MCMC Algorithms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In order to add a new MCMC algorithm, a user must create a child class of ``MCMC``, and overwrite the ``run_one_iteration`` method that propagates all the chains forward one iteration. Such a new class may use any number of additional inputs compared to the ``MCMC`` base class. The reader is encouraged to have a look at the ``MH`` class and its code to better understand how a particular algorithm should fit the general framework.
+In order to add a new MCMC algorithm, a user must create a child class of :meth:`.MCMC`, and overwrite the
+:meth:`run_one_iteration` method that propagates all the chains forward one iteration. Such a new class may use any
+number of additional inputs compared to the :class:`.MCMC` base class. The reader is encouraged to have a look at the
+:class:`.MetropolisHastings`` class and its code to better understand how a particular algorithm should fit the general framework.
 
 A useful note is that the user has access to a number of useful attributes / utility methods as the algorithm proceeds, such as:
 
-* the attribute ``evaluate_log_target`` (and possibly ``evaluate_log_target_marginals`` if marginals were provided) is created at initialization. It is a callable that simply evaluates the log-pdf of the target distribution at a given point `x`. It can be called within the code of a new sampler as ``log_pdf_value = self.evaluate_log_target(x)``.
-* the `nsamples` and `nsamples_per_chain` attributes indicate the number of samples that have been stored up to the current iteration (i.e., they are updated dynamically as the algorithm proceeds),
+* the attribute :meth:`evaluate_log_target` (and possibly :meth:`evaluate_log_target_marginals` if marginals were provided) is created at initialization. It is a callable that simply evaluates the log-pdf of the target distribution at a given point `x`. It can be called within the code of a new sampler as ``log_pdf_value = self.evaluate_log_target(x)``.
+* the `samples_number` and `samples_number_per_chain` attributes indicate the number of samples that have been stored up to the current iteration (i.e., they are updated dynamically as the algorithm proceeds),
 * the `samples` attribute contains all previously stored samples. Cautionary note: `self.samples` also contains trailing zeros, for samples yet to be stored, thus to access all previously stored samples at a given iteration the user must call ``self.samples[:self.nsamples_per_chain]``, which will return an `ndarray` of size (self.nsamples_per_chain, self.nchains, self.dimension) ,
 * the `log_pdf_values` attribute contains all previously stored log target values. Same cautionary note as above,
-* the ``_update_acceptance_rate`` method updates the `acceptance_rate` attribute of the sampler, given a (list of) boolean(s) indicating if the candidate state(s) were accepted at a given iteration,
-* the ``_check_methods_proposal`` method checks whether a given proposal is adequate (i.e., has ``rvs`` and ``log_pdf``/``pdf`` methods).
+* the :meth:`_update_acceptance_rate` method updates the `acceptance_rate` attribute of the sampler, given a (list of) boolean(s) indicating if the candidate state(s) were accepted at a given iteration,
+* the :meth:`_check_methods_proposal` method checks whether a given proposal is adequate (i.e., has :meth:`rvs` and :meth:`log_pdf`/:meth:`pdf` methods).
 
 
 MCMC Class Descriptions
@@ -43,32 +48,13 @@ MCMC Class Descriptions
 .. autoclass:: UQpy.sampling.mcmc.MCMC
    :members:
 
-MetropolisHastings
-~~~~~~~~~~~~~~~~~~
+List of MCMC algorithms
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. toctree::
+   :maxdepth: 1
 
-.. autoclass:: UQpy.sampling.mcmc.MetropolisHastings
-    :members:
-
-ModifiedMetropolisHastings
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: UQpy.sampling.mcmc.ModifiedMetropolisHastings
-    :members:
-
-Stretch
-~~~~~~~~
-
-.. autoclass:: UQpy.sampling.mcmc.Stretch
-    :members:
-
-DRAM
-~~~~~~~
-
-.. autoclass:: UQpy.sampling.mcmc.DRAM
-    :members:
-
-DREAM
-~~~~~~~
-
-.. autoclass:: UQpy.sampling.mcmc.DREAM
-    :members:
+    Metropolis Hastings <mh>
+    Modified Metropolis Hastings <mmh>
+    DRAM <dram>
+    DREAM <dream>
+    Stretch <stretch>

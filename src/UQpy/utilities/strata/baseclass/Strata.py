@@ -24,7 +24,7 @@ class Strata:
     def stratify(self, random_state):
         """
         Perform the stratification of the unit hypercube. It is overwritten by the subclass. This method must exist in
-        any subclass of the ``strata`` class.
+        any subclass of the :class:`.Strata` class.
 
         :param random_state: A random state of either int or numpy.RandomState object required for stratification
         """

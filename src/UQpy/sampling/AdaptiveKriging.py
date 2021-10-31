@@ -15,58 +15,6 @@ from UQpy.utilities.Utilities import process_random_state
 
 
 class AdaptiveKriging:
-    """
-
-
-
-    **Inputs:**
-
-    * **distributions** ((list of) ``Distribution`` object(s)):
-
-
-    * **runmodel_object** (``RunModel`` object):
-
-
-    * **samples** (`ndarray`):
-
-
-    * **surrogate** (`class` object):
-
-
-    * **samples_number** (`int`):
-
-
-    * **learning_samples_number** (`int`):
-
-
-    * **qoi_name** (`dict`):
-
-
-    * **learning_function** (`LearningFunction`):
-
-    * **n_add** (`int`):
-
-
-            Default: 1.
-
-    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-
-
-
-
-    **Attributes:**
-
-    * **samples** (`ndarray`):
-        `ndarray` containing the samples at which the model is evaluated.
-
-    * **lf_values** (`list`)
-        The learning function evaluated at new sample points.
-
-
-    **Methods:**
-
-    """
-
     @beartype
     def __init__(
         self,
@@ -85,26 +33,26 @@ class AdaptiveKriging:
         Adaptively sample for construction of a kriging surrogate for different objectives including reliability,
         optimization, and global fit.
 
-        :param distributions: List of ``Distribution`` objects corresponding to each random variable.
-        :param runmodel_object: A ``RunModel`` object, which is used to evaluate the model.
-        :param surrogate: A kriging surrogate model, this object must have ``fit`` and ``predict`` methods.
-         May be an object of the ``UQpy`` ``kriging`` class or an object of the ``scikit-learn``
-         ``GaussianProcessRegressor``
+        :param distributions: List of :class:`.Distribution` objects corresponding to each random variable.
+        :param runmodel_object: A :class:`.RunModel` object, which is used to evaluate the model.
+        :param surrogate: A kriging surrogate model, this object must have :meth:`fit` and :meth:`predict` methods.
+         May be an object of the :py:meth:`UQpy` :class:`Kriging` class or an object of the :py:mod:`scikit-learn`
+         :class:`GaussianProcessRegressor`
         :param learning_function: Learning function used as the selection criteria to identify new samples.
         :param samples: The initial samples at which to evaluate the model.
          Either `samples` or `nstart` must be provided.
         :param samples_number: Total number of samples to be drawn (including the initial samples).
-         If `samples_number` and `samples` are provided when instantiating the class, the ``run`` method will
-         automatically be called. If either `samples_number` or `samples` is not provided, ``AdaptiveKriging`` can be
-         executed by invoking the ``run`` method and passing `samples_number`.
+         If `samples_number` and `samples` are provided when instantiating the class, the :meth:`run` method will
+         automatically be called. If either `samples_number` or `samples` is not provided, :class:`.AdaptiveKriging`
+         can be executed by invoking the :meth:`run` method and passing `samples_number`.
         :param learning_samples_number: Number of samples generated for evaluation of the learning function. Samples for
-         the learning set are drawn using ``LatinHypercubeSampling``.
+         the learning set are drawn using :class:`.LatinHypercubeSampling`.
         :param qoi_name: Name of the quantity of interest. If the quantity of interest is a dictionary, this is used to
          convert it to a list
         :param n_add: Number of samples to be added per iteration.
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
-         If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-         object itself can be passed directly.
+         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+         the object itself can be passed directly.
         """
         # Initialize the internal variables of the class.
         self.runmodel_object = runmodel_object
@@ -185,15 +133,15 @@ class AdaptiveKriging:
         initial_samples_number=None,
     ):
         """
-        Execute the ``Adaptivekriging`` learning iterations.
+        Execute the :class:`.AdaptiveKriging` learning iterations.
 
-        The ``run`` method is the function that performs iterations in the ``Adaptivekriging`` class. If
-        `samples_number` is provided when defining the ``Adaptivekriging`` object, the ``run`` method is automatically
-        called. The user may also call the ``run`` method directly to generate samples. The ``run`` method of the
-        ``Adaptivekriging`` class can be invoked many times.
+        The :meth:`run` method is the function that performs iterations in the :class:`.AdaptiveKriging` class. If
+        `samples_number` is provided when defining the :class:`.AdaptiveKriging` object, the :meth:`run` method is
+        automatically called. The user may also call the :meth:`run` method directly to generate samples.
+        The :meth:`run` method of the :class:`.AdaptiveKriging` class can be invoked many times.
 
-        The ``run`` method has no returns, although it creates and/or appends the `samples` attribute of the
-        ``AdaptiveKriging`` class.
+        The :meth:`run` method has no returns, although it creates and/or appends the `samples` attribute of the
+        :class:`.AdaptiveKriging` class.
 
         :param samples_number: Total number of samples to be drawn (including the initial samples).
         :param samples: Samples at which to evaluate the model.
@@ -202,8 +150,8 @@ class AdaptiveKriging:
          model evaluations are deleted.
          If ``append_samples = True``, samples and their resulting quantities of interest are appended to the
          existing ones.
-        :param initial_samples_number: Number of initial samples, randomly generated using ``LatinHypercubeSampling``
-         class.
+        :param initial_samples_number: Number of initial samples, randomly generated using
+         :class:`.LatinHypercubeSampling` class.
         """
 
         self.samples_number = samples_number
