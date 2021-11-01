@@ -1,23 +1,14 @@
-import copy
 import sys
 
 import numpy as np
-from scipy.interpolate import LinearNDInterpolator
+import scipy
 
 from UQpy.dimension_reduction.distances.grassmanian.GrassmannDistance import GrassmannDistance
-from UQpy.dimension_reduction.distances.grassmanian.baseclass.RiemannianDistance import RiemannianDistance
-from UQpy.dimension_reduction.grassman.Grassman import Grassmann
 from UQpy.dimension_reduction.grassman.interpolations.LinearInterpolation import LinearInterpolation
 from UQpy.dimension_reduction.grassman.interpolations.baseclass.InterpolationMethod import InterpolationMethod
 from UQpy.dimension_reduction.grassman.manifold_projections.SvdProjection import SvdProjection
 from UQpy.dimension_reduction.grassman.optimization_methods.GradientDescent import GradientDescent
-from UQpy.dimension_reduction.grassman.optimization_methods.baseclass.OptimizationMethod import OptimizationMethod
-from UQpy.dimension_reduction.kernels.grassmanian.ProjectionKernel import ProjectionKernel
 from UQpy.dimension_reduction.grassman.interpolations.Interpolation import Interpolation
-
-from UQpy.dimension_reduction.DiffusionMaps import DiffusionMaps
-from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
-from UQpy.dimension_reduction.kernels.euclidean.GaussianKernel import GaussianKernel
 
 
 def test_solution_reconstruction():
@@ -118,7 +109,7 @@ def test_user_interpolation():
             else:
                 point = np.array(point)
 
-            myInterpolator = LinearNDInterpolator(coordinates, samples)
+            myInterpolator = scipy.interpolate.LinearNDInterpolator(coordinates, samples)
             interp_point = myInterpolator(point)
             interp_point = interp_point[0]
 

@@ -1,7 +1,7 @@
 import sys
 
 from UQpy import SvdProjection, Grassmann
-from UQpy.dimension_reduction.kernels.grassmanian import ProjectionKernel, BinetCauchy
+from UQpy.dimension_reduction.kernels.grassmanian import ProjectionKernel, BinetCauchyKernel
 from UQpy.dimension_reduction.kernels.euclidean import GaussianKernel
 
 import numpy as np
