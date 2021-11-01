@@ -1,3 +1,5 @@
+:github_url: https://github.com/SURGroup/UQpy
+
 Welcome to UQpy's documentation!
 ================================
 

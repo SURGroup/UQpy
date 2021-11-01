@@ -68,6 +68,7 @@ class StratifiedSampling:
         Transform samples in the unit hypercube :math:`[0, 1]^n` to the prescribed distribution using the inverse CDF.
 
         :param samples01: `ndarray` containing the generated samples on [0, 1]^dimension.
+
         :return `ndarray` containing the generated samples following the prescribed distribution.
         """
         samples_u_to_x = np.zeros_like(samples01)

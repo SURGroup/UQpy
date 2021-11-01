@@ -8,7 +8,6 @@ Copula
 List of Copulas
 ^^^^^^^^^^^^^^^
 
-______
 
 Clayton
 """"""""

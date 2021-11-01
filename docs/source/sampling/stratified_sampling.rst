@@ -75,3 +75,5 @@ First, the user can define a new geometric decomposition of the parameter space 
 To implement a new stratified sampling method based on a new stratification, the user must write a new subclass of the :class:`.Strata` class defining the new decomposition.
 The details of these subclasses and their requirements are outlined in the sections discussing the respective classes.
 
+.. [9] K. Tocher. "The art of simulation." The English Universities Press, London, UK; 1963.
+

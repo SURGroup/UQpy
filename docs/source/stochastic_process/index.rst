@@ -1,5 +1,5 @@
 Stochastic Process
-=================
+==================
 
 The :py:mod:`.stochastic_process` module consists of classes and functions to generate samples of stochastic processes from
 prescribed properties of the process (e.g. power spectrum, bispectrum and/or autocorrelation function). The existing

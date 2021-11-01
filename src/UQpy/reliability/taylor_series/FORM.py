@@ -33,8 +33,8 @@ class FORM(TaylorSeries):
         times and each time the results are appended to the existing ones.
         This is a child class of the :class:`.TaylorSeries` class.
 
-        :param distributions:Marginal probability distributions of each random variable. Must be an object of type
-         :class:`.DistributionContinuous1D` or :class:`.JointIndependent`.
+        :param distributions: Marginal probability distributions of each random variable. Must be an object of
+         type :class:`.DistributionContinuous1D` or :class:`.JointIndependent`.
         :param runmodel_object: The computational model. It should be of type :class:`RunModel`.
         :param form_object: It should be of type :class:`FORM`. Used to calculate SORM correction.
         :param seed_u: The initial starting point for the `Hasofer-Lind` algorithm.
@@ -52,6 +52,7 @@ class FORM(TaylorSeries):
         :param tol1: Convergence threshold for criterion `e1` of the `HLRF` algorithm. Default: 1.0e-3
         :param tol2: Convergence threshold for criterion `e2` of the `HLRF` algorithm. Default: 1.0e-3
         :param tol3: Convergence threshold for criterion `e3` of the  `HLRF` algorithm. Default: 1.0e-3
+        
         """
         super().__init__(
             distributions,

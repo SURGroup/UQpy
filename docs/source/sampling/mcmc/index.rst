@@ -1,7 +1,13 @@
 MCMC
 ----
 
-The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution :math:`p(x)=\frac{\tilde{p}(x)}{Z}`, where :math:`\tilde{p}(x)` is known but :math:`Z` is hard to compute (this will often be the case when using Bayes' theorem for instance). In order to do this, the theory of a Markov chain, a stochastic model that describes a sequence of states in which the probability of a state depends only on the previous state, is combined with a Monte Carlo simulation method, see e.g. ([1]_, [2]_). More specifically, a Markov Chain is built and sampled from whose stationary distribution is the target distribution :math:`p(x)`.  For instance, the Metropolis-Hastings (MH) algorithm goes as follows:
+The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution
+:math:`p(x)=\frac{\tilde{p}(x)}{Z}`, where :math:`\tilde{p}(x)` is known but :math:`Z` is hard to compute (this will
+often be the case when using Bayes' theorem for instance). In order to do this, the theory of a Markov chain, a
+stochastic model that describes a sequence of states in which the probability of a state depends only on the previous
+state, is combined with a Monte Carlo simulation method, see e.g. ([1]_, [2]_). More specifically, a Markov Chain is
+built and sampled from whose stationary distribution is the target distribution :math:`p(x)`.  For instance, the
+Metropolis-Hastings (MH) algorithm goes as follows:
 
 * initialize with a seed sample :math:`x_{0}`
 * walk the chain: for :math:`k=0,...` do:
@@ -10,14 +16,24 @@ The goal of Markov Chain Monte Carlo is to draw samples from some probability di
 
 .. math:: \alpha(x^{\star} \vert x_{k}):= \min \left\{ \frac{\tilde{p}(x^{\star})}{\tilde{p}(x)}\cdot \frac{Q(x \vert x^{\star})}{Q(x^{\star} \vert x)}, 1 \right\}
 
-The transition probability :math:`Q` is chosen by the user (see input `proposal` of the MH algorithm, and careful attention must be given to that choice as it plays a major role in the accuracy and efficiency of the algorithm. The following figure shows samples accepted (blue) and rejected (red) when trying to sample from a 2d Gaussian distribution using MH, for different scale parameters of the proposal distribution. If the scale is too small, the space is not well explored; if the scale is too large, many candidate samples will be rejected, yielding a very inefficient algorithm. As a rule of thumb, an acceptance rate of 10\%-50\% could be targeted (see `Diagnostics` in the `Utilities` module).
+The transition probability :math:`Q` is chosen by the user (see input `proposal` of the MH algorithm, and careful
+attention must be given to that choice as it plays a major role in the accuracy and efficiency of the algorithm. The
+following figure shows samples accepted (blue) and rejected (red) when trying to sample from a 2d Gaussian distribution
+using MH, for different scale parameters of the proposal distribution. If the scale is too small, the space is not well
+explored; if the scale is too large, many candidate samples will be rejected, yielding a very inefficient algorithm.
+As a rule of thumb, an acceptance rate of 10\%-50\% could be targeted (see `Diagnostics` in the `Utilities` module).
 
-.. image:: ../_static/SampleMethods_MCMC_samples.png
+.. image:: ../../_static/SampleMethods_MCMC_samples.png
    :scale: 40 %
    :alt: IS weighted samples
    :align: center
 
-Finally, samples from the target distribution will be generated only when the chain has converged to its stationary distribution, after a so-called burn-in period. Thus the user would often reject the first few samples (see input `nburn`). Also, the chain yields correlated samples; thus to obtain i.i.d. samples from the target distribution, the user should keep only one out of n samples (see input `jump`). This means that the code will perform in total nburn + jump * N evaluations of the target pdf to yield N i.i.d. samples from the target distribution (for the MH algorithm with a single chain).
+Finally, samples from the target distribution will be generated only when the chain has converged to its stationary
+distribution, after a so-called burn-in period. Thus the user would often reject the first few samples (see input
+`nburn`). Also, the chain yields correlated samples; thus to obtain i.i.d. samples from the target distribution,
+the user should keep only one out of n samples (see input `jump`). This means that the code will perform in total
+nburn + jump * N evaluations of the target pdf to yield N i.i.d. samples from the target distribution (for the MH
+algorithm with a single chain).
 
 The parent class for all MCMC algorithms is the :class:`.MCMC` class, which defines the inputs that are common to all
 MCMC algorithms, along with the :meth:`run` method that is being called to run the chain. Any given MCMC algorithm is a
@@ -58,3 +74,6 @@ List of MCMC algorithms
     DRAM <dram>
     DREAM <dream>
     Stretch <stretch>
+
+.. [1] Gelman et al., "Bayesian data analysis", Chapman and Hall/CRC, 2013
+.. [2] R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014

@@ -15,13 +15,13 @@ class MhInput(SamplingInput):
 
      If pdf_target is a callable, it refers to the joint pdf to sample from, it must take at least one input x, which
      are the point(s) at which to evaluate the pdf. Within MCMC the pdf_target is evaluated as:
-     p(x) = pdf_target(x, *args_target)
+     p(x) = pdf_target(x, \*args_target)
 
      where x is a ndarray of shape (nsamples, dimension) and args_target are additional positional arguments that are
      provided to MCMC via its args_target input.
 
      If pdf_target is a list of callables, it refers to independent marginals to sample from. The marginal in dimension
-     j is evaluated as: p_j(xj) = pdf_target[j](xj, *args_target[j]) where x is a ndarray of shape (nsamples, dimension)
+     j is evaluated as: p_j(xj) = pdf_target[j](xj, \*args_target[j]) where x is a ndarray of shape (nsamples, dimension)
     :param callable log_pdf_target: Logarithm of the target density function from which to draw random samples.
      Either pdf_target or log_pdf_target must be provided (the latter should be preferred for better numerical
      stability).

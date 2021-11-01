@@ -30,12 +30,14 @@ class LatinHypercubeSampling:
         :param int samples_number: Number of samples to be drawn from each distribution.
         :param Criterion criterion: The criterion for pairing the generating sample points. This parameter must be of
          type :class:`.Criterion`.
+
          Options:
-                1. 'Random' - completely random. \n
-                2. 'Centered' - points only at the centre. \n
-                3. 'MaxiMin' - maximizing the minimum distance between points. \n
-                4. 'MinCorrelation' - minimizing the correlation between the points. \n
-                5. User-defined criterion class, by providing an implementation of the abstract class :class:`Criterion`
+
+         1. 'Random' - completely random. \n
+         2. 'Centered' - points only at the centre. \n
+         3. 'MaxiMin' - maximizing the minimum distance between points. \n
+         4. 'MinCorrelation' - minimizing the correlation between the points. \n
+         5. User-defined criterion class, by providing an implementation of the abstract class :class:`Criterion`
         """
         self.dist_object = distributions
         self.criterion = criterion

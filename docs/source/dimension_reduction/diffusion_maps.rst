@@ -1,9 +1,19 @@
 DiffusionMaps
 --------------------------------
 
-In nonlinear dimensionality reduction Diffusion Maps corresponds to a technique used to reveal the intrinsic structure of data sets based on a diffusion process over the data. In particular, the eigenfunctions of Markov matrices defining a random walk on the data are used to obtain a coordinate system represented by the diffusion coordinates revealing the embedded geometry of the data. Moreover, the diffusion coordinates are defined on a Euclidean space where usual metrics define the distances between pairs of data points. Thus, the diffusion maps create a connection between the spectral properties of the diffusion process and the intrinsic geometry of the data resulting in a multiscale representation of the data.
+In nonlinear dimensionality reduction Diffusion Maps corresponds to a technique used to reveal the intrinsic structure
+of data sets based on a diffusion process over the data. In particular, the eigenfunctions of Markov matrices defining a
+random walk on the data are used to obtain a coordinate system represented by the diffusion coordinates revealing the
+embedded geometry of the data. Moreover, the diffusion coordinates are defined on a Euclidean space where usual metrics
+define the distances between pairs of data points. Thus, the diffusion maps create a connection between the spectral
+properties of the diffusion process and the intrinsic geometry of the data resulting in a multiscale representation of
+the data.
 
-To present this method let's assume measure space :math:`(X, \mathcal{A}, \mu)`, where :math:`X` is the dataset, :math:`\mathcal{A}` is a :math:`\sigma-`algebra on the set :math:`X`, and :math:`\mu` a measure; and a non-negative symmetric kernel :math:`k: X \times X \rightarrow \mathbb{R}` representing the pairwise affinity of the data points in a symmetric graph; one can define the connectivity between two points as the transition probability in a random walk using the kernel :math:`k`. Therefore, the diffusion maps technique can be based on a normalized graph Laplacian construction [7]_, [8]_, where
+To present this method let's assume measure space :math:`(X, \mathcal{A}, \mu)`, where :math:`X` is the dataset,
+:math:`\mathcal{A}` is a :math:`\sigma-`algebra on the set :math:`X`, and :math:`\mu` a measure; and a non-negative
+symmetric kernel :math:`k: X \times X \rightarrow \mathbb{R}` representing the pairwise affinity of the data points in a
+symmetric graph; one can define the connectivity between two points as the transition probability in a random walk using
+the kernel :math:`k`. Therefore, the diffusion maps technique can be based on a normalized graph Laplacian construction [7]_, [8]_, where
 
 .. math:: p(x, y) = \frac{k(x,y)}{\int_X k(x,y)d\mu(y)}
 
@@ -29,11 +39,15 @@ From the eigendecomposition of :math:`M`, one can obtain the eigenvectors :math:
 Diffusion Maps Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``DiffusionMaps`` class is imported using the following command:
+The :class:`.DiffusionMaps` class is imported using the following command:
 
->>> from DimensionReduction import DiffusionMaps
+>>> from UQpy.dimension_reduction.DiffusionMaps import DiffusionMaps
 
-One can use the following command to instantiate the class ``DiffusionMaps``
+One can use the following command to instantiate the class :class:`.DiffusionMaps`
 
-.. autoclass:: UQpy.DimensionReduction.DiffusionMaps
+.. autoclass:: UQpy.dimension_reduction.DiffusionMaps
     :members:
+
+.. [7] R. R. Coifman, S. Lafon. Diffusion maps. Applied Computational Harmonic Analysis, 2006, 21(1), p.5–30.
+
+.. [8] R. R. Coifman, I. G. Kevrekidis, S. Lafon, M. Maggioni, and B. Nadler, Diffusionmaps, reduction coordinates, and low dimensional representation of stochastic systems, Multiscale Modeling and Simulation, 2008, 7(2), p.842–864.

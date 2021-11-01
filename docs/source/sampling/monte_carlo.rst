@@ -8,7 +8,7 @@ with the :py:mod:`scipy.stats` package, is that it allows building an object con
 for integration with other :py:mod:`UQpy` modules.
 
 Monte Carlo Sampling Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.sampling.MonteCarloSampling
     :members:

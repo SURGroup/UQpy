@@ -11,7 +11,6 @@ Additionally, joint distributions can be built from their marginals through the 
 List of Multivariate Distributions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-______
 
 Multinomial
 """""""""""
