@@ -11,7 +11,7 @@ def my_interp(coordinates, samples, point):
         Coordinates of the input second_order_tensor points.
 
     * **samples** (`ndarray`)
-        Matrices corresponding to the points on the grassman manifold.
+        Matrices corresponding to the points on the grassmann_manifold manifold.
 
     * **point** (`ndarray`)
         Coordinates of the point to be interpolated.

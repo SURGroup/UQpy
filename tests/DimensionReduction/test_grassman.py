@@ -3,16 +3,16 @@ import sys
 import numpy as np
 import scipy
 
-from UQpy.dimension_reduction.distances.grassmanian.GrassmannDistance import GrassmannDistance
-from UQpy.dimension_reduction.grassman.interpolations.LinearInterpolation import LinearInterpolation
-from UQpy.dimension_reduction.grassman.interpolations.baseclass.InterpolationMethod import InterpolationMethod
-from UQpy.dimension_reduction.grassman.manifold_projections.SvdProjection import SvdProjection
-from UQpy.dimension_reduction.grassman.optimization_methods.GradientDescent import GradientDescent
-from UQpy.dimension_reduction.grassman.interpolations.Interpolation import Interpolation
+from UQpy.dimension_reduction.distances.grassmaniann.GrassmannDistance import GrassmannDistance
+from UQpy.dimension_reduction.grassmann.interpolations.LinearInterpolation import LinearInterpolation
+from UQpy.dimension_reduction.grassmann.interpolations.baseclass.InterpolationMethod import InterpolationMethod
+from UQpy.dimension_reduction.grassmann.manifold_projections.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassmann.optimization_methods.GradientDescent import GradientDescent
+from UQpy.dimension_reduction.grassmann.interpolations.Interpolation import Interpolation
 
 
 def test_solution_reconstruction():
-    nodes = np.array([[0, 0], [1, 0], [1, 1], [0, 1]])  # node_0, node_1, node_2.
+    nodes = np.array([[0, 0], [1, 0], [1, 1], [0, 1]])
     point = np.array([0.1, 0.1])  # Point to interpolate.
 
     D1 = 6

@@ -3,7 +3,7 @@ import numpy as np
 # Define a dataset to test DirectPOD, SnapshotPOD and HOSVD methods
 from UQpy.dimension_reduction.pod.DirectPOD import DirectPOD
 from UQpy.dimension_reduction.pod.SnapshotPOD import SnapshotPOD
-from UQpy.dimension_reduction.HigherOrderSVD import HigherOrderSVD
+from UQpy.dimension_reduction.hosvd.HigherOrderSVD import HigherOrderSVD
 
 Data = np.zeros((2, 2, 3))
 

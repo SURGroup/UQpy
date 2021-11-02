@@ -8,10 +8,10 @@ def my_distance(x0, x1):
     **Input:**
 
     * **x0** (`list` or `ndarray`)
-        Point on the grassman manifold.
+        Point on the grassmann_manifold manifold.
 
     * **x1** (`list` or `ndarray`)
-        Point on the grassman manifold.
+        Point on the grassmann_manifold manifold.
 
     **Output/Returns:**
 

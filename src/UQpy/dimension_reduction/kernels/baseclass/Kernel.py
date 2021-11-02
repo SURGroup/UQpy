@@ -2,7 +2,7 @@ import itertools
 from abc import ABC, abstractmethod
 import numpy as np
 
-from UQpy.dimension_reduction.distances.grassmanian.baseclass import RiemannianDistance
+from UQpy.dimension_reduction.distances.grassmann.baseclass import RiemannianDistance
 
 
 class Kernel(ABC):

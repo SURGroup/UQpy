@@ -9,7 +9,7 @@ def my_karcher(data_points, distance_fun, kwargs):
         **Input:**
 
         * **data_points** (`list`)
-            Points on the grassman manifold.
+            Points on the grassmann_manifold manifold.
             
         * **distance_fun** (`callable`)
             Distance function.
