@@ -21,9 +21,10 @@ class AsimovDistance(RiemannianDistance):
     def compute_distance(self, xi, xj) -> float:
         """
         Compute the Asimov distance between two points on the Grassmann manifold
+
         :param numpy.array xi: Orthonormal matrix representing the first point.
         :param numpy.array xj: Orthonormal matrix representing the first point.
-        :rtype float
+        :rtype: float
         """
         RiemannianDistance.check_points(xi, xj)
 

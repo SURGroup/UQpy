@@ -131,12 +131,12 @@ def test_gradient_enhanced_refinement_rectangular():
 marginals = [Uniform(loc=0., scale=2.), Uniform(loc=0., scale=1.)]
 strata = Rectangular(strata_number=[2, 2])
 x = StratifiedSampling(distributions=marginals, strata_object=strata, samples_per_stratum_number=1, random_state=1)
-y = RefinedStratifiedSampling(sample_object=x, samples_number=6, n_add=2, random_state=2,
-                              refinement_algorithm=SimpleRefinement())
+y = RefinedStratifiedSampling(stratified_sampling=x, samples_number=6, samples_per_iteration=2, random_state=2,
+                              refinement_algorithm=SimpleRefinement(strata=strata))
 
 # dir_path = os.path.dirname(os.path.realpath(__file__))
 # filepath = os.path.join(dir_path, 'python_model_function.py')
-rmodel = RunModel(model_script='python_model_function.py', vec='False')
+rmodel = RunModel(model_script='python_model_function.py', vec=False)
 from UQpy.surrogates.kriging.regression_models import Linear
 from UQpy.surrogates.kriging.correlation_models import Exponential
 K = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimizations_number=20,
@@ -152,10 +152,12 @@ K.fit(samples=x.samples, values=rmodel.qoi_list)
 strata_vor = Voronoi(seeds_number=4, dimension=2)
 x_vor = StratifiedSampling(distributions=marginals, strata_object=strata_vor, samples_per_stratum_number=1,
                            random_state=10)
-y_vor = RefinedStratifiedSampling(sample_object=x_vor, samples_number=6, n_add=2)
+y_vor = RefinedStratifiedSampling(stratified_sampling=x_vor, samples_number=6, samples_per_iteration=2,
+                                  refinement_algorithm=SimpleRefinement(strata=strata))
 
-rmodel_ = RunModel(model_script='python_model_function.py', vec='False')
-K_ = Kriging(reg_model='Linear', corr_model='Exponential', nopt=20, corr_model_params=[1, 1])
+rmodel_ = RunModel(model_script='python_model_function.py', vec=False)
+K_ = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimizations_number=20,
+             correlation_model_parameters=[1, 1])
 # K_.fit(samples=x_vor.samples, values=rmodel_.qoi_list)
 # z_vor = VoronoiRSS(sample_object=x_vor, runmodel_object=rmodel_, krig_object=K_, nsamples=6,
 #                    random_state=x_vor.random_state, max_train_size=4, verbose=True)

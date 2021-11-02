@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath("./src/UQpy/docs"))
 # -- Project information -----------------------------------------------------
 
 project = "UQpy"
-copyright = "2020, Michael D. Shields"
+copyright = "2021, Michael D. Shields"
 author = (
     "Michael D. Shields, Dimitrs G. Giovanis, Audrey Olivier, B.S. Aakash, Mohit Singh Chauhan, Lohit Vandanapu, "
     "Ketson RM dos Santos"
