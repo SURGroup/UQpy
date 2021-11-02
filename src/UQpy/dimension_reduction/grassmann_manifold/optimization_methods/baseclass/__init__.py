@@ -1,3 +1,3 @@
-from UQpy.dimension_reduction.grassman.optimization_methods.baseclass.OptimizationMethod import (
+from UQpy.dimension_reduction.grassmann_manifold.optimization_methods.baseclass.OptimizationMethod import (
     OptimizationMethod,
 )

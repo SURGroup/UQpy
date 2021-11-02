@@ -3,10 +3,10 @@ import copy
 import numpy as np
 
 from UQpy import GrassmannDistance, OptimizationMethod, RiemannianDistance
-from UQpy.dimension_reduction.grassman.manifold_projections.SvdProjection import SvdProjection
-from UQpy.dimension_reduction.grassman.Grassman import Grassmann
+from UQpy.dimension_reduction.grassmann_manifold.manifold_projections.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
 import sys
-from UQpy.dimension_reduction.grassman.optimization_methods.GradientDescent import GradientDescent
+from UQpy.dimension_reduction.grassmann_manifold.optimization_methods.GradientDescent import GradientDescent
 
 
 def test_karcher():
@@ -72,7 +72,7 @@ def test_user_karcher():
             for i in range(points_number):
                 rank.append(min(np.shape(data_points[i])))
 
-            from UQpy.dimension_reduction.grassman.Grassman import Grassmann
+            from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
             max_rank = max(rank)
             fmean = []
             for i in range(points_number):
@@ -88,7 +88,7 @@ def test_user_karcher():
             l = 0
             avg = []
             _gamma = []
-            from UQpy.dimension_reduction.grassman.Grassman import Grassmann
+            from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
             if self.acceleration:
                 _gamma = Grassmann.log_map(manifold_points=data_points,
                                            reference_point=np.asarray(mean_element))

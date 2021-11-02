@@ -3,12 +3,12 @@ import sys
 import numpy as np
 import scipy
 
-from UQpy.dimension_reduction.distances.grassmaniann.GrassmannDistance import GrassmannDistance
-from UQpy.dimension_reduction.grassmann.interpolations.LinearInterpolation import LinearInterpolation
-from UQpy.dimension_reduction.grassmann.interpolations.baseclass.InterpolationMethod import InterpolationMethod
-from UQpy.dimension_reduction.grassmann.manifold_projections.SvdProjection import SvdProjection
-from UQpy.dimension_reduction.grassmann.optimization_methods.GradientDescent import GradientDescent
-from UQpy.dimension_reduction.grassmann.interpolations.Interpolation import Interpolation
+from UQpy.dimension_reduction.distances.grassmann.GrassmannDistance import GrassmannDistance
+from UQpy.dimension_reduction.grassmann_manifold.interpolations.LinearInterpolation import LinearInterpolation
+from UQpy.dimension_reduction.grassmann_manifold.interpolations.baseclass.InterpolationMethod import InterpolationMethod
+from UQpy.dimension_reduction.grassmann_manifold.manifold_projections.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassmann_manifold.optimization_methods.GradientDescent import GradientDescent
+from UQpy.dimension_reduction.grassmann_manifold.interpolations.Interpolation import Interpolation
 
 
 def test_solution_reconstruction():

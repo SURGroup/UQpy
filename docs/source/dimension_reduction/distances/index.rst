@@ -7,4 +7,4 @@ Distances
    :caption: Distance Metrics
 
     Euclidean Distances <euclidean_distances>
-    Riemannian Distances <grassmann_distances>
+    Grassmann Distances <grassmann_distances>
