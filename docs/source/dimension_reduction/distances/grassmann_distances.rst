@@ -1,5 +1,5 @@
 Grassmann Distances
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------------------
 
 The Grassmannian (or Riemannian) distance is a metric that assigns nonnegative values to each pair of subspaces :math:`Y_1, Y_2 \in \mathbb{R}^{n \times p}` on the Grassmann manifold :math:`\mathcal{G}(p, n)`. Formally, is defined as the length of the shortest geodesic connecting the two points on :math:`\mathcal{G}(p, n)`. :py:mod:`UQpy` introduces various Grassmann distances derived from the principal angles [1]_
 
@@ -25,6 +25,17 @@ One can use the following command to instantiate the class :class:`.AsimovDistan
     :members:
 
 
+Binet-Cauchy Distance
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.BinetCauchyDistance` class is imported using the following command:
+
+>>> from UQpy.dimension_reduction.distances.grassmann.BinetCauchyDistance import BinetCauchyDistance
+
+One can use the following command to instantiate the class :class:`.BinetCauchyDistance`
+
+.. autoclass:: UQpy.dimension_reduction.distances.grassmann.BinetCauchyDistance
+    :members:
 
 
 

@@ -1,5 +1,5 @@
 import itertools
-from UQpy.dimension_reduction.grassmann.manifold_projections.baseclass.ManifoldProjection import (
+from UQpy.dimension_reduction.grassmann_manifold.manifold_projections.baseclass.ManifoldProjection import (
     ManifoldProjection,
 )
 from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel

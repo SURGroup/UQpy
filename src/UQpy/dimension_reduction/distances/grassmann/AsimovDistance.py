@@ -10,9 +10,6 @@ class AsimovDistance(RiemannianDistance):
     A class to calculate the Asimov distance between two  Grassmann points defined as:
 
     .. math::
-        x_j' x_i = UΣV
-
-        \Theta = cos^{-1}(Σ)
 
         d_{A}(x_i, x_j) = \max(\Theta)
 
@@ -23,7 +20,7 @@ class AsimovDistance(RiemannianDistance):
         Compute the Asimov distance between two points on the Grassmann manifold
 
         :param numpy.array xi: Orthonormal matrix representing the first point.
-        :param numpy.array xj: Orthonormal matrix representing the first point.
+        :param numpy.array xj: Orthonormal matrix representing the second point.
         :rtype: float
         """
         RiemannianDistance.check_points(xi, xj)
