@@ -67,7 +67,9 @@ class InverseTranslation:
             self.samples_gaussian = self._inverse_translate_non_gaussian_samples().reshape(
                 self.samples_shape
             )
+            """The inverse translated Gaussian samples from the non-Gaussian samples."""
         self.power_spectrum_gaussian = self._itam_power_spectrum()
+        """The power spectrum of the inverse translated Gaussian stochastic processes"""
         self.auto_correlation_function_gaussian = wiener_khinchin_transform(
             self.power_spectrum_gaussian, self.frequency, self.time
         )
@@ -75,6 +77,7 @@ class InverseTranslation:
             self.auto_correlation_function_gaussian
             / self.auto_correlation_function_gaussian[0]
         )
+        """The correlation function of the inverse translated Gaussian stochastic processes."""
 
     def _inverse_translate_non_gaussian_samples(self):
         if hasattr(self.distributions, "cdf"):

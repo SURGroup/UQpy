@@ -45,7 +45,17 @@ class Voronoi(Strata):
         self.dimension = dimension
         self.decomposition_iterations = decomposition_iterations
         self.voronoi = None
+        """
+        Defines a Voronoi decomposition of the set of reflected points. When creating the Voronoi decomposition on
+        the unit hypercube, the code reflects the points on the unit hypercube across all faces of the unit hypercube.
+        This causes the Voronoi decomposition to create edges along the faces of the hypercube.
+        
+        This object is not the Voronoi decomposition of the unit hypercube. It is the Voronoi decomposition of all
+        points and their reflections from which the unit hypercube is extracted.
+        
+        To access the vertices in the unit hypercube, see the attribute `vertices`."""
         self.vertices = []
+        """A list of the vertices for each Voronoi stratum on the unit hypercube."""
         self.stratification_criterion = stratification_criterion
 
         if self.seeds is not None:

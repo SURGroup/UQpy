@@ -23,3 +23,6 @@ The module :py:mod:`.dimension_reduction` currently contains the following class
     HOSVD <hosvd>
     Diffusion Maps <diffusion_maps>
     Grassmann <grassmann>
+    Distances <distances/index>
+    Kernels <kernels/index>
+    Manifold Projections <manifold_projections/index>

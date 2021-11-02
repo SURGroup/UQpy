@@ -153,6 +153,7 @@ files, their structure, and when/if they are required.
 different ways depending on the type of model being executed.
 
 * *Python Model:* For a python model, the ``model_script`` is directly imported into the working python environment.
+
 The ``model_script`` must have an object (either a class object or a function object) defined within it, and specified
 in :class:`.RunModel` by ``model_object_name``, that contains the computational model itself. The ``samples`` passed to
 :class:`.RunModel` and any additional keyword arguments are passed as inputs to the model object. Examples for how the
@@ -176,6 +177,7 @@ Python model may be structured are provided below.
 	 return output
 	 
 * *Third-Party Software Model:* When running a third-party model, :class:`.RunModel` does not import ``model_script``.
+
 Instead, :class:`.RunModel` calls the model script through
   the command line as
     

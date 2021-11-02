@@ -15,7 +15,9 @@ class Copula(ABC):
         :param kwargs: Parameters of the copula.
         """
         self.parameters = kwargs
+        """Parameters of the copula."""
         self.ordered_parameters = ordered_parameters
+        """List of parameter names"""
         if self.ordered_parameters is None:
             self.ordered_parameters = tuple(kwargs.keys())
         if len(self.ordered_parameters) != len(self.parameters):

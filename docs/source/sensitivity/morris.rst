@@ -36,6 +36,7 @@ Morris Class Description
 
 .. autoclass:: UQpy.sensitivity.MorrisSensitivity
     :members:
+    :private-members:
 
 
 .. Note::

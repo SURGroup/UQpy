@@ -12,3 +12,4 @@ Decorrelate Class Descriptions
 
 .. autoclass:: UQpy.transformations.Decorrelate
     :members:
+    :private-members:

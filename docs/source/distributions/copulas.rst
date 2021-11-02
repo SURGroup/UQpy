@@ -3,12 +3,12 @@ Copula
 
 .. autoclass:: UQpy.distributions.baseclass.Copula
     :members:
+    :private-members:
 
 
 List of Copulas
 ^^^^^^^^^^^^^^^
 
-______
 
 Clayton
 """"""""

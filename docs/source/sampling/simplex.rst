@@ -19,5 +19,6 @@ Simplex Class Descriptions
 
 .. autoclass:: UQpy.sampling.SimplexSampling
     :members:
+    :private-members:
 
 .. [8] W. N. Edeling, R. P. Dwight, P. Cinnella, "Simplex-stochastic collocation method with improved scalability", Journal of Computational Physics, 310:301–328, 2016.

@@ -10,7 +10,7 @@ following classes:
 * :class:`.InferenceModel`: Define a probabilistic model for inference.
 * :class:`.MLE`: Compute maximum likelihood parameter estimate.
 * :class:`.InformationModelSelection`: Perform model selection using information theoretic criteria.
-* :class:`.BayesParameterEstimation`: Perform Bayesian parameter estimation (estimate posterior density) via :class:`.MCMC` or :class:`.ImportanceSampling.
+* :class:`.BayesParameterEstimation`: Perform Bayesian parameter estimation (estimate posterior density) via :class:`.MCMC` or :class:`.ImportanceSampling`.
 * :class:`.BayesModelSelection`: Estimate model posterior probabilities.
 
 

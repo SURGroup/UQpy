@@ -42,11 +42,17 @@ class StratifiedSampling:
         """
         self.logger = logging.getLogger(__name__)
         self.weights = None
+        """Individual sample weights."""
         self.strata_object = strata_object
 
         self.samples_per_stratum_number = samples_per_stratum_number
         self.samples_number = samples_number
-        self.samplesU01, self.samples = None, None
+
+        self.samples = None
+        """The generated samples following the prescribed distribution."""
+        self.samplesU01 = None
+        """The generated samples on the unit hypercube."""
+
         self.distributions = distributions
         self.random_state = process_random_state(random_state)
 
@@ -68,6 +74,7 @@ class StratifiedSampling:
         Transform samples in the unit hypercube :math:`[0, 1]^n` to the prescribed distribution using the inverse CDF.
 
         :param samples01: `ndarray` containing the generated samples on [0, 1]^dimension.
+
         :return `ndarray` containing the generated samples following the prescribed distribution.
         """
         samples_u_to_x = np.zeros_like(samples01)

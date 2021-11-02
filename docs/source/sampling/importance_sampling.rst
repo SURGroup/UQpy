@@ -18,6 +18,7 @@ ImportanceSampling Class Descriptions
 
 .. autoclass:: UQpy.sampling.ImportanceSampling
    :members:
+   :private-members:
 
 ISInput Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

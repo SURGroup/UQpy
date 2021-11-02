@@ -69,14 +69,14 @@ pygments_style = None
 html_theme = "sphinx_rtd_theme"
 
 html_theme_options = {
-    "github_user": "SURG",
-    "github_repo": "UQpy",
-    "github_banner": True,
-    "logo": "logo.jpg",
-    "logo_name": False,
-    "logo_text_align": "left",
-    "description": ("Uncertainty quantification with Python "),
+    'logo_only': True,
+    'style_nav_header_background': '#F0F0F0',
+    'vcs_pageview_mode': 'view'
 }
+
+
+github_url = "https://github.com/SURGroup/UQpy"
+html_logo = "_static/logo.png"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

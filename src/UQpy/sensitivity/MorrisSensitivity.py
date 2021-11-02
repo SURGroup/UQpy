@@ -72,10 +72,15 @@ class MorrisSensitivity:
         self.maximize_dispersion = maximize_dispersion
 
         self.trajectories_unit_hypercube = None
+        """Trajectories in the unit hypercube, `ndarray` of shape `(trajectories_number, d+1, d)`"""
         self.trajectories_physical_space = None
+        """Trajectories in the physical space, `ndarray` of shape `(trajectories_number, d+1, d)`"""
         self.elementary_effects = None
+        """Elementary effects :math:`EE_{k}`, `ndarray` of shape `(trajectories_number, d, ny)`."""
         self.mustar_indices = None
+        """First Morris sensitivity index :math:`\mu_{k}^{\star}`, `ndarray` of shape `(d, ny)`"""
         self.sigma_indices = None
+        """Second Morris sensitivity index :math:`\sigma_{k}`, `ndarray` of shape `(d, ny)`"""
 
         if trajectories_number is not None:
             self.run(trajectories_number)

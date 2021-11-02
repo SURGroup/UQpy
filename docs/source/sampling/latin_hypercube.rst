@@ -9,6 +9,7 @@ LatinHypercubeSampling Class Descriptions
 
 .. autoclass:: UQpy.sampling.LatinHypercubeSampling
     :members:
+    :private-members:
 
 Adding New Latin Hypercube Design Criteria
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

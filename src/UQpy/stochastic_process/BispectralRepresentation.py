@@ -51,6 +51,7 @@ class BispectralRepresentation:
         self.frequency_interval = np.array(frequency_interval)
         self.time_interval = np.array(time_interval)
         self.number_of_dimensions = len(power_spectrum.shape)
+        """The dimensionality of the stochastic process."""
         self.power_spectrum = power_spectrum
         self.bispectrum = bispectrum
 
@@ -72,13 +73,23 @@ class BispectralRepresentation:
         self.logger = logging.getLogger(__name__)
 
         self.b_ampl = np.absolute(bispectrum)
+        """The amplitude of the bispectrum."""
         self.b_real = np.real(bispectrum)
+        """The real part of the bispectrum."""
         self.b_imag = np.imag(bispectrum)
+        """The imaginary part of the bispectrum."""
         self.biphase = np.arctan2(self.b_imag, self.b_real)
+        """The biphase values of the bispectrum."""
         self.biphase[np.isnan(self.biphase)] = 0
 
         self.phi = None
+        """The random phase angles used in the simulation of the stochastic process.
+        The shape of the phase angles (`samples_number`, `number_of_variables`, `number_frequency_intervals[0]`, ...,
+        `number_frequency_intervals[number_of_dimensions-1]`)"""
         self.samples = None
+        """Generated samples.
+        The shape of the samples is (`samples_number`, `number_of_variables`, `number_time_intervals[0]`, ...,
+        `number_time_intervals[number_of_dimensions-1]`)"""
 
         self.case = case
 
@@ -87,6 +98,7 @@ class BispectralRepresentation:
             self._compute_bicoherence_uni()
         else:
             self.number_of_variables = self.power_spectrum.shape[0]
+            """Number of variables in the stochastic process."""
             self.case = "multi"
 
         if self.nsamples is not None:
@@ -97,8 +109,11 @@ class BispectralRepresentation:
             "UQpy: Stochastic Process: Computing the partial bicoherence values."
         )
         self.bc2 = np.zeros_like(self.b_real)
+        """The bicoherence values of the power spectrum and bispectrum."""
         self.pure_power_sepctrum = np.zeros_like(self.power_spectrum)
+        """The pure part of the power spectrum."""
         self.sum_bc2 = np.zeros_like(self.power_spectrum)
+        """The sum of the bicoherence values for single frequencies."""
 
         if self.number_of_dimensions == 1:
             self.pure_power_sepctrum[0] = self.power_spectrum[0]

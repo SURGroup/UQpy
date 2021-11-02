@@ -333,27 +333,16 @@ class DiffusionMaps:
 
     def parsimonious(self, num_eigenvectors=None, visualization=False):
         """
-
         This method implements an algorithm based on local linear regression can be used to identify the eigenvectors
         corresponding to repeated eigen directions.
 
-        **Input:**
-
-        * **num_eigenvectors** (`int`):
-            An integer for the number of eigenvectors to be tested.
-
-        * **get_error** (`Boolean`):
-            A boolean declaring whether to return a graphic to visualize the residuals of each eigenvector.
-
-        **Output/Returns:**
-        * **index** (`ndarray`):
-            The eigenvectors indices from the largest to the smallest residual.
-
-        * **residuals** (`ndarray`):
-            Residuals used to identify the most parsimonious low-dimensional representation.
-
+        :param int num_eigenvectors: An integer for the number of eigenvectors to be tested.
+        :param bool visualization: A boolean declaring whether to return a graphic to visualize the residuals of each
+         eigenvector.
+        :return: The eigenvectors indices from the largest to the smallest residual and
+         Residuals used to identify the most parsimonious low-dimensional representation.
+        :rtype: tuple
         """
-
         if num_eigenvectors is None:
             num_eigenvectors = self.eigenvectors_number
         elif num_eigenvectors > self.eigenvectors_number:

@@ -16,6 +16,7 @@ MLEstimation Class Descriptions
 
 .. autoclass:: UQpy.inference.MLE
    :members:
+   :private-members:
 
 .. Note::
 

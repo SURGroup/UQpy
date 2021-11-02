@@ -109,7 +109,7 @@ class TaylorSeries:
 
         :param point_u: Point in the uncorrelated standard normal space at which to evaluate the gradient with shape
          `samples.shape=(1, dimension)`. Either `point_u` or `point_x` must be specified. If `point_u` is specified,
-          the derivatives are computed directly.
+         the derivatives are computed directly.
         :param runmodel_object: The computational model. It should be of type :class:`RunModel` .
         :param nataf_object: An object of the :class:`.Nataf` class .
         :param order: Order of the derivative. Available options: 'first', 'second', 'mixed'. Default: 'first'.

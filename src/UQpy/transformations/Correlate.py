@@ -10,10 +10,13 @@ class Correlate:
         """
         A class to induce correlation to standard normal random variables.
 
-        :param samples_u: Uncorrelated  standard normal vector of shape ``(nsamples, dimension)``.
+        :param samples_u: Uncorrelated  standard normal vector of shape ``(samples_number, dimension)``.
         :param corr_z: The correlation  matrix (:math:`\mathbf{C_Z}`) of the standard normal random vector **Z** .
         """
         self.samples_y = samples_u
         self.corr_z = corr_z
         self.H = cholesky(self.corr_z, lower=True)
+        """The lower diagonal matrix resulting from the Cholesky decomposition of the correlation  matrix
+        (:math:`\mathbf{C_Z}`)."""
         self.samples_z = (self.H @ samples_u.T).T
+        """Correlated standard normal vector of shape ``(samples_number, dimension)``."""

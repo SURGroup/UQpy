@@ -17,5 +17,6 @@ InfoModelSelection Class Descriptions
 
 .. autoclass:: UQpy.inference.InformationModelSelection
     :members:
+    :private-members:
 
 .. [2] Burnham, K. P. and Anderson, D. R., "Model Selection and Multimodel Inference: A Practical Information-Theoretic Approach", Springer-Verlag, 2002

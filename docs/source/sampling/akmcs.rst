@@ -121,6 +121,7 @@ AdaptiveKriging Class Descriptions
 
 .. autoclass:: UQpy.sampling.AdaptiveKriging
     :members:
+    :private-members:
 
 
 .. [3] B. Echard, N. Gayton and M. Lemaire, "AK-MCS: An active learning reliability method combining Kriging and Monte Carlo Simulation", Structural Safety, Pages 145-154, 2011.

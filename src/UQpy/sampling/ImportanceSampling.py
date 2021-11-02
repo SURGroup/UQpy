@@ -51,9 +51,15 @@ class ImportanceSampling:
 
         # Initialize the samples and weights
         self.samples = None
+        """Set of samples, `ndarray` of shape (samples_number, dimensions)"""
         self.unnormalized_log_weights = None
+        """Unnormalized log weights, i.e., log_w(x) = log_target(x) - log_proposal(x), `ndarray` of shape 
+        (samples_number, )"""
         self.weights = None
+        """Importance weights, weighted so that they sum up to 1, `ndarray` of shape (samples_number, )"""
         self.unweighted_samples = None
+        """Set of un-weighted samples (useful for instance for plotting), computed by calling the :meth:`resample` 
+        method"""
 
         # Run IS if nsamples is provided
         if samples_number is not None and samples_number != 0:

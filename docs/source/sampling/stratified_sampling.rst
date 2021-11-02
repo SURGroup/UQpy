@@ -36,15 +36,19 @@ Strata Class Descriptions
 
 .. autoclass:: UQpy.utilities.strata.baseclass.Strata
     :members:
+    :private-members:
 
 .. autoclass:: UQpy.utilities.strata.Rectangular
     :members:
+    :private-members:
 
 .. autoclass:: UQpy.utilities.strata.Voronoi
     :members:
+    :private-members:
 
 .. autoclass:: UQpy.utilities.strata.Delaunay
     :members:
+    :private-members:
 
 Adding a new :class:`.Strata` class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -66,6 +70,7 @@ StratifiedSampling Class Descriptions
 
 .. autoclass:: UQpy.sampling.StratifiedSampling
     :members:
+    :private-members:
 
 New Stratified Sampling Methods
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -74,4 +79,6 @@ Extension of the stratified sampling capabilities in :py:mod:`UQpy` can be perfo
 First, the user can define a new geometric decomposition of the parameter space by creating a new subclass of the :class:`Strata` class.
 To implement a new stratified sampling method based on a new stratification, the user must write a new subclass of the :class:`.Strata` class defining the new decomposition.
 The details of these subclasses and their requirements are outlined in the sections discussing the respective classes.
+
+.. [9] K. Tocher. "The art of simulation." The English Universities Press, London, UK; 1963.
 

@@ -180,3 +180,4 @@ Kriging Class Descriptions
 
 .. autoclass:: UQpy.surrogates.kriging.Kriging
     :members:
+    :private-members:

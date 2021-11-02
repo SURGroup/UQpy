@@ -46,6 +46,7 @@ Nataf Class Descriptions
 
 .. autoclass:: UQpy.transformations.Nataf
     :members:
+    :private-members:
 
 
 .. [1] A. Nataf, Determination des distributions dont les marges sont donnees, C. R. Acad. Sci.

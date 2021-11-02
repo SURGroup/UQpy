@@ -45,6 +45,12 @@ class Translation:
         self.frequency_interval = frequency_interval
         self.number_time_intervals = number_time_intervals
         self.number_frequency_intervals = number_frequency_intervals
+        self.correlation_function_non_gaussian = None
+        """The correlation function of the translated non-Gaussian stochastic processes obtained by distorting the 
+        Gaussian correlation function."""
+        self.scaled_correlation_function_non_gaussian = None
+        """This obtained by scaling the correlation function of the non-Gaussian stochastic processes to make the
+        correlation at '0' lag to be 1"""
         if correlation_function_gaussian is None and power_spectrum_gaussian is None:
             print(
                 "Either the Power Spectrum or the Autocorrelation function should be specified"
@@ -68,6 +74,7 @@ class Translation:
         if samples_gaussian is not None:
             self.samples_shape = samples_gaussian.shape
             self.samples_gaussian = samples_gaussian.flatten()[:, np.newaxis]
+            """Translated non-Gaussian stochastic process from Gaussian samples."""
             self.samples_non_gaussian = self._translate_gaussian_samples().reshape(
                 self.samples_shape
             )
@@ -80,6 +87,7 @@ class Translation:
             np.arange(0, self.number_frequency_intervals) * self.frequency_interval,
             np.arange(0, self.number_time_intervals) * self.time_interval,
         )
+        """The power spectrum of the translated non-Gaussian stochastic processes."""
 
     def _translate_gaussian_samples(self):
         standard_deviation = np.sqrt(self.correlation_function_gaussian[0])

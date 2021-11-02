@@ -30,18 +30,21 @@ class LatinHypercubeSampling:
         :param int samples_number: Number of samples to be drawn from each distribution.
         :param Criterion criterion: The criterion for pairing the generating sample points. This parameter must be of
          type :class:`.Criterion`.
+
          Options:
-                1. 'Random' - completely random. \n
-                2. 'Centered' - points only at the centre. \n
-                3. 'MaxiMin' - maximizing the minimum distance between points. \n
-                4. 'MinCorrelation' - minimizing the correlation between the points. \n
-                5. User-defined criterion class, by providing an implementation of the abstract class :class:`Criterion`
+
+         1. 'Random' - completely random. \n
+         2. 'Centered' - points only at the centre. \n
+         3. 'MaxiMin' - maximizing the minimum distance between points. \n
+         4. 'MinCorrelation' - minimizing the correlation between the points. \n
+         5. User-defined criterion class, by providing an implementation of the abstract class :class:`Criterion`
         """
         self.dist_object = distributions
         self.criterion = criterion
         self.samples_number = samples_number
         self.logger = logging.getLogger(__name__)
-
+        self.samples = None
+        """ The generated LHS samples."""
         if isinstance(self.dist_object, list):
             self.samples = np.zeros([self.samples_number, len(self.dist_object)])
         elif isinstance(self.dist_object, DistributionContinuous1D):
@@ -52,6 +55,7 @@ class LatinHypercubeSampling:
             )
 
         self.samplesU01 = np.zeros_like(self.samples)
+        """The generated LHS samples on the unit hypercube."""
 
         if self.samples_number is not None:
             self.run(self.samples_number)

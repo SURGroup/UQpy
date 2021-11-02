@@ -12,3 +12,4 @@ KarhunenLoeve Class Descriptions
 
 .. autoclass:: UQpy.stochastic_process.KarhunenLoeveExpansion
     :members:
+    :private-members:

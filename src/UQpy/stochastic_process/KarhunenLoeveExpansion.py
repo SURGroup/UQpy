@@ -47,7 +47,9 @@ class KarhunenLoeveExpansion:
         self.nsamples = samples_number
 
         self.samples = None
+        """Array of generated samples."""
         self.xi = None
+        """The independent gaussian random variables used in the expansion."""
 
         if self.nsamples is not None:
             self.run(samples_number=self.nsamples)

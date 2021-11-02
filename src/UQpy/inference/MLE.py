@@ -45,7 +45,9 @@ class MLE:
         self.logger = logging.getLogger(__name__)
         self.optimizer = optimizer
         self.mle = None
+        """Value of parameter vector that maximizes the likelihood function."""
         self.max_log_like = None
+        """Value of the likelihood function at the MLE."""
         self.logger.info("UQpy: Initialization of MLEstimation object completed.")
 
         # Run the optimization procedure

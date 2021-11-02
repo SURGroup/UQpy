@@ -14,3 +14,4 @@ Correlate Class Descriptions
 
 .. autoclass:: UQpy.transformations.Correlate
     :members:
+    :private-members:

@@ -68,7 +68,7 @@ def test_mh_2d_nsamplecheck():
     mh_input = MhInput(dimension=2, pdf_target=target,
                        chains_number=2, random_state=123)
     x = MetropolisHastings(mh_input=mh_input, samples_number=60)
-    assert x.nsamples_per_chain + x.samples_number == 90
+    assert x.samples_number_per_chain + x.samples_number == 90
 
 
 def test_mh_2d_2chainz():

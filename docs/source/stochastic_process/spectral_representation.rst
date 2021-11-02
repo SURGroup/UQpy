@@ -15,3 +15,4 @@ SpectralRepresentation Class Descriptions
 
 .. autoclass:: UQpy.stochastic_process.SpectralRepresentation
     :members:
+    :private-members:

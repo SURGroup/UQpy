@@ -36,7 +36,9 @@ class Delaunay(Strata):
         self.seeds_number = seeds_number
         self.dimension = dimension
         self.delaunay = None
+        """Defines a Delaunay decomposition of the set of seed points and all corner points."""
         self.centroids = []
+        """A list of the vertices for each Voronoi stratum on the unit hypercube."""
         self.logger = logging.getLogger(__name__)
 
         if self.seeds is not None:
