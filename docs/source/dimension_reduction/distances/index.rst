@@ -1,9 +1,11 @@
 Distances
 ^^^^^^^^^
 
+A module to calculate distances between points in the Euclidean space and between subspaces on the Grassmann manifold.
+
+
 .. toctree::
    :maxdepth: 1
-   :hidden:
    :caption: Distance Metrics
 
     Euclidean Distances <euclidean_distances>
