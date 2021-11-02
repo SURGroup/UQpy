@@ -1,9 +1,11 @@
 Kernels
 ^^^^^^^^^
 
+A module to define kernel functions in the Euclidean space and the Grassmann manifold that are compatible with a valid metric.
+
+
 .. toctree::
    :maxdepth: 1
-   :hidden:
    :caption: Kernels
 
     Euclidean Kernels <euclidean_kernels>

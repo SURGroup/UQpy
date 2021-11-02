@@ -17,10 +17,10 @@ class BinetCauchyDistance(RiemannianDistance):
 
     def compute_distance(self, xi, xj) -> float:
         """
-        Compute the Binet-Cauchy distance between two points on the Grassmann manifold
+        Compute the Binet-Cauchy distance between two points on the Grassmann manifold.
 
-        :param numpy.array xi: Orthonormal matrix representing the first point.
-        :param numpy.array xj: Orthonormal matrix representing the second point.
+        :param numpy.array xi: Orthonormal matrix representing the first subspace.
+        :param numpy.array xj: Orthonormal matrix representing the second subspace.
         :rtype: float
         """
         RiemannianDistance.check_points(xi, xj)

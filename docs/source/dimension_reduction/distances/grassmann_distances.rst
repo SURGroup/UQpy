@@ -12,7 +12,7 @@ where the first principal angle :math:`\theta_1` is the smallest angle between a
 where :math:`\cos(\Theta)=\text{diag}(\cos\theta_1, \ldots,\cos\theta_p)`. This definition of distance can be extended to cases where :math:`Y_1` and :math:`Y_2` have different number of columns :math:`p`. More information can be found in [2]_.
 
 
-Asimov Distance
+Asimov
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :class:`.AsimovDistance` class is imported using the following command:
@@ -25,7 +25,7 @@ One can use the following command to instantiate the class :class:`.AsimovDistan
     :members:
 
 
-Binet-Cauchy Distance
+Binet-Cauchy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :class:`.BinetCauchyDistance` class is imported using the following command:
@@ -37,6 +37,85 @@ One can use the following command to instantiate the class :class:`.BinetCauchyD
 .. autoclass:: UQpy.dimension_reduction.distances.grassmann.BinetCauchyDistance
     :members:
 
+
+Fubini-Study
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.FubiniStudyDistance` class is imported using the following command:
+
+>>> from UQpy.dimension_reduction.distances.grassmann.FubiniStudyDistance import FubiniStudyDistance
+
+One can use the following command to instantiate the class :class:`.FubiniStudyDistance`
+
+.. autoclass:: UQpy.dimension_reduction.distances.grassmann.FubiniStudyDistance
+    :members:
+	
+
+
+Grassmann 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.GrassmannDistance` class is imported using the following command:
+
+>>> from UQpy.dimension_reduction.distances.grassmann.GrassmannDistance import GrassmannDistance
+
+One can use the following command to instantiate the class :class:`.GrassmannDistance`
+
+.. autoclass:: UQpy.dimension_reduction.distances.grassmann.GrassmannDistance
+    :members:
+
+
+Martin 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.MartinDistance` class is imported using the following command:
+
+>>> from UQpy.dimension_reduction.distances.grassmann.GrassmannDistance import MartinDistance
+
+One can use the following command to instantiate the class :class:`.MartinDistance`
+
+.. autoclass:: UQpy.dimension_reduction.distances.grassmann.MartinDistance
+    :members:
+	
+	
+	
+Procrustes 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.ProcrustesDistance` class is imported using the following command:
+
+>>> from UQpy.dimension_reduction.distances.grassmann.GrassmannDistance import ProcrustesDistance
+
+One can use the following command to instantiate the class :class:`.ProcrustesDistance`
+
+.. autoclass:: UQpy.dimension_reduction.distances.grassmann.ProcrustesDistance
+    :members:
+	
+	
+Projection 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.ProjectionDistance` class is imported using the following command:
+
+>>> from UQpy.dimension_reduction.distances.grassmann.GrassmannDistance import ProjectionDistance
+
+One can use the following command to instantiate the class :class:`.ProjectionDistance`
+
+.. autoclass:: UQpy.dimension_reduction.distances.grassmann.ProjectionDistance
+    :members:
+	
+
+Spectral 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.SpectralDistance` class is imported using the following command:
+
+>>> from UQpy.dimension_reduction.distances.grassmann.GrassmannDistance import SpectralDistance
+
+One can use the following command to instantiate the class :class:`.SpectralDistance`
+
+.. autoclass:: UQpy.dimension_reduction.distances.grassmann.SpectralDistance
+    :members:
 
 
 .. [1] G. H. Golub and C.F.V. Loan. Matrix computations (3rd ed.). Baltimore, MD, USA: Johns Hopkins University Press, 1996.
