@@ -38,10 +38,12 @@ Translation Class Descriptions
 
 .. autoclass:: UQpy.stochastic_process.Translation
     :members:
+    :private-members:
 
 
 .. autoclass:: UQpy.stochastic_process.InverseTranslation
     :members:
+    :private-members:
 
 .. [11] Grigoriu, M. (1995). "Applied Non-Gaussian Processes," Pretice Hall.
 

@@ -54,13 +54,23 @@ class SubsetSimulation:
         self.mcmc_objects = [sampler]
 
         self.samples = list()
+        """A list of arrays containing the samples in each conditional level."""
         self.g = list()
+        """A list of arrays containing the evaluation of the performance function at each sample in each conditional 
+        level."""
         self.g_level = list()
+        """Threshold value of the performance function for each conditional level"""
 
         self.logger.info(
             "UQpy: Running Subset Simulation with mcmc of type: "
             + str(type(mcmc_input))
         )
+        self.pf = None
+        """Probability of failure estimate."""
+        self.cov1 = None
+        """Coefficient of variation of the probability of failure estimate assuming independent chains."""
+        self.cov2 = None
+        """Coefficient of variation of the probability of failure estimate with dependent chains."""
 
         [self.pf, self.cov1, self.cov2] = self.run()
 
@@ -301,7 +311,7 @@ class SubsetSimulation:
         :param int n_s: Number of samples drawn from each Markov chain in each conditional level
         :param int n_c: Number of Markov chains in each conditional level
         :return: Gamma factor in coefficient of variation estimate
-        :rtype float
+        :rtype: float
         """
         gam = np.zeros(n_s - 1)
         r = np.zeros(n_s)
@@ -333,7 +343,8 @@ class SubsetSimulation:
          conditional level.
         :param int step: Current conditional level
         :return: Beta factor in coefficient of variation estimate
-        :rtype float
+        :rtype: float
+
         """
         beta = 0
         for i in range(np.shape(g)[1]):

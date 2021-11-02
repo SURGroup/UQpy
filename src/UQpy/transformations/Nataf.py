@@ -38,9 +38,10 @@ class Nataf:
 
         :param distributions: Probability distribution of each random variable. Must be an object of type
          :class:`.DistributionContinuous1D` or :class:`.JointIndependent`.
-        :param samples_x: Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.
+        :param samples_x: Random vector of shape ``(samples_number, dimension)`` with prescribed probability
+         distributions.
          If `samples_x` is provided, the :class:`.Nataf` class transforms them to `samples_z`.
-        :param samples_z: Standard normal random vector of shape ``(nsamples, dimension)``
+        :param samples_z: Standard normal random vector of shape ``(samples_number, dimension)``
          If `samples_z` is provided, the :class:`.Nataf` class transforms them to `samples_x`.
         :param jacobian: A boolean whether to return the jacobian of the transformation. Default: False
         :param corr_z: The correlation  matrix (:math:`\mathbf{C_Z}`) of the standard normal random vector **Z** .
@@ -71,10 +72,14 @@ class Nataf:
             self.update_dimensions(distributions)
         self.dist_object = distributions
         self.samples_x = samples_x
+        """Random vector of shape ``(samples_number, dimension)`` with prescribed probability distributions."""
         self.samples_z = samples_z
+        """Standard normal random vector of shape ``(samples_number, dimension)``"""
         self.jacobian = jacobian
         self.jzx = None
+        """The Jacobian of the transformation of shape ``(dimension, dimension)``."""
         self.jxz = None
+        """The Jacobian of the transformation of shape ``(dimension, dimension)``."""
         self.itam_max_iter = itam_max_iter
         self.itam_beta = float(itam_beta)
         self.itam_threshold1 = float(itam_threshold1)
@@ -83,7 +88,9 @@ class Nataf:
 
         if corr_x is None and corr_z is None:
             self.corr_x = np.eye(self.dimension)
+            """Distorted correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X**."""
             self.corr_z = np.eye(self.dimension)
+            """Distorted correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal vector **Z**."""
         elif corr_x is not None:
             self.corr_x = corr_x
             if np.all(np.equal(self.corr_x, np.eye(self.dimension))):
@@ -109,6 +116,8 @@ class Nataf:
                 self.corr_x = self.distortion_z2x(self.dist_object, self.corr_z)
 
         self.H = cholesky(self.corr_z, lower=True)
+        """The lower triangular matrix resulting from the Cholesky decomposition of the correlation matrix
+        :math:`\mathbf{C_Z}`."""
 
         if self.samples_x is not None or self.samples_z is not None:
             self.run(self.samples_x, self.samples_z, self.jacobian)

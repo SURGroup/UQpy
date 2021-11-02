@@ -57,6 +57,7 @@ class AdaptiveKriging:
         # Initialize the internal variables of the class.
         self.runmodel_object = runmodel_object
         self.samples = np.array(samples)
+        """`ndarray` containing the samples at which the model is evaluated."""
         self.learning_samples_number = learning_samples_number
         self.initial_samples_number = None
         self.logger = logging.getLogger(__name__)

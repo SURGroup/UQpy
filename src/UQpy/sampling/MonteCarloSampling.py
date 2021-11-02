@@ -39,8 +39,27 @@ class MonteCarloSampling:
         self._process_distributions(distributions)
 
         self.samples = None
+        """Generated samples.
+        
+        If a list of :class:`.DistributionContinuous1D` objects is provided for `distributions`, then `samples` is an
+        `ndarray` with ``samples.shape=(samples_number, len(distributions))``.
+        
+        If a :class:`.DistributionContinuous1D` object is provided for `distributions` then `samples` is an array with
+        ``samples.shape=(samples_number, 1)``.
+        
+        If a :class:`.DistributionContinuousND` object is provided for `distributions` then `samples` is an array with
+        ``samples.shape=(samples_number, ND)``.
+        
+        If a list of mixed :class:`.DistributionContinuous1D` and :class:`.DistributionContinuousND` objects is provided
+        then `samples` is a list with ``len(samples)=samples_number`` and ``len(samples[i]) = len(distributions)``.
+        """
         self.x = None
         self.samplesU01 = None
+        """
+        Generated samples transformed to the unit hypercube.
+        
+        This attribute exists only if the :meth:`transform_u01` method is invoked by the user.
+        """
         self.samples_number = samples_number
 
         # Run Monte Carlo sampling

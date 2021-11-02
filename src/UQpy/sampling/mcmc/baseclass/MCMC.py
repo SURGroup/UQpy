@@ -87,12 +87,25 @@ class MCMC(ABC):
 
         # Initialize a few more variables
         self.samples = None
+        """Set of MCMC samples following the target distribution, `ndarray` of shape 
+        (`samples_number` * `chains_number`, `dimension`)
+        or (samples_number, chains_number, dimension) (see input `concatenate_chains`)."""
         self.log_pdf_values = None
+        """Values of the log pdf for the accepted samples, `ndarray` of shape (chains_number * samples_number,) or 
+        (samples_number, chains_number)"""
         self.acceptance_rate = [0.0] * self.chains_number
-        self.samples_number, self.nsamples_per_chain = 0, 0
+        self.samples_number = 0
+        """Total number of samples; The `samples_number` attribute tallies the total number of generated samples. After 
+        each iteration, it is updated by 1. At the end of the simulation, the `samples_number` attribute equals the 
+        user-specified value for input `samples_number` given to the child class."""
+        self.samples_number_per_chain = 0
+        """Total number of samples per chain; Similar to the attribute `nsamples`, it is updated during iterations as new
+        samples are saved."""
         self.iterations_number = (
             0  # total nb of iterations, grows if you call run several times
         )
+        """Total number of iterations, updated on-the-fly as the algorithm proceeds. It is related to number of samples 
+        as iterations_number=burn_length+jump*samples_number_per_chain."""
 
     def run(
         self, samples_number: PositiveInteger = None, samples_number_per_chain=None
@@ -124,7 +137,7 @@ class MCMC(ABC):
         self.logger.info("UQpy: Running mcmc...")
 
         # Run nsims iterations of the mcmc algorithm, starting at current_state
-        while self.nsamples_per_chain < final_nsamples_per_chain:
+        while self.samples_number_per_chain < final_nsamples_per_chain:
             # update the total number of iterations
             self.iterations_number += 1
             # run iteration
@@ -137,12 +150,12 @@ class MCMC(ABC):
                 self.iterations_number > self.burn_length
                 and (self.iterations_number - self.burn_length) % self.jump == 0
             ):
-                self.samples[self.nsamples_per_chain, :, :] = current_state.copy()
+                self.samples[self.samples_number_per_chain, :, :] = current_state.copy()
                 if self.save_log_pdf:
                     self.log_pdf_values[
-                        self.nsamples_per_chain, :
+                        self.samples_number_per_chain, :
                     ] = current_log_pdf.copy()
-                self.nsamples_per_chain += 1
+                self.samples_number_per_chain += 1
                 self.samples_number += self.chains_number
 
         self.logger.info("UQpy: mcmc run successfully !")
@@ -245,7 +258,7 @@ class MCMC(ABC):
                 self.samples[0, :, :] = current_state
                 if self.save_log_pdf:
                     self.log_pdf_values[0, :] = current_log_pdf
-                self.nsamples_per_chain += 1
+                self.samples_number_per_chain += 1
                 self.samples_number += self.chains_number
             final_nsamples, final_nsamples_per_chain = (
                 number_of_samples,
@@ -276,7 +289,7 @@ class MCMC(ABC):
                 )
             final_nsamples = number_of_samples + self.samples_number
             final_nsamples_per_chain = (
-                samples_per_chain_number + self.nsamples_per_chain
+                samples_per_chain_number + self.samples_number_per_chain
             )
 
         return final_nsamples, final_nsamples_per_chain, current_state, current_log_pdf

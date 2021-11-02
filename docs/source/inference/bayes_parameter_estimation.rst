@@ -22,3 +22,4 @@ BayesParameterEstimation Class Descriptions
 
 .. autoclass:: UQpy.inference.BayesParameterEstimation
     :members:
+    :private-members:

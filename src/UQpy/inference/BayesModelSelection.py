@@ -59,11 +59,14 @@ class BayesModelSelection:
 
         # Instantiate the Bayesian parameter estimators (without running them)
         self.bayes_estimators = []
+        """Results of the Bayesian parameter estimation."""
         self._create_bayes_estimators(candidate_models, sampling_class_inputs)
 
         # Initialize the outputs
         self.evidences = [0.0] * self.models_number
+        """Value of the evidence for all models."""
         self.probabilities = [0.0] * self.models_number
+        """Posterior probability for all models"""
 
         # Run the model selection procedure
         if samples_number is not None or samples_per_chain_number is not None:

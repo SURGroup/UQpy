@@ -3,6 +3,7 @@ Parent Distribution Class
 
 .. autoclass:: UQpy.distributions.baseclass.Distribution
     :members:
+    :private-members:
 
 **Additional methods available from :py:mod:`scipy.stats` :**
     **cdf** *(x)*

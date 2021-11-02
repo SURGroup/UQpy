@@ -47,7 +47,11 @@ class Rectangular(Strata):
         self.logger = logging.getLogger(__name__)
         self.input_file = input_file
         self.strata_number = strata_number
+        """A list of length `n` defining the number of strata in each of the `n` dimensions. Creates an equal
+        stratification with strata widths equal to 1/`n_strata`. The total number of strata, `N`, is the product
+        of the terms of `n_strata`."""
         self.widths = widths
+        """An array of dimension `N x n` specifying the widths of all strata in each dimension."""
         self.stratification_criterion = stratification_criterion
 
     def stratify(self, random_state):

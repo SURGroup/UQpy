@@ -261,9 +261,9 @@ class DREAM(MCMC):
             raise ValueError(
                 "UQpy: Input save_log_pdf must be True in order to check outlier chains"
             )
-        start_ = self.nsamples_per_chain // 2
+        start_ = self.samples_number_per_chain // 2
         avgs_logpdf = np.mean(
-            self.log_pdf_values[start_ : self.nsamples_per_chain], axis=0
+            self.log_pdf_values[start_ : self.samples_number_per_chain], axis=0
         )
         best_ = np.argmax(avgs_logpdf)
         avg_sorted = np.sort(avgs_logpdf)

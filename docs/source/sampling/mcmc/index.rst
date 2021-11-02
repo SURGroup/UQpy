@@ -63,6 +63,7 @@ MCMC Class Descriptions
 
 .. autoclass:: UQpy.sampling.mcmc.MCMC
    :members:
+   :private-members:
 
 List of MCMC algorithms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

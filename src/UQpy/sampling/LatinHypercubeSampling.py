@@ -43,7 +43,8 @@ class LatinHypercubeSampling:
         self.criterion = criterion
         self.samples_number = samples_number
         self.logger = logging.getLogger(__name__)
-
+        self.samples = None
+        """ The generated LHS samples."""
         if isinstance(self.dist_object, list):
             self.samples = np.zeros([self.samples_number, len(self.dist_object)])
         elif isinstance(self.dist_object, DistributionContinuous1D):
@@ -54,6 +55,7 @@ class LatinHypercubeSampling:
             )
 
         self.samplesU01 = np.zeros_like(self.samples)
+        """The generated LHS samples on the unit hypercube."""
 
         if self.samples_number is not None:
             self.run(self.samples_number)

@@ -36,6 +36,7 @@ class SimplexSampling:
 
         if samples_number is not None:
             self.samples = self.run(samples_number=samples_number)
+            """New random samples distributed uniformly inside the simplex."""
 
     @beartype
     def run(self, samples_number: PositiveInteger):

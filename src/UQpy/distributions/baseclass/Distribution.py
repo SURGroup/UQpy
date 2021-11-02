@@ -29,7 +29,12 @@ class Distribution(ABC):
          user is advised to use the :meth:`get_parameters` method to access the parameters.
         """
         self.parameters = kwargs
+        """ Ordered list of parameter names, useful when parameter values are stored in vectors and must be passed to 
+        the :meth:`update_params` method."""
         self.ordered_parameters = ordered_parameters
+        """Parameters of the distribution. Note: this attribute is not defined for certain ``Distribution`` objects such
+        as those of type :class:`.JointIndependent` or :class:`.JointCopula`. The user is advised to use the 
+        :meth:`get_parameters` method to access the parameters."""
         if self.ordered_parameters is None:
             self.ordered_parameters = tuple(kwargs.keys())
         if len(self.ordered_parameters) != len(self.parameters):
@@ -63,28 +68,3 @@ class Distribution(ABC):
         :return: Parameters of the distribution.
         """
         return self.parameters
-
-    @property
-    def ordered_parameters(self) -> list:
-        """
-        :return: Ordered list of parameter names, useful when parameter values are stored in vectors and must be passed
-        to the  update_params method.
-        """
-        return self.ordered_parameters
-
-    @property
-    def parameters(self) -> dict:
-        """
-        :return: Parameters of the distribution. Note: this attribute is not defined for certain :class:`.Distribution`
-        objects  such as those of type :class:`.JointIndependent` or :class:`.JointCopula`. The user is advised to use
-        the get_params method to access the  parameters.
-        """
-        return self.parameters
-
-    @parameters.setter
-    def parameters(self, value):
-        self._parameters = value
-
-    @ordered_parameters.setter
-    def ordered_parameters(self, value):
-        self._ordered_parameters = value

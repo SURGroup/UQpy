@@ -10,6 +10,7 @@ BispectralRepresentation Class Descriptions
 
 .. autoclass:: UQpy.stochastic_process.BispectralRepresentation
     :members:
+    :private-members:
 
 .. [8] Shields, M.D. and Kim, H. (2017). "Simulation of higher-order stochastic processes by spectral representation," Probabilistic Engineering Mechanics. 47: 1-15.
 

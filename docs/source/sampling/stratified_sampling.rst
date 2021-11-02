@@ -36,15 +36,19 @@ Strata Class Descriptions
 
 .. autoclass:: UQpy.utilities.strata.baseclass.Strata
     :members:
+    :private-members:
 
 .. autoclass:: UQpy.utilities.strata.Rectangular
     :members:
+    :private-members:
 
 .. autoclass:: UQpy.utilities.strata.Voronoi
     :members:
+    :private-members:
 
 .. autoclass:: UQpy.utilities.strata.Delaunay
     :members:
+    :private-members:
 
 Adding a new :class:`.Strata` class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -66,6 +70,7 @@ StratifiedSampling Class Descriptions
 
 .. autoclass:: UQpy.sampling.StratifiedSampling
     :members:
+    :private-members:
 
 New Stratified Sampling Methods
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

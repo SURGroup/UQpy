@@ -18,7 +18,9 @@ class Strata:
         :param seeds: Define the seed points for the strata. See specific subclass for definition of the seed points.
         """
         self.seeds = seeds
+        """Seed points for the strata. See specific subclass for definition of the seed points."""
         self.volume = None
+        """An array of dimension `(strata_number, )` containing the volume of each stratum. """
 
     @abc.abstractmethod
     def stratify(self, random_state):

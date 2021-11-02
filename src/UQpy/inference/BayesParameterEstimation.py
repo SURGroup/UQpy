@@ -44,6 +44,9 @@ class BayesParameterEstimation(metaclass=NoPublicConstructor):
         self.data = data
         self.logger = logging.getLogger(__name__)
         self.sampler = sampling_class
+        """Sampling method object, contains e.g. the posterior samples.
+        This object is created along with the :class:`.BayesParameterEstimation` object, and its `run` method is called
+        whenever the `run` method of the :class:`.BayesParameterEstimation` is called."""
         if (samples_number is not None) or (samples_number_per_chain is not None):
             self.run(
                 samples_number=samples_number,

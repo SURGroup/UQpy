@@ -35,7 +35,9 @@ class RefinedStratifiedSampling:
         self.refinement_algorithm = refinement_algorithm
         self.training_points = self.stratified_sampling.samplesU01
         self.samplesU01 = self.stratified_sampling.samplesU01
+        """The generated samples on the unit hypercube."""
         self.samples = self.stratified_sampling.samples
+        """The generated stratified samples following the prescribed distribution."""
         self.dimension = self.samples.shape[1]
         self.random_state = random_state
         self.logger = logging.getLogger(__name__)

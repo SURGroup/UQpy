@@ -29,5 +29,6 @@ SubsetSimulation Class Descriptions
 
 .. autoclass:: UQpy.reliability.SubsetSimulation
     :members:
+    :private-members:
 
 .. [3] S.K.  Au  and  J.L.  Beck. "Estimation  of  small  failure  probabilities  in  high  dimensions  by  subset  simulation", Probabilistic  Engineering Mechanics, 16(4):263–277, 2001.

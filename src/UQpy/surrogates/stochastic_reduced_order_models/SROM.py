@@ -234,6 +234,7 @@ class SROM:
         )
 
         self.sample_weights = p_.x
+        """The probability weights defining discrete approximation of continuous random variables."""
         self.logger.info("UQpy: stochastic_reduced_order_models completed!")
 
     def _init_srom(self):

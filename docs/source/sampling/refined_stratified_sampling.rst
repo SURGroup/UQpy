@@ -29,6 +29,7 @@ calling the child class for the desired algorithm.
 
 .. autoclass:: UQpy.sampling.RefinedStratifiedSampling
     :members:
+    :private-members:
 
 .. [10] M.D. Shields, K. Teferra, A. Hapij, and R.P. Daddazio, "Refined Stratified Sampling for efficient Monte Carlo based uncertainty quantification," Reliability Engineering and System Safety,vol.142, pp.310-325,2015.
 .. [11] M.D. Shields, "Adaptive Monte Carlo analysis for strongly nonlinear stochastic systems." Reliability Engineering & System Safety 175 (2018): 207-224.
