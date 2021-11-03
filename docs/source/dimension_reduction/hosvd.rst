@@ -1,9 +1,9 @@
-HOSVD
---------------------------------
+Higher-order Singular Value Decomposition
+----------------------------------------------
 
-The Higher-order Singular Value Decomposition is a generalization of the classical SVD. Instead of vectorizing the
-solution snapshot into two-dimensional matrices we instead perform the dimension reduction directly to the generalized
-matrix, namely a  tensor. Let :math:`A \in \mathbb{R}^{I_1 \times I_2 \times ,..,\times I_N}` be an input Nth-order
+The Higher-order Singular Value Decomposition (HOSVD) is the generalization of the matrix SVD, also called an orthogonal
+Tucker decomposition. HOSVD is used in cases where the solution snapshots are most naturally condensed into generalized
+matrices (tensors) and do not lend themselves naturally to vectorization. Let :math:`A \in \mathbb{R}^{I_1 \times I_2 \times ,..,\times I_N}` be an input Nth-order
 tensor containing the solution snapshots from a numerical simulation. The HOSVD decomposes :math:`A` as
 
 .. math:: A = S \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)}...\times_N \mathbf{U}^{(N)}
@@ -47,11 +47,11 @@ HOSVD Class Descriptions
 
 The :class:`.HigherOrderSVD` class is imported using the following command:
 
->>> from UQpy.dimension_reduction.HigherOrderSVD import HigherOrderSVD
+>>> from UQpy.dimension_reduction.hosvd.HigherOrderSVD import HigherOrderSVD
 
 One can use the following command to instantiate the class :class:`.HigherOrderSVD`
 
-.. autoclass:: UQpy.dimension_reduction.HigherOrderSVD
+.. autoclass:: UQpy.dimension_reduction.hosvd.HigherOrderSVD
     :members:
 
 
