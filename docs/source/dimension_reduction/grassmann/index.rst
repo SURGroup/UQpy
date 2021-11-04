@@ -2,7 +2,7 @@ Grassmann manifold
 --------------------------------
 
 In differential geometry the Grassmann manifold :math:`\mathcal{G}(p, n)` refers to a collection of
-:math:`p`-dimensional subspaces embedded in a :math:`n`-dimensional vector space [1]_, [2]_. A point on :math:`\mathcal{G}(p, n)` is typically represented as a :math:`n \times p` orthonormal matrix :math:`\mathbf{X}`, whose column spans the corresponding subspace.  For point :math:`\mathbf{X}` we can define the tangent space :math:`\mathcal{T}_{\mathbf{X}, \mathcal{G}(p,n)}` as  the set of all matrices :math:`\mathbf{\Gamma}` at :math:`\mathbf{X}` such as 
+:math:`p`-dimensional subspaces embedded in a :math:`n`-dimensional vector space [1]_ [2]_. A point on :math:`\mathcal{G}(p, n)` is typically represented as a :math:`n \times p` orthonormal matrix :math:`\mathbf{X}`, whose column spans the corresponding subspace.  For point :math:`\mathbf{X}` we can define the tangent space :math:`\mathcal{T}_{\mathbf{X}, \mathcal{G}(p,n)}` as  the set of all matrices :math:`\mathbf{\Gamma}` at :math:`\mathbf{X}` such as 
 
 .. math:: \mathcal{T}_{\mathbf{X}, \mathcal{G}(p,n)} = \{\mathbf{\Gamma} \in \mathbb{R}^{n \times p} : \mathbf{\Gamma}^T\mathbf{X}=\mathbf{0}\}
 
@@ -33,17 +33,17 @@ The exponential map, denoted as :math:`\mathcal{T}_{\mathbf{X}, \mathcal{G}(p,n)
 .. math:: \mathbf{Y} = \mathrm{exp}_{\mathbf{X}}(\mathbf{U}\mathbf{S}\mathbf{V}^T) = \mathbf{X}\mathbf{V}\mathrm{cos}\left(\mathbf{S}\right)\mathbf{Q}^T+\mathbf{U}\mathrm{sin}\left(\mathbf{S}\right)\mathbf{Q}^T
 
 
-The :class:`.exp_map` class is imported using the following command:
+In order to use the method :meth:`.exp_map` one needs to import the :class:`.Grassmann` class from the :mod:`UQpy.dimension_reduction.grassmann_manifold` module
 
->>> from UQpy.dimension_reduction.grassmann_manifold.grassmann import exp_map
+>>> from UQpy.dimension_reduction.grassmann_manifold import Grassmann
+>>> Grassmann.exp_map()
 
-One can use the following command to instantiate the class :class:`.exp_map`
+Since :meth:`.exp_map` is a static method, it does not require instantiation of the class. 
 
-.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.grassmann.exp_map
-    :members:
-	
-	
-	
+.. automethod:: UQpy.dimension_reduction.grassmann_manifold.Grassmann.exp_map
+
+
+
 
 Logarithmic map
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -53,14 +53,14 @@ The logarithmic map, denoted as :math:`\mathcal{G}(p, n) \rightarrow  \mathcal{T
 
 .. math:: \mathrm{log}_\mathbf{X}(\mathbf{Y})\equiv \mathbf{\Gamma} = \mathbf{U}\mathrm{tan}^{-1}\left(\mathbf{S}\right)\mathbf{V}^T 
 
-The :class:`.log_map` class is imported using the following command:
+In order to use the method :meth:`.log_map` one needs to import the :class:`.Grassmann` class from the :mod:`UQpy.dimension_reduction.grassmann_manifold` module
 
->>> from UQpy.dimension_reduction.grassmann_manifold.grassmann import log_map
+>>> from UQpy.dimension_reduction.grassmann_manifold import Grassmann
+>>> Grassmann.log_map()
 
-One can use the following command to instantiate the class :class:`.log_map`
+Since :meth:`.log_map` is a static method, it does not require instantiation of the class. 
 
-.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.grassmann.log_map
-    :members:
+.. automethod:: UQpy.dimension_reduction.grassmann_manifold.Grassmann.log_map
 
 
 Frechet variance
@@ -70,17 +70,16 @@ For a set of points :math:`\{\mathbf{X}_i\}_{i=1}^N`  on :math:`\mathcal{G}(p,n)
 
 .. math:: \sigma_{f}^2 = \mathrm{min}(\frac{1}{N}\sum_{i=1}^N d(\mathbf{X}_i - \mathbf{Y})^2)
 
-where :mat:`d(\cdot)` is a Grassmann distance metric and :math:`\mathbf{Y}` is a reference point on :math:`\mathcal{G}(p,n)`.
+where :math:`d(\cdot)` is a Grassmann distance metric and :math:`\mathbf{Y}` is a reference point on :math:`\mathcal{G}(p,n)`.
 
+In order to use the method :meth:`.frechet_variance` one needs to import the :class:`.Grassmann` class from the :mod:`UQpy.dimension_reduction.grassmann_manifold` module
 
-The :class:`.frechet_variance` class is imported using the following command:
+>>> from UQpy.dimension_reduction.grassmann_manifold import Grassmann
+>>> Grassmann.frechet_variance()
 
->>> from UQpy.dimension_reduction.grassmann_manifold.grassmann import frechet_variance
+Since :meth:`.frechet_variance` is a static method, it does not require instantiation of the class. 
 
-One can use the following command to instantiate the class :class:`.frechet_variance`
-
-.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.grassmann.frechet_variance
-    :members:
+.. automethod:: UQpy.dimension_reduction.grassmann_manifold.Grassmann.frechet_variance
 	
 
 Karcher mean
@@ -90,19 +89,25 @@ For a set of points :math:`\{\mathbf{X}_i\}_{i=1}^N`  on :math:`\mathcal{G}(p,n)
 
 .. math:: \mu = \arg \mathrm{min}(\frac{1}{N}\sum_{i=1}^N d(\mathbf{X}_i - \mathbf{Y})^2)
 
-where :mat:`d(\cdot)` is a Grassmann distance metric and :math:`\mathbf{Y}` is a reference point on :math:`\mathcal{G}(p,n)`. :mod:`UQpy` offers two methods for solving this optimization, the GradientDescent and the stochastic Gradient descent methods, defined in 
+where :math:`d(\cdot)` is a Grassmann distance metric and :math:`\mathbf{Y}` is a reference point on :math:`\mathcal{G}(p,n)`. 
 
+In order to use the method :meth:`.karcher_mean` one needs to import the :class:`.Grassmann` class from the :mod:`UQpy.dimension_reduction.grassmann_manifold` module
 
-The :class:`.karcher_mean` class is imported using the following command:
+>>> from UQpy.dimension_reduction.grassmann_manifold import Grassmann
+>>> Grassmann.karcher_mean()
 
->>> from UQpy.dimension_reduction.grassmann_manifold.grassmann import karcher_mean
+Since :meth:`.karcher_mean` is a static method, it does not require instantiation of the class. 
 
-One can use the following command to instantiate the class :class:`.karcher_mean`
-
-.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.grassmann.karcher_mean
-    :members:	
+.. automethod:: UQpy.dimension_reduction.grassmann_manifold.Grassmann.karcher_mean
 	
-	
+:mod:`UQpy` offers two classes for solving this optimization, the :class:`.GradientDescent` and the :class:`.StochasticGradientDescent`.
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Optimization methods	
+   
+  
+  Optimization methods <optimization_methods/index>
 	
 
 .. [1] T. Bendokat, R. Zimmermann, P.-A. Absil, A Grassmann Manifold Handbook: Basic Geometry and Computational Aspects, 2020.

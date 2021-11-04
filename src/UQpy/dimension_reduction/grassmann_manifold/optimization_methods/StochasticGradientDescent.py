@@ -9,6 +9,12 @@ class StochasticGradientDescent:
         error_tolerance: float = 1e-3,
         max_iterations: PositiveInteger = 1000,
     ):
+        """
+
+        :param acceleration:
+        :param error_tolerance:
+        :param max_iterations:
+        """
         self.max_iterations = max_iterations
         self.error_tolerance = error_tolerance
         self.acceleration = acceleration

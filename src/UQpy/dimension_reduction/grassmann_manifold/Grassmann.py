@@ -16,18 +16,14 @@ class Grassmann:
         return kernel_matrix
 
     @staticmethod
-    def log_map(manifold_points, reference_point=None, origin=0):
+    def log_map(manifold_points, reference_point):
         """
-        Map points from the Grassmann manifold onto the tangent space with origin a point.
-
-        :param manifold_points:
-        :param reference_point:
-        :param origin:
-        :return:
+        :param list(numpy.ndarray) manifold_points: List of points on the manifold.
+        :param numpy.ndarray reference_point: Origin of the tangent space.
+        :return: List of points on the tangent space.
+        :rtype: list(numpy.ndarray)
         """
         number_of_points = Kernel.check_data(manifold_points)
-        if reference_point is None:
-            reference_point = manifold_points[origin]
 
         for i in range(number_of_points):
             RiemannianDistance.check_points(reference_point, manifold_points[i])
@@ -48,23 +44,17 @@ class Grassmann:
             m_inv = np.linalg.inv(np.dot(reference_point_transpose, u_trunc))
             m = np.dot(u_trunc - np.dot(m_, u_trunc), m_inv)
             ui, si, vi = np.linalg.svd(m, full_matrices=False)
-            # If the reference point is one of the given points
-            # set the entries to zero.
-            if reference_point is None and i == origin:
-                tangent_points.append(np.zeros_like(reference_point))
-            else:
-                tangent_points.append(np.dot(np.dot(ui, np.diag(np.arctan(si))), vi))
+            tangent_points.append(np.dot(np.dot(ui, np.diag(np.arctan(si))), vi))
 
         return tangent_points
 
     @staticmethod
-    def exp_map(tangent_points, reference_point=None):
+    def exp_map(tangent_points, reference_point):
         """
-        Map points from the tangent space with origin a point onto the Grassmann manifold.
-
-        :param tangent_points:
-        :param reference_point:
-        :return:
+        :param list(numpy.ndarray) tangent_points: List of tangent vectors.
+        :param numpy.ndarray reference_point: Origin of the tangent space.
+        :return: List of points on the manifold.
+        :rtype: list(numpy.ndarray)
         """
         if reference_point is None:
             raise TypeError('UQpy: The origin of the tangent space on the Grassmann is required.')
@@ -98,15 +88,12 @@ class Grassmann:
         return manifold_points
 
     @staticmethod
-    def frechet_variance(manifold_points, reference_point, distance):
+    def frechet_variance(manifold_points, reference_point, distance: RiemannianDistance):
         """
-        The Frechet variance corresponds to the summation of the square distances, on the manifold, to a given
-        point also on the manifold.
-
-        :param manifold_points:
-        :param reference_point:
-        :param distance:
-        :return:
+        :param list(numpy.ndarray) manifold_points: List of points on the manifold
+        :param numpy.ndarray reference_point: Reference point
+        :param RiemannianDistance distance: Distance metric to be used for the optimization
+        :rtype: float
         """
         p_dim = []
         for i in range(len(manifold_points)):
