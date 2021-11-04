@@ -9,6 +9,11 @@ from UQpy.dimension_reduction.grassmann_manifold.manifold_projections.baseclass.
 
 class Grassmann:
     def __init__(self, manifold_projected_points: ManifoldProjection):
+        """
+
+        :param ManifoldProjection manifold_projected_points: Points on Grassmann manifold given as an object of type
+         ManifoldProjection.
+        """
         self.manifold_projected_points = manifold_projected_points
 
     def evaluate_kernel_matrix(self, kernel):

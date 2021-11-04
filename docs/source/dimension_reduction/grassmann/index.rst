@@ -17,6 +17,8 @@ where :math:`\mathbf{\Phi}(0)=\mathbf{X}` and :math:`\mathbf{\Phi}(1)=\mathbf{Y}
 
 The :class:`.Grassmann` class offers various methods to operate with data on the Grassmann manifold.
 
+.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.Grassmann
+
 
 .. toctree::
    :maxdepth: 1
@@ -108,7 +110,18 @@ Since :meth:`.karcher_mean` is a static method, it does not require instantiatio
    
   
   Optimization methods <optimization_methods/index>
-	
+  
+
+Manifold projections
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ A collection of methods to project data on the Grassmann manifold.
+
+.. toctree::
+   :hidden:
+   :maxdepth: 1
+   
+  
+  Methods <manifold_projections/index>	
 
 .. [1] T. Bendokat, R. Zimmermann, P.-A. Absil, A Grassmann Manifold Handbook: Basic Geometry and Computational Aspects, 2020.
 

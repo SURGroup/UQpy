@@ -4,6 +4,9 @@ from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
 
 
 class ManifoldProjection(ABC):
+    """
+    A baseclass that binds together different methods used to represent data on the Grassmann manifold.
+    """
     @abstractmethod
     def reconstruct_solution(
         self,
