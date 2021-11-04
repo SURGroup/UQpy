@@ -23,7 +23,7 @@ The signature of the initializer is shown below:
 
 .. autoclass:: UQpy.dimension_reduction.SvdProjection
     :members:
-	
+
 ------------------------------------------	
 The :class:`.KernelComposition` class is imported using the following command:
 
@@ -32,4 +32,5 @@ The :class:`.KernelComposition` class is imported using the following command:
 One can use the following command to instantiate the class :class:`.KernelComposition`
 
 .. autoclass:: UQpy.dimension_reduction.KernelComposition
-	:private-members:
+    :members:
+
