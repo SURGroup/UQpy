@@ -14,7 +14,7 @@ The :class:`.SvdProjection` class is used to project each data point of a given 
 
 .. math:: \mathbf{X} =  \mathbf{U}  \mathbf{\Sigma}  \mathbf{V}^\intercal
 
-where :math:`\mathbf{U}` and :math:`\mathbf{V}` are the matrices of left and right eigenvectors, respectively and :math:`\mathbf{\Sigma}` is a diagonal matrix containing the eigenvalues. Since :math:`\mathbf{U}` and :math:`\mathbf{V}` are orthonormal matrices we consider them to be representatives of the data point on the Grassmann manifold. The :class:`.SvdProjection` class allows the user to define the Grassmann manifold :math:`\mathcal{G}(p, n)` on which the data will reside by selecting the number of :math:`p-`planes, i.e., the rank of matrix :math:`\mathbf{U}` is equal to the number of :math:`p-`planes. It also provides the flexibility to define various compositions of Grassmann kernels using the :math:`\mathbf{U}` and :math:`\mathbf{V}` matrices.
+where :math:`\mathbf{U}` and :math:`\mathbf{V}` are the matrices of left and right eigenvectors, respectively and :math:`\mathbf{\Sigma}` is a diagonal matrix containing the eigenvalues. Since :math:`\mathbf{U}` and :math:`\mathbf{V}` are orthonormal matrices we consider them to be representatives of the data point on the Grassmann manifold. The :class:`.SvdProjection` class allows the user to define the Grassmann manifold :math:`\mathcal{G}(p, n)` on which the data will reside by selecting the number of :math:`p-` planes, i.e., the rank of matrix :math:`\mathbf{U}` is equal to the number of :math:`p-` planes. It also provides the flexibility to define various compositions of Grassmann kernels using the :math:`\mathbf{U}` and :math:`\mathbf{V}` matrices.
 
 The :class:`.SvdProjection` class is imported using the following command:
 

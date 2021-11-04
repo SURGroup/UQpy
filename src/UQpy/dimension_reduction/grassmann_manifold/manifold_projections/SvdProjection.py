@@ -20,7 +20,7 @@ class SvdProjection(ManifoldProjection):
         kernel_composition: KernelComposition = KernelComposition.LEFT,
     ):
         """
-        :param data: Raw data given as a list of 2-d arrays.
+        :param data: Raw data given as a list of matrices.
         :param p: Number of independent p-planes of each Grassmann point.
         :param kernel_composition: Composition of the kernel.
         """
