@@ -49,6 +49,7 @@ extensions = [
 ]
 autoclass_content = 'init'
 add_module_names = False
+autodoc_member_order = 'bysource'
 napoleon_use_param = True
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
