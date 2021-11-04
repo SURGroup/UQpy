@@ -1,4 +1,4 @@
-POD
+Proper Orthogonal Decomposition 
 --------------------------------
 
 The Proper Orthogonal Decomposition (POD) is a post-processing technique which takes a given dataset and extracts a
@@ -7,9 +7,6 @@ amounts of data in order to gain a better understanding of the simulated process
 two variants, the Direct POD and Snapshot POD. In cases where the dataset is large, the Snapshot POD is recommended as
 it is much faster.
 
-The Higher-order Singular Value Decomposition (HOSVD) is the generalization of the matrix SVD, also called an orthogonal
-Tucker decomposition. HOSVD is used in cases where the solution snapshots are most naturally condensed into generalized
-matrices (tensors) and do not lend themselves naturally to vectorization.
 
 DirectPOD
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

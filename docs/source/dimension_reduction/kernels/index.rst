@@ -1,7 +1,7 @@
 Kernels
 ^^^^^^^^^
 
-A module to define kernel functions in the Euclidean space and the Grassmann manifold that are compatible with a valid metric.
+A collection of kernel functions in the Euclidean space and the Grassmann manifold that are compatible with a valid metric.
 
 
 .. toctree::
