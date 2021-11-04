@@ -2,6 +2,16 @@
 .. toctree::
    :maxdepth: 1
    :hidden:
+   
+OptimizationMethod
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The abstract :class:`.OptimizationMethod` class is a blueprint for classes in :mod:`.optimization_methods` module. It allows the user to define a set of methods that must be created within any child classes built from this abstract class.
+
+.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.optimization_methods.baseclass.OptimizationMethod 
+    :members:
+
+
 
 Gradient Descent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,6 +1,8 @@
 import itertools
 import numpy as np
 from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
+from UQpy.dimension_reduction.grassmann_manifold.optimization_methods.baseclass.OptimizationMethod \
+    import OptimizationMethod
 from UQpy.dimension_reduction.distances.grassmann.baseclass.RiemannianDistance import RiemannianDistance
 from UQpy.dimension_reduction.grassmann_manifold.manifold_projections.baseclass.ManifoldProjection import (
     ManifoldProjection,
@@ -160,14 +162,12 @@ class Grassmann:
         return distance_list
 
     @staticmethod
-    def karcher_mean(manifold_points, p_planes_dimensions, optimization_method, distance):
+    def karcher_mean(manifold_points, optimization_method: OptimizationMethod,
+                     distance: RiemannianDistance):
         """
-        Method to calculate the Karcher mean of points on the Grassmann manifold.
-
-        :param manifold_points:
-        :param p_planes_dimensions:
-        :param optimization_method:
-        :param distance:
+        :param list(numpy.ndarray) manifold_points: List of points on the Grassmann manifold.
+        :param OptimizationMethod optimization_method: The optimization method
+        :param RiemannianDistance distance: Distance metric to be used for the optimization
         :return:
         """
         # Test the input data for type consistency.
@@ -182,22 +182,6 @@ class Grassmann:
         nargs = len(manifold_points)
         if nargs < 2:
             raise ValueError("UQpy: At least two matrices must be provided.")
-
-        # Test the dimensionality of the input data.
-        p = []
-        for i in range(len(manifold_points)):
-            p.append(min(np.shape(np.array(manifold_points[i]))))
-
-        if p.count(p[0]) != len(p):
-            raise TypeError(
-                "UQpy: The input points do not belong to the same manifold."
-            )
-        else:
-            p0 = p[0]
-            if p0 != p_planes_dimensions:
-                raise ValueError(
-                    "UQpy: The input points do not belong to the manifold G(n,p)."
-                )
 
         kr_mean = optimization_method.optimize(manifold_points, distance)
 
