@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import scipy
 
-from UQpy.dimension_reduction.distances.grassmann.GrassmannDistance import GrassmannDistance
+from UQpy.dimension_reduction.distances.grassmann.GeodesicDistance import GeodesicDistance
 from UQpy.dimension_reduction.grassmann_manifold.interpolations.LinearInterpolation import LinearInterpolation
 from UQpy.dimension_reduction.grassmann_manifold.interpolations.baseclass.InterpolationMethod import InterpolationMethod
 from UQpy.dimension_reduction.grassmann_manifold.manifold_projections.SvdProjection import SvdProjection
@@ -41,7 +41,7 @@ def test_solution_reconstruction():
                               point=point,
                               p_planes_dimensions=manifold_projection.p_planes_dimensions,
                               optimization_method=optimization_method,
-                              distance=GrassmannDistance(),
+                              distance=GeodesicDistance(),
                               element_wise=False)
     assert round(interpolated_solution[0, 0], 9) == 0.61556849
 
@@ -121,7 +121,7 @@ def test_user_interpolation():
                                                                      point=point,
                                                                      p_planes_dimensions=manifold_projection.p_planes_dimensions,
                                                                      optimization_method=optimization_method,
-                                                                     distance=GrassmannDistance(),
+                                                                     distance=GeodesicDistance(),
                                                                      element_wise=False)
 
     assert round(interpolated_solution[0, 0], 9) == 0.61556849

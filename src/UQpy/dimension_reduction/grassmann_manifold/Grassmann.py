@@ -1,21 +1,10 @@
 import itertools
-
-from UQpy.dimension_reduction.distances.grassmann.GrassmannDistance import (
-    GrassmannDistance,
-)
+import numpy as np
+from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
 from UQpy.dimension_reduction.distances.grassmann.baseclass.RiemannianDistance import RiemannianDistance
-from UQpy.dimension_reduction.grassmann_manifold.interpolations.LinearInterpolation import (
-    LinearInterpolation,
-)
 from UQpy.dimension_reduction.grassmann_manifold.manifold_projections.baseclass.ManifoldProjection import (
     ManifoldProjection,
 )
-from UQpy.dimension_reduction.grassmann_manifold.optimization_methods.GradientDescent import (
-    GradientDescent,
-)
-import numpy as np
-
-from UQpy.dimension_reduction.kernels.baseclass import Kernel
 
 
 class Grassmann:
@@ -30,6 +19,7 @@ class Grassmann:
     def log_map(manifold_points, reference_point=None, origin=0):
         """
         Map points from the Grassmann manifold onto the tangent space with origin a point.
+
         :param manifold_points:
         :param reference_point:
         :param origin:
@@ -71,6 +61,7 @@ class Grassmann:
     def exp_map(tangent_points, reference_point=None):
         """
         Map points from the tangent space with origin a point onto the Grassmann manifold.
+
         :param tangent_points:
         :param reference_point:
         :return:
@@ -178,6 +169,15 @@ class Grassmann:
 
     @staticmethod
     def karcher_mean(manifold_points, p_planes_dimensions, optimization_method, distance):
+        """
+        Method to calculate the Karcher mean of points on the Grassmann manifold.
+
+        :param manifold_points:
+        :param p_planes_dimensions:
+        :param optimization_method:
+        :param distance:
+        :return:
+        """
         # Test the input data for type consistency.
         if not isinstance(manifold_points, list) and not isinstance(
             manifold_points, np.ndarray

@@ -13,6 +13,6 @@ This module contains various classes and methods to perform dimensionality reduc
     Proper Orthogonal Decomposition <pod>
     Higher-Order SVD <hosvd>
     Diffusion Maps <dmaps>
-    Grassmann manifold <grassmann>
+    Grassmann manifold <grassmann/index>
     Distances <distances/index>
     Kernels <kernels/index>

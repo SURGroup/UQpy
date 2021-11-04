@@ -4,7 +4,7 @@ from UQpy.dimension_reduction.grassmann_manifold.manifold_projections.SvdProject
 from UQpy.dimension_reduction.kernels.grassmann.ProjectionKernel import ProjectionKernel
 from UQpy.dimension_reduction.kernels.grassmann.BinetCauchyKernel import BinetCauchyKernel
 from UQpy.dimension_reduction.kernels.euclidean.GaussianKernel import GaussianKernel
-
+from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
 import numpy as np
 
 

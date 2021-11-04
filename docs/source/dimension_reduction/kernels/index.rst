@@ -10,3 +10,4 @@ A collection of kernel functions in the Euclidean space and the Grassmann manifo
 
     Euclidean Kernels <euclidean_kernels>
     Grassmann Kernels <grassmann_kernels>
+	

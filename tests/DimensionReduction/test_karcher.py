@@ -2,7 +2,10 @@ import copy
 
 import numpy as np
 
-from UQpy import GrassmannDistance, OptimizationMethod, RiemannianDistance
+from UQpy.dimension_reduction.distances.grassmann.GeodesicDistance import GeodesicDistance
+from UQpy.dimension_reduction.grassmann_manifold.optimization_methods.baseclass.OptimizationMethod import \
+    OptimizationMethod
+from UQpy.dimension_reduction.distances.grassmann.baseclass.RiemannianDistance import RiemannianDistance
 from UQpy.dimension_reduction.grassmann_manifold.manifold_projections.SvdProjection import SvdProjection
 from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
 import sys
@@ -25,12 +28,12 @@ def test_karcher():
     psi_mean = Grassmann.karcher_mean(manifold_points=manifold_projection.psi,
                                       p_planes_dimensions=manifold_projection.p_planes_dimensions,
                                       optimization_method=optimization_method,
-                                      distance=GrassmannDistance())
+                                      distance=GeodesicDistance())
 
     phi_mean = Grassmann.karcher_mean(manifold_points=manifold_projection.phi,
                                       p_planes_dimensions=manifold_projection.p_planes_dimensions,
                                       optimization_method=optimization_method,
-                                      distance=GrassmannDistance())
+                                      distance=GeodesicDistance())
 
     assert round(psi_mean[0, 0], 9) == -0.399231356
     assert round(phi_mean[0, 0], 9) == -0.382092372
@@ -196,7 +199,7 @@ def test_user_karcher():
                                       p_planes_dimensions=manifold_projection.p_planes_dimensions,
                                       optimization_method=GradientDescent(acceleration=True, error_tolerance=1e-4,
                                                                           max_iterations=1000),
-                                      distance=GrassmannDistance())
+                                      distance=GeodesicDistance())
 
     assert round(psi_mean[0, 0], 9) == -0.399231356
 

@@ -52,16 +52,16 @@ One can use the following command to instantiate the class :class:`.FubiniStudyD
 	
 
 
-Grassmann 
+Geodesic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :class:`.GrassmannDistance` class is imported using the following command:
+The :class:`.GeodesicDistance` class is imported using the following command:
 
->>> from UQpy.dimension_reduction.distances.grassmann.GrassmannDistance import GrassmannDistance
+>>> from UQpy.dimension_reduction.distances.grassmann.GeodesicDistance import GeodesicDistance
 
-One can use the following command to instantiate the class :class:`.GrassmannDistance`
+One can use the following command to instantiate the class :class:`.GeodesicDistance`
 
-.. autoclass:: UQpy.dimension_reduction.distances.grassmann.GrassmannDistance
+.. autoclass:: UQpy.dimension_reduction.distances.grassmann.GeodesicDistance
     :members:
 
 
@@ -70,7 +70,7 @@ Martin
 
 The :class:`.MartinDistance` class is imported using the following command:
 
->>> from UQpy.dimension_reduction.distances.grassmann.GrassmannDistance import MartinDistance
+>>> from UQpy.dimension_reduction.distances.grassmann.MartinDistance import MartinDistance
 
 One can use the following command to instantiate the class :class:`.MartinDistance`
 
@@ -84,7 +84,7 @@ Procrustes
 
 The :class:`.ProcrustesDistance` class is imported using the following command:
 
->>> from UQpy.dimension_reduction.distances.grassmann.GrassmannDistance import ProcrustesDistance
+>>> from UQpy.dimension_reduction.distances.grassmann.ProcrustesDistance import ProcrustesDistance
 
 One can use the following command to instantiate the class :class:`.ProcrustesDistance`
 
@@ -97,7 +97,7 @@ Projection
 
 The :class:`.ProjectionDistance` class is imported using the following command:
 
->>> from UQpy.dimension_reduction.distances.grassmann.GrassmannDistance import ProjectionDistance
+>>> from UQpy.dimension_reduction.distances.grassmann.ProjectionDistance import ProjectionDistance
 
 One can use the following command to instantiate the class :class:`.ProjectionDistance`
 
@@ -110,7 +110,7 @@ Spectral
 
 The :class:`.SpectralDistance` class is imported using the following command:
 
->>> from UQpy.dimension_reduction.distances.grassmann.GrassmannDistance import SpectralDistance
+>>> from UQpy.dimension_reduction.distances.grassmann.SpectralDistance import SpectralDistance
 
 One can use the following command to instantiate the class :class:`.SpectralDistance`
 

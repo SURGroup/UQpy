@@ -2,7 +2,7 @@ from UQpy.dimension_reduction.grassmann_manifold.manifold_projections.SvdProject
 from UQpy.dimension_reduction.distances.euclidean.EuclideanDistance import EuclideanDistance
 from UQpy.dimension_reduction.distances.grassmann.AsimovDistance import AsimovDistance
 from UQpy.dimension_reduction.distances.grassmann.FubiniStudyDistance import FubiniStudyDistance
-from UQpy.dimension_reduction.distances.grassmann.GrassmannDistance import GrassmannDistance
+from UQpy.dimension_reduction.distances.grassmann.GeodesicDistance import GeodesicDistance
 from UQpy.dimension_reduction.distances.grassmann.MartinDistance import MartinDistance
 from UQpy.dimension_reduction.distances.grassmann.ProjectionDistance import ProjectionDistance
 from UQpy.dimension_reduction.distances.grassmann.SpectralDistance import SpectralDistance
@@ -32,7 +32,7 @@ def test_euclidean_distance_3points():
 def test_grassmann_distance():
     xi = np.array([[-np.sqrt(2)/2, -np.sqrt(2)/4], [np.sqrt(2)/2, -np.sqrt(2)/4], [0, -np.sqrt(3)/2]])
     xj = np.array([[0, np.sqrt(2)/2], [1, 0], [0, -np.sqrt(2)/2]])
-    distance = np.round(GrassmannDistance().compute_distance(xi, xj), 6)
+    distance = np.round(GeodesicDistance().compute_distance(xi, xj), 6)
     assert distance == 1.491253
 
 
@@ -104,7 +104,7 @@ def test_distances():
 
     manifold_projection = SvdProjection(matrices, p_planes_dimensions=sys.maxsize)
 
-    distance_metric = GrassmannDistance()
+    distance_metric = GeodesicDistance()
     value = distance_metric.compute_distance(manifold_projection.psi[0], manifold_projection.psi[1])
 
     assert value == 1.6024416339920522
