@@ -15,26 +15,25 @@ from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
 class SvdProjection(ManifoldProjection):
     def __init__(
         self,
-        input_points: list[Numpy2DFloatArray],
-        p_planes_dimensions: int,
+        data: list[Numpy2DFloatArray],
+        p: int,
         kernel_composition: KernelComposition = KernelComposition.LEFT,
     ):
         """
-
-        :param input_points:
-        :param p_planes_dimensions:
-        :param kernel_composition:
+        :param data: Raw data given as a list of 2-d arrays.
+        :param p: Number of independent p-planes of each Grassmann point.
+        :param kernel_composition: Composition of the kernel.
         """
         self.kernel_composition = kernel_composition
-        self.data = input_points
+        self.data = data
 
-        points_number = len(input_points)
+        points_number = len(data)
 
         n_left = []
         n_right = []
         for i in range(points_number):
-            n_left.append(max(np.shape(input_points[i])))
-            n_right.append(min(np.shape(input_points[i])))
+            n_left.append(max(np.shape(data[i])))
+            n_right.append(min(np.shape(data[i])))
 
         bool_left = n_left.count(n_left[0]) != len(n_left)
         bool_right = n_right.count(n_right[0]) != len(n_right)
@@ -47,20 +46,20 @@ class SvdProjection(ManifoldProjection):
 
         ranks = []
         for i in range(points_number):
-            ranks.append(np.linalg.matrix_rank(input_points[i]))
+            ranks.append(np.linalg.matrix_rank(data[i]))
 
-        if p_planes_dimensions == 0:
+        if p == 0:
             p_planes_dimensions = int(min(ranks))
-        elif p_planes_dimensions == sys.maxsize:
+        elif p == sys.maxsize:
             p_planes_dimensions = int(max(ranks))
         else:
             for i in range(points_number):
-                if min(np.shape(input_points[i])) < p_planes_dimensions:
+                if min(np.shape(data[i])) < p:
                     raise ValueError(
                         "UQpy: The dimension of the input data is not consistent with `p` of G(n,p)."
                     )  # write something that makes sense
 
-        ranks = np.ones(points_number) * [int(p_planes_dimensions)]
+        ranks = np.ones(points_number) * [int(p)]
         ranks = ranks.tolist()
 
         ranks = list(map(int, ranks))
@@ -69,19 +68,19 @@ class SvdProjection(ManifoldProjection):
         sigma = []  # initialize the singular values as a list.
         phi = []  # initialize the right singular eigenvectors as a list.
         for i in range(points_number):
-            u, s, v = svd(input_points[i], int(ranks[i]))
+            u, s, v = svd(data[i], int(ranks[i]))
             psi.append(u)
             sigma.append(np.diag(s))
             phi.append(v)
 
-        self.input_points = input_points
+        self.input_points = data
         self.psi = psi
         self.sigma = sigma
         self.phi = phi
 
         self.n_psi = n_psi
         self.n_phi = n_phi
-        self.p_planes_dimensions = p_planes_dimensions
+        self.p_planes_dimensions = p
         self.ranks = ranks
         self.points_number = points_number
         self.max_rank = int(np.max(ranks))
@@ -100,14 +99,12 @@ class SvdProjection(ManifoldProjection):
 
         ref_psi = Grassmann.karcher_mean(
             manifold_points=self.psi,
-            p_planes_dimensions=p_planes_dimensions,
             optimization_method=optimization_method,
             distance=distance,
         )
 
         ref_phi = Grassmann.karcher_mean(
             manifold_points=self.phi,
-            p_planes_dimensions=p_planes_dimensions,
             optimization_method=optimization_method,
             distance=distance,
         )

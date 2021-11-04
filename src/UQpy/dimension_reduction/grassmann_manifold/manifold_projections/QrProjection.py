@@ -10,6 +10,9 @@ import scipy.spatial.distance as sd
 
 
 class QrProjection(ManifoldProjection):
+    """
+
+    """
     def __init__(self, input_points: list[Numpy2DFloatArray], p_planes_dimensions: int):
         self.data = input_points
 
