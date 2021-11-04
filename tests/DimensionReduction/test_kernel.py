@@ -70,7 +70,7 @@ def test_kernel():
 
     # Creating a list of solutions.
     Solutions = [Sol0, Sol1, Sol2, Sol3]
-
+    from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
     manifold_projection = SvdProjection(Solutions, p_planes_dimensions=sys.maxsize)
     manifold = Grassmann(manifold_projected_points=manifold_projection)
     kernel = manifold.evaluate_kernel_matrix(kernel=ProjectionKernel())

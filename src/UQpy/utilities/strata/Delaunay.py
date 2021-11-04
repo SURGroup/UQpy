@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 import scipy.stats as stats
-
+from UQpy.utilities.strata.StratificationCriterion import StratificationCriterion
 from UQpy.utilities.ValidationTypes import RandomStateType
 from UQpy.utilities.strata.baseclass.Strata import Strata
 from UQpy.sampling.SimplexSampling import SimplexSampling
@@ -17,6 +17,7 @@ class Delaunay(Strata):
         seeds: np.ndarray = None,
         seeds_number: int = None,
         dimension: np.ndarray = None,
+        stratification_criterion: StratificationCriterion = StratificationCriterion.RANDOM
     ):
         """
         Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling
@@ -31,8 +32,9 @@ class Delaunay(Strata):
         :param dimension: The dimension of the unit hypercube in which to generate random seeds. Used only if
          `seeds_number` is provided. The user must provide `seeds` or `seeds_number` and `dimension`
         """
-        super().__init__(seeds=seeds)
+        super().__init__(seeds=seeds, stratification_criterion=stratification_criterion)
 
+        self.stratification_criterion = stratification_criterion
         self.seeds_number = seeds_number
         self.dimension = dimension
         self.delaunay = None
@@ -43,9 +45,7 @@ class Delaunay(Strata):
 
         if self.seeds is not None:
             if self.seeds_number is not None or self.dimension is not None:
-                print(
-                    "UQpy: Ignoring 'nseeds' and 'dimension' attributes because 'seeds' are provided"
-                )
+                print("UQpy: Ignoring 'seeds_number' and 'dimension' attributes because 'seeds' are provided")
             self.seeds_number, self.dimension = self.seeds.shape[0], self.seeds.shape[1]
 
     def stratify(self, random_state):
@@ -71,9 +71,7 @@ class Delaunay(Strata):
         self.centroids = np.zeros([0, self.dimension])
         self.volume = np.zeros([0])
         count = 0
-        for (
-            sim
-        ) in self.delaunay.simplices:  # extract simplices from Delaunay triangulation
+        for sim in self.delaunay.simplices:  # extract simplices from Delaunay triangulation
             # pylint: disable=E1136
             cent, vol = self.compute_delaunay_centroid_volume(self.delaunay.points[sim])
             self.centroids = np.vstack([self.centroids, cent])

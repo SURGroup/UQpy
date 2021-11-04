@@ -22,7 +22,7 @@ class GradientDescent:
         for i in range(points_number):
             rank.append(min(np.shape(data_points[i])))
 
-        from UQpy.dimension_reduction.grassmann.Grassmann import Grassmann
+        from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
 
         max_rank = max(rank)
         fmean = []
