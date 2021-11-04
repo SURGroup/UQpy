@@ -114,7 +114,7 @@ Since :meth:`.karcher_mean` is a static method, it does not require instantiatio
 
 Manifold projections
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
- A collection of methods to project data on the Grassmann manifold.
+A collection of methods to project data on the Grassmann manifold.
 
 .. toctree::
    :hidden:

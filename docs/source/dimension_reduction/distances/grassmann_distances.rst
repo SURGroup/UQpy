@@ -11,6 +11,16 @@ where the first principal angle :math:`\theta_1` is the smallest angle between a
 
 where :math:`\cos(\Theta)=\text{diag}(\cos\theta_1, \ldots,\cos\theta_p)`. This definition of distance can be extended to cases where :math:`Y_1` and :math:`Y_2` have different number of columns :math:`p`. More information can be found in [2]_.
 
+RiemannianDistance
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+The abstract :class:`.RiemannianDistance` class is a blueprint for classes in :mod:`.distances` module. It allows the user to define a set of methods that must be created within any child classes built from this abstract class.
+
+.. autoclass:: UQpy.dimension_reduction.RiemannianDistance 
+    :members:
+
+
 
 Asimov
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

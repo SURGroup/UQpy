@@ -19,6 +19,12 @@ class SvdProjection(ManifoldProjection):
         p_planes_dimensions: int,
         kernel_composition: KernelComposition = KernelComposition.LEFT,
     ):
+        """
+
+        :param input_points:
+        :param p_planes_dimensions:
+        :param kernel_composition:
+        """
         self.kernel_composition = kernel_composition
         self.data = input_points
 
