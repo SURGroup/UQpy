@@ -57,7 +57,7 @@ class StratifiedSampling:
         self.random_state = process_random_state(random_state)
 
         self.strata_object.stratify(self.random_state)
-
+        self.strata_object.check_centered(samples_number)
         self.logger.info("UQpy: Stratified_sampling object is created")
 
         if (
@@ -157,7 +157,6 @@ class StratifiedSampling:
 
     def create_unit_hypercube_samples(self):
         samples_in_strata, weights = self.strata_object.sample_strata(
-            self.samples_per_stratum_number, self.random_state
-        )
+            self.samples_per_stratum_number, self.random_state)
         self.weights = np.array(weights)
         self.samplesU01 = np.concatenate(samples_in_strata, axis=0)

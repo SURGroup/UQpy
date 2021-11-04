@@ -90,7 +90,7 @@ class SvdProjection(ManifoldProjection):
         element_wise=True,
     ):
         # Find the Karcher mean.
-        from UQpy.dimension_reduction.grassmann.Grassmann import Grassmann
+        from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
 
         ref_psi = Grassmann.karcher_mean(
             manifold_points=self.psi,

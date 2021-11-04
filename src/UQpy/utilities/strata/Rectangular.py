@@ -41,7 +41,7 @@ class Rectangular(Strata):
 
         The user must pass one of `strata_number` OR `input_file` OR `seeds` and `widths`
         """
-        super().__init__(seeds=seeds)
+        super().__init__(seeds=seeds, stratification_criterion=stratification_criterion)
 
         self.gradients = None
         self.logger = logging.getLogger(__name__)
