@@ -2,7 +2,7 @@
 from sklearn.gaussian_process import GaussianProcessRegressor
 
 from UQpy.surrogates.kriging.Kriging import Kriging
-from UQpy.dimension_reduction.grassmann_manifold.interpolations.LinearInterpolation import (
+from UQpy.dimension_reduction.grassmann_manifold.interpolation.LinearInterpolation import (
     LinearInterpolation,
 )
 import numpy as np

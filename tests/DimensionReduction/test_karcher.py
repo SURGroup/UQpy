@@ -3,13 +3,13 @@ import copy
 import numpy as np
 
 from UQpy.dimension_reduction.distances.grassmann.GeodesicDistance import GeodesicDistance
-from UQpy.dimension_reduction.grassmann_manifold.optimization_methods.baseclass.OptimizationMethod import \
+from UQpy.dimension_reduction.grassmann_manifold.optimization.baseclass.OptimizationMethod import \
     OptimizationMethod
 from UQpy.dimension_reduction.distances.grassmann.baseclass.RiemannianDistance import RiemannianDistance
-from UQpy.dimension_reduction.grassmann_manifold.manifold_projections.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassmann_manifold.projection.SvdProjection import SvdProjection
 from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
 import sys
-from UQpy.dimension_reduction.grassmann_manifold.optimization_methods.GradientDescent import GradientDescent
+from UQpy.dimension_reduction.grassmann_manifold.optimization.GradientDescent import GradientDescent
 
 
 def test_karcher():

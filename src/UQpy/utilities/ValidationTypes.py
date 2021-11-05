@@ -10,3 +10,7 @@ Numpy2DFloatArray = Annotated[
     np.ndarray,
     Is[lambda array: array.ndim == 2 and np.issubdtype(array.dtype, np.floating)],
 ]
+NumpyFloatArray = Annotated[
+    np.ndarray,
+    Is[lambda array: np.issubdtype(array.dtype, np.floating)],
+]

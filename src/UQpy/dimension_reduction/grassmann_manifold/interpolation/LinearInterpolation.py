@@ -1,7 +1,7 @@
 import numpy as np
 import scipy
 
-from UQpy.dimension_reduction.grassmann_manifold.interpolations.baseclass.InterpolationMethod import (
+from UQpy.dimension_reduction.grassmann_manifold.interpolation.baseclass.InterpolationMethod import (
     InterpolationMethod,
 )
 

@@ -1,9 +1,9 @@
 import sys
-from UQpy.dimension_reduction.grassmann_manifold.manifold_projections.KernelComposition import (
+from UQpy.dimension_reduction.grassmann_manifold.projection.KernelComposition import (
     KernelComposition,
     CompositionAction,
 )
-from UQpy.dimension_reduction.grassmann_manifold.manifold_projections.baseclass.ManifoldProjection import (
+from UQpy.dimension_reduction.grassmann_manifold.projection.baseclass.ManifoldProjection import (
     ManifoldProjection,
 )
 from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
@@ -20,6 +20,7 @@ class SvdProjection(ManifoldProjection):
         kernel_composition: KernelComposition = KernelComposition.LEFT,
     ):
         """
+
         :param data: Raw data given as a list of matrices.
         :param p: Number of independent p-planes of each Grassmann point.
         :param kernel_composition: Composition of the kernel.

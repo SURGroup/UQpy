@@ -1,10 +1,14 @@
 import itertools
+
 import numpy as np
+from beartype import beartype
+
+from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
-from UQpy.dimension_reduction.grassmann_manifold.optimization_methods.baseclass.OptimizationMethod \
+from UQpy.dimension_reduction.grassmann_manifold.optimization.baseclass.OptimizationMethod \
     import OptimizationMethod
 from UQpy.dimension_reduction.distances.grassmann.baseclass.RiemannianDistance import RiemannianDistance
-from UQpy.dimension_reduction.grassmann_manifold.manifold_projections.baseclass.ManifoldProjection import (
+from UQpy.dimension_reduction.grassmann_manifold.projection.baseclass.ManifoldProjection import (
     ManifoldProjection,
 )
 
@@ -23,12 +27,13 @@ class Grassmann:
         return kernel_matrix
 
     @staticmethod
-    def log_map(manifold_points, reference_point):
+    @beartype
+    def log_map(manifold_points: list[Numpy2DFloatArray], reference_point: Numpy2DFloatArray)\
+            -> list[Numpy2DFloatArray]:
         """
-        :param list(numpy.ndarray) manifold_points: List of points on the manifold.
-        :param numpy.ndarray reference_point: Origin of the tangent space.
-        :return: List of points on the tangent space.
-        :rtype: list(numpy.ndarray)
+        :param manifold_points: Point(s) on the Grassmann manifold.
+        :param reference_point: Origin of the tangent space.
+        :return: Point(s) on the tangent space.
         """
         number_of_points = Kernel.check_data(manifold_points)
 
@@ -56,15 +61,14 @@ class Grassmann:
         return tangent_points
 
     @staticmethod
-    def exp_map(tangent_points, reference_point):
+    @beartype
+    def exp_map(tangent_points: list[Numpy2DFloatArray], reference_point: Numpy2DFloatArray) \
+            -> list[Numpy2DFloatArray]:
         """
-        :param list(numpy.ndarray) tangent_points: List of tangent vectors.
-        :param numpy.ndarray reference_point: Origin of the tangent space.
-        :return: List of points on the manifold.
-        :rtype: list(numpy.ndarray)
+        :param tangent_points: Tangent vector(s).
+        :param reference_point: Origin of the tangent space.
+        :return: Point(s) on the Grassmann manifold.
         """
-        if reference_point is None:
-            raise TypeError('UQpy: The origin of the tangent space on the Grassmann is required.')
 
         number_of_points = len(tangent_points)
 
@@ -95,12 +99,13 @@ class Grassmann:
         return manifold_points
 
     @staticmethod
-    def frechet_variance(manifold_points, reference_point, distance: RiemannianDistance):
+    @beartype
+    def frechet_variance(manifold_points: list[Numpy2DFloatArray], reference_point: Numpy2DFloatArray,
+                         distance: RiemannianDistance) -> float:
         """
-        :param list(numpy.ndarray) manifold_points: List of points on the manifold
-        :param numpy.ndarray reference_point: Reference point
-        :param RiemannianDistance distance: Distance metric to be used for the optimization
-        :rtype: float
+        :param manifold_points: Point(s) on the Grassmann manifold
+        :param reference_point: Reference point
+        :param distance: Distance metric to be used for the optimization.
         """
         p_dim = []
         for i in range(len(manifold_points)):
@@ -162,12 +167,13 @@ class Grassmann:
         return distance_list
 
     @staticmethod
-    def karcher_mean(manifold_points, optimization_method: OptimizationMethod,
-                     distance: RiemannianDistance):
+    @beartype
+    def karcher_mean(manifold_points: list[Numpy2DFloatArray], optimization_method: OptimizationMethod,
+                     distance: RiemannianDistance) -> Numpy2DFloatArray:
         """
-        :param list(numpy.ndarray) manifold_points: List of points on the Grassmann manifold.
-        :param OptimizationMethod optimization_method: The optimization method
-        :param RiemannianDistance distance: Distance metric to be used for the optimization
+        :param manifold_points: Point(s) on the Grassmann manifold.
+        :param optimization_method: The optimization method.
+        :param distance: Distance metric to be used for the optimization.
         :return:
         """
         # Test the input data for type consistency.

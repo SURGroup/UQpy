@@ -4,11 +4,11 @@ import numpy as np
 import scipy
 
 from UQpy.dimension_reduction.distances.grassmann.GeodesicDistance import GeodesicDistance
-from UQpy.dimension_reduction.grassmann_manifold.interpolations.LinearInterpolation import LinearInterpolation
-from UQpy.dimension_reduction.grassmann_manifold.interpolations.baseclass.InterpolationMethod import InterpolationMethod
-from UQpy.dimension_reduction.grassmann_manifold.manifold_projections.SvdProjection import SvdProjection
-from UQpy.dimension_reduction.grassmann_manifold.optimization_methods.GradientDescent import GradientDescent
-from UQpy.dimension_reduction.grassmann_manifold.interpolations.Interpolation import Interpolation
+from UQpy.dimension_reduction.grassmann_manifold.interpolation.LinearInterpolation import LinearInterpolation
+from UQpy.dimension_reduction.grassmann_manifold.interpolation.baseclass.InterpolationMethod import InterpolationMethod
+from UQpy.dimension_reduction.grassmann_manifold.projection.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassmann_manifold.optimization.GradientDescent import GradientDescent
+from UQpy.dimension_reduction.grassmann_manifold.interpolation.Interpolation import Interpolation
 
 
 def test_solution_reconstruction():
