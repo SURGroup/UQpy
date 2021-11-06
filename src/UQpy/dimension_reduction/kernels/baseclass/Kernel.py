@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from UQpy.dimension_reduction.distances.grassmann.baseclass import RiemannianDistance
+from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
 
 
 class Kernel(ABC):
@@ -14,25 +15,8 @@ class Kernel(ABC):
     def kernel_entry(self, xi, xj):
         pass
 
-    @staticmethod
-    def check_data(points):
-        if not isinstance(points, list) and not isinstance(points, np.ndarray):
-            raise TypeError("UQpy: Data points must be provided either as a list or a numpy.ndarray.")
-        elif isinstance(points, np.ndarray):
-            if len(points.shape) != 3:
-                raise TypeError("UQpy: Data points must be provided as a 3D numpy.ndarray.")
-            else:
-                nargs = points.shape[0]
-        else:
-            nargs = len(points)
-        if nargs < 2:
-            raise ValueError("UQpy: At least two matrices must be provided.")
-
-        return nargs
-
-    def kernel_operator(self, points, p=None):
-
-        nargs = Kernel.check_data(points)
+    def kernel_operator(self, points: list[GrassmannPoint], p: int = None):
+        nargs = len(points)
         # Define the pairs of points to compute the entries of the kernel matrix.
         indices = range(nargs)
         pairs = list(itertools.combinations_with_replacement(indices, 2))
@@ -46,10 +30,10 @@ class Kernel(ABC):
                 xi = points[i]
                 xj = points[j]
             else:
-                xi = points[i][:, :p]
-                xj = points[j][:, :p]
+                xi = GrassmannPoint(points[i].data[:, :p])
+                xj = GrassmannPoint(points[j].data[:, :p])
 
-            RiemannianDistance.check_points(xi, xj)
+            # RiemannianDistance.check_rows(xi, xj)
             kernel[i, j] = self.kernel_entry(xi, xj)
             kernel[j, i] = kernel[i, j]
 

@@ -4,11 +4,11 @@ import numpy as np
 import scipy
 
 from UQpy.dimension_reduction.distances.grassmann.GeodesicDistance import GeodesicDistance
-from UQpy.dimension_reduction.grassmann_manifold.interpolation.LinearInterpolation import LinearInterpolation
+from UQpy.dimension_reduction.grassmann_manifold.interpolation.methods.LinearInterpolation import LinearInterpolation
 from UQpy.dimension_reduction.grassmann_manifold.interpolation.baseclass.InterpolationMethod import InterpolationMethod
 from UQpy.dimension_reduction.grassmann_manifold.projection.SvdProjection import SvdProjection
 from UQpy.dimension_reduction.grassmann_manifold.optimization.GradientDescent import GradientDescent
-from UQpy.dimension_reduction.grassmann_manifold.interpolation.Interpolation import Interpolation
+from UQpy.dimension_reduction.grassmann_manifold.interpolation.ManifoldInterpolation import ManifoldInterpolation
 
 
 def test_solution_reconstruction():
@@ -34,7 +34,7 @@ def test_solution_reconstruction():
     manifold_projection = SvdProjection(Solutions, p_planes_dimensions=sys.maxsize)
 
     optimization_method = GradientDescent(acceleration=False, error_tolerance=1e-3, max_iterations=1000)
-    interpolation = Interpolation(LinearInterpolation())
+    interpolation = ManifoldInterpolation(LinearInterpolation())
 
     interpolated_solution = manifold_projection\
         .reconstruct_solution(interpolation=interpolation, coordinates=nodes,
@@ -115,7 +115,7 @@ def test_user_interpolation():
 
             return interp_point
 
-    interpolation = Interpolation(UserInterpolation())
+    interpolation = ManifoldInterpolation(UserInterpolation())
 
     interpolated_solution = manifold_projection.reconstruct_solution(interpolation=interpolation, coordinates=nodes,
                                                                      point=point,

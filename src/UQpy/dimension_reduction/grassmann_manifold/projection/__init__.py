@@ -1,6 +1,4 @@
-from UQpy.dimension_reduction.grassmann_manifold.projection.baseclass import ManifoldProjection
+from UQpy.dimension_reduction.grassmann_manifold.projection.baseclass import *
 
 from UQpy.dimension_reduction.grassmann_manifold.projection.KernelComposition import KernelComposition
-from UQpy.dimension_reduction.grassmann_manifold.projection.OrthoMatrixPoints import OrthoMatrixPoints
-from UQpy.dimension_reduction.grassmann_manifold.projection.QrProjection import QrProjection
 from UQpy.dimension_reduction.grassmann_manifold.projection.SvdProjection import SvdProjection

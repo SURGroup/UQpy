@@ -1,3 +1,1 @@
-from UQpy.dimension_reduction.distances.grassmann.baseclass.RiemannianDistance import (
-    RiemannianDistance,
-)
+from UQpy.dimension_reduction.distances.grassmann.baseclass.RiemannianDistance import RiemannianDistance

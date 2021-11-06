@@ -3,12 +3,14 @@ import numpy as np
 from scipy.linalg import cholesky
 import scipy.stats as stats
 from beartype import beartype
+
+from UQpy.surrogates.baseclass.Surrogate import Surrogate
 from UQpy.utilities.ValidationTypes import RandomStateType
 from UQpy.surrogates.kriging.correlation_models.baseclass.Correlation import Correlation
 from UQpy.surrogates.kriging.regression_models.baseclass.Regression import Regression
 
 
-class Kriging:
+class Kriging(Surrogate):
     @beartype
     def __init__(
         self,

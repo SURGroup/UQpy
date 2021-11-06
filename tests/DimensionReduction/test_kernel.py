@@ -1,5 +1,6 @@
 import sys
 
+from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
 from UQpy.dimension_reduction.grassmann_manifold.projection.SvdProjection import SvdProjection
 from UQpy.dimension_reduction.kernels.grassmann.ProjectionKernel import ProjectionKernel
 from UQpy.dimension_reduction.kernels.grassmann.BinetCauchyKernel import BinetCauchyKernel
@@ -9,9 +10,11 @@ import numpy as np
 
 
 def test_kernel_projection():
-    xi = np.array([[-np.sqrt(2) / 2, -np.sqrt(2) / 4], [np.sqrt(2) / 2, -np.sqrt(2) / 4], [0, -np.sqrt(3) / 2]])
-    xj = np.array([[0, np.sqrt(2) / 2], [1, 0], [0, -np.sqrt(2) / 2]])
-    xk = np.array([[-0.69535592, -0.0546034], [-0.34016974, -0.85332868], [-0.63305978, 0.51850616]])
+    xi = GrassmannPoint(np.array([[-np.sqrt(2) / 2, -np.sqrt(2) / 4], [np.sqrt(2) / 2,
+                                                                       -np.sqrt(2) / 4], [0, -np.sqrt(3) / 2]]))
+    xj = GrassmannPoint(np.array([[0, np.sqrt(2) / 2], [1, 0], [0, -np.sqrt(2) / 2]]))
+    xk = GrassmannPoint(np.array([[-0.69535592, -0.0546034], [-0.34016974, -0.85332868],
+                                  [-0.63305978, 0.51850616]]))
     points = [xi, xj, xk]
     kernel = np.matrix.round(ProjectionKernel().kernel_operator(points), 4)
 
@@ -19,9 +22,10 @@ def test_kernel_projection():
 
 
 def test_kernel_binet_cauchy():
-    xi = np.array([[-np.sqrt(2) / 2, -np.sqrt(2) / 4], [np.sqrt(2) / 2, -np.sqrt(2) / 4], [0, -np.sqrt(3) / 2]])
-    xj = np.array([[0, np.sqrt(2) / 2], [1, 0], [0, -np.sqrt(2) / 2]])
-    xk = np.array([[-0.69535592, -0.0546034], [-0.34016974, -0.85332868], [-0.63305978, 0.51850616]])
+    xi = GrassmannPoint(np.array([[-np.sqrt(2) / 2, -np.sqrt(2) / 4], [np.sqrt(2) / 2, -np.sqrt(2) / 4],
+                                  [0, -np.sqrt(3) / 2]]))
+    xj = GrassmannPoint(np.array([[0, np.sqrt(2) / 2], [1, 0], [0, -np.sqrt(2) / 2]]))
+    xk = GrassmannPoint(np.array([[-0.69535592, -0.0546034], [-0.34016974, -0.85332868], [-0.63305978, 0.51850616]]))
     points = [xi, xj, xk]
     kernel = np.matrix.round(BinetCauchyKernel().kernel_operator(points), 4)
 
@@ -71,7 +75,7 @@ def test_kernel():
     # Creating a list of solutions.
     Solutions = [Sol0, Sol1, Sol2, Sol3]
     from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
-    manifold_projection = SvdProjection(Solutions, p_planes_dimensions=sys.maxsize)
+    manifold_projection = SvdProjection(Solutions, p=sys.maxsize)
     manifold = Grassmann(manifold_projected_points=manifold_projection)
     kernel = manifold.evaluate_kernel_matrix(kernel=ProjectionKernel())
 

@@ -3,14 +3,11 @@ import itertools
 import numpy as np
 from beartype import beartype
 
+from UQpy.dimension_reduction.distances.grassmann.baseclass import RiemannianDistance
+from UQpy.dimension_reduction.grassmann_manifold.optimization.baseclass.OptimizationMethod import OptimizationMethod
+from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint, ListOfGrassmannPoints
+from UQpy.dimension_reduction.grassmann_manifold.projection.baseclass.ManifoldProjection import ManifoldProjection
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
-from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
-from UQpy.dimension_reduction.grassmann_manifold.optimization.baseclass.OptimizationMethod \
-    import OptimizationMethod
-from UQpy.dimension_reduction.distances.grassmann.baseclass.RiemannianDistance import RiemannianDistance
-from UQpy.dimension_reduction.grassmann_manifold.projection.baseclass.ManifoldProjection import (
-    ManifoldProjection,
-)
 
 
 class Grassmann:
@@ -28,33 +25,32 @@ class Grassmann:
 
     @staticmethod
     @beartype
-    def log_map(manifold_points: list[Numpy2DFloatArray], reference_point: Numpy2DFloatArray)\
+    def log_map(manifold_points: list[GrassmannPoint], reference_point: GrassmannPoint)\
             -> list[Numpy2DFloatArray]:
         """
         :param manifold_points: Point(s) on the Grassmann manifold.
         :param reference_point: Origin of the tangent space.
         :return: Point(s) on the tangent space.
         """
-        number_of_points = Kernel.check_data(manifold_points)
-
+        from UQpy.dimension_reduction.distances.grassmann.baseclass.RiemannianDistance import RiemannianDistance
+        number_of_points = len(manifold_points)
         for i in range(number_of_points):
-            RiemannianDistance.check_points(reference_point, manifold_points[i])
-            if reference_point.shape[1] != manifold_points[i].shape[1]:
+            RiemannianDistance.check_rows(reference_point, manifold_points[i])
+            if reference_point.data.shape[1] != manifold_points[i].data.shape[1]:
                 raise ValueError("UQpy: Point {0} is on G({1},{2}) - Reference is on"
-                                 " G({1},{2})".format(i, manifold_points[i].shape[1], manifold_points[i].shape[0],
-                                                      reference_point.shape[1])
-                                 )
+                                 " G({1},{2})".format(i, manifold_points[i].data.shape[1],
+                                                      manifold_points[i].data.shape[0], reference_point.data.shape[1]))
 
         # Multiply ref by its transpose.
-        reference_point_transpose = reference_point.T
-        m_ = np.dot(reference_point, reference_point_transpose)
+        reference_point_transpose = reference_point.data.T
+        m_ = np.dot(reference_point.data, reference_point_transpose)
 
         tangent_points = []
         for i in range(number_of_points):
             u_trunc = manifold_points[i]
             # compute: M = ((I - psi0*psi0')*psi1)*inv(psi0'*psi1)
-            m_inv = np.linalg.inv(np.dot(reference_point_transpose, u_trunc))
-            m = np.dot(u_trunc - np.dot(m_, u_trunc), m_inv)
+            m_inv = np.linalg.inv(np.dot(reference_point_transpose, u_trunc.data))
+            m = np.dot(u_trunc.data - np.dot(m_, u_trunc.data), m_inv)
             ui, si, vi = np.linalg.svd(m, full_matrices=False)
             tangent_points.append(np.dot(np.dot(ui, np.diag(np.arctan(si))), vi))
 
@@ -62,8 +58,8 @@ class Grassmann:
 
     @staticmethod
     @beartype
-    def exp_map(tangent_points: list[Numpy2DFloatArray], reference_point: Numpy2DFloatArray) \
-            -> list[Numpy2DFloatArray]:
+    def exp_map(tangent_points: list[Numpy2DFloatArray], reference_point: GrassmannPoint) \
+            -> list[GrassmannPoint]:
         """
         :param tangent_points: Tangent vector(s).
         :param reference_point: Origin of the tangent space.
@@ -71,13 +67,11 @@ class Grassmann:
         """
 
         number_of_points = len(tangent_points)
-
         for i in range(number_of_points):
-            if reference_point.shape[1] != tangent_points[i].shape[1]:
+            if reference_point.data.shape[1] != tangent_points[i].shape[1]:
                 raise ValueError("UQpy: Point {0} is on G({1},{2}) - Reference is on"
                                  " G({1},{2})".format(i, tangent_points[i].shape[1], tangent_points[i].shape[0],
-                                                      reference_point.shape[1])
-                                 )
+                                                      reference_point.data.shape[1]))
 
         # Map the each point back to the manifold.
         manifold_points = list()
@@ -86,7 +80,7 @@ class Grassmann:
             ui, si, vi = np.linalg.svd(u_trunc, full_matrices=False)
 
             x0 = np.dot(
-                np.dot(np.dot(reference_point, vi.T), np.diag(np.cos(si)))
+                np.dot(np.dot(reference_point.data, vi.T), np.diag(np.cos(si)))
                 + np.dot(ui, np.diag(np.sin(si))),
                 vi,
             )
@@ -94,13 +88,13 @@ class Grassmann:
             if not np.allclose(x0.T @ x0, np.eye(u_trunc.shape[1])):
                 x0, _ = np.linalg.qr(x0)
 
-            manifold_points.append(x0)
+            manifold_points.append(GrassmannPoint(x0))
 
         return manifold_points
 
     @staticmethod
     @beartype
-    def frechet_variance(manifold_points: list[Numpy2DFloatArray], reference_point: Numpy2DFloatArray,
+    def frechet_variance(manifold_points: ListOfGrassmannPoints, reference_point: GrassmannPoint,
                          distance: RiemannianDistance) -> float:
         """
         :param manifold_points: Point(s) on the Grassmann manifold
@@ -109,39 +103,22 @@ class Grassmann:
         """
         p_dim = []
         for i in range(len(manifold_points)):
-            p_dim.append(min(np.shape(np.array(manifold_points[i]))))
+            p_dim.append(min(np.shape(manifold_points[i].data)))
 
         points_number = len(manifold_points)
 
-        if points_number < 2:
-            raise ValueError("UQpy: At least two input matrices must be provided.")
-
         variance_nominator = 0
         for i in range(points_number):
-            distances = Grassmann.__estimate_distance(
-                [reference_point, manifold_points[i]], p_dim, distance
-            )
+            distances = Grassmann.__estimate_distance([reference_point, manifold_points[i]], p_dim, distance)
             variance_nominator += distances[0] ** 2
 
         frechet_variance = variance_nominator / points_number
         return frechet_variance
 
     @staticmethod
-    def __estimate_distance(points, p_dim, distance):
-
-        # Check points for type and shape consistency.
-        # -----------------------------------------------------------
-        if not isinstance(points, list) and not isinstance(points, np.ndarray):
-            raise TypeError(
-                "UQpy: The input matrices must be either list or numpy.ndarray."
-            )
-
+    @beartype
+    def __estimate_distance(points: ListOfGrassmannPoints, p_dim, distance: RiemannianDistance):
         nargs = len(points)
-
-        if nargs < 2:
-            raise ValueError("UQpy: At least two matrices must be provided.")
-
-        # ------------------------------------------------------------
 
         # Define the pairs of points to compute the grassmann_manifold distance.
         indices = range(nargs)
@@ -156,8 +133,8 @@ class Grassmann:
             p0 = int(p_dim[ii])
             p1 = int(p_dim[jj])
 
-            x0 = np.asarray(points[ii])[:, :p0]
-            x1 = np.asarray(points[jj])[:, :p1]
+            x0 = GrassmannPoint(np.asarray(points[ii].data)[:, :p0])
+            x1 = GrassmannPoint(np.asarray(points[jj].data)[:, :p1])
 
             # Call the functions where the distance metric is implemented.
             distance_value = distance.compute_distance(x0, x1)
@@ -168,22 +145,14 @@ class Grassmann:
 
     @staticmethod
     @beartype
-    def karcher_mean(manifold_points: list[Numpy2DFloatArray], optimization_method: OptimizationMethod,
-                     distance: RiemannianDistance) -> Numpy2DFloatArray:
+    def karcher_mean(manifold_points: ListOfGrassmannPoints, optimization_method: OptimizationMethod,
+                     distance: RiemannianDistance) -> GrassmannPoint:
         """
         :param manifold_points: Point(s) on the Grassmann manifold.
         :param optimization_method: The optimization method.
         :param distance: Distance metric to be used for the optimization.
         :return:
         """
-        # Test the input data for type consistency.
-        if not isinstance(manifold_points, list) and not isinstance(
-            manifold_points, np.ndarray
-        ):
-            raise TypeError(
-                "UQpy: `points_grassmann` must be either list or numpy.ndarray."
-            )
-
         # Compute and test the number of input matrices necessary to compute the Karcher mean.
         nargs = len(manifold_points)
         if nargs < 2:
@@ -194,16 +163,8 @@ class Grassmann:
         return kr_mean
 
     @staticmethod
-    def calculate_pairwise_distances(distance_method, points_grassmann):
-        if isinstance(points_grassmann, np.ndarray):
-            points_grassmann = points_grassmann.tolist()
-
-        n_size = max(np.shape(points_grassmann[0]))
-        for i in range(len(points_grassmann)):
-            if n_size != max(np.shape(points_grassmann[i])):
-                raise TypeError(
-                    "UQpy: The shape of the input matrices must be the same."
-                )
+    def calculate_pairwise_distances(distance_method: RiemannianDistance,
+                                     points_grassmann: ListOfGrassmannPoints):
 
         # if manifold_points is provided, use the shape of the input matrices to define
         # the dimension of the p-planes defining the manifold of each individual input matrix.
@@ -213,8 +174,8 @@ class Grassmann:
 
         # Compute the pairwise distances.
         points_distance = Grassmann.__estimate_distance(
-            points_grassmann, p_dim, distance_method
-        )
+            points_grassmann, p_dim, distance_method)
 
         # Return the pairwise distances.
         return points_distance
+

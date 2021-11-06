@@ -1,8 +1,9 @@
+from UQpy.dimension_reduction.grassmann_manifold.optimization.baseclass.OptimizationMethod import OptimizationMethod
 from UQpy.utilities.ValidationTypes import PositiveInteger
 import numpy as np
 
 
-class StochasticGradientDescent:
+class StochasticGradientDescent(OptimizationMethod):
     def __init__(
         self,
         acceleration: bool = False,
@@ -20,7 +21,7 @@ class StochasticGradientDescent:
         self.acceleration = acceleration
 
     def optimize(self, data_points, distance):
-
+        from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
         n_mat = len(data_points)
 
         rnk = []
@@ -28,7 +29,6 @@ class StochasticGradientDescent:
             rnk.append(min(np.shape(data_points[i])))
 
         max_rank = max(rnk)
-        from UQpy.dimension_reduction.grassmann.Grassmann import Grassmann
 
         fmean = []
         for i in range(n_mat):
@@ -40,7 +40,7 @@ class StochasticGradientDescent:
         counter_iteration = 0
         _gamma = []
         k = 1
-        from UQpy.dimension_reduction.grassmann.Grassmann import Grassmann
+
 
         while counter_iteration < self.max_iterations:
 

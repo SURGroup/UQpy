@@ -3,6 +3,7 @@ import numpy as np
 from UQpy.dimension_reduction.distances.grassmann.baseclass.RiemannianDistance import (
     RiemannianDistance,
 )
+from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
 
 
 class BinetCauchyDistance(RiemannianDistance):
@@ -15,7 +16,7 @@ class BinetCauchyDistance(RiemannianDistance):
 
     """
 
-    def compute_distance(self, xi, xj) -> float:
+    def compute_distance(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:
         """
         Compute the Binet-Cauchy distance between two points on the Grassmann manifold.
 
@@ -23,14 +24,14 @@ class BinetCauchyDistance(RiemannianDistance):
         :param numpy.array xj: Orthonormal matrix representing the second subspace.
         :rtype: float
         """
-        RiemannianDistance.check_points(xi, xj)
+        RiemannianDistance.check_rows(xi, xj)
 
-        r = np.dot(xi.T, xj)
+        r = np.dot(xi.data.T, xj.data)
         (ui, si, vi) = np.linalg.svd(r, full_matrices=True)
         si[np.where(si > 1)] = 1.0
         theta = np.arccos(si)
 
         cos_sq = np.cos(theta) ** 2
-        d = np.sqrt(1 - np.prod(cos_sq))
+        distance = np.sqrt(1 - np.prod(cos_sq))
 
-        return d
+        return distance

@@ -1,7 +1,7 @@
 import logging
 
 from beartype import beartype
-
+from UQpy.surrogates.baseclass.Surrogate import Surrogate
 from UQpy.surrogates.polynomial_chaos.regressions.LeastSquareRegression import (
     LeastSquareRegression,
 )
@@ -10,7 +10,7 @@ from UQpy.surrogates.polynomial_chaos.regressions.LassoRegression import LassoRe
 from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
 
 
-class PolynomialChaosExpansion:
+class PolynomialChaosExpansion(Surrogate):
 
     @beartype
     def __init__(self, regression_method: Regression):

@@ -14,7 +14,7 @@ def test_log_exp_maps():
 
     # Creating a list of matrices.
     matrices = [sol0, sol1, sol2, sol3]
-    manifold_projection = SvdProjection(matrices, p_planes_dimensions=sys.maxsize)
+    manifold_projection = SvdProjection(matrices, p=sys.maxsize)
 
     points_tangent = Grassmann.log_map(manifold_points=manifold_projection.psi,
                                        reference_point=manifold_projection.psi[0])
@@ -27,9 +27,9 @@ def test_log_exp_maps():
     manifold_points = Grassmann.exp_map(tangent_points=points_tangent,
                                         reference_point=manifold_projection.psi[0])
 
-    assert np.round(manifold_points[0][0][0], 5) == -0.49845
-    assert manifold_points[1][0][0] == -0.5013644537794977
-    assert manifold_points[2][0][0] == -0.4498150778515823
-    assert manifold_points[3][0][0] == -0.4980716121312462
+    assert np.round(manifold_points[0].data[0][0], 5) == -0.49845
+    assert manifold_points[1].data[0][0] == -0.5013644537794977
+    assert manifold_points[2].data[0][0] == -0.4498150778515823
+    assert manifold_points[3].data[0][0] == -0.4980716121312462
 
 

@@ -1,9 +1,12 @@
 import copy
+
+from UQpy.dimension_reduction.grassmann_manifold.optimization.baseclass.OptimizationMethod import OptimizationMethod
+from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
 from UQpy.utilities.ValidationTypes import PositiveInteger
 import numpy as np
 
 
-class GradientDescent:
+class GradientDescent(OptimizationMethod):
     def __init__(
         self,
         acceleration: bool = False,
@@ -20,13 +23,13 @@ class GradientDescent:
         self.error_tolerance = error_tolerance
         self.acceleration = acceleration
 
-    def optimize(self, data_points, distance):
+    def optimize(self, data_points: list[GrassmannPoint], distance):
         # Number of points.
         points_number = len(data_points)
         alpha = 0.5
         rank = []
         for i in range(points_number):
-            rank.append(min(np.shape(data_points[i])))
+            rank.append(min(np.shape(data_points[i].data)))
 
         from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
 
@@ -39,9 +42,9 @@ class GradientDescent:
             )
 
         index_0 = fmean.index(min(fmean))
-        mean_element = data_points[index_0].tolist()
+        mean_element = GrassmannPoint(data_points[index_0].data)
 
-        avg_gamma = np.zeros([np.shape(data_points[0])[0], np.shape(data_points[0])[1]])
+        avg_gamma = np.zeros([np.shape(data_points[0].data)[0], np.shape(data_points[0].data)[1]])
 
         counter_iteration = 0
 
@@ -49,9 +52,8 @@ class GradientDescent:
         avg = []
         _gamma = []
         if self.acceleration:
-            _gamma = Grassmann.log_map(
-                manifold_points=data_points, reference_point=np.asarray(mean_element)
-            )
+            _gamma = Grassmann.log_map(manifold_points=data_points,
+                                       reference_point=mean_element)
 
             avg_gamma.fill(0)
             for i in range(points_number):
@@ -60,9 +62,8 @@ class GradientDescent:
 
         # Main loop
         while counter_iteration <= self.max_iterations:
-            _gamma = Grassmann.log_map(
-                manifold_points=data_points, reference_point=np.asarray(mean_element)
-            )
+            _gamma = Grassmann.log_map(manifold_points=data_points,
+                                       reference_point=mean_element)
             avg_gamma.fill(0)
 
             for i in range(points_number):
@@ -85,11 +86,9 @@ class GradientDescent:
             else:
                 step = alpha * avg_gamma
 
-            x = Grassmann.exp_map(
-                tangent_points=[step], reference_point=np.asarray(mean_element)
-            )
+            x = Grassmann.exp_map(tangent_points=[step], reference_point=mean_element)
 
-            test_1 = np.linalg.norm(x[0] - mean_element, "fro")
+            test_1 = np.linalg.norm(x[0].data - mean_element.data, "fro")
 
             if test_1 < self.error_tolerance:
                 break

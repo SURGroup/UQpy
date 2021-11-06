@@ -2,7 +2,5 @@ from UQpy.dimension_reduction.grassmann_manifold.interpolation.baseclass.Interpo
     InterpolationMethod,
 )
 
-from UQpy.dimension_reduction.grassmann_manifold.interpolation.Interpolation import Interpolation
-from UQpy.dimension_reduction.grassmann_manifold.interpolation.LinearInterpolation import (
-    LinearInterpolation,
-)
+from UQpy.dimension_reduction.grassmann_manifold.interpolation.ManifoldInterpolation import ManifoldInterpolation
+from UQpy.dimension_reduction.grassmann_manifold.interpolation.methods import *
