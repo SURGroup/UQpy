@@ -262,6 +262,8 @@ class RunModel:
                  cores_per_task=1, nodes=1, cluster=False, resume=False, verbose=False, model_dir='Model_Runs',
                  fmt=None, separator=', ', vec=True, delete_files=False, **kwargs):
 
+
+        print("THIS IS CUSTOM!!!")
         # Check the platform and build appropriate call to Python
         if platform.system() in ['Windows']:
             self.python_command = "python"
@@ -769,18 +771,30 @@ class RunModel:
 
         # If running on SLURM cluster
         if self.cluster:
-            self.srun_string = "srun -N" + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive "
-            self.model_command_string = (self.parallel_string + "'(cd run_{1}" + " && " + self.srun_string
+            print("CLUSTER RUN!!")            
+            # self.srun_string = "srun -N" + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive "
+            self.ibrun_string = "ibrun -n " + str(self.cores_per_task) + " \"$(({} * " + str(self.cores_per_task) + "))\" "
+            self.model_command_string = (self.parallel_string + "'(cd run_{1}" + " && " + self.ibrun_string
                                          + " " + self.python_command + " -u " + str(self.model_script) +
-                                         " {1})'  ::: {" + str(self.nexist) + ".." +
-                                         str(self.nexist + self.nsim - 1) + "}")
+                                         " {1} &)'  ::: {" + str(self.nexist) + ".." +
+                                         str(self.nexist + self.nsim - 1) + "}; wait")
         else:  # If running locally
-            self.model_command_string = (self.parallel_string + " 'cd run_{1}" + " && " +
+            print("LOCAL RUN!!")
+            self.model_command_string = str(self.parallel_string + "'cd run_{1}" + " && " +
                                          self.python_command + " -u " +
-                                         str(self.model_script) + "' {1}  ::: {" + str(self.nexist) + ".." +
+                                         str(self.model_script) + " {1}' ::: {" + str(self.nexist) + ".." +
                                          str(self.nexist + self.nsim - 1) + "}")
 
-        subprocess.run(self.model_command_string, shell=True)
+
+        print("This is the current directory:", os.getcwd())
+        print("This is the command string:\n", self.model_command_string)
+        # print("THIS IS THE MODEL SCRIPT: ", self.model_script)        
+        result = subprocess.run(self.model_command_string, shell=True, capture_output=True, text=True, executable='/bin/bash')
+
+        print("command:", result.args)
+        print("stdout:", result.stdout)
+        print("stderr:", result.stderr)        
+        # subprocess.check_output(self.model_command_string, shell=True)
 
     ####################################################################################################################
     # Helper functions
