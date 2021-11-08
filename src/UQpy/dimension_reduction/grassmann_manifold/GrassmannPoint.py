@@ -4,14 +4,13 @@ from beartype import beartype
 from beartype.vale import Is
 
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArrayOrthonormal, Numpy2DFloatArray
-import numpy as np
 
 
 class GrassmannPoint:
     @beartype
     def __init__(self, data: Numpy2DFloatArrayOrthonormal):
         """
-        :param data: Orthonormal matrix containing the data of a point on the Grassmann manifold.
+        :param data: Orthonormal matrix representing the subspace on the Grassmann manifold.
         """
         self._data = data
 

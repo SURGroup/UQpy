@@ -21,8 +21,8 @@ class AsimovDistance(RiemannianDistance):
         """
         Compute the Asimov distance between two points on the Grassmann manifold.
 
-        :param numpy.array xi: Orthonormal matrix representing the first subspace.
-        :param numpy.array xj: Orthonormal matrix representing the second subspace.
+        :param GrassmannPoint xi: Orthonormal matrix representing the first subspace.
+        :param GrassmannPoint xj: Orthonormal matrix representing the second subspace.
         :rtype: float
         """
         RiemannianDistance.check_rows(xi, xj)

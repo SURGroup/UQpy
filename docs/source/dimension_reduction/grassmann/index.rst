@@ -2,7 +2,27 @@ Grassmann manifold
 --------------------------------
 
 In differential geometry the Grassmann manifold :math:`\mathcal{G}(p, n)` refers to a collection of
-:math:`p`-dimensional subspaces embedded in a :math:`n`-dimensional vector space [1]_ [2]_. A point on :math:`\mathcal{G}(p, n)` is typically represented as a :math:`n \times p` orthonormal matrix :math:`\mathbf{X}`, whose column spans the corresponding subspace.  For point :math:`\mathbf{X}` we can define the tangent space :math:`\mathcal{T}_{\mathbf{X}, \mathcal{G}(p,n)}` as  the set of all matrices :math:`\mathbf{\Gamma}` at :math:`\mathbf{X}` such as 
+:math:`p`-dimensional subspaces embedded in a :math:`n`-dimensional vector space [1]_ [2]_. A point on :math:`\mathcal{G}(p, n)` is typically represented as a :math:`n \times p` orthonormal matrix :math:`\mathbf{X}`, whose column spans the corresponding subspace.
+
+The  :py:mod:`UQpy` class :class:`.GrassmannPoint` offers a way to check that a data point, given as a matrix :math:`\mathbf{X} \in \mathbb{R}^{n \times p}`,  belongs on the corresponding Grassmann manifold. To this end, the user needs to create an object of type :class:`.GrassmannPoint`
+that will check that the point is given as an orthonormal 2-d numpy.array, i.e., :math:`\text{shape}(\mathbf{X})=(p, n)` and :math:`\mathbf{X}' \mathbf{X} = \mathbf{I}`.
+In order to use the class :class:`.GrassmannPoint` one needs to import it from the :mod:`UQpy.dimension_reduction.grassmann_manifold` module
+
+>>> from UQpy.dimension_reduction.grassmann_manifold import GrassmannPoint
+
+To create an object of type :class:`.GrassmannPoint`
+
+>>> X = GrassmannPoint(X)
+
+.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Methods
+
+
+
+For point :math:`\mathbf{X}` we can define the tangent space :math:`\mathcal{T}_{\mathbf{X}, \mathcal{G}(p,n)}` as  the set of all matrices :math:`\mathbf{\Gamma}` at :math:`\mathbf{X}` such as
 
 .. math:: \mathcal{T}_{\mathbf{X}, \mathcal{G}(p,n)} = \{\mathbf{\Gamma} \in \mathbb{R}^{n \times p} : \mathbf{\Gamma}^T\mathbf{X}=\mathbf{0}\}
 
