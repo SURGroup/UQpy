@@ -1,10 +1,10 @@
+import numpy as np
 import scipy.special as special
 from beartype import beartype
 
 from UQpy.distributions import Uniform
-from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import (
-    Polynomials,
-)
+from UQpy.surrogates.polynomial_chaos_new.polynomials.baseclass.Polynomials import Polynomials
+from scipy.special import eval_legendre
 
 
 class Legendre(Polynomials):
@@ -19,9 +19,9 @@ class Legendre(Polynomials):
         """
         super().__init__(distributions, degree)
         self.degree = degree
-        self.pdf = self.distribution.pdf
+        self.pdf = self.distributions
 
-    def get_polys(self, x):
+    def evaluate(self, x):
         """
         Calculates the normalized Legendre polynomials evaluated at sample points.
 
@@ -29,15 +29,19 @@ class Legendre(Polynomials):
         :return: Α list of 'ndarrays' with the design matrix and the
                     normalized polynomials.
         """
-        a, b = -1, 1
-        m, scale = Polynomials.get_mean(self), Polynomials.scale(self)
-        x_ = Polynomials.standardize_uniform(x, m, scale)
+        x = np.array(x).flatten()
 
-        uni = Uniform(a, b - a)
-        pdf_st = uni.pdf
+        # normalize data
+        x_normed = Polynomials.standardize_uniform(x, self.distributions)
 
-        p = []
-        for i in range(self.degree):
-            p.append(special.legendre(i, monic=False))
+        # evaluate standard Legendre polynomial, i.e. orthogonal in [-1,1] with
+        # PDF = 1 (NOT 1/2!!!)
+        l = eval_legendre(self.degree, x_normed)
 
-        return Polynomials.normalized(self.degree, x_, a, b, pdf_st, p)
+        # normalization constant
+        st_lege_norm = np.sqrt(2 / (2 * self.degree + 1))
+
+        # multiply by sqrt(2) to take into account the pdf 1/2
+        l = np.sqrt(2) * l / st_lege_norm
+
+        return l

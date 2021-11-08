@@ -8,8 +8,8 @@ from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import 
 )
 from UQpy.distributions import DistributionContinuous1D, JointIndependent
 from UQpy.sampling.latin_hypercube_criteria import Random
+from UQpy.surrogates.baseclass import Surrogate
 from UQpy.surrogates.kriging import Kriging
-from UQpy.surrogates.polynomial_chaos import PolynomialChaosExpansion
 from UQpy.utilities.ValidationTypes import *
 from UQpy.utilities.Utilities import process_random_state
 
@@ -20,7 +20,7 @@ class AdaptiveKriging:
         self,
         distributions: Union[Distribution, list[Distribution]],
         runmodel_object: RunModel,
-        surrogate: Union[Kriging, PolynomialChaosExpansion],
+        surrogate: Surrogate,
         learning_function: LearningFunction,
         samples=None,
         samples_number: PositiveInteger = None,

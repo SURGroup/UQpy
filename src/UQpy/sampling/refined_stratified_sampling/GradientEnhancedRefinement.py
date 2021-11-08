@@ -1,11 +1,9 @@
 from ctypes import Union
+
+from UQpy.surrogates.baseclass import Surrogate
 from UQpy.utilities.ValidationTypes import *
 from UQpy import RunModel
 from UQpy.sampling.refined_stratified_sampling.baseclass.Refinement import *
-from UQpy.surrogates.kriging import Kriging
-from UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion import (
-    PolynomialChaosExpansion,
-)
 from UQpy.utilities.Utilities import gradient
 
 
@@ -14,7 +12,7 @@ class GradientEnhancedRefinement(Refinement):
         self,
         strata,
         runmodel_object: RunModel,
-        surrogate: Union[Kriging, PolynomialChaosExpansion],
+        surrogate: Surrogate,
         nearest_points_number: int = None,
         qoi_name: str = None,
         step_size: float = 0.005,

@@ -101,6 +101,102 @@ The :class:`.AdaptiveKriging` class also allows new, user-defined learning funct
 >>>    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
 >>>        # AKMS class use these inputs to compute the learning function
 >>>
+>>>        g, sig = surrogate.predict(population,)
+>>>
+>>>        # Remove the inconsistency in the shape of 'g' and 'sig' array
+>>>        g = g.reshape([population.shape[0], 1])
+>>>        sig = sig.reshape([population.shape[0], 1])
+>>>
+>>>        u = abs(g) / sig
+>>>        rows = u[:, 0].argsort()[:n_add]
+>>>
+>>>        indicator = False
+>>>        if min(u[:, 0]) >= self.u_stop:
+>>>            indicator = True
+>>>
+>>>        return population[rows, :], u[rows, 0], indicator
+
+
+>>> class UserLearningFunction(LearningFunction):
+>>>
+>>>    def __init__(self, u_stop: int = 2):
+>>>        self.u_stop = u_stop
+>>>
+>>>    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
+>>>        # AKMS class use these inputs to compute the learning function
+>>>
+>>>        g, sig = surrogate.predict(population,)
+>>>
+>>>        # Remove the inconsistency in the shape of 'g' and 'sig' array
+>>>        g = g.reshape([population.shape[0], 1])
+>>>        sig = sig.reshape([population.shape[0], 1])
+>>>
+>>>        u = abs(g) / sig
+>>>        rows = u[:, 0].argsort()[:n_add]
+>>>
+>>>        indicator = False
+>>>        if min(u[:, 0]) >= self.u_stop:
+>>>            indicator = True
+>>>
+>>>        return population[rows, :], u[rows, 0], indicator
+
+
+>>> class UserLearningFunction(LearningFunction):
+>>>
+>>>    def __init__(self, u_stop: int = 2):
+>>>        self.u_stop = u_stop
+>>>
+>>>    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
+>>>        # AKMS class use these inputs to compute the learning function
+>>>
+>>>        g, sig = surrogate.predict(population,)
+>>>
+>>>        # Remove the inconsistency in the shape of 'g' and 'sig' array
+>>>        g = g.reshape([population.shape[0], 1])
+>>>        sig = sig.reshape([population.shape[0], 1])
+>>>
+>>>        u = abs(g) / sig
+>>>        rows = u[:, 0].argsort()[:n_add]
+>>>
+>>>        indicator = False
+>>>        if min(u[:, 0]) >= self.u_stop:
+>>>            indicator = True
+>>>
+>>>        return population[rows, :], u[rows, 0], indicator
+
+
+>>> class UserLearningFunction(LearningFunction):
+>>>
+>>>    def __init__(self, u_stop: int = 2):
+>>>        self.u_stop = u_stop
+>>>
+>>>    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
+>>>        # AKMS class use these inputs to compute the learning function
+>>>
+>>>        g, sig = surrogate.predict(population,)
+>>>
+>>>        # Remove the inconsistency in the shape of 'g' and 'sig' array
+>>>        g = g.reshape([population.shape[0], 1])
+>>>        sig = sig.reshape([population.shape[0], 1])
+>>>
+>>>        u = abs(g) / sig
+>>>        rows = u[:, 0].argsort()[:n_add]
+>>>
+>>>        indicator = False
+>>>        if min(u[:, 0]) >= self.u_stop:
+>>>            indicator = True
+>>>
+>>>        return population[rows, :], u[rows, 0], indicator
+
+
+>>> class UserLearningFunction(LearningFunction):
+>>>
+>>>    def __init__(self, u_stop: int = 2):
+>>>        self.u_stop = u_stop
+>>>
+>>>    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
+>>>        # AKMS class use these inputs to compute the learning function
+>>>
 >>>        g, sig = surrogate.predict(population, True)
 >>>
 >>>        # Remove the inconsistency in the shape of 'g' and 'sig' array

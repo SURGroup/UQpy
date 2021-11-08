@@ -1,4 +1,4 @@
-from UQpy import InterpolationMethod
+from UQpy.dimension_reduction.grassmann_manifold.interpolation.baseclass.InterpolationMethod import InterpolationMethod
 from UQpy.surrogates.baseclass import Surrogate
 import numpy as np
 

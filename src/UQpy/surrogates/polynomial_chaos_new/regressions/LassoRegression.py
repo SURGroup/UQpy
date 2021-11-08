@@ -1,30 +1,28 @@
 import logging
 import numpy as np
-from UQpy.surrogates.polynomial_chaos.polynomials.baseclass import Polynomials
-from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
+from beartype import beartype
+
+from UQpy.surrogates.polynomial_chaos_new.polynomials.PolynomialBasis import PolynomialBasis
+from UQpy.surrogates.polynomial_chaos_new.regressions.baseclass.Regression import Regression
 
 
-class RidgeRegression(Regression):
-
-    def __init__(
-        self,
-        polynomials: Polynomials,
-        learning_rate: float = 0.01,
-        iterations: int = 1000,
-        penalty: float = 1,
-    ):
+class LassoRegression(Regression):
+    @beartype
+    def __init__(self, polynomial_basis: PolynomialBasis, learning_rate: float = 0.01, iterations: int = 1000,
+                 penalty: float = 1):
         """
-        Class to calculate the polynomial_chaos coefficients with the Ridge regression method.
+        Class to calculate the polynomial_chaos coefficients with the Least Absolute Shrinkage
+        and Selection Operator (LASSO) method.
 
-        :param polynomials: Object from the 'Polynomial' class
+        :param polynomial_basis: Object from the 'Polynomial' class
         :param learning_rate: Size of steps for the gradient descent.
         :param iterations: Number of iterations of the optimization algorithm.
         :param penalty: Penalty parameter controls the strength of regularization. When it
-         is close to zero, then the ridge regression converges to the linear
+         is close to zero, then the Lasso regression converges to the linear
          regression, while when it goes to infinity, polynomial_chaos coefficients
          converge to zero.
         """
-        self.polynomials = polynomials
+        super().__init__(polynomial_basis)
         self.learning_rate = learning_rate
         self.iterations = iterations
         self.penalty = penalty
@@ -38,18 +36,24 @@ class RidgeRegression(Regression):
         :param y: `ndarray` containing the model evaluations (labels) at the training points.
         :return: Weights (polynomial_chaos coefficients)  and Bias of the regressor
         """
-        xx = self.polynomials.evaluate(x)
+        xx = self.polynomial_basis.evaluate_basis(x)
         m, n = xx.shape
 
         if y.ndim == 1 or y.shape[1] == 1:
             y = y.reshape(-1, 1)
             w = np.zeros(n).reshape(-1, 1)
+            dw = np.zeros(n).reshape(-1, 1)
             b = 0
 
             for _ in range(self.iterations):
-                y_pred = (xx.dot(w) + b).reshape(-1, 1)
+                y_pred = xx.dot(w) + b
 
-                dw = (-(2 * xx.T.dot(y - y_pred)) + (2 * self.penalty * w)) / m
+                for i in range(n):
+                    if w[i] > 0:
+                        dw[i] = (-(2 * (xx.T[i, :]).dot(y - y_pred)) + self.penalty) / m
+                    else:
+                        dw[i] = (-(2 * (xx.T[i, :]).dot(y - y_pred)) - self.penalty) / m
+
                 db = -2 * np.sum(y - y_pred) / m
 
                 w = w - self.learning_rate * dw
@@ -63,7 +67,7 @@ class RidgeRegression(Regression):
             for _ in range(self.iterations):
                 y_pred = xx.dot(w) + b
 
-                dw = (-(2 * xx.T.dot(y - y_pred)) + (2 * self.penalty * w)) / m
+                dw = (-(2 * xx.T.dot(y - y_pred)) - self.penalty) / m
                 db = -2 * np.sum((y - y_pred), axis=0).reshape(1, -1) / m
 
                 w = w - self.learning_rate * dw

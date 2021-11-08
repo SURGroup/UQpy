@@ -100,8 +100,8 @@ class GrassmannianGHMap:
     def predict(self, X):
 
         dcoords = self.dcoords
-        dcoord_interp = self.gh0.predict(X)
-        sig_interp = self.gh1.predict(X)
+        dcoord_interp = self.gh0.predict(X, )
+        sig_interp = self.gh1.predict(X, )
 
         nbrs = NearestNeighbors(n_neighbors=self.n_neighbors, algorithm='ball_tree').fit(dcoords)
         distances, indices = nbrs.kneighbors(dcoord_interp)
@@ -159,10 +159,10 @@ class GrassmannianGHMap:
         gh_local = GeometricHarmonics()
 
         gh_local.fit(diffc, gamma_psi, epsilon=epsilon_local)
-        gpsipred_ = gh_local.predict(dcoord_interp)
+        gpsipred_ = gh_local.predict(dcoord_interp, )
 
         gh_local.fit(diffc, gamma_phi, epsilon=epsilon_local)
-        gphipred_ = gh_local.predict(dcoord_interp)
+        gphipred_ = gh_local.predict(dcoord_interp, )
 
         #gh_local.fit(diffc, sigma, epsilon=epsilon_local)
         #sigpred_ = gh_local.predict(dcoord_interp)
