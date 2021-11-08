@@ -10,7 +10,7 @@ class GrassmannPoint:
     @beartype
     def __init__(self, data: Numpy2DFloatArrayOrthonormal):
         """
-        :param data: Orthonormal matrix representing the subspace on the Grassmann manifold.
+        :param data: Matrix representing the point on the Grassmann manifold.
         """
         self._data = data
 

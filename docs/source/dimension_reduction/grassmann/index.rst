@@ -6,7 +6,7 @@ In differential geometry the Grassmann manifold :math:`\mathcal{G}(p, n)` refers
 
 The  :py:mod:`UQpy` class :class:`.GrassmannPoint` offers a way to check that a data point, given as a matrix :math:`\mathbf{X} \in \mathbb{R}^{n \times p}`,  belongs on the corresponding Grassmann manifold. To this end, the user needs to create an object of type :class:`.GrassmannPoint`
 that will check that the point is given as an orthonormal 2-d numpy.array, i.e., :math:`\text{shape}(\mathbf{X})=(p, n)` and :math:`\mathbf{X}' \mathbf{X} = \mathbf{I}`.
-In order to use the class :class:`.GrassmannPoint` one needs to import it from the :mod:`UQpy.dimension_reduction.grassmann_manifold` module
+In order to use the class :class:`.GrassmannPoint` one needs to import it
 
 >>> from UQpy.dimension_reduction.grassmann_manifold import GrassmannPoint
 
@@ -21,6 +21,8 @@ To create an object of type :class:`.GrassmannPoint`
    :caption: Methods
 
 
+Exponential mapping
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For point :math:`\mathbf{X}` we can define the tangent space :math:`\mathcal{T}_{\mathbf{X}, \mathcal{G}(p,n)}` as  the set of all matrices :math:`\mathbf{\Gamma}` at :math:`\mathbf{X}` such as
 
@@ -35,17 +37,6 @@ Consider two points :math:`\mathbf{X}` and :math:`\mathbf{Y}` on :math:`\mathcal
 
 where :math:`\mathbf{\Phi}(0)=\mathbf{X}` and :math:`\mathbf{\Phi}(1)=\mathbf{Y}`.
 
-The :class:`.Grassmann` class offers various methods to operate with data on the Grassmann manifold.
-
-.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.Grassmann
-
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Methods
-
-Exponential mapping
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The exponential map, denoted as :math:`\mathcal{T}_{\mathbf{X}, \mathcal{G}(p,n)}  \rightarrow \mathcal{G}(p, n)`, maps a tangent vector :math:`\mathbf{\Gamma} \in \mathcal{T}_{\mathbf{X}, \mathcal{G}(p,n)}` to the endpoint :math:`\mathbf{Y}=\Phi(1)` of the unique geodesic :math:`\Phi` that emanates from :math:`\mathbf{X}` in the direction :math:`\mathbf{\Gamma}`.
 
