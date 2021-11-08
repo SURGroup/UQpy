@@ -9,7 +9,7 @@ from UQpy.utilities.Utilities import _nn_coord
 from beartype import beartype
 from typing import Annotated, Union
 from beartype.vale import Is
-from UQpy.dimension_reduction.kernels.euclidean.GaussianKernel import GaussianKernel
+from UQpy.dimension_reduction.kernels.GaussianKernel import GaussianKernel
 
 
 class DiffusionMaps:

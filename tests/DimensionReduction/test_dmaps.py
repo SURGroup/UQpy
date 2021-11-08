@@ -1,4 +1,4 @@
-from UQpy.dimension_reduction.kernels.euclidean.GaussianKernel import GaussianKernel
+from UQpy.dimension_reduction.kernels.GaussianKernel import GaussianKernel
 from UQpy.dimension_reduction.dmaps.DiffusionMaps import DiffusionMaps
 
 

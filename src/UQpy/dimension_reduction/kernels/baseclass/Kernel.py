@@ -2,7 +2,6 @@ import itertools
 from abc import ABC, abstractmethod
 import numpy as np
 
-from UQpy.dimension_reduction.distances.grassmann.baseclass import RiemannianDistance
 from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
 
 

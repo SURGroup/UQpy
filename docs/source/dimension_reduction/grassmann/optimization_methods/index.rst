@@ -8,7 +8,7 @@ OptimizationMethod
 
 The abstract :class:`.OptimizationMethod` class is a blueprint for classes in :mod:`.optimization_methods` module. It allows the user to define a set of methods that must be created within any child classes built from this abstract class.
 
-.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.optimization_methods.baseclass.OptimizationMethod 
+.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.optimization.baseclass.OptimizationMethod
     :members:
 
 
@@ -26,11 +26,11 @@ The exponential map, denoted as :math:`\mathcal{T}_{\mathbf{X}, \mathcal{G}(p,n)
 
 The :class:`.GradientDescent` class is imported using the following command:
 
->>> from UQpy.dimension_reduction.grassmann_manifold.optimization_methods.GradientDescent import GradientDescent
+>>> from UQpy.dimension_reduction.grassmann_manifold.optimization.GradientDescent import GradientDescent
 
 One can use the following command to instantiate the class :class:`.GradientDescent`
 
-.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.optimization_methods.GradientDescent
+.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.optimization.GradientDescent
     :members:
 
 
@@ -44,11 +44,11 @@ The logarithmic map, denoted as :math:`\mathcal{G}(p, n) \rightarrow  \mathcal{T
 
 The :class:`.StochasticGradientDescent` class is imported using the following command:
 
->>> from UQpy.dimension_reduction.grassmann_manifold.optimization_methods.StochasticGradientDescent import StochasticGradientDescent
+>>> from UQpy.dimension_reduction.grassmann_manifold.optimization.StochasticGradientDescent import StochasticGradientDescent
 
 One can use the following command to instantiate the class :class:`.StochasticGradientDescent`
 
-.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.optimization_methods.StochasticGradientDescent
+.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.optimization.StochasticGradientDescent
     :members:
 
 
