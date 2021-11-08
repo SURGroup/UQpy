@@ -1,1 +1,11 @@
-from UQpy.dimension_reduction.distances import *
+from UQpy.dimension_reduction.distances.baseclass import *
+
+from UQpy.dimension_reduction.distances.AsimovDistance import AsimovDistance
+from UQpy.dimension_reduction.distances.BinetCauchyDistance import BinetCauchyDistance
+from UQpy.dimension_reduction.distances.EuclideanDistance import EuclideanDistance
+from UQpy.dimension_reduction.distances.FubiniStudyDistance import FubiniStudyDistance
+from UQpy.dimension_reduction.distances.GeodesicDistance import GeodesicDistance
+from UQpy.dimension_reduction.distances.MartinDistance import MartinDistance
+from UQpy.dimension_reduction.distances.ProcrustesDistance import ProcrustesDistance
+from UQpy.dimension_reduction.distances.ProjectionDistance import ProjectionDistance
+from UQpy.dimension_reduction.distances.SpectralDistance import SpectralDistance
