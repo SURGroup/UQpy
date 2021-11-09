@@ -6,7 +6,7 @@ from beartype import beartype
 from UQpy.dimension_reduction.distances.baseclass import RiemannianDistance
 from UQpy.dimension_reduction.grassmann_manifold.optimization.baseclass.OptimizationMethod import OptimizationMethod
 from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint, ListOfGrassmannPoints
-from UQpy.dimension_reduction.grassmann_manifold.projection.baseclass.ManifoldProjection import ManifoldProjection
+from UQpy.dimension_reduction.grassmann_manifold.projections.baseclass.ManifoldProjection import ManifoldProjection
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 
 

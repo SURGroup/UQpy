@@ -1,7 +1,7 @@
 import sys
 
 from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
-from UQpy.dimension_reduction.grassmann_manifold.projection.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
 from UQpy.dimension_reduction.kernels.ProjectionKernel import ProjectionKernel
 from UQpy.dimension_reduction.kernels.BinetCauchyKernel import BinetCauchyKernel
 from UQpy.dimension_reduction.kernels.GaussianKernel import GaussianKernel

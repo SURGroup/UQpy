@@ -16,13 +16,12 @@ class ProjectionKernel(Kernel):
     def apply_method(self, points):
         points.evaluate_matrix(self, self.kernel_operator)
 
-    def kernel_entry(self, xi: GrassmannPoint, xj: GrassmannPoint):
+    def kernel_entry(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:
         """
         Compute the Projection kernel entry for two points on the Grassmann manifold.
 
-        :param numpy.array xi: Orthonormal matrix representing the first subspace.
-        :param numpy.array xj: Orthonormal matrix representing the second subspace.
-        :rtype: float
+        :param xi: Orthonormal matrix representing the first point.
+        :param xj: Orthonormal matrix representing the second point.
         """
         r = np.dot(xi.data.T, xj.data)
         n = np.linalg.norm(r, "fro")

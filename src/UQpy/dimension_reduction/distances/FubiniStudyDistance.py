@@ -19,9 +19,9 @@ class FubiniStudyDistance(RiemannianDistance):
         """
         Compute the Fubini-Study distance between two points on the Grassmann manifold.
 
-        :param GrassmannPoint xi: Orthonormal matrix representing the first point.
-        :param GrassmannPoint xj: Orthonormal matrix representing the second point.
-        :rtype: float
+        :param xi: Orthonormal matrix representing the first point.
+        :param xj: Orthonormal matrix representing the second point.
+
         """
         RiemannianDistance.check_rows(xi, xj)
 

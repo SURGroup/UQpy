@@ -7,7 +7,7 @@ from UQpy.dimension_reduction.distances.GeodesicDistance import GeodesicDistance
 from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
 from UQpy.dimension_reduction.grassmann_manifold.optimization.baseclass.OptimizationMethod import \
     OptimizationMethod
-from UQpy.dimension_reduction.grassmann_manifold.projection.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
 from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
 import sys
 from UQpy.dimension_reduction.grassmann_manifold.optimization.GradientDescent import GradientDescent
