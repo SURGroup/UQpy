@@ -3,11 +3,11 @@ import sys
 from beartype import beartype
 
 from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
-from UQpy.dimension_reduction.grassmann_manifold.projection.KernelComposition import (
+from UQpy.dimension_reduction.grassmann_manifold.projections.KernelComposition import (
     KernelComposition,
     CompositionAction,
 )
-from UQpy.dimension_reduction.grassmann_manifold.projection.baseclass.ManifoldProjection import (
+from UQpy.dimension_reduction.grassmann_manifold.projections.baseclass.ManifoldProjection import (
     ManifoldProjection,
 )
 from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel

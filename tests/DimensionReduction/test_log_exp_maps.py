@@ -1,5 +1,5 @@
 import numpy as np
-from UQpy.dimension_reduction.grassmann_manifold.projection.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
 from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
 import sys
 

@@ -1,5 +1,5 @@
 from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
-from UQpy.dimension_reduction.grassmann_manifold.projection.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
 from UQpy.dimension_reduction.distances.EuclideanDistance import EuclideanDistance
 from UQpy.dimension_reduction.distances.AsimovDistance import AsimovDistance
 from UQpy.dimension_reduction.distances.FubiniStudyDistance import FubiniStudyDistance

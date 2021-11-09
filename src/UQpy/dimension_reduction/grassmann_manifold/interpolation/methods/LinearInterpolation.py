@@ -8,10 +8,21 @@ from UQpy.dimension_reduction.grassmann_manifold.interpolation.baseclass.Interpo
 
 
 class LinearInterpolation(InterpolationMethod):
+    """
+    A class to perform piecewise linear interpolation in high dimensions.
+    """
     def interpolate(self,
                     coordinates: NumpyFloatArray,
                     samples: NumpyFloatArray,
-                    point: NumpyFloatArray):
+                    point: NumpyFloatArray) -> NumpyFloatArray:
+        """
+        Method to perform the interpolation.
+
+        :param coordinates: Nodes of the interpolant
+        :param samples: Data to interpolate
+        :param point: Point to interpolation
+
+        """
         nargs = len(samples)
         shape_ref = np.shape(samples[0])
         for i in range(1, nargs):

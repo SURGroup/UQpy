@@ -1,12 +1,3 @@
-Baseclass 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The abstract :class:`.ManifoldProjection` class is the parent class for all classes in :mod:`.manifold_projections` module. It allows the user to define a set of methods that must be created within any child classes built from this abstract class.
-
-.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.manifold_projections.baseclass.ManifoldProjection 
-    :members:
-
-
 SVD
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -36,23 +27,10 @@ The signature of the initializer is shown below:
 .. autoclass:: UQpy.dimension_reduction.KernelComposition
     :members:
 
+------------------------------------------------------------------------------------
 
+The abstract :class:`.ManifoldProjection` class is the parent class that allows the user to define a set of methods that
+must be created within any child classes built from this abstract class.
 
-QR
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The QR decomposition of a matrix :math:`\mathbf{X}\in \mathbb{R}^{n \times m}` is
-
-.. math:: \mathbf{X} =  \mathbf{Q}  \mathbf{R}
-
-where :math:`\mathbf{Q}` is an orthonormal matrix representing the point on the Grassmann manifold.
-
-
-The :class:`.QrProjection` class is imported using the following command:
-
->>> from UQpy.dimension_reduction.QrProjection import QrProjection
-
-The signature of the initializer is shown below:
-
-.. autoclass:: UQpy.dimension_reduction.QrProjection
+.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.manifold_projections.baseclass.ManifoldProjection
     :members:

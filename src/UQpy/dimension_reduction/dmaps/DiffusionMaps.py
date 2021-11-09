@@ -136,7 +136,7 @@ class DiffusionMaps:
         """
         Perform diffusion maps to reveal the embedded geometry of datasets.
 
-        In this method, the users have the option to work with input data defined by subspaces obtained via projection
+        In this method, the users have the option to work with input data defined by subspaces obtained via projections
         of input data points on the grassmann_manifold manifold, or directly with the input data points. For example,
         considering that a ``grassmann_manifold`` object is provided using the following command:
 

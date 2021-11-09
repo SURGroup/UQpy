@@ -120,10 +120,10 @@ Since :meth:`.karcher_mean` is a static method, it does not require instantiatio
    :caption: Optimization methods	
    
   
-  Optimization methods <optimization_methods/index>
+  Optimization  <optimization/index>
   
 
-Manifold projections
+Projections
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 A collection of methods to project data on the Grassmann manifold.
 
@@ -132,7 +132,44 @@ A collection of methods to project data on the Grassmann manifold.
    :maxdepth: 1
    
   
-  Methods <manifold_projections/index>	
+  Methods <projections/index>
+
+
+
+Interpolation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:py:mod:`UQpy` offers the capability to interpolate points on the Grassmann :math:`\mathcal{G}(p,n)`. Consider we have a set of
+:math:`n+1` points :math:`(t_0, \mathbf{X}_0), ..., (t_n, \mathbf{X}_n)`, with :math:`t_0 <...<t_n` and
+:math:`\mathbf{X}_k \in \mathbb{R}^{p \times n}`,  and we want to find
+a function :math:`p(x)` for which :math:`p(t_k)=\mathbf{X}_k` for :math:`k=0,..,n`. In this setting,
+:math:`x` is a continuous independent variable and :math:`t_k` are called the nodes (or coordinates) of the interpolant.
+However, since the Grassmann manifold has a nonlinear structure, interpolation can only be performed on the tangent space
+which is a flat space. To this end, the steps required to interpolate a point on :math:`\mathcal{G}(p,n)` the  are the
+following:
+
+1. Calculate the Karcher mean of the given points on the manifold.
+2. Project all points onto the tangent space with origin the Karcher mean.
+3. Perform the interpolation on the tangent space using the available methods.
+4. Map the interpolated point back onto the manifold.
+
+The :class:`.ManifoldInterpolation` class provides a framework to perform these steps. To use this
+class we need to import it first
+
+>>> from UQpy.dimension_reduction.ManifoldInterpolation import ManifoldInterpolation
+
+A description of the class signature is shown below:
+
+.. autoclass:: UQpy.dimension_reduction.ManifoldInterpolation
+    :members:
+
+
+:py:mod:`UQpy` provides a collection of methods to perform the interpolation on the tangent space.
+
+.. toctree::
+   :hidden:
+   :maxdepth: 1
+
+  Methods <interpolation/index>
 
 .. [1] T. Bendokat, R. Zimmermann, P.-A. Absil, A Grassmann Manifold Handbook: Basic Geometry and Computational Aspects, 2020.
 
