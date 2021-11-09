@@ -22,19 +22,15 @@ class ComputationalModel(InferenceModel):
 
         :param parameters_number: Number of parameters to be estimated.
         :param runmodel_object: :class:`.RunModel` class object that defines the forward model. This input is required
-         for cases 1a and 1b.
-        :param error_covariance: Covariance for Gaussian error model (case 1a). It can be a scalar (in which case the
-         covariance matrix is the identity times that value), a 1d `ndarray` in which case the covariance is assumed to
-         be diagonal, or a full covariance matrix (2D `ndarray`). Default value is 1.
+         for **cases 1a and 1b**.
+        :param error_covariance: Covariance for Gaussian error model **(case 1a)**. It can be a scalar (in which case
+         the covariance matrix is the identity times that value), a 1d `ndarray` in which case the covariance is assumed
+         to be diagonal, or a full covariance matrix (2D `ndarray`). Default value is 1.
         :param name: Name of model - optional but useful in a model selection setting.
         :param prior: Prior distribution, must have a `log_pdf` or `pdf` method.
         :param log_likelihood: Function that defines the log-likelihood model, possibly in conjunction with the
-         `runmodel_object` (cases 1b and 2). Default is None, and a Gaussian-error model is considered (case 1a).
-         |  If a `runmodel_object` is also defined (case 1b), this function is called as:
-         |  `model_outputs = runmodel_object.run(samples=params).qoi_list`
-         |  `log_likelihood(params, model_outputs, data, **kwargs_likelihood)`
-         |  If no `runmodel_object` is defined (case 2), this function is called as:
-         |  `log_likelihood(params, data, **kwargs_likelihood)`
+         `runmodel_object` **(cases 1b and 2)**. Default is None, and a Gaussian-error model is considered
+         **(case 1a)**.
         """
         self.parameters_number = parameters_number
         self.runmodel_object = runmodel_object

@@ -249,16 +249,6 @@ class SubsetSimulation:
     # Support functions for subset simulation
 
     def _compute_coefficient_of_variation(self, step):
-        """
-        Compute the coefficient of variation of the samples in a conditional level
-
-        This is an instance method that is called after each conditional level is complete to compute the coefficient
-        of variation of the conditional probability in that level.
-
-        :param step: Specifies the conditional level
-        :return: Coefficient of variation in conditional level assuming independent chains, Coefficient of variation in
-         conditional level with dependent chains
-        """
         # Here, we assume that the initial samples are drawn to be uncorrelated such that the correction factors do not
         # need to be computed.
         if step == 0:
@@ -299,20 +289,6 @@ class SubsetSimulation:
 
     # Computes the conventional correlation factor gamma from Au and Beck
     def _correlation_factor_gamma(self, indicator, n_s, n_c):
-        """
-        Compute the conventional correlation factor gamma from Au and Beck (Reference [1])
-
-        This is an instance method that computes the correlation factor gamma used to estimate the coefficient of
-        variation of the conditional probability estimate from a given conditional level. This method is called
-        automatically within the _cov_sus method.
-
-        :param indicator: An array of booleans indicating whether the performance function is below the threshold for
-         the conditional probability.
-        :param int n_s: Number of samples drawn from each Markov chain in each conditional level
-        :param int n_c: Number of Markov chains in each conditional level
-        :return: Gamma factor in coefficient of variation estimate
-        :rtype: float
-        """
         gam = np.zeros(n_s - 1)
         r = np.zeros(n_s)
 
@@ -332,20 +308,6 @@ class SubsetSimulation:
 
     # Computes the updated correlation factor beta from Shields et al.
     def _correlation_factor_beta(self, g, step):
-        """
-        Compute the additional correlation factor beta from Shields et al. (Reference [2])
-
-        This is an instance method that computes the correlation factor beta used to estimate the coefficient of
-        variation of the conditional probability estimate from a given conditional level. This method is called
-        automatically within the _cov_sus method.
-
-        :param numpy.ndarray g: An array containing the performance function evaluation at all points in the current
-         conditional level.
-        :param int step: Current conditional level
-        :return: Beta factor in coefficient of variation estimate
-        :rtype: float
-
-        """
         beta = 0
         for i in range(np.shape(g)[1]):
             for j in range(i + 1, np.shape(g)[1]):

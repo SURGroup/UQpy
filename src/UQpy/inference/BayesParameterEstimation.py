@@ -71,7 +71,7 @@ class BayesParameterEstimation(metaclass=NoPublicConstructor):
         :param inference_model: The inference model that defines the likelihood function.
         :param data: Available data, `ndarray` of shape consistent with log-likelihood function in
          :class:`.InferenceModel`
-        :param samples_number: Number of samples used in MCMC/IS, see :meth:`run` method.
+        :param samples_number: Number of samples used in MCMC, see :meth:`run` method.
         :param samples_number_per_chain: Number of samples per chain used in mcmc, see `run` method.
         """
         class_type = type(mcmc_input)
@@ -114,7 +114,7 @@ class BayesParameterEstimation(metaclass=NoPublicConstructor):
          :class:`.InferenceModel`
         :param is_input: Class instance, must be a class of :class:`.SamplingInput` used by the ImportanceSampling
          algorithm
-        :param samples_number: Number of samples used in MCMC/IS, see :meth:`run` method.
+        :param samples_number: Number of samples used in IS, see :meth:`run` method.
         """
         if is_input.proposal is None:
             if inference_model.prior is None:

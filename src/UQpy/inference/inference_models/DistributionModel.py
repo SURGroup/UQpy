@@ -17,7 +17,7 @@ class DistributionModel(InferenceModel):
         """
         Define a distributions model for inference.
 
-        :param distributions: Distribution :math:`\pi` for which to learn parameters from iid data (case 3).
+        :param distributions: Distribution :math:`\pi` for which to learn parameters from iid data **(case 3)**.
          When creating this :class:`.Distribution` object, the parameters to be learned should be set to `None`.
         :param parameters_number: Number of parameters to be estimated.
         :param name: Name of model - optional but useful in a model selection setting.

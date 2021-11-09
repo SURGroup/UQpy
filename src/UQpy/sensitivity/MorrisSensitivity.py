@@ -256,9 +256,6 @@ class MorrisSensitivity:
         return trajectories_unit_hypercube, trajectories_physical_space
 
     def _compute_elementary_effects(self, trajectories_physical_space):
-        """
-        Compute elementary effects from the trajectories in the physical space.
-        """
         r, _, d = trajectories_physical_space.shape
         # Run the model for all replicates
         elementary_effects = []
@@ -276,9 +273,6 @@ class MorrisSensitivity:
 
     @staticmethod
     def _compute_indices(elementary_effects):
-        """
-        Compute indices from elementary effects.
-        """
         # elementary_effects is an array of shape (r, d, ny) or (r, d)
         mu_star = np.mean(np.abs(elementary_effects), axis=0)
         mu = np.mean(elementary_effects, axis=0)

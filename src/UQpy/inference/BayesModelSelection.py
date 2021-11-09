@@ -40,7 +40,7 @@ class BayesModelSelection:
          class
         :param prior_probabilities: Prior probabilities of each model, default is [1/nmodels, ] * nmodels
         :param method_evidence_computation: as of v3, only the harmonic mean method is supported
-        :param samples_number: Number of samples used in :class:`.MCMC`/:class:`.ImportanceSampling``, for each model
+        :param samples_number: Number of samples used in :class:`.MCMC`/:class:`.ImportanceSampling`, for each model
         :param samples_per_chain_number: Number of samples per chain used in :class:`.MCMC`, for each model
         """
         self.candidate_models = candidate_models

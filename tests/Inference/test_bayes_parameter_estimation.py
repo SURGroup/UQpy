@@ -58,7 +58,7 @@ def test_probability_model_mcmc():
     candidate_model = DistributionModel(distributions=Normal(loc=None, scale=None),
                                         parameters_number=2, prior=prior)
 
-    mh_input = MhInput(jump=10, burn_length=10, seed=[1.0, 0.2])
+    mh_input = MhInput(jump=10, burn_length=10, seed=[1.0, 0.2], random_state=1)
 
     bayes_estimator = BayesParameterEstimation \
         .create_with_mcmc_sampling(mcmc_input=mh_input,
@@ -67,8 +67,8 @@ def test_probability_model_mcmc():
                                    samples_number=5)
     s = bayes_estimator.sampler.samples
 
-    assert s[0, 1] == 7.068887940481888
-    assert s[1, 0] == 6.372598665842243
-    assert s[2, 0] == 8.254666345432273
-    assert s[3, 1] == 2.056254330693403
-    assert s[4, 1] == 1.1035303119474327
+    assert s[0, 1] == 3.5196936384257835
+    assert s[1, 0] == 11.143811671048994
+    assert s[2, 0] == 10.162512455643435
+    assert s[3, 1] == 0.8541521389437781
+    assert s[4, 1] == 1.0095454025762525

@@ -152,19 +152,6 @@ class MLE:
 
     @beartype
     def _evaluate_func_to_minimize(self, one_param: np.ndarray):
-        """
-        Compute negative log likelihood for one parameter vector.
-
-        This is the function to be minimized in the optimization procedure. This is a utility function that will not be
-        called by the user.
-
-        :param one_param: A parameter vector, `ndarray` of shape (nparams, ).
-        :return: Value of negative log-likelihood.
-        """
-        a = (
-            -1
-            * self.inference_model.evaluate_log_likelihood(
-                params=one_param.reshape((1, -1)), data=self.data
-            )[0]
-        )
+        a = (-1 * self.inference_model.evaluate_log_likelihood(
+                params=one_param.reshape((1, -1)), data=self.data)[0])
         return a

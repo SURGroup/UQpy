@@ -31,7 +31,7 @@ class InformationModelSelection:
         Perform model selection using information theoretic criteria.
 
         Supported criteria are BIC, AIC (default), AICc. This class leverages the :class:`.MLE` class for maximum
-        likelihood estimation, thus inputs to :class:`.MLE`` can also be provided to :class:`InformationModelSelection``
+        likelihood estimation, thus inputs to :class:`.MLE` can also be provided to :class:`InformationModelSelection`
         , as lists of length equal to the number of models.
 
         :param candidate_models: Candidate models
@@ -178,30 +178,6 @@ class InformationModelSelection:
         max_log_like,
         return_penalty=False,
     ):
-        """
-        Compute the criterion value for a given model, given a max_log_likelihood value.
-
-        The criterion value is -2 * max_log_like + penalty, the penalty depends on the chosen criterion. This function
-        is a utility function (static method), called within the run_estimation method.
-
-        :param criterion: Chosen criterion.
-        :type criterion: str
-        :param data: Available data.
-        :type data: ndarray
-        :param inference_model: inference model.
-        :type inference_model: object of class InferenceModel
-        :param max_log_like: Value of likelihood function at MLE.
-        :type max_log_like: float
-        :param return_penalty: Boolean that sets whether to return the penalty term as additional output. Default is
-         False
-        :type return_penalty: bool
-
-        :return criterion_value: Value of criterion.
-        :rtype criterion_value: float
-        :return penalty_term: Value of penalty term.
-        :rtype penalty_term: float
-
-        """
 
         n_params = inference_model.parameters_number
         number_of_data = len(data)
@@ -212,19 +188,6 @@ class InformationModelSelection:
 
     @staticmethod
     def _compute_probabilities(criterion_values):
-        """
-        Compute the model probability given criterion values for all models.
-
-        Model probability is proportional to exp(-criterion/2), model probabilities over all models sum up to 1. This
-        function is a utility function (static method), called within the run_estimation method.
-
-        :param criterion_values: Values of criterion for all models.
-        :type criterion_values: list (length nmodels) of floats
-        :return probabilities: Values of model probabilities
-        :rtype probabilities: list (length nmodels) of floats
-
-        """
-
         delta = np.array(criterion_values) - min(criterion_values)
         prob = np.exp(-delta / 2)
         return prob / np.sum(prob)

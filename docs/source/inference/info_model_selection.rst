@@ -12,6 +12,16 @@ where :math:`k` is the number of parameters characterizing the model, :math:`\ha
 
 A probability can be defined for each model as :math:`P(m_{i}) \propto \exp\left(  -\frac{\text{criterion}}{2} \right)`.
 
+Depending on which criterion will be utilized, the user must import the :class:`.InformationTheoreticCriterion` as
+follows:
+
+>>> from UQpy.inference.InformationTheoreticCriterion import InformationTheoreticCriterion
+
+The definition of the latter enumeration options is given below:
+
+.. autoclass:: UQpy.inference.InformationTheoreticCriterion
+    :members:
+
 InfoModelSelection Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
