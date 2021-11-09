@@ -3,7 +3,7 @@ import scipy.sparse.linalg as spsl
 import matplotlib.pyplot as plt
 import scipy.spatial.distance as sd
 from matplotlib.cm import ScalarMappable
-
+from typing import Optional
 from UQpy.utilities.Utilities import *
 from UQpy.utilities.Utilities import _nn_coord
 from beartype import beartype
@@ -296,7 +296,6 @@ class DiffusionMaps:
 
         return diagonal_matrix, inverse_diagonal_matrix
 
-    # Private method
     def __normalize_kernel_matrix(self, kernel_matrix, inverse_diagonal_matrix):
 
         """
@@ -331,12 +330,12 @@ class DiffusionMaps:
 
         return normalized_kernel
 
-    def parsimonious(self, num_eigenvectors=None, visualization=False):
+    def parsimonious(self, num_eigenvectors: int, visualization=False):
         """
-        This method implements an algorithm based on local linear regression can be used to identify the eigenvectors
+        This method implements an algorithm based on local linear regression to identify the eigenvectors
         corresponding to repeated eigen directions.
 
-        :param int num_eigenvectors: An integer for the number of eigenvectors to be tested.
+        :param num_eigenvectors: Number of eigenvectors to be tested.
         :param bool visualization: A boolean declaring whether to return a graphic to visualize the residuals of each
          eigenvector.
         :return: The eigenvectors indices from the largest to the smallest residual and
@@ -454,3 +453,106 @@ class DiffusionMaps:
         residual = np.sqrt(np.sum(np.square((f - estimated_f))) / np.sum(np.square(f)))
 
         return residual
+
+    def estimate_cutoff(
+        self,
+        data,
+        n_subsample: int = 1000,
+        k: int = 10,
+        random_state: Optional[int] = None,
+        distance_matrix=None,
+    ) -> float:
+        """Estimates a good choice of cut-off for a Gaussian radial basis kernel, given a
+        certain tolerance below which the kernel values are considered zero.
+
+        Parameters
+        ----------
+        pcm
+            point cloud to compute pair-wise kernel matrix with
+
+        n_subsample
+            Maximum subsample used for the estimation. Ignored if :code:`distance_matrix is not
+            None`.
+
+        k
+            Compute the `k`-th nearest neighbor distance to estimate the
+            cut-off distance.
+
+        random_state
+            sets :code:`np.random.default_rng(random_state)`
+
+        distance_matrix
+            pre-computed distance matrix instead of using the internal `cdist` method
+
+        See Also
+        --------
+
+        :py:class:`datafold.pcfold.kernels.GaussianKernel`
+
+        """
+
+        if k <= 1 and not isinstance(k, int):
+            raise ValueError("Parameter 'k' must be an integer greater than 1.")
+        else:
+            k = int(k)
+
+        n_points = data.shape[0]
+        n_subsample = np.min([n_points, n_subsample])
+
+        if n_points < 10:
+            d = scipy.spatial.distance.pdist(pcm)
+            return np.max(d)
+
+        if distance_matrix is None:
+            perm_indices_all = np.random.default_rng(random_state).permutation(n_points)
+
+            distance_matrix = compute_distance_matrix(
+                pcm[perm_indices_all[:n_subsample], :],
+                pcm,
+                metric="euclidean",
+                backend="brute",
+                kmin=k,
+                # for estimation it is okay to be not exact and compute faster
+                **dict(exact_numeric=False)
+            )
+
+            k = np.min([k, distance_matrix.shape[1]])
+            # need to transpose the matrix here to correctly work with
+            # _kth_nearest_neighbor_dist
+            k_smallest_values = _kth_nearest_neighbor_dist(distance_matrix.T, k)
+        else:
+            # distance matrix is assumed to be symmetric here (no transpose required)
+            k_smallest_values = _kth_nearest_neighbor_dist(distance_matrix, k)
+
+        est_cutoff = np.max(k_smallest_values)
+        return float(est_cutoff)
+
+
+    def estimate_scale(
+        pcm, tol=1e-8, cut_off: Optional[float] = None, **estimate_cutoff_params
+    ) -> float:
+        """Estimates the Gaussian kernel scale (epsilon) for a Gaussian kernel, given a
+        certain tolerance below which the kernel values are considered zero.
+
+        Parameters
+        ----------
+        pcm
+            Point cloud to estimate the kernel scale with.
+
+        tol
+            Tolerance where the cut_off should be made.
+
+        cut_off
+            The `tol` parameter is ignored and the cut-off is used directly
+
+        **estimate_cutoff_params
+            Parameters to handle to method :py:meth:`estimate_cutoff` if ``cut_off is None``.
+        """
+
+        if cut_off is None:
+            cut_off = estimate_cutoff(pcm, **estimate_cutoff_params)
+
+        # this formula is derived by solving for epsilon in
+        # tol >= exp(-cut_off**2 / epsilon)
+        eps0 = cut_off ** 2 / (-np.log(tol))
+        return float(eps0)
