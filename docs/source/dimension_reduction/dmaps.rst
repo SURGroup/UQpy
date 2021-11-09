@@ -41,11 +41,11 @@ Diffusion Maps Class Descriptions
 
 The :class:`.DiffusionMaps` class is imported using the following command:
 
->>> from UQpy.dimension_reduction.DiffusionMaps import DiffusionMaps
+>>> from UQpy.dimension_reduction.dmaps.DiffusionMaps import DiffusionMaps
 
 One can use the following command to instantiate the class :class:`.DiffusionMaps`
 
-.. autoclass:: UQpy.dimension_reduction.DiffusionMaps
+.. autoclass:: UQpy.dimension_reduction.dmaps.DiffusionMaps
     :members:
 
 .. [7] R. R. Coifman, S. Lafon. Diffusion maps. Applied Computational Harmonic Analysis, 2006, 21(1), p.5–30.

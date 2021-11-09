@@ -1,1 +1,1 @@
-from UQpy.dimension_reduction.dmaps import DiffusionMaps
+from UQpy.dimension_reduction.dmaps.DiffusionMaps import DiffusionMaps

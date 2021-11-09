@@ -7,7 +7,7 @@ The :class:`.LinearInterpolation` class can be used to  perform piecewise linear
 
 where in each interval :math:`[t_k, t_{k+1}]`, :math:`p(x)` is a linear function.
 
-This class is a child class of the :class:`.InterpolationMethod` class and utilizes the LinearNDInterpolator method of
+This class is a child class of the :class:`.InterpolationMethod` class and utilizes the :class:`scipy.interpolate.LinearNDInterpolator` method of
 the scipy package to perform interpolation in high dimensions.
 To use this class one needs to import it as
 
