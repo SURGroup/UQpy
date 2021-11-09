@@ -16,9 +16,9 @@ class ChiSquare(DistributionContinuous1D):
     ):
         """
 
-        :param float df: shape parameter (degrees of freedom) (given by k in the equation)
-        :param float loc: location parameter
-        :param float scale: scale parameter
+        :param df: shape parameter (degrees of freedom) (given by k in the equation)
+        :param loc: location parameter
+        :param scale: scale parameter
         """
         super().__init__(
             df=df, loc=loc, scale=scale, ordered_parameters=("df", "loc", "scale")

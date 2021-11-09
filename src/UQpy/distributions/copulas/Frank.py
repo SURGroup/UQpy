@@ -1,3 +1,4 @@
+import numpy
 import numpy as np
 from beartype import beartype
 
@@ -9,11 +10,11 @@ class Frank(Copula):
     def __init__(self, theta: float):
         """
 
-        :param float theta: Parameter of the copula, real number in R
+        :param theta: Parameter of the copula, real number in R
         """
         super().__init__(theta=theta)
 
-    def evaluate_cdf(self, unit_uniform_samples):
+    def evaluate_cdf(self, unit_uniform_samples) -> numpy.ndarray:
         """
         Compute the copula cdf :math:`C(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.
 
@@ -28,7 +29,6 @@ class Frank(Copula):
          shape `(npoints, dimension)`.
 
         :return: Values of the cdf.
-        :rtype: numpy.ndarray
         """
         theta, u, v = self.extract_data(unit_uniform_samples)
         tmp_ratio = (

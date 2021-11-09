@@ -1,3 +1,4 @@
+import numpy
 from beartype import beartype
 
 from UQpy.distributions.baseclass import Copula
@@ -10,11 +11,11 @@ class Clayton(Copula):
     def __init__(self, theta: float):
         """
 
-        :param float theta: Parameter of the Gumbel copula, real number in :math:`[1, +\infty)`
+        :param theta: Parameter of the Clayton copula, real number in :math:`[1, +\infty)`
         """
         super().__init__(theta=theta)
 
-    def evaluate_cdf(self, unit_uniform_samples):
+    def evaluate_cdf(self, unit_uniform_samples) -> numpy.ndarray:
         """
         Compute the copula cdf :math:`C(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.
 
@@ -29,12 +30,9 @@ class Clayton(Copula):
          shape `(npoints, dimension)`.
 
         :return: Values of the cdf.
-        :rtype: numpy.ndarray
         """
         theta, u, v = self.extract_data(unit_uniform_samples)
-        cdf_val = (np.maximum(u ** (-theta) + v ** (-theta) - 1.0, 0.0)) ** (
-                -1.0 / theta
-        )
+        cdf_val = (np.maximum(u ** (-theta) + v ** (-theta) - 1.0, 0.0)) ** (-1.0 / theta)
         return cdf_val
 
     def extract_data(self, unit_uniform_samples):

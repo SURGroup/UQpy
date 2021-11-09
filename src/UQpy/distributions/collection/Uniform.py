@@ -13,7 +13,7 @@ class Uniform(DistributionContinuous1D):
     ):
         """
 
-        :param float loc: lower bound
+        :param loc: lower bound
         :param scale: range
         """
         super().__init__(loc=loc, scale=scale, ordered_parameters=("loc", "scale"))

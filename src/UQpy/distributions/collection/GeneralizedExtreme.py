@@ -17,9 +17,9 @@ class GeneralizedExtreme(DistributionContinuous1D):
     ):
         """
 
-        :param float c: shape parameter
-        :param float loc: location parameter
-        :param float scale: scale parameter
+        :param c: shape parameter
+        :param loc: location parameter
+        :param scale: scale parameter
         """
         super().__init__(
             c=c, loc=loc, scale=scale, ordered_parameters=("c", "loc", "scale")

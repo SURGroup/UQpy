@@ -7,7 +7,6 @@ from beartype import beartype
 
 class Beta(DistributionContinuous1D):
 
-
     @beartype
     def __init__(
         self,
@@ -18,10 +17,10 @@ class Beta(DistributionContinuous1D):
     ):
         """
 
-        :param float a: first shape parameter
-        :param float b: second shape parameter
-        :param float loc: location parameter
-        :param float scale: scale parameter
+        :param a: first shape parameter
+        :param b: second shape parameter
+        :param loc: location parameter
+        :param scale: scale parameter
         """
         super().__init__(
             a=a,

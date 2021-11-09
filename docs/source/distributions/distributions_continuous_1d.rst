@@ -4,13 +4,12 @@ Continuous Distributions 1D
 In :py:mod:`UQpy`, univariate continuous distributions inherit from the :class:`.DistributionContinuous1D` class:
 
 Since the continuous distributions are based on scipy, all of the distribution types described below have posses the
-following methods:
-* ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``
+following methods: ``cdf``, ``pdf``, ``log_pdf``, ``icdf``, ``rvs``, ``moments``, ``fit``
 
 List of 1D Continuous Distributions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following is a list of all 1D continuous distributions currently available in ``UQpy``.
+The following is a list of all 1D continuous distributions currently available in :py:mod:`UQpy`.
 
 Beta
 """"

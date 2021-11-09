@@ -25,19 +25,18 @@ class Copula(ABC):
                 "Inconsistent dimensions between ordered_parameters tuple and parameters dictionary."
             )
 
-    def get_parameters(self):
+    def get_parameters(self) -> dict:
         """
-        :return: A list containing the parameter names.
-        :rtype: list
+        :return: A dictionary containing the parameter names.
         """
         return self.parameters
 
-    def update_parameters(self, **kwargs):
+    def update_parameters(self, **kwargs: dict):
         """
         Given a dictionary with keys the names and values the new parameter values,
         the method updates the current values.
 
-        :param dict kwargs: Dictionary containing the updated parameter values.
+        :param kwargs: Dictionary containing the updated parameter values.
         """
         for key in kwargs.keys():
             if key not in self.parameters.keys():
@@ -52,7 +51,7 @@ class Copula(ABC):
         As an example, Archimedian copula are only defined for bi-variate continuous distributions, thus this method
         checks that marginals is of length 2 and continuous, and raise an error if that is not the case.
 
-        :param list[DistributionContinuous1D] marginals: List of 1D continuous distributions.
+        :param marginals: List of 1D continuous distributions.
         """
         if len(marginals) != 2:
             raise ValueError("Maximum dimension for the Copula is 2.")

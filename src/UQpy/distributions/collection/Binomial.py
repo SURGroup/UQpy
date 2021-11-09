@@ -16,9 +16,9 @@ class Binomial(DistributionDiscrete1D):
     ):
         """
 
-        :param int n: number of trials, integer >=0
-        :param float p: success probability for each trial, real number in [0, 1]
-        :param float loc: location parameter
+        :param n: number of trials, integer >=0
+        :param p: success probability for each trial, real number in [0, 1]
+        :param loc: location parameter
         """
         super().__init__(n=n, p=p, loc=loc, ordered_parameters=("n", "p", "loc"))
         self._construct_from_scipy(scipy_name=stats.binom)

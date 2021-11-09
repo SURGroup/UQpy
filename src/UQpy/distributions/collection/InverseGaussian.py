@@ -17,9 +17,9 @@ class InverseGauss(DistributionContinuous1D):
     ):
         """
 
-        :param float mu: shape parameter :math:`\mu`
-        :param float loc: location parameter
-        :param float scale: scale parameter
+        :param mu: shape parameter :math:`\mu`
+        :param loc: location parameter
+        :param scale: scale parameter
         """
         super().__init__(
             mu=mu, loc=loc, scale=scale, ordered_parameters=("mu", "loc", "scale")

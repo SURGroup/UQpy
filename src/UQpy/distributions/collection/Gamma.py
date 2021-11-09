@@ -17,9 +17,9 @@ class Gamma(DistributionContinuous1D):
     ):
         """
 
-        :param float a: shape parameter
-        :param float loc: location parameter
-        :param float scale: scale parameter
+        :param a: shape parameter
+        :param loc: location parameter
+        :param scale: scale parameter
         """
         super().__init__(
             a=a, loc=loc, scale=scale, ordered_parameters=("a", "loc", "scale")

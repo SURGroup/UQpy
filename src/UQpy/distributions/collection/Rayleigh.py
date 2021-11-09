@@ -13,8 +13,8 @@ class Rayleigh(DistributionContinuous1D):
     ):
         """
 
-        :param float loc: location parameter
-        :param float scale: scale parameter
+        :param loc: location parameter
+        :param scale: scale parameter
         """
         super().__init__(loc=loc, scale=scale, ordered_parameters=("loc", "scale"))
         self._construct_from_scipy(scipy_name=stats.rayleigh)

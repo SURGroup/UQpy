@@ -18,10 +18,10 @@ class TruncatedNormal(DistributionContinuous1D):
     ):
         """
 
-        :param float a: shape parameter
-        :param float b: shape parameter
-        :param float loc: location parameter
-        :param float scale: scale parameter
+        :param a: shape parameter
+        :param b: shape parameter
+        :param loc: location parameter
+        :param scale: scale parameter
         """
         super().__init__(
             a=a,

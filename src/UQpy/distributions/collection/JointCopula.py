@@ -21,10 +21,8 @@ class JointCopula(DistributionND):
     ):
         """
 
-        :param list[Union[DistributionContinuous1D, DistributionDiscrete1D]] marginals:
-         list of distribution objects that define the marginals
-
-        :param Copula copula: copula object
+        :param marginals: list of distribution objects that define the marginals
+        :param copula: copula object
         """
         super().__init__()
         self.ordered_parameters = []
@@ -124,7 +122,7 @@ class JointCopula(DistributionND):
 
             self.log_pdf = MethodType(joint_log_pdf, self)
 
-    def get_parameters(self):
+    def get_parameters(self) -> dict:
         """
         Return the parameters of a :class:`.Distributions` object.
 
@@ -133,7 +131,6 @@ class JointCopula(DistributionND):
         of the marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
         :return: Parameters of the distribution.
-        :rtype: dict
         """
         params = {}
         for i, m in enumerate(self.marginals):
@@ -143,7 +140,7 @@ class JointCopula(DistributionND):
             params[key + "_c"] = value
         return params
 
-    def update_parameters(self, **kwargs):
+    def update_parameters(self, **kwargs: dict):
         """
         Update the parameters of a :class:`.Distributions` object.
 
@@ -151,7 +148,7 @@ class JointCopula(DistributionND):
         a unique string identifier as `key_index` - where `key` is the parameter name and `index` the index of the
         marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
-        :param dict kwargs: Parameters to be updated
+        :param kwargs: Parameters to be updated
         :raises ValueError: if kwargs contains key that does not already exist.
         """
         # check arguments

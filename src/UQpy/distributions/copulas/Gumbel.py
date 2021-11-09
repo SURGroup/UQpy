@@ -1,5 +1,6 @@
 from typing import Union
 
+import numpy
 import numpy as np
 from beartype import beartype
 
@@ -12,7 +13,7 @@ class Gumbel(Copula):
     def __init__(self, theta: Union[None, float]):
         """
 
-        :param float theta: Parameter of the Gumbel copula, real number in :math:`[1, +\infty)`.
+        :param theta: Parameter of the Gumbel copula, real number in :math:`[1, +\infty)`.
         """
         super().__init__(theta=theta)
 
@@ -29,9 +30,7 @@ class Gumbel(Copula):
 
         :param unit_uniform_samples: Points (uniformly distributed) at which to evaluate the copula cdf, must be of
          shape `(npoints, dimension)`.
-
         :return: Values of the cdf.
-        :rtype: numpy.ndarray
         """
         if unit_uniform_samples.shape[1] > 2:
             raise ValueError("Maximum dimension for the Gumbel Copula is 2")
@@ -42,7 +41,7 @@ class Gumbel(Copula):
 
         return cdf_val
 
-    def evaluate_pdf(self, unit_uniform_samples):
+    def evaluate_pdf(self, unit_uniform_samples) -> numpy.ndarray:
         """
         Compute the copula pdf :math:`c(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.
 
@@ -58,25 +57,14 @@ class Gumbel(Copula):
          shape `(npoints, dimension)`.
 
         :return: Values of the copula pdf term.
-        :rtype: numpy.ndarray
         """
         theta, u, v = self.extract_data(unit_uniform_samples)
         c = exp(-(((-log(u)) ** theta + (-log(v)) ** theta) ** (1 / theta)))
 
-        pdf_val = (
-            c
-            * 1
-            / u
-            * 1
-            / v
-            * ((-log(u)) ** theta + (-log(v)) ** theta) ** (-2 + 2 / theta)
-            * (log(u) * log(v)) ** (theta - 1)
-            * (
-                1
-                + (theta - 1)
-                * ((-log(u)) ** theta + (-log(v)) ** theta) ** (-1 / theta)
-            )
-        )
+        pdf_val = (c * 1 / u * 1 / v
+                   * ((-log(u)) ** theta + (-log(v)) ** theta) ** (-2 + 2 / theta)
+                   * (log(u) * log(v)) ** (theta - 1)
+                   * (1 + (theta - 1) * ((-log(u)) ** theta + (-log(v)) ** theta) ** (-1 / theta)))
         return pdf_val
 
     def extract_data(self, unit_uniform_samples):

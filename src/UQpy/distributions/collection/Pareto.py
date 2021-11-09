@@ -16,9 +16,9 @@ class Pareto(DistributionContinuous1D):
     ):
         """
 
-        :param float b: shape parameter
-        :param float loc: location parameter
-        :param float scale: scale parameter
+        :param b: shape parameter
+        :param loc: location parameter
+        :param scale: scale parameter
         """
         super().__init__(
             b=b, loc=loc, scale=scale, ordered_parameters=("b", "loc", "scale")

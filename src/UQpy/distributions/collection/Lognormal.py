@@ -17,9 +17,9 @@ class Lognormal(DistributionContinuous1D):
     ):
         """
 
-        :param float s: shape parameter
-        :param float loc: location parameter
-        :param float scale: scale parameter
+        :param s: shape parameter
+        :param loc: location parameter
+        :param scale: scale parameter
         """
         super().__init__(
             s=s, loc=loc, scale=scale, ordered_parameters=("s", "loc", "scale")

@@ -9,11 +9,11 @@ from UQpy.distributions.baseclass import DistributionND
 class Multinomial(DistributionND):
 
     @beartype
-    def __init__(self, n: Union[None, int], p):
+    def __init__(self, n: Union[None, int], p: Union[list[float], np.ndarray]):
         """
 
-        :param int n: number of trials
-        :param Union[list[float], numpy.ndarray] p: probability of a trial falling into each category; should sum to 1
+        :param n: number of trials
+        :param p: probability of a trial falling into each category; should sum to 1
         """
         super().__init__(n=n, p=p)
 

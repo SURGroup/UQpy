@@ -14,31 +14,22 @@ from UQpy.distributions.baseclass import (
 class JointIndependent(DistributionND):
     @beartype
     def __init__(
-        self,
-        marginals: Union[list[DistributionContinuous1D], list[DistributionDiscrete1D]],
+            self,
+            marginals: Union[list[DistributionContinuous1D], list[DistributionDiscrete1D]],
     ):
         """
-        :param Union[list[DistributionContinuous1D], list[DistributionDiscrete1D]] marginals:
-         list of distribution objects that define the marginals.
+        :param marginals: list of distribution objects that define the marginals.
         """
         super().__init__()
         self.ordered_parameters = []
         for i, m in enumerate(marginals):
             self.ordered_parameters.extend(
-                [key + "_" + str(i) for key in m.ordered_parameters]
-            )
+                [key + "_" + str(i) for key in m.ordered_parameters])
 
         # Check and save the marginals
-        if not (
-            isinstance(marginals, list)
-            and all(
-                isinstance(d, (DistributionContinuous1D, DistributionDiscrete1D))
-                for d in marginals
-            )
-        ):
-            raise ValueError(
-                "Input marginals must be a list of Distribution1d objects."
-            )
+        if not (isinstance(marginals, list)
+                and all(isinstance(d, (DistributionContinuous1D, DistributionDiscrete1D)) for d in marginals)):
+            raise ValueError("Input marginals must be a list of Distribution1d objects.")
         self.marginals = marginals
 
         # If all marginals have a method, the joint has it to
@@ -79,7 +70,6 @@ class JointIndependent(DistributionND):
                 self.log_pmf = MethodType(joint_log_pdf, self)
 
         if all(hasattr(m, "cdf") for m in self.marginals):
-
             def joint_cdf(dist, x):
                 x = dist.check_x_dimension(x)
                 # Compute cdf of independent marginals
@@ -117,8 +107,8 @@ class JointIndependent(DistributionND):
                 mle_all = {}
                 for ind_m, marg in enumerate(dist.marginals):
                     if any(
-                        param_value is None
-                        for param_value in marg.get_parameters().values()
+                            param_value is None
+                            for param_value in marg.get_parameters().values()
                     ):
                         mle_i = marg.fit(data[:, ind_m])
                     else:
@@ -152,7 +142,7 @@ class JointIndependent(DistributionND):
 
             self.moments = MethodType(joint_moments, self)
 
-    def get_parameters(self):
+    def get_parameters(self) -> dict:
         """
         Return the parameters of a :class:`.Distributions` object.
 
@@ -161,7 +151,6 @@ class JointIndependent(DistributionND):
         of the marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
         :return: Parameters of the distribution
-        :rtype: dict
         """
         params = {}
         for i, m in enumerate(self.marginals):
@@ -170,7 +159,7 @@ class JointIndependent(DistributionND):
                 params[key + "_" + str(i)] = value
         return params
 
-    def update_parameters(self, **kwargs):
+    def update_parameters(self, **kwargs: dict):
         """
         Update the parameters of a :class:`.Distributions` object.
 
@@ -178,7 +167,7 @@ class JointIndependent(DistributionND):
         is assigned a unique string identifier as `key_index` - where `key` is the parameter name and `index` the index
         of the marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
 
-        :param dict kwargs: Parameters to be updated
+        :param kwargs: Parameters to be updated
         :raises ValueError: if kwargs contains key that does not already exist.
         """
         # check arguments
