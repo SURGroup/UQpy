@@ -8,11 +8,11 @@ class KarhunenLoeveExpansion:
 
     def __init__(
         self,
-        samples_number,
-        correlation_function,
-        time_interval,
-        threshold=None,
-        random_state=None,
+        samples_number: int,
+        correlation_function: np.ndarray,
+        time_interval: np.ndarray,
+        threshold: int = None,
+        random_state: RandomStateType = None,
     ):
         """
         A class to simulate stochastic processes from a given auto-correlation function based on the Karhunen-Loeve
