@@ -24,14 +24,8 @@ class DiffusionMaps:
         is_sparse: bool = False,
         neighbors_number: IntegerLargerThanUnityType = 1,
         kernel_matrix=None,
-        optimize_parameters: bool = False,
         parsimonious: bool = False,
-        cut_off: float = None,
-        k_nn: int = 10,
-        n_partition: Union[None, int] = None,
-        distance_matrix: Union[None, Numpy2DFloatArray] = None,
         random_state: Union[None, int] = None,
-        tol: float = 1e-8,
         t: int = 1
     ):
         self.alpha = alpha
@@ -39,14 +33,8 @@ class DiffusionMaps:
         self.is_sparse = is_sparse
         self.neighbors_number = neighbors_number
         self.kernel_matrix = kernel_matrix
-        self.optimize_parameters = optimize_parameters
         self.parsimonious = parsimonious
-        self.cut_off = cut_off
-        self.k_nn = k_nn,
-        self.n_partition = n_partition,
-        self.distance_matrix = distance_matrix,
         self.random_state = random_state,
-        self.tol = tol,
         self.t = t
 
         self.transition_matrix = None
@@ -91,12 +79,6 @@ class DiffusionMaps:
             neighbors_number=neighbors_number,
             kernel_matrix=kernel_matrix,
             parsimonious=parsimonious,
-            optimize_parameters=optimize_parameters,
-            cut_off=cut_off,
-            k_nn=k_nn,
-            tol=tol,
-            n_partition=n_partition,
-            distance_matrix=distance_matrix,
             random_state=random_state,
             t=t
         )
