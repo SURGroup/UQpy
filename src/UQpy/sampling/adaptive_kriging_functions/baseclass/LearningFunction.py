@@ -13,7 +13,8 @@ class LearningFunction(ABC):
             )
 
     @abstractmethod
-    def evaluate_function(
-        self, distributions, n_add, surrogate, population, qoi=None, samples=None
-    ):
+    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
+        """
+        Abstract method that needs to be overriden by the user to create new Adaptive Kriging Learning functions.
+        """
         pass

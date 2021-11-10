@@ -29,8 +29,8 @@ class ModifiedMetropolisHastings(MCMC):
         1. S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
            Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
 
-        :param mmh_input: Object that contains input data to the :class:`ΜοδιφιεδMetropolisHastings` class.
-         (See :class:`.MμhInput`)
+        :param mmh_input: Object that contains input data to the :class:`ModifiedMetropolisHastings` class.
+         (See :class:`.MmhInput`)
         :param samples_number: Number of samples to generate.
         :param samples_number_per_chain: Number of samples to generate per chain.
         """

@@ -1,32 +1,31 @@
 import numpy as np
 
-from UQpy.surrogates.polynomial_chaos_new.polynomials.baseclass.Polynomials import Polynomials
+from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import Polynomials
 
 
 class PolynomialsND(Polynomials):
 
     def __init__(self, distributions, multi_index):
+        """
+        Class for multivariate Wiener-Askey chaos polynomials.
+
+        :param distributions: Joint probability distribution.
+        :param multi_index: Polynomial multi-degree (multi-index).
+        """
         self.multi_index = multi_index
         self.distributions = distributions
         marginals = distributions.marginals
         N = len(multi_index)  # dimensions
-        from UQpy.surrogates.polynomial_chaos_new.polynomials.PolynomialBasis import PolynomialBasis
+        from UQpy.surrogates.polynomial_chaos.polynomials.PolynomialBasis import PolynomialBasis
         self.polynomials1d = [PolynomialBasis.distribution_to_polynomial[type(marginals[n])]
                               (distributions=marginals[n], degree=int(multi_index[n])) for n in range(N)]
 
-    def evaluate(self, eval_data):
+    def evaluate(self, eval_data) ->np.ndarray:
         """
         Evaluate Nd chaos polynomial on the given data set.
 
-        **Inputs:**
-
-        * **eval_data** (`ndarray` or `1darray`):
-            Points upon which the Nd chaos polynomial will be evaluated.
-
-        **Outputs:**
-
-        * **evals** (`1darray`):
-            Evaluations of the Nd chaos polynomial.
+        :param eval_data: Points upon which the Nd chaos polynomial will be evaluated.
+        :return: Evaluations of the Nd chaos polynomial.
         """
         try:  # case: 2d array, K x N, N being the number of dimensions
             K, N = np.shape(eval_data)

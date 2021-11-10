@@ -1,16 +1,20 @@
 from ctypes import Union
 
+from beartype import beartype
+
 from UQpy.surrogates.baseclass import Surrogate
 from UQpy.utilities.ValidationTypes import *
-from UQpy import RunModel
+from UQpy.RunModel import RunModel
 from UQpy.sampling.refined_stratified_sampling.baseclass.Refinement import *
 from UQpy.utilities.Utilities import gradient
+from UQpy.utilities.strata.baseclass import Strata
 
 
 class GradientEnhancedRefinement(Refinement):
+    @beartype
     def __init__(
         self,
-        strata,
+        strata: Strata,
         runmodel_object: RunModel,
         surrogate: Surrogate,
         nearest_points_number: int = None,
@@ -23,16 +27,12 @@ class GradientEnhancedRefinement(Refinement):
         self.qoi_name = qoi_name
         self.strata = strata
         self.dy_dx = 0
+        self.surrogate = surrogate
 
-        if surrogate is not None:
-            if (
-                surrogate is not None
-                and hasattr(surrogate, "fit")
-                and hasattr(surrogate, "predict")
-            ):
-                self.surrogate = surrogate
+    def initialize(self, nsamples, training_points, samples):
 
-    def initialize(self, nsamples, training_points):
+        self.runmodel_object.run(samples)
+
         self.dy_dx = np.zeros((nsamples, np.size(training_points[1])))
         self.strata.initialize(nsamples, training_points)
 

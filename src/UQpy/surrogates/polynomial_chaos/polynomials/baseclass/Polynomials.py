@@ -42,7 +42,7 @@ class Polynomials:
         """
         Calculates design matrix and normalized polynomials.
 
-        :param degree:
+        :param degree: polynomial degree
         :param samples:  Input samples.
         :param a: Left bound of the support the distribution.
         :param b: Right bound of the support of the distribution.
@@ -112,13 +112,13 @@ class Polynomials:
         # """
         # if not type(self.distributions) == JointIndependent:
         #     if type(self.distributions) == Normal:
-        #         from UQpy.surrogates.polynomial_chaos_new.polynomials.Hermite import Hermite
+        #         from UQpy.surrogates.polynomial_chaos.polynomials.Hermite import Hermite
         #
         #         return Hermite(self.degree, self.distributions).get_polys(x)[0]
         #         # design matrix (second_order_tensor x polynomials)
         #
         #     if type(self.distributions) == Uniform:
-        #         from UQpy.surrogates.polynomial_chaos_new.polynomials.Legendre import (
+        #         from UQpy.surrogates.polynomial_chaos.polynomials.Legendre import (
         #             Legendre,
         #         )
         #
@@ -133,7 +133,7 @@ class Polynomials:
         #     for i in range(len(self.distributions.marginals)):
         #
         #         if isinstance(self.distributions.marginals[i], Normal):
-        #             from UQpy.surrogates.polynomial_chaos_new.polynomials.Hermite import (
+        #             from UQpy.surrogates.polynomial_chaos.polynomials.Hermite import (
         #                 Hermite,
         #             )
         #
@@ -144,7 +144,7 @@ class Polynomials:
         #             )
         #
         #         elif isinstance(self.distributions.marginals[i], Uniform):
-        #             from UQpy.surrogates.polynomial_chaos_new.polynomials.Legendre import (
+        #             from UQpy.surrogates.polynomial_chaos.polynomials.Legendre import (
         #                 Legendre,
         #             )
         #

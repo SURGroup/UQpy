@@ -3,7 +3,7 @@ from typing import Annotated
 import numpy as np
 from beartype.vale import Is
 
-from UQpy.surrogates.polynomial_chaos_new import PolynomialChaosExpansion
+from UQpy.surrogates.polynomial_chaos import PolynomialChaosExpansion
 
 FittedPce = Annotated[PolynomialChaosExpansion, Is[lambda pce: pce.coefficients is not None]]
 
@@ -11,9 +11,19 @@ FittedPce = Annotated[PolynomialChaosExpansion, Is[lambda pce: pce.coefficients 
 class PceSensitivity:
 
     def __init__(self, pce: FittedPce):
+        """
+        Compute Sobol sensitivity indices based on a PCE surrogate approximation of the QoI.
+
+        :param pce: Polynomial Chaos Expansion surrogate.
+        """
         self.pce = pce
 
-    def first_order_indices(self):
+    def first_order_indices(self) -> np.ndarray:
+        """
+        PCE estimates for the first order Sobol indices.
+
+        :return: First order Sobol indices.
+        """
         outputs_number = np.shape(self.pce.coefficients)[1]
         variance = self.pce.get_moments()[1]
         inputs_number = self.pce.regression_method.polynomial_basis.inputs_number
@@ -32,7 +42,12 @@ class PceSensitivity:
             first_order_indices[nn, :] = variance_contribution / variance
         return first_order_indices
 
-    def total_order_indices(self):
+    def total_order_indices(self) -> np.ndarray:
+        """
+        PCE estimates for the total order Sobol indices.
+
+        :return: Total order Sobol indices.
+        """
         outputs_number = np.shape(self.pce.coefficients)[1]
         variance = self.pce.get_moments()[1]
         inputs_number = self.pce.regression_method.polynomial_basis.inputs_number
@@ -47,7 +62,14 @@ class PceSensitivity:
             total_order_indices[nn, :] = variance_contribution / variance
         return total_order_indices
 
-    def generalized_first_order_indices(self):
+    def generalized_first_order_indices(self) -> np.ndarray:
+        """
+        PCE estimates of generalized first order Sobol indices, which characterize
+        the sensitivity of a vector-valued quantity of interest on the random
+        inputs.
+
+        :return: Generalized first order Sobol indices.
+        """
         inputs_number = self.pce.regression_method.polynomial_basis.inputs_number
         if inputs_number == 1:
             raise ValueError('Not applicable for scalar model outputs.')
@@ -61,6 +83,13 @@ class PceSensitivity:
         return generalized_first_order_indices
 
     def generalized_total_order_indices(self):
+        """
+        PCE estimates of generalized total order Sobol indices, which characterize
+        the sensitivity of a vector-valued quantity of interest on the random
+        inputs.
+
+        :return: Generalized total order Sobol indices.
+        """
         inputs_number = self.pce.regression_method.polynomial_basis.inputs_number
 
         if inputs_number == 1:

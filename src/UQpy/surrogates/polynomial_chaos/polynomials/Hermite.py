@@ -1,6 +1,6 @@
 from beartype import beartype
 
-from UQpy.surrogates.polynomial_chaos_new.polynomials.baseclass.Polynomials import (
+from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import (
     Polynomials,
 )
 import numpy as np

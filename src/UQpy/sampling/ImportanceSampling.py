@@ -17,7 +17,7 @@ class ImportanceSampling:
         """
         Sample from a user-defined target density using importance sampling.
 
-        :param ISInput is_input: Object that contains input data to the :class:`ImportanceSampling` class.
+        :param is_input: Object that contains input data to the :class:`ImportanceSampling` class.
          (See :class:`.ISInput`)
         :param samples_number: Number of samples to generate - see :meth:`run` method. If not `None`, the `run` method
          is called when the object is created. Default is None.

@@ -8,7 +8,7 @@ class SimpleRefinement(Refinement):
     def __init__(self, strata):
         self.strata = strata
 
-    def initialize(self, samples_number, training_points):
+    def initialize(self, samples_number, training_points, samples):
         self.strata.initialize(samples_number, training_points)
 
     def update_samples(

@@ -2,8 +2,8 @@ import logging
 import numpy as np
 from beartype import beartype
 
-from UQpy.surrogates.polynomial_chaos_new.polynomials.PolynomialBasis import PolynomialBasis
-from UQpy.surrogates.polynomial_chaos_new.regressions.baseclass.Regression import Regression
+from UQpy.surrogates.polynomial_chaos.polynomials.PolynomialBasis import PolynomialBasis
+from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
 
 
 class LassoRegression(Regression):

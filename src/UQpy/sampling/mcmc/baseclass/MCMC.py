@@ -119,8 +119,9 @@ class MCMC(ABC):
         :param samples_number: Number of samples to generate.
         :param samples_number_per_chain: number of samples to generate per chain.
 
-        Either `nsamples` or `nsamples_per_chain` must be provided (not both). Not that if `nsamples` is not a multiple
-        of `nchains`, `nsamples` is set to the next largest integer that is a multiple of `nchains`.
+        Either `samples_number` or `samples_number_per_chain` must be provided (not both). Not that if `samples_number`
+        is not a multiple of `chains_number`, `samples_number` is set to the next largest integer that is a multiple of
+        `chains_number`.
         """
 
         # Initialize the runs: allocate space for the new samples and log pdf values
@@ -172,31 +173,19 @@ class MCMC(ABC):
         associated log-pdf, which will be passed as inputs to the :meth:`run_one_iteration` method at the next
         iteration.
 
-        :param current_state: Current state of the chain(s), `ndarray` of shape ``(nchains, dimension)``.
-        :param current_log_pdf: Log-pdf of the current state of the chain(s), `ndarray` of shape ``(nchains, )``.
+        :param current_state: Current state of the chain(s), `ndarray` of shape ``(chains_number, dimension)``.
+        :param current_log_pdf: Log-pdf of the current state of the chain(s), `ndarray` of shape ``(chains_number, )``.
         :return: New state of the chain(s) and Log-pdf of the new state of the chain(s)
         """
         return [], []
 
     def _concatenate_chains(self):
-        """
-        Concatenate chains.
-
-        Utility function that reshapes (in place) attribute samples from (nsamples, nchains, dimension) to
-        (nsamples * nchains, dimension), and log_pdf_values from (nsamples, nchains) to (nsamples * nchains, ).
-        """
         self.samples = self.samples.reshape((-1, self.dimension), order="C")
         if self.save_log_pdf:
             self.log_pdf_values = self.log_pdf_values.reshape((-1,), order="C")
         return None
 
     def _unconcatenate_chains(self):
-        """
-        Inverse of concatenate_chains.
-
-        Utility function that reshapes (in place) attribute samples from (nsamples * nchains, dimension) to
-        (nsamples, nchains, dimension), and log_pdf_values from (nsamples * nchains) to (nsamples, nchains).
-        """
         self.samples = self.samples.reshape(
             (-1, self.chains_number, self.dimension), order="C"
         )
@@ -207,17 +196,6 @@ class MCMC(ABC):
         return None
 
     def _initialize_samples(self, number_of_samples, samples_per_chain_number):
-        """
-        Initialize necessary attributes and variables before running the chain forward.
-
-        Utility function that allocates space for samples and log likelihood values, initialize sample_index,
-        acceptance ratio. If some samples already exist, allocate space to append new samples to the old ones. Computes
-        the number of forward iterations nsims to be run (depending on burnin and jump parameters).
-
-        :param number_of_samples: number of samples to be generated
-        :param samples_per_chain_number: number of samples to be generated per chain
-        :return: Number of iterations to perform, Current state of the chain to start from
-        """
         if (
             (number_of_samples is not None) and (samples_per_chain_number is not None)
         ) or (number_of_samples is None and samples_per_chain_number is None):
@@ -295,13 +273,6 @@ class MCMC(ABC):
         return final_nsamples, final_nsamples_per_chain, current_state, current_log_pdf
 
     def _update_acceptance_rate(self, chain_state_acceptance=None):
-        """
-        Update acceptance rate of the chains.
-
-        Utility function, uses an iterative function to update the acceptance rate of all the chains separately.
-
-        :param chain_state_acceptance: indicates whether the current state was accepted (for each chain separately).
-        """
         self.acceptance_rate = [
             na / self.iterations_number
             + (self.iterations_number - 1) / self.iterations_number * a
@@ -310,21 +281,6 @@ class MCMC(ABC):
 
     @staticmethod
     def _preprocess_target(log_pdf_, pdf_, args):
-        """
-        Preprocess the target pdf inputs.
-
-        Utility function (static method), that transforms the log_pdf, pdf, args inputs into a function that evaluates
-        log_pdf_target(x) for a given x. If the target is given as a list of callables (marginal pdfs), the list of
-        log margianals is also returned.
-
-        :param log_pdf_: Log of the target density function from which to draw random samples. Either
-                  pdf_target or log_pdf_target must be provided.
-        :param pdf_: Target density function from which to draw random samples. Either pdf_target or
-                  log_pdf_target must be provided.
-        :param args: Positional arguments of the pdf target.
-        :return: Callable that computes the log of the target density function, List of callables to compute the log pdf
-         of the marginals
-        """
         # log_pdf is provided
         if log_pdf_ is not None:
             if callable(log_pdf_):
@@ -405,15 +361,6 @@ class MCMC(ABC):
 
     @staticmethod
     def _preprocess_seed(seed, dimensions, chains_number):
-        """
-        Preprocess input seed.s
-        Utility function (static method), that checks the dimension of seed, assign [0., 0., ..., 0.] if not provided.
-
-        :param seed: seed for mcmc
-        :param dimensions: dimension of target density
-        :param chains_number: number of chains
-        :return: seed for mcmc, dimension of target density
-        """
         if seed is None:
             if dimensions is None or chains_number is None:
                 raise ValueError(
@@ -438,15 +385,6 @@ class MCMC(ABC):
 
     @staticmethod
     def _check_methods_proposal(proposal_distribution):
-        """
-        Check if proposal has required methods.
-
-        Utility function (static method), that checks that the given proposal distribution has 1) a rvs method and 2) a
-        log pdf or pdf method. If a pdf method exists but no log_pdf, the log_pdf methods is added to the proposal
-        object. Used in the MH and MMH initializations.
-
-        :param proposal_distribution: proposal distribution
-        """
         if not isinstance(proposal_distribution, Distribution):
             raise TypeError("UQpy: Proposal should be a Distribution object")
         if not hasattr(proposal_distribution, "rvs"):

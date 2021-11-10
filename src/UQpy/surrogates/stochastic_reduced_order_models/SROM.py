@@ -47,10 +47,15 @@ class SROM:
          the weight :math:`w_R(i, j)` assigned for matching the correlation between component `i` and component `j`
          Default: `weights_correlation` = `(d, d)` array with all elements equal to 1.
         :param properties: A list of booleans declaring the properties to be matched in the reduced order model.
+
          `properties[0] = True` matches the marginal distributions
+
          `properties[1] = True` matches the mean values
+
          `properties[2] = True` matches the mean square
+
          `properties[3] = True` matches the correlation
+
         :param correlation: Correlation matrix between random variables.
 
         """
@@ -238,9 +243,6 @@ class SROM:
         self.logger.info("UQpy: stochastic_reduced_order_models completed!")
 
     def _init_srom(self):
-        """
-        Initialization and preliminary error checks.
-        """
         if isinstance(self.moments, list):
             self.moments = np.array(self.moments)
 

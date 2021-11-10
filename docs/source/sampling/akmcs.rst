@@ -90,7 +90,17 @@ No stopping criterion is suggested by the authors of [7]_, thus its implementati
 User-Defined Learning Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :class:`.AdaptiveKriging` class also allows new, user-defined learning functions to be specified in a straightforward way. This is done by creating a new method that contains the algorithm for selecting a new samples. This method takes as input the surrogate model, the randomly generated learning points, the number of points to be added in each iteration, any requisite parameters including a stopping criterion, existing samples, model evaluate at samples and distribution object. It returns a set of samples that are selected according to the user's desired learning function and the corresponding learning function values. The outputs of this function should be (1) a numpy array of samples to be added; (2) the learning function values at the new sample points, and (3) a boolean stopping criterion indicating whether the iterations should continue (`False`) or stop (`True`). The numpy array of samples should be a two-dimensional array with the first dimension being the number of samples and the second dimension being the number of variables. An example user-defined learning function is given below:
+The :class:`.AdaptiveKriging` class also allows new, user-defined learning functions to be specified in a straightforward way, by generating child classes of the :class:`.LearningFunction` abstract class.
+
+.. autoclass:: UQpy.sampling.LearningFunction
+    :members:
+
+The user only needs to implement the :meth:`evaluate_function` method.
+This method takes as input the surrogate model, the randomly generated learning points, the number of points to be added in each iteration,
+any requisite parameters including a stopping criterion, existing samples, model evaluate at samples and distribution object.
+It returns a set of samples that are selected according to the user's desired learning function and the corresponding learning function values. The outputs of this function should be (1) a numpy array of samples to be added; (2) the learning function values at the new sample points, and (3) a boolean stopping criterion indicating whether the iterations should continue (`False`) or stop (`True`). The numpy array of samples should be a two-dimensional array with the first dimension being the number of samples and the second dimension being the number of variables. An example user-defined learning function is given below:
+
+
 
 
 >>> class UserLearningFunction(LearningFunction):
@@ -117,100 +127,6 @@ The :class:`.AdaptiveKriging` class also allows new, user-defined learning funct
 >>>        return population[rows, :], u[rows, 0], indicator
 
 
->>> class UserLearningFunction(LearningFunction):
->>>
->>>    def __init__(self, u_stop: int = 2):
->>>        self.u_stop = u_stop
->>>
->>>    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
->>>        # AKMS class use these inputs to compute the learning function
->>>
->>>        g, sig = surrogate.predict(population,)
->>>
->>>        # Remove the inconsistency in the shape of 'g' and 'sig' array
->>>        g = g.reshape([population.shape[0], 1])
->>>        sig = sig.reshape([population.shape[0], 1])
->>>
->>>        u = abs(g) / sig
->>>        rows = u[:, 0].argsort()[:n_add]
->>>
->>>        indicator = False
->>>        if min(u[:, 0]) >= self.u_stop:
->>>            indicator = True
->>>
->>>        return population[rows, :], u[rows, 0], indicator
-
-
->>> class UserLearningFunction(LearningFunction):
->>>
->>>    def __init__(self, u_stop: int = 2):
->>>        self.u_stop = u_stop
->>>
->>>    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
->>>        # AKMS class use these inputs to compute the learning function
->>>
->>>        g, sig = surrogate.predict(population,)
->>>
->>>        # Remove the inconsistency in the shape of 'g' and 'sig' array
->>>        g = g.reshape([population.shape[0], 1])
->>>        sig = sig.reshape([population.shape[0], 1])
->>>
->>>        u = abs(g) / sig
->>>        rows = u[:, 0].argsort()[:n_add]
->>>
->>>        indicator = False
->>>        if min(u[:, 0]) >= self.u_stop:
->>>            indicator = True
->>>
->>>        return population[rows, :], u[rows, 0], indicator
-
-
->>> class UserLearningFunction(LearningFunction):
->>>
->>>    def __init__(self, u_stop: int = 2):
->>>        self.u_stop = u_stop
->>>
->>>    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
->>>        # AKMS class use these inputs to compute the learning function
->>>
->>>        g, sig = surrogate.predict(population,)
->>>
->>>        # Remove the inconsistency in the shape of 'g' and 'sig' array
->>>        g = g.reshape([population.shape[0], 1])
->>>        sig = sig.reshape([population.shape[0], 1])
->>>
->>>        u = abs(g) / sig
->>>        rows = u[:, 0].argsort()[:n_add]
->>>
->>>        indicator = False
->>>        if min(u[:, 0]) >= self.u_stop:
->>>            indicator = True
->>>
->>>        return population[rows, :], u[rows, 0], indicator
-
-
->>> class UserLearningFunction(LearningFunction):
->>>
->>>    def __init__(self, u_stop: int = 2):
->>>        self.u_stop = u_stop
->>>
->>>    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
->>>        # AKMS class use these inputs to compute the learning function
->>>
->>>        g, sig = surrogate.predict(population, True)
->>>
->>>        # Remove the inconsistency in the shape of 'g' and 'sig' array
->>>        g = g.reshape([population.shape[0], 1])
->>>        sig = sig.reshape([population.shape[0], 1])
->>>
->>>        u = abs(g) / sig
->>>        rows = u[:, 0].argsort()[:n_add]
->>>
->>>        indicator = False
->>>        if min(u[:, 0]) >= self.u_stop:
->>>            indicator = True
->>>
->>>        return population[rows, :], u[rows, 0], indicator
 
 AdaptiveKriging Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

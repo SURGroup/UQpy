@@ -1,8 +1,8 @@
 from UQpy.distributions.collection import Uniform, Normal
 from UQpy.distributions.collection import JointIndependent, JointCopula
-from UQpy.surrogates.polynomial_chaos_new.polynomials import Hermite, Legendre
-from UQpy.surrogates.polynomial_chaos_new.polynomials.PolynomialsND import PolynomialsND
-from UQpy.surrogates.polynomial_chaos_new.polynomials.baseclass.Polynomials import Polynomials
+from UQpy.surrogates.polynomial_chaos.polynomials import Hermite, Legendre
+from UQpy.surrogates.polynomial_chaos.polynomials.PolynomialsND import PolynomialsND
+from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import Polynomials
 from UQpy.utilities import NoPublicConstructor
 import itertools
 import math
@@ -16,7 +16,9 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
                  polynomials_number,
                  multi_index_set,
                  polynomials):
-
+        """
+        Create polynomial basis for a given multi index set.
+        """
         self.polynomials = polynomials
         self.multi_index_set = multi_index_set
         self.polynomials_number = polynomials_number
@@ -24,6 +26,13 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
 
     @classmethod
     def create_total_degree_basis(cls, distributions, max_degree):
+        """
+        Create tensor-product polynomial basis given the .
+        The size is equal to (max_degree+1)**n_inputs (exponential complexity).
+
+        :param distributions: List of univariate distributions.
+        :param max_degree: Maximum polynomial degree of the 1d chaos polynomials.
+        """
         inputs_number = 1 if not isinstance(distributions, (JointIndependent, JointCopula)) \
             else len(distributions.marginals)
         multi_index_set = PolynomialBasis.calculate_total_degree_set(inputs_number=inputs_number,
@@ -33,6 +42,14 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
 
     @classmethod
     def create_tensor_product_basis(cls, distributions, max_degree):
+        """
+        Create total-degree polynomial basis.
+        The size is equal to (total_degree+n_inputs)!/(total_degree!*n_inputs!)
+        (polynomial complexity).
+
+        :param distributions: List of univariate distributions.
+        :param max_degree: Maximum polynomial degree of the 1d chaos polynomials.
+        """
         inputs_number = 1 if not isinstance(distributions, (JointIndependent, JointCopula)) \
             else len(distributions.marginals)
         multi_index_set = PolynomialBasis.calculate_tensor_product_set(inputs_number=inputs_number,
@@ -78,18 +95,10 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
 
     @staticmethod
     def _setsize(inputs_number, degree):
-        """
-        Returns the number of PCE polynomials of total-degree basis given the
-        number of dimensions N and the maximum polynomial degree w.
-        """
         return int(comb(inputs_number + degree - 1, inputs_number - 1))
 
     @staticmethod
     def calculate_total_degree_recursive(N, w, rows):
-        """
-        Help function for the recursive computation of the total-degree
-        multiindices.
-        """
         if N == 1:
             subset = w * np.ones([rows, 1])
         else:
@@ -140,24 +149,6 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
 
     @staticmethod
     def construct_arbitrary_basis(inputs_number, distributions, multi_index_set):
-        """
-        Create polynomial basis for a given multiindex set.
-
-        **Inputs**
-
-        * **midx_set** (`ndarray`):
-            n_polys x n_inputs ndarray with the multiindices of the PCE basis
-
-        * **pce** (`PolyChaosExp object`):
-            Polynomial chaos expansion for which the multiindex set will be
-            generated.
-
-        **Output**
-
-        * **poly_basis** (`list`)
-            List with the basis polynomials (ChaosPolynomial1d or
-            ChaosPolynomialNd objects)
-        """
         # populate polynomial basis
         poly_basis = list()
         if inputs_number == 1:

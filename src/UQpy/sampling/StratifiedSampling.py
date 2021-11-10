@@ -32,7 +32,7 @@ class StratifiedSampling:
          defined, the user must call the :meth:`run` method to perform stratified sampling.
         :param samples_number: Specify the total number of samples. If `samples_number` is specified, the samples will
          be drawn in proportion to the volume of the strata. Thus, each stratum will contain
-         :math:`round(V_i*samples_number)` samples.
+         :math:`round(V_i*samples number)` samples.
          If `samples_number` is provided when the class is defined, the :meth:`run` method will be executed
          automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided when the class is
          defined, the user must call the :meth:`run` method to perform stratified sampling.
@@ -110,7 +110,7 @@ class StratifiedSampling:
          defined, the user must call the :meth:`run` method to perform stratified sampling.
         :param samples_number: Specify the total number of samples. If `samples_number` is specified, the samples will
          be drawn in proportion to the volume of the strata. Thus, each stratum will contain
-         :math:`round(V_i*samples_number)` samples where :math:`V_i \le 1` is the volume of stratum `i` in the unit
+         `round(V_i*samples_number)` samples where :math:`V_i \le 1` is the volume of stratum `i` in the unit
          hypercube.
          If `samples_number` is provided when the class is defined, the :meth:`run` method will be executed
          automatically.  If neither `samples_per_stratum_number` or `samples_number` are provided when the class is

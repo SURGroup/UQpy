@@ -32,7 +32,7 @@ class Voronoi(Strata):
          `seeds_number` is provided. The user must provide `seeds` or `seeds_number` and `dimension`
         :param decomposition_iterations: Number of iterations to perform to create a Centroidal Voronoi decomposition.
          If `decomposition_iterations = 0`, the Voronoi decomposition is based on the provided or generated seeds.
-         If :math: `decomposition_iterations \ge 1`, the seed points are moved to the centroids of the Voronoi cells
+         If `decomposition_iterations >= 1`, the seed points are moved to the centroids of the Voronoi cells
          in each iteration and the a new Voronoi decomposition is performed. This process is repeated
          `decomposition iterations` times to create a Centroidal Voronoi decomposition.
         :param stratification_criterion: An enumeration of type :class:`.StratificationCriterion` defining the
@@ -240,7 +240,7 @@ class Voronoi(Strata):
 
     def initialize(self, samples_number, training_points):
         self.add_boundary_points_and_construct_delaunay(samples_number, training_points)
-        self.mesh.old_vertices = self.mesh.vertices
+        self.mesh.old_vertices = self.mesh.vertices.copy()
 
     def add_boundary_points_and_construct_delaunay(
             self, samples_number, training_points
@@ -420,16 +420,6 @@ class Voronoi(Strata):
         return dy_dx
 
     def _update_strata(self, new_point, samples_u01):
-        """
-        This method update the `mesh` and `strata_object` attributes of refined_stratified_sampling class for each
-        iteration.
-
-
-        **Inputs:**
-
-        * **new_point** (`ndarray`):
-            An array of new samples generated at current iteration.
-        """
         i_ = samples_u01.shape[0]
         p_ = new_point.shape[0]
         # Update the matrices to have recognize the new point
@@ -455,23 +445,6 @@ class Voronoi(Strata):
             self.volume.append(volume)
 
     def _generate_sample(self, bin_, random_state):
-        """
-        This method create a subsimplex inside a Dealaunay Triangle and generate a random sample inside it using
-        Simplex class.
-
-
-        **Input:**
-
-        * **bin_** (`int or float`):
-            Index of delaunay triangle.
-
-
-        **Outputt:**
-
-        * **new** (`ndarray`):
-            An array of new sample.
-
-        """
         import itertools
 
         tmp_vertices = self.points[self.mesh.simplices[int(bin_), :]]

@@ -40,12 +40,17 @@ class MorrisSensitivity:
         :param levels_number: Number of levels that define the grid over the hypercube where evaluation points are
          sampled. Must be an integer >= 3.
         :param delta: Size of the jump between two consecutive evaluation points, must be a multiple of delta should be
-         in `{1/(nlevels-1), ..., 1-1/(nlevels-1)}`.
-         Default: :math:`delta=\\frac{nlevels}{2 * (nlevels-1)}` if nlevels is even, delta=0.5 if nlevels is odd.
+         in `{1/(levels_number-1), ..., 1-1/(levels_number-1)}`.
+         Default: :math:`delta=\\frac{levels_number}{2 * (levels_number-1)}` if levels_number is even, delta=0.5 if
+         levels_number is odd.
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
         :param trajectories_number: Number of random trajectories, usually chosen between 5 and 10. The number of model
-         evaluations is `ntrajectories * (d+1)`. If None, the `Morris` object is created but not run (see `run` method)
-        :param maximize_dispersion:
+         evaluations is `trajectories_number * (d+1)`. If None, the `Morris` object is created but not run
+         (see `run` method)
+        :param maximize_dispersion: If True, generate a large number of design trajectories and keep the ones that
+         maximize dispersion between all trajectories, allows for a better coverage of the input space.
+
+         Default False.
         """
         # Check RunModel object and distributions
         self.runmodel_object = runmodel_object
