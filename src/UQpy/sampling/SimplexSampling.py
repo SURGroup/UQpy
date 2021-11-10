@@ -42,7 +42,7 @@ class SimplexSampling:
     def run(self, samples_number: PositiveInteger):
         """
         Execute the random sampling in the :class:`.SimplexSampling` class.
-        The :meth:`run` method is the function that performs random sampling in the :class:`.SimplexSampling`` class.
+        The :meth:`run` method is the function that performs random sampling in the :class:`.SimplexSampling` class.
         If `samples_number` is provided called when the :class:`.SimplexSampling` object is defined, the
         :meth:`run` method is automatically. The user may also call the :meth:`run` method directly to generate samples.
         The :meth:`run` method of the :class:`.SimplexSampling` class can be

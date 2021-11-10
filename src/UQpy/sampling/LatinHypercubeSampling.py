@@ -25,10 +25,10 @@ class LatinHypercubeSampling:
         list of :class:`.DistributionContinuous1D` objects or an object of the :class:`.JointIndependent` class.
 
 
-        :param Union[Distribution, list[Distribution]] distributions: List of :class:`.Distribution` objects
+        :param distributions: List of :class:`.Distribution` objects
          corresponding to each random variable.
-        :param int samples_number: Number of samples to be drawn from each distribution.
-        :param Criterion criterion: The criterion for pairing the generating sample points. This parameter must be of
+        :param samples_number: Number of samples to be drawn from each distribution.
+        :param criterion: The criterion for pairing the generating sample points. This parameter must be of
          type :class:`.Criterion`.
 
          Options:
@@ -65,7 +65,7 @@ class LatinHypercubeSampling:
         """
         Execute the random sampling in the :class:`.LatinHypercubeSampling` class.
 
-        :param int samples_number: If the :meth:`run` method is invoked multiple times, the newly generated samples will
+        :param samples_number: If the :meth:`run` method is invoked multiple times, the newly generated samples will
          overwrite the existing samples.
 
         The :meth:`run` method is the function that performs random sampling in the :class:`.LatinHypercubeSampling`

@@ -3,7 +3,7 @@ import scipy.special as special
 from beartype import beartype
 
 from UQpy.distributions import Uniform
-from UQpy.surrogates.polynomial_chaos_new.polynomials.baseclass.Polynomials import Polynomials
+from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import Polynomials
 from scipy.special import eval_legendre
 
 

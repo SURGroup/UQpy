@@ -4,7 +4,7 @@ import numpy as np
 from beartype import beartype
 
 from UQpy.surrogates.baseclass.Surrogate import Surrogate
-from UQpy.surrogates.polynomial_chaos_new.regressions.baseclass.Regression import Regression
+from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
 
 
 class PolynomialChaosExpansion(Surrogate):

@@ -3,8 +3,16 @@ import numpy as np
 
 
 class Correlation(ABC):
+    """
+    Abstract base class of all Correlations. Serves as a template for creating new Kriging correlation
+    functions.
+    """
+
     @abstractmethod
     def c(self, x, s, params, dt=False, dx=False):
+        """
+        Abstract method that needs to be implemented by the user when creating a new Correlation function.
+        """
         pass
 
     @staticmethod

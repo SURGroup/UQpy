@@ -1,3 +1,0 @@
-from UQpy.surrogates.polynomial_chaos_new.regressions.LassoRegression import LassoRegression
-from UQpy.surrogates.polynomial_chaos_new.regressions.LeastSquareRegression import LeastSquareRegression
-from UQpy.surrogates.polynomial_chaos_new.regressions.RidgeRegression import RidgeRegression

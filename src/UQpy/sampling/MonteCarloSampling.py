@@ -21,7 +21,7 @@ class MonteCarloSampling:
         """
         Perform Monte Carlo sampling (MCS) of random variables.
 
-        :param Union[Distribution, list[Distribution]] distributions: Probability distribution of each random variable.
+        :param distributions: Probability distribution of each random variable.
         :param samples_number: Number of samples to be drawn from each distribution. The :meth:`run` method is
          automatically called if `samples_number` is provided. If `samples_number` is not provided,
          then the :class:`.MonteCarloSampling` object is created but samples are not generated.

@@ -16,7 +16,7 @@ class RefinedStratifiedSampling:
     ):
         """
 
-        :param stratified_sampling: Generally, this must be an object of a :py:mod:`UQpy.sampling`` class. Each child
+        :param stratified_sampling: Generally, this must be an object of a :py:mod:`UQpy.sampling` class. Each child
          class of :class:`.RefinedStratifiedSampling` has it's own constraints on which specific types
          it can accept. These are described in the child class documentation below.
         :param refinement_algorithm: Algorithm used for the refinement of the strata. Two method exist Simple and
@@ -54,25 +54,18 @@ class RefinedStratifiedSampling:
         self.samples_number = samples_number
 
         if self.samples_number <= self.samples.shape[0]:
-            raise ValueError(
-                "UQpy Error: The number of requested samples must be larger than the existing "
-                "sample set."
-            )
+            raise ValueError("UQpy Error: The number of requested samples must be larger than the existing "
+                             "sample set.")
 
         initial_number = self.samples.shape[0]
 
-        self.refinement_algorithm.initialize(self.samples_number, self.training_points)
+        self.refinement_algorithm.initialize(self.samples_number, self.training_points, self.samples)
 
         for i in range(initial_number, samples_number, self.samples_per_iteration):
             new_points = self.refinement_algorithm.update_samples(
-                self.samples_number,
-                self.samples_per_iteration,
-                self.random_state,
-                i,
-                self.dimension,
-                self.samplesU01,
-                self.training_points,
-            )
+                self.samples_number, self.samples_per_iteration,
+                self.random_state, i, self.dimension,
+                self.samplesU01, self.training_points)
             self.append_samples(new_points)
 
             self.refinement_algorithm.finalize(self.samples, self.samples_per_iteration)

@@ -35,4 +35,7 @@ class Criterion(ABC):
 
     @abstractmethod
     def generate_samples(self):
+        """
+        Abstract method that must be overriden when generating creating new Latin Hypercube sampling criteria.
+        """
         pass

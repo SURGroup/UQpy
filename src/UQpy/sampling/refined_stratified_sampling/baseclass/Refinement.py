@@ -16,7 +16,7 @@ class Refinement(ABC):
     ):
         pass
 
-    def initialize(self, samples_number, training_points):
+    def initialize(self, samples_number, training_points, samples):
         pass
 
     def finalize(self, samples, samples_per_iteration):

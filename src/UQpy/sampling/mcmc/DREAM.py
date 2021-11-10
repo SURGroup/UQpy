@@ -243,20 +243,7 @@ class DREAM(MCMC):
 
         return current_state, current_log_pdf
 
-    def check_outlier_chains(self, replace_with_best=False):
-        """
-        Check outlier chains in DREAM algorithm.
-
-        This function checks for outlier chains as part of the DREAM algorithm, potentially replacing outlier chains
-        (i.e. the samples and log_pdf_values) with 'good' chains. The function does not have any returned output but it
-        prints out the number of outlier chains.
-
-        **Inputs:**
-
-        * **replace_with_best** (`bool`):
-            Indicates whether to replace outlier chains with the best (most probable) chain. Default: False
-
-        """
+    def check_outlier_chains(self, replace_with_best: bool = False):
         if not self.save_log_pdf:
             raise ValueError(
                 "UQpy: Input save_log_pdf must be True in order to check outlier chains"
@@ -287,28 +274,3 @@ class DREAM(MCMC):
                     self.logger.info("UQpy: Chain {} is an outlier chain".format(j))
         if outlier_num > 0:
             self.logger.info("UQpy: Detected {} outlier chains".format(outlier_num))
-
-    def __copy__(self):
-        new = self.__class__(
-            pdf_target=self.pdf_target,
-            log_pdf_target=self.log_pdf_target,
-            args_target=self.args_target,
-            burn_length=self.burn_length,
-            jump=self.jump,
-            dimension=self.dimension,
-            seed=self.seed,
-            save_log_pdf=self.save_log_pdf,
-            concatenate_chains=self.concatenate_chains,
-            jump_rate=self.jump_rate,
-            c=self.c,
-            c_star=self.c_star,
-            crossover_probabilities_number=self.crossover_probabilities_number,
-            gamma_probability=self.gamma_probability,
-            crossover_adaptation=self.crossover_adaptation,
-            check_chains=self.check_chains,
-            chains_number=self.chains_number,
-            random_state=self.random_state,
-        )
-        new.__dict__.update(self.__dict__)
-
-        return new

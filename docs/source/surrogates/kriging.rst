@@ -60,9 +60,14 @@ and the quadratic regression model given by:
 User-Defined Regression Model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Adding a new regression model to the :class:`.Kriging` class is straightforward. This is done by creating a new method
-that evaluates the basis functions and the Jacobian. This method may be passed directly as an object to the `regression`
-input of the :class:`.Kriging` class.
+Adding a new regression model to the :class:`.Kriging` class is straightforward. This is done by creating a new class
+that evaluates the basis functions and the Jacobian, by extending the :class:`.Regression`.
+
+
+.. autoclass:: UQpy.surrogates.kriging.Regression
+    :members:
+
+This class may be passed directly as an object to the `regression input of the :class:`.Kriging` class.
 This new class must have a method ``r(self,s)`` that takes as input the samples points at which to evaluate the model and return two arrays containing the value of the basis functions and the Jacobian at these sample points.
 
 The first output of this function should be a two dimensional numpy array with the first dimension being the number of samples and the second dimension being the number of basis functions.
@@ -150,8 +155,12 @@ User-Defined Correlation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Adding a new correlation model to the :class:`.Kriging` class is straightforward. This is done by creating a new class that extends the Correlation abstract base class.
-This requires a method takes as input the new points, training points, hyperparameters and two indicators for the computation of the derivative of correlation matrix (i.e. dt and dx). This method evaluates the correlation matrix, its derivative with respect to the variables and its derivative with respect to the hyperparameters.
+Adding a new correlation model to the :class:`.Kriging` class is straightforward. This is done by creating a new class that extends the :class:`.Correlation` abstract base class.
+This requires a method takes as input the new points, training points, hyperparameters and two indicators for the computation of the derivative of correlation matrix (i.e. dt and dx).
+This method evaluates the correlation matrix, its derivative with respect to the variables and its derivative with respect to the hyperparameters.
+
+.. autoclass:: UQpy.surrogates.kriging.Correlation
+    :members:
 
 If both indicators are false, then the method should return correlation matrix, i.e. a 2-D array with first dimension being the number of points and second dimension being the number of training points.
 

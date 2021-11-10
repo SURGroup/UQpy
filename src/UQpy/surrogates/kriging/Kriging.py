@@ -43,10 +43,10 @@ class Kriging(Surrogate):
          Default: True.
         :param optimizations_number: Number of times MLE optimization problem is to be solved with a random starting
          point. Default: 1.
-        :param bool normalize: Boolean flag used in case data normalization is required.
+        :param normalize: Boolean flag used in case data normalization is required.
         :param optimizer: String of the :class:`scipy.stats` optimizer used during the Kriging surrogate.
         :param random_state: Random seed used to initialize the pseudo-random number generator. If an integer is
-         provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
+         provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
          object itself can be passed directly.
         """
         self.regression_model = regression_model
@@ -128,7 +128,7 @@ class Kriging(Surrogate):
 
         The user can run this method multiple time after initiating the :class:`.Kriging` class object.
 
-        This method updates the samples and parameters of the `:class:`.Kriging` object. This method uses
+        This method updates the samples and parameters of the :class:`.Kriging` object. This method uses
         `corr_model_params` from previous run as the starting point for MLE problem unless user provides a new starting
         point.
 
@@ -219,7 +219,7 @@ class Kriging(Surrogate):
 
         self.logger.info("UQpy: kriging fit complete.")
 
-    def predict(self, points, return_std=False):
+    def predict(self, points, return_std: bool = False):
         """
         Predict the model response at new points.
 
@@ -227,7 +227,7 @@ class Kriging(Surrogate):
         value and standard deviation.
 
         :param points: Points at which to predict the model response.
-        :param  bool return_std: Indicator to estimate standard deviation.
+        :param  return_std: Indicator to estimate standard deviation.
         :return: Predicted values at the new points, Standard deviation of predicted values at the new points
         """
         x_ = np.atleast_2d(points)

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from UQpy.surrogates.polynomial_chaos_new.polynomials.PolynomialBasis import PolynomialBasis
+from UQpy.surrogates.polynomial_chaos.polynomials.PolynomialBasis import PolynomialBasis
 
 
 class Regression(ABC):

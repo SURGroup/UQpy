@@ -17,3 +17,4 @@ Sensitivity analysis comprises techniques focused on determining how the variati
    :caption: Sensitivity
 
     Morris Sensitivity <morris>
+    Polynomial Chaos Sensitivity <pce>
