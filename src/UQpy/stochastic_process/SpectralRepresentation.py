@@ -1,16 +1,17 @@
 from UQpy.utilities import *
+import numpy as np
 
 
 class SpectralRepresentation:
     def __init__(
         self,
-        samples_number,
-        power_spectrum,
-        time_interval,
-        frequency_interval,
-        number_time_intervals,
-        number_frequency_intervals,
-        random_state=None,
+        samples_number: int,
+        power_spectrum: Union[list, np.ndarray],
+        time_interval: Union[list, np.ndarray],
+        frequency_interval: Union[list, np.ndarray],
+        number_time_intervals: Union[list, np.ndarray],
+        number_frequency_intervals: Union[list, np.ndarray],
+        random_state: RandomStateType = None,
     ):
         """
         A class to simulate stochastic processes from a given power spectrum density using the Spectral Representation
@@ -21,7 +22,7 @@ class SpectralRepresentation:
         :param int samples_number: Number of samples of the stochastic process to be simulated.
          The :meth:`run` method is automatically called if `samples_number` is provided. If `samples_number` is not
          provided, then the :class:`.SpectralRepresentation` object is created but samples are not generated.
-        :param Union[list, numpy.ndarray] power_spectrum: The discretized power spectrum.
+        :param power_spectrum: The discretized power spectrum.
          For uni-variate, one-dimensional processes `power_spectrum` will be `list` or `ndarray` of length
          `number_frequency_intervals`.
          For multi-variate, one-dimensional processes, `power_spectrum` will be a `list` or `ndarray` of size
@@ -31,13 +32,13 @@ class SpectralRepresentation:
          For multi-variate, multi-dimensional processes, `power_spectrum` will be a `list` or `ndarray` of size
          (`number_of_variables`, `number_of_variables`, `number_frequency_intervals[0]`, ...
          `number_frequency_intervals[number_of_dimensions-1]``).
-        :param Union[list, numpy.ndarray] time_interval: Length of time discretizations (:math:`\Delta t`) for each
+        :param time_interval: Length of time discretizations (:math:`\Delta t`) for each
          dimension of size `number_of_dimensions`.
-        :param Union[list, numpy.ndarray] frequency_interval: Length of frequency discretizations
+        :param frequency_interval: Length of frequency discretizations
          (:math:`\Delta \omega`) for each dimension of size `number_of_dimensions`.
-        :param Union[list, numpy.ndarray] number_time_intervals: Number of time discretizations for each dimensions of
+        :param number_time_intervals: Number of time discretizations for each dimensions of
          size `number_of_dimensions`.
-        :param Union[list, numpy.ndarray] number_frequency_intervals: Number of frequency discretizations for each
+        :param number_frequency_intervals: Number of frequency discretizations for each
          dimension of size `number_of_dimensions`.
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
          If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,

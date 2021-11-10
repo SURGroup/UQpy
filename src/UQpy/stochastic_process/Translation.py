@@ -1,7 +1,9 @@
 import itertools
 
+import numpy as np
 from scipy.stats import norm
 
+from UQpy.distributions.baseclass import Distribution
 from UQpy.utilities import *
 from UQpy.stochastic_process.supportive import (
     inverse_wiener_khinchin_transform,
@@ -13,14 +15,14 @@ from UQpy.stochastic_process.supportive import (
 class Translation:
     def __init__(
             self,
-            distributions,
-            time_interval,
-            frequency_interval,
-            number_time_intervals,
-            number_frequency_intervals,
-            power_spectrum_gaussian=None,
-            correlation_function_gaussian=None,
-            samples_gaussian=None,
+            distributions: Distribution,
+            time_interval: Union[list, np.ndarray],
+            frequency_interval: Union[list, np.ndarray],
+            number_time_intervals: Union[list, np.ndarray],
+            number_frequency_intervals: Union[list, np.ndarray],
+            power_spectrum_gaussian: np.ndarray = None,
+            correlation_function_gaussian: np.ndarray = None,
+            samples_gaussian: np.ndarray = None,
     ):
         """
         A class to translate Gaussian Stochastic Processes to non-Gaussian Stochastic Processes

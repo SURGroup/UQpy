@@ -135,7 +135,7 @@ class Nataf:
         provided, the :meth:`run` method performs the inverse Nataf transformation.
 
         :param samples_x: Random vector **X**  with prescribed probability distributions or standard normal random
-         vector **Z** of shape``(nsamples, dimension)``.
+         vector **Z** of shape `(nsamples, dimension)`.
         :param jacobian: The jacobian of the transformation of shape ``(dimension, dimension)``. Default: False
         """
         self.jacobian = jacobian

@@ -9,15 +9,15 @@ from UQpy.stochastic_process.supportive import (
 class InverseTranslation:
     def __init__(
         self,
-        distributions,
-        time_interval,
-        frequency_interval,
-        number_time_intervals,
-        number_frequency_intervals,
-        correlation_function_non_gaussian=None,
-        power_spectrum_non_gaussian=None,
-        samples_non_gaussian=None,
-        percentage_error=5.0
+        distributions: Distribution,
+        time_interval: Union[list, np.ndarray],
+        frequency_interval: Union[list, np.ndarray],
+        number_time_intervals: Union[list, np.ndarray],
+        number_frequency_intervals: Union[list, np.ndarray],
+        correlation_function_non_gaussian: Union[list, np.ndarray] = None,
+        power_spectrum_non_gaussian: Union[list, np.ndarray] = None,
+        samples_non_gaussian: Union[list, np.ndarray] = None,
+        percentage_error: float = 5.0
     ):
         """
         A class to perform Iterative Translation Approximation Method to find the underlying  Gaussian Stochastic

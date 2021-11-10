@@ -5,15 +5,15 @@ from UQpy.utilities import *
 class BispectralRepresentation:
     def __init__(
         self,
-        samples_number,
-        power_spectrum,
-        bispectrum,
-        time_interval,
-        frequency_interval,
-        number_time_intervals,
-        number_frequency_intervals,
+        samples_number: int,
+        power_spectrum: Union[list, np.ndarray],
+        bispectrum: Union[list, np.ndarray],
+        time_interval: Union[list, np.ndarray],
+        frequency_interval: Union[list, np.ndarray],
+        number_time_intervals: Union[list, np.ndarray],
+        number_frequency_intervals: Union[list, np.ndarray],
         case="uni",
-        random_state=None,
+        random_state:RandomStateType = None,
     ):
         """
         A class to simulate non-Gaussian stochastic processes from a given power spectrum and bispectrum based on the

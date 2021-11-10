@@ -40,6 +40,8 @@ Translation Class Descriptions
     :members:
     :private-members:
 
+Inverse Translation Class Descriptions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.stochastic_process.InverseTranslation
     :members:
