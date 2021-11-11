@@ -62,13 +62,15 @@ class DiffusionMaps:
         tol: float = 1e-8,
         kernel=GaussianKernel(),
     ):
-        kernel_matrix = kernel.kernel_operator(points=data)
+
         if optimize_parameters:
             epsilon, cut_off = DiffusionMaps.__estimate_epsilon(data, cut_off=cut_off, tol=tol,
                                                                 k_nn=k_nn, n_partition=n_partition,
                                                                 distance_matrix=distance_matrix,
                                                                 random_state=random_state)
             kernel.epsilon = epsilon
+
+        kernel_matrix = kernel.kernel_operator(points=data)
 
         return cls(
             alpha=alpha,
@@ -111,7 +113,7 @@ class DiffusionMaps:
         # Find the eigenvalues and eigenvectors of Ps.
         if sparse:
             eigenvalues, eigenvectors = spsl.eigs(
-                transition_matrix, k=(eigenvectors_number + 1), which="LM")
+                transition_matrix, k=(eigenvectors_number + 1), which="LR")
         else:
             eigenvalues, eigenvectors = np.linalg.eig(transition_matrix)
 
@@ -162,12 +164,11 @@ class DiffusionMaps:
 
     def __normalize_kernel_matrix(self, kernel_matrix, inverse_diagonal_matrix):
 
-        rows = inverse_diagonal_matrix.shape[0]
-        d_alpha = (
-            sps.spdiags(inverse_diagonal_matrix, 0, rows, rows)
-            if self.is_sparse
-            else np.diag(inverse_diagonal_matrix)
-        )
+        m = inverse_diagonal_matrix.shape[0]
+        if self.is_sparse:
+            d_alpha = sps.spdiags(inverse_diagonal_matrix, 0, m, m)
+        else:
+            d_alpha = np.diag(inverse_diagonal_matrix)
 
         normalized_kernel = d_alpha.dot(kernel_matrix.dot(d_alpha))
 
