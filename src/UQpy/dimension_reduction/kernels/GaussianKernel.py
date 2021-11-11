@@ -40,7 +40,7 @@ class GaussianKernel(Kernel):
         epsilon = np.median(np.array(distance_pairs) ** 2)
         return epsilon
 
-    def kernel_operator(self, points: Union[list, NumpyFloatArray], p=None) -> NumpyFloatArray:
+    def kernel_operator(self, points: Union[list, NumpyFloatArray],  p=None) -> NumpyFloatArray:
         """
         Compute the Gaussian kernel entry for two points on the Euclidean space.
 
@@ -50,7 +50,7 @@ class GaussianKernel(Kernel):
         """
         distance_pairs = None
         if len(np.shape(points)) == 2:
-            distance_pairs = sd.pdist(points, "euclidean")
+            distance_pairs = sd.pdist(points, "sqeuclidean")
 
         elif len(np.shape(points)) == 3:
             nargs = len(points)
@@ -64,11 +64,11 @@ class GaussianKernel(Kernel):
                 xi = points[i]
                 xj = points[j]
 
-                distance_pairs.append(np.linalg.norm(xi - xj, "fro"))
+                distance_pairs.append(np.linalg.norm(xi - xj, "fro") ** 2)
 
         if self.epsilon is None:
             self.epsilon = self.compute_default_epsilon(distance_pairs)
 
-        kernel = np.exp(-sd.squareform(distance_pairs) ** 2 / (4 * self.epsilon))
+        kernel = np.exp(-sd.squareform(distance_pairs)  / (self.epsilon))
 
         return kernel

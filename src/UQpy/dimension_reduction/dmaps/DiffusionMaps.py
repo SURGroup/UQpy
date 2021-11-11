@@ -105,6 +105,7 @@ class DiffusionMaps:
         else:
             d_star_invd = np.diag(d_star_inv)
 
+
         transition_matrix = d_star_invd.dot(l_star)
 
         # Find the eigenvalues and eigenvectors of Ps.
@@ -113,7 +114,6 @@ class DiffusionMaps:
                 transition_matrix, k=(eigenvectors_number + 1), which="LM")
         else:
             eigenvalues, eigenvectors = np.linalg.eig(transition_matrix)
-
 
         ix = np.argsort(np.abs(eigenvalues))
         ix = ix[::-1]
@@ -124,14 +124,13 @@ class DiffusionMaps:
         eigenvectors = u[:, :eigenvectors_number]
 
         # Compute the diffusion coordinates
-        diffusion_coordinates = np.zeros([n, eigenvectors_number])
-        for i in range(eigenvectors_number):
-            diffusion_coordinates[:, i] = (eigenvalues[i] ** self.t) * eigenvectors[:, i]
+        eigvals_time = np.power(eigenvalues, self.t)
+        diffusion_coordinates = eigenvectors @ np.diag(eigvals_time)
 
         self.transition_matrix = transition_matrix
-        self.diffusion_coordinates = diffusion_coordinates
-        self.eigenvectors = eigenvectors
-        self.eigenvalues = eigenvalues
+        self.diffusion_coordinates = diffusion_coordinates[:, :eigenvectors_number]
+        self.eigenvectors = eigenvectors[:, :eigenvectors_number]
+        self.eigenvalues = eigenvalues[:eigenvectors_number]
 
         return diffusion_coordinates, eigenvalues, eigenvectors
 
