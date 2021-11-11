@@ -24,7 +24,6 @@ class DiffusionMaps:
         is_sparse: bool = False,
         neighbors_number: IntegerLargerThanUnityType = 1,
         kernel_matrix=None,
-        parsimonious: bool = False,
         random_state: Union[None, int] = None,
         t: int = 1
     ):
@@ -33,7 +32,6 @@ class DiffusionMaps:
         self.is_sparse = is_sparse
         self.neighbors_number = neighbors_number
         self.kernel_matrix = kernel_matrix
-        self.parsimonious = parsimonious
         self.random_state = random_state,
         self.t = t
 
@@ -41,6 +39,7 @@ class DiffusionMaps:
         self.diffusion_coordinates = None
         self.eigenvectors = None
         self.eigenvalues = None
+        self.cut_off = None
 
         if kernel_matrix is not None:
             self.kernel_matrix = kernel_matrix
@@ -54,7 +53,6 @@ class DiffusionMaps:
         is_sparse: bool = False,
         neighbors_number: IntegerLargerThanUnityType = 1,
         optimize_parameters: bool = False,
-        parsimonious: bool = False,
         t: int = 1,
         cut_off: float = None,
         k_nn: int = 10,
@@ -78,12 +76,11 @@ class DiffusionMaps:
             is_sparse=is_sparse,
             neighbors_number=neighbors_number,
             kernel_matrix=kernel_matrix,
-            parsimonious=parsimonious,
             random_state=random_state,
             t=t
         )
 
-    def mapping(self):
+    def fit(self):
 
         alpha = self.alpha
         eigenvectors_number = self.eigenvectors_number
@@ -113,26 +110,18 @@ class DiffusionMaps:
         # Find the eigenvalues and eigenvectors of Ps.
         if sparse:
             eigenvalues, eigenvectors = spsl.eigs(
-                transition_matrix, k=(eigenvectors_number + 1), which="LR"
-            )
+                transition_matrix, k=(eigenvectors_number + 1), which="LM")
         else:
             eigenvalues, eigenvectors = np.linalg.eig(transition_matrix)
+
 
         ix = np.argsort(np.abs(eigenvalues))
         ix = ix[::-1]
         s = np.real(eigenvalues[ix])
         u = np.real(eigenvectors[:, ix])
 
-        if self.parsimonious:
-            index, residuals = self.__parsimonious(s, u)
-            coord = index + 1
-            print(coord)
-            eigenvalues = s[coord]
-            eigenvectors = u[:, coord]
-        else:
-            # Truncated eigenvalues and eigenvectors
-            eigenvalues = s[:eigenvectors_number]
-            eigenvectors = u[:, :eigenvectors_number]
+        eigenvalues = s[:eigenvectors_number]
+        eigenvectors = u[:, :eigenvectors_number]
 
         # Compute the diffusion coordinates
         diffusion_coordinates = np.zeros([n, eigenvectors_number])
@@ -185,19 +174,20 @@ class DiffusionMaps:
 
         return normalized_kernel
 
-    def __parsimonious(self, eigenvalues, eigenvectors):
+    @staticmethod
+    def parsimonious(eigenvalues, eigenvectors, dim):
 
-        residuals = np.zeros(self.eigenvectors_number)
+        residuals = np.zeros(eigenvectors.shape[1])
         residuals[0] = np.nan
         # residual 1 for the first eigenvector.
         residuals[1] = 1.0
 
         # Get the residuals of each eigenvector.
-        for i in range(2, self.eigenvectors_number):
-            residuals[i] = self.__get_residual(f_mat=eigenvectors[:, 1:i], f=eigenvectors[:, i])
+        for i in range(2, eigenvectors.shape[1]):
+            residuals[i] = DiffusionMaps.__get_residual(f_mat=eigenvectors[:, 1:i], f=eigenvectors[:, i])
 
         # Get the index of the eigenvalues associated with each residual.
-        index = np.argsort(residuals)[::-1][:len(eigenvalues)]
+        index = np.argsort(residuals)[::-1][1:dim+1]
         return index, residuals
 
     @staticmethod
@@ -205,8 +195,9 @@ class DiffusionMaps:
         n_samples = np.shape(f_mat)[0]
         distance_matrix = sd.squareform(sd.pdist(f_mat))
         m = 3
-        epsilon = (np.median(distance_matrix.flatten()) / m) ** 2
-        kernel_matrix = np.exp(-np.square(distance_matrix) / epsilon)
+        epsilon = (np.median(np.square(distance_matrix.flatten()))/ m)
+        kernel_matrix = np.exp(-1 * np.square(distance_matrix) / epsilon)
+        #kernel_matrix = np.exp(-np.square(distance_matrix) / epsilon)
         coefficients = np.zeros((n_samples, n_samples))
 
         vec_1 = np.ones((n_samples, 1))
@@ -215,16 +206,15 @@ class DiffusionMaps:
             # Weighted least squares:
             matx = np.hstack([vec_1, f_mat - f_mat[i, :]])
             matx_k = matx.T * kernel_matrix[i, :]
-            w_data = matx_k.dot(matx)
-            u, _, _, _ = np.linalg.lstsq(w_data, matx_k, rcond=1e-6)
+            w_data = matx.T * kernel_matrix[i, :]
+            u, _, _, _ = np.linalg.lstsq((w_data @ matx), w_data, rcond=1e-6)
 
             coefficients[i, :] = u[0, :]
 
-        estimated_f = coefficients.dot(f)
+        estimated_f = coefficients @ f
 
         # normalized leave-one-out cross-validation error.
-        residual = np.sqrt(np.sum(np.square((f - estimated_f))) / np.sum(np.square(f)))
-
+        residual = np.sqrt(np.sum(np.square((f - estimated_f)))/ np.sum(np.square(f)))
         return residual
 
     @staticmethod
