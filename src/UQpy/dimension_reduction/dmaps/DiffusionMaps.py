@@ -6,7 +6,6 @@ from scipy.sparse.linalg import eigsh, eigs
 import scipy.spatial.distance as sd
 import scipy
 
-from UQpy import EuclideanDistance, DistanceMetric
 from UQpy.utilities.Utilities import *
 from UQpy.utilities.Utilities import _nn_coord
 from beartype import beartype
