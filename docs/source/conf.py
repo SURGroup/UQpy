@@ -46,7 +46,8 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.autosectionlabel",
     "sphinx_autodoc_typehints",
-    "sphinxcontrib.bibtex"
+    "sphinxcontrib.bibtex",
+    "sphinx_gallery.gen_gallery"
 ]
 autoclass_content = 'init'
 add_module_names = False
@@ -60,6 +61,10 @@ bibtex_bibfiles = ['bibliography.bib']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
+sphinx_gallery_conf = {
+     'examples_dirs': '../examples',   # path to your example scripts
+     'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
+}
 
 # -- Options for HTML output -------------------------------------------------
 

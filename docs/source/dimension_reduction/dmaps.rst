@@ -19,5 +19,5 @@ One can use the following command to instantiate the class :class:`.DiffusionMap
 .. autoclass:: UQpy.dimension_reduction.dmaps.DiffusionMaps
     :members:
 
-.. bibliography::
+
 

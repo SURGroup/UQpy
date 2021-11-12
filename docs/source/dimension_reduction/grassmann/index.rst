@@ -2,7 +2,7 @@ Grassmann manifold
 --------------------------------
 
 In differential geometry the Grassmann manifold :math:`\mathcal{G}(p, n)` refers to a collection of
-:math:`p`-dimensional subspaces embedded in a :math:`n`-dimensional vector space [1]_ [2]_. A point on :math:`\mathcal{G}(p, n)` is typically represented as a :math:`n \times p` orthonormal matrix :math:`\mathbf{X}`, whose column spans the corresponding subspace.
+:math:`p`-dimensional subspaces embedded in a :math:`n`-dimensional vector space :cite:`Grassmann_1` :cite:`Grassmann_2`. A point on :math:`\mathcal{G}(p, n)` is typically represented as a :math:`n \times p` orthonormal matrix :math:`\mathbf{X}`, whose column spans the corresponding subspace.
 
 The  :py:mod:`UQpy` class :class:`.GrassmannPoint` offers a way to check that a data point, given as a matrix :math:`\mathbf{X} \in \mathbb{R}^{n \times p}`,  belongs on the corresponding Grassmann manifold. To this end, the user needs to create an object of type :class:`.GrassmannPoint`
 that will check that the point is given as an orthonormal 2-d numpy.array, i.e., :math:`\text{shape}(\mathbf{X})=(p, n)` and :math:`\mathbf{X}' \mathbf{X} = \mathbf{I}`.
@@ -170,7 +170,3 @@ A description of the class signature is shown below:
    :maxdepth: 1
 
   Methods <interpolation/index>
-
-.. [1] T. Bendokat, R. Zimmermann, P.-A. Absil, A Grassmann Manifold Handbook: Basic Geometry and Computational Aspects, 2020.
-
-.. [2] P.-A. Absil, R. Mahony, and R. Sepulchre. Riemannian geometry of Grassmann manifolds with a view on algorithmic computation. Acta Applicandae Mathematica, 80(2):199{220, 2004.

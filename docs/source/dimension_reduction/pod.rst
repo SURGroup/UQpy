@@ -25,7 +25,7 @@ deterministic spatial functions :math:`\Phi_{k}{\mathtt{x}}`, multiplied by rand
 where :math:`\Phi_{k}{\mathtt{x}}` are the spatial POD modes and :math:`\alpha_{k}(t)` are the time coefficients.
 
 The above decomposition is achieved by maximizing the energy that can be captured by the first :math:`n` spatial POD
-modes [9]_. POD modes are orthonormal and thus one can write
+modes :cite:t:`POD_1`. POD modes are orthonormal and thus one can write
 
 .. math::  \iiint_{\mathtt{x}} \Phi_{k_{1}}{\mathtt{x}} \Phi_{k_{2}}{\mathtt{x}} d\mathtt{x} = \begin{cases}
     1, & \text{if $k_1 = k_2$}.\\
@@ -80,7 +80,7 @@ The Snapshot Proper Orthogonal Decomposition (POD) method is the second variant 
 decomposition of a dataset into deterministic temporal modes and random spatial coefficients. Essentially, this method
 interchanges the time and position. In most problems the number of solution snapshots :math:`n` is less than the number
 of dimensions :math:`m = N_x \times N_y` where :math:`N_x, N_y` are the grid dimensions. Thus, by using the
-:class:`.SnapshotPOD` class one can reconstruct solutions much faster [10]_.
+:class:`.SnapshotPOD` class one can reconstruct solutions much faster :cite:t:`POD_2`.
 
 For the Snapshot POD the covariance matrix :math:`\mathbf{C_s}`, is calculated as follows
 
@@ -107,7 +107,3 @@ One can use the following command to instantiate the class :class:`.SnapshotPOD`
 
 .. autoclass:: UQpy.dimension_reduction.pod.SnapshotPOD
     :members:
-
-.. [9] J. Weiss. A tutorial on the proper orthogonal decomposition. In: AIAA Aviation 2019 Forum. 2019. p. 3333.
-
-.. [10] L. Sirovich. Turbulence and the dynamics of coherent structures. I. Coherent structures. Quarterly of applied mathematics, 1987, 45(3), 561-571.

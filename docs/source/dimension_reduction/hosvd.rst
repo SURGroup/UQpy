@@ -39,7 +39,7 @@ generalizes the matrix of singular values. Finally, the reconstructed tensor can
 where :math:`\mathbf{U}(N))( \xi_{k})` has dimension :math:`n \times 1`, where n is the number of snapshots and
 corresponds to the kth column of :math:`\mathbf{U}(N)` and is the number of independent bases that account for the desired accuracy of the reconstruction.
 
-More information can be found in [11]_, [12]_.
+More information can be found in :cite:`HOSVD_1`, :cite:`HOSVD_2`.
 
 
 HOSVD Class Descriptions
@@ -53,8 +53,3 @@ One can use the following command to instantiate the class :class:`.HigherOrderS
 
 .. autoclass:: UQpy.dimension_reduction.hosvd.HigherOrderSVD
     :members:
-
-
-.. [11] D. Giovanis, M. Shields. Variance‐based simplex stochastic collocation with model order reduction for high‐dimensional systems. International Journal for Numerical Methods in Engineering, 2019, 117(11), 1079-1116.
-
-.. [12] L. De Lathauwer, B. De Moor, J. Vandewalle. A multilinear singular value decomposition. SIAM journal on Matrix Analysis and Applications, 2000, 21(4), 1253-1278.

@@ -12,8 +12,8 @@ Introduction
 
 Dependencies required::
 
-	macOS, Linux, Windows
-	Python >= 3.6
+    macOS, Linux, Windows
+    Python >= 3.6
 
 
 Installation
@@ -23,19 +23,19 @@ Installation on a macOS can be made with the following commands.
 
 Using Python package index (PyPI)::
 
-	pip install UQpy
+    pip install UQpy
 
 Using Conda::
 
-	conda install --channel  ``SURG_JHU``  uqpy
-	conda install -c conda-forge uqpy
+    conda install --channel  ``SURG_JHU``  uqpy
+    conda install -c conda-forge uqpy
 
 
 From GitHub: Clone your fork of the UQpy repo from your GitHub account to your local disk (to get the latest version::
 
-	git clone https://github.com/SURGroup/UQpy.git
-	cd UQpy
-	python setup.py {version} install
+    git clone https://github.com/SURGroup/UQpy.git
+    cd UQpy
+    python setup.py {version} install
 
 
 Development
@@ -81,6 +81,7 @@ Table of contents
    /transformations/index
    utilities_doc
    news_doc
+   bibliography.rst
 
 * :ref:`genindex`
 * :ref:`modindex`

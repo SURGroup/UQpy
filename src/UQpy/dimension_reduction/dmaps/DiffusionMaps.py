@@ -219,12 +219,6 @@ class DiffusionMaps:
         :param eigenvectors: Eigenvectors of the diffusion maps embedding.
         :param dim: Number of eigenvectors to select with largest residuals.
         :returns: indices, residuals
-
-        References
-        ----------
-
-        :cite:`dsilva_parsimonious_2018`
-
         """
 
         residuals = np.zeros(eigenvectors.shape[1])
