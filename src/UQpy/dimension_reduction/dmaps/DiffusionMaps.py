@@ -7,7 +7,7 @@ from UQpy.utilities.Utilities import _nn_coord
 from beartype import beartype
 from typing import Annotated, Union
 from beartype.vale import Is
-from UQpy.utilities import Numpy2DFloatArray
+from UQpy.utilities.ValidationTypes import Numpy2DFloatArray, NumpyFloatArray
 from UQpy.dimension_reduction.kernels.GaussianKernel import GaussianKernel
 
 
@@ -19,14 +19,24 @@ class DiffusionMaps:
     @beartype
     def __init__(
         self,
+        kernel_matrix: Numpy2DFloatArray,
         alpha: AlphaType = 0.5,
         eigenvectors_number: IntegerLargerThanUnityType = 2,
         is_sparse: bool = False,
         neighbors_number: IntegerLargerThanUnityType = 1,
-        kernel_matrix=None,
         random_state: Union[None, int] = None,
-        t: int = 1
+        t: int = 0
     ):
+        """
+
+        :param alpha: Corresponds to different diffusion operators. It should be between zero and one.
+        :param eigenvectors_number: Number of eigenvectors to keep.
+        :param is_sparse: Work with sparse matrices. Increase the computational performance.
+        :param neighbors_number: If :code:`distance_matrix is True` defines the number of nearest neighbors.
+        :param kernel_matrix: kernel matrix defining the similarity between the points.
+        :param random_state: sets :code:`np.random.default_rng(random_state)`.
+        :param t: Time exponent.
+        """
         self.alpha = alpha
         self.eigenvectors_number = eigenvectors_number
         self.is_sparse = is_sparse
@@ -63,11 +73,30 @@ class DiffusionMaps:
         kernel=GaussianKernel(),
     ):
 
+        """
+
+        :param data: Cloud of data points.
+        :param alpha: Corresponds to different diffusion operators. It should be between zero and one.
+        :param eigenvectors_number: Number of eigenvectors to keep.
+        :param is_sparse: Work with sparse matrices. Increase the computational performance.
+        :param neighbors_number: If :code:`distance_matrix is True` defines the number of nearest neighbors.
+        :param optimize_parameters: Estimate the kernel scale from the data.
+        :param t: Time exponent.
+        :param cut_off: Cut-off for a Gaussian kernel, below which the kernel values are considered zero.
+        :param k_nn: k-th nearest neighbor distance to estimate the cut-off distance.
+        :param n_partition: Maximum subsample used for the estimation. Ignored if :code:`distance_matrix is not None`.
+        :param distance_matrix:  Pre-computed distance matrix.
+        :param random_state: sets :code:`np.random.default_rng(random_state)`.
+        :param tol: Tolerance where the cut_off should be made.
+        :param kernel: kernel matrix defining the similarity between the points.
+
+        """
+
         if optimize_parameters:
-            epsilon, cut_off = DiffusionMaps.__estimate_epsilon(data, cut_off=cut_off, tol=tol,
-                                                                k_nn=k_nn, n_partition=n_partition,
-                                                                distance_matrix=distance_matrix,
-                                                                random_state=random_state)
+            epsilon, cut_off = DiffusionMaps.estimate_epsilon(data, cut_off=cut_off, tol=tol,
+                                                              k_nn=k_nn, n_partition=n_partition,
+                                                              distance_matrix=distance_matrix,
+                                                              random_state=random_state)
             kernel.epsilon = epsilon
 
         kernel_matrix = kernel.kernel_operator(points=data)
@@ -82,38 +111,37 @@ class DiffusionMaps:
             t=t
         )
 
-    def fit(self):
+    def fit(self) -> tuple[NumpyFloatArray, NumpyFloatArray, NumpyFloatArray]:
+        """
+        Perform diffusion map embedding.
 
-        alpha = self.alpha
-        eigenvectors_number = self.eigenvectors_number
-        sparse = self.is_sparse
-        k_neighbors = self.neighbors_number
+        :returns: dmaps_embedding, eigenvalues, eigenvectors
 
-        n = np.shape(self.kernel_matrix)[0]
-        if sparse:
-            self.kernel_matrix = self.__sparse_kernel(self.kernel_matrix, k_neighbors)
+        """
+
+        if self.is_sparse:
+            self.kernel_matrix = self.__sparse_kernel(self.kernel_matrix, self.neighbors_number)
 
         # Compute the diagonal matrix D(i,i) = sum(Kernel(i,j)^alpha,j) and its inverse.
-        d, d_inv = self.__diagonal_matrix(self.kernel_matrix, alpha)
+        d, d_inv = self.__diagonal_matrix(self.kernel_matrix, self.alpha)
 
         # Compute L^alpha = D^(-alpha)*L*D^(-alpha).
         l_star = self.__normalize_kernel_matrix(self.kernel_matrix, d_inv)
 
         d_star, d_star_inv = self.__diagonal_matrix(l_star, 1.0)
-        if sparse:
-            d_star_invd = sps.spdiags(
+        if self.is_sparse:
+            d_star_inv_diag = sps.spdiags(
                 d_star_inv, 0, d_star_inv.shape[0], d_star_inv.shape[0]
             )
         else:
-            d_star_invd = np.diag(d_star_inv)
+            d_star_inv_diag = np.diag(d_star_inv)
 
-
-        transition_matrix = d_star_invd.dot(l_star)
+        transition_matrix = d_star_inv_diag.dot(l_star)
 
         # Find the eigenvalues and eigenvectors of Ps.
-        if sparse:
+        if self.is_sparse:
             eigenvalues, eigenvectors = spsl.eigs(
-                transition_matrix, k=(eigenvectors_number + 1), which="LR")
+                transition_matrix, k=(self.eigenvectors_number + 1), which="LR")
         else:
             eigenvalues, eigenvectors = np.linalg.eig(transition_matrix)
 
@@ -122,19 +150,16 @@ class DiffusionMaps:
         s = np.real(eigenvalues[ix])
         u = np.real(eigenvectors[:, ix])
 
-        eigenvalues = s[:eigenvectors_number]
-        eigenvectors = u[:, :eigenvectors_number]
+        eigenvalues = s[:self.eigenvectors_number]
+        eigenvectors = u[:, :self.eigenvectors_number]
 
         # Compute the diffusion coordinates
-        eigvals_time = np.power(eigenvalues, self.t)
-        diffusion_coordinates = eigenvectors @ np.diag(eigvals_time)
+        eig_values_time = np.power(eigenvalues, self.t)
+        dmaps_embedding = eigenvectors @ np.diag(eig_values_time)
 
         self.transition_matrix = transition_matrix
-        self.diffusion_coordinates = diffusion_coordinates[:, :eigenvectors_number]
-        self.eigenvectors = eigenvectors[:, :eigenvectors_number]
-        self.eigenvalues = eigenvalues[:eigenvectors_number]
 
-        return diffusion_coordinates, eigenvalues, eigenvectors
+        return dmaps_embedding, eigenvalues, eigenvectors
 
     # Private method
     @staticmethod
@@ -175,7 +200,26 @@ class DiffusionMaps:
         return normalized_kernel
 
     @staticmethod
-    def parsimonious(eigenvalues, eigenvectors, dim):
+    def parsimonious(eigenvectors: Numpy2DFloatArray, dim: int) -> tuple[list, NumpyFloatArray]:
+        """
+        Selection of independent vectors for parsimonious data manifold embedding, based on
+        local regression.  The eigenvectors with the largest residuals are considered for the
+        embedding. The scale of the kernel used for the local linear regression is:
+
+        .. code::
+
+            scale = median(distances) / 3
+
+        :param eigenvectors: Eigenvectors of the diffusion maps embedding.
+        :param dim: Number of eigenvectors to select with largest residuals.
+        :returns: indices, residuals
+
+        References
+        ----------
+
+        :cite:`dsilva_parsimonious_2018`
+
+        """
 
         residuals = np.zeros(eigenvectors.shape[1])
         residuals[0] = np.nan
@@ -187,40 +231,50 @@ class DiffusionMaps:
             residuals[i] = DiffusionMaps.__get_residual(f_mat=eigenvectors[:, 1:i], f=eigenvectors[:, i])
 
         # Get the index of the eigenvalues associated with each residual.
-        index = np.argsort(residuals)[::-1][1:dim+1]
-        return index, residuals
+        indices = np.argsort(residuals)[::-1][1:dim+1]
+        return indices, residuals
 
     @staticmethod
     def __get_residual(f_mat, f):
         n_samples = np.shape(f_mat)[0]
         distance_matrix = sd.squareform(sd.pdist(f_mat))
         m = 3
-        epsilon = (np.median(np.square(distance_matrix.flatten()))/ m)
+        epsilon = (np.median(np.square(distance_matrix.flatten()))/m)
         kernel_matrix = np.exp(-1 * np.square(distance_matrix) / epsilon)
-        #kernel_matrix = np.exp(-np.square(distance_matrix) / epsilon)
         coefficients = np.zeros((n_samples, n_samples))
 
         vec_1 = np.ones((n_samples, 1))
 
         for i in range(n_samples):
             # Weighted least squares:
-            matx = np.hstack([vec_1, f_mat - f_mat[i, :]])
-            matx_k = matx.T * kernel_matrix[i, :]
-            w_data = matx.T * kernel_matrix[i, :]
-            u, _, _, _ = np.linalg.lstsq((w_data @ matx), w_data, rcond=1e-6)
-
+            mat_x = np.hstack([vec_1, f_mat - f_mat[i, :]])
+            mat_x_k = mat_x.T * kernel_matrix[i, :]
+            u, _, _, _ = np.linalg.lstsq((mat_x_k @ mat_x), mat_x_k, rcond=1e-6)
             coefficients[i, :] = u[0, :]
 
         estimated_f = coefficients @ f
 
         # normalized leave-one-out cross-validation error.
-        residual = np.sqrt(np.sum(np.square((f - estimated_f)))/ np.sum(np.square(f)))
+        residual = np.sqrt(np.sum(np.square((f - estimated_f))) / np.sum(np.square(f)))
         return residual
 
     @staticmethod
-    def __estimate_cutoff(data, k_nn: int = 10, n_partition: Union[None, int] = None,
-                          distance_matrix: Union[None, Numpy2DFloatArray] = None,
-                          random_state: Union[None, int] = None) -> float:
+    def estimate_cut_off(data, k_nn: int = 20, n_partition: Union[None, int] = None,
+                         distance_matrix: Union[None, Numpy2DFloatArray] = None,
+                         random_state: Union[None, int] = None) -> float:
+        """
+        Estimates the cut-off for a Gaussian kernel, given a tolerance below which the kernel values are
+        considered zero.
+
+        :param data: Cloud of data points.
+        :param k_nn: k-th nearest neighbor distance to estimate the cut-off distance.
+        :param n_partition: maximum subsample used for the estimation. Ignored if :code:`distance_matrix is not None`.
+        :param distance_matrix:  Pre-computed distance matrix.
+        :param random_state: sets :code:`np.random.default_rng(random_state)`.
+        :return:
+
+        """
+
         n_points = data.shape[0]
         if n_points < 10:
             d = scipy.spatial.distance.pdist(data)
@@ -242,10 +296,26 @@ class DiffusionMaps:
         return float(est_cutoff)
 
     @staticmethod
-    def __estimate_epsilon(data, tol=1e-8, cut_off: float = None, **estimate_cutoff_params) -> float:
+    def estimate_epsilon(data, tol=1e-8, cut_off: float = None, **estimate_cutoff_params) -> float:
+        """
+        Estimates the scale paramter for a Gaussian kernel, given a tolerance below which the kernel values are
+        considered zero.
+
+        :param data: Cloud of data points.
+        :param tol: Tolerance where the cut_off should be made.
+        :param cut_off: User-defined cut-off.
+        :param estimate_cutoff_params: Parameters to handle to method :py:meth:`estimate_cutoff` if ``cut_off is None``.
+        :return:
+
+        See Also
+        --------
+
+        :py:class:`UQpy.dimension_reduction.kernels.GaussianKernel`
+
+        """
 
         if cut_off is None:
-            cut_off = DiffusionMaps.__estimate_cutoff(data,  **estimate_cutoff_params)
+            cut_off = DiffusionMaps.estimate_cut_off(data,  **estimate_cutoff_params)
 
         # tol >= exp(-cut_off**2 / epsilon)
         eps0 = cut_off ** 2 / (-np.log(tol))

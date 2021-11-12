@@ -19,4 +19,8 @@ One can use the following command to instantiate the class :class:`.DiffusionMap
 .. autoclass:: UQpy.dimension_reduction.dmaps.DiffusionMaps
     :members:
 
+
+
+
+
 .. [1] R. R. Coifman, S. Lafon. Diffusion maps. Applied Computational Harmonic Analysis, 2006, 21(1), p.5–30.

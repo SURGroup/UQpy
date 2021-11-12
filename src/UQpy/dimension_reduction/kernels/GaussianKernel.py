@@ -3,7 +3,7 @@ from typing import Union
 
 import numpy as np
 import scipy.spatial.distance as sd
-from UQpy.utilities import NumpyFloatArray
+from UQpy.utilities.ValidationTypes import NumpyFloatArray
 from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
 
 
@@ -28,7 +28,7 @@ class GaussianKernel(Kernel):
     def kernel_entry(self, xi, xj):
         pass
 
-    def kernel_operator(self, points: Union[list, NumpyFloatArray]) -> NumpyFloatArray:
+    def kernel_operator(self, points: Union[list, NumpyFloatArray], **kwargs) -> NumpyFloatArray:
         """
         Compute the Gaussian kernel entry for two points on the Euclidean space.
 
