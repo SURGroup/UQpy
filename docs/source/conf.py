@@ -45,7 +45,8 @@ extensions = [
     "sphinx.ext.githubpages",
     "sphinx.ext.autosummary",
     "sphinx.ext.autosectionlabel",
-    "sphinx_autodoc_typehints"
+    "sphinx_autodoc_typehints",
+    "sphinxcontrib.bibtex"
 ]
 autoclass_content = 'init'
 add_module_names = False
@@ -53,7 +54,7 @@ autodoc_member_order = 'bysource'
 napoleon_use_param = True
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
-
+bibtex_bibfiles = ['bibliography.bib']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
