@@ -8,10 +8,10 @@ class GeometricHarmonics:
     Geometric Harmonics for domain extension.
     """
 
-    def __init__(self, n_eigen_pairs: int = 5, kernel_object=GaussianKernel()):
+    def __init__(self, eigenvectors_number: int = 5, kernel_object=GaussianKernel()):
         """
 
-        :param n_eigen_pairs: The number of eigenvectors used in the decomposition of the kernel matrix.
+        :param eigenvectors_number: The number of eigenvectors used in the decomposition of the kernel matrix.
         :param kernel_object: Kernel used for the construction of the geometric harmonics.
 
         See Also
@@ -22,7 +22,7 @@ class GeometricHarmonics:
         """
 
         self.kernel_object = kernel_object
-        self.n_eigen_pairs = n_eigen_pairs
+        self.n_eigen_pairs = eigenvectors_number
         self.basis = None
         self.x = None
         self.y = None
@@ -43,7 +43,7 @@ class GeometricHarmonics:
         See Also
         --------
 
-        :py:class:`.DiffusionMaps.estimate_epsilon`
+        :py:meth:`.DiffusionMaps.estimate_epsilon`
 
         """
 
@@ -105,7 +105,7 @@ class GeometricHarmonics:
         return y, score
 
     @staticmethod
-    def score(y: Numpy2DFloatArray, y_predicted: Numpy2DFloatArray, kind: str = 'abs') -> float:
+    def score(y: Numpy2DFloatArray, y_predicted: Numpy2DFloatArray, kind: str = 'abs') -> np.ndarray:
 
         """
         Score interpolation model with negative mean squared error metric.
@@ -113,26 +113,23 @@ class GeometricHarmonics:
         :param y: The exact function values of shape `(n_test, n_targets)`
         :param y_predicted: The interpolated function values of shape `(n_test, n_targets)`
         :param kind: Error metric to be used. If :code:`kind is None` then the `absolute` mean error will be calculated.
-        :return:
-
+        :return:The computed error between the exact value and the prediction.
         """
         n_samples = y.shape[0]
-        error = list()
+        error = []
         for i in range(n_samples):
             # Compute the error between the exact value and the prediction.
             if kind == 'abs':
                 error_value = np.linalg.norm(y_predicted[i, :] - y[i, :])
-            elif kind == 'rel':
-                error_value = np.linalg.norm(y_predicted[i, :] - y[i, :]) / np.linalg.norm(y[i, :])
-            elif kind == 'max':
-                error_value = np.max(abs(y_predicted[i, :] - y[i, :]))
             elif kind == 'l1':
                 error_value = np.linalg.norm(y_predicted[i, :] - y[i, :], 1)
+            elif kind == 'max':
+                error_value = np.max(abs(y_predicted[i, :] - y[i, :]))
+            elif kind == 'rel':
+                error_value = np.linalg.norm(y_predicted[i, :] - y[i, :]) / np.linalg.norm(y[i, :])
             else:
                 raise NotImplementedError('UQpy: Not implement kind of error.')
 
             error.append(error_value)
 
-        mean_error = np.mean(error)
-
-        return mean_error
+        return np.mean(error)

@@ -1,10 +1,4 @@
 import numpy as np
-from UQpy.Utilities import *
-from UQpy.DimensionReduction.Kernels import ProjectionKernel
-from UQpy.DimensionReduction.Kernels import Gaussian
-from UQpy.Surrogates.geometric_harmonics.GeometricHarmonics import GeometricHarmonics
-from UQpy.DimensionReduction.Grassmann import Grassmann
-from UQpy.DimensionReduction.GrassmannianDiffusionMaps import GrassmannianDiffusionMaps
 from scipy.spatial.distance import pdist
 from sklearn.neighbors import NearestNeighbors #todo: Change to scipy (using KD.Tree)
 
@@ -132,12 +126,11 @@ class GrassmannianGHMap:
         gamma_psi = []
         gamma_phi = []
         ptv = []
-        c = 0
         n0 = np.shape(self.grassmann_object.psi[pid[0]])[0]
         n1 = np.shape(self.grassmann_object.psi[pid[0]])[1]
         n0h = np.shape(self.grassmann_object.phi[pid[0]])[0]
         n1h = np.shape(self.grassmann_object.phi[pid[0]])[1]
-        for k in pid:
+        for c, k in enumerate(pid):
             #n0 = np.shape(self.grassmann_object.psi[k])[0]
             #n1 = np.shape(self.grassmann_object.psi[k])[1]
 
@@ -149,8 +142,6 @@ class GrassmannianGHMap:
             phi.append(self.grassmann_object.phi[k].reshape(n0h * n1h))
             diffc.append(self.dcoords[k, :])
             ptv.append(self.X[k, :])
-
-            c = c + 1
 
         #g0 = dcoord_interp
         #dg = pdist(diffc)

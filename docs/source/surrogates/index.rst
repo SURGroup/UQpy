@@ -22,4 +22,4 @@ The module currently contains the following classes:
     Stochastic Reduced Order Models <srom>
     Gaussian Process Regression/Kriging <kriging>
     Polynomial Chaos Expansion <polynomial_chaos>
-	Geometric Harmonics <geometric_harmonics>\
+    Geometric Harmonics <geometric_harmonics>
