@@ -25,7 +25,7 @@ class DiffusionMaps:
         is_sparse: bool = False,
         neighbors_number: IntegerLargerThanUnityType = 1,
         random_state: Union[None, int] = None,
-        t: int = 0
+        t: int = 1
     ):
         """
 
@@ -90,6 +90,12 @@ class DiffusionMaps:
         :param tol: Tolerance where the cut_off should be made.
         :param kernel: kernel matrix defining the similarity between the points.
 
+
+        See Also
+        --------
+
+        :py:class:`UQpy.dimension_reduction.kernels`
+
         """
 
         if optimize_parameters:
@@ -115,7 +121,7 @@ class DiffusionMaps:
         """
         Perform diffusion map embedding.
 
-        :returns: dmaps_embedding, eigenvalues, eigenvectors
+        :returns: diffusion_coordinates, eigenvalues, eigenvectors
 
         """
 
@@ -155,11 +161,11 @@ class DiffusionMaps:
 
         # Compute the diffusion coordinates
         eig_values_time = np.power(eigenvalues, self.t)
-        dmaps_embedding = eigenvectors @ np.diag(eig_values_time)
+        diffusion_coordinates = eigenvectors @ np.diag(eig_values_time)
 
         self.transition_matrix = transition_matrix
 
-        return dmaps_embedding, eigenvalues, eigenvectors
+        return diffusion_coordinates, eigenvalues, eigenvectors
 
     # Private method
     @staticmethod
@@ -296,21 +302,19 @@ class DiffusionMaps:
         return float(est_cutoff)
 
     @staticmethod
-    def estimate_epsilon(data, tol=1e-8, cut_off: float = None, **estimate_cutoff_params) -> float:
+    def estimate_epsilon(data, tol=1e-8, cut_off: float = None, **estimate_cutoff_params) -> tuple[float, float]:
         """
         Estimates the scale paramter for a Gaussian kernel, given a tolerance below which the kernel values are
         considered zero.
 
+        .. code::
+            scale = cut_off ** 2 / -log(tol)
+
         :param data: Cloud of data points.
         :param tol: Tolerance where the cut_off should be made.
         :param cut_off: User-defined cut-off.
-        :param estimate_cutoff_params: Parameters to handle to method :py:meth:`estimate_cutoff` if ``cut_off is None``.
-        :return:
-
-        See Also
-        --------
-
-        :py:class:`UQpy.dimension_reduction.kernels.GaussianKernel`
+        :param estimate_cutoff_params: Parameters to handle to method :py:meth:`estimate_cutoff` if :code:`cut_off is None`.
+        :return: scale, cut_off
 
         """
 
@@ -318,5 +322,5 @@ class DiffusionMaps:
             cut_off = DiffusionMaps.estimate_cut_off(data,  **estimate_cutoff_params)
 
         # tol >= exp(-cut_off**2 / epsilon)
-        eps0 = cut_off ** 2 / (-np.log(tol))
-        return float(eps0), cut_off
+        scale = cut_off ** 2 / (-np.log(tol))
+        return scale, cut_off

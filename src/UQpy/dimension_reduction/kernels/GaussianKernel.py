@@ -17,8 +17,7 @@ class GaussianKernel(Kernel):
     """
     def __init__(self, epsilon: float = 1.0):
         """
-
-        :param float epsilon: Scale parameter of the Gaussian kernel
+        :param epsilon: Scale parameter of the Gaussian kernel
         """
         self.epsilon = epsilon
 
@@ -54,6 +53,6 @@ class GaussianKernel(Kernel):
 
                 distance_pairs.append(np.linalg.norm(xi - xj, "fro") ** 2)
 
-        kernel = np.exp(-sd.squareform(distance_pairs)  / (self.epsilon))
+        kernel = np.exp(-sd.squareform(distance_pairs) / self.epsilon)
 
         return kernel
