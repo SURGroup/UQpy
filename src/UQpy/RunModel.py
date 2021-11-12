@@ -711,6 +711,7 @@ class RunModel:
         :type index: int
         """
         self.model_command = ([self.python_command, str(self.model_script), str(index)])
+        print("THIS IS THE COMMAND STRING: ", self.model_command)
         subprocess.run(self.model_command)
 
     def _output_serial(self, index):
@@ -767,23 +768,27 @@ class RunModel:
                 os.remove("logs/runtask.log")
             except OSError:
                 pass
-        self.parallel_string = "parallel --delay 0.2 --joblog logs/runtask.log --resume -j " + str(self.ntasks) + " "
+        self.parallel_string = "parallel --delay 0.2 --joblog logs/runtask.log -j " + str(self.ntasks) + " "
 
         # If running on SLURM cluster
         if self.cluster:
             print("CLUSTER RUN!!")            
             # self.srun_string = "srun -N" + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive "
-            self.ibrun_string = "ibrun -n " + str(self.cores_per_task) + " \"$(({} * " + str(self.cores_per_task) + "))\" "
-            self.model_command_string = (self.parallel_string + "'(cd run_{1}" + " && " + self.ibrun_string
-                                         + " " + self.python_command + " -u " + str(self.model_script) +
-                                         " {1} &)'  ::: {" + str(self.nexist) + ".." +
-                                         str(self.nexist + self.nsim - 1) + "}; wait")
+            analysisScript = str("/home1/03383/tg826821/quoFEM/applicationsDir/surrogateRuns_intel ./InputFiles/config.cfg --logging --fileIO --vtkWriteFreq 100 --blockSize 50 --XBlocks 16 --YBlocks 8 --ZBlocks 6 --numLevels 1 --loadDistributionStrategy Morton --baseFolder ./OutputFiles --qoiFile qoiFile.txt --qoiIOfreq 1000")
+
+            postProcessScript = str(self.python_command + " -u postProcessRockerRun.py ./OutputFiles/qoiFile.txt results.out ")
+            ibrun_string = "ibrun -n " + str(self.cores_per_task) + " \"$(({} * " + str(self.cores_per_task) + "))\" task_affinity "
+            self.model_command_string = str(self.parallel_string + "'cp *.py run_{1}/. && cp workflow_driver run_{1}/. && cp slopeRealization_template.json run_{1}/. && cp sparkRocks-assembly-1.0.jar run_{1}/. && cd run_{1} && chmod +x workflow_driver && " 
+                                            + self.python_command + " -u " + str(self.model_script) + " {1} && " + ibrun_string
+                                            + analysisScript +
+                                            " && " + postProcessScript + "'  ::: {" + str(self.nexist) + ".." +
+                                            str(self.nexist + self.nsim - 1) + "}; wait")
         else:  # If running locally
             print("LOCAL RUN!!")
             self.model_command_string = str(self.parallel_string + "'cd run_{1}" + " && " +
-                                         self.python_command + " -u " +
-                                         str(self.model_script) + " {1}' ::: {" + str(self.nexist) + ".." +
-                                         str(self.nexist + self.nsim - 1) + "}")
+                                            self.python_command + " -u " +
+                                            str(self.model_script) + " {1}' ::: {" + str(self.nexist) + ".." +
+                                            str(self.nexist + self.nsim - 1) + "}")
 
 
         print("This is the current directory:", os.getcwd())
