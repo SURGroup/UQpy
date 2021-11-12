@@ -94,7 +94,7 @@ class DiffusionMaps:
         See Also
         --------
 
-        :py:class:`UQpy.dimension_reduction.kernels`
+        :py:class:`.GaussianKernel`
 
         """
 
