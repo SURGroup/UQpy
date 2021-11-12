@@ -1,7 +1,12 @@
+import itertools
+
 import scipy.sparse as sps
-import scipy.sparse.linalg as spsl
+import scipy as sp
+from scipy.sparse.linalg import eigsh, eigs
 import scipy.spatial.distance as sd
 import scipy
+
+from UQpy import EuclideanDistance, DistanceMetric
 from UQpy.utilities.Utilities import *
 from UQpy.utilities.Utilities import _nn_coord
 from beartype import beartype
@@ -145,11 +150,13 @@ class DiffusionMaps:
         transition_matrix = d_star_inv_diag.dot(l_star)
 
         # Find the eigenvalues and eigenvectors of Ps.
-        if self.is_sparse:
-            eigenvalues, eigenvectors = spsl.eigs(
-                transition_matrix, k=(self.eigenvectors_number + 1), which="LR")
-        else:
-            eigenvalues, eigenvectors = np.linalg.eig(transition_matrix)
+        eigenvalues, eigenvectors = DiffusionMaps.eig_solver(self.transition_matrix, (self.eigenvectors_number + 1))
+
+        #if self.is_sparse:
+        #    eigenvalues, eigenvectors = spsl.eigs(
+        #        transition_matrix, k=(self.eigenvectors_number + 1), which="LR")
+        #else:
+        #    eigenvalues, eigenvectors = np.linalg.eig(transition_matrix)
 
         ix = np.argsort(np.abs(eigenvalues))
         ix = ix[::-1]
@@ -192,6 +199,22 @@ class DiffusionMaps:
         inverse_diagonal_matrix = np.power(diagonal_matrix, -alpha)
 
         return diagonal_matrix, inverse_diagonal_matrix
+
+    @staticmethod
+    def diffusion_distance(diffusion_coordinates: Numpy2DFloatArray) -> Numpy2DFloatArray:
+        distance_matrix = np.zeros((diffusion_coordinates.shape[0], diffusion_coordinates.shape[0]))
+        pairs = list(itertools.combinations(diffusion_coordinates.shape[0], 2))
+        for id_pair in range(np.shape(pairs)[0]):
+            i = pairs[id_pair][0]
+            j = pairs[id_pair][1]
+
+            xi = diffusion_coordinates[i, :]
+            xj = diffusion_coordinates[j, :]
+
+            distance_matrix[i, j] = np.linalg.norm(xi - xj)
+            distance_matrix[j, i] = distance_matrix[i, j]
+
+        return distance_matrix
 
     def __normalize_kernel_matrix(self, kernel_matrix, inverse_diagonal_matrix):
 
@@ -304,7 +327,7 @@ class DiffusionMaps:
     @staticmethod
     def estimate_epsilon(data, tol=1e-8, cut_off: float = None, **estimate_cutoff_params) -> tuple[float, float]:
         """
-        Estimates the scale paramter for a Gaussian kernel, given a tolerance below which the kernel values are
+        Estimates the scale parameter for a Gaussian kernel, given a tolerance below which the kernel values are
         considered zero.
 
         .. code::
@@ -321,6 +344,41 @@ class DiffusionMaps:
         if cut_off is None:
             cut_off = DiffusionMaps.estimate_cut_off(data,  **estimate_cutoff_params)
 
-        # tol >= exp(-cut_off**2 / epsilon)
         scale = cut_off ** 2 / (-np.log(tol))
         return scale, cut_off
+
+    @staticmethod
+    def eig_solver(kernel_matrix: Numpy2DFloatArray, n_eigenvectors: int) -> \
+            tuple[NumpyFloatArray, Numpy2DFloatArray]:
+
+        n_samples, n_features = kernel_matrix.shape
+
+        is_symmetric = np.allclose(kernel_matrix, np.asmatrix(kernel_matrix).H)
+
+        if n_eigenvectors == n_features:
+            if is_symmetric:
+                solver = sp.linalg.eigh
+            else:
+                solver = sp.linalg.eig
+
+            solver_kwargs = {"check_finite": False}
+
+        else:
+            if is_symmetric:
+                solver = eigsh
+            else:
+                solver = eigs
+
+            solver_kwargs = {
+                "sigma": None,
+                "k": n_eigenvectors,
+                "which": "LM",
+                "v0": np.ones(n_samples),
+                "tol": 1e-14,
+            }
+
+        eigenvalues, eigenvectors = solver(kernel_matrix, **solver_kwargs)
+
+        eigenvectors /= np.linalg.norm(eigenvectors, axis=0)[np.newaxis, :]
+
+        return eigenvalues, eigenvectors

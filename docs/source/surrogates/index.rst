@@ -11,7 +11,7 @@ The module currently contains the following classes:
 
 - :class:`.PolynomialChaosExpansion`: Class to generate an approximate surrogate model using Polynomial chaos.
 
-- :class:`.GeometricHarmonics`: Class to generate an approximate surrogate model using Geometric Harmonics.
+- :class:`.GeometricHarmonics`: Class for domain extension using Geometric Harmonics.
 
 
 .. toctree::
