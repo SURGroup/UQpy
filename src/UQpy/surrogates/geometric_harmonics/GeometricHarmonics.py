@@ -1,13 +1,13 @@
 import numpy as np
-from UQpy.Utilities import *
-from UQpy.dimension_reduction.kernels.euclidean import GaussianKernel
+from UQpy.utilities import *
+from UQpy.dimension_reduction.kernels import GaussianKernel
 
 
 class GeometricHarmonics:
     """
-    Geometric Harmonics for domain extension.
-    The class ``GeometricHarmonics`` is used in the domain extension of functions defined only on few observations.
-    ``GeometricHarmonics`` is a Subclass of Similarity.
+    Geometric Harmonics for domain extension. The class ``GeometricHarmonics`` is used in the domain extension of
+    functions defined only on few observations.
+
     **Input:**
     * **n_evecs** (`int`)
         The number of eigenvectors used in the eigendecomposition of the kernel matrix.
@@ -25,102 +25,84 @@ class GeometricHarmonics:
     **Methods:**
     """
 
-    def __init__(self, n_evecs=None, kernel_object=Gaussian()):
+    def __init__(self, n_eigen_pairs: int = 5, kernel_object=GaussianKernel()):
+        """
+
+        :param n_eigen_pairs: The number of eigenvectors used in the decomposition of the kernel matrix.
+        :param kernel_object: Kernel used for the construction of the geometric harmonics.
+
+        See Also
+        --------
+
+        :py:class:`UQpy.dimension_reduction.kernels.GaussianKernel`
+
+        """
 
         self.kernel_object = kernel_object
-        self.n_evecs = n_evecs
+        self.n_eigen_pairs = n_eigen_pairs
         self.basis = None
-        self.X = None
+        self.x = None
         self.y = None
-        self.evals = None
-        self.evecs = None
+        self.eigenvalues = None
+        self.eigenvectors = None
         self.kwargs_kernel = None
 
-    def fit(self, X, y, **kwargs):
+    def fit(self, x: Numpy2DFloatArray, y: Numpy2DFloatArray, **kwargs):
 
         """
-        Train the model using `fit`.
+        Fit model with training data.
         In this method, `X` is a list of data points, `y` are the function values. `epsilon` can be
         provided, otherwise it is computed from the median of the pairwise distances of X.
-        **Input:**
-        * **X** (`list`)
-            Input data (independent variables).
-        * **y** (`list`)
-            Function values.
-        * **epsilon** (`float`)
-            Parameter of the Gaussian kernel.
-        **Output/Returns:**
+
+        :param x: Training points of shape `(n_samples, n_features)`.
+        :param y: Target function values of shape `(n_samples, n_targets)`
+        :param kwargs:
         """
 
-        if X is not None:
+        self.x = x
+        self.y = y
+        self.kwargs_kernel = kwargs
 
-            self.X = X
-            self.y = y
-            #if not isinstance(X, list):
-            #    raise TypeError('UQpy: `X` must be a list.')
+        if epsilon is None:
+            epsilon, _ = DiffusionMaps.estimate_epsilon(x, cut_off=cut_off, tol=tol,
+                                                        k_nn=k_nn, n_partition=n_partition,
+                                                        distance_matrix=distance_matrix,
+                                                        random_state=random_state)
+        kernel.epsilon = epsilon
+        kernel_matrix = self.kernel_object.kernel_operator(points=x)
 
-            #if not isinstance(y, list):
-            #    raise TypeError('UQpy: `y` must be a list.')
+        eigenvalues, eigenvectors = eigsolver(kernel_matrix, self.n_eigen_pairs)
 
-            # Get the Gaussian kernel matrix.
-            self.kwargs_kernel = kwargs
-            self.kernel_object.fit(X=X, **kwargs)
-            kernel_matrix = self.kernel_object.kernel_matrix
-
-        else:
-            raise TypeError('UQpy: `X` cannot be NoneType.')
-
-        # if n_evecs is NoneType use all the aigenvectors.
-        if self.n_evecs is None:
-            self.n_evecs = len(X)
-
-        # Eigendecomposition.
-        eivals, eivec = eigsolver(kernel_matrix, self.n_evecs)
-
-        idv = np.argsort(eivals)[::-1]
-        evals = eivals[idv]
-        evecs = eivec[:, idv]
+        idv = np.argsort(eigenvalues)[::-1]
+        eigenvalues = eigenvalues[idv]
+        eigenvectors = eigenvectors[:, idv]
 
         # Basis construction.
-        basis = evecs.dot(np.diag(np.reciprocal(evals))).dot(evecs.T) @ y
+        basis = eigenvectors.dot(np.diag(np.reciprocal(eigenvalues))).dot(eigenvectors.T) @ y
         self.basis = basis
-        self.X = X
+        self.x = x
         self.y = y
-        self.evals = evals
-        self.evecs = evecs
+        self.eigenvalues = eigenvalues
+        self.eigenvectors = eigenvectors
 
-    def predict(self, X):
+    def predict(self, x) -> Numpy2DFloatArray:
 
         """
-        Predict the function value for `Xtest`.
-        In this method, `Xtest` is a list of data points.
-        **Input:**
-        * **X** (`list`)
-            Input test data (independent variables).
-        **Output/Returns:**
-        * **ypred** (`list`)
-            Predicted function values.
+        Evaluate model for out-of-sample points.
+
+        :param x:  Points of shape `(n_samples, n_features)`
+        :return: The interpolated function values of shape `(n_samples, n_targets)`
         """
 
-        # Initial checks.
-        if self.X is None or self.y is None:
-            raise TypeError('UQpy: please, train the model.')
 
-        if X is None:
-            raise TypeError('UQpy: Not valid type for X, it should be either a list or a Grassmann object.')
 
-        else:
-            # Compute the partial kernel matrix with respect to Xtest.
-            self.kernel_object.fit(X=self.X, y=X, **self.kwargs_kernel)
-            kernel_matrix = self.kernel_object.kernel_matrix
+        # Compute the partial kernel matrix with respect to Xtest.
+        kernel_matrix = self.kernel_object.kernel_operator(points=x)
 
-            # Compute the kernel matrix of X with respect to Xtest using the Gaussian kernel.
-            # self.compute_similarity(X=Xtest, y=self.X, epsilon=self.epsilon)
-            # kernel_matrix = self.kernel_matrix
 
         # Prediction using the partial kernel matrix and the basis.
         y = kernel_matrix.T @ self.basis
-        #y = (self.basis.T @ kernel_matrix).T
+
 
         return y
 
