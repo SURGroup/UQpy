@@ -20,4 +20,9 @@ One can use the following command to instantiate the class :class:`.DiffusionMap
     :members:
 
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Diffusion Maps Examples
+
+    Examples <../auto_examples/dimension_reduction/diffusion_maps_circle>
 
