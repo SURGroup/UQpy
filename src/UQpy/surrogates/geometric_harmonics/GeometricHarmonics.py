@@ -105,7 +105,7 @@ class GeometricHarmonics:
         return y, score
 
     @staticmethod
-    def score(y: Numpy2DFloatArray, y_predicted: Numpy2DFloatArray, kind: str = 'abs') -> np.ndarray:
+    def score(y: Numpy2DFloatArray, y_predicted: Numpy2DFloatArray, kind: str = 'abs') -> float:
 
         """
         Score interpolation model with negative mean squared error metric.
@@ -113,7 +113,7 @@ class GeometricHarmonics:
         :param y: The exact function values of shape `(n_test, n_targets)`
         :param y_predicted: The interpolated function values of shape `(n_test, n_targets)`
         :param kind: Error metric to be used. If :code:`kind is None` then the `absolute` mean error will be calculated.
-        :return:The computed error between the exact value and the prediction.
+        :return: The mean computed error between the exact values and the predictions.
         """
         n_samples = y.shape[0]
         error = []

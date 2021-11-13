@@ -1,4 +1,4 @@
-Dimension Reduction
+Dimension reduction
 ====================
 
 .. automodule:: UQpy.dimension_reduction
@@ -10,9 +10,10 @@ This module contains various classes and methods to perform dimensionality reduc
    :maxdepth: 1
    :caption: Current capabilities
 
-    Proper Orthogonal Decomposition <pod>
-    Higher-Order SVD <hosvd>
-    Diffusion Maps <dmaps>
-    Grassmann manifold <grassmann/index>
+
     Distances <distances/index>
     Kernels <kernels/index>
+    Grassmann manifold <grassmann/index>
+    Diffusion maps <dmaps>
+    HOSVD <hosvd>
+    POD <pod>
