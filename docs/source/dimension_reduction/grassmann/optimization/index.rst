@@ -1,12 +1,3 @@
-OptimizationMethod
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The abstract :class:`.OptimizationMethod` class is a blueprint for classes in :mod:`.optimization` module. It allows the user to define a set of methods that must be created within any child classes built from this abstract class.
-
-.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.optimization.baseclass.OptimizationMethod
-    :members:
-
-
 
 Gradient Descent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -46,5 +37,12 @@ One can use the following command to instantiate the class :class:`.StochasticGr
 .. autoclass:: UQpy.dimension_reduction.grassmann_manifold.optimization.StochasticGradientDescent
     :members:
 
+___________________________________________________________________________________________
+
+
+The abstract :class:`.OptimizationMethod` class is a blueprint for classes in :mod:`.optimization` module. It allows the user to define a set of methods that must be created within any child classes built from this abstract class.
+
+.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.optimization.baseclass.OptimizationMethod
+    :members:
 
 
