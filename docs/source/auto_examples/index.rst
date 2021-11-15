@@ -25,6 +25,27 @@ Below are examples using my module:
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how to use the UQpy DiffusionMaps class for points on the Grassmann manifold...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/dimension_reduction/images/thumb/sphx_glr_grassmann_dmaps_thumb.png
+     :alt: Grassmannian diffusion maps
+
+     :ref:`sphx_glr_auto_examples_dimension_reduction_grassmann_dmaps.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/dimension_reduction/grassmann_dmaps
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="This example shows how to use the UQpy DiffusionMaps class to * reveal the embedded structure o...">
 
 .. only:: html
