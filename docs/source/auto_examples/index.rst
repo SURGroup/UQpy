@@ -29,10 +29,10 @@ Below are examples using my module:
 
 .. only:: html
 
- .. figure:: /auto_examples/dimension_reduction/images/thumb/sphx_glr_diffusion_maps_circle_thumb.png
-     :alt: Diffusion Maps Circle
+ .. figure:: /auto_examples/dimension_reduction/images/thumb/sphx_glr_dmaps_swiss_role_thumb.png
+     :alt: Swiss role
 
-     :ref:`sphx_glr_auto_examples_dimension_reduction_diffusion_maps_circle.py`
+     :ref:`sphx_glr_auto_examples_dimension_reduction_dmaps_swiss_role.py`
 
 .. raw:: html
 
@@ -42,7 +42,7 @@ Below are examples using my module:
 .. toctree::
    :hidden:
 
-   /auto_examples/dimension_reduction/diffusion_maps_circle
+   /auto_examples/dimension_reduction/dmaps_swiss_role
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>

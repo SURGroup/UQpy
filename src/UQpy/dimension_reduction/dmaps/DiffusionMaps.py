@@ -149,13 +149,7 @@ class DiffusionMaps:
         transition_matrix = d_star_inv_diag.dot(l_star)
 
         # Find the eigenvalues and eigenvectors of Ps.
-        eigenvalues, eigenvectors = DiffusionMaps.eig_solver(self.transition_matrix, (self.eigenvectors_number + 1))
-
-        #if self.is_sparse:
-        #    eigenvalues, eigenvectors = spsl.eigs(
-        #        transition_matrix, k=(self.eigenvectors_number + 1), which="LR")
-        #else:
-        #    eigenvalues, eigenvectors = np.linalg.eig(transition_matrix)
+        eigenvalues, eigenvectors = DiffusionMaps.eig_solver(transition_matrix, (self.eigenvectors_number + 1))
 
         ix = np.argsort(np.abs(eigenvalues))
         ix = ix[::-1]
