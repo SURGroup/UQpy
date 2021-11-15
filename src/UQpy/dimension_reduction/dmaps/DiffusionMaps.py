@@ -4,6 +4,7 @@ import scipy.sparse as sps
 import scipy as sp
 from scipy.sparse.linalg import eigsh, eigs
 import scipy.spatial.distance as sd
+import matplotlib.pyplot as plt
 import scipy
 
 from UQpy.utilities.Utilities import *
@@ -369,3 +370,48 @@ class DiffusionMaps:
         eigenvectors /= np.linalg.norm(eigenvectors, axis=0)[np.newaxis, :]
 
         return eigenvalues, eigenvectors
+
+    @staticmethod
+    def _plot_eigen_pairs(eigenvectors: Numpy2DFloatArray, n: int = 1, **kwargs):
+        """
+        Plot scatter plot of n-th eigenvector on x-axis and remaining eigenvectors on
+        y-axis.
+
+        :param eigenvectors: Eigenvectors of the kernel matrix of shape `(n_samples, n_eigenvectors)`.
+        :param n: eigenvector index (in columns) to plot on x-axis. if
+        :param kwargs:
+            color: visualize the points.
+            figure_size: Size of the figure to be passed as keyword argument to `matplotlib.pyplot.figure()`.
+        """
+        figure_size = kwargs.get('figure_size', None)
+        color = kwargs.get('color', None)
+
+        if figure_size is None:
+            figure_params = dict(figsize=[10, 10])
+        else:
+            figure_params = dict(figsize=kwargs['figure_size'])
+
+        n_eigenvectors = eigenvectors.shape[1] - 1
+
+        if color is None:
+            color = 'b'
+
+        f, ax = plt.subplots(
+            nrows=int(np.ceil(n_eigenvectors / 2)), ncols=2, sharex=True, sharey=True, **figure_params
+        )
+
+        correct_one = 0
+        for i, idx in enumerate(range(n_eigenvectors + 1)):
+
+            if i == n:
+                correct_one = 1
+                continue
+            else:
+                i = i - correct_one
+
+            _ax = ax[i // 2, i - (i // 2) * 2]
+
+            _ax.scatter(eigenvectors[:, n], eigenvectors[:, idx], cmap=plt.cm.Spectral, c=color)
+
+            _ax.set_title(
+                r"$\Psi_{{{}}}$ vs. $\Psi_{{{}}}$".format(n, idx))

@@ -94,7 +94,7 @@ Plot the Grassmannian diffusion coordinates
 Find the parsimonious representation of the eigenvectors. Identify the two most informative
 eigenvectors.
 
-.. GENERATED FROM PYTHON SOURCE LINES 65-69
+.. GENERATED FROM PYTHON SOURCE LINES 65-71
 
 .. code-block:: default
 
@@ -102,6 +102,8 @@ eigenvectors.
     index, residuals = DiffusionMaps.parsimonious(eigenvectors, 2)
 
     print('most informative eigenvectors:', index)
+
+    plt.show()
 
 
 .. rst-class:: sphx-glr-timing
