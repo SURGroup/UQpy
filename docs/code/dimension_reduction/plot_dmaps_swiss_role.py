@@ -32,7 +32,7 @@ y = 1. / 6 * (phi + 0.1 * xi) * np.cos(phi)
 swiss_roll = np.array([x, y, z]).transpose()
 
 # generate point cloud
-X, X_color = make_s_curve(n, random_state=1, noise=0)
+X, X_color = make_s_curve(n, random_state=3, noise=0)
 
 
 #%% md
