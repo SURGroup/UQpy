@@ -62,8 +62,8 @@ bibtex_bibfiles = ['bibliography.bib']
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 sphinx_gallery_conf = {
-     'examples_dirs': '../code/',   # path to your example scripts
-     'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
+     'examples_dirs': ['../code/dimension_reduction'],   # path to your example scripts
+     'gallery_dirs': ['auto_examples/dimension_reduction'],  # path to where to save gallery generated output
 }
 
 # -- Options for HTML output -------------------------------------------------
