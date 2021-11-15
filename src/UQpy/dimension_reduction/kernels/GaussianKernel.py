@@ -53,6 +53,6 @@ class GaussianKernel(Kernel):
 
                 distance_pairs.append(np.linalg.norm(xi - xj, "fro") ** 2)
 
-        kernel = np.exp(-sd.squareform(distance_pairs) / self.epsilon)
+        kernel = np.exp(-sd.squareform(distance_pairs) / (4 * self.epsilon))
 
         return kernel
