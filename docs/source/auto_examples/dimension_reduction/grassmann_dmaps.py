@@ -66,3 +66,5 @@ for i, idx in enumerate(range(n_eigenvectors + 1)):
 index, residuals = DiffusionMaps.parsimonious(eigenvectors, 2)
 
 print('most informative eigenvectors:', index)
+
+plt.show()
