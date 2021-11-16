@@ -69,6 +69,6 @@ print('most informative eigenvectors:', index)
 
 # Plot the diffusion coordinates
 
-DiffusionMaps._plot_eigen_pairs(eigenvectors, color=X_color, figure_size=[12, 12])
+DiffusionMaps._plot_eigen_pairs(eigenvectors, pair_indices=[1, 2], color=X_color, figure_size=[12, 12])
 plt.show()
 
