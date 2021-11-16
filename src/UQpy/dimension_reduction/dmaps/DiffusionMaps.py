@@ -1,12 +1,10 @@
-import itertools
-
 import scipy.sparse as sps
 import scipy as sp
 from scipy.sparse.linalg import eigsh, eigs
 import scipy.spatial.distance as sd
 import matplotlib.pyplot as plt
 import scipy
-
+from itertools import combinations
 from UQpy.utilities.Utilities import *
 from UQpy.utilities.Utilities import _nn_coord
 from beartype import beartype
@@ -133,24 +131,41 @@ class DiffusionMaps:
         if self.is_sparse:
             self.kernel_matrix = self.__sparse_kernel(self.kernel_matrix, self.neighbors_number)
 
+        alpha = self.alpha
         # Compute the diagonal matrix D(i,i) = sum(Kernel(i,j)^alpha,j) and its inverse.
-        d, d_inv = self.__diagonal_matrix(self.kernel_matrix, self.alpha)
+        # d, d_inv = self._d_matrix(self.kernel_matrix, self.alpha)
+        d = np.array(self.kernel_matrix.sum(axis=1)).flatten()
+        d_inv = np.power(d, -alpha)
 
         # Compute L^alpha = D^(-alpha)*L*D^(-alpha).
-        l_star = self.__normalize_kernel_matrix(self.kernel_matrix, d_inv)
-
-        d_star, d_star_inv = self.__diagonal_matrix(l_star, 1.0)
+        m = d_inv.shape[0]
         if self.is_sparse:
-            d_star_inv_diag = sps.spdiags(
-                d_star_inv, 0, d_star_inv.shape[0], d_star_inv.shape[0]
-            )
+            d_alpha = sps.spdiags(d_inv, 0, m, m)
         else:
-            d_star_inv_diag = np.diag(d_star_inv)
+            d_alpha = np.diag(d_inv)
 
-        transition_matrix = d_star_inv_diag.dot(l_star)
+        l_star = d_alpha.dot(self.kernel_matrix.dot(d_alpha))
+
+        # d_star, d_star_inv = self._d_matrix(l_star, 1.0)
+        d_star = np.array(l_star.sum(axis=1)).flatten()
+        d_star_inv = np.power(d_star, -1)
+
+        if self.is_sparse:
+            d_star_inv_d = sps.spdiags(d_star_inv, 0, d_star_inv.shape[0], d_star_inv.shape[0])
+        else:
+            d_star_inv_d = np.diag(d_star_inv)
+
+        # Compute the transition matrix.
+        transition_matrix = d_star_inv_d.dot(l_star)
+
+        if self.is_sparse:
+            is_symmetric = sp.sparse.linalg.norm(transition_matrix - transition_matrix.T, sp.inf) < 1e-08
+        else:
+            is_symmetric = np.allclose(transition_matrix, transition_matrix.T, rtol=1e-5,  atol=1e-08)
 
         # Find the eigenvalues and eigenvectors of Ps.
-        eigenvalues, eigenvectors = DiffusionMaps.eig_solver(transition_matrix, (self.eigenvectors_number + 1))
+        eigenvalues, eigenvectors = DiffusionMaps.eig_solver(transition_matrix, is_symmetric,
+                                                             (self.eigenvectors_number + 1))
 
         ix = np.argsort(np.abs(eigenvalues))
         ix = ix[::-1]
@@ -184,15 +199,6 @@ class DiffusionMaps:
         sparse_kernel_matrix = sps.csc_matrix(kernel_matrix)
 
         return sparse_kernel_matrix
-
-    # Private method
-    @staticmethod
-    def __diagonal_matrix(kernel_matrix, alpha):
-
-        diagonal_matrix = np.array(kernel_matrix.sum(axis=1)).flatten()
-        inverse_diagonal_matrix = np.power(diagonal_matrix, -alpha)
-
-        return diagonal_matrix, inverse_diagonal_matrix
 
     @staticmethod
     def diffusion_distance(diffusion_coordinates: Numpy2DFloatArray) -> Numpy2DFloatArray:
@@ -336,12 +342,10 @@ class DiffusionMaps:
         return scale, cut_off
 
     @staticmethod
-    def eig_solver(kernel_matrix: Numpy2DFloatArray, n_eigenvectors: int) -> \
+    def eig_solver(kernel_matrix: Numpy2DFloatArray, is_symmetric: bool, n_eigenvectors: int) -> \
             tuple[NumpyFloatArray, Numpy2DFloatArray]:
 
         n_samples, n_features = kernel_matrix.shape
-
-        is_symmetric = np.allclose(kernel_matrix, np.asmatrix(kernel_matrix).H)
 
         if n_eigenvectors == n_features:
             if is_symmetric:
@@ -372,46 +376,78 @@ class DiffusionMaps:
         return eigenvalues, eigenvectors
 
     @staticmethod
-    def _plot_eigen_pairs(eigenvectors: Numpy2DFloatArray, n: int = 1, **kwargs):
+    def _plot_eigen_pairs(eigenvectors: Numpy2DFloatArray,
+                          trivial: bool = False, pair_indices: list = None, **kwargs):
         """
         Plot scatter plot of n-th eigenvector on x-axis and remaining eigenvectors on
         y-axis.
 
         :param eigenvectors: Eigenvectors of the kernel matrix of shape `(n_samples, n_eigenvectors)`.
-        :param n: eigenvector index (in columns) to plot on x-axis. if
+        :param  trivial: When trivial constant eigenvectors are ignored is set to `False`.
+        :param pair_indices: Indices of the pair of eigenvectors to plot.
         :param kwargs:
             color: visualize the points.
             figure_size: Size of the figure to be passed as keyword argument to `matplotlib.pyplot.figure()`.
+            font_size: Size of the font to be passed as keyword argument to `matplotlib.pyplot.figure()`.
         """
         figure_size = kwargs.get('figure_size', None)
+        font_size = kwargs.get('font_size', None)
         color = kwargs.get('color', None)
 
-        if figure_size is None:
-            figure_params = dict(figsize=[10, 10])
-        else:
-            figure_params = dict(figsize=kwargs['figure_size'])
+        plt.figure()
 
-        n_eigenvectors = eigenvectors.shape[1] - 1
+        if figure_size is None and font_size is None:
+            plt.rcParams["figure.figsize"] = (10, 10)
+            plt.rcParams.update({'font.size': 18})
+        elif figure_size is not None and font_size is None:
+            plt.rcParams["figure.figsize"] = kwargs['figure_size']
+            plt.rcParams.update({'font.size': 18})
+        elif figure_size is None and font_size is not None:
+            plt.rcParams["figure.figsize"] = (10, 10)
+            plt.rcParams.update({'font.size': kwargs['font_size']})
+        else:
+            plt.rcParams["figure.figsize"] = kwargs['figure_size']
+            plt.rcParams.update({'font.size': kwargs['font_size']})
 
         if color is None:
             color = 'b'
 
-        f, ax = plt.subplots(
-            nrows=int(np.ceil(n_eigenvectors / 2)), ncols=2, sharex=True, sharey=True, **figure_params
-        )
+        n_eigenvectors = eigenvectors.shape[1]
 
-        correct_one = 0
-        for i, idx in enumerate(range(n_eigenvectors + 1)):
+        if not trivial:
+            start = 1
+        else:
+            start = 0
 
-            if i == n:
-                correct_one = 1
-                continue
-            else:
-                i = i - correct_one
+        num_pairs = 0
+        for _ in combinations(range(start, n_eigenvectors), 2):
+            num_pairs = num_pairs + 1
 
-            _ax = ax[i // 2, i - (i // 2) * 2]
+        if num_pairs % 2 == 0:
+            n_rows = int(np.ceil(num_pairs / 2))
+        else:
+            n_rows = int(np.ceil(num_pairs / 2)) + 1
 
-            _ax.scatter(eigenvectors[:, n], eigenvectors[:, idx], cmap=plt.cm.Spectral, c=color)
+        if pair_indices is None:
+            _, _ = plt.subplots(
+                nrows=n_rows, ncols=2, sharex=True, sharey=True,
+            )
 
-            _ax.set_title(
-                r"$\Psi_{{{}}}$ vs. $\Psi_{{{}}}$".format(n, idx))
+            count = 1
+            for arg in combinations(range(start, n_eigenvectors), 2):
+                i = arg[0]
+                j = arg[1]
+                plt.subplot(n_rows, 2, count)
+                plt.scatter(eigenvectors[:, i], eigenvectors[:, j], c=color, cmap=plt.cm.Spectral)
+                plt.title(
+                    r"$\Psi_{{{}}}$ vs. $\Psi_{{{}}}$".format(i, j))
+
+                count = count + 1
+        else:
+            _, _ = plt.subplots(
+                nrows=1, ncols=1, sharex=True, sharey=True)
+            plt.scatter(eigenvectors[:, pair_indices[0]], eigenvectors[:, pair_indices[1]], c=color,
+                        cmap=plt.cm.Spectral)
+            plt.title(
+                r"$\Psi_{{{}}}$ vs. $\Psi_{{{}}}$".format(pair_indices[0], pair_indices[1]))
+
