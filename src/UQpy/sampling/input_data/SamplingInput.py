@@ -2,4 +2,4 @@ from abc import ABC
 
 
 class SamplingInput(ABC):
-    pass
+    input_to_class = {}

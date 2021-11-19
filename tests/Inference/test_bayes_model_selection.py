@@ -1,5 +1,6 @@
 import numpy as np
 
+from UQpy.sampling.input_data.MhInput import MhInput
 from UQpy.inference import *
 from UQpy.RunModel import RunModel
 from UQpy.inference.inference_models.ComputationalModel import ComputationalModel

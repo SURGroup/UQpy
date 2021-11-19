@@ -2,6 +2,7 @@ import logging
 
 from beartype import beartype
 
+from UQpy.sampling.input_data.SamplingInput import SamplingInput
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
 
@@ -117,3 +118,6 @@ class MetropolisHastings(MCMC):
         self._update_acceptance_rate(accept_vec)
 
         return current_state, current_log_pdf
+
+
+SamplingInput.input_to_class[MhInput] = MetropolisHastings

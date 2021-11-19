@@ -4,6 +4,7 @@ from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
 from UQpy.sampling.input_data.StretchInput import StretchInput
 from UQpy.utilities.ValidationTypes import *
+from UQpy.sampling.input_data.SamplingInput import SamplingInput
 
 
 class Stretch(MCMC):
@@ -140,3 +141,6 @@ class Stretch(MCMC):
         # Update the acceptance rate
         self._update_acceptance_rate(accept_vec)
         return current_state, current_log_pdf
+
+
+SamplingInput.input_to_class[StretchInput] = StretchInput

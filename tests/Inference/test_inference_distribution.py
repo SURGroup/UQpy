@@ -2,6 +2,7 @@ import numpy as np
 from UQpy.inference import *
 from UQpy.distributions import *
 from UQpy.inference.inference_models.DistributionModel import DistributionModel
+from UQpy.sampling.input_data.MhInput import MhInput
 
 # data used throughout
 data = [0., 1., -1.5, -0.2]

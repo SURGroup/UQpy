@@ -4,7 +4,7 @@ from typing import Annotated
 from beartype.vale import Is
 
 from UQpy.sampling.input_data.SamplingInput import SamplingInput
-from UQpy.utilities.ValidationTypes import *
+from UQpy.utilities.ValidationTypes import RandomStateType
 
 
 @dataclass
@@ -65,7 +65,7 @@ class DramInput(SamplingInput):
     log_pdf_target: callable = None
     args_target: tuple = None
     burn_length: Annotated[int, Is[lambda x: x >= 0]] = 0
-    jump: PositiveInteger = 1
+    jump: int = 1
     dimension: int = None
     seed: list = None
     save_log_pdf: bool = False
@@ -76,4 +76,4 @@ class DramInput(SamplingInput):
     delayed_rejection_scale: float = 1 / 5
     save_covariance: bool = False
     random_state: RandomStateType = None
-    chains_number: PositiveInteger = None
+    chains_number: int = None

@@ -1,17 +1,16 @@
 import logging
-from typing import Union
+from typing import Union, Annotated
 from beartype import beartype
+from beartype.vale import Is
+
+from UQpy.sampling.input_data import SamplingInput
 from UQpy.sampling.input_data.ISInput import ISInput
-from UQpy.sampling.mcmc import *
-from UQpy.sampling.input_data.DramInput import DramInput
-from UQpy.sampling.input_data.DreamInput import DreamInput
-from UQpy.sampling.input_data.MhInput import MhInput
-from UQpy.sampling.input_data.MmhInput import MmhInput
-from UQpy.sampling.input_data.StretchInput import StretchInput
 from UQpy.utilities.NoPublicConstructor import NoPublicConstructor
 from UQpy.utilities.ValidationTypes import PositiveInteger
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
-from UQpy.sampling import MCMC, ImportanceSampling, MetropolisHastings
+from UQpy.sampling import MCMC, ImportanceSampling
+
+McmcInput = Annotated[SamplingInput, Is[lambda input: not isinstance(input, ISInput)]]
 
 
 class BayesParameterEstimation(metaclass=NoPublicConstructor):
@@ -57,7 +56,7 @@ class BayesParameterEstimation(metaclass=NoPublicConstructor):
     @beartype
     def create_with_mcmc_sampling(
         cls,
-        mcmc_input: Union[DramInput, DreamInput, MhInput, MmhInput, StretchInput],
+        mcmc_input: McmcInput,
         inference_model: InferenceModel,
         data,
         samples_number: int = None,
@@ -75,7 +74,7 @@ class BayesParameterEstimation(metaclass=NoPublicConstructor):
         :param samples_number_per_chain: Number of samples per chain used in mcmc, see `run` method.
         """
         class_type = type(mcmc_input)
-        sampling_class = BayesParameterEstimation.input_to_class[class_type]
+        sampling_class = SamplingInput.input_to_class[class_type]
         if mcmc_input.seed is None:
             if inference_model.prior is None or not hasattr(
                 inference_model.prior, "rvs"
@@ -128,13 +127,6 @@ class BayesParameterEstimation(metaclass=NoPublicConstructor):
         sampler = ImportanceSampling(is_input=is_input)
         return cls._create(inference_model, data, sampler, samples_number)
 
-    input_to_class = {
-        DramInput: DRAM,
-        DreamInput: DREAM,
-        MhInput: MetropolisHastings,
-        MmhInput: ModifiedMetropolisHastings,
-        StretchInput: Stretch,
-    }
 
     sampling_actions = {
         MCMC: lambda sampler, nsamples, nsamples_per_chain: sampler.run(

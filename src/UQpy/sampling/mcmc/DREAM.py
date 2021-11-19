@@ -7,6 +7,7 @@ from UQpy.distributions import *
 
 from UQpy.sampling.input_data.DreamInput import DreamInput
 from UQpy.utilities.ValidationTypes import *
+from UQpy.sampling.input_data.SamplingInput import SamplingInput
 
 
 class DREAM(MCMC):
@@ -274,3 +275,6 @@ class DREAM(MCMC):
                     self.logger.info("UQpy: Chain {} is an outlier chain".format(j))
         if outlier_num > 0:
             self.logger.info("UQpy: Detected {} outlier chains".format(outlier_num))
+
+
+SamplingInput.input_to_class[DreamInput] = DREAM
