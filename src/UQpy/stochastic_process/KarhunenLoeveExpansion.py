@@ -1,5 +1,5 @@
 from scipy.linalg import sqrtm
-
+import numpy as np
 from UQpy.utilities import *
 
 
@@ -58,8 +58,9 @@ class KarhunenLoeveExpansion:
         lam, phi = np.linalg.eig(self.correlation_function)
         lam = lam[: self.number_eigen_values]
         lam = np.diag(lam)
-        lam = lam.astype(np.float64)
-        samples = np.dot(phi[:, : self.number_eigen_values], np.dot(sqrtm(lam), xi))
+        self.phi = np.real(phi[:, : self.number_eigen_values])
+        self.lam = lam.astype(np.float64)
+        samples = np.dot(self.phi, np.dot(sqrtm(self.lam), xi))
         samples = np.real(samples)
         samples = samples.T
         samples = samples[:, np.newaxis]
