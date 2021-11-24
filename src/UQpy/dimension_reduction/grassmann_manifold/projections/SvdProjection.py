@@ -21,6 +21,7 @@ class SvdProjection(ManifoldProjection):
         self,
         data: list[Numpy2DFloatArray],
         p: int,
+        tol: float = None,
         kernel_composition: KernelComposition = KernelComposition.LEFT,
     ):
         """
@@ -28,9 +29,11 @@ class SvdProjection(ManifoldProjection):
         :param data: Raw data given as a list of matrices.
         :param p: Number of independent p-planes of each Grassmann point.
         :param kernel_composition: Composition of the kernel.
+        :param tol: Tolerance on the SVD decomposition
         """
         self.kernel_composition = kernel_composition
         self.data = data
+        self.tolerance = tol
 
         points_number = len(data)
 
@@ -51,7 +54,7 @@ class SvdProjection(ManifoldProjection):
 
         ranks = []
         for i in range(points_number):
-            ranks.append(np.linalg.matrix_rank(data[i]))
+            ranks.append(np.linalg.matrix_rank(data[i], tol=self.tolerance))
 
         if p == 0:
             p = int(min(ranks))
