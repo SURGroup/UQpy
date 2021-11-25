@@ -817,13 +817,7 @@ class RunModel:
 
         # If running on SLURM cluster
         if self.cluster:
-            self.srun_string = (
-                "srun -N"
-                + str(self.nodes)
-                + " -n1 -c"
-                + str(self.cores_per_task)
-                + " --exclusive "
-            )
+            self.srun_string = ("srun -N" + str(self.nodes) + " -n1 -c" + str(self.cores_per_task) + " --exclusive ")
             self.model_command_string = (
                 self.parallel_string
                 + "'(cd run_{1}"
