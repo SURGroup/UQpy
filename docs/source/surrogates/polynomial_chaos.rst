@@ -3,7 +3,7 @@ Polynomial Chaos Expansion - PCE
 
 Polynomial Chaos Expansions (PCE) represent a class of methods which employ orthonormal polynomials to construct
 approximate response surfaces (metamodels or surrogate models) to identify a mapping between inputs and outputs of a
-numerical model [2]_. :class:`.PolynomialChaosExpansion` methods can be directly used for moment estimation and sensitivity analysis (Sobol indices).
+numerical model :cite:`PCE1`. :class:`.PolynomialChaosExpansion` methods can be directly used for moment estimation and sensitivity analysis (Sobol indices).
 A PCE object can be instantiated from the class :class:`.PolynomialChaosExpansion`. The method can be used for models of both one-dimensional and multi-dimensional outputs.
 
 Let us consider a computational model :math:`Y = \mathcal{M}(x)`, with :math:`Y \in \mathbb{R}` and a random vector with independent components :math:`X \in \mathbb{R}^M` described by the joint probability density function :math:`f_X`. The polynomial chaos expansion of :math:`\mathcal{M}(x)` is
@@ -90,6 +90,3 @@ The second moment (variance) is calculated as
 .. math:: \sigma^{2}_{PCE} = \mathbb{E} [( \mathcal{M}^{PCE}(x) - \mu_{PCE} )^{2} ] = \sum_{i=1}^{p} y_{i}
 
 where :math:`p` is the number of polynomials (first PCE coefficient is excluded).
-
-
-.. [2] N. Lüthen, S. Marelli, B. Sudret, “Sparse Polynomial Chaos Expansions: Solvers, Basis Adaptivity and Meta-selection“, Available at arXiv:2009.04800v1 [stat.CO], 2020.

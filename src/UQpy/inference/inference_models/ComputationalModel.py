@@ -62,16 +62,8 @@ class ComputationalModel(InferenceModel):
             if isinstance(self.error_covariance, (float, int)):
                 norm = Normal(loc=0.0, scale=np.sqrt(self.error_covariance))
                 log_like_values = np.array(
-                    [
-                        np.sum(
-                            [
-                                norm.log_pdf(data_i - outpt_i)
-                                for data_i, outpt_i in zip(data, output)
-                            ]
-                        )
-                        for output in model_outputs
-                    ]
-                )
+                    [np.sum([norm.log_pdf(data_i - outpt_i) for data_i, outpt_i in zip(data, output)])
+                     for output in model_outputs])
             else:
                 multivariate_normal = MultivariateNormal(
                     data, cov=self.error_covariance

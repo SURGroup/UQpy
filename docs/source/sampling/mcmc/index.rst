@@ -5,7 +5,7 @@ The goal of Markov Chain Monte Carlo is to draw samples from some probability di
 :math:`p(x)=\frac{\tilde{p}(x)}{Z}`, where :math:`\tilde{p}(x)` is known but :math:`Z` is hard to compute (this will
 often be the case when using Bayes' theorem for instance). In order to do this, the theory of a Markov chain, a
 stochastic model that describes a sequence of states in which the probability of a state depends only on the previous
-state, is combined with a Monte Carlo simulation method, see e.g. ([1]_, [2]_). More specifically, a Markov Chain is
+state, is combined with a Monte Carlo simulation method, see e.g. (:cite:`MCMC1`, :cite:`MCMC2`). More specifically, a Markov Chain is
 built and sampled from whose stationary distribution is the target distribution :math:`p(x)`.  For instance, the
 Metropolis-Hastings (MH) algorithm goes as follows:
 
@@ -75,6 +75,3 @@ List of MCMC algorithms
     DRAM <dram>
     DREAM <dream>
     Stretch <stretch>
-
-.. [1] Gelman et al., "Bayesian data analysis", Chapman and Hall/CRC, 2013
-.. [2] R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014

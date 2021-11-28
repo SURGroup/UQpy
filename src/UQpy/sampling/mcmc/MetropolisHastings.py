@@ -21,11 +21,7 @@ class MetropolisHastings(MCMC):
         samples_number_per_chain: PositiveInteger = None,
     ):
         """
-        Metropolis-Hastings algorithm
-
-        References
-        1. Gelman et al., “Bayesian data analysis”, Chapman and Hall/CRC, 2013
-        2. R.C. Smith, “Uncertainty Quantification - Theory, Implementation and Applications”, CS&E, 2014
+        Metropolis-Hastings algorithm :cite:`MCMC1` :cite:`MCMC2`
 
         :param mh_input: Object that contains input data to the :class:`.MetropolisHastings` class.
          (See :class:`.MhInput`)

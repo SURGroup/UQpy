@@ -88,7 +88,7 @@ This workflow operates in three steps as explained in the following:
 Third-Party Model Workflow: Parallel Execution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Parallel execution in :class:`.RunModel` is carried out by the `GNU parallel` library [1]_. GNU parallel is essential
+Parallel execution in :class:`.RunModel` is carried out by the `GNU parallel` library :cite:`GNU_parallel`. GNU parallel is essential
 and must be installed on the computer running the model. Information regarding how to install GNU parallel is provided
 at `https://www.gnu.org/software/parallel <https://www.gnu.org/software/parallel>`_. Parallel execution is activated in
 :class:`.RunModel` by setting the parameter ``ntasks>1``. The key differences in terms of the workflow are listed below.
@@ -318,7 +318,7 @@ the execution of several commonly-used engineering software packages.
 *Abaqus Model*
 
 Code is provided for execution of 100 Monte Carlo samples of two random variables for the analysis of a beam subject to
-thermo-mechanical loading under fire conditions. The example is described in [2]_. The analysis is set up to run on a
+thermo-mechanical loading under fire conditions. The example is described in :cite:`UQpy_paper`. The analysis is set up to run on a
 HPC cluster (specifically the Maryland Advanced Research Computing Center, MARCC) using the SLURM scheduler from the
 shell script `run_sfe_example.sh`. The model executes 100 finite element calculations using the Abacus software over a
 total of 25 cores on a single compute node with each calculation using 1 core. The requisite :class:`.RunModel` files
@@ -402,7 +402,3 @@ RunModel Class
 
 .. autoclass:: UQpy.RunModel.RunModel
 	:members:
-
-.. [1] Tange, Ole. (2018). GNU Parallel 2018, `https://doi.org/10.5281/zenodo.1146014 <https://doi.org/10.5281/zenodo.1146014>`_
-
-.. [2] Olivier, A., Aakash, B.S., Chauhan, M., Vandanapu, L., Giovanis, D.G., and Shields, M.D. (In Review) "UQpy: A general purpose Python package and development environment for uncertainty quantification." `Journal of Computational Science`.

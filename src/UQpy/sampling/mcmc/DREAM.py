@@ -20,15 +20,7 @@ class DREAM(MCMC):
         samples_number_per_chain: int = None,
     ):
         """
-        DiffeRential Evolution Adaptive Metropolis algorithm
-
-        **References:**
-
-        1. J.A. Vrugt et al. "Accelerating Markov chain Monte Carlo simulation by differential evolution with
-           self-adaptive randomized subspace sampling". International Journal of Nonlinear Sciences and Numerical
-           Simulation, 10(3):273–290, 2009.[68]
-        2. J.A. Vrugt. "Markov chain Monte Carlo simulation using the DREAM software package: Theory, concepts, and
-           MATLAB implementation". Environmental Modelling & Software, 75:273–316, 2016.
+        DiffeRential Evolution Adaptive Metropolis algorithm :cite:`Dream1` :cite:`Dream2`
 
         :param dream_input: Object that contains input data to the :class:`.DREAM` class.
          (See :class:`.DreamInput`)

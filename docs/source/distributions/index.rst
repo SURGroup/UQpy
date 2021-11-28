@@ -22,7 +22,7 @@ classes:
 
 
 Note that the various classes of the :py:mod:`UQpy.distributions` module are written to be consistent with distributions in the
-:py:mod:`scipy.stats` package [1]_, to the extent possible while maintaining an extensible, object oriented architecture that is
+:py:mod:`scipy.stats` package :cite:`Scipy_paper`, to the extent possible while maintaining an extensible, object oriented architecture that is
 convenient for operating with the other :py:mod:`UQpy` modules. All existing distributions and their methods in :py:mod:`UQpy` are
 restructured from the :py:mod:`scipy.stats` package.
 
@@ -39,6 +39,3 @@ restructured from the :py:mod:`scipy.stats` package.
     Multivariate Distributions <distributions_multivariate>
     User Defined Distributions <user_defined_distributions>
 
-
-
-.. [1] https://docs.scipy.org/doc/scipy/reference/stats.html

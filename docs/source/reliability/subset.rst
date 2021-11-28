@@ -1,7 +1,7 @@
 Subset Simulation
 -------------------
 
-In the subset simulation method [3]_ the probability of failure :math:`P_f`  is approximated by a product of probabilities
+In the subset simulation method :cite:`SubsetSimulation` the probability of failure :math:`P_f`  is approximated by a product of probabilities
 of more frequent events. That is, the failure event :math:`G = \{\textbf{x} \in \mathbb{R}^n:G(\textbf{x}) \leq 0\}`,
 is expressed as the of union of `M` nested intermediate events :math:`G_1,G_2,\cdots,G_M` such that
 :math:`G_1 \supset G_2 \supset \cdots \supset G_M`, and :math:`G = \cap_{i=1}^{M} G_i`. The intermediate failure events
@@ -30,5 +30,3 @@ SubsetSimulation Class Descriptions
 .. autoclass:: UQpy.reliability.SubsetSimulation
     :members:
     :private-members:
-
-.. [3] S.K.  Au  and  J.L.  Beck. "Estimation  of  small  failure  probabilities  in  high  dimensions  by  subset  simulation", Probabilistic  Engineering Mechanics, 16(4):263–277, 2001.

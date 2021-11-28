@@ -2,7 +2,7 @@ Nataf
 -----------------
 
 :class:`.Nataf` is   a   class   for   transforming   random   variables   using   the   `Nataf` transformation  and
-calculating  the  correlation  distortion.    According  to  the Nataf transformation theory ([1]_, [2]_), an
+calculating  the  correlation  distortion.    According  to  the Nataf transformation theory (:cite:`Nataf1`, :cite:`Nataf2`), an
 `n`-dimensional dependent random vector :math:`\textbf{X}=[X_1,...,X_n]` for which the  marginal cumulative
 distributions :math:`F_i(x_i)`  and the correlattion matrix :math:`\textbf{C}_x=[\xi_{ij}]` are known, can be
 transformed (component-wise) to standard normal random vector :math:`\textbf{z}=[Z_1,...,Z_n]` with correlation
@@ -26,7 +26,7 @@ where :math:`X_i =F_i^{-1}(\Phi(Z_{i}))` and :math:`\phi_2(\cdot)` is the bivari
 density function. The integration is directly evaluated using a quadratic two-dimensional Gauss-Legendre integration.
 However, in the case where the non-Gaussian correlation is known :math:`\xi_{ij}`, the integral above cannot be
 inverted to solve for the Gaussian correlation :math:`\rho_{ij}`. In such case, iterative methods must be employed
-such as the Iterative Translation Approximation Method (ITAM) [3]_, used in :py:mod:`UQpy`.
+such as the Iterative Translation Approximation Method (ITAM) :cite:`StochasticProcess13`, used in :py:mod:`UQpy`.
 
 The Jacobian of the transformation can be also estimated with the :py:mod:`UQpy` class as:
 
@@ -47,11 +47,3 @@ Nataf Class Descriptions
 .. autoclass:: UQpy.transformations.Nataf
     :members:
     :private-members:
-
-
-.. [1] A. Nataf, Determination des distributions dont les marges sont donnees, C. R. Acad. Sci.
-   vol. 225, pp. 42-43, Paris, 1962.
-.. [2] R. Lebrun and A. Dutfoy, An innovating analysis of the Nataf transformation from the copula viewpoint,
-   Prob. Eng. Mech.,  vol. 24, pp. 312-320, 2009.
-.. [3] Kim, H. and Shields, M.D. (2015). "Modeling strongly non-Gaussian non-stationary stochastic processes using the
-    Iterative Translation Approximation Method and Karhunen-Loeve Expansion," Computers and Structures. 161: 31-42.

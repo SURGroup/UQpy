@@ -57,7 +57,7 @@ def svd(matrix, rank=None, tol=None):
 
 def nearest_psd(input_matrix, iterations=10):
     """
-    A function to compute the nearest positive semi-definite matrix of a given matrix [3]_.
+    A function to compute the nearest positive semi-definite matrix of a given matrix :cite:`Utilities3`.
 
     :param numpy.ndarray input_matrix: Matrix to find the nearest PD.
     :param iterations: Number of iterations to perform. Default: 10
@@ -81,7 +81,7 @@ def nearest_psd(input_matrix, iterations=10):
 
 def nearest_pd(input_matrix):
     """
-    This is a method to find the nearest positive-definite matrix to input ([1]_, [2]_).
+    This is a method to find the nearest positive-definite matrix to input (:cite:`Utilities1`, :cite:`nearest_psd`).
 
     :param numpy.ndarray input_matrix: Matrix to find the nearest PD.
     :return: Nearest PD matrix to input_matrix.

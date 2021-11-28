@@ -4,7 +4,7 @@ Morris method
 The Morris method is a so-called one-at-a-time (OAT) screening method that is known to achieve a good trade-off between
 accuracy and efficiency, and can serve to identify the few important factors in models with many factors. The method is
 based on calculating for each input a number of incremental ratios, called Elementary Effects (EE), from which basic
-statistics are computed to derive sensitivity information [1]_.
+statistics are computed to derive sensitivity information :cite:`Morris1`.
 
 For each input :math:`X_{k}`, the elementary effect is computed as:
 
@@ -44,5 +44,3 @@ Morris Class Description
     The user can subclass the Morris class to implement algorithms with better sampling of the trajectories for instance.
     In order to do so, the user can simply overwrite the `sample_trajectories` method, which should take as inputs the
     number of trajectories `trajectories_number` and any other user-defined input (transferred from the `run` method as kwargs).
-
-.. [1] Campolongo, F., Cariboni, J., Saltelli, A., “An effective screening design for sensitivity analysis of large models”, Environmental Modelling & Software 22 (2007) 1509-1518.

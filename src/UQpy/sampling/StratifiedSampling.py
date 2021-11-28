@@ -19,7 +19,7 @@ class StratifiedSampling:
         random_state: RandomStateType = None,
     ):
         """
-        Class for Stratified Sampling ([9]_).
+        Class for Stratified Sampling (:cite:`StratifiedSampling1`).
 
         :param distributions: List of :class:`.Distribution` objects corresponding to each random variable.
         :param strata_object: Defines the stratification of the unit hypercube. This must be provided and must be an

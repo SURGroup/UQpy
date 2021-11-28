@@ -17,14 +17,7 @@ class Stretch(MCMC):
         samples_number_per_chain: PositiveInteger = None,
     ):
         """
-        Affine-invariant sampler with Stretch moves, parallel implementation.
-
-        **References:**
-
-        1. J. Goodman and J. Weare, “Ensemble samplers with affine invariance,” Commun. Appl. Math. Comput. Sci.,vol.5,
-           no. 1, pp. 65–80, 2010.
-        2. Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, and Jonathan Goodman. "emcee: The mcmc Hammer".
-           Publications of the Astronomical Society of the Pacific, 125(925):306–312,2013.
+        Affine-invariant sampler with Stretch moves, parallel implementation. :cite:`Stretch1` :cite:`Stretch2`
 
         :param stretch_input: Object that contains input data to the :class:`.Stretch` class.
          (See :class:`.StretchInput`)

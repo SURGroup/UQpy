@@ -9,7 +9,7 @@ where the evidence (also called marginal likelihood) :math:`p(\mathcal{D} \vert 
 
 .. math:: p(\mathcal{D} \vert m_{i}) = \int_{\Theta} p(\mathcal{D} \vert m_{i}, \theta) p(\theta \vert m_{i}) d\theta
 
-Currently, calculation of the evidence is performed using the method of the harmonic mean [3]_:
+Currently, calculation of the evidence is performed using the method of the harmonic mean :cite:`BayesModelSelection`:
 
 .. math:: p(\mathcal{D} \vert m_{i}) = \left[ \frac{1}{B} \sum_{b=1}^{B} \frac{1}{p(\mathcal{D} \vert m_{i}, \theta_{b})} \right]^{-1}
 
@@ -25,5 +25,3 @@ BayesModelSelection Class Descriptions
 
 .. autoclass:: UQpy.inference.BayesModelSelection
     :members:
-
-.. [3] A.E. Raftery, M.A. Newton, J.M. Satagopan and P.N. Krivitsky, "Estimating the Integrated Likelihood via Posterior Simulation Using the Harmonic Mean Identity", Bayesian Statistics 8, 2007

@@ -12,7 +12,7 @@ where :math:`M_{n_d}` is an :math:`n_d` dimensional array defining the coordinat
    :alt: Randomly generated point inside a 2-D simplex
    :align: center
 
-Additional details can be found in [8]_.
+Additional details can be found in :cite:`Simplex1`.
 
 Simplex Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -20,5 +20,3 @@ Simplex Class Descriptions
 .. autoclass:: UQpy.sampling.SimplexSampling
     :members:
     :private-members:
-
-.. [8] W. N. Edeling, R. P. Dwight, P. Cinnella, "Simplex-stochastic collocation method with improved scalability", Journal of Computational Physics, 310:301–328, 2016.

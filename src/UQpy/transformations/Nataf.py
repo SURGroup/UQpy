@@ -180,7 +180,7 @@ class Nataf:
         """
         Calculate the correlation matrix :math:`\mathbf{C_Z}` of the standard normal random vector
         :math:`\mathbf{Z}` given the correlation matrix :math:`\mathbf{C_X}` of the random vector :math:`\mathbf{X}`
-        using the `ITAM` method [3]_.
+        using the `ITAM` method :cite:`StochasticProcess13`.
 
         :param distributions:  Probability distribution of each random variable. Must be an object of type
          :class:`.DistributionContinuous1D` or :class:`.JointIndependent`.
@@ -189,7 +189,7 @@ class Nataf:
          Default: The ``identity`` matrix.
         :param itam_max_iter: Maximum number of iterations for the ITAM method. Default: 100
         :param itam_beta: A parameters selected to optimize convergence speed and desired accuracy of the ITAM method
-         (see [2]_). Default: 1.0
+         (see :cite:`Nataf2`). Default: 1.0
         :param itam_threshold1: A threshold value for the relative difference between the non-Gaussian correlation
          function and the underlying Gaussian. Default: 0.001
         :param itam_threshold2: If ``corr_x`` is specified, this specifies the threshold value for the error difference

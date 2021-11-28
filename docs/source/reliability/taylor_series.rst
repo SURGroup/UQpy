@@ -3,7 +3,7 @@ Taylor Series
 
 :class:`.TaylorSeries` is a class that calculates the reliability  of a model using the First Order Reliability Method (FORM)
 or the Second Order Reliability Method (SORM) based on the first-order and second-order Taylor series expansion
-approximation of the performance function, respectively ([1]_, [2]_).
+approximation of the performance function, respectively (:cite:`TaylorSeries1`, :cite:`TaylorSeries2`).
 
 In FORM, the performance function is linearized according to
 
@@ -67,6 +67,3 @@ SORM
 
 .. autoclass:: UQpy.reliability.taylor_series.SORM
     :members:
-
-.. [1] R. Rackwitz and R. Fiessler, “Structural reliability under combined random load sequences”, Structural Safety, Vol. 22, no. 1, pp: 27–60, 1978.
-.. [2] K. Breitung, “Asymptotic approximations for multinormal integrals”, J. Eng. Mech., ASCE, Vol. 110, no. 3, pp: 357–367, 1984.

@@ -17,18 +17,11 @@ class DRAM(MCMC):
         samples_number_per_chain: int = None,
     ):
         """
-        Delayed Rejection Adaptive Metropolis algorithm
+        Delayed Rejection Adaptive Metropolis algorithm :cite:`Dram1` :cite:`MCMC2`
 
         In this algorithm, the proposal density is Gaussian and its covariance C is being updated from samples as
         C = sp * C_sample where C_sample is the sample covariance. Also, the delayed rejection scheme is applied, i.e,
         if a candidate is not accepted another one is generated from the proposal with covariance gamma_2 ** 2 * C.
-
-        **References:**
-
-        1. Heikki Haario, Marko Laine, Antonietta Mira, and Eero Saksman. "DRAM: Efficient adaptive mcmc".
-           Statistics and Computing, 16(4):339–354, 2006
-        2. R.C. Smith, "Uncertainty Quantification - Theory, Implementation and Applications", CS&E, 2014
-
 
         :param dram_input: Object that contains input data to the :class:`DRAM` class.
          (See :class:`.DramInput`)

@@ -2,7 +2,7 @@
 Stochatic Reduced Order Models - SROMs
 ----------------------------------------
 
-A SROM is a sample-based surrogate for probability models. An SROM takes a set of samples and attributes of a distribution and optimizes the sample probability weights according to the method in [1]_. More specifically, an SROM constructs a reduce order model for arbitrary random variables `X` as follows.
+A SROM is a sample-based surrogate for probability models. An SROM takes a set of samples and attributes of a distribution and optimizes the sample probability weights according to the method in :cite:`Surrogates1`. More specifically, an SROM constructs a reduce order model for arbitrary random variables `X` as follows.
 
 .. math:: \tilde{X} =  \begin{cases} x_1 & probability \text{  }p_1^{(opt)} \\ & \vdots \\ x_m & probability \text{  }p_m^{(opt)} \end{cases}
 
@@ -21,6 +21,3 @@ SROM Class Descriptions
 .. autoclass:: UQpy.surrogates.stochastic_reduced_order_models.SROM
     :members:
     :private-members:
-
-
-.. [1] M. Grigoriu, “Reduced order models for random functions. Application to stochastic problems”, Applied Mathematical Modelling, Volume 33, Issue 1, Pages 161-175, 2009.

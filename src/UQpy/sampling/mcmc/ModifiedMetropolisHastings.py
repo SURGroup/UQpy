@@ -19,16 +19,11 @@ class ModifiedMetropolisHastings(MCMC):
         samples_number_per_chain: PositiveInteger = None,
     ):
         """
-        Component-wise Modified Metropolis-Hastings algorithm.
+        Component-wise Modified Metropolis-Hastings algorithm. :cite:`SubsetSimulation`
 
-        In this algorithm, candidate samples are drawn separately in each dimension, thus the proposal consists of a list
-        of 1d distributions. The target pdf can be given as a joint pdf or a list of marginal pdfs in all dimensions. This
-        will trigger two different algorithms.
-
-        **References:**
-
-        1. S.-K. Au and J. L. Beck,“Estimation of small failure probabilities in high dimensions by subset simulation,”
-           Probabilistic Eng. Mech., vol. 16, no. 4, pp. 263–277, Oct. 2001.
+        In this algorithm, candidate samples are drawn separately in each dimension, thus the proposal consists of a
+        list of 1d distributions. The target pdf can be given as a joint pdf or a list of marginal pdfs in all
+        dimensions. This will trigger two different algorithms.
 
         :param mmh_input: Object that contains input data to the :class:`ModifiedMetropolisHastings` class.
          (See :class:`.MmhInput`)
