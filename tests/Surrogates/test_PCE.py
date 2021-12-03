@@ -42,8 +42,8 @@ def test_3():
     Test PCE coefficients w/ lasso
     """
     polynomial_basis = PolynomialBasis.create_total_degree_basis(dist, max_degree)
-    lasso = LassoRegression(polynomial_basis)
-    pce = PolynomialChaosExpansion(regression_method=lasso)
+    lasso = LassoRegression()
+    pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=lasso)
     pce.fit(x, y)
     assert round(pce.coefficients[0][0], 4) == 0.0004
 #
@@ -52,8 +52,8 @@ def test_4():
     Test PCE coefficients w/ ridge
     """
     polynomial_basis = PolynomialBasis.create_total_degree_basis(dist, max_degree)
-    ridge = RidgeRegression(polynomial_basis)
-    pce = PolynomialChaosExpansion(regression_method=ridge)
+    ridge = RidgeRegression()
+    pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=ridge)
     pce.fit(x, y)
     assert round(pce.coefficients[0][0], 4) == 0.0276
 #
@@ -62,8 +62,8 @@ def test_5():
     Test PCE coefficients w/ lstsq
     """
     polynomial_basis = PolynomialBasis.create_total_degree_basis(dist, max_degree)
-    least_squares = LeastSquareRegression(polynomial_basis)
-    pce = PolynomialChaosExpansion(regression_method=least_squares)
+    least_squares = LeastSquareRegression()
+    pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
     pce.fit(x, y)
     assert round(pce.coefficients[0][0], 4) == 0.2175
 #
@@ -72,8 +72,8 @@ def test_6():
     Test PCE prediction
     """
     polynomial_basis = PolynomialBasis.create_total_degree_basis(dist, max_degree)
-    least_squares = LeastSquareRegression(polynomial_basis)
-    pce = PolynomialChaosExpansion(regression_method=least_squares)
+    least_squares = LeastSquareRegression()
+    pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
     pce.fit(x, y)
     y_test = pce.predict(x_test)
     assert round(y_test[0][0], 4) == -0.1607
@@ -83,8 +83,8 @@ def test_7():
     Test Sobol indices
     """
     polynomial_basis = PolynomialBasis.create_total_degree_basis(dist, max_degree)
-    least_squares = LeastSquareRegression(polynomial_basis)
-    pce = PolynomialChaosExpansion(regression_method=least_squares)
+    least_squares = LeastSquareRegression()
+    pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
     pce.fit(x, y)
     pce_sensitivity = PceSensitivity(pce)
     first_order_sobol = pce_sensitivity.first_order_indices()
@@ -95,8 +95,8 @@ def test_8():
     Test Sobol indices
     """
     polynomial_basis = PolynomialBasis.create_total_degree_basis(dist, max_degree)
-    least_squares = LeastSquareRegression(polynomial_basis)
-    pce = PolynomialChaosExpansion(regression_method=least_squares)
+    least_squares = LeastSquareRegression()
+    pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
     pce.fit(x, y)
     pce_sensitivity = PceSensitivity(pce)
     total_order_sobol = pce_sensitivity.total_order_indices()
@@ -107,8 +107,8 @@ def test_9():
     Test Sobol indices
     """
     polynomial_basis = PolynomialBasis.create_total_degree_basis(dist, max_degree)
-    least_squares = LeastSquareRegression(polynomial_basis)
-    pce = PolynomialChaosExpansion(regression_method=least_squares)
+    least_squares = LeastSquareRegression()
+    pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
     pce.fit(x, y)
     pce_sensitivity = PceSensitivity(pce)
 
@@ -118,8 +118,8 @@ def test_10():
     Test Sobol indices
     """
     polynomial_basis = PolynomialBasis.create_total_degree_basis(dist, max_degree)
-    least_squares = LeastSquareRegression(polynomial_basis)
-    pce = PolynomialChaosExpansion(regression_method=least_squares)
+    least_squares = LeastSquareRegression()
+    pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
     pce.fit(x, y)
     pce_sensitivity = PceSensitivity(pce)
     with pytest.raises(ValueError):
@@ -130,8 +130,8 @@ def test_11():
     PCE mean
     """
     polynomial_basis = PolynomialBasis.create_total_degree_basis(dist, max_degree)
-    least_squares = LeastSquareRegression(polynomial_basis)
-    pce = PolynomialChaosExpansion(regression_method=least_squares)
+    least_squares = LeastSquareRegression()
+    pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
     pce.fit(x, y)
     mean, _ = pce.get_moments()
     assert round(mean, 3) == 0.218
@@ -141,8 +141,8 @@ def test_12():
     PCE variance
     """
     polynomial_basis = PolynomialBasis.create_total_degree_basis(dist, max_degree)
-    least_squares = LeastSquareRegression(polynomial_basis)
-    pce = PolynomialChaosExpansion(regression_method=least_squares)
+    least_squares = LeastSquareRegression()
+    pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
     pce.fit(x, y)
     _, variance = pce.get_moments()
     assert round(variance, 3) == 0.185
@@ -180,8 +180,8 @@ x_2 = joint.rvs(n_samples_2)
 y_2 = function(x_2)
 
 polynomial_basis = PolynomialBasis.create_total_degree_basis(joint, 2)
-least_squares = LeastSquareRegression(polynomial_basis)
-pce_2 = PolynomialChaosExpansion(regression_method=least_squares)
+least_squares = LeastSquareRegression()
+pce_2 = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
 pce_2.fit(x_2, y_2)
 
 def test_17():

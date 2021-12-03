@@ -26,8 +26,8 @@ class PceSensitivity:
         """
         outputs_number = np.shape(self.pce.coefficients)[1]
         variance = self.pce.get_moments()[1]
-        inputs_number = self.pce.regression_method.polynomial_basis.inputs_number
-        multi_index_set = self.pce.regression_method.polynomial_basis.multi_index_set
+        inputs_number = self.pce.inputs_number
+        multi_index_set = self.pce.multi_index_set
 
         first_order_indices = np.zeros([inputs_number, outputs_number])
         # take all multi-indices except 0-index
@@ -50,8 +50,8 @@ class PceSensitivity:
         """
         outputs_number = np.shape(self.pce.coefficients)[1]
         variance = self.pce.get_moments()[1]
-        inputs_number = self.pce.regression_method.polynomial_basis.inputs_number
-        multi_index_set = self.pce.regression_method.polynomial_basis.multi_index_set
+        inputs_number = self.pce.inputs_number
+        multi_index_set = self.pce.multi_index_set
 
         total_order_indices = np.zeros([inputs_number, outputs_number])
         for nn in range(inputs_number):
@@ -70,7 +70,7 @@ class PceSensitivity:
 
         :return: Generalized first order Sobol indices.
         """
-        inputs_number = self.pce.regression_method.polynomial_basis.inputs_number
+        inputs_number = self.pce.inputs_number
         if inputs_number == 1:
             raise ValueError('Not applicable for scalar model outputs.')
 
@@ -90,7 +90,7 @@ class PceSensitivity:
 
         :return: Generalized total order Sobol indices.
         """
-        inputs_number = self.pce.regression_method.polynomial_basis.inputs_number
+        inputs_number = self.pce.inputs_number
 
         if inputs_number == 1:
             raise ValueError('Not applicable for scalar model outputs.')
