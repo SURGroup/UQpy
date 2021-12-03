@@ -6,27 +6,17 @@ from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Re
 
 class LeastSquareRegression(Regression):
 
-    def __init__(self, polynomial_basis: PolynomialBasis):
-        """
-        Class to calculate the polynomial_chaos coefficients via the least-squares solution to
-        the linear matrix equation. The equation may be under-, well-, or over-determined.
-
-
-        :param polynomial_basis: Object from the 'Polynomial' class
-        """
-        super().__init__(polynomial_basis)
-
-    def run(self, x, y):
+    def run(self, x, y, design_matrix):
         """
         Least squares solution to compute the polynomial_chaos coefficients.
 
         :param x: `ndarray` containing the training points (samples).
         :param y: `ndarray` containing the model evaluations (labels) at the training points.
+        :param design_matrix: matrix containing the evaluation of the polynomials at the input points x.
         :return: Returns the polynomial_chaos coefficients.
         """
-        a = self.polynomial_basis.evaluate_basis(x)
-        c_, res, rank, sing = np.linalg.lstsq(a, y)
+        c_, res, rank, sing = np.linalg.lstsq(design_matrix, y)
         if c_.ndim == 1:
             c_ = c_.reshape(-1, 1)
 
-        return c_, None
+        return c_, None, np.shape(c_)[1]

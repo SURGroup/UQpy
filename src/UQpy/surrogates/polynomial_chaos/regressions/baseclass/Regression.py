@@ -5,9 +5,6 @@ from UQpy.surrogates.polynomial_chaos.polynomials.PolynomialBasis import Polynom
 
 class Regression(ABC):
 
-    def __init__(self, polynomial_basis: PolynomialBasis):
-        self.polynomial_basis = polynomial_basis
-
     @abstractmethod
-    def run(self, x, y):
+    def run(self, x, y, polynomial_basis):
         pass
