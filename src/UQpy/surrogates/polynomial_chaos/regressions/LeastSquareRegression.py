@@ -15,7 +15,7 @@ class LeastSquareRegression(Regression):
         :param design_matrix: matrix containing the evaluation of the polynomials at the input points x.
         :return: Returns the polynomial_chaos coefficients.
         """
-        c_, res, rank, sing = np.linalg.lstsq(design_matrix, y)
+        c_, res, rank, sing = np.linalg.lstsq(design_matrix, np.array(y), rcond=None)
         if c_.ndim == 1:
             c_ = c_.reshape(-1, 1)
 

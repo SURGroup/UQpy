@@ -53,6 +53,7 @@ class Rectangular(Strata):
         self.widths = widths
         """An array of dimension `N x n` specifying the widths of all strata in each dimension."""
         self.stratification_criterion = stratification_criterion
+        self.stratified=False
 
     def stratify(self, random_state):
         """
@@ -92,7 +93,7 @@ class Rectangular(Strata):
             self.widths = np.divide(np.ones(self.seeds.shape), self.strata_number)
 
         self.volume = np.prod(self.widths, axis=1)
-
+        self.stratified=True
         self.logger.info("UQpy: Rectangular stratification created.")
 
     @staticmethod

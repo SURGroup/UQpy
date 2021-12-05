@@ -42,6 +42,7 @@ class Delaunay(Strata):
         self.centroids = []
         """A list of the vertices for each Voronoi stratum on the unit hypercube."""
         self.logger = logging.getLogger(__name__)
+        self.stratified=False
 
         if self.seeds is not None:
             if self.seeds_number is not None or self.dimension is not None:
@@ -77,7 +78,7 @@ class Delaunay(Strata):
             self.centroids = np.vstack([self.centroids, cent])
             self.volume = np.hstack([self.volume, np.array([vol])])
             count = count + 1
-
+        self.stratified=True
         self.logger.info("UQpy: Delaunay stratification created.")
 
     @staticmethod

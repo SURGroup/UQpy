@@ -56,7 +56,8 @@ class StratifiedSampling:
         self.distributions = distributions
         self.random_state = process_random_state(random_state)
 
-        self.strata_object.stratify(self.random_state)
+        if not self.strata_object.stratified:
+            self.strata_object.stratify(self.random_state)
         self.strata_object.check_centered(samples_number)
         self.logger.info("UQpy: Stratified_sampling object is created")
 

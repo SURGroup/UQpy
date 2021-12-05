@@ -26,7 +26,7 @@ def test_dmaps_swiss_roll():
                                            is_sparse=True, neighbors_number=100,
                                            kernel=GaussianKernel(epsilon=0.03))
 
-    diff_coords, evals, evecs = dmaps.mapping()
+    diff_coords, evals, evecs = dmaps.fit()
 
     assert round(evals[0], 9) == 1.0
     assert round(evals[1], 9) == 0.999489295
@@ -59,7 +59,7 @@ def test_dmaps_circular():
     dmaps = DiffusionMaps.create_from_data(data=X, alpha=1, eigenvectors_number=3,
                                            kernel=GaussianKernel(epsilon=0.3))
 
-    diff_coords, evals, evecs = dmaps.mapping()
+    diff_coords, evals, evecs = dmaps.fit()
 
     assert evals[0] == 1.0000000000000002
     assert evals[1] == 0.9964842223723996
@@ -98,7 +98,7 @@ def test_diff_matrices():
 
     dmaps = DiffusionMaps.create_from_data(data=samples, alpha=0.5, eigenvectors_number=10)
 
-    diff_coords, evals, evecs = dmaps.mapping()
+    diff_coords, evals, evecs = dmaps.fit()
 
     assert evals[0] == 1.0000000000000004
     assert evals[1] == 0.12956887787384186

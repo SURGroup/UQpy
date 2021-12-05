@@ -71,7 +71,7 @@ class ExpectedFeasibility(LearningFunction):
         self, distributions, n_add, surrogate, population, qoi=None, samples=None
     ):
 
-        g, sig = surrogate.predict(population, )
+        g, sig = surrogate.predict(population, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array
         g = g.reshape([population.shape[0], 1])

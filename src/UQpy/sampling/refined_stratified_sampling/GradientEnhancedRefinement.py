@@ -1,6 +1,7 @@
 from ctypes import Union
 
 from beartype import beartype
+from sklearn.gaussian_process import GaussianProcessRegressor
 
 from UQpy.surrogates.baseclass import Surrogate
 from UQpy.utilities.ValidationTypes import *
@@ -16,7 +17,7 @@ class GradientEnhancedRefinement(Refinement):
         self,
         strata: Strata,
         runmodel_object: RunModel,
-        surrogate: Surrogate,
+        surrogate: Union[Surrogate, GaussianProcessRegressor],
         nearest_points_number: int = None,
         qoi_name: str = None,
         step_size: float = 0.005,

@@ -209,3 +209,4 @@ def test_del_strata_object():
     """
     with pytest.raises(BeartypeCallHintPepParamException):
         StratifiedSampling(distributions=marginals, strata_object=None)
+

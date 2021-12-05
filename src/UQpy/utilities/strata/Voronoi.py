@@ -45,6 +45,7 @@ class Voronoi(Strata):
         self.dimension = dimension
         self.decomposition_iterations = decomposition_iterations
         self.voronoi = None
+        self.stratified = False
         """
         Defines a Voronoi decomposition of the set of reflected points. When creating the Voronoi decomposition on
         the unit hypercube, the code reflects the points on the unit hypercube across all faces of the unit hypercube.
@@ -87,7 +88,7 @@ class Voronoi(Strata):
                 self.volume = np.asarray(vol)
 
         self.seeds = initial_seeds
-
+        self.stratified = True
         self.logger.info("UQpy: Voronoi stratification created.")
 
     def create_volume(self, initial_seeds):
@@ -187,6 +188,7 @@ class Voronoi(Strata):
                 len(self.vertices)
         ):  # For each bounded region (Voronoi stratification)
             vertices = self.vertices[j][:-1, :]
+            print(j)
             seed = self.seeds[j, :].reshape(1, -1)
             seed_and_vertices = np.concatenate([vertices, seed])
 
@@ -214,6 +216,7 @@ class Voronoi(Strata):
 
             self.extend_weights(samples_per_stratum_number, j, weights)
         return samples_in_strata, weights
+
 
     def compute_centroids(self):
         if self.mesh is None:
@@ -319,7 +322,15 @@ class Voronoi(Strata):
         self.dy_dx_old = dy_dx
 
     def estimate_gradient(
-            self, index, dimension, samples_u01, training_points, qoi, max_train_size
+            self,
+            surrogate,
+            step_size,
+            samples_number,
+            index,
+            samples_u01,
+            training_points,
+            qoi,
+            max_train_size=None,
     ):
         self.mesh.centroids = np.zeros([self.mesh.nsimplex, self.dimension])
         self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
@@ -343,12 +354,19 @@ class Voronoi(Strata):
         if (
                 max_train_size is None
                 or len(training_points) <= max_train_size
-                or index == self.training_points.shape[0]
+                or index == training_points.shape[0]
         ):
+            from UQpy.utilities.Utilities import calculate_gradient
             # Use the entire sample set to train the surrogate model (more expensive option)
-            dy_dx = self.estimate_gradient(
-                np.atleast_2d(self.training_points), qoi, self.mesh.centroids
+            dy_dx = calculate_gradient(
+                surrogate,
+                step_size,
+                np.atleast_2d(training_points),
+                np.atleast_2d(np.array(qoi)),
+                self.mesh.centroids,
             )
+            # dy_dx = self.calculate_gradient(
+            #     np.atleast_2d(training_points), qoi, self.mesh.centroids, surrogate)
         else:
             # Use only max_train_size points to train the surrogate model (more economical option)
             # Build a mapping from the new vertex indices to the old vertex indices.
