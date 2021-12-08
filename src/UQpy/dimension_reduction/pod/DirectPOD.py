@@ -5,52 +5,31 @@ import logging
 
 
 class DirectPOD:
-    """
-    Direct POD child class generates a set of spatial modes and time coefficients to approximate the solution.
-
-    **Input:**
-
-    * **input_sol** (`ndarray`) or (`list`):
-        Second order tensor or list containing the solution snapshots. Third dimension or length of list corresponds
-        to the number of snapshots.
-
-    * **modes** (`int`):
-        Number of POD modes used to approximate the input solution. Must be less than or equal
-        to the number of grid points.
-
-    * **reconstr_perc** (`float`):
-        Dataset reconstruction percentage.
-
-    **Methods:**
-    """
-
     def __init__(
         self,
         solution_snapshots: Union[np.ndarray, list],
         modes: int = 10 ** 10,
         reconstruction_percentage: float = 10 ** 10,
     ):
+        """
+
+        :param solution_snapshots: Second order tensor or list containing the solution snapshots. Third dimension or
+         length of list corresponds to the number of snapshots.
+        :param modes: Number of POD modes used to approximate the input solution. Must be less than or equal to the
+         number of grid points.
+        :param reconstruction_percentage: Dataset reconstruction percentage.
+        """
         self.logger = logging.getLogger(__name__)
         self.modes = modes
         self.solution_snapshots = solution_snapshots
         self.reconstruction_percentage = reconstruction_percentage
 
     def run(self):
-
-        """
-        Executes the Direct POD method in the ''Direct'' class.
-
-        **Output/Returns:**
-
-        * **reconstructed_solutions** (`ndarray`):
-            Second order tensor containing the reconstructed solution snapshots in their initial spatial and
-            temporal dimensions.
-
-        * **reduced_solutions** (`ndarray`):
-            An array containing the solution snapshots reduced in the spatial dimension.
-
         """
 
+        :return: Second order tensor containing the reconstructed solution snapshots in their initial spatial and
+         temporal dimensions and an array containing the solution snapshots reduced in the spatial dimension.
+        """
         if type(self.solution_snapshots) == list:
             rows = self.solution_snapshots[0].shape[0]
             columns = self.solution_snapshots[0].shape[1]

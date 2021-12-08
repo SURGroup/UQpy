@@ -5,25 +5,6 @@ import numpy as np
 
 
 class SnapshotPOD:
-    """
-    Snapshot POD child class generates a set of temporal modes and spatial coefficients to approximate the solution.
-    (Faster that direct POD)
-
-    **Input:**
-
-    * **input_sol** (`ndarray`) or (`list`):
-        Second order tensor or list containing the solution snapshots. Third dimension or length of list corresponds
-        to the number of snapshots.
-
-    * **modes** (`int`):
-        Number of POD modes used to approximate the input solution. Must be less than or equal
-        to the number of grid points.
-
-    * **reconstr_perc** (`float`):
-        Dataset reconstruction percentage.
-
-    **Methods:**
-   """
 
     def __init__(
         self,
@@ -31,7 +12,16 @@ class SnapshotPOD:
         modes: int = 10 ** 10,
         reconstruction_percentage: float = 10 ** 10,
     ):
+        """
+        Snapshot POD child class generates a set of temporal modes and spatial coefficients to approximate the solution.
+        (Faster that direct POD)
 
+        :param solution_snapshots: Second order tensor or list containing the solution snapshots. Third dimension or
+         length of list corresponds to the number of snapshots.
+        :param modes: Number of POD modes used to approximate the input solution. Must be less than or equal
+         to the number of grid points.
+        :param reconstruction_percentage: Dataset reconstruction percentage.
+        """
         self.solution_snapshots = solution_snapshots
         self.logger = logging.getLogger(__name__)
         self.modes = modes
@@ -41,15 +31,8 @@ class SnapshotPOD:
         """
         Executes the Snapshot POD method in the ''Snapshot'' class.
 
-        **Output/Returns:**
-
-        * **reconstructed_solutions** (`ndarray`):
-            Second order tensor containing the reconstructed solution snapshots in their initial spatial and
-            temporal dimensions.
-
-        * **reduced_solutions** (`ndarray`):
-            An array containing the solution snapshots reduced in the temporal dimension.
-
+        :return: Second order tensor containing the reconstructed solution snapshots in their initial spatial and
+         temporal dimensions and an array containing the solution snapshots reduced in the temporal dimension.
         """
         if type(self.solution_snapshots) == list:
             rows = self.solution_snapshots[0].shape[0]
