@@ -11,6 +11,7 @@ from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 
 
 class Grassmann:
+    @beartype
     def __init__(self, manifold_projected_points: ManifoldProjection):
         """
 

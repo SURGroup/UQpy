@@ -1,4 +1,5 @@
 import sys
+from typing import Union
 
 from beartype import beartype
 
@@ -20,7 +21,7 @@ class SvdProjection(ManifoldProjection):
     def __init__(
         self,
         data: list[Numpy2DFloatArray],
-        p: int,
+        p: Union[int,str],
         tol: float = None,
         kernel_composition: KernelComposition = KernelComposition.LEFT,
     ):
@@ -56,10 +57,12 @@ class SvdProjection(ManifoldProjection):
         for i in range(points_number):
             ranks.append(np.linalg.matrix_rank(data[i], tol=self.tolerance))
 
-        if p == 0:
+        if p is str and p == "min":
             p = int(min(ranks))
-        elif p == sys.maxsize:
+        elif p is str and p == "max":
             p = int(max(ranks))
+        elif p is str:
+            raise ValueError("The input parameter p must me either 'min', 'max' or a integer.")
         else:
             for i in range(points_number):
                 if min(np.shape(data[i])) < p:
