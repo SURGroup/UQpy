@@ -1,12 +1,18 @@
 from beartype import beartype
 
 from UQpy.sampling.refined_stratified_sampling.baseclass.Refinement import *
+from UQpy.utilities import Voronoi
 
 
 class SimpleRefinement(Refinement):
+
     @beartype
     def __init__(self, strata):
         self.strata = strata
+
+    def update_strata(self, samplesU01):
+        if isinstance(self.strata, Voronoi):
+            self.strata = Voronoi(seeds=samplesU01)
 
     def initialize(self, samples_number, training_points, samples):
         self.strata.initialize(samples_number, training_points)
@@ -31,8 +37,7 @@ class SimpleRefinement(Refinement):
             random_state=random_state,
         )
 
-        new_points = self.strata.update_strata_and_generate_samples(
-            dimension, points_to_add, bins2break, samples_u01, random_state
-        )
+        new_points = self.strata.update_strata_and_generate_samples(dimension, points_to_add, bins2break,
+                                                                    samples_u01, random_state)
 
         return new_points

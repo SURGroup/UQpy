@@ -15,6 +15,7 @@ class Rectangular(Strata):
         input_file: str = None,
         seeds: Union[None, np.ndarray] = None,
         widths=None,
+        random_state=None,
         stratification_criterion: StratificationCriterion = StratificationCriterion.RANDOM,
     ):
         """
@@ -41,7 +42,7 @@ class Rectangular(Strata):
 
         The user must pass one of `strata_number` OR `input_file` OR `seeds` and `widths`
         """
-        super().__init__(seeds=seeds, stratification_criterion=stratification_criterion)
+        super().__init__(seeds=seeds, stratification_criterion=stratification_criterion, random_state=random_state)
 
         self.gradients = None
         self.logger = logging.getLogger(__name__)
@@ -53,13 +54,12 @@ class Rectangular(Strata):
         self.widths = widths
         """An array of dimension `N x n` specifying the widths of all strata in each dimension."""
         self.stratification_criterion = stratification_criterion
-        self.stratified=False
+        self.stratify()
 
-    def stratify(self, random_state):
+    def stratify(self):
         """
         Performs the rectangular stratification.
 
-        :param random_state: A random state of either int or numpy.RandomState object required for stratification
         """
         self.logger.info("UQpy: Creating Rectangular stratification ...")
 
@@ -67,9 +67,8 @@ class Rectangular(Strata):
             if self.input_file is None:
                 if self.widths is None or self.seeds is None:
                     raise RuntimeError(
-                        "UQpy: The strata are not fully defined. Must provide `n_strata`, `input_file`, "
-                        "or `seeds` and `widths`."
-                    )
+                        "UQpy: The strata are not fully defined. Must provide `strata_number`, `input_file`, "
+                        "or `seeds` and `widths`.")
 
             else:
                 # Read the strata from the specified input file
@@ -87,13 +86,10 @@ class Rectangular(Strata):
 
         # Define a rectilinear stratification by specifying the number of strata in each dimension via nstrata
         else:
-            self.seeds = np.divide(
-                self.fullfact(self.strata_number), self.strata_number
-            )
+            self.seeds = np.divide(self.fullfact(self.strata_number), self.strata_number)
             self.widths = np.divide(np.ones(self.seeds.shape), self.strata_number)
 
         self.volume = np.prod(self.widths, axis=1)
-        self.stratified=True
         self.logger.info("UQpy: Rectangular stratification created.")
 
     @staticmethod

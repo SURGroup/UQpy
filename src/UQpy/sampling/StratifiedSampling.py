@@ -1,5 +1,7 @@
 import logging
 from beartype import beartype
+from numpy.random import RandomState
+
 from UQpy.distributions import DistributionContinuous1D, JointIndependent
 from UQpy.utilities.strata.baseclass.Strata import Strata
 from UQpy.utilities.ValidationTypes import *
@@ -10,9 +12,7 @@ class StratifiedSampling:
     @beartype
     def __init__(
         self,
-        distributions: Union[
-            DistributionContinuous1D, JointIndependent, list[DistributionContinuous1D]
-        ],
+        distributions: Union[DistributionContinuous1D, JointIndependent, list[DistributionContinuous1D]],
         strata_object: Strata,
         samples_per_stratum_number: Union[int, list[int]] = None,
         samples_number: int = None,
@@ -54,21 +54,20 @@ class StratifiedSampling:
         """The generated samples on the unit hypercube."""
 
         self.distributions = distributions
-        self.random_state = process_random_state(random_state)
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+        if self.random_state is None:
+            self.random_state = self.strata_object.random_state
 
-        if not self.strata_object.stratified:
-            self.strata_object.stratify(self.random_state)
         self.strata_object.check_centered(samples_number)
         self.logger.info("UQpy: Stratified_sampling object is created")
 
-        if (
-            self.samples_per_stratum_number is not None
-            or self.samples_number is not None
-        ):
-            self.run(
-                samples_per_stratum_number=self.samples_per_stratum_number,
-                samples_number=self.samples_number,
-            )
+        if self.samples_per_stratum_number is not None or self.samples_number is not None:
+            self.run(samples_per_stratum_number=self.samples_per_stratum_number,
+                     samples_number=self.samples_number)
 
     def transform_samples(self, samples01):
         """
@@ -79,7 +78,7 @@ class StratifiedSampling:
         :return `ndarray` containing the generated samples following the prescribed distribution.
         """
         samples_u_to_x = np.zeros_like(samples01)
-        for j in range(0, samples01.shape[1]):
+        for j in range(samples01.shape[1]):
             samples_u_to_x[:, j] = self.distributions[j].icdf(samples01[:, j])
 
         self.samples = samples_u_to_x
@@ -132,27 +131,17 @@ class StratifiedSampling:
 
     def _run_checks(self):
         if self.samples_number is not None:
-            self.samples_per_stratum_number = (
-                self.strata_object.volume * self.samples_number
-            ).round()
+            self.samples_per_stratum_number = (self.strata_object.volume * self.samples_number).round()
 
         if self.samples_per_stratum_number is not None:
             if isinstance(self.samples_per_stratum_number, int):
-                self.samples_per_stratum_number = [
-                    self.samples_per_stratum_number
-                ] * self.strata_object.volume.shape[0]
+                self.samples_per_stratum_number = [self.samples_per_stratum_number] * \
+                                                  self.strata_object.volume.shape[0]
             elif isinstance(self.samples_per_stratum_number, list):
-                if (
-                    len(self.samples_per_stratum_number)
-                    != self.strata_object.volume.shape[0]
-                ):
-                    raise ValueError(
-                        "UQpy: Length of 'nsamples_per_stratum' must match the number of strata."
-                    )
+                if len(self.samples_per_stratum_number) != self.strata_object.volume.shape[0]:
+                    raise ValueError("UQpy: Length of 'samples_per_stratum_number' must match the number of strata.")
             elif self.samples_number is None:
-                raise ValueError(
-                    "UQpy: 'nsamples_per_stratum' must be an integer or a list."
-                )
+                raise ValueError("UQpy: 'samples_per_stratum_number' must be an integer or a list.")
         else:
             self.samples_per_stratum_number = [1] * self.strata_object.volume.shape[0]
 

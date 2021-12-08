@@ -33,6 +33,7 @@ class RefinedStratifiedSampling:
         self.stratified_sampling = stratified_sampling
         self.samples_per_iteration = samples_per_iteration
         self.refinement_algorithm = refinement_algorithm
+        self.refinement_algorithm.update_strata(stratified_sampling.samplesU01)
         self.training_points = self.stratified_sampling.samplesU01
         self.samplesU01 = self.stratified_sampling.samplesU01
         """The generated samples on the unit hypercube."""
@@ -44,7 +45,13 @@ class RefinedStratifiedSampling:
 
         self.samples_number = samples_number
 
-        self.random_state = process_random_state(random_state)
+        self.random_state = random_state
+        if isinstance(self.random_state, int):
+            self.random_state = np.random.RandomState(self.random_state)
+        elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
+            raise TypeError('UQpy: random_state must be None, an int or an np.random.Generator object.')
+        if self.random_state is None:
+            self.random_state = self.stratified_sampling.random_state
 
         if self.samples_number is not None:
             self.run(samples_number=self.samples_number)

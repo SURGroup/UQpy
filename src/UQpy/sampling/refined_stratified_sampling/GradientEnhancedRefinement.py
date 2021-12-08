@@ -8,6 +8,7 @@ from UQpy.utilities.ValidationTypes import *
 from UQpy.RunModel import RunModel
 from UQpy.sampling.refined_stratified_sampling.baseclass.Refinement import *
 from UQpy.utilities.Utilities import gradient
+from UQpy.utilities.strata import Voronoi
 from UQpy.utilities.strata.baseclass import Strata
 
 
@@ -30,12 +31,14 @@ class GradientEnhancedRefinement(Refinement):
         self.dy_dx = 0
         self.surrogate = surrogate
 
-    def initialize(self, nsamples, training_points, samples):
+    def update_strata(self, samplesU01):
+        if isinstance(self.strata, Voronoi):
+            self.strata = Voronoi(seeds=samplesU01)
 
+    def initialize(self, samples_number, training_points, samples):
         self.runmodel_object.run(samples)
-
-        self.dy_dx = np.zeros((nsamples, np.size(training_points[1])))
-        self.strata.initialize(nsamples, training_points)
+        self.dy_dx = np.zeros((samples_number, np.size(training_points[1])))
+        self.strata.initialize(samples_number, training_points)
 
     def update_samples(
         self,
@@ -64,19 +67,15 @@ class GradientEnhancedRefinement(Refinement):
         bins2break = self.identify_bins(
             strata_metrics=strata_metrics,
             points_to_add=points_to_add,
-            random_state=random_state,
-        )
+            random_state=random_state,)
 
         new_points = self.strata.update_strata_and_generate_samples(
-            dimension, points_to_add, bins2break, samples_u01, random_state
-        )
+            dimension, points_to_add, bins2break, samples_u01, random_state)
 
         return new_points
 
     def finalize(self, samples, samples_per_iteration):
-        self.runmodel_object.run(
-            samples=np.atleast_2d(samples[-samples_per_iteration:]), append_samples=True
-        )
+        self.runmodel_object.run(samples=np.atleast_2d(samples[-samples_per_iteration:]), append_samples=True)
 
     def _convert_qoi_tolist(self):
         qoi = [None] * len(self.runmodel_object.qoi_list)

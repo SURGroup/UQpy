@@ -17,7 +17,8 @@ class Delaunay(Strata):
         seeds: np.ndarray = None,
         seeds_number: int = None,
         dimension: np.ndarray = None,
-        stratification_criterion: StratificationCriterion = StratificationCriterion.RANDOM
+        random_state=None,
+        stratification_criterion: StratificationCriterion = StratificationCriterion.RANDOM,
     ):
         """
         Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling
@@ -32,8 +33,9 @@ class Delaunay(Strata):
         :param dimension: The dimension of the unit hypercube in which to generate random seeds. Used only if
          `seeds_number` is provided. The user must provide `seeds` or `seeds_number` and `dimension`
         """
-        super().__init__(seeds=seeds, stratification_criterion=stratification_criterion)
+        super().__init__(seeds=seeds, stratification_criterion=stratification_criterion, random_state=random_state)
 
+        self.random_state = random_state
         self.stratification_criterion = stratification_criterion
         self.seeds_number = seeds_number
         self.dimension = dimension
@@ -49,7 +51,9 @@ class Delaunay(Strata):
                 print("UQpy: Ignoring 'seeds_number' and 'dimension' attributes because 'seeds' are provided")
             self.seeds_number, self.dimension = self.seeds.shape[0], self.seeds.shape[1]
 
-    def stratify(self, random_state):
+        self.stratify()
+
+    def stratify(self):
         import itertools
         from scipy.spatial import Delaunay
 
@@ -58,7 +62,7 @@ class Delaunay(Strata):
         initial_seeds = self.seeds
         if self.seeds is None:
             initial_seeds = stats.uniform.rvs(
-                size=[self.seeds_number, self.dimension], random_state=random_state
+                size=[self.seeds_number, self.dimension], random_state=self.random_state
             )
 
         # Modify seeds to include corner points of (0,1) space
@@ -71,13 +75,11 @@ class Delaunay(Strata):
         self.delaunay = Delaunay(initial_seeds)
         self.centroids = np.zeros([0, self.dimension])
         self.volume = np.zeros([0])
-        count = 0
-        for sim in self.delaunay.simplices:  # extract simplices from Delaunay triangulation
+        for count, sim in enumerate(self.delaunay.simplices):  # extract simplices from Delaunay triangulation
             # pylint: disable=E1136
             cent, vol = self.compute_delaunay_centroid_volume(self.delaunay.points[sim])
             self.centroids = np.vstack([self.centroids, cent])
             self.volume = np.hstack([self.volume, np.array([vol])])
-            count = count + 1
         self.stratified=True
         self.logger.info("UQpy: Delaunay stratification created.")
 
@@ -99,16 +101,11 @@ class Delaunay(Strata):
 
     def sample_strata(self, samples_per_stratum_number, random_state):
         samples_in_strata, weights = [], []
-        count = 0
-        for (
-            simplex
-        ) in self.delaunay.simplices:  # extract simplices from Delaunay triangulation
+        for count, simplex in enumerate(self.delaunay.simplices):  # extract simplices from Delaunay triangulation
             samples_temp = SimplexSampling(
                 nodes=self.delaunay.points[simplex],
                 samples_number=int(samples_per_stratum_number[count]),
-                random_state=random_state,
-            )
+                random_state=random_state)
             samples_in_strata.append(samples_temp.samples)
             self.extend_weights(samples_per_stratum_number, count, weights)
-            count = count + 1
         return samples_in_strata, weights
