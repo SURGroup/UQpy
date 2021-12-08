@@ -3,10 +3,10 @@ import pytest
 from beartype.roar import BeartypeCallHintPepParamException
 
 from UQpy.distributions.collection import *
-from UQpy.utilities.strata.Rectangular import Rectangular
-from UQpy.utilities.strata.Voronoi import Voronoi
+from UQpy.utilities.strata.RectangularStrata import Rectangular
+from UQpy.utilities.strata.VoronoiStrata import Voronoi
 from UQpy.sampling.StratifiedSampling import *
-from UQpy.utilities.strata.Delaunay import *
+from UQpy.utilities.strata.DelaunayStrata import *
 
 
 def test_rectangular_sts():

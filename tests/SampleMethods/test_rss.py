@@ -4,10 +4,10 @@ from beartype.roar import BeartypeCallHintPepParamException
 
 from UQpy import GradientEnhancedRefinement
 from UQpy.distributions.collection.Uniform import Uniform
-from UQpy.utilities.strata.Rectangular import Rectangular
+from UQpy.utilities.strata.RectangularStrata import Rectangular
 from UQpy.sampling.RefinedStratifiedSampling import *
 from UQpy.sampling.refined_stratified_sampling.SimpleRefinement import *
-from UQpy.utilities.strata.Voronoi import *
+from UQpy.utilities.strata.VoronoiStrata import *
 from UQpy.RunModel import *
 from UQpy.surrogates.kriging.Kriging import Kriging
 

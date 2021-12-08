@@ -1,7 +1,7 @@
 import logging
 import math
 
-from UQpy.utilities.strata.Delaunay import Delaunay
+from UQpy.utilities.strata.DelaunayStrata import Delaunay
 from UQpy.utilities.strata.baseclass.Strata import Strata
 from UQpy.utilities.strata.StratificationCriterion import StratificationCriterion
 from UQpy.sampling.SimplexSampling import *
@@ -206,7 +206,7 @@ class Voronoi(Strata):
         self.mesh.centroids = np.zeros([self.mesh.nsimplex, self.dimension])
         self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
         from scipy.spatial import qhull, ConvexHull
-        from UQpy.utilities.strata.Delaunay import Delaunay
+        from UQpy.utilities.strata.DelaunayStrata import Delaunay
 
         for j in range(self.mesh.nsimplex):
             try:
