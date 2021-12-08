@@ -8,39 +8,38 @@ from UQpy.dimension_reduction.distances.baseclass import RiemannianDistance
 
 class ManifoldInterpolation:
 
-    def __init__(self, interpolation_method: InterpolationMethod):
+    def __init__(self, interpolation_method: InterpolationMethod,
+                 manifold_data: list[GrassmannPoint],
+                 optimization_method: OptimizationMethod,
+                 coordinates: list[NumpyFloatArray],
+                 distance: RiemannianDistance):
         """
         A class to perform interpolation of points on the Grassmann manifold.
 
         :param interpolation_method: Type of interpolation.
+        :param manifold_data: Data on the Grassmann manifold.
+        :param optimization_method: Optimization method for calculating the Karcher mean.
+        :param coordinates: Nodes of the interpolant.
+        :param distance:  Distance metric.
         """
         self.interpolation_method = interpolation_method
 
-    def interpolate_manifold(self, manifold_data: list[GrassmannPoint],
-                             coordinate_to_interpolate: NumpyFloatArray,
-                             coordinates: list[NumpyFloatArray],
-                             optimization_method: OptimizationMethod, distance: RiemannianDistance):
-        """
+        self.mean = Grassmann.karcher_mean(manifold_points=manifold_data,
+                                           optimization_method=optimization_method,
+                                           distance=distance)
 
-        :param manifold_data: Data on the Grassmann manifold.
+        self.tangent_points = Grassmann.log_map(manifold_points=manifold_data,
+                                                reference_point=self.mean)
+
+        self.interpolation_method.fit(coordinates=coordinates,
+                                      manifold_data=manifold_data,
+                                      samples=self.tangent_points)
+
+    def interpolate_manifold(self, coordinate_to_interpolate: NumpyFloatArray,):
+        """
         :param coordinate_to_interpolate:  Point to interpolate.
-        :param coordinates: Nodes of the interpolant.
-        :param optimization_method: Optimization method for calculating the Karcher mean.
-        :param distance:  Distance metric.
-
         """
-        mean = Grassmann.karcher_mean(manifold_points=manifold_data,
-                                      optimization_method=optimization_method,
-                                      distance=distance)
 
-        tangent_points = Grassmann.log_map(manifold_points=manifold_data,
-                                           reference_point=mean)
+        interp_psi = self.interpolation_method.interpolate(point=coordinate_to_interpolate)
 
-        interp_psi = self.interpolation_method.interpolate(coordinates=coordinates,
-                                                           samples=tangent_points,
-                                                           point=coordinate_to_interpolate)
-
-        interpolated_point = Grassmann.exp_map(tangent_points=[interp_psi],
-                                               reference_point=mean)
-
-        return interpolated_point
+        return Grassmann.exp_map(tangent_points=[interp_psi], reference_point=self.mean)
