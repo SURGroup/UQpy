@@ -31,9 +31,9 @@ def test_delaunay_sts():
 
 def test_voronoi_sts():
     marginals = [Exponential(loc=1., scale=1.), Exponential(loc=1., scale=1.)]
-    strata = Voronoi(seeds_number=8, dimension=2)
+    strata = Voronoi(seeds_number=8, dimension=2, random_state=3)
     x = StratifiedSampling(distributions=marginals, strata_object=strata,
-                           samples_per_stratum_number=3, random_state=3)
+                           samples_per_stratum_number=3)
     assert x.samples[7, 0] == 3.6928440862661223
     assert x.samples[20, 1] == 1.1555963246730931
     assert x.samples[1, 0] == 1.8393015015282757
@@ -52,8 +52,8 @@ strata1 = Rectangular(strata_number=[3, 3], stratification_criterion=Stratificat
 x_sts1 = StratifiedSampling(distributions=marginals, strata_object=strata1, samples_per_stratum_number=1, random_state=1)
 
 # Voronoi
-strata_vor = Voronoi(seeds_number=8, dimension=2)
-sts_vor = StratifiedSampling(distributions=marginals, strata_object=strata_vor, random_state=3)
+strata_vor = Voronoi(seeds_number=8, dimension=2, random_state=3)
+sts_vor = StratifiedSampling(distributions=marginals, strata_object=strata_vor)
 sts_vor.run(samples_per_stratum_number=1)
 
 strata_vor1 = Voronoi(seeds_number=8, dimension=2)

@@ -1,10 +1,10 @@
 from UQpy.dimension_reduction.kernels.GaussianKernel import GaussianKernel
-from UQpy.dimension_reduction.dmaps.DiffusionMaps import DiffusionMaps
+from UQpy.dimension_reduction.diffusion_maps.DiffusionMaps import DiffusionMaps
 
 
 def test_dmaps_swiss_roll():
     import numpy as np
-    from UQpy.dimension_reduction.dmaps.DiffusionMaps import DiffusionMaps
+    from UQpy.dimension_reduction.diffusion_maps.DiffusionMaps import DiffusionMaps
 
     # set parameters
     length_phi = 15  # length of swiss roll in angular direction
