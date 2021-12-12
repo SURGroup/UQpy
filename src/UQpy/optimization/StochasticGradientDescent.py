@@ -1,4 +1,4 @@
-from UQpy.dimension_reduction.grassmann_manifold.optimization.baseclass.OptimizationMethod import OptimizationMethod
+from UQpy.optimization.baseclass.OptimizationMethod import OptimizationMethod
 from UQpy.utilities.ValidationTypes import PositiveInteger
 import numpy as np
 
