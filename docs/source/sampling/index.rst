@@ -1,4 +1,4 @@
-Sample Methods
+Sampling
 ==============
 
 This module contains functionality for all the sampling methods supported in :py:mod:`UQpy`.

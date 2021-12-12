@@ -3,6 +3,7 @@ from typing import Union
 
 from beartype import beartype
 
+from UQpy.dimension_reduction.distances.baseclass import RiemannianDistance
 from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
 from UQpy.dimension_reduction.grassmann_manifold.projections.KernelComposition import (
     KernelComposition,
@@ -101,3 +102,4 @@ class SvdProjection(ManifoldProjection):
         kernel_psi = kernel.kernel_operator(self.psi, p=self.p)
         kernel_phi = kernel.kernel_operator(self.phi, p=self.p)
         return CompositionAction[self.kernel_composition.name](kernel_psi, kernel_phi)
+

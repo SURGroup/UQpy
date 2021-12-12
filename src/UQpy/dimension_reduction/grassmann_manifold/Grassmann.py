@@ -23,6 +23,7 @@ class Grassmann:
     def evaluate_kernel_matrix(self, kernel):
         kernel_matrix = self.manifold_projected_points.evaluate_matrix(kernel)
         return kernel_matrix
+    
 
     @staticmethod
     @beartype

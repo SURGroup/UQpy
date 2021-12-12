@@ -116,8 +116,8 @@ def test_vor_gerss():
     marginals = [Uniform(loc=0., scale=2.), Uniform(loc=0., scale=1.)]
     strata_vor = Voronoi(seeds_number=4, dimension=2, random_state=10)
     x_vor = StratifiedSampling(distributions=marginals, strata_object=strata_vor, samples_per_stratum_number=1,)
-    from UQpy.surrogates.kriging.regression_models.Linear import Linear
-    from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential
+    from UQpy.surrogates.kriging.regression_models.LinearRegression import Linear
+    from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import Exponential
     rmodel_ = RunModel(model_script='python_model_function.py', vec=False)
     K_ = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimizations_number=20,
                  correlation_model_parameters=[1, 1])

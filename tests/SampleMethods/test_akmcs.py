@@ -11,8 +11,8 @@ import shutil
 
 
 def test_akmcs_weighted_u():
-    from UQpy.surrogates.kriging.regression_models.Linear import Linear
-    from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential
+    from UQpy.surrogates.kriging.regression_models.LinearRegression import Linear
+    from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import Exponential
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, samples_number=20, random_state=0)
@@ -35,8 +35,8 @@ def test_akmcs_weighted_u():
 
 
 def test_akmcs_u():
-    from UQpy.surrogates.kriging.regression_models.Linear import Linear
-    from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential
+    from UQpy.surrogates.kriging.regression_models.LinearRegression import Linear
+    from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import Exponential
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, samples_number=20, random_state=1)
@@ -59,8 +59,8 @@ def test_akmcs_u():
 
 
 def test_akmcs_expected_feasibility():
-    from UQpy.surrogates.kriging.regression_models.Linear import Linear
-    from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential
+    from UQpy.surrogates.kriging.regression_models.LinearRegression import Linear
+    from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import Exponential
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, samples_number=20, random_state=1)
@@ -83,8 +83,8 @@ def test_akmcs_expected_feasibility():
 
 
 def test_akmcs_expected_improvement():
-    from UQpy.surrogates.kriging.regression_models.Linear import Linear
-    from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential
+    from UQpy.surrogates.kriging.regression_models.LinearRegression import Linear
+    from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import Exponential
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, samples_number=20, random_state=1)
@@ -107,8 +107,8 @@ def test_akmcs_expected_improvement():
 
 
 def test_akmcs_expected_improvement_global_fit():
-    from UQpy.surrogates.kriging.regression_models.Linear import Linear
-    from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential
+    from UQpy.surrogates.kriging.regression_models.LinearRegression import Linear
+    from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import Exponential
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, samples_number=20, random_state=1)

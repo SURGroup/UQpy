@@ -3,7 +3,7 @@ from beartype.roar import BeartypeCallHintPepParamException
 from line_profiler_pycharm import profile
 
 from UQpy.surrogates.kriging.Kriging import Kriging
-from UQpy.utilities.strata.Rectangular import Rectangular
+from UQpy.utilities.strata.RectangularStrata import Rectangular
 from UQpy.sampling.StratifiedSampling import StratifiedSampling
 from UQpy.RunModel import RunModel
 from UQpy.distributions.collection.Uniform import Uniform
