@@ -1,6 +1,3 @@
-import numpy as np
-
-from UQpy.sampling.input_data.MhInput import MhInput
 from UQpy.inference import *
 from UQpy.RunModel import RunModel
 from UQpy.inference.inference_models.ComputationalModel import ComputationalModel
@@ -35,13 +32,17 @@ def test_models():
                  JointIndependent([Normal(0, 1), Normal(0, 1)]),
                  JointIndependent([Normal(0, 1), Normal(0, 2), Normal(0.025)])]
 
-    mh_input1 = MhInput(jump=1, burn_length=500, proposal=proposals[0], random_state=0, seed=[0.])
-    mh_input2 = MhInput(jump=1, burn_length=500, proposal=proposals[1], random_state=0, seed=[0., 0.])
-    mh_input3 = MhInput(jump=1, burn_length=500, proposal=proposals[2], random_state=0, seed=[0., 0., 0.])
+    # sampling =
+    mh1 = MetropolisHastings.create_for_inference(inference_model=model1, data=data_ex1, jump=1, burn_length=500,
+                                                  proposal=proposals[0], random_state=0, seed=[0.])
+    mh2 = MetropolisHastings.create_for_inference(inference_model=model2, data=data_ex1, jump=1, burn_length=500,
+                                                  proposal=proposals[1], random_state=0, seed=[0., 0.])
+    mh3 = MetropolisHastings.create_for_inference(inference_model=model3, data=data_ex1, jump=1, burn_length=500,
+                                                  proposal=proposals[2], random_state=0, seed=[0., 0., 0.])
 
     selection = BayesModelSelection(candidate_models=[model1, model2, model3],
                                     data=data_ex1,
-                                    sampling_class_inputs=[mh_input1, mh_input2, mh_input3],
+                                    sampling_class=[mh1, mh2, mh3],
                                     prior_probabilities=[1. / 3., 1. / 3., 1. / 3.],
                                     samples_number=[2000, 2000, 2000])
 

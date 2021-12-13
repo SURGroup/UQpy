@@ -1,5 +1,5 @@
 import logging
-from typing import Union
+from typing import Union, List
 
 import numpy as np
 from beartype import beartype
@@ -7,8 +7,8 @@ from beartype import beartype
 from UQpy.inference.BayesParameterEstimation import BayesParameterEstimation
 from UQpy.inference.MethodEvidence import MethodEvidence
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
-from UQpy.sampling.input_data.ISInput import ISInput
-from UQpy.sampling.input_data.SamplingInput import SamplingInput
+from UQpy.sampling import ImportanceSampling
+from UQpy.sampling.mcmc.baseclass import MCMC
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
@@ -18,14 +18,14 @@ class BayesModelSelection:
     # Last modified: 01/24/2020 by Audrey Olivier
     @beartype
     def __init__(
-        self,
-        candidate_models: list[InferenceModel],
-        data,
-        sampling_class_inputs: list[SamplingInput],
-        prior_probabilities=None,
-        method_evidence_computation: MethodEvidence = MethodEvidence.HARMONIC_MEAN,
-        samples_number: list[PositiveInteger] = None,
-        samples_per_chain_number: list[PositiveInteger] = None,
+            self,
+            candidate_models: list[InferenceModel],
+            data,
+            sampling_class: List[Union[ImportanceSampling, MCMC]],
+            prior_probabilities=None,
+            method_evidence_computation: MethodEvidence = MethodEvidence.HARMONIC_MEAN,
+            samples_number: list[PositiveInteger] = None,
+            samples_per_chain_number: list[PositiveInteger] = None,
     ):
         """
         Perform model selection via Bayesian inference, i.e., compute model posterior probabilities given data.
@@ -47,20 +47,18 @@ class BayesModelSelection:
         self.models_number = len(candidate_models)
         self.data = data
         self.method_evidence_computation = method_evidence_computation
-        self.sampling_classes = sampling_class_inputs
+        self.sampling_classes = sampling_class
         self.logger = logging.getLogger(__name__)
 
         if prior_probabilities is None:
-            self.prior_probabilities = [
-                1.0 / len(candidate_models) for _ in candidate_models
-            ]
+            self.prior_probabilities = [1.0 / len(candidate_models) for _ in candidate_models]
         else:
             self.prior_probabilities = prior_probabilities
 
         # Instantiate the Bayesian parameter estimators (without running them)
         self.bayes_estimators = []
         """Results of the Bayesian parameter estimation."""
-        self._create_bayes_estimators(candidate_models, sampling_class_inputs)
+        self._create_bayes_estimators(candidate_models, sampling_class)
 
         # Initialize the outputs
         self.evidences = [0.0] * self.models_number
@@ -70,40 +68,30 @@ class BayesModelSelection:
 
         # Run the model selection procedure
         if samples_number is not None or samples_per_chain_number is not None:
-            self.run(
-                samples_number=samples_number,
-                samples_number_per_chain=samples_per_chain_number,
-            )
+            self.run(samples_number=samples_number,
+                     samples_number_per_chain=samples_per_chain_number,)
 
     def _create_bayes_estimators(self, candidate_models, sampling_classes):
         if len(candidate_models) != len(sampling_classes):
             raise TypeError(
                 "UQpy: The number of sampling_classes provided must be equal to the "
-                "number of candidate_models"
-            )
+                "number of candidate_models")
         for i, inference_model in enumerate(self.candidate_models):
-            sampling_input = sampling_classes[i]
+            sampling = sampling_classes[i]
             # sampling_input.random_state = self.random_state
-            if not isinstance(sampling_input, ISInput):
-                sampling_input.save_log_pdf = True
-                sampling_input.concatenate_chains = True
-            if isinstance(sampling_input, ISInput):
-                bayes_estimator = BayesParameterEstimation.create_with_importance_sampling(
-                    inference_model, self.data, sampling_input
-                )
-            else:
-                sampling_input.dimension = inference_model.parameters_number
-                bayes_estimator = BayesParameterEstimation.create_with_mcmc_sampling(
-                    sampling_input, inference_model, self.data
-                )
+            if not isinstance(sampling_classes, ImportanceSampling):
+                sampling.save_log_pdf = True
+                sampling.concatenate_chains = True
+                sampling.dimension = inference_model.parameters_number
+
+            bayes_estimator = BayesParameterEstimation(sampling_class=sampling, inference_model=inference_model,
+                                                       data=self.data)
             self.bayes_estimators.append(bayes_estimator)
 
     @beartype
-    def run(
-        self,
-        samples_number: Union[None, list[PositiveInteger]] = None,
-        samples_number_per_chain: Union[None, list[PositiveInteger]] = None,
-    ):
+    def run(self,
+            samples_number: Union[None, list[PositiveInteger]] = None,
+            samples_number_per_chain: Union[None, list[PositiveInteger]] = None,):
         """
         Run the Bayesian model selection procedure, i.e., compute model posterior probabilities.
 
@@ -119,30 +107,25 @@ class BayesModelSelection:
         self.logger.info("UQpy: Running Bayesian Model Selection.")
         # Perform mcmc for all candidate models
         for i, (inference_model, bayes_estimator) in enumerate(
-            zip(self.candidate_models, self.bayes_estimators)
-        ):
+                zip(self.candidate_models, self.bayes_estimators)):
             self.logger.info("UQpy: Running mcmc for model " + inference_model.name)
             if samples_number is not None:
                 bayes_estimator.run(samples_number=samples_number[i])
             elif samples_number_per_chain is not None:
-                bayes_estimator.run(
-                    samples_number_per_chain=samples_number_per_chain[i]
-                )
+                bayes_estimator.run(samples_number_per_chain=samples_number_per_chain[i])
             else:
                 raise ValueError(
-                    "UQpy: either nsamples or nsamples_per_chain should be non None"
-                )
+                    "UQpy: either nsamples or nsamples_per_chain should be non None")
             self.evidences[i] = self._estimate_evidence(
                 method_evidence_computation=self.method_evidence_computation,
                 inference_model=inference_model,
                 posterior_samples=bayes_estimator.sampler.samples,
-                log_posterior_values=bayes_estimator.sampler.log_pdf_values,
-            )
+                log_posterior_values=bayes_estimator.sampler.log_pdf_values, )
 
         # Compute posterior probabilities
         self.probabilities = self._compute_posterior_probabilities(
-            prior_probabilities=self.prior_probabilities, evidence_values=self.evidences
-        )
+            prior_probabilities=self.prior_probabilities,
+            evidence_values=self.evidences)
 
         self.logger.info("UQpy: Bayesian Model Selection analysis completed!")
 
@@ -166,10 +149,10 @@ class BayesModelSelection:
 
     @staticmethod
     def _estimate_evidence(
-        method_evidence_computation: MethodEvidence,
-        inference_model,
-        posterior_samples,
-        log_posterior_values,
+            method_evidence_computation: MethodEvidence,
+            inference_model,
+            posterior_samples,
+            log_posterior_values,
     ):
         """
         Compute the model evidence, given samples from the parameter posterior pdf.
@@ -200,15 +183,10 @@ class BayesModelSelection:
         """
         if method_evidence_computation == MethodEvidence.HARMONIC_MEAN:
             # samples[int(0.5 * len(samples)):]
-            log_likelihood_values = (
-                log_posterior_values
-                - inference_model.prior.log_pdf(x=posterior_samples)
-            )
+            log_likelihood_values = (log_posterior_values - inference_model.prior.log_pdf(x=posterior_samples))
             temp = np.mean(1.0 / np.exp(log_likelihood_values))
         else:
-            raise ValueError(
-                "UQpy: Only the harmonic mean method is currently supported"
-            )
+            raise ValueError("UQpy: Only the harmonic mean method is currently supported")
         return 1.0 / temp
 
     @staticmethod
@@ -233,8 +211,6 @@ class BayesModelSelection:
         :rtype probabilities: list (length nmodels) of floats
 
         """
-        scaled_evidences = [
-            evi * prior_prob
-            for (evi, prior_prob) in zip(evidence_values, prior_probabilities)
-        ]
+        scaled_evidences = [evidence * prior_probability for (evidence, prior_probability)
+                            in zip(evidence_values, prior_probabilities)]
         return scaled_evidences / np.sum(scaled_evidences)

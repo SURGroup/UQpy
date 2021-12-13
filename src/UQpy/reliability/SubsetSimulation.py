@@ -1,6 +1,5 @@
 import copy
 import logging
-from UQpy.sampling.input_data import *
 from UQpy.sampling import *
 
 
@@ -10,11 +9,9 @@ class SubsetSimulation:
     def __init__(
         self,
         runmodel_object,
-        mcmc_input: Union[DramInput, DreamInput, MhInput, MmhInput, StretchInput],
+        mcmc_input,
         samples_init: np.ndarray = None,
-        conditional_probability: Annotated[
-            Union[float, int], Is[lambda number: 0 <= number <= 1]
-        ] = 0.1,
+        conditional_probability: Annotated[Union[float, int], Is[lambda number: 0 <= number <= 1]] = 0.1,
         samples_number_per_subset: int = 1000,
         max_level: int = 10,
     ):
@@ -76,13 +73,6 @@ class SubsetSimulation:
 
         self.logger.info("UQpy: Subset Simulation Complete!")
 
-    input_to_class = {
-        DramInput: DRAM,
-        DreamInput: DREAM,
-        MhInput: MetropolisHastings,
-        MmhInput: ModifiedMetropolisHastings,
-        StretchInput: Stretch,
-    }
 
     # -----------------------------------------------------------------------------------------------------------------------
     # The run function executes the chosen subset simulation algorithm

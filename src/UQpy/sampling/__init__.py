@@ -1,7 +1,6 @@
 from UQpy.sampling.mcmc import *
 from UQpy.sampling.refined_stratified_sampling import *
 from UQpy.sampling.adaptive_kriging_functions import *
-from UQpy.sampling.input_data import *
 from UQpy.sampling.latin_hypercube_criteria import *
 
 from UQpy.sampling.AdaptiveKriging import AdaptiveKriging

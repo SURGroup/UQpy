@@ -1,11 +1,11 @@
 import numpy as np
 from sklearn.neighbors import KernelDensity  # for the plots
 
-from UQpy.sampling.input_data.ISInput import *
 from UQpy.distributions.collection import JointIndependent, Uniform, Lognormal, Normal
 from UQpy.inference.inference_models.DistributionModel import DistributionModel
 from UQpy.inference.BayesParameterEstimation import BayesParameterEstimation
-from UQpy.sampling.input_data.MhInput import MhInput
+from UQpy.sampling.ImportanceSampling import ImportanceSampling
+from UQpy.sampling.mcmc.MetropolisHastings import MetropolisHastings
 
 
 def pdf_from_kde(domain, samples1d):
@@ -31,12 +31,13 @@ def test_probability_model_importance_sampling():
     # create an instance of class Model
     candidate_model = DistributionModel(distributions=Normal(loc=None, scale=None),
                                         parameters_number=2, prior=prior)
-    is_input = ISInput(random_state=1)
-    bayes_estimator = BayesParameterEstimation \
-        .create_with_importance_sampling(inference_model=candidate_model,
-                                         is_input=is_input,
-                                         data=data,
-                                         samples_number=10000)
+
+    sampling = ImportanceSampling.create_for_inference(candidate_model, data, random_state=1)
+
+    bayes_estimator = BayesParameterEstimation(sampling_class=sampling,
+                                               inference_model=candidate_model,
+                                               data=data,
+                                               samples_number=10000)
     bayes_estimator.sampler.resample()
     s_posterior = bayes_estimator.sampler.unweighted_samples
 
@@ -58,13 +59,13 @@ def test_probability_model_mcmc():
     candidate_model = DistributionModel(distributions=Normal(loc=None, scale=None),
                                         parameters_number=2, prior=prior)
 
-    mh_input = MhInput(jump=10, burn_length=10, seed=[1.0, 0.2], random_state=1)
-
-    bayes_estimator = BayesParameterEstimation \
-        .create_with_mcmc_sampling(mcmc_input=mh_input,
-                                   inference_model=candidate_model,
-                                   data=data,
-                                   samples_number=5)
+    sampling = MetropolisHastings.create_for_inference(inference_model=candidate_model,
+                                                       data=data,
+                                                       jump=10, burn_length=10, seed=[1.0, 0.2], random_state=1)
+    bayes_estimator = BayesParameterEstimation(sampling_class=sampling,
+                                               inference_model=candidate_model,
+                                               data=data,
+                                               samples_number=5)
     s = bayes_estimator.sampler.samples
 
     assert s[0, 1] == 3.5196936384257835

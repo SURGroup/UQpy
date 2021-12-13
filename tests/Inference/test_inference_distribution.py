@@ -2,9 +2,10 @@ import numpy as np
 from UQpy.inference import *
 from UQpy.distributions import *
 from UQpy.inference.inference_models.DistributionModel import DistributionModel
-from UQpy.sampling.input_data.MhInput import MhInput
 
 # data used throughout
+from UQpy.sampling.mcmc import MetropolisHastings
+
 data = [0., 1., -1.5, -0.2]
 # first candidate model, 1-dimensional
 prior = Lognormal(s=1., loc=0., scale=1.)
@@ -45,38 +46,36 @@ def test_infomodelselection_aicc():
 
 
 def test_bayes_mcmc():
-    mh_input = MhInput(jump=2, burn_length=5, seed=[1., ], random_state=123)
-    bayes_estimator = BayesParameterEstimation\
-        .create_with_mcmc_sampling(mcmc_input=mh_input,
-                                   inference_model=candidate_model_no_prior,
-                                   data=data,
-                                   samples_number=50)
+    mh1 = MetropolisHastings.create_for_inference(inference_model=candidate_model_no_prior, data=data,
+                                                  jump=2, burn_length=5, seed=[1., ], random_state=123)
+    bayes_estimator = BayesParameterEstimation(sampling_class=mh1, inference_model=candidate_model_no_prior,
+                                               data=data, samples_number=50)
     assert np.round(np.mean(bayes_estimator.sampler.samples), 3) == 1.275
 
 
 def test_bayes_is():
-    is_input = ISInput(random_state=123)
-    bayes_estimator = BayesParameterEstimation\
-        .create_with_importance_sampling(inference_model=candidate_model,
-                                         is_input=is_input,
-                                         data=data,
-                                         samples_number=100)
+    is1 = ImportanceSampling.create_for_inference(candidate_model, data, random_state=123)
+    bayes_estimator = BayesParameterEstimation(sampling_class=is1, inference_model=candidate_model,
+                                               data=data, samples_number=100)
     assert np.round(np.mean(bayes_estimator.sampler.samples), 3) == 1.873
 
 
 def test_bayes_selection():
-    mh_input = MhInput(random_state=123, chains_number=2)
-    mh_input1 = MhInput(random_state=123, chains_number=2)
+    mh1 = MetropolisHastings.create_for_inference(inference_model=candidate_model, data=data,
+                                                  random_state=123, chains_number=2)
+    mh2 = MetropolisHastings.create_for_inference(inference_model=candidate_model2, data=data,
+                                                  random_state=123, chains_number=2)
     selection = BayesModelSelection(data=data, candidate_models=[candidate_model, candidate_model2],
-                                    samples_number=[50, 50], sampling_class_inputs=[mh_input, mh_input1])
+                                    samples_number=[50, 50], sampling_class=[mh1, mh2])
     assert round(selection.probabilities[0], 3) == 1.000
 
 
 def test_bayes_selection2():
-    mh_input = MhInput(random_state=123, chains_number=2)
-    mh_input1 = MhInput(random_state=123, chains_number=2)
-    selection = BayesModelSelection(
-        data=data, candidate_models=[candidate_model, candidate_model2],
-        samples_per_chain_number=[25, 25], sampling_class_inputs=[mh_input, mh_input1])
+    mh1 = MetropolisHastings.create_for_inference(inference_model=candidate_model, data=data,
+                                                  random_state=123, chains_number=2)
+    mh2 = MetropolisHastings.create_for_inference(inference_model=candidate_model2, data=data,
+                                                  random_state=123, chains_number=2)
+    selection = BayesModelSelection(data=data, candidate_models=[candidate_model, candidate_model2],
+                                    samples_per_chain_number=[25, 25], sampling_class=[mh1, mh2])
     selection.sort_models()
     assert round(selection.probabilities[0], 3) == 1.000

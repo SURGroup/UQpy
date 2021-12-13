@@ -1,56 +1,101 @@
 import logging
-
+from typing import Callable, List
 from beartype import beartype
-
-from UQpy.sampling.input_data.SamplingInput import SamplingInput
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
-
-from UQpy.sampling.input_data.MhInput import MhInput
 from UQpy.utilities.ValidationTypes import *
 
 
 class MetropolisHastings(MCMC):
 
-
     @beartype
     def __init__(
         self,
-        mh_input: MhInput,
+        pdf_target: Union[Callable, List[Callable]] = None,
+        log_pdf_target: Union[Callable, List[Callable]] = None,
+        args_target: tuple = None,
+        burn_length: Annotated[int, Is[lambda x: x >= 0]] = 0,
+        jump: int = 1,
+        dimension: int = None,
+        seed: list = None,
+        save_log_pdf: bool = False,
+        concatenate_chains: bool = True,
+        chains_number: int = None,
+        proposal: Distribution = None,
+        proposal_is_symmetric: bool = False,
+        random_state: RandomStateType = None,
         samples_number: PositiveInteger = None,
         samples_number_per_chain: PositiveInteger = None,
     ):
         """
         Metropolis-Hastings algorithm :cite:`MCMC1` :cite:`MCMC2`
 
-        :param mh_input: Object that contains input data to the :class:`.MetropolisHastings` class.
-         (See :class:`.MhInput`)
+        :param pdf_target: Target density function from which to draw random samples. Either pdf_target or
+         log_pdf_target must be provided (the latter should be preferred for better numerical stability).
+
+         If pdf_target is a callable, it refers to the joint pdf to sample from, it must take at least one input x, which
+         are the point(s) at which to evaluate the pdf. Within MCMC the pdf_target is evaluated as:
+         p(x) = pdf_target(x, \*args_target)
+
+         where x is a ndarray of shape (samples_number, dimension) and args_target are additional positional arguments that
+         are provided to MCMC via its args_target input.
+
+         If pdf_target is a list of callables, it refers to independent marginals to sample from. The marginal in dimension
+         j is evaluated as:  p_j(xj) = pdf_target[j](xj, \*args_target[j]) where x is a ndarray of shape
+         (samples_number, dimension)
+        :param log_pdf_target: Logarithm of the target density function from which to draw random samples.
+         Either pdf_target or log_pdf_target must be provided (the latter should be preferred for better numerical
+         stability).
+
+         Same comments as for input pdf_target.
+        :param args_target: Positional arguments of the pdf / log-pdf target function. See pdf_target
+        :param burn_length: Length of burn-in - i.e., number of samples at the beginning of the chain to discard (note:
+         no thinning during burn-in). Default is 0, no burn-in.
+        :param jump: Thinning parameter, used to reduce correlation between samples. Setting jump=n corresponds to
+         skipping n-1 states between accepted states of the chain. Default is 1 (no thinning).
+        :param dimension: A scalar value defining the dimension of target density function. Either dimension and
+         nchains or seed must be provided.
+        :param seed: Seed of the Markov chain(s), shape (nchains, dimension). Default: zeros(nchains x dimension).
+
+         If seed is not provided, both nchains and dimension must be provided.
+        :param save_log_pdf: Boolean that indicates whether to save log-pdf values along with the samples.
+         Default: False
+        :param concatenate_chains: Boolean that indicates whether to concatenate the chains after a run, i.e., samples
+         are stored as an ndarray of shape (nsamples * nchains, dimension) if True, (nsamples, nchains, dimension) if False.
+         Default: True
+        :param chains_number: The number of Markov chains to generate. Either dimension and nchains or seed must be
+         provided.
+        :param proposal: Proposal distribution, must have a log_pdf/pdf and rvs method. Default: standard
+         multivariate normal
+        :param proposal_is_symmetric: Indicates whether the proposal distribution is symmetric, affects computation of
+         acceptance probability alpha Default: False, set to True if default proposal is used
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is
+         None.
+
         :param samples_number: Number of samples to generate.
         :param samples_number_per_chain: Number of samples to generate per chain.
         """
         super().__init__(
-            pdf_target=mh_input.pdf_target,
-            log_pdf_target=mh_input.log_pdf_target,
-            args_target=mh_input.args_target,
-            dimension=mh_input.dimension,
-            seed=mh_input.seed,
-            burn_length=mh_input.burn_length,
-            jump=mh_input.jump,
-            save_log_pdf=mh_input.save_log_pdf,
-            concatenate_chains=mh_input.concatenate_chains,
-            random_state=mh_input.random_state,
-            chains_number=mh_input.chains_number,
+            pdf_target=pdf_target,
+            log_pdf_target=log_pdf_target,
+            args_target=args_target,
+            dimension=dimension,
+            seed=seed,
+            burn_length=burn_length,
+            jump=jump,
+            save_log_pdf=save_log_pdf,
+            concatenate_chains=concatenate_chains,
+            random_state=random_state,
+            chains_number=chains_number,
         )
 
         self.logger = logging.getLogger(__name__)
         # Initialize algorithm specific inputs
-        self.proposal = mh_input.proposal
-        self.proposal_is_symmetric = mh_input.proposal_is_symmetric
+        self.proposal = proposal
+        self.proposal_is_symmetric = proposal_is_symmetric
         if self.proposal is None:
             if self.dimension is None:
-                raise ValueError(
-                    "UQpy: Either input proposal or dimension must be provided."
-                )
+                raise ValueError("UQpy: Either input proposal or dimension must be provided.")
             from UQpy.distributions import JointIndependent, Normal
 
             self.proposal = JointIndependent([Normal()] * self.dimension)
@@ -58,18 +103,11 @@ class MetropolisHastings(MCMC):
         else:
             self._check_methods_proposal(self.proposal)
 
-        self.logger.info(
-            "\nUQpy: Initialization of "
-            + self.__class__.__name__
-            + " algorithm complete."
-        )
+        self.logger.info("\nUQpy: Initialization of " + self.__class__.__name__ + " algorithm complete.")
 
-        # If nsamples is provided, run the algorithm
+        # If samples_number is provided, run the algorithm
         if (samples_number is not None) or (samples_number_per_chain is not None):
-            self.run(
-                samples_number=samples_number,
-                samples_number_per_chain=samples_number_per_chain,
-            )
+            self.run(samples_number=samples_number, samples_number_per_chain=samples_number_per_chain,)
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
@@ -78,8 +116,7 @@ class MetropolisHastings(MCMC):
         """
         # Sample candidate
         candidate = current_state + self.proposal.rvs(
-            nsamples=self.chains_number, random_state=self.random_state
-        )
+            nsamples=self.chains_number, random_state=self.random_state)
 
         # Compute log_pdf_target of candidate sample
         log_p_candidate = self.evaluate_log_target(candidate)
@@ -114,6 +151,3 @@ class MetropolisHastings(MCMC):
         self._update_acceptance_rate(accept_vec)
 
         return current_state, current_log_pdf
-
-
-SamplingInput.input_to_class[MhInput] = MetropolisHastings

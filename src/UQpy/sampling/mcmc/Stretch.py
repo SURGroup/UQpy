@@ -1,84 +1,116 @@
 import logging
+from typing import Callable, List
+
 from beartype import beartype
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
-from UQpy.sampling.input_data.StretchInput import StretchInput
 from UQpy.utilities.ValidationTypes import *
-from UQpy.sampling.input_data.SamplingInput import SamplingInput
 
 
 class Stretch(MCMC):
 
     @beartype
     def __init__(
-        self,
-        stretch_input: StretchInput,
-        samples_number: PositiveInteger = None,
-        samples_number_per_chain: PositiveInteger = None,
+            self,
+            pdf_target: Union[Callable, List[Callable]] = None,
+            log_pdf_target: Union[Callable, List[Callable]] = None,
+            args_target: tuple = None,
+            burn_length: Annotated[int, Is[lambda x: x >= 0]] = 0,
+            jump: PositiveInteger = 1,
+            dimension: int = None,
+            seed: list = None,
+            save_log_pdf: bool = False,
+            concatenate_chains: bool = True,
+            scale: float = 2.0,
+            random_state: RandomStateType = None,
+            chains_number: int = None,
+            samples_number: PositiveInteger = None,
+            samples_number_per_chain: PositiveInteger = None,
     ):
         """
         Affine-invariant sampler with Stretch moves, parallel implementation. :cite:`Stretch1` :cite:`Stretch2`
 
-        :param stretch_input: Object that contains input data to the :class:`.Stretch` class.
-         (See :class:`.StretchInput`)
+        :param pdf_target: Target density function from which to draw random samples. Either pdf_target or
+         log_pdf_target must be provided (the latter should be preferred for better numerical stability).
+
+         If pdf_target is a callable, it refers to the joint pdf to sample from, it must take at least one input x, which
+         are the point(s) at which to evaluate the pdf. Within MCMC the pdf_target is evaluated as:
+         p(x) = pdf_target(x, \*args_target)
+
+         where x is a ndarray of shape (samples_number, dimension) and args_target are additional positional arguments that
+         are provided to MCMC via its args_target input.
+
+         If pdf_target is a list of callables, it refers to independent marginals to sample from. The marginal in dimension
+         j is evaluated as: p_j(xj) = pdf_target[j](xj, \*args_target[j]) where x is a ndarray of shape
+         (samples_number, dimension)
+        :param log_pdf_target: Logarithm of the target density function from which to draw random samples.
+         Either pdf_target or log_pdf_target must be provided (the latter should be preferred for better numerical
+         stability).
+
+         Same comments as for input pdf_target.
+        :param args_target: Positional arguments of the pdf / log-pdf target function. See pdf_target
+        :param burn_length: Length of burn-in - i.e., number of samples at the beginning of the chain to discard (note:
+         no thinning during burn-in). Default is 0, no burn-in.
+        :param jump: Thinning parameter, used to reduce correlation between samples. Setting jump=n corresponds to
+         skipping n-1 states between accepted states of the chain. Default is 1 (no thinning).
+        :param dimension: A scalar value defining the dimension of target density function. Either dimension and
+         nchains or seed must be provided.
+        :param seed: Seed of the Markov chain(s), shape (chains_number, dimension).
+         Default: zeros(chains_number x dimension).
+
+         If seed is not provided, both chains_number and dimension must be provided.
+        :param save_log_pdf: Boolean that indicates whether to save log-pdf values along with the samples.
+         Default: False
+        :param concatenate_chains: Boolean that indicates whether to concatenate the chains after a run, i.e., samples
+         are stored as an ndarray of shape (samples_number * chains_number, dimension) if True,
+         (samples_number, chains_number, dimension) if False.
+         Default: True
+        :param chains_number: The number of Markov chains to generate. Either dimension and chains_number or seed must be
+         provided.
+        :param scale: Scale parameter. Default: 2.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is
+         None.
         :param samples_number: Number of samples to generate.
         :param samples_number_per_chain: Number of samples to generate per chain.
         """
         flag_seed = False
-        if stretch_input.seed is None:
-            if stretch_input.dimension is None or stretch_input.chains_number is None:
-                raise ValueError(
-                    "UQpy: Either `seed` or `dimension` and `nchains` must be provided."
-                )
+        if seed is None:
+            if dimension is None or chains_number is None:
+                raise ValueError("UQpy: Either `seed` or `dimension` and `chains_number` must be provided.")
             flag_seed = True
 
         super().__init__(
-            pdf_target=stretch_input.pdf_target,
-            log_pdf_target=stretch_input.log_pdf_target,
-            args_target=stretch_input.args_target,
-            dimension=stretch_input.dimension,
-            seed=stretch_input.seed,
-            burn_length=stretch_input.burn_length,
-            jump=stretch_input.jump,
-            save_log_pdf=stretch_input.save_log_pdf,
-            concatenate_chains=stretch_input.concatenate_chains,
-            random_state=stretch_input.random_state,
-            chains_number=stretch_input.chains_number,
-        )
+            pdf_target=pdf_target,
+            log_pdf_target=log_pdf_target,
+            args_target=args_target,
+            dimension=dimension,
+            seed=seed,
+            burn_length=burn_length,
+            jump=jump,
+            save_log_pdf=save_log_pdf,
+            concatenate_chains=concatenate_chains,
+            random_state=random_state,
+            chains_number=chains_number, )
 
         self.logger = logging.getLogger(__name__)
         # Check nchains = ensemble size for the Stretch algorithm
         if flag_seed:
-            self.seed = (
-                Uniform()
-                .rvs(
-                    nsamples=self.dimension * self.chains_number,
-                    random_state=self.random_state,
-                )
-                .reshape((self.chains_number, self.dimension))
-            )
+            self.seed = (Uniform().rvs(nsamples=self.dimension * self.chains_number,
+                                       random_state=self.random_state, )
+                         .reshape((self.chains_number, self.dimension)))
         if self.chains_number < 2:
-            raise ValueError(
-                "UQpy: For the Stretch algorithm, a seed must be provided with at least two samples."
-            )
+            raise ValueError("UQpy: For the Stretch algorithm, a seed must be provided with at least two samples.")
 
         # Check Stretch algorithm inputs: proposal_type and proposal_scale
-        self.scale = stretch_input.scale
+        self.scale = scale
         if not isinstance(self.scale, float):
             raise TypeError("UQpy: Input scale must be of type float.")
 
-        self.logger.info(
-            "\nUQpy: Initialization of "
-            + self.__class__.__name__
-            + " algorithm complete."
-        )
+        self.logger.info("\nUQpy: Initialization of " + self.__class__.__name__ + " algorithm complete.")
 
         # If nsamples is provided, run the algorithm
         if (samples_number is not None) or (samples_number_per_chain is not None):
-            self.run(
-                samples_number=samples_number,
-                samples_number_per_chain=samples_number_per_chain,
-            )
+            self.run(samples_number=samples_number, samples_number_per_chain=samples_number_per_chain,)
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
@@ -95,36 +127,25 @@ class Stretch(MCMC):
 
             # Get current and complementary sets
             sets = [current_state[inds == j01, :] for j01 in range(2)]
-            curr_set, comp_set = (
-                sets[split],
-                sets[1 - split],
-            )  # current and complementary sets respectively
+            curr_set, comp_set = (sets[split],sets[1 - split],)  # current and complementary sets respectively
             ns, nc = len(curr_set), len(comp_set)
 
             # Sample new state for S1 based on S0
             unif_rvs = Uniform().rvs(nsamples=ns, random_state=self.random_state)
             zz = ((self.scale - 1.0) * unif_rvs + 1.0) ** 2.0 / self.scale  # sample Z
             factors = (self.dimension - 1.0) * np.log(zz)  # compute log(Z ** (d - 1))
-            multi_rvs = Multinomial(n=1, p=[1.0 / nc,] * nc).rvs(
-                nsamples=ns, random_state=self.random_state
-            )
+            multi_rvs = Multinomial(n=1, p=[1.0 / nc, ] * nc).rvs(
+                nsamples=ns, random_state=self.random_state)
             rint = np.nonzero(multi_rvs)[1]  # sample X_{j} from complementary set
             candidates = comp_set[rint, :] - (comp_set[rint, :] - curr_set) * np.tile(
-                zz, [1, self.dimension]
-            )  # new candidates
+                zz, [1, self.dimension])  # new candidates
 
             # Compute new likelihood, can be done in parallel :)
             logp_candidates = self.evaluate_log_target(candidates)
 
             # Compute acceptance rate
-            unif_rvs = (
-                Uniform()
-                .rvs(nsamples=len(all_inds[set1]), random_state=self.random_state)
-                .reshape((-1,))
-            )
-            for j, f, lpc, candidate, u_rv in zip(
-                all_inds[set1], factors, logp_candidates, candidates, unif_rvs
-            ):
+            unif_rvs = (Uniform().rvs(nsamples=len(all_inds[set1]), random_state=self.random_state).reshape((-1,)))
+            for j, f, lpc, candidate, u_rv in zip(all_inds[set1], factors, logp_candidates, candidates, unif_rvs):
                 accept = np.log(u_rv) < f + lpc - current_log_pdf[j]
                 if accept:
                     current_state[j] = candidate
@@ -134,6 +155,3 @@ class Stretch(MCMC):
         # Update the acceptance rate
         self._update_acceptance_rate(accept_vec)
         return current_state, current_log_pdf
-
-
-SamplingInput.input_to_class[StretchInput] = StretchInput

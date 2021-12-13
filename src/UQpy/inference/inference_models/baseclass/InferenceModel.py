@@ -1,25 +1,30 @@
 import logging
-from typing import Union
+from typing import Union, Callable, Annotated
 
 import numpy as np
 from abc import ABC, abstractmethod
+
+from beartype.vale import Is
+
+from UQpy.sampling.mcmc import *
 from UQpy.distributions import Distribution
 from UQpy.RunModel import RunModel
-from UQpy.utilities.ValidationTypes import PositiveInteger
+from UQpy.sampling.ImportanceSampling import ImportanceSampling
+from UQpy.utilities.ValidationTypes import PositiveInteger, RandomStateType
 
 
 class InferenceModel(ABC):
 
     # Last Modified: 05/13/2020 by Audrey Olivier
     def __init__(
-        self,
-        parameters_number: PositiveInteger,
-        runmodel_object: RunModel = None,
-        log_likelihood: callable = None,
-        distributions: Union[Distribution, list[Distribution]] = None,
-        name: str = "",
-        error_covariance: float = 1.0,
-        prior: Distribution = None,
+            self,
+            parameters_number: PositiveInteger,
+            runmodel_object: RunModel = None,
+            log_likelihood: callable = None,
+            distributions: Union[Distribution, list[Distribution]] = None,
+            name: str = "",
+            error_covariance: float = 1.0,
+            prior: Distribution = None,
     ):
         """
         Define a probabilistic model for inference.
@@ -49,15 +54,15 @@ class InferenceModel(ABC):
         self.distributions = distributions
         # Perform checks on inputs runmodel_object, log_likelihood, distribution_object that define the inference model
         if (
-            (self.runmodel_object is None)
-            and (self.log_likelihood is None)
-            and (self.distributions is None)
+                (self.runmodel_object is None)
+                and (self.log_likelihood is None)
+                and (self.distributions is None)
         ):
             raise ValueError(
                 "UQpy: One of runmodel_object, log_likelihood or dist_object inputs must be provided."
             )
         if self.runmodel_object is not None and (
-            not isinstance(self.runmodel_object, RunModel)
+                not isinstance(self.runmodel_object, RunModel)
         ):
             raise TypeError(
                 "UQpy: Input runmodel_object should be an object of class RunModel."
@@ -153,3 +158,51 @@ class InferenceModel(ABC):
         log_prior_eval = self.prior.log_pdf(x=parameter_vector)
 
         return log_likelihood_eval + log_prior_eval
+
+
+def create_for_inference(inference_model: InferenceModel,
+                         data,
+                         proposal: Union[None, Distribution] = None,
+                         random_state: RandomStateType = None, ):
+    if proposal is None:
+        if inference_model.prior is None:
+            raise NotImplementedError(
+                "UQpy: A proposal density of the ImportanceSampling"
+                " or a prior to the Inference model  must be provided.")
+        proposal = inference_model.prior
+    log_pdf_target = inference_model.evaluate_log_posterior
+    args_target = (data,)
+    return ImportanceSampling(log_pdf_target=log_pdf_target,
+                              args_target=args_target,
+                              proposal=proposal,
+                              random_state=random_state, )
+
+
+ImportanceSampling.create_for_inference = create_for_inference
+del create_for_inference
+
+
+@classmethod
+def create_for_inference(cls,
+                         inference_model: InferenceModel,
+                         data,
+                         **kwargs):
+    if kwargs.get('seed', None) is None:
+        if inference_model.prior is None or not hasattr(inference_model.prior, "rvs"):
+            raise ValueError(
+                "UQpy: A prior with a rvs method must be provided for the InferenceModel"
+                " or a seed must be provided for MCMC.")
+        else:
+            kwargs['seed'] = inference_model.prior.rvs(nsamples=kwargs.get('chains_number', None),
+                                                       random_state=kwargs.get('random_state', None), ).tolist()
+    kwargs['log_pdf_target'] = inference_model.evaluate_log_posterior
+    kwargs['args_target'] = (data,)
+    return cls(**kwargs)
+
+
+MetropolisHastings.create_for_inference = create_for_inference
+ModifiedMetropolisHastings.create_for_inference = create_for_inference
+DRAM.create_for_inference = create_for_inference
+DREAM.create_for_inference = create_for_inference
+Stretch.create_for_inference = create_for_inference
+del create_for_inference

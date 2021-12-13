@@ -1,9 +1,9 @@
 import logging
+from typing import Union, Callable
 
 from beartype import beartype
 
-from UQpy.sampling.input_data.ISInput import ISInput
-from UQpy.utilities.ValidationTypes import PositiveInteger
+from UQpy.utilities.ValidationTypes import PositiveInteger, RandomStateType
 from UQpy.utilities.Utilities import process_random_state
 from UQpy.distributions import Distribution
 import numpy as np
@@ -13,7 +13,13 @@ class ImportanceSampling:
 
     # Last Modified: 10/05/2020 by Audrey Olivier
     @beartype
-    def __init__(self, is_input: ISInput, samples_number: PositiveInteger = None):
+    def __init__(self,
+                 pdf_target: Callable = None,
+                 log_pdf_target: Callable = None,
+                 args_target: tuple = None,
+                 proposal: Union[None, Distribution] = None,
+                 random_state: RandomStateType = None,
+                 samples_number: PositiveInteger = None):
         """
         Sample from a user-defined target density using importance sampling.
 
@@ -23,31 +29,24 @@ class ImportanceSampling:
          is called when the object is created. Default is None.
         """
         # Initialize proposal: it should have an rvs and log pdf or pdf method
-        self.proposal = is_input.proposal
+        self.proposal = proposal
         if not isinstance(self.proposal, Distribution):
             raise TypeError("UQpy: The proposal should be of type Distribution.")
         if not hasattr(self.proposal, "rvs"):
             raise AttributeError("UQpy: The proposal should have an rvs method")
         if not hasattr(self.proposal, "log_pdf"):
             if not hasattr(self.proposal, "pdf"):
-                raise AttributeError(
-                    "UQpy: The proposal should have a log_pdf or pdf method"
-                )
+                raise AttributeError("UQpy: The proposal should have a log_pdf or pdf method")
             self.proposal.log_pdf = lambda x: np.log(
-                np.maximum(self.proposal.pdf(x), 10 ** (-320) * np.ones((x.shape[0],)))
-            )
-        # self._pdf_target = is_input.pdf_target
-        # self._log_pdf_target = is_input.log_pdf_target
-        # self._args_target = is_input.args_target
-        # Initialize target
+                np.maximum(self.proposal.pdf(x), 10 ** (-320) * np.ones((x.shape[0],))))
         self.evaluate_log_target = self._preprocess_target(
-            log_pdf_=is_input.log_pdf_target,
-            pdf_=is_input.pdf_target,
-            args=is_input.args_target,
+            log_pdf_=log_pdf_target,
+            pdf_=pdf_target,
+            args=args_target,
         )
 
         self.logger = logging.getLogger(__name__)
-        self.random_state = process_random_state(is_input.random_state)
+        self.random_state = process_random_state(random_state)
 
         # Initialize the samples and weights
         self.samples = None

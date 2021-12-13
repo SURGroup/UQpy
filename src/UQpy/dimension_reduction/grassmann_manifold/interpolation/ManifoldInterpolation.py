@@ -1,7 +1,7 @@
 from UQpy.dimension_reduction.grassmann_manifold import Grassmann
 from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
 from UQpy.dimension_reduction.grassmann_manifold.interpolation.baseclass import InterpolationMethod
-from UQpy.dimension_reduction.grassmann_manifold.optimization.baseclass import OptimizationMethod
+from UQpy.optimization.baseclass import OptimizationMethod
 from UQpy.utilities.ValidationTypes import NumpyFloatArray
 from UQpy.dimension_reduction.distances.baseclass import RiemannianDistance
 
