@@ -9,7 +9,7 @@ class SubsetSimulation:
     def __init__(
         self,
         runmodel_object,
-        mcmc_input,
+        sampling: MCMC,
         samples_init: np.ndarray = None,
         conditional_probability: Annotated[Union[float, int], Is[lambda number: 0 <= number <= 1]] = 0.1,
         samples_number_per_subset: int = 1000,
@@ -33,13 +33,7 @@ class SubsetSimulation:
         :param max_level: Maximum number of allowable conditional levels.
         """
         # Initialize other attributes
-
-        class_type = type(mcmc_input)
-        self._sampling_class = sampling_class = SubsetSimulation.input_to_class[
-            class_type
-        ]
-        self._mcmc_input = mcmc_input
-        sampler = sampling_class(mcmc_input)
+        self._sampling_class = sampling
 
         self.runmodel_object = runmodel_object
         self.samples_init = samples_init
@@ -48,7 +42,7 @@ class SubsetSimulation:
         self.max_level = max_level
         self.logger = logging.getLogger(__name__)
 
-        self.mcmc_objects = [sampler]
+        self.mcmc_objects = [sampling]
 
         self.samples = list()
         """A list of arrays containing the samples in each conditional level."""
@@ -58,10 +52,7 @@ class SubsetSimulation:
         self.g_level = list()
         """Threshold value of the performance function for each conditional level"""
 
-        self.logger.info(
-            "UQpy: Running Subset Simulation with mcmc of type: "
-            + str(type(mcmc_input))
-        )
+        self.logger.info("UQpy: Running Subset Simulation with mcmc of type: " + str(type(sampling)))
         self.pf = None
         """Probability of failure estimate."""
         self.cov1 = None
