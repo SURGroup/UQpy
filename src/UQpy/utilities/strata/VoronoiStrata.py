@@ -1,7 +1,7 @@
 import logging
 import math
 
-from UQpy.utilities.strata.DelaunayStrata import Delaunay
+from UQpy.utilities.strata.DelaunayStrata import DelaunayStrata
 from UQpy.utilities.strata.baseclass.Strata import Strata
 from UQpy.utilities.strata.StratificationCriterion import StratificationCriterion
 from UQpy.sampling.SimplexSampling import *
@@ -9,7 +9,7 @@ from UQpy.utilities.ValidationTypes import RandomStateType
 import numpy as np
 
 
-class Voronoi(Strata):
+class VoronoiStrata(Strata):
     @beartype
     def __init__(
             self,
@@ -206,13 +206,12 @@ class Voronoi(Strata):
         self.mesh.centroids = np.zeros([self.mesh.nsimplex, self.dimension])
         self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
         from scipy.spatial import qhull, ConvexHull
-        from UQpy.utilities.strata.DelaunayStrata import Delaunay
 
         for j in range(self.mesh.nsimplex):
             try:
                 ConvexHull(self.points[self.mesh.vertices[j]])
                 self.mesh.centroids[j, :], self.mesh.volumes[j] = \
-                    Delaunay.compute_delaunay_centroid_volume(self.points[self.mesh.vertices[j]])
+                    DelaunayStrata.compute_delaunay_centroid_volume(self.points[self.mesh.vertices[j]])
             except qhull.QhullError:
                 self.mesh.centroids[j, :], self.mesh.volumes[j] = (np.mean(self.points[self.mesh.vertices[j]]), 0,)
 
@@ -301,7 +300,7 @@ class Voronoi(Strata):
         for j in range(self.mesh.nsimplex):
             try:
                 ConvexHull(self.points[self.mesh.vertices[j]])
-                self.mesh.centroids[j, :], self.mesh.volumes[j] = Delaunay.compute_delaunay_centroid_volume(
+                self.mesh.centroids[j, :], self.mesh.volumes[j] = DelaunayStrata.compute_delaunay_centroid_volume(
                     self.points[self.mesh.vertices[j]])
             except qhull.QhullError:
                 self.mesh.centroids[j, :], self.mesh.volumes[j] = (np.mean(self.points[self.mesh.vertices[j]]), 0,)
@@ -389,13 +388,13 @@ class Voronoi(Strata):
         self.mesh_vertices = np.vstack([self.mesh_vertices, new_point])
 
         # Compute the strata weights.
-        self.voronoi, bounded_regions = Voronoi.voronoi_unit_hypercube(samples_u01)
+        self.voronoi, bounded_regions = VoronoiStrata.voronoi_unit_hypercube(samples_u01)
 
         self.centroids = []
         self.volume = []
         for region in bounded_regions:
             vertices = self.voronoi.vertices[region + [region[0]]]
-            centroid, volume = Voronoi.compute_voronoi_centroid_volume(vertices)
+            centroid, volume = VoronoiStrata.compute_voronoi_centroid_volume(vertices)
             self.centroids.append(centroid[0, :])
             self.volume.append(volume)
 

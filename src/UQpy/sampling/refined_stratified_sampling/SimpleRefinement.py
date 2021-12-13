@@ -1,7 +1,7 @@
 from beartype import beartype
 
 from UQpy.sampling.refined_stratified_sampling.baseclass.Refinement import *
-from UQpy.utilities import Voronoi
+from UQpy.utilities.strata.VoronoiStrata import VoronoiStrata
 
 
 class SimpleRefinement(Refinement):
@@ -11,8 +11,8 @@ class SimpleRefinement(Refinement):
         self.strata = strata
 
     def update_strata(self, samplesU01):
-        if isinstance(self.strata, Voronoi):
-            self.strata = Voronoi(seeds=samplesU01)
+        if isinstance(self.strata, VoronoiStrata):
+            self.strata = VoronoiStrata(seeds=samplesU01)
 
     def initialize(self, samples_number, training_points, samples):
         self.strata.initialize(samples_number, training_points)

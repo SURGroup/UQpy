@@ -1,9 +1,9 @@
 import pytest
+from UQpy.optimization.MinimizeOptimizer import MinimizeOptimizer
 from beartype.roar import BeartypeCallHintPepParamException
-from line_profiler_pycharm import profile
 
 from UQpy.surrogates.kriging.Kriging import Kriging
-from UQpy.utilities.strata.RectangularStrata import Rectangular
+from UQpy.utilities.strata.RectangularStrata import RectangularStrata
 from UQpy.sampling.StratifiedSampling import StratifiedSampling
 from UQpy.RunModel import RunModel
 from UQpy.distributions.collection.Uniform import Uniform
@@ -12,116 +12,16 @@ import shutil
 from UQpy.surrogates.kriging.regression_models import Linear, Constant
 from UQpy.surrogates.kriging.correlation_models import Gaussian
 
-#
-# def test_kriging_constant_exponential():
-#     from UQpy.surrogates.kriging.regression_models.Constant import Constant
-#     from UQpy.surrogates.kriging.correlation_models.Exponential import Exponential
-#     marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
-#     strata = Rectangular(strata_number=[10, 10])
-#     x = StratifiedSampling(distributions=marginals, strata_object=strata,
-#                            samples_per_stratum_number=1, random_state=1)
-#     rmodel = RunModel(model_script='python_model_function.py', vec=False)
-#     rmodel.run(samples=x.samples)
-#
-#     regression_model = Constant()
-#     correlation_model = Exponential()
-#     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
-#                 optimizations_number=20, correlation_model_parameters=[1, 1])
-#     K.fit(samples=x.samples, values=rmodel.qoi_list)
-#
-#     assert round(K.correlation_model_parameters[0], 5) == 3.99253
-#     assert round(K.correlation_model_parameters[1], 5) == 0.78878
-#
-#     shutil.rmtree(rmodel.model_dir)
-#
-#
-# def test_kriging_quadratic_linear():
-#     from UQpy.surrogates.kriging.regression_models.Quadratic import Quadratic
-#     from UQpy.surrogates.kriging.correlation_models.Linear import Linear
-#     marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
-#     strata = Rectangular(strata_number=[10, 10])
-#     x = StratifiedSampling(distributions=marginals, strata_object=strata,
-#                            samples_per_stratum_number=1, random_state=1)
-#     rmodel = RunModel(model_script='python_model_function.py', vec=False)
-#     rmodel.run(samples=x.samples)
-#
-#     regression_model = Quadratic()
-#     correlation_model = Linear()
-#     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
-#                 optimizations_number=20, correlation_model_parameters=[1, 1], random_state=0)
-#     K.fit(samples=x.samples, values=rmodel.qoi_list)
-#     assert round(K.correlation_model_parameters[0], 3) == 12.294
-#     assert round(K.correlation_model_parameters[1], 3) == 0.6
-#     shutil.rmtree(rmodel.model_dir)
-#
-#
-# def test_kriging_constant_spherical():
-#     from UQpy.surrogates.kriging.regression_models.Constant import Constant
-#     from UQpy.surrogates.kriging.correlation_models.Spherical import Spherical
-#     marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
-#     strata = Rectangular(strata_number=[10, 10])
-#     x = StratifiedSampling(distributions=marginals, strata_object=strata,
-#                            samples_per_stratum_number=1, random_state=1)
-#     rmodel = RunModel(model_script='python_model_function.py', vec=False)
-#     rmodel.run(samples=x.samples)
-#
-#     regression_model = Constant()
-#     correlation_model = Spherical()
-#     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
-#                 optimizations_number=20, correlation_model_parameters=[1, 1])
-#     K.fit(samples=x.samples, values=rmodel.qoi_list)
-#     assert round(K.correlation_model_parameters[0], 3) == 2.315
-#     assert round(K.correlation_model_parameters[1], 3) == 0.536
-#     shutil.rmtree(rmodel.model_dir)
-#
-#
-# def test_kriging_constant_spline():
-#     from UQpy.surrogates.kriging.regression_models.Constant import Constant
-#     from UQpy.surrogates.kriging.correlation_models.Spline import Spline
-#     marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
-#     strata = Rectangular(strata_number=[10, 10])
-#     x = StratifiedSampling(distributions=marginals, strata_object=strata,
-#                            samples_per_stratum_number=1, random_state=1)
-#     rmodel = RunModel(model_script='python_model_function.py', vec=False)
-#     rmodel.run(samples=x.samples)
-#
-#     regression_model = Constant()
-#     correlation_model = Spline()
-#     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
-#                 optimizations_number=20, correlation_model_parameters=[1, 1])
-#     K.fit(samples=x.samples, values=rmodel.qoi_list)
-#     assert round(K.correlation_model_parameters[0], 3) == 2.104
-#     assert round(K.correlation_model_parameters[1], 3) == 0.387
-#     shutil.rmtree(rmodel.model_dir)
-#
-#
-# def test_kriging_constant_cubic():
-#     from UQpy.surrogates.kriging.regression_models.Constant import Constant
-#     from UQpy.surrogates.kriging.correlation_models.Cubic import Cubic
-#     marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
-#     strata = Rectangular(strata_number=[10, 10])
-#     x = StratifiedSampling(distributions=marginals, strata_object=strata,
-#                            samples_per_stratum_number=1, random_state=1)
-#     rmodel = RunModel(model_script='python_model_function.py', vec=False)
-#     rmodel.run(samples=x.samples)
-#
-#     regression_model = Constant()
-#     correlation_model = Cubic()
-#     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
-#                 optimizations_number=20, correlation_model_parameters=[1, 1], random_state=0)
-#     K.fit(samples=x.samples, values=rmodel.qoi_list)
-#     assert round(K.correlation_model_parameters[0], 3) == 0.001
-#     assert round(K.correlation_model_parameters[1], 3) == 338.74
-#     shutil.rmtree(rmodel.model_dir)
-
 
 samples = np.linspace(0, 5, 20).reshape(-1, 1)
 values = np.cos(samples)
-krig = Kriging(regression_model=Linear(), correlation_model=Gaussian(),
+optimizer = MinimizeOptimizer(method="L-BFGS-B")
+krig = Kriging(regression_model=Linear(), correlation_model=Gaussian(), optimizer=optimizer,
                correlation_model_parameters=[0.14], optimize=False, random_state=1)
 krig.fit(samples=samples, values=values, correlation_model_parameters=[0.3])
 
-krig2 = Kriging(regression_model=Constant(), correlation_model=Gaussian(),
+optimizer = MinimizeOptimizer(method="L-BFGS-B")
+krig2 = Kriging(regression_model=Constant(), correlation_model=Gaussian(), optimizer=optimizer,
                 correlation_model_parameters=[0.3], bounds=[[0.01, 5]],
                 optimize=False, optimizations_number=100, normalize=False,
                 random_state=2)
@@ -129,12 +29,15 @@ krig2.fit(samples=samples, values=values)
 
 
 # Using the in-built linear regression model as a function
-linear_regression_model = Kriging(regression_model=Linear(), correlation_model=Gaussian(),
+linear_regression_model = Kriging(regression_model=Linear(), correlation_model=Gaussian(), optimizer=optimizer,
                                   correlation_model_parameters=[1]).regression_model
-gaussian_corrleation_model = Kriging(regression_model=Linear(), correlation_model=Gaussian(),
+optimizer = MinimizeOptimizer(method="L-BFGS-B")
+gaussian_corrleation_model = Kriging(regression_model=Linear(), correlation_model=Gaussian(), optimizer=optimizer,
                                      correlation_model_parameters=[1]).correlation_model
 
+optimizer = MinimizeOptimizer(method="L-BFGS-B")
 krig3 = Kriging(regression_model=linear_regression_model, correlation_model=gaussian_corrleation_model,
+                optimizer=optimizer,
                 correlation_model_parameters=[1], optimize=False, normalize=False, random_state=0)
 krig3.fit(samples=samples, values=values)
 
@@ -270,7 +173,7 @@ def test_optimizer():
     """
         Raises an error if corr_model_params is not defined.
     """
-    with pytest.raises(TypeError):
+    with pytest.raises(BeartypeCallHintPepParamException):
         Kriging(regression_model=Linear(), correlation_model=Gaussian(),
                 correlation_model_parameters=[1], optimizer='A')
 
@@ -285,14 +188,16 @@ def test_random_state():
 
 
 def test_loglikelihood():
-    prediction = np.round(krig3.log_likelihood(np.array([1.5]), krig3.correlation_model, np.array([[1], [2]]),
-                                               np.array([[1], [1]]), np.array([[1], [2]]))[0], 3)
+    prediction = np.round(krig3.log_likelihood(np.array([1.5]),
+                                               krig3.correlation_model, np.array([[1], [2]]),
+                                               np.array([[1], [1]]), np.array([[1], [2]]), return_grad=False), 3)
     expected_prediction = 1.679
     assert (expected_prediction == prediction).all()
 
 
 def test_loglikelihood_derivative():
     prediction = np.round(krig3.log_likelihood(np.array([1.5]), krig3.correlation_model, np.array([[1], [2]]),
-                                               np.array([[1], [1]]), np.array([[1], [2]]))[1], 3)
+                                               np.array([[1], [1]]), np.array([[1], [2]]), return_grad=True)[1], 3)
     expected_prediction = np.array([-0.235])
     assert (expected_prediction == prediction).all()
+

@@ -8,7 +8,7 @@ from UQpy.utilities.strata.baseclass.Strata import Strata
 from UQpy.sampling.SimplexSampling import SimplexSampling
 
 
-class Delaunay(Strata):
+class DelaunayStrata(Strata):
     def calculate_strata_metrics(self, **kwargs):
         pass
 

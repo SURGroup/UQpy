@@ -6,7 +6,7 @@ import logging
 
 class MinimizeOptimizer(Optimizer):
 
-    def __init__(self, method: str = None, bounds=None):
+    def __init__(self, method: str = 'bfgs', bounds=None):
         super().__init__(bounds)
         self.logger = logging.getLogger(__name__)
         self.optimization = minimize

@@ -8,7 +8,7 @@ from UQpy.utilities.ValidationTypes import *
 from UQpy.RunModel import RunModel
 from UQpy.sampling.refined_stratified_sampling.baseclass.Refinement import *
 from UQpy.utilities.Utilities import gradient
-from UQpy.utilities.strata import Voronoi
+from UQpy.utilities.strata.VoronoiStrata import VoronoiStrata
 from UQpy.utilities.strata.baseclass import Strata
 
 
@@ -32,8 +32,8 @@ class GradientEnhancedRefinement(Refinement):
         self.surrogate = surrogate
 
     def update_strata(self, samplesU01):
-        if isinstance(self.strata, Voronoi):
-            self.strata = Voronoi(seeds=samplesU01)
+        if isinstance(self.strata, VoronoiStrata):
+            self.strata = VoronoiStrata(seeds=samplesU01)
 
     def initialize(self, samples_number, training_points, samples):
         self.runmodel_object.run(samples)

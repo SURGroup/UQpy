@@ -1,5 +1,4 @@
-
-
+from UQpy.optimization.MinimizeOptimizer import MinimizeOptimizer
 from matplotlib import pyplot as plt
 
 from UQpy.surrogates.kriging.Kriging import Kriging
@@ -20,6 +19,7 @@ def test_akmcs_weighted_u():
     regression_model = Linear()
     correlation_model = Exponential()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
+                optimizer=MinimizeOptimizer('l-bfgs-b'),
                 optimizations_number=10, correlation_model_parameters=[1, 1], random_state=1)
     # OPTIONS: 'U', 'EFF', 'Weighted-U'
     learning_function = WeightedUFunction(weighted_u_stop=2)
@@ -44,6 +44,7 @@ def test_akmcs_u():
     regression_model = Linear()
     correlation_model = Exponential()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
+                optimizer=MinimizeOptimizer('l-bfgs-b'),
                 optimizations_number=10, correlation_model_parameters=[1, 1], random_state=0)
     # OPTIONS: 'U', 'EFF', 'Weighted-U'
     learning_function = UFunction(u_stop=2)
@@ -68,7 +69,8 @@ def test_akmcs_expected_feasibility():
     regression_model = Linear()
     correlation_model = Exponential()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
-                optimizations_number=10, correlation_model_parameters=[1, 1])
+                optimizations_number=10, correlation_model_parameters=[1, 1],
+                optimizer=MinimizeOptimizer('l-bfgs-b'),)
     # OPTIONS: 'U', 'EFF', 'Weighted-U'
     learning_function = ExpectedFeasibility(eff_a=0, eff_epsilon=2, eff_stop=0.001)
     a = AdaptiveKriging(distributions=marginals, runmodel_object=rmodel, surrogate=K,
@@ -92,7 +94,8 @@ def test_akmcs_expected_improvement():
     regression_model = Linear()
     correlation_model = Exponential()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
-                optimizations_number=10, correlation_model_parameters=[1, 1])
+                optimizations_number=10, correlation_model_parameters=[1, 1],
+                optimizer=MinimizeOptimizer('l-bfgs-b'),)
     # OPTIONS: 'U', 'EFF', 'Weighted-U'
     learning_function = ExpectedImprovement()
     a = AdaptiveKriging(distributions=marginals, runmodel_object=rmodel, surrogate=K,
@@ -116,7 +119,8 @@ def test_akmcs_expected_improvement_global_fit():
     regression_model = Linear()
     correlation_model = Exponential()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
-                optimizations_number=10, correlation_model_parameters=[1, 1])
+                optimizations_number=10, correlation_model_parameters=[1, 1],
+                optimizer=MinimizeOptimizer('l-bfgs-b'),)
     # OPTIONS: 'U', 'EFF', 'Weighted-U'
     learning_function = ExpectedImprovementGlobalFit()
     a = AdaptiveKriging(distributions=marginals, runmodel_object=rmodel, surrogate=K,

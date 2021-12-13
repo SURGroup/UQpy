@@ -3,17 +3,17 @@ import pytest
 from beartype.roar import BeartypeCallHintPepParamException
 
 from UQpy.distributions.collection import *
-from UQpy.utilities.strata.RectangularStrata import Rectangular
-from UQpy.utilities.strata.VoronoiStrata import Voronoi
+from UQpy.utilities.strata.RectangularStrata import RectangularStrata
+from UQpy.utilities.strata.VoronoiStrata import VoronoiStrata
 from UQpy.sampling.StratifiedSampling import *
 from UQpy.utilities.strata.DelaunayStrata import *
 
 
 def test_rectangular_sts():
     marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
-    strata = Rectangular(strata_number=[4, 4])
+    strata = RectangularStrata(strata_number=[4, 4], random_state=1)
     x = StratifiedSampling(distributions=marginals, strata_object=strata,
-                           samples_per_stratum_number=1, random_state=1)
+                           samples_per_stratum_number=1, )
     assert x.samples[6, 0] == 0.5511130624328794
     assert x.samples[12, 1] == 0.9736516658759619
     assert x.samples[2, 0] == 0.5366889727042783
@@ -23,15 +23,15 @@ def test_rectangular_sts():
 def test_delaunay_sts():
     marginals = [Exponential(loc=1., scale=1.), Exponential(loc=1., scale=1.)]
     seeds = np.array([[0, 0], [0.4, 0.8], [1, 0], [1, 1]])
-    strata_obj = Delaunay(seeds=seeds)
-    sts_obj = StratifiedSampling(distributions=marginals, strata_object=strata_obj,
-                                 samples_per_stratum_number=1, random_state=1)
+    strata_obj = DelaunayStrata(seeds=seeds, )
+    sts_obj = StratifiedSampling(distributions=marginals, strata_object=strata_obj, random_state=1,
+                                 samples_per_stratum_number=1, )
     assert sts_obj.samples[2, 0] == 1.902581742436106
 
 
 def test_voronoi_sts():
     marginals = [Exponential(loc=1., scale=1.), Exponential(loc=1., scale=1.)]
-    strata = Voronoi(seeds_number=8, dimension=2, random_state=3)
+    strata = VoronoiStrata(seeds_number=8, dimension=2, random_state=3)
     x = StratifiedSampling(distributions=marginals, strata_object=strata,
                            samples_per_stratum_number=3)
     assert x.samples[7, 0] == 3.6928440862661223
@@ -42,29 +42,30 @@ def test_voronoi_sts():
 
 # Rectangular
 marginals = [Exponential(loc=1., scale=1.), Exponential(loc=1., scale=1.)]
-strata = Rectangular(strata_number=[3, 3])
+strata = RectangularStrata(strata_number=[3, 3])
 
 nsamples_per_stratum = [1] * 9
 nsamples_per_stratum[4] = 0
 x_sts = StratifiedSampling(distributions=marginals, strata_object=strata,
                            samples_per_stratum_number=nsamples_per_stratum, random_state=1)
-strata1 = Rectangular(strata_number=[3, 3], stratification_criterion=StratificationCriterion.CENTERED)
-x_sts1 = StratifiedSampling(distributions=marginals, strata_object=strata1, samples_per_stratum_number=1, random_state=1)
+strata1 = RectangularStrata(strata_number=[3, 3], stratification_criterion=StratificationCriterion.CENTERED,
+                            random_state=1)
+x_sts1 = StratifiedSampling(distributions=marginals, strata_object=strata1, samples_per_stratum_number=1, )
 
 # Voronoi
-strata_vor = Voronoi(seeds_number=8, dimension=2, random_state=3)
+strata_vor = VoronoiStrata(seeds_number=8, dimension=2, random_state=3)
 sts_vor = StratifiedSampling(distributions=marginals, strata_object=strata_vor)
 sts_vor.run(samples_per_stratum_number=1)
 
-strata_vor1 = Voronoi(seeds_number=8, dimension=2)
-sts_vor2 = StratifiedSampling(distributions=marginals, strata_object=strata_vor1, random_state=3)
+strata_vor1 = VoronoiStrata(seeds_number=8, dimension=2, random_state=3)
+sts_vor2 = StratifiedSampling(distributions=marginals, strata_object=strata_vor1, )
 sts_vor2.run(samples_number=8, samples_per_stratum_number=1)
 sts_vor2.run()
 
 # Delaunay
 seeds = np.array([[0, 0], [0.4, 0.8], [1, 0], [1, 1]])
-strata_del = Delaunay(seeds=seeds)
-sts_del = StratifiedSampling(distributions=marginals, strata_object=strata_del, random_state=2,
+strata_del = DelaunayStrata(seeds=seeds, random_state=2)
+sts_del = StratifiedSampling(distributions=marginals, strata_object=strata_del,
                              samples_per_stratum_number=2)
 
 
@@ -101,7 +102,7 @@ def test_rect_sts_criterion():
         Test the 'sts_criterion' attribute for RectangularSTS class.
     """
     with pytest.raises(AttributeError):
-        Rectangular(stratification_criterion=StratificationCriterion.aaa)
+        RectangularStrata(stratification_criterion=StratificationCriterion.aaa)
 
 
 def test_rect_strata_object():

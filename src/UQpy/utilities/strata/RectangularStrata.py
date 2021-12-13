@@ -7,7 +7,7 @@ from UQpy.utilities.Utilities import calculate_gradient
 import scipy.stats as stats
 
 
-class Rectangular(Strata):
+class RectangularStrata(Strata):
     @beartype
     def __init__(
         self,
