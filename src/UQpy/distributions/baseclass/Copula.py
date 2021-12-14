@@ -48,7 +48,7 @@ class Copula(ABC):
         """
         Perform some checks on the marginals, raise errors if necessary.
 
-        As an example, Archimedian copula are only defined for bi-variate continuous distributions, thus this method
+        As an example, Archimedian copulas are only defined for bi-variate continuous distributions, thus this method
         checks that marginals is of length 2 and continuous, and raise an error if that is not the case.
 
         :param marginals: List of 1D continuous distributions.

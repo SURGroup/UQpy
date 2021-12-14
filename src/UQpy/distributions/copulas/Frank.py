@@ -10,7 +10,7 @@ class Frank(Copula):
     def __init__(self, theta: float):
         """
 
-        :param theta: Parameter of the copula, real number in R
+        :param theta: Parameter of the copula, real number in :math:`\mathbb{R}`
         """
         super().__init__(theta=theta)
 
