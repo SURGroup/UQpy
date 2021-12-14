@@ -5,12 +5,16 @@ Distributions
 This module contains functionality for all probability distributions supported in :py:mod:`UQpy`.
 
 The :py:mod:`UQpy.distributions` module is  used  to  define  probability  distribution  objects.   These  objects  possess various
-methods  that  allow the user  to:  compute  the  probability  density/mass  function ``pdf/pmf``, the cumulative
-distribution  function ``cdf``, the logarithm of the pdf/pmf ``log_pdf/log_pmf``, return the moments ``moments``, draw
-independent samples ``rvs`` and compute the maximum likelihood estimate of the parameters from data ``mle``.
+methods  that  allow the user  to :
 
-The module contains the following parent classes - probability distributions are defined via sub-classing those parent
-classes:
+- compute the  probability  density/mass  function ``pdf/pmf``,
+- compute the cumulative distribution  function ``cdf``,
+- compute the logarithm of the pdf/pmf ``log_pdf/log_pmf``,
+- return the moments ``moments``,
+- draw independent samples ``rvs``
+- and compute the maximum likelihood estimate of the parameters from data ``mle``.
+
+The module contains the following parent classes:
 
 - :class:`.Distribution`: Parent class to all distributions.
 - :class:`.Distribution1D`: Parent class to all univariate distributions.
@@ -19,6 +23,7 @@ classes:
 - :class:`.DistributionND`: Parent class to multivariate probability distributions.
 - :class:`.Copula`: Parent class to copula to model dependency between marginals.
 
+Probability distributions are defined via sub-classing those parent classes.
 
 
 Note that the various classes of the :py:mod:`UQpy.distributions` module are written to be consistent with distributions in the
