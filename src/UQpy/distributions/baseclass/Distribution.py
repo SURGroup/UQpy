@@ -32,7 +32,9 @@ class Distribution(ABC):
         """ Ordered list of parameter names, useful when parameter values are stored in vectors and must be passed to 
         the :meth:`update_params` method."""
         self.ordered_parameters = ordered_parameters
-        """Parameters of the distribution. Note: this attribute is not defined for certain :class:`.Distribution` 
+        """Parameters of the distribution. 
+        
+        This attribute is not defined for certain :class:`.Distribution` 
         objects such as those of type :class:`.JointIndependent` or :class:`.JointCopula`. The user is advised to use 
         the :meth:`get_parameters` method to access the parameters."""
         if self.ordered_parameters is None:

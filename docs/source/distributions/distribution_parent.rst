@@ -5,7 +5,7 @@ Parent Distribution Class
     :members:
     :private-members:
 
-**Additional methods available from :py:mod:`scipy.stats` :**
+**Additional methods available from** :py:mod:`scipy.stats` :
     **cdf** *(x)*
         Evaluate the cumulative distribution function.
 
@@ -71,7 +71,7 @@ Parent Distribution Class
     **fit** *(data)*
         Compute the maximum-likelihood parameters from iid data.
         Computes the mle analytically if possible. For univariate continuous distributions, it leverages the fit
-        method of the scipy.stats package.
+        method of the :py:mod:`scipy.stats` package.
 
         :param numpy.ndarray data: Data array, must be of shape `(npoints, dimension)`.
         :return: Maximum-likelihood parameter estimates.
