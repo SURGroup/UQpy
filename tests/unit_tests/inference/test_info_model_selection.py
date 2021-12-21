@@ -14,8 +14,8 @@ def test_aic():
 
     candidate_models = [m0, m1, m2]
     selector = InformationModelSelection(candidate_models=candidate_models,
-                                         data= data,
-                                         criterion = InformationTheoreticCriterion.AIC,
+                                         data=data,
+                                         criterion=InformationTheoreticCriterion.AIC,
                                          random_state=0)
     selector.run(optimizations_number=5)
     selector.sort_models()
@@ -33,8 +33,8 @@ def test_bic():
 
     candidate_models = [m0, m1, m2]
     selector = InformationModelSelection(candidate_models=candidate_models,
-                                         data= data,
-                                         criterion = InformationTheoreticCriterion.BIC,
+                                         data=data,
+                                         criterion=InformationTheoreticCriterion.BIC,
                                          random_state=0)
     selector.run(optimizations_number=5)
     selector.sort_models()
@@ -52,8 +52,8 @@ def test_aicc():
 
     candidate_models = [m0, m1, m2]
     selector = InformationModelSelection(candidate_models=candidate_models,
-                                         data= data,
-                                         criterion = InformationTheoreticCriterion.AICc,
+                                         data=data,
+                                         criterion=InformationTheoreticCriterion.AICc,
                                          random_state=0)
     selector.run(optimizations_number=5)
     selector.sort_models()

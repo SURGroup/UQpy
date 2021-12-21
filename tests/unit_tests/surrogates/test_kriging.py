@@ -72,7 +72,7 @@ def test_jacobian1():
     assert (expected_jacobian == jacobian).all()
 
 
-def test_regress():
+def test_regression_models():
     from UQpy.surrogates.kriging.regression_models import Constant, Linear, Quadratic
     krig.regression_model = Constant()
     tmp = krig.regression_model.r([[0], [1]])
@@ -94,7 +94,7 @@ def test_regress():
     assert tmp_test1 and tmp_test2 and tmp_test3
 
 
-def test_corr():
+def test_correlation_models():
     from UQpy.surrogates.kriging.correlation_models import Exponential, Linear, Spherical, Cubic, Spline
     krig.correlation_model = Exponential()
     rx_exponential = (np.round(krig.correlation_model.c([[0], [1], [2]], [[2]], np.array([1])), 3) ==
@@ -144,7 +144,7 @@ def test_corr():
     assert expon and linear and spherical and cubic and spline
 
 
-def test_reg_model():
+def test_wrong_regression_model():
     """
         Raises an error if reg_model is not callable or a string of an in-built model.
     """
@@ -152,7 +152,7 @@ def test_reg_model():
         Kriging(regression_model='A', correlation_model=Gaussian(), correlation_model_parameters=[1])
 
 
-def test_corr_model():
+def test_wrong_correlation_model():
     """
         Raises an error if corr_model is not callable or a string of an in-built model.
     """
@@ -160,7 +160,7 @@ def test_corr_model():
         Kriging(regression_model=Linear(), correlation_model='A', correlation_model_parameters=[1])
 
 
-def test_corr_model_params():
+def test_missing_correlation_model_parameters():
     """
         Raises an error if corr_model_params is not defined.
     """
@@ -187,7 +187,7 @@ def test_random_state():
                 correlation_model_parameters=[1], random_state='A')
 
 
-def test_loglikelihood():
+def test_log_likelihood():
     prediction = np.round(krig3.log_likelihood(np.array([1.5]),
                                                krig3.correlation_model, np.array([[1], [2]]),
                                                np.array([[1], [1]]), np.array([[1], [2]]), return_grad=False), 3)
@@ -195,7 +195,7 @@ def test_loglikelihood():
     assert (expected_prediction == prediction).all()
 
 
-def test_loglikelihood_derivative():
+def test_log_likelihood_derivative():
     prediction = np.round(krig3.log_likelihood(np.array([1.5]), krig3.correlation_model, np.array([[1], [2]]),
                                                np.array([[1], [1]]), np.array([[1], [2]]), return_grad=True)[1], 3)
     expected_prediction = np.array([-0.235])

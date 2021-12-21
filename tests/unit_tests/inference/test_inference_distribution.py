@@ -23,14 +23,14 @@ def test_mle():
     assert round(ml_estimator.mle[0], 3) == 0.907
 
 
-def test_infomodelselection_bic():
+def test_info_model_selection_bic():
     selector = InformationModelSelection(
         candidate_models=[candidate_model, candidate_model2], data=data,
         criterion=InformationTheoreticCriterion.BIC, optimizations_number=5)
     assert round(selector.probabilities[0], 3) == 0.284
 
 
-def test_infomodelselection_aic():
+def test_info_model_selection_aic():
     selector = InformationModelSelection(
         candidate_models=[candidate_model, candidate_model2], data=data,
         criterion=InformationTheoreticCriterion.AIC, optimizations_number=5)
@@ -38,7 +38,7 @@ def test_infomodelselection_aic():
     assert round(selector.probabilities[0], 3) == 0.650
 
 
-def test_infomodelselection_aicc():
+def test_info_model_selection_aicc():
     selector = InformationModelSelection(
         candidate_models=[candidate_model, candidate_model2], data=data,
         criterion=InformationTheoreticCriterion.AICc, optimizations_number=5)

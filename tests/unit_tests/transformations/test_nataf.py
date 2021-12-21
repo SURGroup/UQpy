@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 
-def test_type_of_dist1():
+def test_correct_distribution_dimensions():
     dist1 = Normal(loc=0.0, scale=1.0)
     dist2 = Normal(loc=0.0, scale=1.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
@@ -14,34 +14,34 @@ def test_type_of_dist1():
     assert ntf_obj.dimension == 2
 
 
-def test_type_of_dist2():
+def test_wrong_distribution_in_list():
     dist1 = Normal(loc=0.0, scale=1.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     with pytest.raises(Exception):
         assert Nataf(distributions=[dist1, 'Beta'], corr_x=rx)
 
 
-def test_type_of_dist3():
+def test_wrong_distribution():
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     with pytest.raises(Exception):
         assert Nataf(distributions='Normal', corr_x=rx)
 
 
-def test_corr1():
+def test_identity_correlation_x_normal():
     dist1 = Normal(loc=0.0, scale=1.0)
     dist2 = Normal(loc=0.0, scale=1.0)
     ntf_obj = Nataf(distributions=[dist1, dist2])
     assert np.all(np.equal(ntf_obj.corr_x, np.eye(2)))
 
 
-def test_corr2():
+def test_identity_correlation_z_normal():
     dist1 = Normal(loc=0.0, scale=1.0)
     dist2 = Normal(loc=0.0, scale=1.0)
     ntf_obj = Nataf(distributions=[dist1, dist2])
     assert np.all(np.equal(ntf_obj.corr_z, np.eye(2)))
 
 
-def test_corr_x1():
+def test_identity_correlation_uniform_z():
     dist1 = Uniform(loc=0.0, scale=1.0)
     dist2 = Uniform(loc=0.0, scale=1.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
@@ -49,7 +49,7 @@ def test_corr_x1():
     assert np.all(np.equal(ntf_obj.corr_z, rx))
 
 
-def test_corr_x2():
+def test_identity_correlation_normal_z():
     dist1 = Normal(loc=0.0, scale=1.0)
     dist2 = Normal(loc=0.0, scale=1.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
@@ -57,7 +57,7 @@ def test_corr_x2():
     assert np.all(np.equal(ntf_obj.corr_z, rx))
 
 
-def test_corr_x3():
+def test_non_identity_correlation_normal():
     dist1 = Normal(loc=0.0, scale=1.0)
     dist2 = Normal(loc=0.0, scale=1.0)
     rx = np.array([[1.0, 0.8], [0.8, 1.0]])
@@ -65,39 +65,15 @@ def test_corr_x3():
     assert np.all(np.equal(ntf_obj.corr_z, rx))
 
 
-def test_corr_x4():
+def test_non_identity_correlation_uniform_z():
     dist1 = Uniform(loc=0.0, scale=1.0)
     dist2 = Uniform(loc=0.0, scale=1.0)
     rx = np.array([[1.0, 0.8], [0.8, 1.0]])
     ntf_obj = Nataf(distributions=[dist1, dist2], corr_x=rx)
-    np.testing.assert_allclose(ntf_obj.corr_z,[[1., 0.8134732861515996], [0.8134732861515996, 1.]], rtol=1e-09)
+    np.testing.assert_allclose(ntf_obj.corr_z, [[1., 0.8134732861515996], [0.8134732861515996, 1.]], rtol=1e-09)
 
 
-def test_corr_z1():
-    dist1 = Uniform(loc=0.0, scale=1.0)
-    dist2 = Uniform(loc=0.0, scale=1.0)
-    rz = np.array([[1.0, 0.0], [0.0, 1.0]])
-    ntf_obj = Nataf(distributions=[dist1, dist2], corr_z=rz)
-    assert np.all(np.equal(ntf_obj.corr_x, rz))
-
-
-def test_corr_z2():
-    dist1 = Normal(loc=0.0, scale=1.0)
-    dist2 = Normal(loc=0.0, scale=1.0)
-    rz = np.array([[1.0, 0.0], [0.0, 1.0]])
-    ntf_obj = Nataf(distributions=[dist1, dist2], corr_z=rz)
-    assert np.all(np.equal(ntf_obj.corr_x, rz))
-
-
-def test_corr_z3():
-    dist1 = Normal(loc=0.0, scale=1.0)
-    dist2 = Normal(loc=0.0, scale=1.0)
-    rz = np.array([[1.0, 0.8], [0.8, 1.0]])
-    ntf_obj = Nataf(distributions=[dist1, dist2], corr_z=rz)
-    assert np.all(np.equal(ntf_obj.corr_x, rz))
-
-
-def test_corr_z4():
+def test_non_identity_correlation_uniform_x():
     dist1 = Uniform(loc=0.0, scale=1.0)
     dist2 = Uniform(loc=0.0, scale=1.0)
     rz = np.array([[1.0, 0.8], [0.8, 1.0]])
@@ -105,7 +81,7 @@ def test_corr_z4():
     assert (ntf_obj.corr_x == [[1., 0.7859392826067285], [0.7859392826067285, 1.]]).all()
 
 
-def test_h():
+def test_attribute_h():
     dist1 = Normal(loc=0.0, scale=1.0)
     dist2 = Normal(loc=0.0, scale=1.0)
     rz = np.array([[1.0, 0.8], [0.8, 1.0]])
@@ -221,63 +197,63 @@ def test_samples_z2():
     assert np.all(g)
 
 
-def test_itam_1():
+def test_itam_beta():
     dist1 = Uniform(loc=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = Nataf(distributions=[dist1], corr_x=rx)
     assert ntf_obj.itam_beta == 1.0
 
 
-def test_itam_2():
+def test_itam_max_iteration():
     dist1 = Uniform(loc=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = Nataf(distributions=[dist1], corr_x=rx)
     assert ntf_obj.itam_max_iter == 100
 
 
-def test_itam_3():
+def test_itam_threshold1():
     dist1 = Uniform(loc=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = Nataf(distributions=[dist1], corr_x=rx)
     assert ntf_obj.itam_threshold1 == 0.001
 
 
-def test_itam_4():
+def test_itam_threshold2():
     dist1 = Uniform(loc=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = Nataf(distributions=[dist1], corr_x=rx)
     assert ntf_obj.itam_threshold2 == 0.1
 
 
-def test_itam_1a():
+def test_itam_beta1():
     dist1 = Uniform(loc=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = Nataf(distributions=[dist1], corr_x=rx, itam_beta=2.0)
     assert ntf_obj.itam_beta == 2.0
 
 
-def test_itam_2a():
+def test_itam_max_iteration1():
     dist1 = Uniform(loc=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = Nataf(distributions=[dist1], corr_x=rx, itam_max_iter=200)
     assert ntf_obj.itam_max_iter == 200
 
 
-def test_itam_2m():
+def test_itam_max_iteration2():
     dist1 = Uniform(loc=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = Nataf(distributions=[dist1], corr_x=rx, itam_max_iter=10)
     assert ntf_obj.itam_max_iter == 10
 
 
-def test_itam_3a():
+def test_itam_threshold1_1():
     dist1 = Uniform(loc=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = Nataf(distributions=[dist1], corr_x=rx, itam_threshold1=0.002)
     assert ntf_obj.itam_threshold1 == 0.002
 
 
-def test_itam_4a():
+def test_itam_threshold2_1():
     dist1 = Uniform(loc=0.0, scale=5.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = Nataf(distributions=[dist1], corr_x=rx, itam_threshold2=0.3)
@@ -297,4 +273,3 @@ def distortion_z2x_dist_object():
     rz = np.array([[1.0, 0.8], [0.8, 1.0]])
     with pytest.raises(Exception):
         assert Nataf.distortion_z2x(distributions=[dist1, 'Beta'], corr_z=rz)
-

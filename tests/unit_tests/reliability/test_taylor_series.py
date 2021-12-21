@@ -6,8 +6,6 @@ import shutil
 import numpy as np
 import pytest
 from UQpy.RunModel import RunModel
-########################################################################################################################
-# Tests for the constructor of the TaylorSeries class.
 
 
 def model_i(samples):
@@ -18,9 +16,6 @@ def model_i(samples):
         qoi_list[i] = resistance - stress
     return qoi_list
 
-# from unittest.mock import MagicMock
-# model_i = RunModel()
-# thing.method = MagicMock(return_value=3)
 
 def test_dist_object1():
     dist1 = Normal(loc=0.0, scale=1.0)
@@ -123,7 +118,6 @@ def test_derivatives_5_run_model(setup):
         shutil.rmtree(file_name)
     np.testing.assert_allclose(array_of_samples[0], [160, 160], rtol=1e-09)
     np.testing.assert_allclose(gradient, [20, -10], rtol=1e-09)
-
 
 
 def test_derivatives_6_second():
