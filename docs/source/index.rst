@@ -45,21 +45,6 @@ UQpy is designed to serve as a platform for developing new UQ methodologies and 
 
     python setup.py develop
 
-Referencing
--------------
-
-If you are using this software in a work that will be published, please cite this paper:
-
-Olivier, A., Giovanis, D.G., Aakash, B.S., Chauhan, M., Vandanapu, L., and Shields, M.D. (2020). "UQpy: A general purpose Python package and development environment for uncertainty quantification". Journal of Computational Science.
-
-Help & Support
----------------------------
-
-For assistance with the ``UQpy`` software package, please raise an issue on the Github `issues`_ page. Please use the appropriate labels to indicate which module you are specifically inquiring about. Alternatively, please contact ``uqpy.info@gmail.com``.
-
-
-.. _issues: https://github.com/SURGroup/UQpy/issues
-
 
 .. _toc:
 
@@ -86,3 +71,25 @@ Table of contents
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+Referencing UQpy
+----------------
+
+If you are using this software in a work that will be published, please cite this paper:
+
+Olivier, A., Giovanis, D.G., Aakash, B.S., Chauhan, M., Vandanapu, L., and Shields, M.D. (2020). "UQpy: A general purpose Python package and development environment for uncertainty quantification". Journal of Computational Science. Volume 47, 101204
+
+https://doi.org/10.1016/j.jocs.2020.101204
+
+Examples from the above article were performed using UQpy version 3. These examples can be found at:
+
+https://github.com/SURGroup/UQpy_paper
+
+
+Help & Support
+---------------------------
+
+For assistance with the ``UQpy`` software package, please raise an issue on the Github `issues`_ page. Please use the appropriate labels to indicate which module you are specifically inquiring about.
+
+
+.. _issues: https://github.com/SURGroup/UQpy/issues

@@ -5,3 +5,8 @@ Defining custom distributions in :py:mod:`UQpy`. can be done by sub-classing the
 The subclasses must possess the desired methods, per the parent :class:`.Distribution` class.
 
 Custom copulas can be similarly defined by subclassing the :class:`.Copula` class and defining the appropriate methods.
+
+.. toctree::
+   :maxdepth: 1
+
+    Examples <../auto_examples/distributions/user_defined/index.rst>

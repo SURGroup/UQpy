@@ -33,7 +33,7 @@ restructured from the :py:mod:`scipy.stats` package.
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :hidden:
    :caption: Distributions
 
@@ -41,6 +41,6 @@ restructured from the :py:mod:`scipy.stats` package.
     Distributions Continuous 1D <distributions_continuous_1d>
     Distributions Discrete 1D <distributions_discrete_1d>
     Copulas <copulas>
-    Multivariate Distributions <distributions_multivariate>
+    Distributions ND <distributions_multivariate>
     User Defined Distributions <user_defined_distributions>
 

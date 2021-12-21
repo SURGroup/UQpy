@@ -63,8 +63,16 @@ bibtex_default_style = 'unsrt'
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 sphinx_gallery_conf = {
-     'examples_dirs': ['../code/dimension_reduction'],   # path to your example scripts
-     'gallery_dirs': ['auto_examples/dimension_reduction'],  # path to where to save gallery generated output
+     'examples_dirs': ['../code/dimension_reduction',
+                       '../code/distributions/continuous_1d',
+                       '../code/distributions/discrete_1d',
+                       '../code/distributions/multivariate',
+                       '../code/distributions/user_defined'],   # path to your example scripts
+     'gallery_dirs': ['auto_examples/dimension_reduction',
+                      'auto_examples/distributions/continuous_1d',
+                      'auto_examples/distributions/discrete_1d',
+                      'auto_examples/distributions/multivariate',
+                      'auto_examples/distributions/user_defined'],  # path to where to save gallery generated output
 }
 
 # -- Options for HTML output -------------------------------------------------

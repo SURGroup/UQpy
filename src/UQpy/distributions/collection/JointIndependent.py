@@ -125,15 +125,8 @@ class JointIndependent(DistributionND):
             def joint_moments(dist, moments2return="mvsk"):
                 # Go through all marginals
                 if len(moments2return) == 1:
-                    return np.array(
-                        [
-                            marg.moments(moments2return=moments2return)
-                            for marg in dist.marginals
-                        ]
-                    )
-                moments_ = [
-                    np.empty((len(dist.marginals),)) for _ in range(len(moments2return))
-                ]
+                    return np.array([marg.moments(moments2return=moments2return) for marg in dist.marginals])
+                moments_ = [np.empty((len(dist.marginals),)) for _ in range(len(moments2return))]
                 for ind_m, marg in enumerate(dist.marginals):
                     moments_i = marg.moments(moments2return=moments2return)
                     for j in range(len(moments2return)):
