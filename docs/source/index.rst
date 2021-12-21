@@ -92,6 +92,7 @@ listing of the occurring events. This can performed by including the following l
    utilities_doc
    news_doc
    bibliography.rst
+   paper.rst
 
 ------------
 
