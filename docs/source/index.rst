@@ -7,14 +7,18 @@ UQpy (Uncertainty Quantification with python) is a general purpose Python toolbo
 for modeling uncertainty in physical and mathematical systems. The code is organized 
 as a set of modules centered around core capabilities in Uncertainty Quantification (UQ).
 
+------------
+
 Introduction
-==============
+------------
 
 Dependencies required::
 
     macOS, Linux, Windows
-    Python >= 3.6
+    Python >= 3.9
 
+
+------------
 
 Installation
 -------------
@@ -37,22 +41,43 @@ From GitHub: Clone your fork of the UQpy repo from your GitHub account to your l
     cd UQpy
     python setup.py {version} install
 
+------------
 
 Development
 -----------
 
 UQpy is designed to serve as a platform for developing new UQ methodologies and algorithms. To install ``UQpy`` as a developer run::
 
-    python setup.py develop
+    python setup.py {version} develop
 
 
-.. _toc:
+------------
 
-Table of contents
------------------
+Logging
+-----------
+
+UQpy adopts the built-in `logging` python library. This allows for a fine-grain logging of events of various severity levels.
+The available logging levels allowed by the library are:
+
+**DEBUG**, **INFO**, **WARNING**, **ERROR**, **CRITICAL**
+
+The default logging level is set to **ERROR**. The user can change the logging severity level to allow for more detailed
+listing of the occurring events. This can performed by including the following line in their code and choosing the desired logging level:
+
+.. code-block:: python
+  :linenos:
+
+  logging.getLogger('UQpy').setLevel(logging.INFO)
+
 
 .. toctree::
-   :maxdepth: 2
+   :hidden:
+
+   Home <self>
+
+.. toctree::
+   :maxdepth: 0
+   :hidden:
 
    runmodel_doc
    /dimension_reduction/index
@@ -68,9 +93,7 @@ Table of contents
    news_doc
    bibliography.rst
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+------------
 
 Referencing UQpy
 ----------------
@@ -85,6 +108,7 @@ Examples from the above article were performed using UQpy version 3. These examp
 
 https://github.com/SURGroup/UQpy_paper
 
+------------
 
 Help & Support
 ---------------------------
