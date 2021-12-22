@@ -40,3 +40,12 @@ def test_lhs_maximin_criterion():
     actual_samples = latin_hypercube_sampling.samples.flatten()
     expected_samples = np.array([[1.208511], [1.86016225]]).flatten()
     np.testing.assert_allclose(expected_samples, actual_samples, rtol=1e-6)
+
+def test_lhs_maximin_criterion_joint_independent():
+    maximin_criterion = MaxiMin()
+    latin_hypercube_sampling = \
+        LatinHypercubeSampling(distributions=JointIndependent(marginals=[distribution, distribution1]),
+                               nsamples=2, criterion=maximin_criterion, random_state=1)
+    actual_samples = latin_hypercube_sampling.samples.flatten()
+    expected_samples = np.array([1.86016225, 1.00011437, 1.208511,   2.30233257]).flatten()
+    np.testing.assert_allclose(expected_samples, actual_samples, rtol=1e-6)
