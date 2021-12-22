@@ -1,8 +1,9 @@
 import logging
 from typing import Union
 
+from UQpy.utilities.Utilities import process_random_state
 from UQpy.sampling.latin_hypercube_criteria import Random
-from UQpy.utilities.ValidationTypes import PositiveInteger
+from UQpy.utilities.ValidationTypes import PositiveInteger, NumpyFloatArray, RandomStateType
 from UQpy.distributions import *
 from UQpy.sampling.latin_hypercube_criteria.baseclass.Criterion import *
 import numpy as np
@@ -14,8 +15,9 @@ class LatinHypercubeSampling:
     def __init__(
         self,
         distributions: Union[Distribution, list[Distribution]],
-        samples_number: PositiveInteger,
+        nsamples: PositiveInteger,
         criterion: Criterion = Random(),
+        random_state: RandomStateType = None
     ):
         """
         Perform Latin hypercube sampling (LHS) of random variables.
@@ -27,49 +29,48 @@ class LatinHypercubeSampling:
 
         :param distributions: List of :class:`.Distribution` objects
          corresponding to each random variable.
-        :param samples_number: Number of samples to be drawn from each distribution.
+        :param nsamples: Number of samples to be drawn from each distribution.
         :param criterion: The criterion for pairing the generating sample points. This parameter must be of
          type :class:`.Criterion`.
 
          Options:
 
-         1. 'Random' - completely random. \n
-         2. 'Centered' - points only at the centre. \n
-         3. 'MaxiMin' - maximizing the minimum distance between points. \n
-         4. 'MinCorrelation' - minimizing the correlation between the points. \n
+         1. :class:`.Random` - completely random. \n
+         2. :class:`.Centered` - points only at the centre. \n
+         3. :class:`.MaxiMin` - maximizing the minimum distance between points. \n
+         4. :class:`.MinCorrelation` - minimizing the correlation between the points. \n
          5. User-defined criterion class, by providing an implementation of the abstract class :class:`Criterion`
         """
+        self.random_state = process_random_state(random_state)
         self.dist_object = distributions
         self.criterion = criterion
-        self.samples_number = samples_number
+        self.nsamples = nsamples
         self.logger = logging.getLogger(__name__)
-        self.samples = None
+        self.samples: NumpyFloatArray = None
         """ The generated LHS samples."""
         if isinstance(self.dist_object, list):
-            self.samples = np.zeros([self.samples_number, len(self.dist_object)])
+            self.samples = np.zeros([self.nsamples, len(self.dist_object)])
         elif isinstance(self.dist_object, DistributionContinuous1D):
-            self.samples = np.zeros([self.samples_number, 1])
+            self.samples = np.zeros([self.nsamples, 1])
         elif isinstance(self.dist_object, JointIndependent):
-            self.samples = np.zeros(
-                [self.samples_number, len(self.dist_object.marginals)]
-            )
+            self.samples = np.zeros([self.nsamples, len(self.dist_object.marginals)])
 
-        self.samplesU01 = np.zeros_like(self.samples)
+        self.samplesU01: NumpyFloatArray = np.zeros_like(self.samples)
         """The generated LHS samples on the unit hypercube."""
 
-        if self.samples_number is not None:
-            self.run(self.samples_number)
+        if self.nsamples is not None:
+            self.run(self.nsamples)
 
     @beartype
-    def run(self, samples_number: PositiveInteger):
+    def run(self, nsamples: PositiveInteger):
         """
         Execute the random sampling in the :class:`.LatinHypercubeSampling` class.
 
-        :param samples_number: If the :meth:`run` method is invoked multiple times, the newly generated samples will
+        :param nsamples: If the :meth:`run` method is invoked multiple times, the newly generated samples will
          overwrite the existing samples.
 
         The :meth:`run` method is the function that performs random sampling in the :class:`.LatinHypercubeSampling`
-        class. If `samples_number` is provided, the :meth:`run` method is automatically called when the
+        class. If `nsamples` is provided, the :meth:`run` method is automatically called when the
         :class:`.LatinHypercubeSampling` object is defined. The user may also call the :meth:`run` method directly to
         generate samples. The :meth:`run` method of the :class:`.LatinHypercubeSampling` class cannot be invoked
         multiple times for sample size extension.
@@ -77,11 +78,11 @@ class LatinHypercubeSampling:
         The :meth:`run` method has no returns, although it creates and/or appends the `samples` and `samplesU01`
         attributes of the :class:`.LatinHypercubeSampling` object.
         """
-        self.samples_number = samples_number
+        self.nsamples = nsamples
         self.logger.info("UQpy: Running Latin Hypercube sampling...")
-        self.criterion.create_bins(self.samples)
+        self.criterion.create_bins(self.samples, self.random_state)
 
-        u_lhs = self.criterion.generate_samples()
+        u_lhs = self.criterion.generate_samples(self.random_state)
         self.samplesU01 = u_lhs
 
         if isinstance(self.dist_object, list):

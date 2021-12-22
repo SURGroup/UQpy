@@ -7,41 +7,23 @@ from UQpy.utilities.ValidationTypes import RandomStateType
 
 
 class MinCorrelation(Criterion):
-    """
-            Method for generating a Latin hypercube design that aims to minimize spurious correlations.
-
-            **Input:**
-
-            * **samples** (`ndarray`):
-                A set of samples drawn from within each LHS bin.
-
-            * **random_state** (``numpy.random.RandomState`` object):
-                A ``numpy.RandomState`` object that fixes the seed of the pseudo random number generation.
-
-            * **iterations** (`int`):
-                The number of iteration to run in the search for a maximin design.
-
-            **Output/Returns:**
-
-            * **lhs_samples** (`ndarray`)
-                The minimum correlation set of LHS samples.
-
-            """
-
     @beartype
-    def __init__(self, random_state: RandomStateType = None, iterations: int = 100):
+    def __init__(self, iterations: int = 100):
+        """
+        Method for generating a Latin hypercube design that aims to minimize spurious correlations.
 
-        super().__init__(random_state)
-        self.random_state = random_state
+        :param iterations: The number of iteration to run in the search for a maximin design.
+        """
+        super().__init__()
         self.iterations = iterations
-        self.random_criterion = Random(random_state=random_state)
+        self.random_criterion = Random()
         self.logger = logging.getLogger(__name__)
 
-    def create_bins(self, samples):
-        self.random_criterion.create_bins(samples)
-        super().create_bins(samples)
+    def create_bins(self, samples, random_state):
+        self.random_criterion.create_bins(samples, random_state)
+        super().create_bins(samples, random_state)
 
-    def generate_samples(self):
+    def generate_samples(self, random_state):
         i = 0
         lhs_samples = self.random_criterion.generate_samples()
         r = np.corrcoef(np.transpose(lhs_samples))
@@ -56,7 +38,7 @@ class MinCorrelation(Criterion):
             if np.max(np.abs(r1)) < min_corr:
                 min_corr = np.max(np.abs(r1))
                 lhs_samples = copy.deepcopy(samples_try)
-            i = i + 1
+            i += 1
         self.logger.info("UQpy: Achieved minimum correlation of ", min_corr)
 
         return lhs_samples
