@@ -76,23 +76,43 @@ listing of the occurring events. This can performed by including the following l
    Home <self>
 
 .. toctree::
-   :maxdepth: 0
+   :maxdepth: 1
    :hidden:
+   :caption: Computational Model Evaluation
 
    runmodel_doc
-   /dimension_reduction/index
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Basic Probabilistic Operations
+
    /distributions/index
-   /inference/index
-   /reliability/index
    /sampling/index
-   /sensitivity/index
-   /stochastic_process/index
-   /surrogates/index
    /transformations/index
-   utilities_doc
-   news_doc
-   bibliography.rst
+   /stochastic_process/index
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Advanced Analysis
+
+   /reliability/index
+   /inference/index
+   /surrogates/index
+   /sensitivity/index
+   /dimension_reduction/index
+
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Information
+
    paper.rst
+   bibliography.rst
+   news_doc
+
 
 ------------
 

@@ -1,4 +1,4 @@
-Dimension reduction
+Dimension Reduction
 ====================
 
 .. automodule:: UQpy.dimension_reduction

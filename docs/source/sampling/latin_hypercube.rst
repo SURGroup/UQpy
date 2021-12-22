@@ -4,12 +4,23 @@ Latin Hypercube Sampling
 The :class:`.LatinHypercubeSampling` class generates random samples from a specified probability distribution(s) using Latin hypercube sampling. LatinHypercubeSampling has the advantage that the samples generated are uniformly distributed over each marginal distribution. LatinHypercubeSampling is perfomed by dividing the range of each random variable into N bins with equal probability mass, where N is the required number of samples, generating one sample per bin, and then randomly pairing the samples.
 
 
-LatinHypercubeSampling Class Descriptions
+LatinHypercubeSampling Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.sampling.LatinHypercubeSampling
     :members:
     :private-members:
+
+List of Available Latin Hypercube Design Criteria
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: UQpy.sampling.Random
+
+.. autoclass:: UQpy.sampling.Centered
+
+.. autoclass:: UQpy.sampling.MaxiMin
+
+.. autoclass:: UQpy.sampling.MinCorrelation
 
 Adding New Latin Hypercube Design Criteria
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
