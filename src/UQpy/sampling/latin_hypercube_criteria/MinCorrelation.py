@@ -25,13 +25,13 @@ class MinCorrelation(Criterion):
 
     def generate_samples(self, random_state):
         i = 0
-        lhs_samples = self.random_criterion.generate_samples()
+        lhs_samples = self.random_criterion.generate_samples(random_state)
         r = np.corrcoef(np.transpose(lhs_samples))
         np.fill_diagonal(r, 1)
         r1 = r[r != 1]
         min_corr = np.max(np.abs(r1))
         while i < self.iterations:
-            samples_try = self.random_criterion.generate_samples()
+            samples_try = self.random_criterion.generate_samples(random_state)
             r = np.corrcoef(np.transpose(samples_try))
             np.fill_diagonal(r, 1)
             r1 = r[r != 1]

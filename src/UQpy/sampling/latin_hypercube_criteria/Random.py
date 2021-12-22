@@ -11,7 +11,6 @@ class Random(Criterion):
         The :class:`Random` class takes a set of samples drawn randomly from within the Latin hypercube bins and
         performs a random shuffling of them to pair the variables.
 
-        :param random_state: A random state object that fixes the seed of the pseudo random number generation.
         """
         super().__init__()
 

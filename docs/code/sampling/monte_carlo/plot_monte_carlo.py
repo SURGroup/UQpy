@@ -3,7 +3,7 @@
 Monte Carlo Sampling
 ==================================
 
-This example shows the use of a Monte Carlo sampling class. In particular:
+This example shows the use of the Monte Carlo sampling class. In particular:
 """
 
 #%% md

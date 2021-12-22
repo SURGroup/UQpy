@@ -68,13 +68,15 @@ sphinx_gallery_conf = {
                        '../code/distributions/discrete_1d',
                        '../code/distributions/multivariate',
                        '../code/distributions/user_defined',
-                       '../code/sampling/monte_carlo'],   # path to your example scripts
+                       '../code/sampling/monte_carlo',
+                       '../code/sampling/latin_hypercube'],   # path to your example scripts
      'gallery_dirs': ['auto_examples/dimension_reduction',
                       'auto_examples/distributions/continuous_1d',
                       'auto_examples/distributions/discrete_1d',
                       'auto_examples/distributions/multivariate',
                       'auto_examples/distributions/user_defined',
-                      'auto_examples/sampling/monte_carlo'],  # path to where to save gallery generated output
+                      'auto_examples/sampling/monte_carlo',
+                      'auto_examples/sampling/latin_hypercube'],  # path to where to save gallery generated output
 }
 
 # -- Options for HTML output -------------------------------------------------
