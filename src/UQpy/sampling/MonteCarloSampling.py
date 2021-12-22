@@ -2,7 +2,7 @@ from typing import Union
 from typing import Optional
 from beartype import beartype
 
-from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger
+from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger, NumpyFloatArray
 from UQpy.distributions import *
 from UQpy.utilities.Utilities import process_random_state
 import numpy as np
@@ -15,15 +15,15 @@ class MonteCarloSampling:
     def __init__(
         self,
         distributions: Union[Distribution, list[Distribution]],
-        samples_number: Optional[int] = None,
+        nsamples: Optional[int] = None,
         random_state: RandomStateType = None,
     ):
         """
         Perform Monte Carlo sampling (MCS) of random variables.
 
         :param distributions: Probability distribution of each random variable.
-        :param samples_number: Number of samples to be drawn from each distribution. The :meth:`run` method is
-         automatically called if `samples_number` is provided. If `samples_number` is not provided,
+        :param nsamples: Number of samples to be drawn from each distribution. The :meth:`run` method is
+         automatically called if `nsamples` is provided. If `nsamples` is not provided,
          then the :class:`.MonteCarloSampling` object is created but samples are not generated.
         :param random_state: Random seed used to initialize the pseudo-random number generator. If an integer is
          provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
@@ -38,33 +38,45 @@ class MonteCarloSampling:
         self.array = False
         self._process_distributions(distributions)
 
-        self.samples = None
+        self.samples: NumpyFloatArray = None
         """Generated samples.
         
         If a list of :class:`.DistributionContinuous1D` objects is provided for `distributions`, then `samples` is an
-        `ndarray` with ``samples.shape=(samples_number, len(distributions))``.
+        `ndarray` with ``samples.shape=(nsamples, len(distributions))``.
         
         If a :class:`.DistributionContinuous1D` object is provided for `distributions` then `samples` is an array with
-        ``samples.shape=(samples_number, 1)``.
+        ``samples.shape=(nsamples, 1)``.
         
         If a :class:`.DistributionContinuousND` object is provided for `distributions` then `samples` is an array with
-        ``samples.shape=(samples_number, ND)``.
+        ``samples.shape=(nsamples, ND)``.
         
         If a list of mixed :class:`.DistributionContinuous1D` and :class:`.DistributionContinuousND` objects is provided
-        then `samples` is a list with ``len(samples)=samples_number`` and ``len(samples[i]) = len(distributions)``.
+        then `samples` is a list with ``len(samples)=nsamples`` and ``len(samples[i]) = len(distributions)``.
         """
         self.x = None
-        self.samplesU01 = None
+        self.samplesU01: NumpyFloatArray = None
         """
         Generated samples transformed to the unit hypercube.
         
         This attribute exists only if the :meth:`transform_u01` method is invoked by the user.
+        
+        If a list of :class:`.DistributionContinuous1D` objects is provided for `distributions`, then `samplesU01` is an
+        `ndarray` with ``samples.shape=(nsamples, len(distributions))``.
+        
+        If a :class:`.DistributionContinuous1D` object is provided for `distributions` then `samplesU01` is an array 
+        with ``samples.shape=(nsamples, 1)``.
+        
+        If a :class:`.DistributionContinuousND` object is provided for `distributions` then `samplesU01` is an array 
+        with ``samples.shape=(nsamples, ND)``.
+        
+        If a list of mixed :class:`.DistributionContinuous1D` and :class:`.DistributionContinuousND` objects is provided
+        then `samplesU01` is a list with ``len(samples)=nsamples`` and ``len(samples[i]) = len(distributions)``.
         """
-        self.samples_number = samples_number
+        self.nsamples = nsamples
 
         # Run Monte Carlo sampling
-        if samples_number is not None:
-            self.run(samples_number=self.samples_number, random_state=self.random_state)
+        if nsamples is not None:
+            self.run(nsamples=self.nsamples, random_state=self.random_state)
 
     def _process_distributions(self, distributions):
         if isinstance(distributions, list):
@@ -93,18 +105,18 @@ class MonteCarloSampling:
 
     @beartype
     def run(
-        self, samples_number: PositiveInteger, random_state: RandomStateType = None
+        self, nsamples: PositiveInteger, random_state: RandomStateType = None
     ):
         """
         Execute the random sampling in the :class:`.MonteCarloSampling` class.
 
         The :meth:`run` method is the function that performs random sampling in the :class:`.MonteCarloSampling` class.
-        If `samples_number` is provided, the :meth:`run` method is automatically called when the
+        If `nsamples` is provided, the :meth:`run` method is automatically called when the
         :class:`MonteCarloSampling` object is defined. The user may also call the :meth:`run` method directly to
         generate samples. The :meth:`run` method of the :class:`.MonteCarloSampling` class can be  invoked many times
         and each time the generated samples are appended to the existing samples.
 
-        :param samples_number: Number of samples to be drawn from each distribution.
+        :param nsamples: Number of samples to be drawn from each distribution.
 
          If the :meth:`run` method is invoked multiple times, the newly generated samples will be appended to the
          existing samples.
@@ -125,13 +137,13 @@ class MonteCarloSampling:
                 if hasattr(self.dist_object[i], "rvs"):
                     temp_samples.append(
                         self.dist_object[i].rvs(
-                            nsamples=samples_number, random_state=self.random_state
+                            nsamples=nsamples, random_state=self.random_state
                         )
                     )
                 else:
                     raise ValueError("UQpy: rvs method is missing.")
             self.x = list()
-            for j in range(samples_number):
+            for j in range(nsamples):
                 y = list()
                 for k in range(len(self.dist_object)):
                     y.append(temp_samples[k][j])
@@ -139,7 +151,7 @@ class MonteCarloSampling:
         else:
             if hasattr(self.dist_object, "rvs"):
                 temp_samples = self.dist_object.rvs(
-                    nsamples=samples_number, random_state=self.random_state
+                    nsamples=nsamples, random_state=self.random_state
                 )
                 self.x = temp_samples
 
@@ -158,7 +170,7 @@ class MonteCarloSampling:
                 self.samples = np.vstack([self.samples, self.x])
             else:
                 self.samples = np.vstack([self.samples, self.x])
-        self.samples_number = len(self.samples)
+        self.nsamples = len(self.samples)
 
         self.logger.info("UQpy: Monte Carlo Sampling Complete.")
 
@@ -171,7 +183,7 @@ class MonteCarloSampling:
         """
         if isinstance(self.dist_object, list) and self.array is True:
             zi = np.zeros_like(self.samples)
-            for i in range(self.samples_number):
+            for i in range(self.nsamples):
                 z = self.samples[i, :]
                 for j in range(len(self.dist_object)):
                     if hasattr(self.dist_object[j], "cdf"):
@@ -185,7 +197,7 @@ class MonteCarloSampling:
         elif isinstance(self.dist_object, Distribution):
             if hasattr(self.dist_object, "cdf"):
                 zi = np.zeros_like(self.samples)
-                for i in range(self.samples_number):
+                for i in range(self.nsamples):
                     z = self.samples[i, :]
                     zi[i, :] = self.dist_object.cdf(z)
                 self.samplesU01 = zi
@@ -194,7 +206,7 @@ class MonteCarloSampling:
 
         elif isinstance(self.dist_object, list) and self.list is True:
             temp_samples_u01 = list()
-            for i in range(self.samples_number):
+            for i in range(self.nsamples):
                 z = self.samples[i][:]
                 y = [None] * len(self.dist_object)
                 for j in range(len(self.dist_object)):
