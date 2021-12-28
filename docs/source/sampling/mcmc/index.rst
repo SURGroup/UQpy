@@ -45,7 +45,7 @@ Adding New MCMC Algorithms
 In order to add a new MCMC algorithm, a user must create a child class of :meth:`.MCMC`, and overwrite the
 :meth:`run_one_iteration` method that propagates all the chains forward one iteration. Such a new class may use any
 number of additional inputs compared to the :class:`.MCMC` base class. The reader is encouraged to have a look at the
-:class:`.MetropolisHastings`` class and its code to better understand how a particular algorithm should fit the general framework.
+:class:`.MetropolisHastings` class and its code to better understand how a particular algorithm should fit the general framework.
 
 A useful note is that the user has access to a number of useful attributes / utility methods as the algorithm proceeds, such as:
 

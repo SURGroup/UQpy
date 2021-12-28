@@ -20,3 +20,6 @@ Simplex Class Descriptions
 .. autoclass:: UQpy.sampling.SimplexSampling
     :members:
     :private-members:
+
+
+.. include::    ../auto_examples/sampling/simplex/index.rst
