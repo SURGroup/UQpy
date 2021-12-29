@@ -7,51 +7,8 @@ from sklearn.neighbors import NearestNeighbors
 
 class ExpectedImprovementGlobalFit(LearningFunction):
     """
-            Expected Improvement for Global Fit (EIGF) learning function. See [7]_ for a detailed explanation.
-
-
-            **Inputs:**
-
-            * **surr** (`class` object):
-                A kriging surrogate model, this object must have a ``predict`` method as defined in `krig_object`
-                parameter.
-
-            * **pop** (`ndarray`):
-                An array of samples defining the learning set at which points the EIGF is evaluated
-
-            * **n_add** (`int`):
-                Number of samples to be added per iteration.
-
-                Default: 1.
-
-            * **parameters** (`dictionary`)
-                Dictionary containing all necessary parameters and the stopping criterion for the learning function. For
-                ``EIGF``, this dictionary is empty as no stopping criterion is specified.
-
-            * **samples** (`ndarray`):
-                The initial samples at which to evaluate the model.
-
-            * **qoi** (`list`):
-                A list, which contaains the model evaluations.
-
-            * **dist_object** ((list of) ``Distribution`` object(s)):
-                List of ``Distribution`` objects corresponding to each random variable.
-
-
-            **Output/Returns:**
-
-            * **new_samples** (`ndarray`):
-                Samples selected for model evaluation.
-
-            * **indicator** (`boolean`):
-                Indicator for stopping criteria.
-
-                `indicator = True` specifies that the stopping criterion has been met and the AKMCS.run method stops.
-
-            * **eigf_lf** (`ndarray`)
-                EIGF learning function evaluated at the new sample points.
-
-            """
+    Expected Improvement for Global Fit (EIGF) learning function. See :cite:`AKMCS5` for a detailed explanation.
+    """
 
     def evaluate_function(
         self, distributions, n_add, surrogate, population, qoi=None, samples=None

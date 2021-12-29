@@ -7,54 +7,14 @@ import numpy as np
 
 
 class WeightedUFunction(LearningFunction):
-    """
-            Probability Weighted U-function for reliability analysis. See [5]_ for a detailed explanation.
-
-
-            **Inputs:**
-
-            * **surr** (`class` object):
-                A kriging surrogate model, this object must have a ``predict`` method as defined in `krig_object`
-                parameter.
-
-            * **pop** (`ndarray`):
-                An array of samples defining the learning set at which points the weighted U-function is evaluated
-
-            * **n_add** (`int`):
-                Number of samples to be added per iteration.
-
-                Default: 1.
-
-            * **parameters** (`dictionary`)
-                Dictionary containing all necessary parameters and the stopping criterion for the learning function.
-                Here this includes the parameter `u_stop`.
-
-            * **samples** (`ndarray`):
-                The initial samples at which to evaluate the model.
-
-            * **qoi** (`list`):
-                A list, which contaains the model evaluations.
-
-            * **dist_object** ((list of) ``Distribution`` object(s)):
-                List of ``Distribution`` objects corresponding to each random variable.
-
-            **Output/Returns:**
-
-            * **new_samples** (`ndarray`):
-                Samples selected for model evaluation.
-
-            * **w_lf** (`ndarray`)
-                Weighted U learning function evaluated at the new sample points.
-
-            * **indicator** (`boolean`):
-                Indicator for stopping criteria.
-
-                `indicator = True` specifies that the stopping criterion has been met and the AKMCS.run method stops.
-
-            """
 
     @beartype
     def __init__(self, weighted_u_stop: int):
+        """
+        Probability Weighted U-function for reliability analysis. See :cite:`AKMCS3` for a detailed explanation.
+
+        :param weighted_u_stop: Stopping parameter required for the WeightedU learning function
+        """
         self.weighted_u_stop = weighted_u_stop
 
     def evaluate_function(

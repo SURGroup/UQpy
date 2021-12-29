@@ -5,10 +5,18 @@ The :class:`.AdaptiveKriging` class generates samples adaptively using a specifi
 general Adaptive Kriging-Monte Carlo Sampling (AKMCS) framework. Based on the specified learning function, different
 objectives can be achieved. In particular, the :class:`.AdaptiveKriging` class has learning functions for reliability analysis
 (probability of failure estimation), global optimization, best global fit surrogate models, and can also accept
-user-defined learning functions for these and other objectives.  Note that the term AKMCS is adopted from :cite:`AKMCS1` although
+user-defined learning functions for these and other objectives.  Note that the term Adaptive Kriging is adopted from :cite:`AKMCS1` although
 the procedure is referred to by different names depending on the specific learning function employed. For example,
 when applied for optimization the algorithm leverages the expected improvement function and is known under the name
 Efficient Global Optimization (EGO) :cite:`AKMCS2`.
+
+
+AdaptiveKriging Class
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: UQpy.sampling.AdaptiveKriging
+    :members:
+    :private-members:
 
 
 Learning Functions
@@ -33,6 +41,9 @@ The :class:`.AdaptiveKriging` then adds the corresponding point to the training 
 where :math:`\epsilon_u` is a user-defined error threshold (typically set to 2).
 
 
+.. autoclass:: UQpy.sampling.UFunction
+
+
 Weighted U-Function
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -44,6 +55,7 @@ where :math:`p(\mathbf{x})` is the probability density function of :math:`\mathb
 
 As with the standard U-function, :class:`.AdaptiveKriging` with the weighted U-function iterates until :math:`\min(U(\mathbf{x})) > \epsilon_u` (the same stopping criterion as the U-function).
 
+.. autoclass:: UQpy.sampling.WeightedUFunction
 
 Expected Feasibility Function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -58,6 +70,7 @@ At each iteration, the new point that is selected is the point that maximizes th
 
 .. math:: \max_x(EFF(\mathbf{x})) < \epsilon_{eff}
 
+.. autoclass:: UQpy.sampling.ExpectedFeasibility
 
 Expected Improvement Function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -74,6 +87,7 @@ At each iteration, the EGO algorithm selects the point in the learning set that 
 
 Typically a value of 0.01 is used for :math:`\epsilon_{eif}`.
 
+.. autoclass:: UQpy.sampling.ExpectedImprovement
 
 Expected Improvement for Global Fit
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -86,6 +100,7 @@ where :math:`\mathbf{x}_*` is the point in the training set closest in distance 
 
 No stopping criterion is suggested by the authors of :cite:`AKMCS5`, thus its implementation in :class:`.AdaptiveKriging` uses a fixed number of iterations.
 
+.. autoclass:: UQpy.sampling.ExpectedImprovementGlobalFit
 
 User-Defined Learning Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -125,13 +140,4 @@ It returns a set of samples that are selected according to the user's desired le
 >>>            indicator = True
 >>>
 >>>        return population[rows, :], u[rows, 0], indicator
-
-
-
-AdaptiveKriging Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: UQpy.sampling.AdaptiveKriging
-    :members:
-    :private-members:
 
