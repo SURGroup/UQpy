@@ -3,7 +3,7 @@ from typing import Union, Callable
 
 from beartype import beartype
 
-from UQpy.utilities.ValidationTypes import PositiveInteger, RandomStateType
+from UQpy.utilities.ValidationTypes import PositiveInteger, RandomStateType, NumpyFloatArray
 from UQpy.utilities.Utilities import process_random_state
 from UQpy.distributions import Distribution
 import numpy as np
@@ -19,13 +19,23 @@ class ImportanceSampling:
                  args_target: tuple = None,
                  proposal: Union[None, Distribution] = None,
                  random_state: RandomStateType = None,
-                 samples_number: PositiveInteger = None):
+                 nsamples: PositiveInteger = None):
         """
         Sample from a user-defined target density using importance sampling.
 
-        :param is_input: Object that contains input data to the :class:`ImportanceSampling` class.
-         (See :class:`.ISInput`)
-        :param samples_number: Number of samples to generate - see :meth:`run` method. If not `None`, the `run` method
+        :param pdf_target: Callable that evaluates the pdf of the target distribution. Either log_pdf_target or
+         pdf_target must be specified (the former is preferred).
+        :param log_pdf_target: Callable that evaluates the log-pdf of the target distribution. Either log_pdf_target or
+         pdf_target must be specified (the former is preferred).
+        :param args_target: Positional arguments of the target log_pdf / pdf callable.
+        :param proposal: Proposal to sample from. This :class:`.Distribution` object must have an rvs method and a
+         log_pdf (or pdf) method.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is
+         :class:`.None`.
+
+         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+         the object itself can be passed directly.
+        :param nsamples: Number of samples to generate - see :meth:`run` method. If not `None`, the `run` method
          is called when the object is created. Default is None.
         """
         # Initialize proposal: it should have an rvs and log pdf or pdf method
@@ -42,37 +52,36 @@ class ImportanceSampling:
         self.evaluate_log_target = self._preprocess_target(
             log_pdf_=log_pdf_target,
             pdf_=pdf_target,
-            args=args_target,
-        )
+            args=args_target,)
 
         self.logger = logging.getLogger(__name__)
         self.random_state = process_random_state(random_state)
 
         # Initialize the samples and weights
-        self.samples = None
-        """Set of samples, `ndarray` of shape (samples_number, dimensions)"""
-        self.unnormalized_log_weights = None
+        self.samples: NumpyFloatArray = None
+        """Set of samples, `ndarray` of shape (nsamples, dimensions)"""
+        self.unnormalized_log_weights: NumpyFloatArray = None
         """Unnormalized log weights, i.e., log_w(x) = log_target(x) - log_proposal(x), `ndarray` of shape 
-        (samples_number, )"""
-        self.weights = None
-        """Importance weights, weighted so that they sum up to 1, `ndarray` of shape (samples_number, )"""
-        self.unweighted_samples = None
+        (nsamples, )"""
+        self.weights: NumpyFloatArray = None
+        """Importance weights, weighted so that they sum up to 1, `ndarray` of shape (nsamples, )"""
+        self.unweighted_samples: NumpyFloatArray = None
         """Set of un-weighted samples (useful for instance for plotting), computed by calling the :meth:`resample` 
         method"""
 
         # Run IS if nsamples is provided
-        if samples_number is not None and samples_number != 0:
-            self.run(samples_number)
+        if nsamples is not None and nsamples != 0:
+            self.run(nsamples)
 
     @beartype
-    def run(self, samples_number: PositiveInteger):
+    def run(self, nsamples: PositiveInteger):
         """
         Generate and weight samples.
 
         This function samples from the proposal and appends samples to existing ones (if any). It then weights the
         samples as log_w_unnormalized) = log(target)-log(proposal).
 
-        :param samples_number: Number of weighted samples to generate.
+        :param nsamples: Number of weighted samples to generate.
 
         This function has no returns, but it updates the output attributes `samples`, `unnormalized_log_weights` and
         `weights` of the :class:`.ImportanceSampling` object.
@@ -81,7 +90,7 @@ class ImportanceSampling:
         self.logger.info("UQpy: Running Importance Sampling...")
         # Sample from proposal
         new_samples = self.proposal.rvs(
-            nsamples=samples_number, random_state=self.random_state
+            nsamples=nsamples, random_state=self.random_state
         )
         # Compute un-scaled weights of new samples
         new_log_weights = self.evaluate_log_target(
@@ -114,7 +123,7 @@ class ImportanceSampling:
             )
             self.unweighted_samples = None
 
-    def resample(self, method="multinomial", samples_number=None):
+    def resample(self, method="multinomial", nsamples=None):
         """
         Resample to get a set of un-weighted samples that represent the target pdf.
 
@@ -124,21 +133,18 @@ class ImportanceSampling:
         The :meth:`resample` method is not called automatically when instantiating the :class:`.ImportanceSampling`
         class or when invoking its :meth:`run` method.
 
-        :param method: Resampling method, as of V3 only multinomial resampling is supported. Default: 'multinomial'.
-        :param samples_number: Number of un-weighted samples to generate. Default: None (sets `nsamples` equal to the
+        :param method: Resampling method, as of V4 only multinomial resampling is supported. Default: 'multinomial'.
+        :param nsamples: Number of un-weighted samples to generate. Default: None (sets `nsamples` equal to the
          number of existing weighted samples).
-
         The method has no returns, but it computes the following attribute of the :class:`ImportanceSampling` object.
 
-        * **unweighted_samples** (`ndarray`)
-            Un-weighted samples that represent the target pdf, `ndarray` of shape (nsamples, dimension)
         """
 
-        if samples_number is None:
-            samples_number = self.samples.shape[0]
+        if nsamples is None:
+            nsamples = self.samples.shape[0]
         if method == "multinomial":
             multinomial_run = self.random_state.multinomial(
-                samples_number, self.weights, size=1
+                nsamples, self.weights, size=1
             )[0]
             idx = list()
             for j in range(self.samples.shape[0]):
@@ -150,18 +156,6 @@ class ImportanceSampling:
 
     @staticmethod
     def _preprocess_target(log_pdf_, pdf_, args):
-        """
-        Preprocess the target pdf inputs.
-
-        Utility function (static method), that transforms the log_pdf, pdf, args inputs into a function that evaluates
-        log_pdf_target(x) for a given x.
-
-        :param log_pdf_: Log of the target density function from which to draw random samples. Either
-         pdf_target or log_pdf_target must be provided
-        :param pdf_: Target density function from which to draw random samples.
-        :param args: Positional arguments of the pdf target
-        :return: Callable that computes the log of the target density function
-        """
         # log_pdf is provided
         if log_pdf_ is not None:
             if callable(log_pdf_):

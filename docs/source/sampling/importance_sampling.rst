@@ -13,14 +13,9 @@ If :math:`p` is only known up to a constant, i.e., one can only evaluate :math:`
    :align: center
 
 
-ImportanceSampling Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ImportanceSampling Class
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.sampling.ImportanceSampling
    :members:
    :private-members:
-
-ISInput Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: UQpy.sampling.ISInput
