@@ -1,19 +1,18 @@
-import numpy as np
 import pytest
 from beartype.roar import BeartypeCallHintPepParamException
 
 from UQpy.distributions.collection import *
-from UQpy.utilities.strata.RectangularStrata import RectangularStrata
-from UQpy.utilities.strata.VoronoiStrata import VoronoiStrata
-from UQpy.sampling.StratifiedSampling import *
-from UQpy.utilities.strata.DelaunayStrata import *
+from UQpy.sampling.TrueStratifiedSampling import *
+from UQpy.sampling.strata.DelaunayStrata import *
+from UQpy.sampling.strata.RectangularStrata import *
+from UQpy.sampling.strata.VoronoiStrata import *
 
 
 def test_rectangular_sts():
     marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
     strata = RectangularStrata(strata_number=[4, 4], random_state=1)
-    x = StratifiedSampling(distributions=marginals, strata_object=strata,
-                           samples_per_stratum_number=1, )
+    x = TrueStratifiedSampling(distributions=marginals, strata_object=strata,
+                               nsamples_per_stratum=1, )
     assert x.samples[6, 0] == 0.5511130624328794
     assert x.samples[12, 1] == 0.9736516658759619
     assert x.samples[2, 0] == 0.5366889727042783
@@ -24,16 +23,16 @@ def test_delaunay_sts():
     marginals = [Exponential(loc=1., scale=1.), Exponential(loc=1., scale=1.)]
     seeds = np.array([[0, 0], [0.4, 0.8], [1, 0], [1, 1]])
     strata_obj = DelaunayStrata(seeds=seeds, )
-    sts_obj = StratifiedSampling(distributions=marginals, strata_object=strata_obj, random_state=1,
-                                 samples_per_stratum_number=1, )
+    sts_obj = TrueStratifiedSampling(distributions=marginals, strata_object=strata_obj, random_state=1,
+                                     nsamples_per_stratum=1, )
     assert sts_obj.samples[2, 0] == 1.902581742436106
 
 
 def test_voronoi_sts():
     marginals = [Exponential(loc=1., scale=1.), Exponential(loc=1., scale=1.)]
     strata = VoronoiStrata(seeds_number=8, dimension=2, random_state=3)
-    x = StratifiedSampling(distributions=marginals, strata_object=strata,
-                           samples_per_stratum_number=3)
+    x = TrueStratifiedSampling(distributions=marginals, strata_object=strata,
+                               nsamples_per_stratum=3)
     assert x.samples[7, 0] == 3.6928440862661223
     assert x.samples[20, 1] == 1.1555963246730931
     assert x.samples[1, 0] == 1.8393015015282757
@@ -46,27 +45,27 @@ strata = RectangularStrata(strata_number=[3, 3])
 
 nsamples_per_stratum = [1] * 9
 nsamples_per_stratum[4] = 0
-x_sts = StratifiedSampling(distributions=marginals, strata_object=strata,
-                           samples_per_stratum_number=nsamples_per_stratum, random_state=1)
-strata1 = RectangularStrata(strata_number=[3, 3], stratification_criterion=StratificationCriterion.CENTERED,
+x_sts = TrueStratifiedSampling(distributions=marginals, strata_object=strata,
+                               nsamples_per_stratum=nsamples_per_stratum, random_state=1)
+strata1 = RectangularStrata(strata_number=[3, 3], sampling_criterion=SamplingCriterion.CENTERED,
                             random_state=1)
-x_sts1 = StratifiedSampling(distributions=marginals, strata_object=strata1, samples_per_stratum_number=1, )
+x_sts1 = TrueStratifiedSampling(distributions=marginals, strata_object=strata1, nsamples_per_stratum=1, )
 
 # Voronoi
 strata_vor = VoronoiStrata(seeds_number=8, dimension=2, random_state=3)
-sts_vor = StratifiedSampling(distributions=marginals, strata_object=strata_vor)
-sts_vor.run(samples_per_stratum_number=1)
+sts_vor = TrueStratifiedSampling(distributions=marginals, strata_object=strata_vor)
+sts_vor.run(nsamples_per_stratum=1)
 
 strata_vor1 = VoronoiStrata(seeds_number=8, dimension=2, random_state=3)
-sts_vor2 = StratifiedSampling(distributions=marginals, strata_object=strata_vor1, )
-sts_vor2.run(samples_number=8, samples_per_stratum_number=1)
+sts_vor2 = TrueStratifiedSampling(distributions=marginals, strata_object=strata_vor1, )
+sts_vor2.run(nsamples=8, nsamples_per_stratum=1)
 sts_vor2.run()
 
 # Delaunay
 seeds = np.array([[0, 0], [0.4, 0.8], [1, 0], [1, 1]])
 strata_del = DelaunayStrata(seeds=seeds, random_state=2)
-sts_del = StratifiedSampling(distributions=marginals, strata_object=strata_del,
-                             samples_per_stratum_number=2)
+sts_del = TrueStratifiedSampling(distributions=marginals, strata_object=strata_del,
+                                 nsamples_per_stratum=2)
 
 
 # Unit tests
@@ -102,7 +101,7 @@ def test_rect_sts_criterion():
         Test the 'sts_criterion' attribute for RectangularSTS class.
     """
     with pytest.raises(AttributeError):
-        RectangularStrata(stratification_criterion=StratificationCriterion.aaa)
+        RectangularStrata(sampling_criterion=SamplingCriterion.aaa)
 
 
 def test_rect_strata_object():
@@ -110,7 +109,7 @@ def test_rect_strata_object():
         Test type of strata_object. It should be a RectangularStrata object.
     """
     with pytest.raises(BeartypeCallHintPepParamException):
-        StratifiedSampling(distributions=marginals, strata_object=None, samples_per_stratum_number=1)
+        TrueStratifiedSampling(distributions=marginals, strata_object=None, nsamples_per_stratum=1)
 
 
 def test_rect_nsamples_check1():
@@ -118,9 +117,9 @@ def test_rect_nsamples_check1():
         In case of centered sampling, nsamples should be equal to number of strata in strata_object.
     """
     with pytest.raises(ValueError):
-        strata.stratification_criterion = StratificationCriterion.CENTERED
-        StratifiedSampling(distributions=marginals, strata_object=strata, samples_per_stratum_number=1,
-                           samples_number=10)
+        strata.sampling_criterion = SamplingCriterion.CENTERED
+        TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1,
+                               nsamples=10)
 
 
 def test_vor_nsamples_per_strarum_not_0():
@@ -142,7 +141,7 @@ def test_vor_strata_object():
         Test type of strata_object. It should be a VoronoiStrata object.
     """
     with pytest.raises(BeartypeCallHintPepParamException):
-        StratifiedSampling(distributions=marginals, strata_object=None)
+        TrueStratifiedSampling(distributions=marginals, strata_object=None)
 
 
 def test_vor_random_state():
@@ -150,7 +149,7 @@ def test_vor_random_state():
         Check 'random_state' is an integer or RandomState object.
     """
     with pytest.raises(BeartypeCallHintPepParamException):
-        StratifiedSampling(distributions=marginals, strata_object=strata_vor, random_state='abc')
+        TrueStratifiedSampling(distributions=marginals, strata_object=strata_vor, random_state='abc')
 
 
 def test_vor_dist_object():
@@ -158,7 +157,7 @@ def test_vor_dist_object():
         Check 'dist_object' is a Distribution object.
     """
     with pytest.raises(BeartypeCallHintPepParamException):
-        StratifiedSampling(distributions=[2, 1], strata_object=strata_vor)
+        TrueStratifiedSampling(distributions=[2, 1], strata_object=strata_vor)
 
 
 def test_vor_dist_object2():
@@ -166,7 +165,7 @@ def test_vor_dist_object2():
         Check 'dist_object' is a Distribution object.
     """
     with pytest.raises(BeartypeCallHintPepParamException):
-        StratifiedSampling(distributions=2, strata_object=strata_vor)
+        TrueStratifiedSampling(distributions=2, strata_object=strata_vor)
 
 
 def test_voronoi_nsamples_check():
@@ -174,7 +173,7 @@ def test_voronoi_nsamples_check():
         In case of centered sampling, nsamples should be equal to number of strata in strata_object.
     """
     with pytest.raises(BeartypeCallHintPepParamException):
-        sts_vor.run(samples_number='abc')
+        sts_vor.run(nsamples='abc')
 
 
 def test_voronoi_nsamples_per_stratum_check():
@@ -182,7 +181,7 @@ def test_voronoi_nsamples_per_stratum_check():
         Check length of nsamples_per_stratum should be equal to number of strata in strata_object.
     """
     with pytest.raises(ValueError):
-        sts_vor.run(samples_per_stratum_number=[2, 1, 0, 1])
+        sts_vor.run(nsamples_per_stratum=[2, 1, 0, 1])
 
 
 def test_voronoi_nsamples_per_stratum_check2():
@@ -190,7 +189,7 @@ def test_voronoi_nsamples_per_stratum_check2():
         Check nsamples_per_stratum should an integer or list.
     """
     with pytest.raises(BeartypeCallHintPepParamException):
-        sts_vor.run(samples_per_stratum_number='abc')
+        sts_vor.run(nsamples_per_stratum='abc')
 
 
 def test_del_nsamples_per_strarum_not_0():
@@ -209,5 +208,5 @@ def test_del_strata_object():
         Test type of strata_object. It should be a DelaunayStrata object.
     """
     with pytest.raises(BeartypeCallHintPepParamException):
-        StratifiedSampling(distributions=marginals, strata_object=None)
+        TrueStratifiedSampling(distributions=marginals, strata_object=None)
 

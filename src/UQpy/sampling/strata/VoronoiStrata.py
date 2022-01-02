@@ -1,12 +1,13 @@
 import logging
 import math
 
-from UQpy.utilities.strata.DelaunayStrata import DelaunayStrata
-from UQpy.utilities.strata.baseclass.Strata import Strata
-from UQpy.utilities.strata.StratificationCriterion import StratificationCriterion
+from UQpy.sampling.strata.DelaunayStrata import DelaunayStrata
+from UQpy.sampling.strata.baseclass.Strata import Strata
+from UQpy.sampling.strata.SamplingCriterion import SamplingCriterion
 from UQpy.sampling.SimplexSampling import *
 from UQpy.utilities.ValidationTypes import RandomStateType
 import numpy as np
+from scipy.spatial import Voronoi
 
 
 class VoronoiStrata(Strata):
@@ -17,7 +18,6 @@ class VoronoiStrata(Strata):
             seeds_number: PositiveInteger = None,
             dimension: PositiveInteger = None,
             decomposition_iterations: PositiveInteger = 1,
-            stratification_criterion: StratificationCriterion = StratificationCriterion.RANDOM,
             random_state: RandomStateType = None
     ):
         """
@@ -39,13 +39,13 @@ class VoronoiStrata(Strata):
         :param stratification_criterion: An enumeration of type :class:`.StratificationCriterion` defining the
          stratification type
         """
-        super().__init__(seeds=seeds, stratification_criterion=stratification_criterion, random_state=random_state)
+        super().__init__(seeds=seeds, random_state=random_state)
 
         self.logger = logging.getLogger(__name__)
         self.seeds_number = seeds_number
         self.dimension = dimension
         self.decomposition_iterations = decomposition_iterations
-        self.voronoi = None
+        self.voronoi: Voronoi = None
         """
         Defines a Voronoi decomposition of the set of reflected points. When creating the Voronoi decomposition on
         the unit hypercube, the code reflects the points on the unit hypercube across all faces of the unit hypercube.
@@ -55,9 +55,8 @@ class VoronoiStrata(Strata):
         points and their reflections from which the unit hypercube is extracted.
         
         To access the vertices in the unit hypercube, see the attribute `vertices`."""
-        self.vertices = []
+        self.vertices: list = []
         """A list of the vertices for each Voronoi stratum on the unit hypercube."""
-        self.stratification_criterion = stratification_criterion
 
         if self.seeds is not None:
             if self.seeds_number is not None or self.dimension is not None:
@@ -191,7 +190,7 @@ class VoronoiStrata(Strata):
 
                 new_samples = SimplexSampling(
                     nodes=seed_and_vertices[delaunay_obj.vertices[simplex]],
-                    samples_number=1,
+                    nsamples=1,
                     random_state=self.random_state,
                 ).samples
                 samples_in_strata.append(new_samples)

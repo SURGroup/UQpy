@@ -39,6 +39,27 @@ The parent class for all MCMC algorithms is the :class:`.MCMC` class, which defi
 MCMC algorithms, along with the :meth:`run` method that is being called to run the chain. Any given MCMC algorithm is a
 child class of MCMC that overwrites the main :meth:`run_one_iteration` method.
 
+MCMC Class
+^^^^^^^^^^^
+
+Methods
+~~~~~~~~~~~~~~~~~~
+.. autoclass:: UQpy.sampling.mcmc.MCMC
+   :exclude-members: __init__
+   :members: run, run_one_iteration
+
+Attributes
+~~~~~~~~~~~~~~~~~~
+.. autoattribute:: UQpy.sampling.mcmc.MCMC.evaluate_log_target
+.. autoattribute:: UQpy.sampling.mcmc.MCMC.evaluate_log_target_marginals
+.. autoattribute:: UQpy.sampling.mcmc.MCMC.samples
+.. autoattribute:: UQpy.sampling.mcmc.MCMC.log_pdf_values
+.. autoattribute:: UQpy.sampling.mcmc.MCMC.nsamples
+.. autoattribute:: UQpy.sampling.mcmc.MCMC.nsamples_per_chain
+.. autoattribute:: UQpy.sampling.mcmc.MCMC.iterations_number
+
+
+
 Adding New MCMC Algorithms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -56,14 +77,6 @@ A useful note is that the user has access to a number of useful attributes / uti
 * the :meth:`_update_acceptance_rate` method updates the `acceptance_rate` attribute of the sampler, given a (list of) boolean(s) indicating if the candidate state(s) were accepted at a given iteration,
 * the :meth:`_check_methods_proposal` method checks whether a given proposal is adequate (i.e., has :meth:`rvs` and :meth:`log_pdf`/:meth:`pdf` methods).
 
-
-MCMC Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-.. autoclass:: UQpy.sampling.mcmc.MCMC
-   :members:
-   :private-members:
 
 List of MCMC algorithms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

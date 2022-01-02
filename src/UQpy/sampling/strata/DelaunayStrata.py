@@ -2,11 +2,11 @@ import logging
 
 import numpy as np
 import scipy.stats as stats
-from UQpy.utilities.strata.StratificationCriterion import StratificationCriterion
-from UQpy.utilities.ValidationTypes import RandomStateType
-from UQpy.utilities.strata.baseclass.Strata import Strata
+from UQpy.sampling.strata.SamplingCriterion import SamplingCriterion
+from UQpy.sampling.strata.baseclass.Strata import Strata
 from UQpy.sampling.SimplexSampling import SimplexSampling
-
+from scipy.spatial import Delaunay
+import itertools
 
 class DelaunayStrata(Strata):
     def calculate_strata_metrics(self, **kwargs):
@@ -18,11 +18,10 @@ class DelaunayStrata(Strata):
         seeds_number: int = None,
         dimension: np.ndarray = None,
         random_state=None,
-        stratification_criterion: StratificationCriterion = StratificationCriterion.RANDOM,
     ):
         """
         Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling
-         Delaunay strata of n-dimensional simplexes. :class:`.Delaunay` is a child class of the :class:`.Strata` class.
+        Delaunay strata of n-dimensional simplexes. :class:`.Delaunay` is a child class of the :class:`.Strata` class.
 
         :param seeds: An array of dimension `N x n` specifying the seeds of all strata. The seeds of the strata are the
          coordinates of the vertices of the Delaunay cells. The user must provide `seeds` or `seeds_number` and
@@ -33,15 +32,14 @@ class DelaunayStrata(Strata):
         :param dimension: The dimension of the unit hypercube in which to generate random seeds. Used only if
          `seeds_number` is provided. The user must provide `seeds` or `seeds_number` and `dimension`
         """
-        super().__init__(seeds=seeds, stratification_criterion=stratification_criterion, random_state=random_state)
+        super().__init__(seeds=seeds, random_state=random_state)
 
         self.random_state = random_state
-        self.stratification_criterion = stratification_criterion
         self.seeds_number = seeds_number
         self.dimension = dimension
-        self.delaunay = None
+        self.delaunay: Delaunay = None
         """Defines a Delaunay decomposition of the set of seed points and all corner points."""
-        self.centroids = []
+        self.centroids: list = []
         """A list of the vertices for each Voronoi stratum on the unit hypercube."""
         self.logger = logging.getLogger(__name__)
         self.stratified=False
@@ -54,8 +52,6 @@ class DelaunayStrata(Strata):
         self.stratify()
 
     def stratify(self):
-        import itertools
-        from scipy.spatial import Delaunay
 
         self.logger.info("UQpy: Creating Delaunay stratification ...")
 
@@ -104,7 +100,7 @@ class DelaunayStrata(Strata):
         for count, simplex in enumerate(self.delaunay.simplices):  # extract simplices from Delaunay triangulation
             samples_temp = SimplexSampling(
                 nodes=self.delaunay.points[simplex],
-                samples_number=int(samples_per_stratum_number[count]),
+                nsamples=int(samples_per_stratum_number[count]),
                 random_state=random_state)
             samples_in_strata.append(samples_temp.samples)
             self.extend_weights(samples_per_stratum_number, count, weights)

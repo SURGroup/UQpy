@@ -16,6 +16,14 @@ If :math:`p` is only known up to a constant, i.e., one can only evaluate :math:`
 ImportanceSampling Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Methods
+""""""""""""""""""
 .. autoclass:: UQpy.sampling.ImportanceSampling
-   :members:
-   :private-members:
+   :members: run, resample,
+
+Attributes
+""""""""""""""""""
+.. autoattribute:: UQpy.sampling.ImportanceSampling.samples
+.. autoattribute:: UQpy.sampling.ImportanceSampling.unnormalized_log_weights
+.. autoattribute:: UQpy.sampling.ImportanceSampling.weights
+.. autoattribute:: UQpy.sampling.ImportanceSampling.unweighted_samples

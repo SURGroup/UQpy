@@ -13,10 +13,14 @@ Efficient Global Optimization (EGO) :cite:`AKMCS2`.
 
 AdaptiveKriging Class
 ^^^^^^^^^^^^^^^^^^^^^
-
+Methods
+"""""""""""
 .. autoclass:: UQpy.sampling.AdaptiveKriging
-    :members:
-    :private-members:
+    :members: run
+
+Attributes
+"""""""""""
+.. autoattribute:: UQpy.sampling.AdaptiveKriging.samples
 
 
 Learning Functions

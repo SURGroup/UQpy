@@ -1,17 +1,31 @@
 Copula
------------
+--------
 
+----
+
+Copula Class
+^^^^^^^^^^^^^^^^
+
+Methods
+~~~~~~~~~~~~~~~~~~
 .. autoclass:: UQpy.distributions.baseclass.Copula
-    :members:
-    :private-members:
+    :members: get_parameters, update_parameters, check_marginals
 
+Attributes
+~~~~~~~~~~~~~~~~~~
+.. autoattribute:: UQpy.distributions.baseclass.Copula.parameters
+.. autoattribute:: UQpy.distributions.baseclass.Copula.ordered_parameters
+
+
+
+----
 
 List of Copulas
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 
 
 Clayton
-""""""""
+~~~~~~~~~~~~~~~~~~
 
 Clayton copula having cumulative distribution function
 
@@ -25,7 +39,7 @@ where :math:`u_1 = F_1(x_1), u_2 = F_2(x_2)` are uniformly distributed on the in
 ______
 
 Frank
-""""""""
+~~~~~~~~~~~~~~~~~~
 
 Frank copula having cumulative distribution function
 
@@ -40,7 +54,7 @@ where :math:`u_1 = F_1(x_1), u_2 = F_2(x_2)` are uniformly distributed on the in
 ______
 
 Gumbel
-""""""""
+~~~~~~~~~~~~~~~~~~
 
 Gumbel copula having cumulative distribution function
 

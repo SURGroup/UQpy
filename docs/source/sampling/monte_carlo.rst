@@ -10,8 +10,16 @@ for integration with other :py:mod:`UQpy` modules.
 Monte Carlo Sampling Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Methods
+~~~~~~~~~~~~~~~~~~
+
 .. autoclass:: UQpy.sampling.MonteCarloSampling
-    :members:
+    :members: run, transform_u01
+
+Attributes
+~~~~~~~~~~~~~~~~~~
+.. autoattribute:: UQpy.sampling.MonteCarloSampling.samples
+.. autoattribute:: UQpy.sampling.MonteCarloSampling.samplesU01
 
 
 .. include::    ../auto_examples/sampling/monte_carlo/index.rst

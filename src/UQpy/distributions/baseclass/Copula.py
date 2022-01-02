@@ -14,9 +14,9 @@ class Copula(ABC):
         :param ordered_parameters: List of parameter names
         :param kwargs: Parameters of the copula.
         """
-        self.parameters = kwargs
+        self.parameters: dict = kwargs
         """Parameters of the copula."""
-        self.ordered_parameters = ordered_parameters
+        self.ordered_parameters: dict = ordered_parameters
         """List of parameter names"""
         if self.ordered_parameters is None:
             self.ordered_parameters = tuple(kwargs.keys())

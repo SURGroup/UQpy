@@ -8,23 +8,23 @@ from UQpy.sampling import MonteCarloSampling
 dist1 = Normal(loc=0., scale=1.)
 dist2 = Normal(loc=0., scale=1.)
 
-x = MonteCarloSampling(distributions=dist1, samples_number=5, random_state=np.random.RandomState(123))
+x = MonteCarloSampling(distributions=dist1, nsamples=5, random_state=np.random.RandomState(123))
 x.transform_u01()
 y = MonteCarloSampling(distributions=[dist1, dist2])
-y.run(samples_number=5, random_state=123)
+y.run(nsamples=5, random_state=123)
 y.transform_u01()
 
 # Call run method multiple time, to cover lines where samples are append to existing ones
-z1 = MonteCarloSampling(distributions=dist1, samples_number=2, random_state=123)
-z1.run(samples_number=2)
-z2 = MonteCarloSampling(distributions=[dist1, dist2], samples_number=2, random_state=np.random.RandomState(123))
-z2.run(samples_number=2)
+z1 = MonteCarloSampling(distributions=dist1, nsamples=2, random_state=123)
+z1.run(nsamples=2)
+z2 = MonteCarloSampling(distributions=[dist1, dist2], nsamples=2, random_state=np.random.RandomState(123))
+z2.run(nsamples=2)
 # Same object as z2, just to cover lines where, random_state is an integer
-z3 = MonteCarloSampling(distributions=[dist1, dist2], samples_number=2, random_state=123)
+z3 = MonteCarloSampling(distributions=[dist1, dist2], nsamples=2, random_state=123)
 
-z4 = MonteCarloSampling(distributions=[MultivariateNormal([0, 0])], samples_number=2,
+z4 = MonteCarloSampling(distributions=[MultivariateNormal([0, 0])], nsamples=2,
                         random_state=np.random.RandomState(123))
-z4.run(samples_number=2)
+z4.run(nsamples=2)
 z4.transform_u01()
 dist3 = Normal(loc=0., scale=1.)
 del dist3.rvs
@@ -53,7 +53,7 @@ def test_dist_object3():
 def test_distribution_nd():
     """Validate error check, when distribution object doesn't have 'rvs' method."""
     with pytest.raises(ValueError):
-        z5.run(samples_number=2)
+        z5.run(nsamples=2)
 
 
 def test_samples1():
@@ -108,13 +108,13 @@ def test_samples2_u03():
 def test_nsamples_none():
     """Validate error check, when nsamples is None, while calling 'run' method."""
     with pytest.raises(BeartypeCallHintPepParamException):
-        MonteCarloSampling(distributions=dist1, random_state=np.random.RandomState(123)).run(samples_number=None)
+        MonteCarloSampling(distributions=dist1, random_state=np.random.RandomState(123)).run(nsamples=None)
 
 
 def test_nsamples_not_integer():
     """Validate error check, when nsamples is not an integer, while calling 'run' method."""
     with pytest.raises(BeartypeCallHintPepParamException):
-        MonteCarloSampling(distributions=dist1, random_state=np.random.RandomState(123)).run(samples_number='abc')
+        MonteCarloSampling(distributions=dist1, random_state=np.random.RandomState(123)).run(nsamples='abc')
 
 
 def test_random_state1():
@@ -136,7 +136,7 @@ def test_run_random_state():
     """Check if random_state attribute is not an integer, np.random.RandomState object or None, when when 'run' method
     is called."""
     with pytest.raises(BeartypeCallHintPepParamException):
-        MonteCarloSampling(distributions=dist1).run(samples_number=5, random_state='abc')
+        MonteCarloSampling(distributions=dist1).run(nsamples=5, random_state='abc')
 
 
 def test_cdf_method1():

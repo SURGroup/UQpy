@@ -20,7 +20,7 @@ def test_pdf_target():
     w = ImportanceSampling(pdf_target=rosenbrock,
                            proposal=proposal,
                            random_state=123,
-                           samples_number=2000)
+                           nsamples=2000)
     assert (w.weights.shape == (2000, ) and np.all(np.round(w.samples[-1], 3) == [-6.434, 27.373]))
 
 
@@ -29,22 +29,22 @@ def test_log_pdf_target():
                            args_target=(20, ),
                            proposal=proposal,
                            random_state=123,
-                           samples_number=2000)
+                           nsamples=2000)
     assert (w.weights.shape == (2000, ) and np.all(np.round(w.samples[-1], 3) == [-6.434, 27.373]))
 
 
 def test_resampling():
     w = ImportanceSampling(log_pdf_target=log_rosenbrock, args_target=(20,),
                            proposal=proposal, random_state=123,
-                           samples_number=2000)
-    w.resample(samples_number=1000)
+                           nsamples=2000)
+    w.resample(nsamples=1000)
     result = w.unweighted_samples[-1]
     assert np.all(np.round(result, 3) == [-4.912, 23.106])
 
 
 def test_resampling2():
     w = ImportanceSampling(log_pdf_target=log_rosenbrock, args_target=(20,),
-                           proposal=proposal, random_state=123, samples_number=2000)
+                           proposal=proposal, random_state=123, nsamples=2000)
     w.resample()
     assert w.unweighted_samples.shape == (2000, 2)
 
@@ -52,14 +52,14 @@ def test_resampling2():
 def test_rerun():
     w = ImportanceSampling(log_pdf_target=log_rosenbrock, args_target=(20,),
                            proposal=proposal, random_state=123)
-    w.run(samples_number=1000)
-    w.resample(samples_number=1000)
-    w.run(samples_number=1000)
+    w.run(nsamples=1000)
+    w.resample(nsamples=1000)
+    w.run(nsamples=1000)
     assert w.samples.shape == (2000, 2)
 
 
 def test_proposal():
     w = ImportanceSampling(log_pdf_target=log_rosenbrock, args_target=(20,),
-                           proposal=proposal2, random_state=123, samples_number=2000)
+                           proposal=proposal2, random_state=123, nsamples=2000)
     assert (w.weights.shape == (2000,) and np.all(np.round(w.samples[-1], 3) == [-6.434, 27.373]))
 

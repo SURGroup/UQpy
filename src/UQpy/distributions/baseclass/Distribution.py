@@ -28,10 +28,10 @@ class Distribution(ABC):
          :class:`.Distribution` objects such as those of type :class:`.JointIndependent` or :class:`.JointCopula`. The
          user is advised to use the :meth:`get_parameters` method to access the parameters.
         """
-        self.parameters = kwargs
+        self.parameters: dict = kwargs
         """ Ordered list of parameter names, useful when parameter values are stored in vectors and must be passed to 
         the :meth:`update_params` method."""
-        self.ordered_parameters = ordered_parameters
+        self.ordered_parameters: list = ordered_parameters
         """Parameters of the distribution. 
         
         This attribute is not defined for certain :class:`.Distribution` 

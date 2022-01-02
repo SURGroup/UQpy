@@ -1,8 +1,8 @@
 import logging
 from beartype import beartype
 from UQpy.utilities.ValidationTypes import *
-from UQpy.utilities.strata.baseclass.Strata import Strata
-from UQpy.utilities.strata.StratificationCriterion import StratificationCriterion
+from UQpy.sampling.strata.baseclass.Strata import Strata
+from UQpy.sampling.strata.SamplingCriterion import SamplingCriterion
 from UQpy.utilities.Utilities import calculate_gradient
 import scipy.stats as stats
 
@@ -16,7 +16,7 @@ class RectangularStrata(Strata):
         seeds: Union[None, np.ndarray] = None,
         widths=None,
         random_state=None,
-        stratification_criterion: StratificationCriterion = StratificationCriterion.RANDOM,
+        sampling_criterion: SamplingCriterion = SamplingCriterion.RANDOM,
     ):
         """
         :param strata_number: A list of length `n` defining the number of strata in each of the `n` dimensions. Creates
@@ -28,7 +28,7 @@ class RectangularStrata(Strata):
         :param seeds: An array of dimension `N x n` specifying the seeds of all strata. The seeds of the strata are the
          coordinates of the stratum orthotope nearest the global origin.
         :param widths: An array of dimension `N x n` specifying the widths of all strata in each dimension
-        :param stratification_criterion: An enumeration of type :class:`.StratificationCriterion` defining the
+        :param sampling_criterion: An enumeration of type :class:`.StratificationCriterion` defining the
          stratification type
 
         **Example:**
@@ -42,18 +42,18 @@ class RectangularStrata(Strata):
 
         The user must pass one of `strata_number` OR `input_file` OR `seeds` and `widths`
         """
-        super().__init__(seeds=seeds, stratification_criterion=stratification_criterion, random_state=random_state)
+        super().__init__(seeds=seeds, random_state=random_state)
 
         self.gradients = None
         self.logger = logging.getLogger(__name__)
         self.input_file = input_file
-        self.strata_number = strata_number
+        self.strata_number: int = strata_number
         """A list of length `n` defining the number of strata in each of the `n` dimensions. Creates an equal
         stratification with strata widths equal to 1/`n_strata`. The total number of strata, `N`, is the product
         of the terms of `n_strata`."""
-        self.widths = widths
+        self.widths: Numpy2DFloatArray = widths
         """An array of dimension `N x n` specifying the widths of all strata in each dimension."""
-        self.stratification_criterion = stratification_criterion
+        self.sampling_criterion = sampling_criterion
         self.stratify()
 
     def stratify(self):
@@ -167,7 +167,7 @@ class RectangularStrata(Strata):
                 [int(samples_per_stratum_number[i]), self.seeds.shape[1]]
             )
             for j in range(self.seeds.shape[1]):
-                if self.stratification_criterion == StratificationCriterion.RANDOM:
+                if self.sampling_criterion == SamplingCriterion.RANDOM:
                     samples_temp[:, j] = stats.uniform.rvs(
                         loc=self.seeds[i, j],
                         scale=self.widths[i, j],
@@ -286,3 +286,11 @@ class RectangularStrata(Strata):
         )
 
         return new_samples
+
+    def check_centered(self, samples_number):
+        if samples_number is None:
+            return
+        if (self.sampling_criterion == SamplingCriterion.CENTERED) and \
+                samples_number != len(self.seeds):
+            raise ValueError("In case of centered stratification, the number of samples must be equal to the number "
+                             "of strata")

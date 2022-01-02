@@ -29,9 +29,9 @@ class DREAM(MCMC):
             crossover_adaptation: tuple = (-1, 1),
             check_chains: tuple = (-1, 1),
             random_state: RandomStateType = None,
-            chains_number: int = None,
-            samples_number: int = None,
-            samples_number_per_chain: int = None,
+            n_chains: int = None,
+            nsamples: int = None,
+            nsamples_per_chain: int = None,
     ):
         """
         DiffeRential Evolution Adaptive Metropolis algorithm :cite:`Dream1` :cite:`Dream2`
@@ -43,12 +43,12 @@ class DREAM(MCMC):
          are the point(s) at which to evaluate the pdf. Within MCMC the pdf_target is evaluated as:
          p(x) = pdf_target(x, \*args_target)
 
-         where x is a ndarray of shape (samples_number, dimension) and args_target are additional positional arguments that
+         where x is a ndarray of shape (nsamples, dimension) and args_target are additional positional arguments that
          are provided to MCMC via its args_target input.
 
          If pdf_target is a list of callables, it refers to independent marginals to sample from. The marginal in dimension
          j is evaluated as: p_j(xj) = pdf_target[j](xj, \*args_target[j]) where x is a ndarray of shape
-         (samples_number, dimension)
+         (nsamples, dimension)
         :param log_pdf_target: Logarithm of the target density function from which to draw random samples.
          Either pdf_target or log_pdf_target must be provided (the latter should be preferred for better numerical
          stability).
@@ -61,17 +61,17 @@ class DREAM(MCMC):
          skipping n-1 states between accepted states of the chain. Default is 1 (no thinning).
         :param dimension: A scalar value defining the dimension of target density function. Either dimension and
          nchains or seed must be provided.
-        :param seed: Seed of the Markov chain(s), shape (chains_number, dimension).
-         Default: zeros(chains_number x dimension).
+        :param seed: Seed of the Markov chain(s), shape (n_chains, dimension).
+         Default: zeros(n_chains x dimension).
 
-         If seed is not provided, both chains_number and dimension must be provided.
+         If seed is not provided, both n_chains and dimension must be provided.
         :param save_log_pdf: Boolean that indicates whether to save log-pdf values along with the samples.
          Default: False
         :param concatenate_chains: Boolean that indicates whether to concatenate the chains after a run, i.e., samples
-         are stored as an ndarray of shape (samples_number * chains_number, dimension) if True,
-         (samples_number, chains_number, dimension) if False.
+         are stored as an ndarray of shape (nsamples * n_chains, dimension) if True,
+         (nsamples, n_chains, dimension) if False.
          Default: True
-        :param chains_number: The number of Markov chains to generate. Either dimension and chains_number or seed must be
+        :param n_chains: The number of Markov chains to generate. Either dimension and n_chains or seed must be
          provided.
         :param jump_rate: Jump rate. Default: 3
         :param c: Differential evolution parameter. Default: 0.1
@@ -85,8 +85,8 @@ class DREAM(MCMC):
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is
          None.
 
-        :param samples_number: Number of samples to generate.
-        :param samples_number_per_chain: Number of samples to generate per chain.
+        :param nsamples: Number of samples to generate.
+        :param nsamples_per_chain: Number of samples to generate per chain.
         """
         super().__init__(
             pdf_target=pdf_target,
@@ -99,12 +99,12 @@ class DREAM(MCMC):
             save_log_pdf=save_log_pdf,
             concatenate_chains=concatenate_chains,
             random_state=random_state,
-            chains_number=chains_number,
+            n_chains=n_chains,
         )
 
         self.logger = logging.getLogger(__name__)
         # Check nb of chains
-        if self.chains_number < 2:
+        if self.n_chains < 2:
             raise ValueError("UQpy: For the DREAM algorithm, a seed must be provided with at least two samples.")
 
         # Check user-specific algorithms
@@ -147,52 +147,52 @@ class DREAM(MCMC):
         self.logger.info("UQpy: Initialization of " + self.__class__.__name__ + " algorithm complete.\n")
 
         # If nsamples is provided, run the algorithm
-        if (samples_number is not None) or (samples_number_per_chain is not None):
-            self.run(samples_number=samples_number, samples_number_per_chain=samples_number_per_chain, )
+        if (nsamples is not None) or (nsamples_per_chain is not None):
+            self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain, )
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
         Run one iteration of the mcmc chain for DREAM algorithm, starting at current state -
         see :class:`MCMC` class.
         """
-        r_diff = np.array([np.setdiff1d(np.arange(self.chains_number), j) for j in range(self.chains_number)])
+        r_diff = np.array([np.setdiff1d(np.arange(self.n_chains), j) for j in range(self.n_chains)])
         cross = (np.arange(1, self.crossover_probabilities_number + 1) / self.crossover_probabilities_number)
 
         # Dynamic part: evolution of chains
-        unif_rvs = (Uniform().rvs(nsamples=self.chains_number * (self.chains_number - 1),
+        unif_rvs = (Uniform().rvs(nsamples=self.n_chains * (self.n_chains - 1),
                                   random_state=self.random_state, )
-                    .reshape((self.chains_number - 1, self.chains_number)))
+                    .reshape((self.n_chains - 1, self.n_chains)))
         draw = np.argsort(unif_rvs, axis=0)
         dx = np.zeros_like(current_state)
-        lmda = (Uniform(scale=2 * self.c).rvs(nsamples=self.chains_number, random_state=self.random_state)
+        lmda = (Uniform(scale=2 * self.c).rvs(nsamples=self.n_chains, random_state=self.random_state)
                 .reshape((-1,)))
         std_x_tmp = np.std(current_state, axis=0)
 
         multi_rvs = Multinomial(n=1, p=[1.0 / self.jump_rate, ] * self.jump_rate).rvs(
-            nsamples=self.chains_number, random_state=self.random_state)
+            nsamples=self.n_chains, random_state=self.random_state)
         d_ind = np.nonzero(multi_rvs)[1]
-        as_ = [r_diff[j, draw[slice(d_ind[j]), j]] for j in range(self.chains_number)]
-        bs_ = [r_diff[j, draw[slice(d_ind[j], 2 * d_ind[j], 1), j]] for j in range(self.chains_number)]
+        as_ = [r_diff[j, draw[slice(d_ind[j]), j]] for j in range(self.n_chains)]
+        bs_ = [r_diff[j, draw[slice(d_ind[j], 2 * d_ind[j], 1), j]] for j in range(self.n_chains)]
         multi_rvs = Multinomial(n=1, p=self.cross_prob).rvs(
-            nsamples=self.chains_number, random_state=self.random_state)
+            nsamples=self.n_chains, random_state=self.random_state)
         id_ = np.nonzero(multi_rvs)[1]
         # id = np.random.choice(self.n_CR, size=(self.nchains, ), replace=True, trial_probability=self.pCR)
-        z = (Uniform().rvs(nsamples=self.chains_number * self.dimension,
+        z = (Uniform().rvs(nsamples=self.n_chains * self.dimension,
                            random_state=self.random_state, )
-             .reshape((self.chains_number, self.dimension)))
+             .reshape((self.n_chains, self.dimension)))
         subset_a = [np.where(z_j < cross[id_j])[0] for (z_j, id_j) in zip(z, id_)]  # subset A of selected dimensions
         d_star = np.array([len(a_j) for a_j in subset_a])
-        for j in range(self.chains_number):
+        for j in range(self.n_chains):
             if d_star[j] == 0:
                 subset_a[j] = np.array([np.argmin(z[j])])
                 d_star[j] = 1
         gamma_d = 2.38 / np.sqrt(2 * (d_ind + 1) * d_star)
-        g = (Binomial(n=1, p=self.gamma_probability).rvs(nsamples=self.chains_number, random_state=self.random_state)
+        g = (Binomial(n=1, p=self.gamma_probability).rvs(nsamples=self.n_chains, random_state=self.random_state)
              .reshape((-1,)))
         g[g == 0] = gamma_d[g == 0]
-        norm_vars = (Normal(loc=0.0, scale=1.0).rvs(nsamples=self.chains_number ** 2, random_state=self.random_state)
-                     .reshape((self.chains_number, self.chains_number)))
-        for j in range(self.chains_number):
+        norm_vars = (Normal(loc=0.0, scale=1.0).rvs(nsamples=self.n_chains ** 2, random_state=self.random_state)
+                     .reshape((self.n_chains, self.n_chains)))
+        for j in range(self.n_chains):
             for i in subset_a[j]:
                 dx[j, i] = self.c_star * norm_vars[j, i] + (1 + lmda[j]) * g[j] * np.sum(current_state[as_[j], i] -
                                                                                          current_state[bs_[j], i])
@@ -202,8 +202,8 @@ class DREAM(MCMC):
         logp_candidates = self.evaluate_log_target(candidates)
 
         # Accept or reject
-        accept_vec = np.zeros((self.chains_number,))
-        unif_rvs = (Uniform().rvs(nsamples=self.chains_number, random_state=self.random_state)
+        accept_vec = np.zeros((self.n_chains,))
+        unif_rvs = (Uniform().rvs(nsamples=self.n_chains, random_state=self.random_state)
                     .reshape((-1,)))
         for nc, (lpc, candidate, log_p_curr) in enumerate(
                 zip(logp_candidates, candidates, current_log_pdf)):
@@ -226,7 +226,7 @@ class DREAM(MCMC):
             self.cross_prob = self.j_ind / self.n_id
             self.cross_prob /= sum(self.cross_prob)
         # check outlier chains (only if you have saved at least 100 values already)
-        if ((self.samples_number >= 100)
+        if ((self.nsamples >= 100)
                 and (self.iterations_number < self.check_chains[0])
                 and (self.iterations_number % self.check_chains[1] == 0)):
             self.check_outlier_chains(replace_with_best=True)
@@ -236,16 +236,16 @@ class DREAM(MCMC):
     def check_outlier_chains(self, replace_with_best: bool = False):
         if not self.save_log_pdf:
             raise ValueError("UQpy: Input save_log_pdf must be True in order to check outlier chains")
-        start_ = self.samples_number_per_chain // 2
-        avgs_logpdf = np.mean(self.log_pdf_values[start_: self.samples_number_per_chain], axis=0)
+        start_ = self.nsamples_per_chain // 2
+        avgs_logpdf = np.mean(self.log_pdf_values[start_: self.nsamples_per_chain], axis=0)
         best_ = np.argmax(avgs_logpdf)
         avg_sorted = np.sort(avgs_logpdf)
-        ind1, ind3 = (1 + round(0.25 * self.chains_number), 1 + round(0.75 * self.chains_number),)
+        ind1, ind3 = (1 + round(0.25 * self.n_chains), 1 + round(0.75 * self.n_chains),)
         q1, q3 = avg_sorted[ind1], avg_sorted[ind3]
         qr = q3 - q1
 
         outlier_num = 0
-        for j in range(self.chains_number):
+        for j in range(self.n_chains):
             if avgs_logpdf[j] < q1 - 2.0 * qr:
                 outlier_num += 1
                 if replace_with_best:

@@ -19,14 +19,17 @@ Extension of the RSS class for new algorithms can be accomplished by adding new 
 appropriate methods.
 
 
-RefinedStratifiedSampling Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 Parent class for Refined Stratified Sampling :cite:`Rss1`, :cite:`Rss2`.
 This is the parent class for all refined stratified sampling methods. This parent class only provides the
 framework for refined stratified sampling and cannot be used directly for the sampling. Sampling is done by
 calling the child class for the desired algorithm.
 
+Methods
+""""""""""""""""""""""""
 .. autoclass:: UQpy.sampling.RefinedStratifiedSampling
-    :members:
-    :private-members:
+    :members: run
+
+Attributes
+""""""""""""""""""""""""
+.. autoattribute:: UQpy.sampling.RefinedStratifiedSampling.samples
+.. autoattribute:: UQpy.sampling.RefinedStratifiedSampling.samplesU01

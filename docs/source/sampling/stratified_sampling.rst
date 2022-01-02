@@ -21,41 +21,17 @@ hyper-rectangles (orthotopes), a Voronoi decomposition, and a Delaunay decomposi
 
 1. The :class:`.Strata` class defines the geometric structure of the stratification of the parameter space and it has three existing subclasses - :class:`.Rectangular`, :class:`.Voronoi`, and:class:`.Delaunay` that correspond to geometric decompositions of the parameter space based on rectilinear strata of orthotopes, strata composed of Voronoi cells, and strata composed of Delaunay simplexes respectively. These classes live in the :py:mod:`UQpy.utilities.strata` folder.
 
+.. toctree::
+   :maxdepth: 1
+
+    Strata Class <strata/strata_class>
+    List of available Strata <strata/list_of_strata>
+    Adding a new Strata <strata/adding_new_strata>
+
 2. The :class:`.StratifiedSampling` class defines a set of subclasses used to draw samples from strata defined by a :class:`.Strata` class object.
 
 3. The :class:`.RefinedStratifiedSampling` class defines a set of subclasses for refinement of :class:`.StratifiedSampling` stratified sampling designs.
 
-Strata Class
-^^^^^^^^^^^^^
-
-The :class:`.Strata` class is the parent class that defines the geometric decomposition of the parameter space. All geometric decompositions in the :class:`.Strata` class are performed on the `n`-dimensional unit :math:`[0, 1]^n` hypercube. Specific stratifications are performed by subclassing the :class:`.Strata` class. There are currently three stratifications available in the :class:`.Strata` class, defined through the subclasses :class:`.Rectangular`, :class:`.Voronoi`, and :class:`.Delaunay`.
-
-
-Strata Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: UQpy.utilities.strata.baseclass.Strata
-    :members:
-    :private-members:
-
-.. autoclass:: UQpy.utilities.strata.Rectangular
-    :members:
-    :private-members:
-
-.. autoclass:: UQpy.utilities.strata.Voronoi
-    :members:
-    :private-members:
-
-.. autoclass:: UQpy.utilities.strata.Delaunay
-    :members:
-    :private-members:
-
-Adding a new :class:`.Strata` class
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Adding a new type of stratification requires creating a new subclass of the :class:`.Strata` class that defines the
-desired geometric decomposition. This subclass must have a :meth:`stratify` method that overwrites the corresponding
-method in the parent class and performs the stratification.
 
 
 StratifiedSampling Class
@@ -65,12 +41,16 @@ The :class:`.StratifiedSampling` class is the parent class for stratified sampli
 :class:`.StratifiedSampling` classes generate random samples from a specified probability distribution(s) using
 stratified sampling with strata specified by an object of one of the :class:`.Strata` classes.
 
-StratifiedSampling Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
+Methods
+""""""""""""""""""""""""
 .. autoclass:: UQpy.sampling.StratifiedSampling
-    :members:
-    :private-members:
+    :members: transform_samples, run
+
+Attributes
+"""""""""""
+.. autoattribute:: UQpy.sampling.StratifiedSampling.weights
+.. autoattribute:: UQpy.sampling.StratifiedSampling.samples
+.. autoattribute:: UQpy.sampling.StratifiedSampling.samplesU01
 
 New Stratified Sampling Methods
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

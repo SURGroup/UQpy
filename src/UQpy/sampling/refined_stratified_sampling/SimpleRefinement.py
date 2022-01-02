@@ -1,7 +1,7 @@
 from beartype import beartype
 
 from UQpy.sampling.refined_stratified_sampling.baseclass.Refinement import *
-from UQpy.utilities.strata.VoronoiStrata import VoronoiStrata
+from UQpy.sampling.strata.VoronoiStrata import VoronoiStrata
 
 
 class SimpleRefinement(Refinement):

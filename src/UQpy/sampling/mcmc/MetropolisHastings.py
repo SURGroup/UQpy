@@ -20,12 +20,12 @@ class MetropolisHastings(MCMC):
         seed: list = None,
         save_log_pdf: bool = False,
         concatenate_chains: bool = True,
-        chains_number: int = None,
+        n_chains: int = None,
         proposal: Distribution = None,
         proposal_is_symmetric: bool = False,
         random_state: RandomStateType = None,
-        samples_number: PositiveInteger = None,
-        samples_number_per_chain: PositiveInteger = None,
+        nsamples: PositiveInteger = None,
+        nsamples_per_chain: PositiveInteger = None,
     ):
         """
         Metropolis-Hastings algorithm :cite:`MCMC1` :cite:`MCMC2`
@@ -37,12 +37,12 @@ class MetropolisHastings(MCMC):
          are the point(s) at which to evaluate the pdf. Within MCMC the pdf_target is evaluated as:
          p(x) = pdf_target(x, \*args_target)
 
-         where x is a ndarray of shape (samples_number, dimension) and args_target are additional positional arguments that
+         where x is a ndarray of shape (nsamples, dimension) and args_target are additional positional arguments that
          are provided to MCMC via its args_target input.
 
          If pdf_target is a list of callables, it refers to independent marginals to sample from. The marginal in dimension
          j is evaluated as:  p_j(xj) = pdf_target[j](xj, \*args_target[j]) where x is a ndarray of shape
-         (samples_number, dimension)
+         (nsamples, dimension)
         :param log_pdf_target: Logarithm of the target density function from which to draw random samples.
          Either pdf_target or log_pdf_target must be provided (the latter should be preferred for better numerical
          stability).
@@ -63,7 +63,7 @@ class MetropolisHastings(MCMC):
         :param concatenate_chains: Boolean that indicates whether to concatenate the chains after a run, i.e., samples
          are stored as an ndarray of shape (nsamples * nchains, dimension) if True, (nsamples, nchains, dimension) if False.
          Default: True
-        :param chains_number: The number of Markov chains to generate. Either dimension and nchains or seed must be
+        :param n_chains: The number of Markov chains to generate. Either dimension and nchains or seed must be
          provided.
         :param proposal: Proposal distribution, must have a log_pdf/pdf and rvs method. Default: standard
          multivariate normal
@@ -72,8 +72,8 @@ class MetropolisHastings(MCMC):
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is
          None.
 
-        :param samples_number: Number of samples to generate.
-        :param samples_number_per_chain: Number of samples to generate per chain.
+        :param nsamples: Number of samples to generate.
+        :param nsamples_per_chain: Number of samples to generate per chain.
         """
         super().__init__(
             pdf_target=pdf_target,
@@ -86,7 +86,7 @@ class MetropolisHastings(MCMC):
             save_log_pdf=save_log_pdf,
             concatenate_chains=concatenate_chains,
             random_state=random_state,
-            chains_number=chains_number,
+            n_chains=n_chains,
         )
 
         self.logger = logging.getLogger(__name__)
@@ -105,9 +105,9 @@ class MetropolisHastings(MCMC):
 
         self.logger.info("\nUQpy: Initialization of " + self.__class__.__name__ + " algorithm complete.")
 
-        # If samples_number is provided, run the algorithm
-        if (samples_number is not None) or (samples_number_per_chain is not None):
-            self.run(samples_number=samples_number, samples_number_per_chain=samples_number_per_chain,)
+        # If nsamples is provided, run the algorithm
+        if (nsamples is not None) or (nsamples_per_chain is not None):
+            self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain,)
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
@@ -116,7 +116,7 @@ class MetropolisHastings(MCMC):
         """
         # Sample candidate
         candidate = current_state + self.proposal.rvs(
-            nsamples=self.chains_number, random_state=self.random_state)
+            nsamples=self.n_chains, random_state=self.random_state)
 
         # Compute log_pdf_target of candidate sample
         log_p_candidate = self.evaluate_log_target(candidate)
@@ -132,11 +132,11 @@ class MetropolisHastings(MCMC):
 
         # Compare candidate with current sample and decide or not to keep the candidate (loop over nc chains)
         accept_vec = np.zeros(
-            (self.chains_number,)
+            (self.n_chains,)
         )  # this vector will be used to compute accept_ratio of each chain
         unif_rvs = (
             Uniform()
-            .rvs(nsamples=self.chains_number, random_state=self.random_state)
+            .rvs(nsamples=self.n_chains, random_state=self.random_state)
             .reshape((-1,))
         )
         for nc, (cand, log_p_cand, r_) in enumerate(

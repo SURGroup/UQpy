@@ -16,10 +16,13 @@ Additional details can be found in :cite:`Simplex1`.
 
 Simplex Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
+Methods
+~~~~~~~~~~~~~~~~~~
 .. autoclass:: UQpy.sampling.SimplexSampling
-    :members:
-    :private-members:
+    :members: run
 
+Attributes
+~~~~~~~~~~~~~~~~~~
+.. autoattribute:: UQpy.sampling.SimplexSampling.samples
 
 .. include::    ../auto_examples/sampling/simplex/index.rst
