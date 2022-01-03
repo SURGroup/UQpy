@@ -9,7 +9,7 @@ The module currently contains the following classes:
 
 - :class:`.LatinHypercubeSampling`: Class generating random samples from a specified probability distribution(s) using Latin hypercube sampling.
 
-- :class:`.StratifiedSampling`: Class is a variance reduction technique that divides the parameter space into a set of disjoint and space-filling strata
+- :class:`.TrueStratifiedSampling`: Class is a variance reduction technique that divides the parameter space into a set of disjoint and space-filling strata
 
 - :class:`.RefinedStratifiedSampling`: Class is a sequential sampling procedure that adaptively refines the stratification of the parameter space to add samples
 
@@ -27,7 +27,7 @@ The module currently contains the following classes:
 
     Monte Carlo Sampling <monte_carlo>
     Latin Hypercube Sampling <latin_hypercube>
-    Stratified Sampling <stratified_sampling>
+    True Stratified Sampling <stratified_sampling>
     Refined Stratified Sampling <refined_stratified_sampling>
     Simplex Sampling <simplex>
     Adaptive Kriging <akmcs>

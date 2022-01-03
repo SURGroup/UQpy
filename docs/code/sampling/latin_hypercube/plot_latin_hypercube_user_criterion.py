@@ -24,8 +24,8 @@ This example illustrates use of user-defined latin hypercube design criteria. In
 from UQpy.sampling import LatinHypercubeSampling
 import matplotlib.pyplot as plt
 from UQpy.distributions import Uniform
-from UQpy.sampling.latin_hypercube_criteria import *
-from UQpy.sampling.latin_hypercube_criteria import Criterion
+from UQpy.sampling.stratified_sampling.latin_hypercube_criteria import *
+from UQpy.sampling.stratified_sampling.latin_hypercube_criteria import Criterion
 
 
 # %% md

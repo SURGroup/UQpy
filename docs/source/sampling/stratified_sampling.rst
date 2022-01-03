@@ -19,7 +19,7 @@ sampling designs that can be extended in a straightforward way. Specifically, th
 of n-dimensional parameter spaces based on three common spatial discretizations: a rectilinear decomposition into
 hyper-rectangles (orthotopes), a Voronoi decomposition, and a Delaunay decomposition. The three parent classes are:
 
-1. The :class:`.Strata` class defines the geometric structure of the stratification of the parameter space and it has three existing subclasses - :class:`.Rectangular`, :class:`.Voronoi`, and:class:`.Delaunay` that correspond to geometric decompositions of the parameter space based on rectilinear strata of orthotopes, strata composed of Voronoi cells, and strata composed of Delaunay simplexes respectively. These classes live in the :py:mod:`UQpy.utilities.strata` folder.
+1. The :class:`.Strata` class defines the geometric structure of the stratification of the parameter space and it has three existing subclasses - :class:`.Rectangular`, :class:`.Voronoi`, and:class:`.Delaunay` that correspond to geometric decompositions of the parameter space based on rectilinear strata of orthotopes, strata composed of Voronoi cells, and strata composed of Delaunay simplexes respectively. These classes live in the :py:mod:`UQpy.sampling.stratified_sampling.strata` folder.
 
 .. toctree::
    :maxdepth: 1
@@ -28,29 +28,29 @@ hyper-rectangles (orthotopes), a Voronoi decomposition, and a Delaunay decomposi
     List of available Strata <strata/list_of_strata>
     Adding a new Strata <strata/adding_new_strata>
 
-2. The :class:`.StratifiedSampling` class defines a set of subclasses used to draw samples from strata defined by a :class:`.Strata` class object.
+2. The :class:`.TrueStratifiedSampling` class defines a set of subclasses used to draw samples from strata defined by a :class:`.Strata` class object.
 
-3. The :class:`.RefinedStratifiedSampling` class defines a set of subclasses for refinement of :class:`.StratifiedSampling` stratified sampling designs.
+3. The :class:`.RefinedStratifiedSampling` class defines a set of subclasses for refinement of :class:`.TrueStratifiedSampling` stratified sampling designs.
 
 
 
 StratifiedSampling Class
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :class:`.StratifiedSampling` class is the parent class for stratified sampling. The various
-:class:`.StratifiedSampling` classes generate random samples from a specified probability distribution(s) using
+The :class:`.TrueStratifiedSampling` class is the parent class for stratified sampling. The various
+:class:`.TrueStratifiedSampling` classes generate random samples from a specified probability distribution(s) using
 stratified sampling with strata specified by an object of one of the :class:`.Strata` classes.
 
 Methods
 """"""""""""""""""""""""
-.. autoclass:: UQpy.sampling.StratifiedSampling
+.. autoclass:: UQpy.sampling.stratified_sampling.TrueStratifiedSampling
     :members: transform_samples, run
 
 Attributes
 """""""""""
-.. autoattribute:: UQpy.sampling.StratifiedSampling.weights
-.. autoattribute:: UQpy.sampling.StratifiedSampling.samples
-.. autoattribute:: UQpy.sampling.StratifiedSampling.samplesU01
+.. autoattribute:: UQpy.sampling.stratified_sampling.TrueStratifiedSampling.weights
+.. autoattribute:: UQpy.sampling.stratified_sampling.TrueStratifiedSampling.samples
+.. autoattribute:: UQpy.sampling.stratified_sampling.TrueStratifiedSampling.samplesU01
 
 New Stratified Sampling Methods
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

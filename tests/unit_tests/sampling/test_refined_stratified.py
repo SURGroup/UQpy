@@ -4,9 +4,9 @@ from beartype.roar import BeartypeCallHintPepParamException
 from UQpy.optimization.MinimizeOptimizer import MinimizeOptimizer
 from UQpy.sampling.refined_stratified_sampling.GradientEnhancedRefinement import GradientEnhancedRefinement
 from UQpy.distributions.collection.Uniform import Uniform
-from UQpy.sampling.RefinedStratifiedSampling import *
+from UQpy.sampling.stratified_sampling.RefinedStratifiedSampling import *
 from UQpy.sampling.refined_stratified_sampling.SimpleRefinement import *
-from UQpy.sampling.strata.VoronoiStrata import *
+from UQpy.sampling.stratified_sampling.strata.VoronoiStrata import *
 from UQpy.RunModel import *
 from UQpy.surrogates.kriging.Kriging import Kriging
 

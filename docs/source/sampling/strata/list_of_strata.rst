@@ -7,13 +7,13 @@ Rectangular
 ~~~~~~~~~~~~~~~~~~
 Methods
 """""""
-.. autoclass:: UQpy.utilities.strata.RectangularStrata
+.. autoclass:: UQpy.sampling.stratified_sampling.strata.RectangularStrata
     :members: stratify, fullfact, plot_2d
 
 Attributes
 """"""""""
-.. autoattribute:: UQpy.utilities.strata.RectangularStrata.strata_number
-.. autoattribute:: UQpy.utilities.strata.RectangularStrata.widths
+.. autoattribute:: UQpy.utilities.sampling.stratified_sampling.RectangularStrata.strata_number
+.. autoattribute:: UQpy.utilities.sampling.stratified_sampling.RectangularStrata.widths
 
 ----
 
@@ -21,13 +21,13 @@ Voronoi
 ~~~~~~~~~~~~~~~~~~
 Methods
 """""""
-.. autoclass:: UQpy.utilities.strata.VoronoiStrata
+.. autoclass:: UQpy.sampling.stratified_sampling.strata.VoronoiStrata
     :members: stratify, compute_voronoi_centroid_volume, add_boundary_points_and_construct_delaunay
 
 Attributes
 """"""""""
-.. autoattribute:: UQpy.utilities.strata.VoronoiStrata.voronoi
-.. autoattribute:: UQpy.utilities.strata.VoronoiStrata.vertices
+.. autoattribute:: UQpy.sampling.stratified_sampling.strata.VoronoiStrata.voronoi
+.. autoattribute:: UQpy.sampling.stratified_sampling.strata.VoronoiStrata.vertices
 
 ----
 

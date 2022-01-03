@@ -1,11 +1,6 @@
-import pytest
-
-from UQpy.sampling.LatinHypercubeSampling import *
+from UQpy.sampling.stratified_sampling.LatinHypercubeSampling import *
 from UQpy.distributions.collection.Uniform import *
-from UQpy.sampling.latin_hypercube_criteria.Random import Random
-from UQpy.sampling.latin_hypercube_criteria.Centered import *
-from UQpy.sampling.latin_hypercube_criteria.MaxiMin import *
-from UQpy.sampling.latin_hypercube_criteria.MinCorrelation import *
+from UQpy.sampling.stratified_sampling.latin_hypercube_criteria.MinCorrelation import *
 import numpy as np
 
 distribution = Uniform(1, 1)

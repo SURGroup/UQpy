@@ -23,7 +23,7 @@ This example shows the use of the Latin Hypercube sampling class. In particular:
 from UQpy.sampling import LatinHypercubeSampling
 import matplotlib.pyplot as plt
 from UQpy.distributions import Uniform
-from UQpy.sampling.latin_hypercube_criteria import *
+from UQpy.sampling.stratified_sampling.latin_hypercube_criteria import *
 
 # %% md
 #
