@@ -12,8 +12,8 @@ class Stretch(MCMC):
     @beartype
     def __init__(
             self,
-            pdf_target: Union[Callable, List[Callable]] = None,
-            log_pdf_target: Union[Callable, List[Callable]] = None,
+            pdf_target: Union[Callable, list[Callable]] = None,
+            log_pdf_target: Union[Callable, list[Callable]] = None,
             args_target: tuple = None,
             burn_length: Annotated[int, Is[lambda x: x >= 0]] = 0,
             jump: PositiveInteger = 1,

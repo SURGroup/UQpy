@@ -21,7 +21,7 @@ class BayesModelSelection:
             self,
             candidate_models: list[InferenceModel],
             data,
-            sampling_class: List[Union[ImportanceSampling, MCMC]],
+            sampling_class: list[Union[ImportanceSampling, MCMC]],
             prior_probabilities=None,
             method_evidence_computation: MethodEvidence = MethodEvidence.HARMONIC_MEAN,
             samples_number: list[PositiveInteger] = None,

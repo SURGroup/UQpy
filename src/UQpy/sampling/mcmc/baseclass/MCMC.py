@@ -15,8 +15,8 @@ class MCMC(ABC):
     def __init__(
         self,
         dimension: Union[None, int] = None,
-        pdf_target: Union[Callable, List[Callable], None] = None,
-        log_pdf_target: Union[Callable, List[Callable], None] = None,
+        pdf_target: Union[Callable, list[Callable], None] = None,
+        log_pdf_target: Union[Callable, list[Callable], None] = None,
         args_target: Union[tuple, None] = None,
         seed: Union[list, None] = None,
         burn_length: Annotated[int, Is[lambda x: x >= 0]] = 0,
@@ -33,8 +33,8 @@ class MCMC(ABC):
         mcmc and cannot be used directly for sampling. Sampling is done by calling the child class for the specific
         mcmc algorithm.
 
-        :param dimension: A scalar value defining the dimension of target density function. Either `dimension` and
-         `n_chains` or `seed` must be provided.
+        :param dimension: A scalar value defining the dimension of target density function. Either :strong:`dimension`
+         and `n_chains` or `seed` must be provided.
         :param pdf_target: Target density function from which to draw random samples. Either `pdf_target` or
          `log_pdf_target` must be provided (the latter should be preferred for better numerical stability).
          If `pdf_target` is a callable, it refers to the joint pdf to sample from, it must take at least one input `x`,

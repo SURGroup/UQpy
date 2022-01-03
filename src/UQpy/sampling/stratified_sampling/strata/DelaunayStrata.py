@@ -93,13 +93,13 @@ class DelaunayStrata(Strata):
 
         return centroid, volume
 
-    def sample_strata(self, samples_per_stratum_number, random_state):
+    def sample_strata(self, nsamples_per_stratum, random_state):
         samples_in_strata, weights = [], []
         for count, simplex in enumerate(self.delaunay.simplices):  # extract simplices from Delaunay triangulation
             samples_temp = SimplexSampling(
                 nodes=self.delaunay.points[simplex],
-                nsamples=int(samples_per_stratum_number[count]),
+                nsamples=int(nsamples_per_stratum[count]),
                 random_state=random_state)
             samples_in_strata.append(samples_temp.samples)
-            self.extend_weights(samples_per_stratum_number, count, weights)
+            self.extend_weights(nsamples_per_stratum, count, weights)
         return samples_in_strata, weights

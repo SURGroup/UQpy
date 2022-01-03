@@ -160,11 +160,11 @@ class RectangularStrata(Strata):
 
         return fig
 
-    def sample_strata(self, samples_per_stratum_number, random_state):
+    def sample_strata(self, nsamples_per_stratum, random_state):
         samples_in_strata, weights = [], []
         for i in range(self.seeds.shape[0]):
             samples_temp = np.zeros(
-                [int(samples_per_stratum_number[i]), self.seeds.shape[1]]
+                [int(nsamples_per_stratum[i]), self.seeds.shape[1]]
             )
             for j in range(self.seeds.shape[1]):
                 if self.sampling_criterion == SamplingCriterion.RANDOM:
@@ -172,13 +172,13 @@ class RectangularStrata(Strata):
                         loc=self.seeds[i, j],
                         scale=self.widths[i, j],
                         random_state=random_state,
-                        size=int(samples_per_stratum_number[i]),
+                        size=int(nsamples_per_stratum[i]),
                     )
                 else:
                     samples_temp[:, j] = self.seeds[i, j] + self.widths[i, j] / 2.0
 
             samples_in_strata.append(samples_temp)
-            self.extend_weights(samples_per_stratum_number, i, weights)
+            self.extend_weights(nsamples_per_stratum, i, weights)
         return samples_in_strata, weights
 
     def calculate_strata_metrics(self, index):

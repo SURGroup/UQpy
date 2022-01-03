@@ -1,6 +1,7 @@
 import itertools
 from abc import ABC, abstractmethod
 import numpy as np
+from line_profiler_pycharm import profile
 
 from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
 
@@ -14,6 +15,7 @@ class Kernel(ABC):
     def kernel_entry(self, xi, xj):
         pass
 
+    @profile
     def kernel_operator(self, points: list[GrassmannPoint], p: int = None):
         nargs = len(points)
         # Define the pairs of points to compute the entries of the kernel matrix.

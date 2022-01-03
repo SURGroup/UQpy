@@ -39,11 +39,28 @@ class Strata:
         pass
 
     @abc.abstractmethod
-    def sample_strata(self, samples_per_stratum_number, random_state):
+    def sample_strata(self, nsamples_per_stratum, random_state):
+        """
+        Abstract class that need to be implemented in each new Stratum. It defines a way to draw samples from
+
+        :param nsamples_per_stratum: Number of samples to draw in each stratum
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
+         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+         the object itself can be passed directly.
+        :return: A :class:`tuple` containing the new samples contained in the strata as well as their corresponding
+         weights.
+        """
         pass
 
     @abc.abstractmethod
     def calculate_strata_metrics(self, index):
+        """
+        Abstract method that calculates stratum metrics needed in order for the sampling algorithm to decide which
+        stratum to refine
+
+        :param index: Stratum index
+        :return: A list containing the metric of each stratum.
+        """
         pass
 
     def initialize(self, samples_number, training_points):
@@ -51,9 +68,7 @@ class Strata:
 
     def extend_weights(self, samples_per_stratum_number, index, weights):
         if int(samples_per_stratum_number[index]) != 0:
-            weights.extend(
-                [self.volume[index] / samples_per_stratum_number[index]]
-                * int(samples_per_stratum_number[index])
-            )
+            weights.extend([self.volume[index] / samples_per_stratum_number[index]]
+                           * int(samples_per_stratum_number[index]))
         else:
             weights.extend([0] * int(samples_per_stratum_number[index]))

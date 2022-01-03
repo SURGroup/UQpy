@@ -7,7 +7,7 @@ The :class:`.Strata` class is the parent class that defines the geometric decomp
 Methods
 """""""
 .. autoclass:: UQpy.sampling.stratified_sampling.strata.baseclass.Strata
-    :members: stratify
+    :members: stratify, sample_strata, calculate_strata_metrics
 
 Attributes
 """"""""""""""

@@ -1,3 +1,8 @@
+import numpy as np
+import scipy
+from line_profiler_pycharm import profile
+
+from UQpy import GrassmannPoint, ProjectionKernel
 from UQpy.dimension_reduction.kernels.GaussianKernel import GaussianKernel
 from UQpy.dimension_reduction.diffusion_maps.DiffusionMaps import DiffusionMaps
 
@@ -103,3 +108,19 @@ def test_diff_matrices():
     assert evals[0] == 1.0000000000000004
     assert evals[1] == 0.12956887787384186
     assert evals[2] == 0.07277038589085978
+
+
+@profile
+def test_example():
+    import scipy.io as sio
+    mat = sio.loadmat('dataSphere.mat')
+    points = mat['BaseManifold']
+
+    list_of_points=[GrassmannPoint(np.atleast_2d(points[:, i]).T) for i in range(points.shape[1])]
+    kernel = ProjectionKernel()
+
+    kernel_matrix = kernel.kernel_operator(list_of_points, p=3)
+
+    dmaps = DiffusionMaps(kernel_matrix=kernel_matrix, eigenvectors_number=3)
+
+    diff_coords, evals, evecs = dmaps.fit()

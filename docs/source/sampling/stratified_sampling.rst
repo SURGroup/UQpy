@@ -52,11 +52,4 @@ Attributes
 .. autoattribute:: UQpy.sampling.stratified_sampling.TrueStratifiedSampling.samples
 .. autoattribute:: UQpy.sampling.stratified_sampling.TrueStratifiedSampling.samplesU01
 
-New Stratified Sampling Methods
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Extension of the stratified sampling capabilities in :py:mod:`UQpy` can be performed through subclassing from the three main classes.
-First, the user can define a new geometric decomposition of the parameter space by creating a new subclass of the :class:`Strata` class.
-To implement a new stratified sampling method based on a new stratification, the user must write a new subclass of the :class:`.Strata` class defining the new decomposition.
-The details of these subclasses and their requirements are outlined in the sections discussing the respective classes.
 

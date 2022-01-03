@@ -161,7 +161,7 @@ class VoronoiStrata(Strata):
 
         return centroid, volume
 
-    def sample_strata(self, samples_per_stratum_number, random_state):
+    def sample_strata(self, nsamples_per_stratum, random_state):
         from scipy.spatial import Delaunay, ConvexHull
 
         samples_in_strata, weights = list(), list()
@@ -184,7 +184,7 @@ class VoronoiStrata(Strata):
 
             temp_prob = np.array(volume) / sum(volume)
             a = list(range(len(delaunay_obj.vertices)))
-            for k in range(int(samples_per_stratum_number[j])):
+            for k in range(int(nsamples_per_stratum[j])):
                 simplex = random_state.choice(a, p=temp_prob)
 
                 new_samples = SimplexSampling(
@@ -194,7 +194,7 @@ class VoronoiStrata(Strata):
                 ).samples
                 samples_in_strata.append(new_samples)
 
-            self.extend_weights(samples_per_stratum_number, j, weights)
+            self.extend_weights(nsamples_per_stratum, j, weights)
         return samples_in_strata, weights
 
 
@@ -411,6 +411,5 @@ class VoronoiStrata(Strata):
                     np.sum(tmp_vertices[col_one[m] - 1, :], 0) / self.dimension)
 
         # Using the Simplex class to generate a new sample in the sub-simplex
-        new = SimplexSampling(
-            nodes=self.mesh.sub_simplex, samples_number=1, random_state=random_state).samples
+        new = SimplexSampling(nodes=self.mesh.sub_simplex, nsamples=1, random_state=random_state).samples
         return new
