@@ -71,6 +71,7 @@ class SROM:
         self.properties = properties
         self.logger = logging.getLogger(__name__)
         self.sample_weights = None
+        """The probability weights defining discrete approximation of continuous random variables."""
 
         if isinstance(samples, list):
             self.samples = np.array(samples)

@@ -33,11 +33,18 @@ These indices allow differentiation between three groups of inputs (see example 
 Morris Class Description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-
+Methods
+"""""""
 .. autoclass:: UQpy.sensitivity.MorrisSensitivity
-    :members:
-    :private-members:
+    :members: run, sample_trajectories
 
+Attributes
+""""""""""
+.. autoattribute:: UQpy.sensitivity.MorrisSensitivity.trajectories_unit_hypercube
+.. autoattribute:: UQpy.sensitivity.MorrisSensitivity.trajectories_physical_space
+.. autoattribute:: UQpy.sensitivity.MorrisSensitivity.elementary_effects
+.. autoattribute:: UQpy.sensitivity.MorrisSensitivity.mustar_indices
+.. autoattribute:: UQpy.sensitivity.MorrisSensitivity.sigma_indices
 
 .. Note::
     **Subclassing the Morris class.**

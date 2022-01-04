@@ -12,8 +12,8 @@ Methods
 
 Attributes
 """"""""""
-.. autoattribute:: UQpy.utilities.sampling.stratified_sampling.RectangularStrata.strata_number
-.. autoattribute:: UQpy.utilities.sampling.stratified_sampling.RectangularStrata.widths
+.. autoattribute:: UQpy.sampling.stratified_sampling.RectangularStrata.strata_number
+.. autoattribute:: UQpy.sampling.stratified_sampling.RectangularStrata.widths
 
 ----
 
@@ -35,10 +35,10 @@ Delaunay
 ~~~~~~~~~~~~~~~~~~
 Methods
 """""""
-.. autoclass:: UQpy.utilities.strata.DelaunayStrata
+.. autoclass:: UQpy.sampling.stratified_sampling.strata.DelaunayStrata
     :members: stratify, compute_delaunay_centroid_volume
 
 Attributes
 """"""""""
-.. autoattribute:: UQpy.utilities.strata.DelaunayStrata.delaunay
-.. autoattribute:: UQpy.utilities.strata.DelaunayStrata.centroids
+.. autoattribute:: UQpy.sampling.stratified_sampling.strata.DelaunayStrata.delaunay
+.. autoattribute:: UQpy.sampling.stratified_sampling.strata.DelaunayStrata.centroids

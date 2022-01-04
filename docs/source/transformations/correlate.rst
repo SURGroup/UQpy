@@ -12,6 +12,12 @@ where :math:`\mathbf{H}` is the lower triangular matrix resulting from the Chole
 Correlate Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Methods
+"""""""
 .. autoclass:: UQpy.transformations.Correlate
-    :members:
-    :private-members:
+
+Attributes
+""""""""""
+
+.. autoattribute:: UQpy.transformations.Correlate.H
+.. autoattribute:: UQpy.transformations.Correlate.samples_z

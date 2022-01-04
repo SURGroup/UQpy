@@ -18,16 +18,28 @@ class PolynomialChaosExpansion(Surrogate):
         :param regression_method: object for the method used for the calculation of the polynomial_chaos coefficients.
         """
         self.polynomial_basis = polynomial_basis
+        """Contains the 1d or Nd chaos polynomials that form the PCE basis"""
         self.multi_index_set = polynomial_basis.multi_index_set
+        "Multi-index-set"
         self.regression_method = regression_method
         self.logger = logging.getLogger(__name__)
         self.coefficients = None
+        """Polynomial Chaos Expansion Coefficient"""
         self.bias = None
+        """Bias term in case LASSO or ridge regression are employed to estimate 
+        the PCE coefficients"""
         self.outputs_number = None
+        """Dimensions of the quantities of interest"""
         self.design_matrix = None
+        """Matrix containing the evaluations of the PCE basis on the experimental 
+        design that has been used to fit the PCE coefficients"""
 
         self.experimental_design_input = None
+        """Realizations of the random parameter in the experimental design that 
+        has been used to fit the PCE coefficients"""
         self.experimental_design_output = None
+        """Model outputs for the random parameter realizations of the 
+        experimental design that has been used to fit the PCE coefficients"""
 
     @property
     def polynomials_number(self):

@@ -31,9 +31,9 @@ class KarhunenLoeveExpansion:
         self.correlation_function = correlation_function
         self.time_interval = time_interval
         if threshold:
-            self.number_eigen_values = threshold
+            self.number_eigenvalues = threshold
         else:
-            self.number_eigen_values = len(self.correlation_function[0])
+            self.number_eigenvalues = len(self.correlation_function[0])
 
         self.random_state = random_state
         if isinstance(self.random_state, int):
@@ -56,9 +56,9 @@ class KarhunenLoeveExpansion:
 
     def _simulate(self, xi):
         lam, phi = np.linalg.eig(self.correlation_function)
-        lam = lam[: self.number_eigen_values]
+        lam = lam[: self.number_eigenvalues]
         lam = np.diag(lam)
-        self.phi = np.real(phi[:, : self.number_eigen_values])
+        self.phi = np.real(phi[:, : self.number_eigenvalues])
         self.lam = lam.astype(np.float64)
         samples = np.dot(self.phi, np.dot(sqrtm(self.lam), xi))
         samples = np.real(samples)
@@ -95,7 +95,7 @@ class KarhunenLoeveExpansion:
         self.logger.info(
             "UQpy: Stochastic Process: Starting simulation of Stochastic Processes."
         )
-        xi = np.random.normal(size=(self.number_eigen_values, self.nsamples))
+        xi = np.random.normal(size=(self.number_eigenvalues, self.nsamples))
         samples = self._simulate(xi)
 
         if self.samples is None:

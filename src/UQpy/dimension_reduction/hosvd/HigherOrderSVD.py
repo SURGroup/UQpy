@@ -10,14 +10,28 @@ class HigherOrderSVD:
         modes: PositiveInteger = 10 ** 10,
         reconstruction_percentage: float = 10 ** 10,
     ):
+        """
 
+        :param solution_snapshots: Second order tensor or list containing the solution snapshots. Third dimension or
+         length of list corresponds to the number of snapshots.
+        :param modes: Number of modes to keep for dataset reconstruction.
+        :param reconstruction_percentage: Dataset reconstruction percentage.
+        """
         self.solution_snapshots = solution_snapshots
         self.logger = logging.getLogger(__name__)
         self.modes = modes
         self.reconstruction_percentage = reconstruction_percentage
 
     def factorize(self, get_error: bool = False):
+        """
+        Executes the HOSVD method.
 
+        :param get_error: A boolean declaring whether to return the reconstruction error.
+        :return: Second order tensor containing the reconstructed solution snapshots in their initial spatial and
+         temporal dimensions, as well as an array containing the reduced solutions snapshots. The array’s dimensions
+         depends on the dimensions of input second order tensor and not on the input number of modes or reconstruction
+         percentage.
+        """
         if self.modes <= 0:
             print("Warning: Invalid input, the number of modes must be positive.")
             return [], [], [], [], [], []
@@ -109,6 +123,11 @@ class HigherOrderSVD:
 
     @staticmethod
     def unfold3d(second_order_tensor):
+        """
+
+        :param second_order_tensor:
+        :return:
+        """
         if type(second_order_tensor) == list:
             rows = second_order_tensor[0].shape[0]
             columns = second_order_tensor[0].shape[1]
@@ -144,6 +163,14 @@ class HigherOrderSVD:
 
     @staticmethod
     def reconstruct(u1, u2, u3hat, s3hat):
+        """
+
+        :param u1:
+        :param u2:
+        :param u3hat:
+        :param s3hat:
+        :return:
+        """
         b = np.kron(u1, u2)
         c = np.dot(s3hat, b.T)
         d = np.dot(u3hat[:, :], c)

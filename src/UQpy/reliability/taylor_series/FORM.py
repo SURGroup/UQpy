@@ -42,7 +42,7 @@ class FORM(TaylorSeries):
          If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
          If `seed_x` is provided, it should be a point in the parameter space of **X**.
          Default: `seed_u = (0, 0, ..., 0)`
-        :param df_step: Finite difference step in standard normal space. Default: 0.01 (see `derivatives` class)
+        :param df_step: Finite difference step in standard normal space. Default: 0.01 (see `derivatives`)
         :param corr_z: Covariance matrix
          If `corr_x` is provided, it is the correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
          If `corr_z` is provided, it is the correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal random
@@ -73,27 +73,39 @@ class FORM(TaylorSeries):
 
         # Initialize output
         self.beta_form = None
+        """Hasofer-Lind reliability index."""
         self.DesignPoint_U = None
+        """Design point in the uncorrelated standard normal space U."""
         self.DesignPoint_X = None
+        """Design point in the parameter space X."""
         self.alpha = None
+        """Direction cosine."""
         self.failure_probability = None
         self.x = None
         self.alpha = None
         self.g0 = None
         self.form_iterations = None
+        """Number of model evaluations."""
         self.df_step = df_step
         self.error_record = None
+        """Record of the error defined by criteria e1, e2, e3."""
 
         self.tol1 = tol1
         self.tol2 = tol2
         self.tol3 = tol3
 
         self.u_record = None
+        """Record of all iteration points in the standard normal space U."""
         self.x_record = None
+        """Record of all iteration points in the parameter space X."""
         self.g_record = None
+        """Record of the performance function."""
         self.dg_u_record = None
+        """Record of the model’s gradient in the standard normal space."""
         self.alpha_record = None
+        """Record of the alpha (directional cosine)."""
         self.beta_record = None
+        """Record of all Hasofer-Lind reliability index values."""
         self.jzx = None
 
         self.call = None
@@ -109,7 +121,11 @@ class FORM(TaylorSeries):
         """
         Runs FORM
 
-        :param seed_x: See :class:`.TaylorSeries` parent class.
+        :param seed_u | seed_x: The initial starting point for the `Hasofer-Lind` algorithm.
+         Either `seed_u` or `seed_x` must be provided.
+         If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
+         If `seed_x` is provided, it should be a point in the parameter space of **X**.
+         Default: `seed_u = (0, 0, ..., 0)`
         """
         self.logger.info("UQpy: Running FORM...")
         if seed_u is None and seed_x is None:

@@ -11,6 +11,7 @@ class LinearInterpolation(InterpolationMethod):
     def __init__(self):
         """
         A class to perform piecewise linear interpolation in high dimensions.
+
         """
         self.coordinates=None
         self.samples = None
@@ -19,8 +20,7 @@ class LinearInterpolation(InterpolationMethod):
         """
         Method to perform the interpolation.
 
-        :param coordinates: Nodes of the interpolant
-        :param samples: Data to interpolate
+
         :param point: Point to interpolation
 
         """
@@ -35,5 +35,10 @@ class LinearInterpolation(InterpolationMethod):
         return interp_point
 
     def fit(self, coordinates: NumpyFloatArray, manifold_data, samples: list[NumpyFloatArray]):
+        """
+
+        :param coordinates: Nodes of the interpolant
+        :param samples: Data to interpolate
+        """
         self.coordinates = coordinates
         self.samples = samples

@@ -9,6 +9,18 @@ references :cite:`StochasticProcess8` and :cite:`StochasticProcess9`. The multi-
 BispectralRepresentation Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Methods
+"""""""
 .. autoclass:: UQpy.stochastic_process.BispectralRepresentation
-    :members:
-    :private-members:
+    :members: run
+
+Attributes
+""""""""""
+.. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.number_of_dimensions
+.. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.bispectrum_amplitude
+.. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.bispectrum_real
+.. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.bispectrum_imaginary
+.. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.biphase
+.. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.phi
+.. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.samples
+.. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.number_of_variables

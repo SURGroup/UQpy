@@ -18,6 +18,11 @@ Here, :math:`F(x_{k,i})` and :math:`\hat{F}(x_{k,i})` denote the marginal cumula
 
 SROM Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Methods
+"""""""
 .. autoclass:: UQpy.surrogates.stochastic_reduced_order_models.SROM
-    :members:
-    :private-members:
+    :members: run
+
+Attributes
+""""""""""
+.. autoattribute:: UQpy.surrogates.stochastic_reduced_order_models.SROM.sample_weights

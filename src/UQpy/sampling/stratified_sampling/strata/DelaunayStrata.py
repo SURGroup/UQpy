@@ -7,6 +7,7 @@ from UQpy.sampling.SimplexSampling import SimplexSampling
 from scipy.spatial import Delaunay
 import itertools
 
+
 class DelaunayStrata(Strata):
     def calculate_strata_metrics(self, **kwargs):
         pass
@@ -40,7 +41,7 @@ class DelaunayStrata(Strata):
         self.centroids: list = []
         """A list of the vertices for each Voronoi stratum on the unit hypercube."""
         self.logger = logging.getLogger(__name__)
-        self.stratified=False
+        self.stratified = False
 
         if self.seeds is not None:
             if self.seeds_number is not None or self.dimension is not None:

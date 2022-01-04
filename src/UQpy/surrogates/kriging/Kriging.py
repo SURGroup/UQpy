@@ -4,8 +4,6 @@ from UQpy.optimization.baseclass import Optimizer
 from scipy.linalg import cholesky
 import scipy.stats as stats
 from beartype import beartype
-import inspect
-from scipy.optimize import minimize
 
 from UQpy.utilities.Utilities import process_random_state
 from UQpy.surrogates.baseclass.Surrogate import Surrogate

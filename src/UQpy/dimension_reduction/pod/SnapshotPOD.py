@@ -29,7 +29,7 @@ class SnapshotPOD:
 
     def run(self):
         """
-        Executes the Snapshot POD method in the ''Snapshot'' class.
+        Executes the Snapshot POD method.
 
         :return: Second order tensor containing the reconstructed solution snapshots in their initial spatial and
          temporal dimensions and an array containing the solution snapshots reduced in the temporal dimension.

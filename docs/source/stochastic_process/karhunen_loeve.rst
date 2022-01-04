@@ -10,6 +10,12 @@ where :math:`\theta_i(\omega)` are uncorrelated standardized random variables an
 KarhunenLoeve Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Methods
+"""""""
 .. autoclass:: UQpy.stochastic_process.KarhunenLoeveExpansion
-    :members:
-    :private-members:
+    :members: run
+
+Attributes
+""""""""""
+.. autoattribute:: UQpy.stochastic_process.KarhunenLoeveExpansion.samples
+.. autoattribute:: UQpy.stochastic_process.KarhunenLoeveExpansion.xi

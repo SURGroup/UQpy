@@ -44,7 +44,7 @@ class RectangularStrata(Strata):
         """
         super().__init__(seeds=seeds, random_state=random_state)
 
-        self.gradients = None
+        self._gradients = None
         self.logger = logging.getLogger(__name__)
         self.input_file = input_file
         self.strata_number: int = strata_number
@@ -188,7 +188,7 @@ class RectangularStrata(Strata):
         return s
 
     def calculate_gradient_strata_metrics(self, index):
-        dy_dx1 = self.gradients[:index]
+        dy_dx1 = self._gradients[:index]
         stratum_variance = (1 / 12) * self.widths ** 2
         s = np.zeros(index)
         for i in range(index):
@@ -209,15 +209,15 @@ class RectangularStrata(Strata):
         qoi,
         max_train_size=None,
     ):
-        if self.gradients is None:
-            self.gradients = np.zeros((samples_number, np.size(training_points[1])))
+        if self._gradients is None:
+            self._gradients = np.zeros((samples_number, np.size(training_points[1])))
         if (
             max_train_size is None
             or len(training_points) <= max_train_size
             or index == samples_u01.shape[0]
         ):
             # Use the entire sample set to train the surrogate model (more expensive option)
-            self.gradients[:index] = calculate_gradient(
+            self._gradients[:index] = calculate_gradient(
                 surrogate,
                 step_size,
                 np.atleast_2d(training_points),
@@ -236,7 +236,7 @@ class RectangularStrata(Strata):
             )
 
             # Recompute the gradient only at the nearest neighbor points.
-            self.gradients[neighbors] = calculate_gradient(
+            self._gradients[neighbors] = calculate_gradient(
                 surrogate,
                 step_size,
                 np.squeeze(training_points[neighbors]),

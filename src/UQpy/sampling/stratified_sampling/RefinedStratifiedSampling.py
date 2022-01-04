@@ -89,7 +89,5 @@ class RefinedStratifiedSampling(StratifiedSampling):
         self.samplesU01 = np.vstack([self.samplesU01, new_points])
         new_point_ = np.zeros_like(new_points)
         for k in range(self.dimension):
-            new_point_[:, k] = self.stratified_sampling.distributions[k].icdf(
-                new_points[:, k]
-            )
+            new_point_[:, k] = self.stratified_sampling.distributions[k].icdf(new_points[:, k])
         self.samples = np.vstack([self.samples, new_point_])

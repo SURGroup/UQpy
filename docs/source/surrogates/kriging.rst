@@ -187,6 +187,13 @@ An example user-defined model is given below:
 Kriging Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Methods
+"""""""
 .. autoclass:: UQpy.surrogates.kriging.Kriging
-    :members:
-    :private-members:
+    :members: fit, predict, jacobian
+
+Attributes
+""""""""""
+.. autoattribute:: UQpy.surrogates.kriging.Kriging.beta
+.. autoattribute:: UQpy.surrogates.kriging.Kriging.err_var
+.. autoattribute:: UQpy.surrogates.kriging.Kriging.C_inv

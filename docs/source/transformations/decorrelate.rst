@@ -10,6 +10,12 @@ normal vector :math:`\textbf{u}=[U_1,...,U_n]` can be calculated as:
 Decorrelate Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Methods
+"""""""
 .. autoclass:: UQpy.transformations.Decorrelate
-    :members:
-    :private-members:
+
+
+Attributes
+""""""""""
+.. autoattribute:: UQpy.transformations.Decorrelate.H
+.. autoattribute:: UQpy.transformations.Decorrelate.samples_z

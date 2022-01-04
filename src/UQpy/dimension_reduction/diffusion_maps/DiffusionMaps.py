@@ -37,7 +37,7 @@ class DiffusionMaps:
         :param is_sparse: Work with sparse matrices. Increase the computational performance.
         :param neighbors_number: If :code:`distance_matrix is True` defines the number of nearest neighbors.
         :param kernel_matrix: kernel matrix defining the similarity between the points.
-        :param random_state: sets :code:`np.random.default_rng(random_state)`.
+        :param random_state: sets :code:`np.random.RandomState(random_state)`.
         :param t: Time exponent.
         """
         self.alpha = alpha
@@ -48,10 +48,14 @@ class DiffusionMaps:
         self.random_state = random_state,
         self.t = t
 
-        self.transition_matrix = None
-        self.diffusion_coordinates = None
-        self.eigenvectors = None
-        self.eigenvalues = None
+        self.transition_matrix: NumpyFloatArray = None
+        """Transition kernel of a Markov chain on the data."""
+        self.diffusion_coordinates: NumpyFloatArray = None
+        """Diffusion coordinates generated after the mapping of the Diffusion maps"""
+        self.eigenvectors: NumpyFloatArray = None
+        """Eigenvectors of the transition kernel of a Markov chain on the data."""
+        self.eigenvalues: NumpyFloatArray = None
+        """Eigenvalues of the transition kernel of a Markov chain on the data."""
         self.cut_off = None
 
         if kernel_matrix is not None:
@@ -77,6 +81,7 @@ class DiffusionMaps:
     ):
 
         """
+        Alternative way of generating a :class:`.DiffusionMaps` object in case of raw data.
 
         :param data: Cloud of data points.
         :param alpha: Corresponds to different diffusion operators. It should be between zero and one.

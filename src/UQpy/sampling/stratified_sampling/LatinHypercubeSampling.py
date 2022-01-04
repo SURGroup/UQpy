@@ -45,18 +45,18 @@ class LatinHypercubeSampling(StratifiedSampling):
          5. User-defined criterion class, by providing an implementation of the abstract class :class:`Criterion`
         """
         self.random_state = process_random_state(random_state)
-        self.dist_object = distributions
+        self.distributions = distributions
         self.criterion = criterion
         self.nsamples = nsamples
         self.logger = logging.getLogger(__name__)
         self.samples: NumpyFloatArray = None
         """ The generated LHS samples."""
-        if isinstance(self.dist_object, list):
-            self.samples = np.zeros([self.nsamples, len(self.dist_object)])
-        elif isinstance(self.dist_object, DistributionContinuous1D):
+        if isinstance(self.distributions, list):
+            self.samples = np.zeros([self.nsamples, len(self.distributions)])
+        elif isinstance(self.distributions, DistributionContinuous1D):
             self.samples = np.zeros([self.nsamples, 1])
-        elif isinstance(self.dist_object, JointIndependent):
-            self.samples = np.zeros([self.nsamples, len(self.dist_object.marginals)])
+        elif isinstance(self.distributions, JointIndependent):
+            self.samples = np.zeros([self.nsamples, len(self.distributions.marginals)])
 
         self.samplesU01: NumpyFloatArray = np.zeros_like(self.samples)
         """The generated LHS samples on the unit hypercube."""
@@ -88,18 +88,18 @@ class LatinHypercubeSampling(StratifiedSampling):
         u_lhs = self.criterion.generate_samples(self.random_state)
         self.samplesU01 = u_lhs
 
-        if isinstance(self.dist_object, list):
-            for j in range(len(self.dist_object)):
-                if hasattr(self.dist_object[j], "icdf"):
-                    self.samples[:, j] = self.dist_object[j].icdf(u_lhs[:, j])
+        if isinstance(self.distributions, list):
+            for j in range(len(self.distributions)):
+                if hasattr(self.distributions[j], "icdf"):
+                    self.samples[:, j] = self.distributions[j].icdf(u_lhs[:, j])
 
-        elif isinstance(self.dist_object, JointIndependent):
-            if all(hasattr(m, "icdf") for m in self.dist_object.marginals):
-                for j in range(len(self.dist_object.marginals)):
-                    self.samples[:, j] = self.dist_object.marginals[j].icdf(u_lhs[:, j])
+        elif isinstance(self.distributions, JointIndependent):
+            if all(hasattr(m, "icdf") for m in self.distributions.marginals):
+                for j in range(len(self.distributions.marginals)):
+                    self.samples[:, j] = self.distributions.marginals[j].icdf(u_lhs[:, j])
 
-        elif isinstance(self.dist_object, DistributionContinuous1D):
-            if hasattr(self.dist_object, "icdf"):
-                self.samples = self.dist_object.icdf(u_lhs)
+        elif isinstance(self.distributions, DistributionContinuous1D):
+            if hasattr(self.distributions, "icdf"):
+                self.samples = self.distributions.icdf(u_lhs)
 
         self.logger.info("Successful execution of LHS design.")

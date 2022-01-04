@@ -25,6 +25,14 @@ The definition of the latter enumeration options is given below:
 InfoModelSelection Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Methods
+"""""""
 .. autoclass:: UQpy.inference.InformationModelSelection
-    :members:
-    :private-members:
+    :members: run, sort_models
+
+Attributes
+""""""""""
+.. autoattribute:: UQpy.inference.InformationModelSelection.ml_estimators
+.. autoattribute:: UQpy.inference.InformationModelSelection.criterion_values
+.. autoattribute:: UQpy.inference.InformationModelSelection.penalty_terms
+.. autoattribute:: UQpy.inference.InformationModelSelection.probabilities

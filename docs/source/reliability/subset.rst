@@ -27,6 +27,16 @@ and in the second stage is accepted/rejected based on whether the sample belongs
 SubsetSimulation Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Methods
+"""""""
 .. autoclass:: UQpy.reliability.SubsetSimulation
-    :members:
-    :private-members:
+    :members: run
+
+Attributes
+""""""""""
+.. autoattribute:: UQpy.reliability.SubsetSimulation.samples
+.. autoattribute:: UQpy.reliability.SubsetSimulation.performance_function_per_level
+.. autoattribute:: UQpy.reliability.SubsetSimulation.performance_threshold_per_level
+.. autoattribute:: UQpy.reliability.SubsetSimulation.failure_probability
+.. autoattribute:: UQpy.reliability.SubsetSimulation.independent_chains_CoV
+.. autoattribute:: UQpy.reliability.SubsetSimulation.dependent_chains_CoV

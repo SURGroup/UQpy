@@ -29,37 +29,24 @@ class DistributionModel(InferenceModel):
 
         if self.distributions is not None:
             if not isinstance(self.distributions, Distribution):
-                raise TypeError(
-                    "UQpy: Input dist_object should be an object of class Distribution."
-                )
+                raise TypeError("UQpy: Input dist_object should be an object of class Distribution.")
             if not hasattr(self.distributions, "log_pdf"):
                 if not hasattr(self.distributions, "pdf"):
-                    raise AttributeError(
-                        "UQpy: dist_object should have a log_pdf or pdf method."
-                    )
+                    raise AttributeError("UQpy: dist_object should have a log_pdf or pdf method.")
                 self.distributions.log_pdf = lambda x: np.log(self.distributions.pdf(x))
             init_params = self.distributions.get_parameters()
             self.list_params = [
-                key
-                for key in self.distributions.ordered_parameters
-                if init_params[key] is None
-            ]
+                key for key in self.distributions.ordered_parameters if init_params[key] is None]
             if len(self.list_params) != self.parameters_number:
-                raise TypeError(
-                    "UQpy: Incorrect dimensions between nparams and number of inputs set to None."
-                )
+                raise TypeError("UQpy: Incorrect dimensions between nparams and number of inputs set to None.")
 
         self.prior = prior
         if self.prior is not None:
             if not isinstance(self.prior, Distribution):
-                raise TypeError(
-                    "UQpy: Input prior should be an object of class Distribution."
-                )
+                raise TypeError("UQpy: Input prior should be an object of class Distribution.")
             if not hasattr(self.prior, "log_pdf"):
                 if not hasattr(self.prior, "pdf"):
-                    raise AttributeError(
-                        "UQpy: Input prior should have a log_pdf or pdf method."
-                    )
+                    raise AttributeError("UQpy: Input prior should have a log_pdf or pdf method.")
                 self.prior.log_pdf = lambda x: np.log(self.prior.pdf(x))
 
     def evaluate_log_likelihood(self, params, data):

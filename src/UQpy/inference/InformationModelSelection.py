@@ -2,7 +2,7 @@ import logging
 from typing import Union
 
 from UQpy.optimization.MinimizeOptimizer import MinimizeOptimizer
-from UQpy.optimization.baseclass import Optimizer
+from UQpy.optimization.baseclass.Optimizer import Optimizer
 from beartype import beartype
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
 from UQpy.inference.MLE import MLE
@@ -44,9 +44,7 @@ class InformationModelSelection:
         if not isinstance(candidate_models, (list, tuple)) or not all(
             isinstance(model, InferenceModel) for model in candidate_models
         ):
-            raise TypeError(
-                "UQpy: Input candidate_models must be a list of InferenceModel objects."
-            )
+            raise TypeError("UQpy: Input candidate_models must be a list of InferenceModel objects.")
         self.models_number = len(candidate_models)
         self.candidate_models = candidate_models
         self.data = data
@@ -73,9 +71,7 @@ class InformationModelSelection:
 
         # Run the model selection procedure
         if (optimizations_number is not None) or (initial_guess is not None):
-            self.run(
-                optimizations_number=optimizations_number, initial_guess=initial_guess
-            )
+            self.run(optimizations_number=optimizations_number, initial_guess=initial_guess)
 
     def _initialize_ml_estimators(self):
         for i, inference_model in enumerate(self.candidate_models):

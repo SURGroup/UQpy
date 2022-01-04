@@ -23,5 +23,14 @@ creating instances of the :class:`.InferenceModel` class.
 BayesModelSelection Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Methods
+"""""""
 .. autoclass:: UQpy.inference.BayesModelSelection
-    :members:
+    :members: run, sort_models
+
+Attributes
+""""""""""
+
+.. autoattribute:: UQpy.inference.BayesModelSelection.bayes_estimators
+.. autoattribute:: UQpy.inference.BayesModelSelection.evidences
+.. autoattribute:: UQpy.inference.BayesModelSelection.probabilities

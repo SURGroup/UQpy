@@ -62,9 +62,8 @@ class SpectralRepresentation:
         self.nsamples = samples_number
 
         # Error checks
-        t_u = (
-            2 * np.pi / (2 * self.number_frequency_intervals * self.frequency_interval)
-        )
+        t_u = 2 * np.pi / (2 * self.number_frequency_intervals * self.frequency_interval)
+
         if (self.time_interval > t_u).any():
             raise RuntimeError("UQpy: Aliasing might occur during execution")
 

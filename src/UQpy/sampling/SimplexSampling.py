@@ -8,7 +8,7 @@ class SimplexSampling:
     @beartype
     def __init__(
         self,
-        nodes: Union[list, Numpy2DFloatArray]=None,
+        nodes: Union[list, Numpy2DFloatArray] = None,
         nsamples: PositiveInteger = None,
         random_state: RandomStateType = None,
     ):
@@ -60,7 +60,7 @@ class SimplexSampling:
                 r = np.zeros([dimension])
                 ad = np.zeros(shape=(dimension, len(self.nodes)))
                 for j in range(dimension):
-                    b_ = list()
+                    b_ = []
                     for k in range(1, len(self.nodes)):
                         ai = self.nodes[k, j] - self.nodes[k - 1, j]
                         b_.append(ai)

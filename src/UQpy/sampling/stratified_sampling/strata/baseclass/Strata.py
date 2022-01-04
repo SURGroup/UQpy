@@ -8,8 +8,7 @@ from UQpy.sampling.stratified_sampling.strata.SamplingCriterion import SamplingC
 
 class Strata:
     @beartype
-    def __init__(self, seeds: Union[None, np.ndarray] = None, stratification_criterion=SamplingCriterion.RANDOM,
-                 random_state: RandomStateType = None):
+    def __init__(self, seeds: Union[None, np.ndarray] = None, random_state: RandomStateType = None):
         """
         Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling strata.
 
@@ -19,7 +18,6 @@ class Strata:
 
         :param seeds: Define the seed points for the strata. See specific subclass for definition of the seed points.
         """
-        self.stratification_criterion = stratification_criterion
         self.seeds: NumpyFloatArray = seeds
         """Seed points for the strata. See specific subclass for definition of the seed points."""
         self.volume: NumpyFloatArray = None

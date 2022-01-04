@@ -12,13 +12,21 @@ coordinate system that reveals the embedded geometry of the data.
 
 The :class:`.DiffusionMaps` class is imported using the following command:
 
->>> from UQpy.dimension_reduction.dmaps.DiffusionMaps import DiffusionMaps
+>>> from UQpy.dimension_reduction.diffusion_maps.DiffusionMaps import DiffusionMaps
 
 One can use the following command to instantiate the class :class:`.DiffusionMaps`
 
-.. autoclass:: UQpy.dimension_reduction.dmaps.DiffusionMaps
-    :members:
+Methods
+""""""""
+.. autoclass:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps
+    :members: create_from_data, fit, parsimonious, estimate_cut_off, estimate_epsilon
 
+Attributes
+"""""""""""
+.. autoattribute:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps.transition_matrix
+.. autoattribute:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps.diffusion_coordinates
+.. autoattribute:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps.eigenvectors
+.. autoattribute:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps.eigenvalues
 
 .. toctree::
    :maxdepth: 1

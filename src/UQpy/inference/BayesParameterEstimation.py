@@ -37,11 +37,7 @@ class BayesParameterEstimation:
         self.data = data
         self.logger = logging.getLogger(__name__)
         self.sampler = sampling_class
-        self.method = MCMC if isinstance(self.sampler, MCMC) else ImportanceSampling
-
-        """Sampling method object, contains e.g. the posterior samples.
-        This object is created along with the :class:`.BayesParameterEstimation` object, and its `run` method is called
-        whenever the `run` method of the :class:`.BayesParameterEstimation` is called."""
+        self._method = MCMC if isinstance(self.sampler, MCMC) else ImportanceSampling
         if (samples_number is not None) or (samples_number_per_chain is not None):
             self.run(samples_number=samples_number, samples_number_per_chain=samples_number_per_chain,)
 
@@ -63,7 +59,7 @@ class BayesParameterEstimation:
         :param samples_number_per_chain: Number of samples per chain used in :class:`.MCMC`
         """
 
-        BayesParameterEstimation.sampling_actions[self.method](self.sampler, samples_number, samples_number_per_chain)
+        BayesParameterEstimation.sampling_actions[self._method](self.sampler, samples_number, samples_number_per_chain)
 
         self.logger.info("UQpy: Parameter estimation with " + self.sampler.__class__.__name__
                          + " completed successfully!")

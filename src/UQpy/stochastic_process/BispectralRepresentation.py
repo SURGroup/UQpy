@@ -72,13 +72,13 @@ class BispectralRepresentation:
 
         self.logger = logging.getLogger(__name__)
 
-        self.b_ampl = np.absolute(bispectrum)
+        self.bispectrum_amplitude = np.absolute(bispectrum)
         """The amplitude of the bispectrum."""
-        self.b_real = np.real(bispectrum)
+        self.bispectrum_real = np.real(bispectrum)
         """The real part of the bispectrum."""
-        self.b_imag = np.imag(bispectrum)
+        self.bispectrum_imaginary = np.imag(bispectrum)
         """The imaginary part of the bispectrum."""
-        self.biphase = np.arctan2(self.b_imag, self.b_real)
+        self.biphase = np.arctan2(self.bispectrum_imaginary, self.bispectrum_real)
         """The biphase values of the bispectrum."""
         self.biphase[np.isnan(self.biphase)] = 0
 
@@ -108,7 +108,7 @@ class BispectralRepresentation:
         self.logger.info(
             "UQpy: Stochastic Process: Computing the partial bicoherence values."
         )
-        self.bc2 = np.zeros_like(self.b_real)
+        self.bc2 = np.zeros_like(self.bispectrum_real)
         """The bicoherence values of the power spectrum and bispectrum."""
         self.pure_power_sepctrum = np.zeros_like(self.power_spectrum)
         """The pure part of the power spectrum."""
@@ -146,14 +146,14 @@ class BispectralRepresentation:
                 wj = np.array(j)
                 wi = wk - wj
                 if (
-                    self.b_ampl[(*wi, *wj)] > 0
+                    self.bispectrum_amplitude[(*wi, *wj)] > 0
                     and self.pure_power_sepctrum[(*wi, *[])]
                     * self.pure_power_sepctrum[(*wj, *[])]
                     != 0
                 ):
                     self.bc2[(*wi, *wj)] = (
-                        self.b_ampl[(*wi, *wj)] ** 2
-                        / (
+                            self.bispectrum_amplitude[(*wi, *wj)] ** 2
+                            / (
                             self.pure_power_sepctrum[(*wi, *[])]
                             * self.pure_power_sepctrum[(*wj, *[])]
                             * self.power_spectrum[(*wk, *[])]) * np.prod(self.frequency_interval)

@@ -44,6 +44,17 @@ matrix :math:`\textbf{C}_x=[\rho_{ij}]` according to:
 Nataf Class Descriptions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Methods
+"""""""
 .. autoclass:: UQpy.transformations.Nataf
-    :members:
-    :private-members:
+    :members: run, itam, distortion_z2x, rvs
+
+Attributes
+""""""""""
+.. autoattribute:: UQpy.transformations.Nataf.samples_x
+.. autoattribute:: UQpy.transformations.Nataf.samples_z
+.. autoattribute:: UQpy.transformations.Nataf.jzx
+.. autoattribute:: UQpy.transformations.Nataf.jxz
+.. autoattribute:: UQpy.transformations.Nataf.corr_z
+.. autoattribute:: UQpy.transformations.Nataf.corr_x
+.. autoattribute:: UQpy.transformations.Nataf.H

@@ -56,27 +56,21 @@ class TaylorSeries:
                     if isinstance(distributions[i], DistributionContinuous1D):
                         self.dimension = self.dimension + 1
                     elif isinstance(distributions[i], JointIndependent):
-                        self.dimension = self.dimension + len(
-                            distributions[i].marginals
-                        )
+                        self.dimension = self.dimension + len(distributions[i].marginals)
                     else:
                         raise TypeError(
                             "UQpy: A  ``DistributionContinuous1D`` or ``JointInd`` object must be "
-                            "provided."
-                        )
+                            "provided.")
             else:
                 if isinstance(distributions, DistributionContinuous1D):
                     self.dimension = 1
                 elif isinstance(distributions, JointIndependent):
                     self.dimension = len(distributions.marginals)
                 else:
-                    raise TypeError(
-                        "UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided."
-                    )
+                    raise TypeError("UQpy: A  ``DistributionContinuous1D``  or ``JointInd`` object must be provided.")
 
             self.nataf_object = Nataf(
-                distributions=distributions, corr_z=corr_z, corr_x=corr_x
-            )
+                distributions=distributions, corr_z=corr_z, corr_x=corr_x)
         else:
             pass
 
