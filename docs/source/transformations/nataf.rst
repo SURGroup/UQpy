@@ -41,8 +41,8 @@ matrix :math:`\textbf{C}_x=[\rho_{ij}]` according to:
 
 .. math:: X_{i}=F_i^{-1}(\Phi(Z_{i}))
 
-Nataf Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Nataf Class
+^^^^^^^^^^^^^^
 
 Methods
 """""""

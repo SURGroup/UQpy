@@ -14,7 +14,7 @@ where :math:`M_{n_d}` is an :math:`n_d` dimensional array defining the coordinat
 
 Additional details can be found in :cite:`Simplex1`.
 
-Simplex Class Descriptions
+Simplex Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Methods
 ~~~~~~~~~~~~~~~~~~

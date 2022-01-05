@@ -60,7 +60,7 @@ reconstruction of data as follows
 .. math:: \mathbf{\sim{u}}(\mathtt{x},t) =  \sum_{i=1}^{k}A(t)\Phi{\mathtt{x}}
 
 
-DirectPOD Class Descriptions
+DirectPOD Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :class:`.DirectPOD` class is imported using the following command:
@@ -96,7 +96,7 @@ Spatial coefficients are therefore calculated as :math:`\Phi_s = \mathbf{U}^T A_
 .. math:: \mathbf{\sim{u}}(\mathtt{x},t) = \sum_{i=1}^{k} A_s(t) \Phi_s \mathtt{x}
 
 
-SnapshotPOD Class Descriptions
+SnapshotPOD Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :class:`.SnapshotPOD` class is imported using the following command:

@@ -184,8 +184,8 @@ An example user-defined model is given below:
 >>>            return rx, drdx
 >>>        return rx
 
-Kriging Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Kriging Class
+^^^^^^^^^^^^^^
 
 Methods
 """""""

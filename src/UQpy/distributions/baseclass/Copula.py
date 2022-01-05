@@ -9,7 +9,7 @@ class Copula(ABC):
     def __init__(self, ordered_parameters: dict = None, **kwargs):
         """
         Define a copula for a multivariate distribution whose dependence structure is defined with a copula.
-        This class is used in support of the :class:`.JointCopula`: distribution class.
+        This class is used in support of the :class:`.JointCopula` class.
 
         :param ordered_parameters: List of parameter names
         :param kwargs: Parameters of the copula.

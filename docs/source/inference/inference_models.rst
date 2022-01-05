@@ -40,23 +40,23 @@ rely on a computational model defined through the :class:`.RunModel` class. If t
 :class:`.RunModel` object, this object is also passed into :class:`.InferenceModel` and the log-likelihood method should also take
 as input, the output (`qoi_list`) of the :class:`.RunModel` object evaluated at the specified parameter values.
 
-InferenceModel Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+InferenceModel Class
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.inference.inference_models.baseclass.InferenceModel
    :members:
 
-ComputationalModel Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ComputationalModel Class
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.inference.inference_models.ComputationalModel
 
-DistributionModel Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+DistributionModel Class
+^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.inference.inference_models.DistributionModel
 
-LogLikelihoodModel Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+LogLikelihoodModel Class
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.inference.inference_models.LogLikelihoodModel

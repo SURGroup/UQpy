@@ -16,7 +16,7 @@ where :math:`\alpha_1`, :math:`\alpha_2`, :math:`\alpha_3 \geq 0` are constants 
 
 Here, :math:`F(x_{k,i})` and :math:`\hat{F}(x_{k,i})` denote the marginal cumulative distributions of :math:`\mathbf{X}` and :math:`\mathbf{\tilde{X}}` (reduced order model) evaluated at point :math:`x_{k,i}`, :math:`\mu(r; i)` and :math:`\hat{\mu}(r; i)` are the marginal moments of order `r` for variable `i`, and :math:`R(i,j)` and :math:`\hat{R}(i,j)` are correlation matrices of :math:`\mathbf{X}` and :math:`\mathbf{\tilde{X}}` evaluted for components :math:`x_i` and :math:`x_j`. Note also that `m` is the number of sample points and `d` is the number of random variables.
 
-SROM Class Descriptions
+SROM Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Methods
 """""""

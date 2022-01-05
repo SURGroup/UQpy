@@ -49,7 +49,7 @@ respectively. These classes can be imported in a python script using the followi
 >>> from UQpy.reliability.taylor_series import FORM, SORM
 
 
-TaylorSeries Class Descriptions
+TaylorSeries Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.reliability.taylor_series.baseclass.TaylorSeries

@@ -30,20 +30,23 @@ class MCMC(ABC):
         Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
 
         This is the parent class for all mcmc algorithms. This parent class only provides the framework for
-        mcmc and cannot be used directly for sampling. Sampling is done by calling the child class for the specific
-        mcmc algorithm.
+        MCMC and cannot be used directly for sampling. Sampling is done by calling the child class for the specific
+        MCMC algorithm.
 
-        :param dimension: A scalar value defining the dimension of target density function. Either :strong:`dimension`
-         and `n_chains` or `seed` must be provided.
-        :param pdf_target: Target density function from which to draw random samples. Either `pdf_target` or
-         `log_pdf_target` must be provided (the latter should be preferred for better numerical stability).
-         If `pdf_target` is a callable, it refers to the joint pdf to sample from, it must take at least one input `x`,
-         which are the point(s) at which to evaluate the pdf. Within mcmc the `pdf_target` is evaluated as:
-         ``p(x) = pdf_target(x, *args_target)`` where `x` is a ndarray of shape (nsamples, dimension) and `args_target`
-         are additional positional arguments that are provided to mcmc via its `args_target` input.
-         If `pdf_target` is a list of callables, it refers to independent marginals to sample from. The marginal in
-         dimension `j` is evaluated as: ``p_j(xj) = pdf_target[j](xj, *args_target[j])`` where `x` is a ndarray of shape
-         (nsamples, dimension)
+        :param dimension: A scalar value defining the dimension of target density function. Either *dimension*
+         and *n_chains* or *seed* must be provided.
+        :param pdf_target: Target density function from which to draw random samples. Either :strong:`pdf_target` or
+         :strong:`log_pdf_target` must be provided (the latter should be preferred for better numerical stability).
+         If :strong:`pdf_target` is a callable, it refers to the joint pdf to sample from, it must take at least one
+         input :code:`x`, which are the point(s) at which to evaluate the pdf. Within mcmc the :strong:`pdf_target` is
+         evaluated as:
+
+         :code:`p(x) = pdf_target(x, *args_target)` where :code:`x` is a ndarray of shape :code:`(nsamples, dimension)`
+         and :code:`args_target` are additional positional arguments that are provided to MCMC via its
+         :code:`args_target` input.
+         If :code:`pdf_target` is a list of callables, it refers to independent marginals to sample from. The marginal
+         in dimension :code:`j` is evaluated as: :code:`p_j(xj) = pdf_target[j](xj, *args_target[j])` where :code:`x`
+         is a ndarray of shape :code:`(nsamples, dimension)`
         :param log_pdf_target: Logarithm of the target density function from which to draw random samples. Either
          `pdf_target` or `log_pdf_target` must be provided (the latter should be preferred for better numerical
          stability).

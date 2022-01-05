@@ -109,7 +109,7 @@ Inverse Gaussian distribution having probability density function
 
 .. math:: f(x|\mu) = \dfrac{1}{2\pi x^3}\exp{(-\dfrac{(x\\mu)^2}{2x\mu^2})}
 
-for :math:`x>0`. ``cdf`` method returns `NaN` for :math:`\mu<0.0028`.
+for :math:`x>0`. :py:meth:`cdf` method returns :any:`NaN` for :math:`\mu<0.0028`.
 
 In this standard form `(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
 this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
@@ -171,9 +171,9 @@ Lognormal distribution having probability density function
 
 for :math:`x>0, s>0`.
 
-A common parametrization for a lognormal random variable Y is in terms of the mean, mu, and standard deviation,
-sigma, of the gaussian random variable X such that exp(X) = Y. This parametrization corresponds to setting
-s = sigma and scale = exp(mu).
+A common parametrization for a lognormal random variable :math:`Y` is in terms of the mean, mu, and standard deviation,
+sigma, of the gaussian random variable :math:`X` such that :math:`exp(X) = Y`. This parametrization corresponds to setting
+:math:`s = sigma` and :math:`scale = exp(mu)`.
 
 .. autoclass:: UQpy.distributions.collection.Lognormal
 
@@ -246,8 +246,8 @@ Truncated Normal
 
 Truncated normal distribution
 
-The standard form of this distribution (i.e, loc=0., scale=1) is a standard normal truncated to the range [a, b].
-Note that a and b are defined over the domain of the standard normal.
+The standard form of this distribution `(i.e, loc=0., scale=1)` is a standard normal truncated to the range :math:`[a, b]`.
+Note that *a* and *b* are defined over the domain of the standard normal.
 
 .. autoclass:: UQpy.distributions.collection.TruncatedNormal
 

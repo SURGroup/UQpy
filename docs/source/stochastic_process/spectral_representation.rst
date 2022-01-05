@@ -10,7 +10,7 @@ where :math:`S(\omega_i)` is the discretized power spectrum at frequency :math:`
 frequency discretization, and :math:`\phi_i` are random phase angles uniformly distributed in :math:`[0, 2\pi]`. For
 computational efficiency, the SRM is implemented using the Fast Fourier Transform (FFT).
 
-SpectralRepresentation Class Descriptions
+SpectralRepresentation Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Methods

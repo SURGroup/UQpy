@@ -17,8 +17,8 @@ method of the :meth:`.BayesParameterEstimation` class then calls the:meth:`run` 
 can add samples as they wish by calling the :meth:`run` method several times.
 
 
-BayesParameterEstimation Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+BayesParameterEstimation Class
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.inference.BayesParameterEstimation
     :members:

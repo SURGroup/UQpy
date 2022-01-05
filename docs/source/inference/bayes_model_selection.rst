@@ -20,8 +20,8 @@ evidences. Also, it is known that results of such Bayesian model selection proce
 choice of prior for the parameters of the competing models, thus the user should carefully define such priors when
 creating instances of the :class:`.InferenceModel` class.
 
-BayesModelSelection Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+BayesModelSelection Class
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Methods
 """""""

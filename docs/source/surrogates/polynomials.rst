@@ -1,24 +1,24 @@
-Polynomials Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Polynomials Class
+^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials
     :members:
 
-Legendre Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Legendre Class
+^^^^^^^^^^^^^^^^
 .. autoclass:: UQpy.surrogates.polynomial_chaos.polynomials.Legendre
     :members:
 
-Hermite Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Hermite Class
+^^^^^^^^^^^^^^^^^
 .. autoclass:: UQpy.surrogates.polynomial_chaos.polynomials.Hermite
     :members:
 
-PolynomialsND Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PolynomialsND Class
+^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: UQpy.surrogates.polynomial_chaos.polynomials.PolynomialsND
     :members:
 
-PolynomialBasis Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PolynomialBasis Class
+^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: UQpy.surrogates.polynomial_chaos.polynomials.PolynomialBasis
     :members:

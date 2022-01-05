@@ -4,8 +4,8 @@ Geometric Harmonics
 
 
 
-GeometricHarmonics Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+GeometricHarmonics Class
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: UQpy.surrogates.geometric_harmonics.GeometricHarmonics
     :members:

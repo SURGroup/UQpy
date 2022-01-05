@@ -7,8 +7,8 @@ normal vector :math:`\textbf{u}=[U_1,...,U_n]` can be calculated as:
 
 .. math:: \textbf{u}^\intercal = \mathbf{H}^{-1} \mathbf{z}^\intercal
 
-Decorrelate Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Decorrelate Class
+^^^^^^^^^^^^^^^^^^
 
 Methods
 """""""

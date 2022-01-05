@@ -25,10 +25,7 @@ class SurrogateInterpolation(InterpolationMethod):
         """
         Method to perform the interpolation.
 
-        :param coordinates: Nodes of the interpolant
-        :param samples: Data to interpolate
         :param point: Point to interpolation
-
         """
         nargs = len(self.samples)
 

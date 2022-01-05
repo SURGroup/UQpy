@@ -13,8 +13,8 @@ A numerical optimization procedure is performed to compute the MLE. By default, 
 :py:mod:`scipy.optimize` module is used, however other optimizers can be leveraged via the `optimizer` input of the
 :class:`.MLE` class.
 
-MLEstimation Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+MLEstimation Class
+^^^^^^^^^^^^^^^^^^^^^
 
 Methods
 """""""

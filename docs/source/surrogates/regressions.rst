@@ -14,8 +14,8 @@ The equation may be under-, well-, or over-determined. In the context of Polynom
 vector corresponds to the polynomial coefficients. The above method can be used from the class :class:`.LeastSquaresRegression`.
 
 
-LeastSquares Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+LeastSquares Class
+^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: UQpy.surrogates.polynomial_chaos.regressions.LeastSquareRegression
     :members:
 
@@ -43,8 +43,8 @@ The Lasso regression model needs to be trained on the data, and for this gradien
 where :math:`i` is the iteration step, and :math:`\epsilon` is the learning rate (gradient descent step) with a value larger than zero.
 
 
-Lasso Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Lasso Class
+^^^^^^^^^^^^^^^
 .. autoclass:: UQpy.surrogates.polynomial_chaos.regressions.LassoRegression
     :members:
 
@@ -63,7 +63,7 @@ penalization is similarly controlled by the hyperparameter :math:`\lambda` and t
 gradient descent. The Ridge regression method can be used from the `.RidgeRegression` class.
 
 
-Ridge Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Ridge Class
+^^^^^^^^^^^^^^^^^
 .. autoclass:: UQpy.surrogates.polynomial_chaos.regressions.RidgeRegression
     :members:

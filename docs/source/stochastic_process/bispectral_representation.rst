@@ -6,7 +6,7 @@ SpectralRepresentation for processes possessing a known power spectrum and bispe
 references :cite:`StochasticProcess8` and :cite:`StochasticProcess9`. The multi-variate formulation from reference
 :cite:`StochasticProcess10` is not currently implemented.
 
-BispectralRepresentation Class Descriptions
+BispectralRepresentation Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Methods

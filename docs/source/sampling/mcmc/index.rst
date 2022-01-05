@@ -9,8 +9,8 @@ state, is combined with a Monte Carlo simulation method, see e.g. (:cite:`MCMC1`
 built and sampled from whose stationary distribution is the target distribution :math:`p(x)`.  For instance, the
 Metropolis-Hastings (MH) algorithm goes as follows:
 
-* initialize with a seed sample :math:`x_{0}`
-* walk the chain: for :math:`k=0,...` do:
+- initialize with a seed sample :math:`x_{0}`
+- walk the chain: for :math:`k=0,...` do:
    * sample candidate :math:`x^{\star} \sim Q(\cdot \vert x_{k})` for a given Markov transition probability :math:`Q`
    * accept candidate (set :math:`x_{k+1}=x^{\star}`) with probability :math:`\alpha(x^{\star} \vert x_{k})`, otherwise propagate last sample :math:`x_{k+1}=x_{k}`.
 

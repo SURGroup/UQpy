@@ -30,8 +30,8 @@ These indices allow differentiation between three groups of inputs (see example 
    :align: left
 
 
-Morris Class Description
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Morris Class
+^^^^^^^^^^^^^^^^^^
 
 Methods
 """""""

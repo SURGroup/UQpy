@@ -23,8 +23,8 @@ The multivariate polynomials :math:`\Psi_{\alpha}(X)` are assembled as the tenso
 which are also orthonormal.
 
 
-PCE Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PCE Class
+^^^^^^^^^^^
 Methods
 """""""
 .. autoclass:: UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion

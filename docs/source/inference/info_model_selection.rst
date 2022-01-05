@@ -22,8 +22,8 @@ The definition of the latter enumeration options is given below:
 .. autoclass:: UQpy.inference.InformationTheoreticCriterion
     :members:
 
-InfoModelSelection Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+InfoModelSelection Class
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Methods
 """""""

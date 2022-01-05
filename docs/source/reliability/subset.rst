@@ -24,7 +24,7 @@ and in the second stage is accepted/rejected based on whether the sample belongs
 :class:`.SubSetSimulation` can be used with any of the available (or custom) :class:`.MCMC` classes in the
 :py:mod:`sampling` module.
 
-SubsetSimulation Class Descriptions
+SubsetSimulation Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Methods

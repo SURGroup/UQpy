@@ -1,3 +1,5 @@
+import itertools
+
 import scipy.sparse as sps
 import scipy as sp
 from scipy.sparse.linalg import eigsh, eigs
@@ -32,12 +34,14 @@ class DiffusionMaps:
     ):
         """
 
-        :param alpha: Corresponds to different diffusion operators. It should be between zero and one.
+        :param alpha: Corresponds to different diffusion operators. It should be between 0 and 1.
         :param eigenvectors_number: Number of eigenvectors to keep.
         :param is_sparse: Work with sparse matrices. Increase the computational performance.
-        :param neighbors_number: If :code:`distance_matrix is True` defines the number of nearest neighbors.
+        :param neighbors_number: Defines the number of nearest neighbors.
         :param kernel_matrix: kernel matrix defining the similarity between the points.
-        :param random_state: sets :code:`np.random.RandomState(random_state)`.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
+         provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
+         object itself can be passed directly.
         :param t: Time exponent.
         """
         self.alpha = alpha
@@ -84,19 +88,21 @@ class DiffusionMaps:
         Alternative way of generating a :class:`.DiffusionMaps` object in case of raw data.
 
         :param data: Cloud of data points.
-        :param alpha: Corresponds to different diffusion operators. It should be between zero and one.
+        :param alpha: Corresponds to different diffusion operators. It should be between 0 and 1.
         :param eigenvectors_number: Number of eigenvectors to keep.
         :param is_sparse: Work with sparse matrices. Increase the computational performance.
-        :param neighbors_number: If :code:`distance_matrix is True` defines the number of nearest neighbors.
+        :param neighbors_number: Defines the number of nearest neighbors.
         :param optimize_parameters: Estimate the kernel scale from the data.
         :param t: Time exponent.
         :param cut_off: Cut-off for a Gaussian kernel, below which the kernel values are considered zero.
         :param k_nn: k-th nearest neighbor distance to estimate the cut-off distance.
-        :param n_partition: Maximum subsample used for the estimation. Ignored if :code:`distance_matrix is not None`.
+        :param n_partition: Maximum subsample used for the estimation. Ignored if *distance_matrix* is not None.
         :param distance_matrix:  Pre-computed distance matrix.
-        :param random_state: sets :code:`np.random.default_rng(random_state)`.
-        :param tol: Tolerance where the cut_off should be made.
-        :param kernel: kernel matrix defining the similarity between the points.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
+         provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
+         object itself can be passed directly.
+        :param tol: Tolerance where the *cut_off* should be made.
+        :param kernel: Kernel matrix defining the similarity between the points.
 
 
         See Also
@@ -296,11 +302,11 @@ class DiffusionMaps:
 
         :param data: Cloud of data points.
         :param k_nn: k-th nearest neighbor distance to estimate the cut-off distance.
-        :param n_partition: maximum subsample used for the estimation. Ignored if :code:`distance_matrix is not None`.
+        :param n_partition: maximum subsample used for the estimation. Ignored if *distance_matrix* is not None.
         :param distance_matrix:  Pre-computed distance matrix.
-        :param random_state: sets :code:`np.random.default_rng(random_state)`.
-        :return:
-
+        :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
+         provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
+         object itself can be passed directly.
         """
 
         n_points = data.shape[0]
@@ -333,11 +339,10 @@ class DiffusionMaps:
             scale = cut_off ** 2 / -log(tol)
 
         :param data: Cloud of data points.
-        :param tol: Tolerance where the cut_off should be made.
+        :param tol: Tolerance where the *cut_off* should be made.
         :param cut_off: User-defined cut-off.
-        :param estimate_cutoff_params: Parameters to handle to method :py:meth:`estimate_cutoff` if :code:`cut_off is None`.
-        :return: scale, cut_off
-
+        :param estimate_cutoff_params: Parameters to handle to method :py:meth:`estimate_cutoff`
+         if *cut_off* is None.
         """
 
         if cut_off is None:

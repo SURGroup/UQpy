@@ -44,16 +44,16 @@ where :math:`\mathbf{\Psi}_0`, if :math:`t=0`, and :math:`\mathbf{\Psi}_1`, :mat
 
 
 
-Grassmann Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Grassmann Class
+^^^^^^^^^^^^^^^^
 
 The :class:`.Grassmann` class is imported using the following command:
 
->>> from UQpy.dimension_reduction.grassman.Grassman import Grassmann
+>>> from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
 
 One can use the following command to instantiate the class :class:`.Grassmann`
 
-.. autoclass:: UQpy.dimension_reduction.grassman.Grassman
+.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.Grassmann
     :members:
 
 

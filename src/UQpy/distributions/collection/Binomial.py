@@ -16,8 +16,8 @@ class Binomial(DistributionDiscrete1D):
     ):
         """
 
-        :param n: number of trials, integer >=0
-        :param p: success probability for each trial, real number in [0, 1]
+        :param n: number of trials, integer :math:`\ge 0`
+        :param p: success probability for each trial, real number in :math:`[0, 1]`.
         :param loc: location parameter
         """
         super().__init__(n=n, p=p, loc=loc, ordered_parameters=("n", "p", "loc"))

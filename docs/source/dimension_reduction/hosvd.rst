@@ -42,8 +42,8 @@ corresponds to the kth column of :math:`\mathbf{U}(N)` and is the number of inde
 More information can be found in :cite:`HOSVD_1`, :cite:`HOSVD_2`.
 
 
-HOSVD Class Descriptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+HOSVD Class
+^^^^^^^^^^^^
 
 The :class:`.HigherOrderSVD` class is imported using the following command:
 

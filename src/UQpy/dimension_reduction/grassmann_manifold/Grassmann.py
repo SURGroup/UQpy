@@ -153,7 +153,6 @@ class Grassmann:
         :param manifold_points: Point(s) on the Grassmann manifold.
         :param optimization_method: The optimization method.
         :param distance: Distance metric to be used for the optimization.
-        :return:
         """
         # Compute and test the number of input matrices necessary to compute the Karcher mean.
         nargs = len(manifold_points)
