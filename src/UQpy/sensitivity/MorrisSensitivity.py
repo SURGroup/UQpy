@@ -10,7 +10,7 @@ from beartype import beartype
 from beartype.vale import Is
 
 from UQpy.utilities.Utilities import process_random_state
-from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger
+from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger, NumpyFloatArray
 from UQpy.distributions import *
 from UQpy.RunModel import RunModel
 import numpy as np
@@ -76,15 +76,15 @@ class MorrisSensitivity:
         self.random_state = process_random_state(random_state)
         self.maximize_dispersion = maximize_dispersion
 
-        self.trajectories_unit_hypercube = None
+        self.trajectories_unit_hypercube: NumpyFloatArray = None
         """Trajectories in the unit hypercube, `ndarray` of shape `(trajectories_number, d+1, d)`"""
-        self.trajectories_physical_space = None
+        self.trajectories_physical_space: NumpyFloatArray = None
         """Trajectories in the physical space, `ndarray` of shape `(trajectories_number, d+1, d)`"""
-        self.elementary_effects = None
+        self.elementary_effects: NumpyFloatArray = None
         """Elementary effects :math:`EE_{k}`, `ndarray` of shape `(trajectories_number, d, ny)`."""
-        self.mustar_indices = None
+        self.mustar_indices: NumpyFloatArray = None
         """First Morris sensitivity index :math:`\mu_{k}^{\star}`, `ndarray` of shape `(d, ny)`"""
-        self.sigma_indices = None
+        self.sigma_indices: NumpyFloatArray = None
         """Second Morris sensitivity index :math:`\sigma_{k}`, `ndarray` of shape `(d, ny)`"""
 
         if trajectories_number is not None:

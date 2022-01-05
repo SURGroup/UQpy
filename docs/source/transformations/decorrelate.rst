@@ -18,4 +18,4 @@ Methods
 Attributes
 """"""""""
 .. autoattribute:: UQpy.transformations.Decorrelate.H
-.. autoattribute:: UQpy.transformations.Decorrelate.samples_z
+.. autoattribute:: UQpy.transformations.Decorrelate.samples_u

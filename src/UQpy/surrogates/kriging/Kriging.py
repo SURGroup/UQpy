@@ -68,14 +68,13 @@ class Kriging(Surrogate):
         self.sample_mean, self.sample_std = None, None
         self.value_mean, self.value_std = None, None
         self.rmodel, self.cmodel = None, None
-        self.beta = None
+        self.beta: list = None
         """Regression coefficients."""
         self.gamma = None
-        self.err_var = None
+        self.err_var: float = None
         """Variance of the Gaussian random process."""
         self.F_dash = None
         self.C_inv = None
-        """Inverse Cholesky decomposition of the correlation matrix."""
         self.G = None
         self.F, self.R = None, None
 

@@ -47,10 +47,10 @@ class Translation:
         self.frequency_interval = frequency_interval
         self.number_time_intervals = number_time_intervals
         self.number_frequency_intervals = number_frequency_intervals
-        self.correlation_function_non_gaussian = None
+        self.correlation_function_non_gaussian: callable = None
         """The correlation function of the translated non-Gaussian stochastic processes obtained by distorting the 
         Gaussian correlation function."""
-        self.scaled_correlation_function_non_gaussian = None
+        self.scaled_correlation_function_non_gaussian: callable = None
         """This obtained by scaling the correlation function of the non-Gaussian stochastic processes to make the
         correlation at '0' lag to be 1"""
         if correlation_function_gaussian is None and power_spectrum_gaussian is None:
@@ -75,7 +75,7 @@ class Translation:
         self.dim = len(self.correlation_function_gaussian.shape)
         if samples_gaussian is not None:
             self.samples_shape = samples_gaussian.shape
-            self.samples_gaussian = samples_gaussian.flatten()[:, np.newaxis]
+            self.samples_gaussian: NumpyFloatArray = samples_gaussian.flatten()[:, np.newaxis]
             """Translated non-Gaussian stochastic process from Gaussian samples."""
             self.samples_non_gaussian = self._translate_gaussian_samples().reshape(
                 self.samples_shape
@@ -84,7 +84,7 @@ class Translation:
             self.correlation_function_non_gaussian,
             self.scaled_correlation_function_non_gaussian,
         ) = self._autocorrelation_distortion()
-        self.power_spectrum_non_gaussian = inverse_wiener_khinchin_transform(
+        self.power_spectrum_non_gaussian: NumpyFloatArray = inverse_wiener_khinchin_transform(
             self.correlation_function_non_gaussian,
             np.arange(0, self.number_frequency_intervals) * self.frequency_interval,
             np.arange(0, self.number_time_intervals) * self.time_interval,

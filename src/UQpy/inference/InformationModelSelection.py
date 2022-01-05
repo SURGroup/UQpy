@@ -53,16 +53,16 @@ class InformationModelSelection:
         self.logger = logging.getLogger(__name__)
 
         self.optimizer = optimizer
-        self.ml_estimators = []
+        self.ml_estimators: list = []
         """:class:`.MLE` results for each model (contains e.g. fitted parameters)"""
         self._initialize_ml_estimators()
 
         # Initialize the outputs
-        self.criterion_values = [None,] * self.models_number
+        self.criterion_values: list = [None,] * self.models_number
         """Value of the criterion for all models."""
-        self.penalty_terms = [None,] * self.models_number
+        self.penalty_terms: list = [None,] * self.models_number
         """Value of the penalty term for all models. Data fit term is then criterion_value - penalty_term."""
-        self.probabilities = [None,] * self.models_number
+        self.probabilities: list = [None,] * self.models_number
         """Value of the model probabilities, computed as
         
         .. math:: P(M_i|d) = \dfrac{\exp(-\Delta_i/2)}{\sum_i \exp(-\Delta_i/2)}

@@ -3,6 +3,7 @@ import logging
 import numpy as np
 from beartype import beartype
 
+from UQpy.utilities.ValidationTypes import NumpyFloatArray
 from UQpy.surrogates.baseclass.Surrogate import Surrogate
 from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
 from UQpy.surrogates.polynomial_chaos.polynomials.PolynomialBasis import PolynomialBasis
@@ -17,27 +18,27 @@ class PolynomialChaosExpansion(Surrogate):
 
         :param regression_method: object for the method used for the calculation of the polynomial_chaos coefficients.
         """
-        self.polynomial_basis = polynomial_basis
+        self.polynomial_basis: PolynomialBasis = polynomial_basis
         """Contains the 1d or Nd chaos polynomials that form the PCE basis"""
-        self.multi_index_set = polynomial_basis.multi_index_set
+        self.multi_index_set: NumpyFloatArray = polynomial_basis.multi_index_set
         "Multi-index-set"
         self.regression_method = regression_method
         self.logger = logging.getLogger(__name__)
-        self.coefficients = None
+        self.coefficients: NumpyFloatArray = None
         """Polynomial Chaos Expansion Coefficient"""
-        self.bias = None
+        self.bias: NumpyFloatArray = None
         """Bias term in case LASSO or ridge regression are employed to estimate 
         the PCE coefficients"""
-        self.outputs_number = None
+        self.outputs_number: int = None
         """Dimensions of the quantities of interest"""
-        self.design_matrix = None
+        self.design_matrix: NumpyFloatArray = None
         """Matrix containing the evaluations of the PCE basis on the experimental 
         design that has been used to fit the PCE coefficients"""
 
-        self.experimental_design_input = None
+        self.experimental_design_input: NumpyFloatArray = None
         """Realizations of the random parameter in the experimental design that 
         has been used to fit the PCE coefficients"""
-        self.experimental_design_output = None
+        self.experimental_design_output: NumpyFloatArray = None
         """Model outputs for the random parameter realizations of the 
         experimental design that has been used to fit the PCE coefficients"""
 

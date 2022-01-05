@@ -1,6 +1,8 @@
 import logging
 from typing import Union
 import numpy as np
+
+from UQpy.utilities.ValidationTypes import NumpyFloatArray
 from UQpy.distributions import DistributionContinuous1D
 
 
@@ -70,7 +72,7 @@ class SROM:
 
         self.properties = properties
         self.logger = logging.getLogger(__name__)
-        self.sample_weights = None
+        self.sample_weights: NumpyFloatArray = None
         """The probability weights defining discrete approximation of continuous random variables."""
 
         if isinstance(samples, list):

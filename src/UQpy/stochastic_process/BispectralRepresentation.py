@@ -50,7 +50,7 @@ class BispectralRepresentation:
         self.number_time_intervals = np.array(number_time_intervals)
         self.frequency_interval = np.array(frequency_interval)
         self.time_interval = np.array(time_interval)
-        self.number_of_dimensions = len(power_spectrum.shape)
+        self.number_of_dimensions: int = len(power_spectrum.shape)
         """The dimensionality of the stochastic process."""
         self.power_spectrum = power_spectrum
         self.bispectrum = bispectrum
@@ -72,21 +72,21 @@ class BispectralRepresentation:
 
         self.logger = logging.getLogger(__name__)
 
-        self.bispectrum_amplitude = np.absolute(bispectrum)
+        self.bispectrum_amplitude: float = np.absolute(bispectrum)
         """The amplitude of the bispectrum."""
-        self.bispectrum_real = np.real(bispectrum)
+        self.bispectrum_real: float = np.real(bispectrum)
         """The real part of the bispectrum."""
-        self.bispectrum_imaginary = np.imag(bispectrum)
+        self.bispectrum_imaginary: float = np.imag(bispectrum)
         """The imaginary part of the bispectrum."""
-        self.biphase = np.arctan2(self.bispectrum_imaginary, self.bispectrum_real)
+        self.biphase: NumpyFloatArray = np.arctan2(self.bispectrum_imaginary, self.bispectrum_real)
         """The biphase values of the bispectrum."""
         self.biphase[np.isnan(self.biphase)] = 0
 
-        self.phi = None
+        self.phi: NumpyFloatArray = None
         """The random phase angles used in the simulation of the stochastic process.
         The shape of the phase angles (`samples_number`, `number_of_variables`, `number_frequency_intervals[0]`, ...,
         `number_frequency_intervals[number_of_dimensions-1]`)"""
-        self.samples = None
+        self.samples: NumpyFloatArray = None
         """Generated samples.
         The shape of the samples is (`samples_number`, `number_of_variables`, `number_time_intervals[0]`, ...,
         `number_time_intervals[number_of_dimensions-1]`)"""
@@ -97,7 +97,7 @@ class BispectralRepresentation:
             self.case = "uni"
             self._compute_bicoherence_uni()
         else:
-            self.number_of_variables = self.power_spectrum.shape[0]
+            self.number_of_variables: int = self.power_spectrum.shape[0]
             """Number of variables in the stochastic process."""
             self.case = "multi"
 

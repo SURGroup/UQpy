@@ -2,6 +2,8 @@ import numpy as np
 from beartype import beartype
 from scipy.linalg import cholesky
 
+from UQpy.utilities.ValidationTypes import NumpyFloatArray
+
 
 class Decorrelate:
     @beartype
@@ -14,8 +16,8 @@ class Decorrelate:
         """
         self.samples_z = samples_z
         self.corr_z = corr_z
-        self.H = cholesky(self.corr_z, lower=True)
+        self.H: NumpyFloatArray = cholesky(self.corr_z, lower=True)
         """The lower diagonal matrix resulting from the Cholesky decomposition of the correlation  matrix
         (:math:`\mathbf{C_Z}`)."""
-        self.samples_u = np.linalg.solve(self.H, samples_z.T.squeeze()).T
+        self.samples_u: NumpyFloatArray = np.linalg.solve(self.H, samples_z.T.squeeze()).T
         """Uncorrelated standard normal vector of shape ``(samples_number, dimension)``."""

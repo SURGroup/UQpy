@@ -11,7 +11,7 @@ class SubsetSimulation:
         runmodel_object,
         sampling: MCMC,
         samples_init: np.ndarray = None,
-        conditional_probability: Annotated[Union[float, int], Is[lambda number: 0 <= number <= 1]] = 0.1,
+        conditional_probability: Annotated[Union[float, int], Is[lambda x: 0 <= x <= 1]] = 0.1,
         samples_number_per_subset: int = 1000,
         max_level: int = 10,
     ):
@@ -44,20 +44,20 @@ class SubsetSimulation:
 
         self.mcmc_objects = [sampling]
 
-        self.samples = list()
+        self.samples: list = list()
         """A list of arrays containing the samples in each conditional level."""
-        self.performance_function_per_level = []
+        self.performance_function_per_level: list = []
         """A list of arrays containing the evaluation of the performance function at each sample in each conditional 
         level."""
-        self.performance_threshold_per_level = []
+        self.performance_threshold_per_level: list = []
         """Threshold value of the performance function for each conditional level"""
 
         self.logger.info("UQpy: Running Subset Simulation with mcmc of type: " + str(type(sampling)))
-        self.failure_probability = None
+        self.failure_probability: float = None
         """Probability of failure estimate."""
-        self.independent_chains_CoV = None
+        self.independent_chains_CoV: float = None
         """Coefficient of variation of the probability of failure estimate assuming independent chains."""
-        self.dependent_chains_CoV = None
+        self.dependent_chains_CoV: float = None
         """Coefficient of variation of the probability of failure estimate with dependent chains."""
 
         [self.failure_probability, self.independent_chains_CoV, self.dependent_chains_CoV] = self.run()

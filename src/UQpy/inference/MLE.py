@@ -8,7 +8,7 @@ from beartype import beartype
 
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
 from UQpy.utilities.Utilities import process_random_state
-from UQpy.utilities.ValidationTypes import PositiveInteger
+from UQpy.utilities.ValidationTypes import PositiveInteger, NumpyFloatArray
 
 
 class MLE:
@@ -42,9 +42,9 @@ class MLE:
         self.random_state = process_random_state(random_state)
         self.logger = logging.getLogger(__name__)
         self.optimizer = optimizer
-        self.mle = None
+        self.mle: NumpyFloatArray = None
         """Value of parameter vector that maximizes the likelihood function."""
-        self.max_log_like = None
+        self.max_log_like: NumpyFloatArray = None
         """Value of the likelihood function at the MLE."""
         self.logger.info("UQpy: Initialization of MLEstimation object completed.")
 

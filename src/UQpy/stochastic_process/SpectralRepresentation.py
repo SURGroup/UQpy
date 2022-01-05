@@ -77,15 +77,15 @@ class SpectralRepresentation:
                 "UQpy: random_state must be None, an int or an np.random.RandomState object."
             )
 
-        self.samples = None
+        self.samples: NumpyFloatArray = None
         """Generated samples.
         The shape of the samples is (`samples_number`, `number_of_variables`, `number_time_intervals[0]`, ...,
         `number_time_intervals[number_of_dimensions-1]`)"""
-        self.number_of_variables = None
+        self.number_of_variables: int = None
         """Number of variables in the stochastic process."""
-        self.number_of_dimensions = len(self.number_frequency_intervals)
+        self.number_of_dimensions: int = len(self.number_frequency_intervals)
         """The dimensionality of the stochastic process."""
-        self.phi = None
+        self.phi: NumpyFloatArray = None
         """The random phase angles used in the simulation of the stochastic process.
         The shape of the phase angles (`nsamples`, `number_of_variables`, `number_frequency_intervals[0]`, ...,
         `number_frequency_intervals[number_of_dimensions-1]`)"""

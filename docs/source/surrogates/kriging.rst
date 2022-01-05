@@ -196,4 +196,3 @@ Attributes
 """"""""""
 .. autoattribute:: UQpy.surrogates.kriging.Kriging.beta
 .. autoattribute:: UQpy.surrogates.kriging.Kriging.err_var
-.. autoattribute:: UQpy.surrogates.kriging.Kriging.C_inv

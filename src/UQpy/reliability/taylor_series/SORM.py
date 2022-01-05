@@ -67,30 +67,30 @@ class SORM(TaylorSeries):
             df_step,
         )
         self.logger = logging.getLogger(__name__)
-        self.beta_form = None
+        self.beta_form: float = None
         """Hasofer-Lind reliability index."""
-        self.DesignPoint_U = None
+        self.DesignPoint_U: list = None
         """Design point in the uncorrelated standard normal space U."""
-        self.DesignPoint_X = None
+        self.DesignPoint_X: list = None
         """Design point in the parameter space X."""
         self.Pf_form = None
-        self.form_iterations = None
+        self.form_iterations: int = None
         """Number of model evaluations."""
-        self.u_record = None
+        self.u_record: list = None
         """Record of all iteration points in the standard normal space U."""
-        self.x_record = None
+        self.x_record: list = None
         """Record of all iteration points in the parameter space X."""
-        self.g_record = None
+        self.g_record: list = None
         """Record of the performance function."""
         self.dg_record = None
-        self.beta_record = None
+        self.beta_record: list = None
         """Record of all Hasofer-Lind reliability index values."""
-        self.alpha_record = None
+        self.alpha_record: list = None
         """Record of the alpha (directional cosine)."""
-        self.dg_u_record = None
+        self.dg_u_record: list = None
         """Record of the model’s gradient in the standard normal space."""
         self.df_step = df_step
-        self.error_record = None
+        self.error_record: float = None
         """Record of the error defined by criteria e1, e2, e3."""
 
         self.failure_probability = None

@@ -46,9 +46,9 @@ class KarhunenLoeveExpansion:
         self.logger = logging.getLogger(__name__)
         self.nsamples = samples_number
 
-        self.samples = None
+        self.samples: NumpyFloatArray = None
         """Array of generated samples."""
-        self.xi = None
+        self.xi: NumpyFloatArray = None
         """The independent gaussian random variables used in the expansion."""
 
         if self.nsamples is not None:

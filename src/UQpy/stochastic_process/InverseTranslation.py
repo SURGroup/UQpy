@@ -64,16 +64,16 @@ class InverseTranslation:
         if samples_non_gaussian is not None:
             self.samples_shape = samples_non_gaussian.shape
             self.samples_non_gaussian = samples_non_gaussian.flatten()[:, np.newaxis]
-            self.samples_gaussian = self._inverse_translate_non_gaussian_samples().reshape(
+            self.samples_gaussian: NumpyFloatArray = self._inverse_translate_non_gaussian_samples().reshape(
                 self.samples_shape
             )
             """The inverse translated Gaussian samples from the non-Gaussian samples."""
-        self.power_spectrum_gaussian = self._itam_power_spectrum()
+        self.power_spectrum_gaussian: NumpyFloatArray = self._itam_power_spectrum()
         """The power spectrum of the inverse translated Gaussian stochastic processes"""
         self.auto_correlation_function_gaussian = wiener_khinchin_transform(
             self.power_spectrum_gaussian, self.frequency, self.time
         )
-        self.correlation_function_gaussian = (
+        self.correlation_function_gaussian: NumpyFloatArray = (
             self.auto_correlation_function_gaussian
             / self.auto_correlation_function_gaussian[0]
         )

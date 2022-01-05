@@ -9,7 +9,7 @@ import scipy.stats as stats
 from UQpy.utilities.Utilities import nearest_psd, calculate_gauss_quadrature_2d
 from UQpy.utilities.Utilities import bi_variate_normal_pdf
 from scipy.linalg import cholesky
-from UQpy.utilities.ValidationTypes import PositiveInteger
+from UQpy.utilities.ValidationTypes import PositiveInteger, NumpyFloatArray
 
 DistributionList = Annotated[
     list[Distribution],
@@ -71,14 +71,14 @@ class Nataf:
         else:
             self.update_dimensions(distributions)
         self.dist_object = distributions
-        self.samples_x = samples_x
+        self.samples_x: NumpyFloatArray = samples_x
         """Random vector of shape ``(samples_number, dimension)`` with prescribed probability distributions."""
-        self.samples_z = samples_z
+        self.samples_z:NumpyFloatArray = samples_z
         """Standard normal random vector of shape ``(samples_number, dimension)``"""
         self.jacobian = jacobian
-        self.jzx = None
+        self.jzx: NumpyFloatArray = None
         """The Jacobian of the transformation of shape ``(dimension, dimension)``."""
-        self.jxz = None
+        self.jxz: NumpyFloatArray = None
         """The Jacobian of the transformation of shape ``(dimension, dimension)``."""
         self.itam_max_iter = itam_max_iter
         self.itam_beta = float(itam_beta)
@@ -87,9 +87,9 @@ class Nataf:
         self.logger = logging.getLogger(__name__)
 
         if corr_x is None and corr_z is None:
-            self.corr_x = np.eye(self.dimension)
+            self.corr_x: NumpyFloatArray = np.eye(self.dimension)
             """Distorted correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X**."""
-            self.corr_z = np.eye(self.dimension)
+            self.corr_z: NumpyFloatArray = np.eye(self.dimension)
             """Distorted correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal vector **Z**."""
         elif corr_x is not None:
             self.corr_x = corr_x
@@ -115,7 +115,7 @@ class Nataf:
             else:
                 self.corr_x = self.distortion_z2x(self.dist_object, self.corr_z)
 
-        self.H = cholesky(self.corr_z, lower=True)
+        self.H: NumpyFloatArray = cholesky(self.corr_z, lower=True)
         """The lower triangular matrix resulting from the Cholesky decomposition of the correlation matrix
         :math:`\mathbf{C_Z}`."""
 
