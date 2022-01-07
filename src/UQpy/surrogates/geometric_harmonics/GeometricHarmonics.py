@@ -35,8 +35,8 @@ class GeometricHarmonics:
         """
         Fit model with training data.
 
-        :param x: Training points of shape `(n_samples, n_features)`.
-        :param y: Target function values of shape `(n_samples, n_targets)`
+        :param x: Training points of shape :code:`(n_samples, n_features)`.
+        :param y: Target function values of shape :code:`(n_samples, n_targets)`
         :param kwargs: Scale parameter of the kernel. if :code:`epsilon is None` then the parameters for the
         estimation of the kernel's scale must be provided.
 
@@ -83,8 +83,8 @@ class GeometricHarmonics:
         """
         Evaluate model for out-of-sample points.
 
-        :param x:  Points of shape `(n_samples, n_features)`
-        :return: The interpolated function values of shape `(n_samples, n_targets)`
+        :param x:  Points of shape :code:`(n_samples, n_features)`
+        :return: The interpolated function values of shape :code:`(n_samples, n_targets)`
         """
 
         if self.kwargs_kernel['epsilon'] is None:
@@ -110,9 +110,9 @@ class GeometricHarmonics:
         """
         Score interpolation model with negative mean squared error metric.
 
-        :param y: The exact function values of shape `(n_test, n_targets)`
-        :param y_predicted: The interpolated function values of shape `(n_test, n_targets)`
-        :param kind: Error metric to be used. If :code:`kind is None` then the `absolute` mean error will be calculated.
+        :param y: The exact function values of shape :code:`(n_test, n_targets)`
+        :param y_predicted: The interpolated function values of shape :code:`(n_test, n_targets)`
+        :param kind: Error metric to be used. If :code:`kind is None` then the absolute mean error will be calculated.
         :return: The mean computed error between the exact values and the predictions.
         """
         n_samples = y.shape[0]

@@ -35,55 +35,57 @@ class DRAM(MCMC):
         Delayed Rejection Adaptive Metropolis algorithm :cite:`Dram1` :cite:`MCMC2`
 
         In this algorithm, the proposal density is Gaussian and its covariance C is being updated from samples as
-        C = scale_parameter * C_sample where C_sample is the sample covariance. Also, the delayed rejection scheme is
-        applied, i.e, if a candidate is not accepted another one is generated from the proposal with covariance
-        delayed_rejection_scale ** 2 * C.
+        :code:`C = scale_parameter * C_sample` where :code:`C_sample` is the sample covariance. Also, the delayed
+        rejection scheme is applied, i.e, if a candidate is not accepted another one is generated from the proposal with
+        covariance :code:`delayed_rejection_scale ** 2 * C`.
 
-        :param pdf_target: Target density function from which to draw random samples. Either pdf_target or
-         log_pdf_target must be provided (the latter should be preferred for better numerical stability).
+        :param pdf_target: Target density function from which to draw random samples. Either `pdf_target` or
+         `log_pdf_target` must be provided (the latter should be preferred for better numerical stability).
 
-         If pdf_target is a callable, it refers to the joint pdf to sample from, it must take at least one input x, which
-         are the point(s) at which to evaluate the pdf. Within MCMC the pdf_target is evaluated as:
-         p(x) = pdf_target(x, \*args_target)
+         If `pdf_target` is a callable, it refers to the joint pdf to sample from, it must take at least one input
+         **x**, which are the point(s) at which to evaluate the pdf. Within :class:`.MCMC` the `pdf_target` is evaluated
+         as:
+         :code:`p(x) = pdf_target(x, \*args_target)`
 
-         where x is a ndarray of shape (nsamples, dimension) and args_target are additional positional arguments that
-         are provided to MCMC via its args_target input.
+         where **x** is a :class:`numpy.ndarray of shape :code:`(nsamples, dimension)` and `args_target` are additional
+         positional arguments that are provided to :class:`.MCMC` via its `args_target` input.
 
-         If pdf_target is a list of callables, it refers to independent marginals to sample from. The marginal in dimension
-         j is evaluated as: p_j(xj) = pdf_target[j](xj, \*args_target[j]) where x is a ndarray of shape (nsamples,
-         dimension)
+         If `pdf_target` is a list of callables, it refers to independent marginals to sample from. The marginal in
+         dimension :code:`j` is evaluated as: :code:`p_j(xj) = pdf_target[j](xj, \*args_target[j])` where **x** is a
+         :class:`numpy.ndarray` of shape :code:`(nsamples, dimension)`
         :param log_pdf_target: Logarithm of the target density function from which to draw random samples.
          Either pdf_target or log_pdf_target must be provided (the latter should be preferred for better numerical
          stability).
 
-         Same comments as for input pdf_target.
-        :param args_target: Positional arguments of the pdf / log-pdf target function. See pdf_target
+         Same comments as for input `pdf_target`.
+        :param args_target: Positional arguments of the pdf / log-pdf target function. See `pdf_target`
         :param burn_length: Length of burn-in - i.e., number of samples at the beginning of the chain to discard (note:
-         no thinning during burn-in). Default is 0, no burn-in.
-        :param jump: Thinning parameter, used to reduce correlation between samples. Setting jump=n corresponds to
-         skipping n-1 states between accepted states of the chain. Default is 1 (no thinning).
-        :param dimension: A scalar value defining the dimension of target density function. Either dimension and
-         nchains or seed must be provided.
-        :param seed: Seed of the Markov chain(s), shape (n_chains, dimension).
-         Default: zeros(n_chains x dimension).
+         no thinning during burn-in). Default is :math:`0`, no burn-in.
+        :param jump: Thinning parameter, used to reduce correlation between samples. Setting :code:`jump=n` corresponds
+         to skipping n-1 states between accepted states of the chain. Default is :math:`1` (no thinning).
+        :param dimension: A scalar value defining the dimension of target density function. Either `dimension` and
+         `n_chains` or `seed` must be provided.
+        :param seed: Seed of the Markov chain(s), shape :code:`(n_chains, dimension)`.
+         Default: :code:`zeros(n_chains x dimension)`.
 
-         If seed is not provided, both n_chains and dimension must be provided.
+         If `seed` is not provided, both `n_chains` and `dimension` must be provided.
         :param save_log_pdf: Boolean that indicates whether to save log-pdf values along with the samples.
-         Default: False
+         Default: :any:`False`
         :param concatenate_chains: Boolean that indicates whether to concatenate the chains after a run, i.e., samples
-         are stored as an ndarray of shape (nsamples * n_chains, dimension) if True,
-         (nsamples, n_chains, dimension) if False.
-         Default: True
-        :param n_chains: The number of Markov chains to generate. Either dimension and n_chains or seed must be
+         are stored as a :class:`numpy.ndarray` of shape :code:`(nsamples * n_chains, dimension)` if :any:`True`,
+         :code:`(nsamples, n_chains, dimension)` if :any:`False`.
+         Default: :any:`True`
+        :param n_chains: The number of Markov chains to generate. Either `dimension` and `n_chains` or `seed` must be
          provided.
         :param initial_covariance: Initial covariance for the gaussian proposal distribution. Default: I(dim)
         :param covariance_update_rate: Rate at which covariance is being updated, i.e., every k0 iterations.
-         Default: 100
-        :param scale_parameter: Scale parameter for covariance updating. Default: 2.38 ** 2 / dim
-        :param delayed_rejection_scale: Scale parameter for delayed rejection. Default: 1 / 5
-        :param save_covariance: If True, updated covariance is saved in attribute adaptive_covariance. Default: False
+         Default: :math:`100`
+        :param scale_parameter: Scale parameter for covariance updating. Default: :math:`2.38^2/dim`
+        :param delayed_rejection_scale: Scale parameter for delayed rejection. Default: :math:`1/5`
+        :param save_covariance: If :any:`True`, updated covariance is saved in attribute adaptive_covariance.
+         Default: :any:`False`
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is
-         None.
+         :any:`None`.
         :param nsamples: Number of samples to generate.
         :param nsamples_per_chain: Number of samples to generate per chain.
         """

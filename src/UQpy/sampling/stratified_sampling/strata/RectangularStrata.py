@@ -19,15 +19,15 @@ class RectangularStrata(Strata):
         sampling_criterion: SamplingCriterion = SamplingCriterion.RANDOM,
     ):
         """
-        :param strata_number: A list of length `n` defining the number of strata in each of the `n` dimensions. Creates
-         an equal stratification with strata widths equal to 1/`strata_number`. The total number of strata, `N`, is the
-         product of the terms of `strata_number`.
+        :param strata_number: A list of length :math:`n` defining the number of strata in each of the :math:`n`
+         dimensions. Creates an equal stratification with strata widths equal to :code:`1/strata_number`. The total
+         number of strata, :math:`N`, is the product of the terms of `strata_number`.
         :param input_file: File path to an input file specifying stratum seeds and stratum widths.
          This is typically used to define irregular stratified designs.
          The user must pass one of `strata_number` OR `input_file` OR `seeds` and `widths`
-        :param seeds: An array of dimension `N x n` specifying the seeds of all strata. The seeds of the strata are the
-         coordinates of the stratum orthotope nearest the global origin.
-        :param widths: An array of dimension `N x n` specifying the widths of all strata in each dimension
+        :param seeds: An array of dimension :math:`N * n` specifying the seeds of all strata. The seeds of the strata
+         are the coordinates of the stratum orthotope nearest the global origin.
+        :param widths: An array of dimension :math:`N * n` specifying the widths of all strata in each dimension
         :param sampling_criterion: An enumeration of type :class:`.StratificationCriterion` defining the
          stratification type
 
@@ -49,10 +49,10 @@ class RectangularStrata(Strata):
         self.input_file = input_file
         self.strata_number: int = strata_number
         """A list of length `n` defining the number of strata in each of the `n` dimensions. Creates an equal
-        stratification with strata widths equal to 1/`n_strata`. The total number of strata, `N`, is the product
-        of the terms of `n_strata`."""
+        stratification with strata widths equal to :code:`1/strata_number`. The total number of strata, :math:`N`, is the 
+        product of the terms of `strata_number`."""
         self.widths: Numpy2DFloatArray = widths
-        """An array of dimension `N x n` specifying the widths of all strata in each dimension."""
+        """An array of dimension :math:`N * n` specifying the widths of all strata in each dimension."""
         self.sampling_criterion = sampling_criterion
         self.stratify()
 

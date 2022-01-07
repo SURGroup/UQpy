@@ -36,9 +36,9 @@ class BayesModelSelection:
 
         :param candidate_models: Candidate models
         :param data: Available data
-        :param sampling_class_inputs: List of class instances, that implement the of :class:`.SamplingInput` abstract
+        :param sampling_class: List of class instances, that implement the of :class:`.SamplingInput` abstract
          class
-        :param prior_probabilities: Prior probabilities of each model, default is [1/nmodels, ] * nmodels
+        :param prior_probabilities: Prior probabilities of each model, default is :code:`[1/nmodels, ] * nmodels`
         :param method_evidence_computation: as of v3, only the harmonic mean method is supported
         :param samples_number: Number of samples used in :class:`.MCMC`/:class:`.ImportanceSampling`, for each model
         :param samples_per_chain_number: Number of samples per chain used in :class:`.MCMC`, for each model
@@ -95,9 +95,9 @@ class BayesModelSelection:
         """
         Run the Bayesian model selection procedure, i.e., compute model posterior probabilities.
 
-        This function calls the :math:`run_estimation` method of the :class:`.BayesParameterEstimation` object for each
-        model to sample from the parameter posterior probability, then computes the model evidence and model posterior
-        probability. This function updates attributes `bayes_estimators`, `evidences` and `probabilities`. If
+        This function calls the :py:meth:`run_estimation` method of the :class:`.BayesParameterEstimation` object for
+        each model to sample from the parameter posterior probability, then computes the model evidence and model
+        posterior probability. This function updates attributes `bayes_estimators`, `evidences` and `probabilities`. If
         `samples_number` or `samples_number_per_chain` are given when creating the object, this method is called
         directly when the object is created. It can also be called separately.
 

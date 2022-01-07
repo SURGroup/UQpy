@@ -33,12 +33,12 @@ class TrueStratifiedSampling(StratifiedSampling):
          defined, the user must call the :meth:`run` method to perform stratified sampling.
         :param nsamples: Specify the total number of samples. If `nsamples` is specified, the samples will
          be drawn in proportion to the volume of the strata. Thus, each stratum will contain
-         :math:`round(V_i*samples number)` samples.
+         :code:`round(V_i* nsamples)` samples.
          If `nsamples` is provided when the class is defined, the :meth:`run` method will be executed
          automatically.  If neither `nsamples_per_stratum` or `nsamples` are provided when the class is
          defined, the user must call the :meth:`run` method to perform stratified sampling.
-        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
-         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.
+         If an :any:`int` is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
          the object itself can be passed directly.
         """
         self.logger = logging.getLogger(__name__)
@@ -75,9 +75,9 @@ class TrueStratifiedSampling(StratifiedSampling):
         """
         Transform samples in the unit hypercube :math:`[0, 1]^n` to the prescribed distribution using the inverse CDF.
 
-        :param samples01: `ndarray` containing the generated samples on [0, 1]^dimension.
+        :param samples01: :class:`numpy.ndarray` containing the generated samples on :math:`[0, 1]^n`.
 
-        :return `ndarray` containing the generated samples following the prescribed distribution.
+        :return: :class:`numpy.ndarray` containing the generated samples following the prescribed distribution.
         """
         samples_u_to_x = np.zeros_like(samples01)
         for j in range(samples01.shape[1]):
@@ -112,7 +112,7 @@ class TrueStratifiedSampling(StratifiedSampling):
          defined, the user must call the :meth:`run` method to perform stratified sampling.
         :param nsamples: Specify the total number of samples. If `nsamples` is specified, the samples will
          be drawn in proportion to the volume of the strata. Thus, each stratum will contain
-         `round(V_i*nsamples)` samples where :math:`V_i \le 1` is the volume of stratum `i` in the unit
+         :code:`round(V_i*nsamples)` samples where :math:`V_i \le 1` is the volume of stratum `i` in the unit
          hypercube.
          If `nsamples` is provided when the class is defined, the :meth:`run` method will be executed
          automatically.  If neither `nsamples_per_stratum` or `nsamples` are provided when the class is

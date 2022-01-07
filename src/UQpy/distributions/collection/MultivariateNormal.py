@@ -17,8 +17,9 @@ class MultivariateNormal(DistributionND):
     ):
         """
 
-        :param mean: mean vector, `ndarray` of shape `(dimension, )`
-        :param cov: covariance, `float` or `ndarray` of shape `(dimension, )` or `(dimension, dimension)`. Default is 1.
+        :param mean: mean vector, :class:`numpy.ndarray` of shape :code:`(dimension, )`
+        :param cov: covariance, :any:`float` or :class:`numpy.ndarray` of shape :code:`(dimension, )` or
+         :code:`(dimension, dimension)`. Default is 1.
         """
         if mean is not None and cov is not None:
             if isinstance(cov, (int, float)):

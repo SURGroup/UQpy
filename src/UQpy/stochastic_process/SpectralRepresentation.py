@@ -5,7 +5,7 @@ import numpy as np
 class SpectralRepresentation:
     def __init__(
         self,
-        samples_number: int,
+        nsamples: int,
         power_spectrum: Union[list, np.ndarray],
         time_interval: Union[list, np.ndarray],
         frequency_interval: Union[list, np.ndarray],
@@ -19,19 +19,21 @@ class SpectralRepresentation:
         class uses Singular Value Decomposition, as opposed to Cholesky Decomposition, to ensure robust, near-positive
         definite multi-dimensional power spectra.
 
-        :param int samples_number: Number of samples of the stochastic process to be simulated.
-         The :meth:`run` method is automatically called if `samples_number` is provided. If `samples_number` is not
+        :param int nsamples: Number of samples of the stochastic process to be simulated.
+         The :meth:`run` method is automatically called if `nsamples` is provided. If `nsamples` is not
          provided, then the :class:`.SpectralRepresentation` object is created but samples are not generated.
         :param power_spectrum: The discretized power spectrum.
-         For uni-variate, one-dimensional processes `power_spectrum` will be `list` or `ndarray` of length
-         `number_frequency_intervals`.
-         For multi-variate, one-dimensional processes, `power_spectrum` will be a `list` or `ndarray` of size
-         (`number_of_variables`, `number_of_variables`, `number_frequency_intervals`).
-         For uni-variate, multi-dimensional processes, `power_spectrum` will be a `list` or `ndarray` of size
-         (`number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`)
-         For multi-variate, multi-dimensional processes, `power_spectrum` will be a `list` or `ndarray` of size
-         (`number_of_variables`, `number_of_variables`, `number_frequency_intervals[0]`, ...
-         `number_frequency_intervals[number_of_dimensions-1]``).
+
+         * For uni-variate, one-dimensional processes `power_spectrum` will be :class:`list` or
+          :class:`numpy.ndarray` of length `number_frequency_intervals`.
+         * For multi-variate, one-dimensional processes, `power_spectrum` will be a :class:`list` or
+          :class:`numpy.ndarray` of size :code:`(number_of_variables, number_of_variables, number_frequency_intervals)`.
+         * For uni-variate, multi-dimensional processes, `power_spectrum` will be a :class:`list` or
+          :class:`numpy.ndarray` of size :code:`(number_frequency_intervals[0], ...,
+          number_frequency_intervals[number_of_dimensions-1])`
+         * For multi-variate, multi-dimensional processes, `power_spectrum` will be a :class:`list` or
+          :class:`numpy.ndarray` of size :code:`(number_of_variables, number_of_variables,
+          number_frequency_intervals[0],...,number_frequency_intervals[number_of_dimensions-1])`.
         :param time_interval: Length of time discretizations (:math:`\Delta t`) for each
          dimension of size `number_of_dimensions`.
         :param frequency_interval: Length of frequency discretizations
@@ -40,8 +42,8 @@ class SpectralRepresentation:
          size `number_of_dimensions`.
         :param number_frequency_intervals: Number of frequency discretizations for each
          dimension of size `number_of_dimensions`.
-        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
-         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.
+         If an :any:`int` is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
          the object itself can be passed directly.
         """
         self.power_spectrum = power_spectrum
@@ -59,7 +61,7 @@ class SpectralRepresentation:
         self.frequency_interval = np.array(frequency_interval)
         self.number_time_intervals = np.array(number_time_intervals)
         self.number_frequency_intervals = np.array(number_frequency_intervals)
-        self.nsamples = samples_number
+        self.nsamples = nsamples
 
         # Error checks
         t_u = 2 * np.pi / (2 * self.number_frequency_intervals * self.frequency_interval)
@@ -79,16 +81,16 @@ class SpectralRepresentation:
 
         self.samples: NumpyFloatArray = None
         """Generated samples.
-        The shape of the samples is (`samples_number`, `number_of_variables`, `number_time_intervals[0]`, ...,
-        `number_time_intervals[number_of_dimensions-1]`)"""
+        The shape of the samples is :code:`(nsamples, number_of_variables, number_time_intervals[0], ...,
+        number_time_intervals[number_of_dimensions-1])`"""
         self.number_of_variables: int = None
         """Number of variables in the stochastic process."""
         self.number_of_dimensions: int = len(self.number_frequency_intervals)
         """The dimensionality of the stochastic process."""
         self.phi: NumpyFloatArray = None
         """The random phase angles used in the simulation of the stochastic process.
-        The shape of the phase angles (`nsamples`, `number_of_variables`, `number_frequency_intervals[0]`, ...,
-        `number_frequency_intervals[number_of_dimensions-1]`)"""
+        The shape of the phase angles :code:`(nsamples, number_of_variables, number_frequency_intervals[0], ...,
+        number_frequency_intervals[number_of_dimensions-1])`"""
 
         if self.number_of_dimensions == len(self.power_spectrum.shape):
             self.case = "uni"
@@ -98,30 +100,30 @@ class SpectralRepresentation:
 
         # Run Spectral Representation Method
         if self.nsamples is not None:
-            self.run(samples_number=self.nsamples)
+            self.run(nsamples=self.nsamples)
 
-    def run(self, samples_number):
+    def run(self, nsamples):
         """
         Execute the random sampling in the :class:`.SpectralRepresentation` class.
 
         The :meth:`run` method is the function that performs random sampling in the :class:`.SpectralRepresentation`
-        class. If `samples_number` is provided when the :class:`.SpectralRepresentation` object is defined, the
+        class. If `nsamples` is provided when the :class:`.SpectralRepresentation` object is defined, the
         :meth:`run` method is automatically called. The user may also call the :meth:`run` method directly to generate
         samples. The :meth:`run` method of the :class:`.SpectralRepresentation` class can be invoked many times and each
         time the generated samples are appended to the existing samples.
 
-        :param int samples_number: Number of samples of the stochastic process to be simulated.
+        :param int nsamples: Number of samples of the stochastic process to be simulated.
          If the :meth:`run` method is invoked multiple times, the newly generated samples will be appended to the
          existing samples.
 
         The :meth:`run` method has no returns, although it creates and/or appends the `samples` attribute of the
         :class:`.SpectralRepresentation` class.
         """
-        if samples_number is None:
+        if nsamples is None:
             raise ValueError(
                 "UQpy: Stochastic Process: Number of samples must be defined."
             )
-        if not isinstance(samples_number, int):
+        if not isinstance(nsamples, int):
             raise ValueError("UQpy: Stochastic Process: nsamples should be an integer.")
 
         self.logger.info(

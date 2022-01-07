@@ -24,16 +24,17 @@ class BispectralRepresentation:
          The :meth:`run` method is automatically called if `samples_number` is provided. If `samples_number` is not
          provided, then the :class:`.BispectralRepresentation` object is created but samples are not generated.
         :param power_spectrum: The discretized power spectrum.
-         For uni-variate, one-dimensional processes `power_spectrum` will be `list` or `ndarray` of length
-         `number_frequency_intervals`.
-         For uni-variate, multi-dimensional processes, `power_spectrum` will be a `list` or `ndarray` of size
-         (`number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`)
+         - For uni-variate, one-dimensional processes `power_spectrum` will be :class:`list` or :class:`numpy.ndarray`
+          of length `number_frequency_intervals`.
+         - For uni-variate, multi-dimensional processes, `power_spectrum` will be a :class:`list` or
+          :class:`numpy.ndarray` of size :code:`(number_frequency_intervals[0], ...,
+          number_frequency_intervals[number_of_dimensions-1])`
         :param bispectrum: The prescribed bispectrum.
-         For uni-variate, one-dimensional processes, `bispectrum` will be a `list` or `ndarray` of size
-         (`number_frequency_intervals`, `number_frequency_intervals`)
-         For uni-variate, multi-dimensional processes, `bispectrum` will be a `list` or `ndarray` of size
-         (`number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`,
-         `number_frequency_intervals[0]`, ..., `number_frequency_intervals[number_of_dimensions-1]`)
+         - For uni-variate, one-dimensional processes, `bispectrum` will be a :class:`list` or :class:`numpy.ndarray` of
+          size :code:`(number_frequency_intervals, number_frequency_intervals)`
+         - For uni-variate, multi-dimensional processes, `bispectrum` will be a :class:`list` or :class:`numpy.ndarray`
+          of size :code:`(number_frequency_intervals[0], ..., number_frequency_intervals[number_of_dimensions-1],
+          number_frequency_intervals[0], ..., number_frequency_intervals[number_of_dimensions-1])`
         :param time_interval: Length of time discretizations (:math:`\Delta t`) for each dimension of size
          `number_of_dimensions`.
         :param frequency_interval: Length of frequency discretizations (:math:`\Delta \omega`) for each dimension of
@@ -41,8 +42,8 @@ class BispectralRepresentation:
         :param number_time_intervals: Number of time discretizations for each dimensions of size `number_of_dimensions`.
         :param number_frequency_intervals: Number of frequency discretizations for each dimension of size
          `number_of_dimensions`.
-        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
-         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.
+         If an :any:`int` is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
          the object itself can be passed directly.
         """
         self.nsamples = samples_number
@@ -84,12 +85,12 @@ class BispectralRepresentation:
 
         self.phi: NumpyFloatArray = None
         """The random phase angles used in the simulation of the stochastic process.
-        The shape of the phase angles (`samples_number`, `number_of_variables`, `number_frequency_intervals[0]`, ...,
-        `number_frequency_intervals[number_of_dimensions-1]`)"""
+        The shape of the phase angles :code:`(samples_number, number_of_variables, number_frequency_intervals[0], ...,
+        number_frequency_intervals[number_of_dimensions-1])`"""
         self.samples: NumpyFloatArray = None
         """Generated samples.
-        The shape of the samples is (`samples_number`, `number_of_variables`, `number_time_intervals[0]`, ...,
-        `number_time_intervals[number_of_dimensions-1]`)"""
+        The shape of the samples is :code:`(samples_number, number_of_variables, number_time_intervals[0], ...,
+        number_time_intervals[number_of_dimensions-1])`"""
 
         self.case = case
 

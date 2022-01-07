@@ -33,24 +33,24 @@ class MorrisSensitivity:
         Compute sensitivity indices based on the Morris screening method.
 
         :param runmodel_object: The computational model. It should be of type :class:`.RunModel`. The
-         output QoI can be a scalar or vector of length `ny`, then the sensitivity indices of all `ny` outputs are
+         output QoI can be a scalar or vector of length `ny`, then the sensitivity indices of all :code:`ny` outputs are
          computed independently.
         :param distributions: List of :class:`.Distribution` objects corresponding to each random variable, or
          :class:`.JointIndependent` object (multivariate RV with independent marginals).
         :param levels_number: Number of levels that define the grid over the hypercube where evaluation points are
-         sampled. Must be an integer >= 3.
+         sampled. Must be an integer :math:`\ge 3`.
         :param delta: Size of the jump between two consecutive evaluation points, must be a multiple of delta should be
-         in `{1/(levels_number-1), ..., 1-1/(levels_number-1)}`.
-         Default: :math:`delta=\\frac{levels_number}{2 * (levels_number-1)}` if levels_number is even, delta=0.5 if
-         levels_number is odd.
-        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
-        :param trajectories_number: Number of random trajectories, usually chosen between 5 and 10. The number of model
-         evaluations is `trajectories_number * (d+1)`. If None, the `Morris` object is created but not run
-         (see `run` method)
-        :param maximize_dispersion: If True, generate a large number of design trajectories and keep the ones that
-         maximize dispersion between all trajectories, allows for a better coverage of the input space.
+         in :code:`{1/(levels_number-1), ..., 1-1/(levels_number-1)}`.
+         Default: :math:`delta=\\frac{levels\_number}{2 * (levels\_number-1)}` if `levels_number` is even,
+         :math:`delta=0.5` if levels_number is odd.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.
+        :param trajectories_number: Number of random trajectories, usually chosen between :math:`5` and :math:`10`.
+         The number of model evaluations is :code:`trajectories_number * (d+1)`. If None, the `Morris` object is created
+         but not run (see :py:meth:`run` method)
+        :param maximize_dispersion: If :any:`True`, generate a large number of design trajectories and keep the ones
+         that maximize dispersion between all trajectories, allows for a better coverage of the input space.
 
-         Default False.
+         Default :any:`False`.
         """
         # Check RunModel object and distributions
         self.runmodel_object = runmodel_object
@@ -77,15 +77,15 @@ class MorrisSensitivity:
         self.maximize_dispersion = maximize_dispersion
 
         self.trajectories_unit_hypercube: NumpyFloatArray = None
-        """Trajectories in the unit hypercube, `ndarray` of shape `(trajectories_number, d+1, d)`"""
+        """Trajectories in the unit hypercube, :class:`numpy.ndarray` of shape :code:`(trajectories_number, d+1, d)`"""
         self.trajectories_physical_space: NumpyFloatArray = None
-        """Trajectories in the physical space, `ndarray` of shape `(trajectories_number, d+1, d)`"""
+        """Trajectories in the physical space, :class:`numpy.ndarray` of shape :code:`(trajectories_number, d+1, d)`"""
         self.elementary_effects: NumpyFloatArray = None
-        """Elementary effects :math:`EE_{k}`, `ndarray` of shape `(trajectories_number, d, ny)`."""
+        """Elementary effects :math:`EE_{k}`, :class:`numpy.ndarray` of shape :code:`(trajectories_number, d, ny)`."""
         self.mustar_indices: NumpyFloatArray = None
-        """First Morris sensitivity index :math:`\mu_{k}^{\star}`, `ndarray` of shape `(d, ny)`"""
+        """First Morris sensitivity index :math:`\mu_{k}^{\star}`, :class:`numpy.ndarray` of shape :code:`(d, ny)`"""
         self.sigma_indices: NumpyFloatArray = None
-        """Second Morris sensitivity index :math:`\sigma_{k}`, `ndarray` of shape `(d, ny)`"""
+        """Second Morris sensitivity index :math:`\sigma_{k}`, :class:`numpy.ndarray` of shape :code:`(d, ny)`"""
 
         if trajectories_number is not None:
             self.run(trajectories_number)
@@ -117,11 +117,11 @@ class MorrisSensitivity:
         Run the Morris indices evaluation.
 
         The code first sample trajectories in the unit hypercube and transform them to the physical space (see method
-        `sample_trajectories`), then runs the forward model to compute the elementary effects (method
-        `_compute_elementary_effects`), and finally computes the sensitivity indices (method `_compute_indices`).
+        :py:meth:`sample_trajectories`), then runs the forward model to compute the elementary effects,
+        and finally computes the sensitivity indices.
 
-        :param trajectories_number: Number of random trajectories. Usually chosen between 5 and 10. The number of model
-         evaluations is `trajectories_number * (d+1)`.
+        :param trajectories_number: Number of random trajectories. Usually chosen between :math:`5` and :math:`10`.
+         The number of model evaluations is :code:`trajectories_number * (d+1)`.
         """
         # Compute trajectories and elementary effects - append if any already exist
         (
@@ -169,10 +169,11 @@ class MorrisSensitivity:
         """
         Create the trajectories, first in the unit hypercube then transform them in the physical space.
 
-        :param trajectories_number: Number of random trajectories. Usually chosen between 5 and 10. The number of model
-         evaluations is `trajectories_number * (d+1)`.
-        :param maximize_dispersion: If True, generate a large number of design trajectories and keep the ones that
-         maximize dispersion between all trajectories, allows for a better coverage of the input space. Default False.
+        :param trajectories_number: Number of random trajectories. Usually chosen between :math:`5` and :math:`10`.
+         The number of model evaluations is :code:`trajectories_number * (d+1)`.
+        :param maximize_dispersion: If :any:`True`, generate a large number of design trajectories and keep the ones
+         that maximize dispersion between all trajectories, allows for a better coverage of the input space.
+         Default :any:`False`.
         """
 
         trajectories_unit_hypercube = []

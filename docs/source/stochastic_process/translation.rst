@@ -33,7 +33,6 @@ described by their power spectrum (and using :class:`.SpectralRepresentation` fo
 described through their correlation function (and using :class:`.KarhunenLoeveExpansion` for simulation). This is implemented
 in the :class:`InverseTranslation` class.
 
-Translation Class ^^^^^^^^^^^^^^^^^^^^
 
 Methods
 """""""

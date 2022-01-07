@@ -13,13 +13,18 @@ Note that if no prior is defined in the model, the prior pdf is chosen as uninfo
 The :class:`.BayesParameterEstimation` leverages the :class:`.MCMC` or :class:`ImportanceSampling` classes of the
 :py:mod:`.sampling` module of :py:mod:`UQpy`. When creating a :class:`.BayesParameterEstimation` object, an object of
 class :class:`.MCMC` or :class:`.ImportanceSampling` is created and saved as an attribute `sampler`. The :meth:`run`
-method of the :meth:`.BayesParameterEstimation` class then calls the:meth:`run` method of that sampler, thus the user
+method of the :meth:`.BayesParameterEstimation` class then calls the :py:meth:`run` method of that sampler, thus the user
 can add samples as they wish by calling the :meth:`run` method several times.
 
 
 BayesParameterEstimation Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Methods
+"""""""
 .. autoclass:: UQpy.inference.BayesParameterEstimation
-    :members:
-    :private-members:
+    :members: run
+
+Attributes
+""""""""""
+.. autoattribute:: UQpy.inference.BayesParameterEstimation.sampler

@@ -34,10 +34,10 @@ class Translation:
         :param number_time_intervals: The number of time discretizations.
         :param number_frequency_intervals: The number of frequency discretizations.
         :param power_spectrum_gaussian: The power spectrum of the gaussian stochastic process to be translated.
-         `power_spectrum_gaussian` must be of size (`number_frequency_intervals`).
+         `power_spectrum_gaussian` must be of size :code:`(number_frequency_intervals)`.
         :param correlation_function_gaussian: The auto correlation function of the Gaussian stochastic process to be
          translated. Either the power spectrum or the auto correlation function of the gaussian stochastic process needs
-         to be defined. `correlation_function_gaussian` must be of size (`number_time_intervals`).
+         to be defined. `correlation_function_gaussian` must be of size :code:`(number_time_intervals)`.
         :param samples_gaussian: Samples of Gaussian stochastic process to be translated.
          `samples_gaussian` is optional. If no samples are passed, the :class:`.Translation` class will compute the
          correlation distortion.

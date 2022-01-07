@@ -3,7 +3,7 @@ from typing import Union
 
 import numpy as np
 from UQpy.optimization.MinimizeOptimizer import MinimizeOptimizer
-from UQpy.optimization.baseclass import Optimizer
+from UQpy.optimization.baseclass.Optimizer import Optimizer
 from beartype import beartype
 
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
@@ -28,13 +28,13 @@ class MLE:
         Estimate the maximum likelihood parameters of a model given some data.
 
         :param inference_model: The inference model that defines the likelihood function.
-        :param data: Available data, `ndarray` of shape consistent with log likelihood function in
+        :param data: Available data, :class:`numpy.ndarray` of shape consistent with log likelihood function in
          :class:`.InferenceModel`
         :param optimizations_number: Optimization algorithm used to compute the mle.
-        :param initial_guess: Starting point(s) for optimization, see `run_estimation`. Default is `None`.
+        :param initial_guess: Starting point(s) for optimization, see :py:meth:`run_estimation`. Default is :any:`None`.
         :param optimizer: This parameter takes as input an object that implements the :class:`Optimizer` class.
-         Default is the :class:`.Minimize` which utilizes the `scipy.optimize.minimize` method.
-        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
+         Default is the :class:`.Minimize` which utilizes the :class:`scipy.optimize.minimize` method.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.
         """
         # Initialize variables
         self.inference_model = inference_model
@@ -63,15 +63,16 @@ class MLE:
 
         This function runs the optimization and updates the `mle` and `max_log_like` attributes of the class. When
         learning the parameters of a distribution, if `distributions` possesses an :meth:`mle` method this method is
-        used. If `x0` or `nopt` are given when creating the :class:`.MLE` object, this method is called automatically
-        when the object is created.
+        used. If `initial_guess` or `optimizations_number` are given when creating the :class:`.MLE` object, this method
+        is called automatically when the object is created.
 
-        :param optimizations_number: Initial guess(es) for optimization, `ndarray` of shape `(nstarts, nparams)` or
-         `(nparams, )`, where `nstarts` is the number of times the optimizer will be called. Alternatively, the user can
-         provide input `nopt` to randomly sample initial guess(es). The identified MLE is the one that yields the
-         maximum log likelihood over all calls of the optimizer.
+        :param optimizations_number: Initial guess(es) for optimization, :class:`numpy.ndarray` of shape
+         :code:`(nstarts, nparams)` or :code:`(nparams, )`, where :code:`nstarts` is the number of times the optimizer
+         will be called. Alternatively, the user can provide input `optimizations_number` to randomly sample initial
+         guess(es). The identified MLE is the one that yields the maximum log likelihood over all calls of the
+         optimizer.
         :param initial_guess: Number of iterations that the optimization is run, starting at random initial guesses. It
-         is only used if `x0` is not provided. Default is 1.
+         is only used if `initial_guess` is not provided. Default is 1.
          The random initial guesses are sampled uniformly between 0 and 1, or uniformly between user-defined bounds
          if an input bounds is provided as a keyword argument to the :class:`.MLE` object.
         """

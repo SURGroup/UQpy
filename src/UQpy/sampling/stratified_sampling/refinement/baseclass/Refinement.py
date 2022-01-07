@@ -23,8 +23,9 @@ class Refinement(ABC):
 
         :param nsamples: Total number of samples to be drawn
         :param samples_per_iteration: New samples to be drawn at each refinement iteration.
-        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
-         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is
+         :class:`None`.
+         If an :any:`int` is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
          the object itself can be passed directly.
         :param index: Iteration index
         :param dimension: Number of dimension of the sampling problem.

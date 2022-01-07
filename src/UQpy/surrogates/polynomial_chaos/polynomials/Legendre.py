@@ -25,8 +25,8 @@ class Legendre(Polynomials):
         """
         Calculates the normalized Legendre polynomials evaluated at sample points.
 
-        :param x: `ndarray` containing the samples.
-        :return: Α list of 'ndarrays' with the design matrix and the
+        :param x: :class:`numpy.ndarray` containing the samples.
+        :return: Α list of :class:`numpy.ndarray` with the design matrix and the
                     normalized polynomials.
         """
         x = np.array(x).flatten()

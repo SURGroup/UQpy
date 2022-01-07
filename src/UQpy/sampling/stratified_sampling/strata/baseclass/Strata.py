@@ -21,7 +21,7 @@ class Strata:
         self.seeds: NumpyFloatArray = seeds
         """Seed points for the strata. See specific subclass for definition of the seed points."""
         self.volume: NumpyFloatArray = None
-        """An array of dimension `(strata_number, )` containing the volume of each stratum. """
+        """An array of dimension :code:`(strata_number, )` containing the volume of each stratum. """
         self.random_state = random_state
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
@@ -42,8 +42,8 @@ class Strata:
         Abstract class that need to be implemented in each new Stratum. It defines a way to draw samples from
 
         :param nsamples_per_stratum: Number of samples to draw in each stratum
-        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
-         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.
+         If an :any:`int` is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
          the object itself can be passed directly.
         :return: A :class:`tuple` containing the new samples contained in the strata as well as their corresponding
          weights.

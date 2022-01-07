@@ -21,7 +21,7 @@ class Polynomials:
     @staticmethod
     def standardize_normal(tensor, mean, std):
         """
-        Static method: Standardize data based on the standard normal distribution N(0,1).
+        Static method: Standardize data based on the standard normal distribution :math:`\mathcal{N}(0,1)`.
 
         :param tensor: Input data generated from a normal distribution.
         :param mean: Mean value of the original normal distribution.
@@ -46,7 +46,7 @@ class Polynomials:
         :param samples:  Input samples.
         :param a: Left bound of the support the distribution.
         :param b: Right bound of the support of the distribution.
-        :param pdf_st: Pdf function generated from UQpy distribution object.
+        :param pdf_st: Pdf function generated from :py:mod:`UQpy` distribution object.
         :param p: List containing the orthogonal polynomials generated with scipy.
         :return: Design matrix,normalized polynomials
         """
@@ -73,28 +73,28 @@ class Polynomials:
 
     def get_mean(self):
         """
-        Returns a `float` with the mean of the UQpy distribution object.
+        Returns a :any:`float` with the mean of the :py:mod:`UQpy` distribution object.
         """
         m = self.distributions.moments(moments2return="m")
         return m
 
     def get_std(self):
         """
-        Returns a `float` with the variance of the UQpy distribution object.
+        Returns a :any:`float` with the variance of the :py:mod:`UQpy` distribution object.
         """
         s = np.sqrt(self.distributions.moments(moments2return="v"))
         return s
 
     def location(self):
         """
-        Returns a `float` with the location of the UQpy distribution object.
+        Returns a :any:`float` with the location of the :py:mod:`UQpy` distribution object.
         """
         m = self.distributions.__dict__["parameters"]["location"]
         return m
 
     def scale(self):
         """
-        Returns a `float` with the scale of the UQpy distribution object.
+        Returns a :any:`float` with the scale of the :py:mod:`UQpy` distribution object.
         """
         s = self.distributions.__dict__["parameters"]["scale"]
         return s

@@ -6,21 +6,21 @@ that defines the problem at hand. This class defines an inference model that wil
 inference classes. A model can be defined in various ways. The following summarizes the four types of inference models
 that are supported by :py:mod:`UQpy`. These four types are further summarized in the figure below.
 
-* **Case 1a** - `Gaussian error model powered by` :class:`.RunModel`: In this case, the data is assumed to come form a
-  model of the following form,  `data ~ h(theta) + eps`, where `eps` is iid Gaussian and `h` consists of a computational
+* **Case 1a** - **Gaussian error model** powered by :class:`.RunModel`: In this case, the data is assumed to come form a
+  model of the following form,  :math:`data \sim h(theta) + eps`, where :math:`eps` is iid Gaussian and :math:`h` consists of a computational
   model executed using :class:`.RunModel`. Data is a 1D ndarray in this setting. In order to define such a inference model,
   the :class:`.ComputationalModel` class must be utilized.
 
-* **Case 1b** - `non-Gaussian error model powered by` :class:`.RunModel`: In this case, the user must provide the likelihood
+* **Case 1b** - **Non-Gaussian error model** powered by :class:`.RunModel`: In this case, the user must provide the likelihood
   function in addition to a :class:`.RunModel` object. The data type is user-defined and must be consistent with the
   likelihood function definition. In order to define such a inference model, the :class:`.ComputationalModel` class must be utilized.
 
-* **Case 2:** - `User-defined likelihood without` :class:`.RunModel`: Here, the likelihood function is user-defined and
+* **Case 2:** - **User-defined likelihood** without :class:`.RunModel`: Here, the likelihood function is user-defined and
   does not leverage :class:`.RunModel`. The data type must be consistent with the likelihood function definition.
   In order to define such a inference model, the :class:`.LogLikelihoodModel` class must be utilized.
 
-* **Case 3:** `Learn parameters of a probability distribution:` Here, the user must define an object of the
-  :class:`.Distribution` class. Data is an ndarray of shape `(ndata, dim)` and consists in `ndata` iid samples from the
+* **Case 3:** - **Learn parameters of a probability distribution**: Here, the user must define an object of the
+  :class:`.Distribution` class. Data is an ndarray of shape :code:`(ndata, dim)` and consists in :code:`ndata` iid samples from the
   probability distribution. In order to define such a inference model, the :class:`.DistributionModel` class must be utilized.
 
 .. image:: ../_static/Inference_models.png

@@ -31,17 +31,18 @@ class InferenceModel(ABC):
 
         :param parameters_number: Number of parameters to be estimated.
         :param runmodel_object: :class:`.RunModel` class object that defines the forward model. This input is required
-         for cases 1a and 1b.
+         for cases **1a** and **1b**.
         :param log_likelihood: Function that defines the log-likelihood model, possibly in conjunction with the
          `runmodel_object` **(cases 1b and 2)**. Default is None, and a Gaussian-error model is considered
          **(case 1a)**.
         :param distributions: Distribution :math:`\pi` for which to learn parameters from iid data **(case 3)**.
-         When creating this :class:`.Distribution` object, the parameters to be learned should be set to `None`.
+         When creating this :class:`.Distribution` object, the parameters to be learned should be set to :any:`None`.
         :param name: Name of model - optional but useful in a model selection setting.
         :param error_covariance: Covariance for Gaussian error model **(case 1a)**. It can be a scalar (in which case
-         the covariance matrix is the identity times that value), a 1d `ndarray` in which case the covariance is assumed
-         to be diagonal, or a full covariance matrix (2D `ndarray`). Default value is 1.
-        :param prior: Prior distribution, must have a `log_pdf` or `pdf` method.
+         the covariance matrix is the identity times that value), a 1D :class:`numpy.ndarray` in which case the
+         covariance is assumed to be diagonal, or a full covariance matrix (2D :class:`numpy.ndarray`).
+         Default value is 1.
+        :param prior: Prior distribution, must have a :py:meth:`log_pdf` or :py:meth:`pdf` method.
         """
         # Initialize some parameters
         self.parameters_number = parameters_number
@@ -115,34 +116,36 @@ class InferenceModel(ABC):
     @abstractmethod
     def evaluate_log_likelihood(self, params, data):
         """
-        Evaluate the log likelihood, `log p(data|params)`.
+        Evaluate the log likelihood, :code:`log p(data|params)`.
 
         This method is the central piece of the :py:mod:`inference` module, it is being called repeatedly by all other
         inference classes to evaluate the likelihood of the data. The log-likelihood can be evaluated at several
-        parameter vectors at once, i.e., `params` is an `ndarray` of shape (nsamples, nparams). If the
-        :class:`.InferenceModel` is powered by :class:`.RunModel` the :meth:`RunModel.run` method is called here,
+        parameter vectors at once, i.e., `params` is an :class:`numpy.ndarray` of shape :code:`(nsamples, nparams)`.
+        If the :class:`.InferenceModel` is powered by :class:`.RunModel` the :meth:`RunModel.run` method is called here,
         possibly  leveraging its parallel execution.
 
-        :param params: Parameter vector(s) at which to evaluate the likelihood function, `ndarray` of shape
-         `(nsamples, nparams)`.
-        :param data: Data from which to learn. For case 1b, this should be an `ndarray` of shape `(ndata, )`. For case
-         3, it must be an `ndarray` of shape `(ndata, dimension)`. For other cases it must be consistent with the
-         definition of the :meth:`log_likelihood` callable input.
-        :return: Log-likelihood evaluated at all `nsamples` parameter vector values, `ndarray` of shape (nsamples, ).
+        :param params: Parameter vector(s) at which to evaluate the likelihood function, :class:`numpy.ndarray` of shape
+         :code:`(nsamples, nparams)`.
+        :param data: Data from which to learn. For case **1b**, this should be an :class:`numpy.ndarray` of shape
+         :code:`(ndata, )`. For **case 3**, it must be an :class:`numpy.ndarray` of shape :code:`(ndata, dimension)`.
+         For other cases it must be consistent with the definition of the :meth:`log_likelihood` callable input.
+        :return: Log-likelihood evaluated at all `nsamples` parameter vector values, :class:`numpy.ndarray` of shape
+         :code:`(nsamples, )`.
         """
         pass
 
     def evaluate_log_posterior(self, parameter_vector, data):
         """
-        Evaluate the scaled log posterior `log(p(data|params)p(params))`.
+        Evaluate the scaled log posterior :code:`log(p(data|params)p(params))`.
 
         This method is called by classes that perform Bayesian inference. If the :class:`.InferenceModel` object does
-        not possess a prior, an uninformative prior `p(params)=1` is assumed. Warning: This is an improper prior.
+        not possess a prior, an uninformative prior :code:`p(params)=1` is assumed. Warning: This is an improper prior.
 
-        :param parameter_vector: Parameter vector(s) at which to evaluate the log-posterior, `ndarray` of shape
-         (nsamples, nparams).
-        :param data: Data from which to learn. See `evaluate_log_likelihood` method for details.
-        :return: Log-posterior evaluated at all `nsamples` parameter vector values, `ndarray` of shape (nsamples, ).
+        :param parameter_vector: Parameter vector(s) at which to evaluate the log-posterior, :class:`numpy.ndarray` of
+         shape :code:`(nsamples, nparams)`.
+        :param data: Data from which to learn. See :py:meth:`evaluate_log_likelihood` method for details.
+        :return: Log-posterior evaluated at all `nsamples` parameter vector values, :class:`numpy.ndarray` of shape
+         :code:`(nsamples, )`.
         """
 
         # Compute log likelihood

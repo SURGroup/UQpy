@@ -29,9 +29,9 @@ class RidgeRegression(Regression):
         """
         Implements the LASSO method to compute the polynomial_chaos coefficients.
 
-        :param x: `ndarray` containing the training points (samples).
-        :param y: `ndarray` containing the model evaluations (labels) at the training points.
-        :param design_matrix: matrix containing the evaluation of the polynomials at the input points x.
+        :param x: :class:`numpy.ndarray` containing the training points (samples).
+        :param y: :class:`numpy.ndarray` containing the model evaluations (labels) at the training points.
+        :param design_matrix: matrix containing the evaluation of the polynomials at the input points **x**.
         :return: Weights (polynomial_chaos coefficients)  and Bias of the regressor
         """
         m, n = design_matrix.shape

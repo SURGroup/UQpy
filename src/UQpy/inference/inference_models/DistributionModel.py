@@ -18,10 +18,10 @@ class DistributionModel(InferenceModel):
         Define a distributions model for inference.
 
         :param distributions: Distribution :math:`\pi` for which to learn parameters from iid data **(case 3)**.
-         When creating this :class:`.Distribution` object, the parameters to be learned should be set to `None`.
+         When creating this :class:`.Distribution` object, the parameters to be learned should be set to :any:`None`.
         :param parameters_number: Number of parameters to be estimated.
         :param name: Name of model - optional but useful in a model selection setting.
-        :param prior: Prior distribution, must have a `log_pdf` or `pdf` method.
+        :param prior: Prior distribution, must have a :py:meth:`log_pdf` or :py:meth:`pdf` method.
         """
         self.distributions = distributions
         self.parameters_number = parameters_number

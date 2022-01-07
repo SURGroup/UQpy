@@ -13,13 +13,15 @@ where :math:`V_{i}\le 1` is the volume of stratum :math:`i` in the unit hypercub
 
 
 :py:mod:`UQpy` supports several stratified sampling variations that vary from conventional stratified sampling designs
-to advanced gradient informed methods for adaptive stratified sampling. Stratified sampling capabilities are built in
-:py:mod:`UQpy` from three sets of classes. These class structures facilitate a highly flexible and varied range of stratified
+to advanced gradient informed methods for adaptive stratified sampling. These class structures facilitate a highly flexible and varied range of stratified
 sampling designs that can be extended in a straightforward way. Specifically, the existing classes allow stratification
 of n-dimensional parameter spaces based on three common spatial discretizations: a rectilinear decomposition into
-hyper-rectangles (orthotopes), a Voronoi decomposition, and a Delaunay decomposition. The three parent classes are:
+hyper-rectangles (orthotopes), a Voronoi decomposition, and a Delaunay decomposition. This structure is based on three classes:
 
-1. The :class:`.Strata` class defines the geometric structure of the stratification of the parameter space and it has three existing subclasses - :class:`.Rectangular`, :class:`.Voronoi`, and:class:`.Delaunay` that correspond to geometric decompositions of the parameter space based on rectilinear strata of orthotopes, strata composed of Voronoi cells, and strata composed of Delaunay simplexes respectively. These classes live in the :py:mod:`UQpy.sampling.stratified_sampling.strata` folder.
+1. The :class:`.Strata` class defines the geometric structure of the stratification of the parameter space and it has
+three existing subclasses - :class:`.Rectangular`, :class:`.Voronoi`, and :class:`.Delaunay` that correspond to
+geometric decompositions of the parameter space based on rectilinear strata of orthotopes, strata composed of Voronoi
+cells, and strata composed of Delaunay simplexes respectively. These classes live in the :py:mod:`UQpy.sampling.stratified_sampling.strata` folder.
 
 .. toctree::
    :maxdepth: 1

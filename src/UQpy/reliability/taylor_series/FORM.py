@@ -41,17 +41,17 @@ class FORM(TaylorSeries):
          Either `seed_u` or `seed_x` must be provided.
          If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
          If `seed_x` is provided, it should be a point in the parameter space of **X**.
-         Default: `seed_u = (0, 0, ..., 0)`
-        :param df_step: Finite difference step in standard normal space. Default: 0.01 (see `derivatives`)
+         Default: :code:`seed_u = (0, 0, ..., 0)`
+        :param df_step: Finite difference step in standard normal space. Default: :math:`0.01`
         :param corr_z: Covariance matrix
          If `corr_x` is provided, it is the correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
          If `corr_z` is provided, it is the correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal random
          vector **Z** .
          Default: `corr_z` is specified as the identity matrix.
-        :param iterations_number: Maximum number of iterations for the `HLRF` algorithm. Default: 100
-        :param tol1: Convergence threshold for criterion `e1` of the `HLRF` algorithm. Default: 1.0e-3
-        :param tol2: Convergence threshold for criterion `e2` of the `HLRF` algorithm. Default: 1.0e-3
-        :param tol3: Convergence threshold for criterion `e3` of the  `HLRF` algorithm. Default: 1.0e-3
+        :param iterations_number: Maximum number of iterations for the `HLRF` algorithm. Default: :math:`100`
+        :param tol1: Convergence threshold for criterion `e1` of the `HLRF` algorithm. Default: :math:`1.0e-3`
+        :param tol2: Convergence threshold for criterion `e2` of the `HLRF` algorithm. Default: :math:`1.0e-3`
+        :param tol3: Convergence threshold for criterion `e3` of the  `HLRF` algorithm. Default: :math:`1.0e-3`
         
         """
         super().__init__(
@@ -88,16 +88,16 @@ class FORM(TaylorSeries):
         """Number of model evaluations."""
         self.df_step = df_step
         self.error_record: float = None
-        """Record of the error defined by criteria e1, e2, e3."""
+        """Record of the error defined by criteria `e1, e2, e3`."""
 
         self.tol1 = tol1
         self.tol2 = tol2
         self.tol3 = tol3
 
         self.u_record: list = None
-        """Record of all iteration points in the standard normal space U."""
+        """Record of all iteration points in the standard normal space **U**."""
         self.x_record: list = None
-        """Record of all iteration points in the parameter space X."""
+        """Record of all iteration points in the parameter space **X**."""
         self.g_record: list = None
         """Record of the performance function."""
         self.dg_u_record: list = None
@@ -125,7 +125,7 @@ class FORM(TaylorSeries):
          Either `seed_u` or `seed_x` must be provided.
          If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
          If `seed_x` is provided, it should be a point in the parameter space of **X**.
-         Default: `seed_u = (0, 0, ..., 0)`
+         Default: :code:`seed_u = (0, 0, ..., 0)`
         """
         self.logger.info("UQpy: Running FORM...")
         if seed_u is None and seed_x is None:

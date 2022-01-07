@@ -27,11 +27,11 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
     @classmethod
     def create_total_degree_basis(cls, distributions, max_degree):
         """
-        Create tensor-product polynomial basis given the .
-        The size is equal to (max_degree+1)**n_inputs (exponential complexity).
+        Create tensor-product polynomial basis.
+        The size is equal to :code:`(max_degree+1)**n_inputs` (exponential complexity).
 
         :param distributions: List of univariate distributions.
-        :param max_degree: Maximum polynomial degree of the 1d chaos polynomials.
+        :param max_degree: Maximum polynomial degree of the 1D chaos polynomials.
         """
         inputs_number = 1 if not isinstance(distributions, (JointIndependent, JointCopula)) \
             else len(distributions.marginals)
@@ -44,11 +44,11 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
     def create_tensor_product_basis(cls, distributions, max_degree):
         """
         Create total-degree polynomial basis.
-        The size is equal to (total_degree+n_inputs)!/(total_degree!*n_inputs!)
+        The size is equal to :code:`(total_degree+n_inputs)!/(total_degree!*n_inputs!)`
         (polynomial complexity).
 
         :param distributions: List of univariate distributions.
-        :param max_degree: Maximum polynomial degree of the 1d chaos polynomials.
+        :param max_degree: Maximum polynomial degree of the 1D chaos polynomials.
         """
         inputs_number = 1 if not isinstance(distributions, (JointIndependent, JointCopula)) \
             else len(distributions.marginals)

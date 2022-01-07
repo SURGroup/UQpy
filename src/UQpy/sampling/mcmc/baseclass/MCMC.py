@@ -29,21 +29,21 @@ class MCMC(ABC):
         """
         Generate samples from arbitrary user-specified probability density function using Markov Chain Monte Carlo.
 
-        This is the parent class for all mcmc algorithms. This parent class only provides the framework for
+        This is the parent class for all MCMC algorithms. This parent class only provides the framework for
         MCMC and cannot be used directly for sampling. Sampling is done by calling the child class for the specific
         MCMC algorithm.
 
         :param dimension: A scalar value defining the dimension of target density function. Either *dimension*
          and *n_chains* or *seed* must be provided.
-        :param pdf_target: Target density function from which to draw random samples. Either :strong:`pdf_target` or
-         :strong:`log_pdf_target` must be provided (the latter should be preferred for better numerical stability).
-         If :strong:`pdf_target` is a callable, it refers to the joint pdf to sample from, it must take at least one
-         input :code:`x`, which are the point(s) at which to evaluate the pdf. Within mcmc the :strong:`pdf_target` is
+        :param pdf_target: Target density function from which to draw random samples. Either `pdf_target` or
+         `log_pdf_target` must be provided (the latter should be preferred for better numerical stability).
+         If `pdf_target` is a callable, it refers to the joint pdf to sample from, it must take at least one
+         input :code:`x`, which are the point(s) at which to evaluate the pdf. Within MCMC the `pdf_target` is
          evaluated as:
 
          :code:`p(x) = pdf_target(x, *args_target)` where :code:`x` is a ndarray of shape :code:`(nsamples, dimension)`
-         and :code:`args_target` are additional positional arguments that are provided to MCMC via its
-         :code:`args_target` input.
+         and `args_target` are additional positional arguments that are provided to MCMC via its
+         `args_target` input.
          If :code:`pdf_target` is a list of callables, it refers to independent marginals to sample from. The marginal
          in dimension :code:`j` is evaluated as: :code:`p_j(xj) = pdf_target[j](xj, *args_target[j])` where :code:`x`
          is a ndarray of shape :code:`(nsamples, dimension)`
@@ -54,18 +54,18 @@ class MCMC(ABC):
         :param seed: Seed of the Markov chain(s), shape ``(nchains, dimension)``. Default: ``zeros(nchains,
          dimension)``. If `seed` is not provided, both `nchains` and `dimension` must be provided.
         :param burn_length: Length of burn-in - i.e., number of samples at the beginning of the chain to discard (note:
-         no thinning during burn-in). Default is 0, no burn-in.
-        :param jump: Thinning parameter, used to reduce correlation between samples. Setting `jump=n` corresponds to
-         skipping `n-1` states between accepted states of the chain. Default is 1 (no thinning).
+         no thinning during burn-in). Default is :math:`0`, no burn-in.
+        :param jump: Thinning parameter, used to reduce correlation between samples. Setting :code:`jump=n` corresponds
+         to skipping :code:`n-1` states between accepted states of the chain. Default is :math:`1` (no thinning).
         :param n_chains: The number of Markov chains to generate. Either `dimension` and `nchains` or `seed` must
          be provided.
         :param save_log_pdf: Boolean that indicates whether to save log-pdf values along with the samples.
-         Default: False
+         Default: :any:`False`
         :param concatenate_chains: Boolean that indicates whether to concatenate the chains after a run, i.e., samples
-         are stored as an `ndarray` of shape ``(nsamples * nchains, dimension)`` if True,
-         ``(nsamples, nchains, dimension)`` if False. Default: True
-        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
-         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+         are stored as an :class:`numpy.ndarray` of shape ``(nsamples * nchains, dimension)`` if :any:`True`,
+         ``(nsamples, nchains, dimension)`` if :any:`False`. Default: :any:`True`
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.
+         If an :any:`int` is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
          the object itself can be passed directly.
         """
         self.burn_length, self.jump = burn_length, jump
@@ -73,9 +73,9 @@ class MCMC(ABC):
         self.n_chains, self.dimension = self.seed.shape
 
         self.evaluate_log_target: Callable = None
-        """It is a callable that evaluates the log-pdf of the target distribution at a given point x"""
+        """It is a callable that evaluates the log-pdf of the target distribution at a given point **x**"""
         self.evaluate_log_target_marginals: Callable = None
-        """It is a callable that evaluates the log-pdf of the target marginal distributions at a given point x"""
+        """It is a callable that evaluates the log-pdf of the target marginal distributions at a given point **x**"""
         # Check target pdf
         (self.evaluate_log_target, self.evaluate_log_target_marginals,) = \
             self._preprocess_target(pdf_=pdf_target, log_pdf_=log_pdf_target, args=args_target)
@@ -90,25 +90,25 @@ class MCMC(ABC):
 
         # Initialize a few more variables
         self.samples: NumpyFloatArray = None
-        """Set of MCMC samples following the target distribution, `ndarray` of shape 
-        (`nsamples` * `n_chains`, `dimension`)
-        or (nsamples, n_chains, dimension) (see input `concatenate_chains`)."""
+        """Set of MCMC samples following the target distribution, :class:`numpy.ndarray` of shape 
+        :code:`(nsamples * n_chains, dimension)`
+        or :code:`(nsamples, n_chains, dimension)` (see input `concatenate_chains`)."""
         self.log_pdf_values: NumpyFloatArray = None
-        """Values of the log pdf for the accepted samples, `ndarray` of shape (n_chains * nsamples,) or 
-        (nsamples, n_chains)"""
+        """Values of the log pdf for the accepted samples, :class:`numpy.ndarray` of shape 
+        :code:`(n_chains * nsamples,)` or  :code:`(nsamples, n_chains)`"""
         self.acceptance_rate = [0.0] * self.n_chains
         self.nsamples: int = 0
         """Total number of samples; The `nsamples` attribute tallies the total number of generated samples. After 
-        each iteration, it is updated by 1. At the end of the simulation, the `nsamples` attribute equals the 
+        each iteration, it is updated by :any:`1`. At the end of the simulation, the `nsamples` attribute equals the 
         user-specified value for input `nsamples` given to the child class."""
         self.nsamples_per_chain: int = 0
-        """Total number of samples per chain; Similar to the attribute `nsamples`, it is updated during iterations as new
-        samples are saved."""
+        """Total number of samples per chain; Similar to the attribute `nsamples`, it is updated during iterations as 
+        new samples are saved."""
         self.iterations_number: int = (
             0  # total nb of iterations, grows if you call run several times
         )
         """Total number of iterations, updated on-the-fly as the algorithm proceeds. It is related to number of samples 
-        as iterations_number=burn_length+jump*nsamples_per_chain."""
+        as :code:`iterations_number=burn_length+jump*nsamples_per_chain`."""
 
     def run(
         self, nsamples: PositiveInteger = None, nsamples_per_chain=None
@@ -176,8 +176,9 @@ class MCMC(ABC):
         associated log-pdf, which will be passed as inputs to the :meth:`run_one_iteration` method at the next
         iteration.
 
-        :param current_state: Current state of the chain(s), `ndarray` of shape ``(n_chains, dimension)``.
-        :param current_log_pdf: Log-pdf of the current state of the chain(s), `ndarray` of shape ``(n_chains, )``.
+        :param current_state: Current state of the chain(s), :class:`numpy.ndarray` of shape ``(n_chains, dimension)``.
+        :param current_log_pdf: Log-pdf of the current state of the chain(s), :class:`numpy.ndarray` of shape
+         ``(n_chains, )``.
         :return: New state of the chain(s) and Log-pdf of the new state of the chain(s)
         """
         return [], []

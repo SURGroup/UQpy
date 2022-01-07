@@ -23,20 +23,20 @@ class ImportanceSampling:
         """
         Sample from a user-defined target density using importance sampling.
 
-        :param pdf_target: Callable that evaluates the pdf of the target distribution. Either log_pdf_target or
-         pdf_target must be specified (the former is preferred).
-        :param log_pdf_target: Callable that evaluates the log-pdf of the target distribution. Either log_pdf_target or
-         pdf_target must be specified (the former is preferred).
+        :param pdf_target: Callable that evaluates the pdf of the target distribution. Either `log_pdf_target` or
+         `pdf_target` must be specified (the former is preferred).
+        :param log_pdf_target: Callable that evaluates the log-pdf of the target distribution. Either `log_pdf_target`
+         or `pdf_target` must be specified (the former is preferred).
         :param args_target: Positional arguments of the target log_pdf / pdf callable.
-        :param proposal: Proposal to sample from. This :class:`.Distribution` object must have an rvs method and a
-         log_pdf (or pdf) method.
+        :param proposal: Proposal to sample from. This :class:`.Distribution` object must have an :py:meth:`rvs` method
+         and a `log_pdf` (or pdf) method.
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is
-         :class:`.None`.
+         :any:`.None`.
 
-         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+         If an :any:`int` is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
          the object itself can be passed directly.
-        :param nsamples: Number of samples to generate - see :meth:`run` method. If not `None`, the `run` method
-         is called when the object is created. Default is None.
+        :param nsamples: Number of samples to generate - see :meth:`run` method. If not :any:`None`, the :py:meth:`run`
+         method is called when the object is created. Default is :any:`None`.
         """
         # Initialize proposal: it should have an rvs and log pdf or pdf method
         self.proposal = proposal
@@ -59,12 +59,13 @@ class ImportanceSampling:
 
         # Initialize the samples and weights
         self.samples: NumpyFloatArray = None
-        """Set of samples, `ndarray` of shape (nsamples, dimensions)"""
+        """Set of samples, :class:`numpy.ndarray` of shape :code:`(nsamples, dimensions)`"""
         self.unnormalized_log_weights: NumpyFloatArray = None
-        """Unnormalized log weights, i.e., log_w(x) = log_target(x) - log_proposal(x), `ndarray` of shape 
-        (nsamples, )"""
+        """Unnormalized log weights, i.e., :code:`log_w(x) = log_target(x) - log_proposal(x)`, :class:`numpy.ndarray` of 
+        shape :code:`(nsamples, )`"""
         self.weights: NumpyFloatArray = None
-        """Importance weights, weighted so that they sum up to 1, `ndarray` of shape (nsamples, )"""
+        """Importance weights, weighted so that they sum up to 1, :class:`numpy.ndarray` of shape :code:`(nsamples, )`
+        """
         self.unweighted_samples: NumpyFloatArray = None
         """Set of un-weighted samples (useful for instance for plotting), computed by calling the :meth:`resample` 
         method"""
@@ -79,7 +80,7 @@ class ImportanceSampling:
         Generate and weight samples.
 
         This function samples from the proposal and appends samples to existing ones (if any). It then weights the
-        samples as log_w_unnormalized) = log(target)-log(proposal).
+        samples as :code:`log_w_unnormalized) = log(target)-log(proposal)`.
 
         :param nsamples: Number of weighted samples to generate.
 

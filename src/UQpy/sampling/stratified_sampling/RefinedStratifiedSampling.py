@@ -24,8 +24,8 @@ class RefinedStratifiedSampling(StratifiedSampling):
          called. If `nsamples` is not provided, :class:`.RefinedStratifiedSampling` can be executed
          by invoking the :meth:`run` method and passing `nsamples`
         :param samples_per_iteration: Number of samples to be added per refinement iteration.
-        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
-         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.
+         If an :any:`int` is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
          the object itself can be passed directly.
         """
         self.stratified_sampling = stratified_sampling

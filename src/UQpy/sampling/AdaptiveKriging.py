@@ -53,8 +53,8 @@ class AdaptiveKriging:
         :param qoi_name: Name of the quantity of interest. If the quantity of interest is a dictionary, this is used to
          convert it to a list
         :param n_add: Number of samples to be added per iteration.
-        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
-         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.
+         If an :any:`int` is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
          the object itself can be passed directly.
         """
         # Initialize the internal variables of the class.

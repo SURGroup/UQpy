@@ -19,7 +19,7 @@ class PolynomialChaosExpansion(Surrogate):
         :param regression_method: object for the method used for the calculation of the polynomial_chaos coefficients.
         """
         self.polynomial_basis: PolynomialBasis = polynomial_basis
-        """Contains the 1d or Nd chaos polynomials that form the PCE basis"""
+        """Contains the 1D or ND chaos polynomials that form the PCE basis"""
         self.multi_index_set: NumpyFloatArray = polynomial_basis.multi_index_set
         "Multi-index-set"
         self.regression_method = regression_method
@@ -53,12 +53,12 @@ class PolynomialChaosExpansion(Surrogate):
     def fit(self, x, y):
         """
         Fit the surrogate model using the training samples and the corresponding model values. This method calls the
-        'run' method of the input method class.
+        :py:meth:'run' method of the input method class.
 
         :param x: containing the training points.
         :param y: containing the model evaluations at the training points.
 
-        The :meth:`fit` method has no returns and it creates an `ndarray` with the
+        The :meth:`fit` method has no returns and it creates an :class:`numpy.ndarray` with the
         polynomial_chaos coefficients.
         """
         self.experimental_design_input = x
@@ -86,8 +86,8 @@ class PolynomialChaosExpansion(Surrogate):
         """
         Returns the validation error.
 
-        :param x: `ndarray` containing the samples of the validation dataset.
-        :param y: `ndarray` containing model evaluations for the validation dataset.
+        :param x: :class:`numpy.ndarray` containing the samples of the validation dataset.
+        :param y: :class:`numpy.ndarray` containing model evaluations for the validation dataset.
         :return: Validation error.
         """
 

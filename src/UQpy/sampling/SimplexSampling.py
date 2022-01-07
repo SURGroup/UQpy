@@ -20,8 +20,8 @@ class SimplexSampling:
          If `nsamples` is provided when the object is defined, the :meth:`run` method will be called
          automatically. If `nsamples` is not provided when the object is defined, the user must invoke the
          :meth:`run` method and specify `nsamples`.
-        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
-         If an integer is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.
+         If an :any:`int` is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
          the object itself can be passed directly.
         """
         self.nodes = np.atleast_2d(nodes)

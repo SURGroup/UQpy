@@ -43,7 +43,7 @@ class Nataf:
          If `samples_x` is provided, the :class:`.Nataf` class transforms them to `samples_z`.
         :param samples_z: Standard normal random vector of shape ``(samples_number, dimension)``
          If `samples_z` is provided, the :class:`.Nataf` class transforms them to `samples_x`.
-        :param jacobian: A boolean whether to return the jacobian of the transformation. Default: False
+        :param jacobian: A boolean whether to return the jacobian of the transformation. Default: :any:`False`
         :param corr_z: The correlation  matrix (:math:`\mathbf{C_Z}`) of the standard normal random vector **Z** .
          Default: The identity matrix.
          If ``corr_z`` is specified, the :class:`.Nataf` class computes the correlation distortion integral above to
@@ -52,17 +52,17 @@ class Nataf:
          Default: The identity matrix.
          If ``corr_x`` is specified, the :class:`.Nataf` class invokes the ITAM to compute ``corr_z``.
         :param itam_beta: A parameter selected to optimize convergence speed and desired accuracy of the ITAM method.
-         Default: 1.0
+         Default: :math:`1.0`
         :param itam_threshold1: If ``corr_x`` is specified, this specifies the threshold value for the error in the
          `ITAM` method (see :py:mod:`.utilities` module) given by
          :math:`\epsilon_1 = ||\mathbf{C_X}^{target} - \mathbf{C_X}^{computed}||`
-         Default: 0.001
+         Default: :math:`0.001`
         :param itam_threshold2: If ``corr_x`` is specified, this specifies the threshold value for the error difference
          between iterations in the `ITAM` method (see :py:mod:`.utilities` module) given by
          :math:`\epsilon_1^{i} - \epsilon_1^{i-1}`
          for iteration :math:`i`.
-         Default: 0.01
-        :param itam_max_iter: Maximum number of iterations for the ITAM method. Default: 100
+         Default: :math:`0.01`
+        :param itam_max_iter: Maximum number of iterations for the ITAM method. Default: :math:`100`
         """
         self.dimension = 0
         if isinstance(distributions, list):
@@ -135,8 +135,8 @@ class Nataf:
         provided, the :meth:`run` method performs the inverse Nataf transformation.
 
         :param samples_x: Random vector **X**  with prescribed probability distributions or standard normal random
-         vector **Z** of shape `(nsamples, dimension)`.
-        :param jacobian: The jacobian of the transformation of shape ``(dimension, dimension)``. Default: False
+         vector **Z** of shape :code:`(nsamples, dimension)`.
+        :param jacobian: The jacobian of the transformation of shape ``(dimension, dimension)``. Default: :any:`False`
         """
         self.jacobian = jacobian
 
@@ -184,18 +184,18 @@ class Nataf:
 
         :param distributions:  Probability distribution of each random variable. Must be an object of type
          :class:`.DistributionContinuous1D` or :class:`.JointIndependent`.
-         `dist_object` must have a ``cdf`` method.
+         `distributions` must have a ``cdf`` method.
         :param corr_x: The correlation  matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
          Default: The ``identity`` matrix.
-        :param itam_max_iter: Maximum number of iterations for the ITAM method. Default: 100
+        :param itam_max_iter: Maximum number of iterations for the ITAM method. Default: :math:`100`
         :param itam_beta: A parameters selected to optimize convergence speed and desired accuracy of the ITAM method
-         (see :cite:`Nataf2`). Default: 1.0
+         (see :cite:`Nataf2`). Default: :math:`1.0`
         :param itam_threshold1: A threshold value for the relative difference between the non-Gaussian correlation
-         function and the underlying Gaussian. Default: 0.001
+         function and the underlying Gaussian. Default: :math:`0.001`
         :param itam_threshold2: If ``corr_x`` is specified, this specifies the threshold value for the error difference
          between iterations in the `ITAM` method (see :py:mod:`.utilities` module) given by:
-         .. math:: \epsilon_1^{i} - \epsilon_1^{i-1}
-         for iteration :math:`i`. Default: 0.01
+         :math:`\epsilon_1^{i} - \epsilon_1^{i-1}`
+         for iteration :math:`i`. Default: :math:`0.01`
         :return: Distorted correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal vector **Z**,
          List of ITAM errors for each iteration, List of ITAM difference errors for each iteration
         """

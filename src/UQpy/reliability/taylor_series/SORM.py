@@ -30,7 +30,8 @@ class SORM(TaylorSeries):
         tol3: Union[float, int] = None,
     ):
         """
-        SORM is a child class of the TaylorSeries class. Input: The SORM class requires an object of type FORM as input.
+        :class:`.SORM` is a child class of the :class:`.TaylorSeries` class. Input: The :class:`.SORM` class requires an
+        object of type :class:`.FORM` as input.
 
         :param form_object: Object of type :class:`.FORM`
         :param distributions: Marginal probability distributions of each random variable. Must be an object of
@@ -39,18 +40,18 @@ class SORM(TaylorSeries):
          Either `seed_u` or `seed_x` must be provided.
          If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
          If `seed_x` is provided, it should be a point in the parameter space of **X**.
-         Default: `seed_u = (0, 0, ..., 0)`
+         Default: :code:`seed_u = (0, 0, ..., 0)`
         :param runmodel_object: The computational model. It should be of type :class:`RunModel`.
-        :param df_step: Finite difference step in standard normal space. Default: 0.01 (see `derivatives`)
+        :param df_step: Finite difference step in standard normal space. Default: :math:`0.01`
         :param corr_x: Covariance matrix
          If `corr_x` is provided, it is the correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
          If `corr_z` is provided, it is the correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal random
          vector **Z** .
          Default: `corr_z` is specified as the identity matrix.
-        :param iterations_number: Maximum number of iterations for the `HLRF` algorithm. Default: 100
-        :param tol1: Convergence threshold for criterion `e1` of the `HLRF` algorithm. Default: 1.0e-3
-        :param tol2: Convergence threshold for criterion `e2` of the `HLRF` algorithm. Default: 1.0e-3
-        :param tol3: Convergence threshold for criterion `e3` of the  `HLRF` algorithm. Default: 1.0e-3
+        :param iterations_number: Maximum number of iterations for the `HLRF` algorithm. Default: :math:`100`
+        :param tol1: Convergence threshold for criterion `e1` of the `HLRF` algorithm. Default: :math:`1.0e-3`
+        :param tol2: Convergence threshold for criterion `e2` of the `HLRF` algorithm. Default: :math:`1.0e-3`
+        :param tol3: Convergence threshold for criterion `e3` of the  `HLRF` algorithm. Default: :math:`1.0e-3`
         """
         super().__init__(
             distributions,
@@ -70,16 +71,16 @@ class SORM(TaylorSeries):
         self.beta_form: float = None
         """Hasofer-Lind reliability index."""
         self.DesignPoint_U: list = None
-        """Design point in the uncorrelated standard normal space U."""
+        """Design point in the uncorrelated standard normal space **U**."""
         self.DesignPoint_X: list = None
-        """Design point in the parameter space X."""
+        """Design point in the parameter space **X**."""
         self.Pf_form = None
         self.form_iterations: int = None
         """Number of model evaluations."""
         self.u_record: list = None
-        """Record of all iteration points in the standard normal space U."""
+        """Record of all iteration points in the standard normal space **U**."""
         self.x_record: list = None
-        """Record of all iteration points in the parameter space X."""
+        """Record of all iteration points in the parameter space **X**."""
         self.g_record: list = None
         """Record of the performance function."""
         self.dg_record = None
@@ -91,7 +92,7 @@ class SORM(TaylorSeries):
         """Record of the model’s gradient in the standard normal space."""
         self.df_step = df_step
         self.error_record: float = None
-        """Record of the error defined by criteria e1, e2, e3."""
+        """Record of the error defined by criteria `e1, e2, e3`."""
 
         self.failure_probability = None
         self.beta_sorm = None

@@ -10,9 +10,9 @@ class LeastSquareRegression(Regression):
         """
         Least squares solution to compute the polynomial_chaos coefficients.
 
-        :param x: `ndarray` containing the training points (samples).
-        :param y: `ndarray` containing the model evaluations (labels) at the training points.
-        :param design_matrix: matrix containing the evaluation of the polynomials at the input points x.
+        :param x: :class:`numpy.ndarray` containing the training points (samples).
+        :param y: :class:`numpy.ndarray` containing the model evaluations (labels) at the training points.
+        :param design_matrix: matrix containing the evaluation of the polynomials at the input points **x**.
         :return: Returns the polynomial_chaos coefficients.
         """
         c_, res, rank, sing = np.linalg.lstsq(design_matrix, np.array(y), rcond=None)

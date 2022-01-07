@@ -25,7 +25,7 @@ class MonteCarloSampling:
         :param nsamples: Number of samples to be drawn from each distribution. The :meth:`run` method is
          automatically called if `nsamples` is provided. If `nsamples` is not provided,
          then the :class:`.MonteCarloSampling` object is created but samples are not generated.
-        :param random_state: Random seed used to initialize the pseudo-random number generator. If an integer is
+        :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
          provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
          object itself can be passed directly.
 
@@ -42,7 +42,7 @@ class MonteCarloSampling:
         """Generated samples.
         
         If a list of :class:`.DistributionContinuous1D` objects is provided for `distributions`, then `samples` is an
-        `ndarray` with ``samples.shape=(nsamples, len(distributions))``.
+        :class:`numpy.ndarray` with ``samples.shape=(nsamples, len(distributions))``.
         
         If a :class:`.DistributionContinuous1D` object is provided for `distributions` then `samples` is an array with
         ``samples.shape=(nsamples, 1)``.
@@ -61,7 +61,7 @@ class MonteCarloSampling:
         This attribute exists only if the :meth:`transform_u01` method is invoked by the user.
         
         If a list of :class:`.DistributionContinuous1D` objects is provided for `distributions`, then `samplesU01` is an
-        `ndarray` with ``samples.shape=(nsamples, len(distributions))``.
+        :class:`numpy.ndarray` with ``samples.shape=(nsamples, len(distributions))``.
         
         If a :class:`.DistributionContinuous1D` object is provided for `distributions` then `samplesU01` is an array 
         with ``samples.shape=(nsamples, 1)``.

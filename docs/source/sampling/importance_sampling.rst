@@ -5,7 +5,7 @@ Importance sampling (IS) is based on the idea of sampling from an alternate dist
 
 .. math:: w(\textbf{x}) = \frac{p(\textbf{x})}{q(\textbf{x})}
 
-If :math:`p` is only known up to a constant, i.e., one can only evaluate :math:`\tilde{p}(\textbf{x})`, where :math:`p(\textbf{x})=\frac{\tilde{p}(\textbf{x})}{Z}`, IS can be used by further normalizing the weights (self-normalized IS). The following figure shows the weighted samples obtained when using IS to estimate a 2d Gaussian target distribution :math:`p`, sampling from a uniform proposal distribution :math:`q`.
+If :math:`p` is only known up to a constant, i.e., one can only evaluate :math:`\tilde{p}(\textbf{x})`, where :math:`p(\textbf{x})=\frac{\tilde{p}(\textbf{x})}{Z}`, IS can be used by further normalizing the weights (self-normalized IS). The following figure shows the weighted samples obtained when using IS to estimate a 2D Gaussian target distribution :math:`p`, sampling from a uniform proposal distribution :math:`q`.
 
 .. image:: ../_static/SampleMethods_IS_samples.png
    :scale: 40 %

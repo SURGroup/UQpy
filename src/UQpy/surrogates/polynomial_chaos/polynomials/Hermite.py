@@ -18,7 +18,7 @@ class Hermite(Polynomials):
         Class of univariate polynomials appropriate for data generated from a normal distribution.
 
         :param degree: Maximum degree of the polynomials.
-        :param distribution: Distribution object of the generated samples.
+        :param distributions: Distribution object of the generated samples.
         """
         super().__init__(distributions, degree)
         self.degree = degree
@@ -28,8 +28,8 @@ class Hermite(Polynomials):
         """
         Calculates the normalized Hermite polynomials evaluated at sample points.
 
-        :param x: `ndarray` containing the samples.
-        :return: Α list of 'ndarrays' with the design matrix and the
+        :param x: :class:`numpy.ndarray` containing the samples.
+        :return: Α list of :class:`numpy.ndarray` with the design matrix and the
                     normalized polynomials.
         """
         a, b = -np.inf, np.inf

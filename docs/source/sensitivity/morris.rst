@@ -49,5 +49,5 @@ Attributes
 .. Note::
     **Subclassing the Morris class.**
     The user can subclass the Morris class to implement algorithms with better sampling of the trajectories for instance.
-    In order to do so, the user can simply overwrite the `sample_trajectories` method, which should take as inputs the
-    number of trajectories `trajectories_number` and any other user-defined input (transferred from the `run` method as kwargs).
+    In order to do so, the user can simply overwrite the :py:meth:`sample_trajectories` method, which should take as inputs the
+    number of trajectories `trajectories_number` and any other user-defined input (transferred from the :py:meth:`run` method as `kwargs`).

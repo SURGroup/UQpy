@@ -27,7 +27,7 @@ class Clayton(Copula):
         :meth:`.JointCopula.cdf` method.
 
         :param unit_uniform_samples: Points (uniformly distributed) at which to evaluate the copula cdf, must be of
-         shape `(npoints, dimension)`.
+         shape :code:`(npoints, dimension)`.
 
         :return: Values of the cdf.
         """

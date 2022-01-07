@@ -140,8 +140,9 @@ class JointIndependent(DistributionND):
         Return the parameters of a :class:`.Distributions` object.
 
         To update the parameters of a :class:`.JointIndependent` or a :class:`.JointCopula` distribution, each parameter
-        is assigned a unique string identifier as `key_index` - where `key` is the parameter name and `index` the index
-        of the marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
+        is assigned a unique string identifier as :code:`key_index` - where :code:`key` is the parameter name and
+        :code:`index` the index of the marginal (e.g., location parameter of the 2nd marginal is identified as
+        :code:`loc_1`).
 
         :return: Parameters of the distribution
         """
@@ -157,11 +158,12 @@ class JointIndependent(DistributionND):
         Update the parameters of a :class:`.Distributions` object.
 
         To update the parameters of a :class:`.JointIndependent` or a :class:`.JointCopula` distribution, each parameter
-        is assigned a unique string identifier as `key_index` - where `key` is the parameter name and `index` the index
-        of the marginal (e.g., location parameter of the 2nd marginal is identified as `loc_1`).
+        is assigned a unique string identifier as :code:`key_index` - where :code:`key` is the parameter name and
+        :code:`index` the index of the marginal (e.g., location parameter of the 2nd marginal is identified as
+        :code:`loc_1`).
 
         :param kwargs: Parameters to be updated
-        :raises ValueError: if kwargs contains key that does not already exist.
+        :raises ValueError: if *kwargs* contains key that does not already exist.
         """
         # check arguments
         all_keys = self.get_parameters().keys()

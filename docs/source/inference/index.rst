@@ -21,7 +21,7 @@ explains the data. :py:mod:`UQpy` currently supports the following inference alg
 (see e.g. [1]_ for theory on parameter estimation in frequentist vs. Bayesian frameworks):
 
 * Maximum Likelihood estimation,
-* Bayesian approach: estimation of posterior pdf via sampling methods (MCMC/IS).
+* Bayesian approach: estimation of posterior pdf via sampling methods (:class:`.MCMC`/:class:`.ImportanceSampling`).
 
 and the following algorithms for model selection:
 

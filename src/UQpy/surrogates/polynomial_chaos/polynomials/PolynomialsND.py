@@ -24,8 +24,8 @@ class PolynomialsND(Polynomials):
         """
         Evaluate Nd chaos polynomial on the given data set.
 
-        :param eval_data: Points upon which the Nd chaos polynomial will be evaluated.
-        :return: Evaluations of the Nd chaos polynomial.
+        :param eval_data: Points upon which the ND chaos polynomial will be evaluated.
+        :return: Evaluations of the ND chaos polynomial.
         """
         try:  # case: 2d array, K x N, N being the number of dimensions
             K, N = np.shape(eval_data)

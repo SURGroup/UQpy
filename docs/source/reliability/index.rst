@@ -14,7 +14,7 @@ function then, the probability that the system will fail is defined as
 where :math:`g(\textbf{X})` is the so-called performance function. The reliability problem is often formulated in the
 standard normal space :math:`\textbf{U}\sim \mathcal{N}(\textbf{0}, \textbf{I}_n)`, which means that a nonlinear
 isoprobabilistic  transformation from the generally non-normal parameter space
-:math:`\textbf{X}\sim f_{\textbf{X}}(\cdot)` to the standard normal is required (see the :py:mod:`.transformations`` module).
+:math:`\textbf{X}\sim f_{\textbf{X}}(\cdot)` to the standard normal is required (see the :py:mod:`.transformations` module).
 The performance function in the standard normal space is denoted :math:`G(\textbf{U})`. :py:mod:`.UQpy` does not require this
 transformation and can support reliability analysis for problems with arbitrarily distributed parameters.
 
@@ -22,8 +22,8 @@ transformation and can support reliability analysis for problems with arbitraril
 This module contains functionality for all reliability methods supported in :py:mod:`UQpy`.
 The module currently contains the following classes:
 
-- :class:`.TaylorSeries`: Class to perform reliability analysis using First Order reliability Method (FORM) and Second Order
-  reliability Method (SORM).
+- :class:`.TaylorSeries`: Class to perform reliability analysis using First Order reliability Method (:class:`FORM`) and Second Order
+  Reliability Method (:class:`SORM`).
 - :class:`.SubsetSimulation`: Class to perform reliability analysis using subset simulation.
 
 

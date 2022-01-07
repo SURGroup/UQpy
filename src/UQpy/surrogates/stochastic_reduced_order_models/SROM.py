@@ -29,34 +29,35 @@ class SROM:
         :param moments: A list containing first and second order moment about origin of all random variables.
         :param weights_errors: A list of weights associated with the error in distribution, moments and correlation.
          This corresponds to a list of the values :math:`a_{u}` in the objective function above.
-         Default: weights_errors = [1, 0.2, 0]
+         Default: weights_errors = :math:`[1, 0.2, 0]`
         :param weights_distribution: A list or array containing weights associated with matching the distribution at
          each sample value.
-         `weights_distribution` is an array or list of shape `(m, d)` where each weight corresponds to the weight
-         :math:`w_F(x_{k,i}; i)` assigned for matching the distribution of component `i` at sample point
+         `weights_distribution` is an array or list of shape :code:`(m, d)` where each weight corresponds to the weight
+         :math:`w_F(x_{k,i}; i)` assigned for matching the distribution of component :code:`i` at sample point
          :math:`x_{k,i}`.
-         If `weights_distribution` is `(1, d)`, it is assumed that each sample sample is equally weighted according
+         If `weights_distribution` is :code:`(1, d)`, it is assumed that each sample is equally weighted according
          to the corresponding weight for its distribution.
-         Default: `weights_distribution` = An array of shape `(m, d)` with all elements equal to 1.
+         Default: An array of shape :code:`(m, d)` with all elements equal to :math:`1`.
         :param weights_moments: An list or array containing weights associated with matching the moments about the
          origin for each component.
          `weights_moments` is a list or array of shape `(2, d), where each weight corresponds to the weight
-         :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component `i`.
-         If `weights_moments` is `(1, d)`, it is assumed that moments of all order are equally weighted.
-         Default: `weights_moments` = [[1/(moment[0][i]^2)], [1/(moment[1][i]^2)]] for i = 1, 2, ..., d.
+         :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component :code:`i`.
+         If `weights_moments` is :code:`(1, d)`, it is assumed that moments of all order are equally weighted.
+         Default: :code:`weights_moments = [[1/(moment[0][i]^2)], [1/(moment[1][i]^2)]] for i = 1, 2, ..., d`.
         :param weights_correlation: A list or array containing weights associated with matching the correlation of the
-         random variables. `weights_correlation` is a list or array of shape `(d, d)` where each weight corresponds to
-         the weight :math:`w_R(i, j)` assigned for matching the correlation between component `i` and component `j`
-         Default: `weights_correlation` = `(d, d)` array with all elements equal to 1.
+         random variables. `weights_correlation` is a list or array of shape :code:`(d, d)` where each weight
+         corresponds to the weight :math:`w_R(i, j)` assigned for matching the correlation between component :code:`i`
+         and component :code:`j`
+         Default: :code:`weights_correlation = (d, d)` array with all elements equal to :math:`1`.
         :param properties: A list of booleans declaring the properties to be matched in the reduced order model.
 
-         `properties[0] = True` matches the marginal distributions
+         - :code:`properties[0] = True` matches the marginal distributions
 
-         `properties[1] = True` matches the mean values
+         - :code:`properties[1] = True` matches the mean values
 
-         `properties[2] = True` matches the mean square
+         - :code:`properties[2] = True` matches the mean square
 
-         `properties[3] = True` matches the correlation
+         - :code:`properties[3] = True` matches the correlation
 
         :param correlation: Correlation matrix between random variables.
 
@@ -125,31 +126,32 @@ class SROM:
 
         :param weights_errors: A list of weights associated with the error in distribution, moments and correlation.
          This corresponds to a list of the values :math:`a_{u}` in the objective function above.
-         Default: weights_errors = [1, 0.2, 0]
+         Default: weights_errors = :math:`[1, 0.2, 0]`
         :param weights_distribution: A list or array containing weights associated with matching the distribution at
          each sample value.
-         `weights_distribution` is an array or list of shape `(m, d)` where each weight corresponds to the weight
-         :math:`w_F(x_{k,i}; i)` assigned for matching the distribution of component `i` at sample point
+         `weights_distribution` is an array or list of shape :code:`(m, d)` where each weight corresponds to the weight
+         :math:`w_F(x_{k,i}; i)` assigned for matching the distribution of component :code:`i` at sample point
          :math:`x_{k,i}`.
-         If `weights_distribution` is `(1, d)`, it is assumed that each sample sample is equally weighted according
+         If `weights_distribution` is :code:`(1, d)`, it is assumed that each sample is equally weighted according
          to the corresponding weight for its distribution.
-         Default: `weights_distribution` = An array of shape `(m, d)` with all elements equal to 1.
+         Default: An array of shape :code:`(m, d)` with all elements equal to :math:`1`.
         :param weights_moments: An list or array containing weights associated with matching the moments about the
          origin for each component.
-         `weights_moments` is a list or array of shape `(2, d), where each weight corresponds to the weight
-         :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component `i`.
-         If `weights_moments` is `(1, d)`, it is assumed that moments of all order are equally weighted.
-         Default: `weights_moments` = [[1/(moment[0][i]^2)], [1/(moment[1][i]^2)]] for i = 1, 2, ..., d.
+         `weights_moments` is a list or array of shape :code:`(2, d)`, where each weight corresponds to the weight
+         :math:`w_{\mu}(r; i)` assigned for matching the moment of order :math:`r = 1, 2` for component :code:`i`.
+         If `weights_moments` is :code:`(1, d)`, it is assumed that moments of all order are equally weighted.
+         Default: :code:`weights_moments = [[1/(moment[0][i]^2)], [1/(moment[1][i]^2)]] for i = 1, 2, ..., d`.
         :param weights_correlation: A list or array containing weights associated with matching the correlation of the
          random variables.
-         `weights_correlation` is a list or array of shape `(d, d)` where each weight corresponds to the weight
-         :math:`w_R(i, j)` assigned for matching the correlation between component `i` and component `j`
-         Default: `weights_correlation` = `(d, d)` array with all elements equal to 1.
+         `weights_correlation` is a list or array of shape :code:`(d, d)` where each weight corresponds to the weight
+         :math:`w_R(i, j)` assigned for matching the correlation between component :code:`i` and component :code:`j`
+         Default: :code:`weights_correlation = (d, d)` array with all elements equal to :math:`1`.
         :param properties: A list of booleans declaring the properties to be matched in the reduced order model.
-         `properties[0] = True` matches the marginal distributions
-         `properties[1] = True` matches the mean values
-         `properties[2] = True` matches the mean square
-         `properties[3] = True` matches the correlation
+
+         - :code:`properties[0] = True` matches the marginal distributions
+         - :code:`properties[1] = True` matches the mean values
+         - :code:`properties[2] = True` matches the mean square
+         - :code:`properties[3] = True` matches the correlation
         """
         from scipy import optimize
 

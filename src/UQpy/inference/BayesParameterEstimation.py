@@ -27,16 +27,22 @@ class BayesParameterEstimation:
         :py:mod:`.sampling` module.
 
         :param inference_model: The inference model that defines the likelihood function.
-        :param data: Available data, `ndarray` of shape consistent with log-likelihood function in
+        :param data: Available data, :class:`numpy.ndarray` of shape consistent with log-likelihood function in
          :class:`.InferenceModel`
         :param sampling_class: Class instance, must be a subclass of :class:`.MCMC` or :class:`.ImportanceSampling`.
-        :param samples_number: Number of samples used in MCMC/IS, see :meth:`run` method.
-        :param samples_number_per_chain: Number of samples per chain used in mcmc, see `run` method.
+        :param samples_number: Number of samples used in :class:`.MCMC`/:class:`ImportanceSampling`, see
+         :meth:`run` method.
+        :param samples_number_per_chain: Number of samples per chain used in :class:`.MCMC`, see :py:meth:`run` method.
         """
         self.inference_model = inference_model
         self.data = data
         self.logger = logging.getLogger(__name__)
-        self.sampler = sampling_class
+        self.sampler: Union[MCMC, ImportanceSampling] = sampling_class
+        """Sampling method object, contains e.g. the posterior samples.
+
+        This object is created along with the :class:`.BayesParameterEstimation` object, and its run method is called 
+        whenever the :py:meth:`run` method of the :class:`.BayesParameterEstimation` is called.
+        """
         self._method = MCMC if isinstance(self.sampler, MCMC) else ImportanceSampling
         if (samples_number is not None) or (samples_number_per_chain is not None):
             self.run(samples_number=samples_number, samples_number_per_chain=samples_number_per_chain,)

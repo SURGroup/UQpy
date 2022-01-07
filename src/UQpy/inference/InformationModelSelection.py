@@ -29,15 +29,16 @@ class InformationModelSelection:
         """
         Perform model selection using information theoretic criteria.
 
-        Supported criteria are BIC, AIC (default), AICc. This class leverages the :class:`.MLE` class for maximum
-        likelihood estimation, thus inputs to :class:`.MLE` can also be provided to :class:`InformationModelSelection`
-        , as lists of length equal to the number of models.
+        Supported criteria are :math:`BIC, AIC` (default), :math:`AICc`. This class leverages the :class:`.MLE` class
+        for maximum likelihood estimation, thus inputs to :class:`.MLE` can also be provided to
+        :class:`InformationModelSelection`, as lists of length equal to the number of models.
 
         :param candidate_models: Candidate models
         :param data: Available data
-        :param optimizer:
-        :param criterion: Criterion to be used ('AIC', 'BIC', 'AICc'). Default is 'AIC'
-        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
+        :param optimizer: This parameter takes as input an object that implements the :class:`Optimizer` class.
+         Default is the :class:`.Minimize` which utilizes the :class:`scipy.optimize.minimize` method.
+        :param criterion: Criterion to be used :math:`(AIC, BIC, AICc)`. Default is :math:`AIC`
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.
         :param optimizations_number: Number of iterations for the maximization procedure - see :class:`.MLE`
         :param initial_guess: Starting points for optimization - see :class:`.MLE`
         """
@@ -93,9 +94,9 @@ class InformationModelSelection:
         log-likelihood, then computes the criterion value and probability for each model.
 
         :param optimizations_number: Number of iterations that the optimization is run, starting at random initial
-         guesses. It is only used if `x0` is not provided. Default is 1. See :class:`.MLEstimation` class.
-        :param initial_guess: Starting point(s) for optimization for all models. Default is `None`. If not provided, see
-         `optimizations_number`. See :class:`.MLE` class.
+         guesses. It is only used if `initial_guess` is not provided. Default is 1. See :class:`.MLEstimation` class.
+        :param initial_guess: Starting point(s) for optimization for all models. Default is :any:`None`. If not
+         provided, see `optimizations_number`. See :class:`.MLE` class.
         """
         initial_guess, optimizations_number = self._check_input_data(
             initial_guess, optimizations_number

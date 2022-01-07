@@ -22,10 +22,10 @@ class KarhunenLoeveExpansion:
          The :meth:`run` method is automatically called if `samples_number` is provided. If `samples_number` is not
          provided, then the :class:`.KarhunenLoeveExpansion` object is created but samples are not generated.
         :param correlation_function: The correlation function of the stochastic process of size
-         (`number_time_intervals`, `number_time_intervals`)
+         :code:`(number_time_intervals, number_time_intervals)`
         :param time_interval: The length of time discretization.
         :param threshold: The threshold number of eigenvalues to be used in the expansion.
-        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is None.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.
 
         """
         self.correlation_function = correlation_function
@@ -70,11 +70,11 @@ class KarhunenLoeveExpansion:
         """
         Execute the random sampling in the :class:`.KarhunenLoeveExpansion` class.
 
-        The :meth:`run` method is the function that performs random sampling in the :class:`.KarhunenLoeveExpansion`` class. If `samples_number` is
-        provided when the :class:`.KarhunenLoeveExpansion` object is defined, the :meth:`run` method is automatically called. The
-        user may also call the :meth:`run` method directly to generate samples. The :meth:`run`` method of the
-        :class:`.KarhunenLoeveExpansion` class can be invoked many times and each time the generated samples are appended to
-        the existing samples.
+        The :meth:`run` method is the function that performs random sampling in the :class:`.KarhunenLoeveExpansion``
+        class. If `samples_number` is provided when the :class:`.KarhunenLoeveExpansion` object is defined, the
+        :meth:`run` method is automatically called. The user may also call the :meth:`run` method directly to generate
+        samples. The :meth:`run`` method of the :class:`.KarhunenLoeveExpansion` class can be invoked many times and
+        each time the generated samples are appended to the existing samples.
 
         :param samples_number: Number of samples of the stochastic process to be simulated.
          If the :meth:`run` method is invoked multiple times, the newly generated samples will be appended to the

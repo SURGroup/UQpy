@@ -22,12 +22,12 @@ class SubsetSimulation:
         use one of several mcmc algorithms to draw conditional samples.
 
         :param runmodel_object: The computational model. It should be of type `RunModel` (see :class:`.RunModel` class).
-        :param mcmc_input: Specifies the mcmc algorithm. Must be a child class of the :class:`.SamplingInput` parent class.
+        :param sampling: Specifies the :class:`MCMC` algorithm.
         :param samples_init: A set of samples from the specified probability distribution. These are the samples from
          the original distribution. They are not conditional samples. The samples must be an array of size
-         `samples_number_per_subset x dimension`.
-         If `samples_init` is not specified, the Subset_Simulation class will use the mcmc class created with the aid of
-         `mcmc_input` to draw the initial samples.
+         :code:`samples_number_per_subset x dimension`.
+         If `samples_init` is not specified, the :class:`.SubsetSimulation` class will use the :class:`.MCMC` class
+         created with the aid of `sampling` to draw the initial samples.
         :param conditional_probability: Conditional probability for each conditional level.
         :param samples_number_per_subset: Number of samples to draw in each conditional level.
         :param max_level: Maximum number of allowable conditional levels.
@@ -69,8 +69,8 @@ class SubsetSimulation:
         """
         Execute subset simulation
 
-        This is an instance method that runs subset simulation. It is automatically called when the SubsetSimulation
-        class is instantiated.
+        This is an instance method that runs subset simulation. It is automatically called when the
+        :class:`.SubsetSimulation` class is instantiated.
         """
         step = 0
         n_keep = int(self.conditional_probability * self.samples_number_per_subset)

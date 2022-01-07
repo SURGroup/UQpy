@@ -31,23 +31,25 @@ class Kriging(Surrogate):
         points.
 
         :param regression_model: `regression_model` specifies and evaluates the basis functions and their coefficients,
-         which defines the trend of the model. Built-in options: Constant, Linear, Quadratic
-        :param correlation_model: `corr_model` specifies and evaluates the correlation function.
-         Built-in options: Exponential, Gaussian, Linear, Spherical, Cubic, Spline
+         which defines the trend of the model. Built-in options: :class:`Constant`, :class:`Linear`, :class:`Quadratic`
+        :param correlation_model: `correlation_model` specifies and evaluates the correlation function.
+         Built-in options: :class:`Exponential`, :class:`Gaussian`, :class:`Linear`, :class:`Spherical`,
+         :class:`Cubic`, :class:`Spline`
         :param correlation_model_parameters: List or array of initial values for the correlation model
          hyperparameters/scale parameters.
         :param bounds: Bounds on the hyperparameters used to solve optimization problem to estimate maximum likelihood
          estimator. This should be a closed bound.
-         Default: [0.001, 10**7] for each hyperparameter.
-        :param optimize: Indicator to solve MLE problem or not. If 'True' corr_model_params will be used as initial
-         solution for optimization problem. Otherwise, corr_model_params will be directly use as the hyperparamters.
-         Default: True.
+         Default: :math:`[0.001, 10**7]` for each hyperparameter.
+        :param optimize: Indicator to solve MLE problem or not. If :any:'True' corr_model_params will be used as initial
+         solution for optimization problem. Otherwise, correlation_model_parameters will be directly use as the
+         hyperparamters.
+         Default: :any:`True`.
         :param optimizations_number: Number of times MLE optimization problem is to be solved with a random starting
-         point. Default: 1.
+         point. Default: :math:`1`.
         :param normalize: Boolean flag used in case data normalization is required.
-        :param optimizer: String of the :class:`scipy.stats` optimizer used during the Kriging surrogate.
-        Default: 'L-BFGS-B'.
-        :param random_state: Random seed used to initialize the pseudo-random number generator. If an integer is
+        :param optimizer: Object of the :class:`Optimizer` optimizer used during the Kriging surrogate.
+        Default: :class:'.MinimizeOptimizer'.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
          provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
          object itself can be passed directly.
         """
@@ -97,11 +99,11 @@ class Kriging(Surrogate):
         The user can run this method multiple time after initiating the :class:`.Kriging` class object.
 
         This method updates the samples and parameters of the :class:`.Kriging` object. This method uses
-        `corr_model_params` from previous run as the starting point for MLE problem unless user provides a new starting
-        point.
+        `correlation_model_parameters` from previous run as the starting point for MLE problem unless user provides a
+        new starting point.
 
-        :param samples: `ndarray` containing the training points.
-        :param values: `ndarray` containing the model evaluations at the training points.
+        :param samples: :class:`numpy.ndarray` containing the training points.
+        :param values: :class:`numpy.ndarray` containing the model evaluations at the training points.
         :param optimizations_number: number of optimization iterations
         :param correlation_model_parameters: List or array of initial values for the correlation model
          hyperparameters/scale parameters.
