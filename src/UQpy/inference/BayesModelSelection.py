@@ -24,8 +24,8 @@ class BayesModelSelection:
             sampling_class: list[Union[ImportanceSampling, MCMC]],
             prior_probabilities=None,
             method_evidence_computation: MethodEvidence = MethodEvidence.HARMONIC_MEAN,
-            samples_number: list[PositiveInteger] = None,
-            samples_per_chain_number: list[PositiveInteger] = None,
+            nsamples: list[PositiveInteger] = None,
+            nsamples_per_chain: list[PositiveInteger] = None,
     ):
         """
         Perform model selection via Bayesian inference, i.e., compute model posterior probabilities given data.
@@ -40,8 +40,8 @@ class BayesModelSelection:
          class
         :param prior_probabilities: Prior probabilities of each model, default is :code:`[1/nmodels, ] * nmodels`
         :param method_evidence_computation: as of v3, only the harmonic mean method is supported
-        :param samples_number: Number of samples used in :class:`.MCMC`/:class:`.ImportanceSampling`, for each model
-        :param samples_per_chain_number: Number of samples per chain used in :class:`.MCMC`, for each model
+        :param nsamples: Number of samples used in :class:`.MCMC`/:class:`.ImportanceSampling`, for each model
+        :param nsamples_per_chain: Number of samples per chain used in :class:`.MCMC`, for each model
         """
         self.candidate_models = candidate_models
         self.models_number = len(candidate_models)
@@ -67,9 +67,9 @@ class BayesModelSelection:
         """Posterior probability for all models"""
 
         # Run the model selection procedure
-        if samples_number is not None or samples_per_chain_number is not None:
-            self.run(samples_number=samples_number,
-                     samples_number_per_chain=samples_per_chain_number,)
+        if nsamples is not None or nsamples_per_chain is not None:
+            self.run(nsamples=nsamples,
+                     nsamples_per_chain=nsamples_per_chain,)
 
     def _create_bayes_estimators(self, candidate_models, sampling_classes):
         if len(candidate_models) != len(sampling_classes):
@@ -90,29 +90,29 @@ class BayesModelSelection:
 
     @beartype
     def run(self,
-            samples_number: Union[None, list[PositiveInteger]] = None,
-            samples_number_per_chain: Union[None, list[PositiveInteger]] = None,):
+            nsamples: Union[None, list[PositiveInteger]] = None,
+            nsamples_per_chain: Union[None, list[PositiveInteger]] = None,):
         """
         Run the Bayesian model selection procedure, i.e., compute model posterior probabilities.
 
         This function calls the :py:meth:`run_estimation` method of the :class:`.BayesParameterEstimation` object for
         each model to sample from the parameter posterior probability, then computes the model evidence and model
         posterior probability. This function updates attributes `bayes_estimators`, `evidences` and `probabilities`. If
-        `samples_number` or `samples_number_per_chain` are given when creating the object, this method is called
+        `nsamples` or `nsamples_per_chain` are given when creating the object, this method is called
         directly when the object is created. It can also be called separately.
 
-        :param samples_number: umber of samples used in :class:`.MCMC`/:class:`.ImportanceSampling``, for each model
-        :param samples_number_per_chain: Number of samples per chain used in :class:`.MCMC`, for each model
+        :param nsamples: umber of samples used in :class:`.MCMC`/:class:`.ImportanceSampling``, for each model
+        :param nsamples_per_chain: Number of samples per chain used in :class:`.MCMC`, for each model
         """
         self.logger.info("UQpy: Running Bayesian Model Selection.")
         # Perform mcmc for all candidate models
         for i, (inference_model, bayes_estimator) in enumerate(
                 zip(self.candidate_models, self.bayes_estimators)):
             self.logger.info("UQpy: Running mcmc for model " + inference_model.name)
-            if samples_number is not None:
-                bayes_estimator.run(samples_number=samples_number[i])
-            elif samples_number_per_chain is not None:
-                bayes_estimator.run(samples_number_per_chain=samples_number_per_chain[i])
+            if nsamples is not None:
+                bayes_estimator.run(nsamples=nsamples[i])
+            elif nsamples_per_chain is not None:
+                bayes_estimator.run(nsamples_per_chain=nsamples_per_chain[i])
             else:
                 raise ValueError(
                     "UQpy: either nsamples or nsamples_per_chain should be non None")

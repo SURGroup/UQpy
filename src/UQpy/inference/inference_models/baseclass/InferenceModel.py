@@ -196,7 +196,7 @@ def create_for_inference(cls,
                 "UQpy: A prior with a rvs method must be provided for the InferenceModel"
                 " or a seed must be provided for MCMC.")
         else:
-            kwargs['seed'] = inference_model.prior.rvs(nsamples=kwargs.get('chains_number', None),
+            kwargs['seed'] = inference_model.prior.rvs(nsamples=kwargs.get('n_chains', None),
                                                        random_state=kwargs.get('random_state', None), ).tolist()
     kwargs['log_pdf_target'] = inference_model.evaluate_log_posterior
     kwargs['args_target'] = (data,)

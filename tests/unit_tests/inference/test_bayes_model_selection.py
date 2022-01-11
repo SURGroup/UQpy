@@ -44,7 +44,7 @@ def test_models():
                                     data=data_ex1,
                                     sampling_class=[mh1, mh2, mh3],
                                     prior_probabilities=[1. / 3., 1. / 3., 1. / 3.],
-                                    samples_number=[2000, 2000, 2000])
+                                    nsamples=[2000, 2000, 2000])
 
     selection.sort_models()
     assert selection.probabilities[0] == 1.0

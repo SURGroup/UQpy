@@ -1,3 +1,4 @@
+from UQpy import Centered, MaxiMin
 from UQpy.sampling.stratified_sampling.LatinHypercubeSampling import *
 from UQpy.distributions.collection.Uniform import *
 from UQpy.sampling.stratified_sampling.latin_hypercube_criteria.MinCorrelation import *

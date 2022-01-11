@@ -37,7 +37,7 @@ def test_probability_model_importance_sampling():
     bayes_estimator = BayesParameterEstimation(sampling_class=sampling,
                                                inference_model=candidate_model,
                                                data=data,
-                                               samples_number=10000)
+                                               nsamples=10000)
     bayes_estimator.sampler.resample()
     s_posterior = bayes_estimator.sampler.unweighted_samples
 
@@ -65,7 +65,7 @@ def test_probability_model_mcmc():
     bayes_estimator = BayesParameterEstimation(sampling_class=sampling,
                                                inference_model=candidate_model,
                                                data=data,
-                                               samples_number=5)
+                                               nsamples=5)
     s = bayes_estimator.sampler.samples
 
     assert s[0, 1] == 3.5196936384257835

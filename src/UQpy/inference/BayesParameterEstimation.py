@@ -16,8 +16,8 @@ class BayesParameterEstimation:
         inference_model: InferenceModel,
         data,
         sampling_class: Union[MCMC, ImportanceSampling] = None,
-        samples_number: Union[None, int] = None,
-        samples_number_per_chain: Union[None, int] = None,
+        nsamples: Union[None, int] = None,
+        nsamples_per_chain: Union[None, int] = None,
     ):
         """
         Estimate the parameter posterior density given some data.
@@ -30,9 +30,9 @@ class BayesParameterEstimation:
         :param data: Available data, :class:`numpy.ndarray` of shape consistent with log-likelihood function in
          :class:`.InferenceModel`
         :param sampling_class: Class instance, must be a subclass of :class:`.MCMC` or :class:`.ImportanceSampling`.
-        :param samples_number: Number of samples used in :class:`.MCMC`/:class:`ImportanceSampling`, see
+        :param nsamples: Number of samples used in :class:`.MCMC`/:class:`ImportanceSampling`, see
          :meth:`run` method.
-        :param samples_number_per_chain: Number of samples per chain used in :class:`.MCMC`, see :py:meth:`run` method.
+        :param nsamples_per_chain: Number of samples per chain used in :class:`.MCMC`, see :py:meth:`run` method.
         """
         self.inference_model = inference_model
         self.data = data
@@ -44,28 +44,28 @@ class BayesParameterEstimation:
         whenever the :py:meth:`run` method of the :class:`.BayesParameterEstimation` is called.
         """
         self._method = MCMC if isinstance(self.sampler, MCMC) else ImportanceSampling
-        if (samples_number is not None) or (samples_number_per_chain is not None):
-            self.run(samples_number=samples_number, samples_number_per_chain=samples_number_per_chain,)
+        if (nsamples is not None) or (nsamples_per_chain is not None):
+            self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain,)
 
     sampling_actions = {
         MCMC: lambda sampler, nsamples, nsamples_per_chain: sampler.run(
-            samples_number=nsamples, samples_number_per_chain=nsamples_per_chain),
-        ImportanceSampling: lambda sampler, nsamples, nsamples_per_chain: sampler.run(samples_number=nsamples),
+            nsamples=nsamples, nsamples_per_chain=nsamples_per_chain),
+        ImportanceSampling: lambda sampler, nsamples, nsamples_per_chain: sampler.run(nsamples=nsamples),
     }
 
     @beartype
-    def run(self, samples_number: PositiveInteger = None, samples_number_per_chain=None):
+    def run(self, nsamples: PositiveInteger = None, nsamples_per_chain=None):
         """
         Run the Bayesian inference procedure, i.e., sample from the parameter posterior distribution.
 
         This function calls the :meth:`run` method of the `sampler` attribute to generate samples from the parameter
         posterior distribution.
 
-        :param samples_number: Number of samples used in :class:`.MCMC`/:class:`.ImportanceSampling`
-        :param samples_number_per_chain: Number of samples per chain used in :class:`.MCMC`
+        :param nsamples: Number of samples used in :class:`.MCMC`/:class:`.ImportanceSampling`
+        :param nsamples_per_chain: Number of samples per chain used in :class:`.MCMC`
         """
 
-        BayesParameterEstimation.sampling_actions[self._method](self.sampler, samples_number, samples_number_per_chain)
+        BayesParameterEstimation.sampling_actions[self._method](self.sampler, nsamples, nsamples_per_chain)
 
         self.logger.info("UQpy: Parameter estimation with " + self.sampler.__class__.__name__
                          + " completed successfully!")

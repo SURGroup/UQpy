@@ -2,10 +2,10 @@ import pytest
 from beartype.roar import BeartypeCallHintPepParamException
 
 from UQpy.optimization.MinimizeOptimizer import MinimizeOptimizer
-from UQpy.sampling.refined_stratified_sampling.GradientEnhancedRefinement import GradientEnhancedRefinement
+from UQpy.sampling.stratified_sampling.refinement.GradientEnhancedRefinement import GradientEnhancedRefinement
 from UQpy.distributions.collection.Uniform import Uniform
 from UQpy.sampling.stratified_sampling.RefinedStratifiedSampling import *
-from UQpy.sampling.refined_stratified_sampling.SimpleRefinement import *
+from UQpy.sampling.stratified_sampling.refinement.RandomRefinement import *
 from UQpy.sampling.stratified_sampling.strata.VoronoiStrata import *
 from UQpy.RunModel import *
 from UQpy.surrogates.kriging.Kriging import Kriging
@@ -15,10 +15,10 @@ def test_rss_simple_rectangular():
     marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
     strata = RectangularStrata(strata_number=[4, 4])
     x = TrueStratifiedSampling(distributions=marginals, strata_object=strata,
-                               samples_per_stratum_number=1, random_state=1)
-    algorithm = SimpleRefinement(strata)
+                               nsamples_per_stratum=1, random_state=1)
+    algorithm = RandomRefinement(strata)
     y = RefinedStratifiedSampling(stratified_sampling=x,
-                                  samples_number=18,
+                                  nsamples=18,
                                   samples_per_iteration=2,
                                   refinement_algorithm=algorithm,
                                   random_state=2)
@@ -32,10 +32,10 @@ def test_rss_simple_voronoi():
     marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
     strata = VoronoiStrata(seeds_number=16, dimension=2, random_state=1)
     x = TrueStratifiedSampling(distributions=marginals, strata_object=strata,
-                               samples_per_stratum_number=1, random_state=1)
-    algorithm = SimpleRefinement(strata)
+                               nsamples_per_stratum=1, random_state=1)
+    algorithm = RandomRefinement(strata)
     y = RefinedStratifiedSampling(stratified_sampling=x,
-                                  samples_number=18,
+                                  nsamples=18,
                                   samples_per_iteration=2,
                                   refinement_algorithm=algorithm,
                                   random_state=2)
@@ -51,9 +51,9 @@ def test_rect_rss():
     """
     marginals = [Uniform(loc=0., scale=2.), Uniform(loc=0., scale=1.)]
     strata = RectangularStrata(strata_number=[2, 2], random_state=1)
-    x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, samples_per_stratum_number=1, )
-    y = RefinedStratifiedSampling(stratified_sampling=x, samples_number=6, samples_per_iteration=2, random_state=2,
-                                  refinement_algorithm=SimpleRefinement(strata=strata))
+    x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1, )
+    y = RefinedStratifiedSampling(stratified_sampling=x, nsamples=6, samples_per_iteration=2, random_state=2,
+                                  refinement_algorithm=RandomRefinement(strata=strata))
     assert np.allclose(y.samples, np.array([[0.417022, 0.36016225], [1.00011437, 0.15116629],
                                             [0.14675589, 0.5461693], [1.18626021, 0.67278036],
                                             [0.77483124, 0.7176612], [1.7101839, 0.66516741]]))
@@ -68,7 +68,7 @@ def test_rect_gerss():
     """
     marginals = [Uniform(loc=0., scale=2.), Uniform(loc=0., scale=1.)]
     strata = RectangularStrata(strata_number=[2, 2], random_state=1)
-    x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, samples_per_stratum_number=1)
+    x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1)
     rmodel = RunModel(model_script='python_model_function.py', vec=False)
     from UQpy.surrogates.kriging.regression_models import Linear
     from UQpy.surrogates.kriging.correlation_models import Exponential
@@ -79,7 +79,7 @@ def test_rect_gerss():
     refinement = GradientEnhancedRefinement(strata=x.strata_object, runmodel_object=rmodel,
                                             surrogate=K, nearest_points_number=4)
     z = RefinedStratifiedSampling(stratified_sampling=x, random_state=2, refinement_algorithm=refinement)
-    z.run(samples_number=6)
+    z.run(nsamples=6)
     assert np.allclose(z.samples, np.array([[0.417022, 0.36016225], [1.00011437, 0.15116629],
                                             [0.14675589, 0.5461693], [1.18626021, 0.67278036],
                                             [1.59254104, 0.96577043], [0.97386531, 0.24237455]]))
@@ -94,9 +94,9 @@ def test_vor_rss():
     """
     marginals = [Uniform(loc=0., scale=2.), Uniform(loc=0., scale=1.)]
     strata_vor = VoronoiStrata(seeds_number=4, dimension=2, random_state=10)
-    x_vor = TrueStratifiedSampling(distributions=marginals, strata_object=strata_vor, samples_per_stratum_number=1, )
-    y_vor = RefinedStratifiedSampling(stratified_sampling=x_vor, samples_number=6, samples_per_iteration=2,
-                                      refinement_algorithm=SimpleRefinement(strata=x_vor.strata_object))
+    x_vor = TrueStratifiedSampling(distributions=marginals, strata_object=strata_vor, nsamples_per_stratum=1, )
+    y_vor = RefinedStratifiedSampling(stratified_sampling=x_vor, nsamples=6, samples_per_iteration=2,
+                                      refinement_algorithm=RandomRefinement(strata=x_vor.strata_object))
     assert np.allclose(y_vor.samples, np.array([[1.78345908, 0.01640854], [1.46201137, 0.70862104],
                                                 [0.4021338, 0.05290083], [0.1062376, 0.88958226],
                                                 [0.61246269, 0.47160095], [0.85778034, 0.72123075]]))
@@ -112,11 +112,12 @@ def test_vor_gerss():
     """
     marginals = [Uniform(loc=0., scale=2.), Uniform(loc=0., scale=1.)]
     strata_vor = VoronoiStrata(seeds_number=4, dimension=2, random_state=10)
-    x_vor = TrueStratifiedSampling(distributions=marginals, strata_object=strata_vor, samples_per_stratum_number=1, )
+    x_vor = TrueStratifiedSampling(distributions=marginals, strata_object=strata_vor, nsamples_per_stratum=1, )
     from UQpy.surrogates.kriging.regression_models.LinearRegression import Linear
     from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import Exponential
     rmodel_ = RunModel(model_script='python_model_function.py', vec=False)
     K_ = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimizations_number=20,
+                 optimizer=MinimizeOptimizer('l-bfgs-b'),
                  correlation_model_parameters=[1, 1])
 
     K_.fit(samples=x_vor.samples, values=rmodel_.qoi_list)
@@ -139,10 +140,10 @@ def test_rss_random_state():
     """
     marginals = [Uniform(loc=0., scale=2.), Uniform(loc=0., scale=1.)]
     strata = RectangularStrata(strata_number=[2, 2])
-    x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, samples_per_stratum_number=1, random_state=1)
+    x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1, random_state=1)
     with pytest.raises(BeartypeCallHintPepParamException):
         RefinedStratifiedSampling(stratified_sampling=x, samples_number=6, samples_per_iteration=2, random_state='abc',
-                                  refinement_algorithm=SimpleRefinement(x.strata_object))
+                                  refinement_algorithm=RandomRefinement(x.strata_object))
 
 
 def test_rss_runmodel_object():
@@ -151,7 +152,7 @@ def test_rss_runmodel_object():
     """
     marginals = [Uniform(loc=0., scale=2.), Uniform(loc=0., scale=1.)]
     strata = RectangularStrata(strata_number=[2, 2])
-    x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, samples_per_stratum_number=1, random_state=1)
+    x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1, random_state=1)
     from UQpy.surrogates.kriging.regression_models import Linear
     from UQpy.surrogates.kriging.correlation_models import Exponential
 
@@ -172,12 +173,12 @@ def test_rss_kriging_object():
     """
     marginals = [Uniform(loc=0., scale=2.), Uniform(loc=0., scale=1.)]
     strata = RectangularStrata(strata_number=[2, 2])
-    x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, samples_per_stratum_number=1, random_state=1)
+    x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1, random_state=1)
     rmodel_ = RunModel(model_script='python_model_function.py', vec=False)
     with pytest.raises(BeartypeCallHintPepParamException):
         refinement = GradientEnhancedRefinement(strata=x.strata_object, runmodel_object=rmodel_,
                                                 surrogate="abc")
-        RefinedStratifiedSampling(stratified_sampling=x, samples_number=6, samples_per_iteration=2,
+        RefinedStratifiedSampling(stratified_sampling=x, nsamples=6, samples_per_iteration=2,
                                   refinement_algorithm=refinement)
 
 
@@ -187,7 +188,7 @@ def test_nsamples():
     """
     marginals = [Uniform(loc=0., scale=2.), Uniform(loc=0., scale=1.)]
     strata = RectangularStrata(strata_number=[2, 2])
-    x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, samples_per_stratum_number=1, random_state=1)
+    x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1, random_state=1)
     with pytest.raises(BeartypeCallHintPepParamException):
-        RefinedStratifiedSampling(stratified_sampling=x, samples_number='a', samples_per_iteration=2,
-                                  refinement_algorithm=SimpleRefinement(x.strata_object))
+        RefinedStratifiedSampling(stratified_sampling=x, nsamples='a', samples_per_iteration=2,
+                                  refinement_algorithm=RandomRefinement(x.strata_object))

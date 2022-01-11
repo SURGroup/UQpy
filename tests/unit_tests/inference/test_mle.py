@@ -1,6 +1,6 @@
 import numpy as np
 
-from UQpy.inference.inference_models.optimization.MinimizeOptimizer import MinimizeOptimizer
+from UQpy.optimization.MinimizeOptimizer import MinimizeOptimizer
 from UQpy.distributions.collection import Normal, JointCopula, JointIndependent
 from UQpy.distributions.copulas.Gumbel import Gumbel
 from UQpy.inference.inference_models.DistributionModel import DistributionModel

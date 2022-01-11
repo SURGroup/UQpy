@@ -49,33 +49,33 @@ def test_bayes_mcmc():
     mh1 = MetropolisHastings.create_for_inference(inference_model=candidate_model_no_prior, data=data,
                                                   jump=2, burn_length=5, seed=[1., ], random_state=123)
     bayes_estimator = BayesParameterEstimation(sampling_class=mh1, inference_model=candidate_model_no_prior,
-                                               data=data, samples_number=50)
+                                               data=data, nsamples=50)
     assert np.round(np.mean(bayes_estimator.sampler.samples), 3) == 1.275
 
 
 def test_bayes_is():
     is1 = ImportanceSampling.create_for_inference(candidate_model, data, random_state=123)
     bayes_estimator = BayesParameterEstimation(sampling_class=is1, inference_model=candidate_model,
-                                               data=data, samples_number=100)
+                                               data=data, nsamples=100)
     assert np.round(np.mean(bayes_estimator.sampler.samples), 3) == 1.873
 
 
 def test_bayes_selection():
     mh1 = MetropolisHastings.create_for_inference(inference_model=candidate_model, data=data,
-                                                  random_state=123, chains_number=2)
+                                                  random_state=123, n_chains=2)
     mh2 = MetropolisHastings.create_for_inference(inference_model=candidate_model2, data=data,
-                                                  random_state=123, chains_number=2)
+                                                  random_state=123, n_chains=2)
     selection = BayesModelSelection(data=data, candidate_models=[candidate_model, candidate_model2],
-                                    samples_number=[50, 50], sampling_class=[mh1, mh2])
+                                    nsamples=[50, 50], sampling_class=[mh1, mh2])
     assert round(selection.probabilities[0], 3) == 1.000
 
 
 def test_bayes_selection2():
     mh1 = MetropolisHastings.create_for_inference(inference_model=candidate_model, data=data,
-                                                  random_state=123, chains_number=2)
+                                                  random_state=123, n_chains=2)
     mh2 = MetropolisHastings.create_for_inference(inference_model=candidate_model2, data=data,
-                                                  random_state=123, chains_number=2)
+                                                  random_state=123, n_chains=2)
     selection = BayesModelSelection(data=data, candidate_models=[candidate_model, candidate_model2],
-                                    samples_per_chain_number=[25, 25], sampling_class=[mh1, mh2])
+                                    nsamples_per_chain=[25, 25], sampling_class=[mh1, mh2])
     selection.sort_models()
     assert round(selection.probabilities[0], 3) == 1.000
