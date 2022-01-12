@@ -73,7 +73,7 @@ def test_rect_gerss():
     from UQpy.surrogates.kriging.regression_models import Linear
     from UQpy.surrogates.kriging.correlation_models import Exponential
 
-    K = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimizations_number=20,
+    K = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimizations_number=20, random_state=0,
                 correlation_model_parameters=[1, 1], optimizer=MinimizeOptimizer('l-bfgs-b'),)
     K.fit(samples=x.samples, values=rmodel.qoi_list)
     refinement = GradientEnhancedRefinement(strata=x.strata_object, runmodel_object=rmodel,
@@ -82,10 +82,10 @@ def test_rect_gerss():
     z.run(nsamples=6)
     assert np.allclose(z.samples, np.array([[0.417022, 0.36016225], [1.00011437, 0.15116629],
                                             [0.14675589, 0.5461693], [1.18626021, 0.67278036],
-                                            [1.59254104, 0.96577043], [0.97386531, 0.24237455]]))
+                                            [1.59254104, 0.96577043], [1.97386531, 0.24237455]]))
     assert np.allclose(z.samplesU01, np.array([[0.208511, 0.36016225], [0.50005719, 0.15116629],
                                                [0.07337795, 0.5461693], [0.59313011, 0.67278036],
-                                               [0.79627052, 0.96577043], [0.48693265, 0.24237455]]))
+                                               [0.79627052, 0.96577043], [0.98693265, 0.24237455]]))
 
 
 def test_vor_rss():
@@ -117,11 +117,11 @@ def test_vor_gerss():
     from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import Exponential
     rmodel_ = RunModel(model_script='python_model_function.py', vec=False)
     K_ = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimizations_number=20,
-                 optimizer=MinimizeOptimizer('l-bfgs-b'),
+                 optimizer=MinimizeOptimizer('l-bfgs-b'), random_state=0,
                  correlation_model_parameters=[1, 1])
 
     K_.fit(samples=x_vor.samples, values=rmodel_.qoi_list)
-    z_vor = RefinedStratifiedSampling(stratified_sampling=x_vor, samples_number=6, random_state=x_vor.random_state,
+    z_vor = RefinedStratifiedSampling(stratified_sampling=x_vor, nsamples=6, random_state=x_vor.random_state,
                                       refinement_algorithm=GradientEnhancedRefinement(strata=x_vor.strata_object,
                                                                                       runmodel_object=rmodel_,
                                                                                       surrogate=K_,
@@ -175,7 +175,7 @@ def test_rss_kriging_object():
     strata = RectangularStrata(strata_number=[2, 2])
     x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1, random_state=1)
     rmodel_ = RunModel(model_script='python_model_function.py', vec=False)
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(NotImplementedError):
         refinement = GradientEnhancedRefinement(strata=x.strata_object, runmodel_object=rmodel_,
                                                 surrogate="abc")
         RefinedStratifiedSampling(stratified_sampling=x, nsamples=6, samples_per_iteration=2,

@@ -119,22 +119,16 @@ class SubsetSimulation:
 
             # Unpack the attributes
 
-            self.mcmc_objects.append(self._sampling_class(self._mcmc_input))
+            self.mcmc_objects.append(copy.deepcopy(self._sampling_class))
 
             # Set the number of samples to propagate each chain (n_prop) in the conditional level
-            n_prop_test = (
-                self.samples_number_per_subset / self.mcmc_objects[step].chains_number
-            )
+            n_prop_test = (self.samples_number_per_subset / self.mcmc_objects[step].n_chains)
             if n_prop_test.is_integer():
-                n_prop = (
-                    self.samples_number_per_subset
-                    // self.mcmc_objects[step].chains_number
-                )
+                n_prop = (self.samples_number_per_subset // self.mcmc_objects[step].n_chains)
             else:
                 raise AttributeError(
                     "UQpy: The number of samples per subset (nsamples_per_ss) must be an integer multiple of "
-                    "the number of mcmc chains."
-                )
+                    "the number of mcmc chains.")
 
             # Propagate each chain n_prop times and evaluate the model to accept or reject.
             for i in range(n_prop - 1):

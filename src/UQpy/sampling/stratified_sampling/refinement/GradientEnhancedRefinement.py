@@ -45,7 +45,11 @@ class GradientEnhancedRefinement(Refinement):
         self.qoi_name = qoi_name
         self.strata = strata
         self.dy_dx = 0
-        self.surrogate = surrogate
+        if surrogate is not None:
+            if hasattr(surrogate, 'fit') and hasattr(surrogate, 'predict'):
+                self.surrogate = surrogate
+            else:
+                raise NotImplementedError("UQpy Error: surrogate must have 'fit' and 'predict' methods.")
 
     def update_strata(self, samplesU01):
         if isinstance(self.strata, VoronoiStrata):
@@ -83,7 +87,7 @@ class GradientEnhancedRefinement(Refinement):
         bins2break = self.identify_bins(
             strata_metrics=strata_metrics,
             points_to_add=points_to_add,
-            random_state=random_state,)
+            random_state=random_state)
 
         new_points = self.strata.update_strata_and_generate_samples(
             dimension, points_to_add, bins2break, samples_u01, random_state)

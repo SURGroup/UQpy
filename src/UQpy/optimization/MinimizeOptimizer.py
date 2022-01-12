@@ -21,9 +21,16 @@ class MinimizeOptimizer(Optimizer):
             self.logger.warning("The selected optimizer method does not support bounds and thus will be ignored.")
 
     def optimize(self, function, initial_guess, args=(), jac=False):
-        return minimize(function, initial_guess, args=args,
-                        method=self.method, bounds=self._bounds,
-                        constraints=self.constraints, jac=jac, options={'disp':True, 'maxiter': 10000, 'catol': 0.002})
+        if self.constraints:
+            return minimize(function, initial_guess, args=args,
+                            method=self.method, bounds=self._bounds,
+                            constraints=self.constraints, jac=jac,
+                            options={'disp': True, 'maxiter': 10000, 'catol': 0.002})
+        else:
+            return minimize(function, initial_guess, args=args,
+                            method=self.method, bounds=self._bounds, jac=jac,
+                            options={'disp': True, 'maxiter': 10000, 'catol': 0.002})
+
 
     def apply_constraints(self, constraints):
         if self.method.lower() in ['cobyla', 'slsqp', 'trust-constr']:

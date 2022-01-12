@@ -26,7 +26,6 @@ def test_simple_probability_model():
 
 
 def test_regression_model():
-
     param_true = np.array([1.0, 2.0]).reshape((1, -1))
 
     h_func = RunModel(model_script='pfn_models.py', model_object_name='model_quadratic', vec=False,
@@ -36,7 +35,7 @@ def test_regression_model():
     # Add noise
     error_covariance = 1.
     data_clean = np.array(h_func.qoi_list[0])
-    noise = Normal(loc=0., scale=np.sqrt(error_covariance)).rvs(nsamples=4,random_state=1).reshape((4,))
+    noise = Normal(loc=0., scale=np.sqrt(error_covariance)).rvs(nsamples=4, random_state=1).reshape((4,))
     data_3 = data_clean + noise
 
     candidate_model = ComputationalModel(parameters_number=2, runmodel_object=h_func, error_covariance=error_covariance)
@@ -49,4 +48,3 @@ def test_regression_model():
     assert ml_estimator.mle[1] == 2.0030767805841143
 
     shutil.rmtree(h_func.model_dir)
-
