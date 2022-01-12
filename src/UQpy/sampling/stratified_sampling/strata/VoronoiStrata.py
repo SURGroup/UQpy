@@ -308,7 +308,7 @@ class VoronoiStrata(Strata):
                 surrogate,
                 step_size,
                 np.atleast_2d(training_points),
-                np.atleast_2d(np.array(qoi)),
+                np.atleast_2d(np.array(qoi)).T,
                 self.mesh.centroids,)
             # dy_dx = self.calculate_gradient(
             #     np.atleast_2d(training_points), qoi, self.mesh.centroids, surrogate)
