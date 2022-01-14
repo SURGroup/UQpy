@@ -1,0 +1,1 @@
+from UQpy.inference.information_criteria.baseclass.InformationCriterion import InformationCriterion

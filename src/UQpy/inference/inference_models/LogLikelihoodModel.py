@@ -5,24 +5,23 @@ from UQpy.inference.inference_models.baseclass.InferenceModel import *
 
 class LogLikelihoodModel(InferenceModel):
     @beartype
-    def __init__(
-        self, parameters_number: PositiveInteger, log_likelihood, name: str = ""
-    ):
+    def __init__(self, n_parameters: PositiveInteger, log_likelihood, name: str = ""):
         """
         Define a log-likelihood model for inference.
 
-        :param parameters_number: Number of parameters to be estimated.
+        :param n_parameters: Number of parameters to be estimated.
         :param log_likelihood: Function that defines the log-likelihood model.
         :param name: Name of model - optional but useful in a model selection setting.
         """
+        super().__init__(n_parameters, name)
         self.name = name
         self.log_likelihood = log_likelihood
-        self.parameters_number = parameters_number
+        self.n_parameters = n_parameters
 
-    def evaluate_log_likelihood(self, params, data):
-        log_like_values = self.log_likelihood(data=data, params=params)
+    def evaluate_log_likelihood(self, parameters, data):
+        log_like_values = self.log_likelihood(data=data, params=parameters)
         if not isinstance(log_like_values, np.ndarray):
             log_like_values = np.array(log_like_values)
-        if log_like_values.shape != (params.shape[0],):
+        if log_like_values.shape != (parameters.shape[0],):
             raise ValueError("UQpy: Likelihood function should output a (nsamples, ) ndarray of likelihood values.")
         return log_like_values
