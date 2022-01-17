@@ -88,8 +88,8 @@ class ImportanceSampling:
 
         :param nsamples: Number of weighted samples to generate.
 
-        This function has no returns, but it updates the output attributes `samples`, `unnormalized_log_weights` and
-        `weights` of the :class:`.ImportanceSampling` object.
+        This function has no returns, but it updates the output attributes :py:attr:`samples`,
+        :py:attr:`unnormalized_log_weights` and :py:attr:`weights` of the :class:`.ImportanceSampling` object.
         """
 
         self.logger.info("UQpy: Running Importance Sampling...")
@@ -141,8 +141,6 @@ class ImportanceSampling:
         :param method: Resampling method, as of V4 only multinomial resampling is supported. Default: 'multinomial'.
         :param nsamples: Number of un-weighted samples to generate. Default: None (sets `nsamples` equal to the
          number of existing weighted samples).
-        The method has no returns, but it computes the following attribute of the :class:`ImportanceSampling` object.
-
         """
 
         if nsamples is None:

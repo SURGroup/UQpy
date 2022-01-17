@@ -39,7 +39,7 @@ class Kriging(Surrogate):
          hyperparameters/scale parameters.
         :param bounds: Bounds on the hyperparameters used to solve optimization problem to estimate maximum likelihood
          estimator. This should be a closed bound.
-         Default: :math:`[0.001, 10**7]` for each hyperparameter.
+         Default: :math:`[0.001, 10^7]` for each hyperparameter.
         :param optimize: Indicator to solve MLE problem or not. If :any:'True' corr_model_params will be used as initial
          solution for optimization problem. Otherwise, correlation_model_parameters will be directly use as the
          hyperparamters.
@@ -48,7 +48,7 @@ class Kriging(Surrogate):
          point. Default: :math:`1`.
         :param normalize: Boolean flag used in case data normalization is required.
         :param optimizer: Object of the :class:`Optimizer` optimizer used during the Kriging surrogate.
-        Default: :class:'.MinimizeOptimizer'.
+         Default: :class:`.MinimizeOptimizer`.
         :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
          provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
          object itself can be passed directly.
@@ -108,8 +108,8 @@ class Kriging(Surrogate):
         :param correlation_model_parameters: List or array of initial values for the correlation model
          hyperparameters/scale parameters.
 
-        The :meth:`fit` method has no returns, although it creates the `beta`, `err_var` and `C_inv` attributes of the
-        :class:`.Kriging` class.
+        The :meth:`fit` method has no returns, although it creates the :py:attr:`beta`, :py:attr:`err_var` and
+        :py:attr:`C_inv` attributes of the :class:`.Kriging` class.
         """
         self.logger.info("UQpy: Running kriging.fit")
 

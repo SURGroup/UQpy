@@ -51,7 +51,7 @@ class VoronoiStrata(Strata):
         This object is not the Voronoi decomposition of the unit hypercube. It is the Voronoi decomposition of all
         points and their reflections from which the unit hypercube is extracted.
         
-        To access the vertices in the unit hypercube, see the attribute `vertices`."""
+        To access the vertices in the unit hypercube, see the attribute :py:attr:`vertices`."""
         self.vertices: list = []
         """A list of the vertices for each Voronoi stratum on the unit hypercube."""
 

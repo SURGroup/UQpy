@@ -228,8 +228,8 @@ class BispectralRepresentation:
          If the :meth:`run` method is invoked multiple times, the newly generated samples will be appended to the
          existing samples.
 
-        The :meth:`run` method has no returns, although it creates and/or appends the `samples` attribute of the
-        :class:`.BispectralRepresentation` class.
+        The :meth:`run` method has no returns, although it creates and/or appends the :py:attr:`samples` attribute of
+        the :class:`.BispectralRepresentation` class.
         """
         if samples_number is None:
             raise ValueError(

@@ -49,8 +49,8 @@ class SimplexSampling:
         :param nsamples: Number of samples to be generated inside the simplex.
          If the :meth:`run` method is invoked multiple times, the newly generated samples will be appended to the
          existing samples.
-        :return: The :meth:`run` method has no returns, although it creates and/or appends the `samples` attribute of the
-         :class:`.SimplexSampling` class.
+        :return: The :meth:`run` method has no returns, although it creates and/or appends the :py:attr:`samples`
+         attribute of the :class:`.SimplexSampling` class.
         """
         self.nsamples = nsamples
         dimension = self.nodes.shape[1]

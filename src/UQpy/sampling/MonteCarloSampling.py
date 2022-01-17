@@ -28,8 +28,6 @@ class MonteCarloSampling:
         :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
          provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
          object itself can be passed directly.
-
-
         """
         self.logger = logging.getLogger(__name__)
         self.random_state = process_random_state(random_state)
@@ -178,8 +176,8 @@ class MonteCarloSampling:
         """
         Transform random samples to uniform on the unit hypercube.
 
-        The :meth:`transform_u01` method has no returns, although it creates and/or appends the `samplesU01` attribute
-        of the :meth:`.MonteCarloSampling` class.
+        The :meth:`transform_u01` method has no returns, although it creates and/or appends the :py:attr:`samplesU01`
+        attribute of the :meth:`.MonteCarloSampling` class.
         """
         if isinstance(self.dist_object, list) and self.array is True:
             zi = np.zeros_like(self.samples)

@@ -18,7 +18,7 @@ class MLE:
     def __init__(
         self,
         inference_model: InferenceModel,
-        n_optimizations: Union[None, int],
+        n_optimizations: Union[None, int] = 1,
         initial_parameters=None,
         data: Union[list, np.ndarray] = None,
         optimizer: Optimizer = MinimizeOptimizer(),
@@ -64,7 +64,7 @@ class MLE:
             self.run(self.data)
 
     @beartype
-    def run(self, data: NumpyFloatArray):
+    def run(self, data: Union[list, np.ndarray]):
         """
         Run the maximum likelihood estimation procedure.
 

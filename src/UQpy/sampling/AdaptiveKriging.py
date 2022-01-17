@@ -131,8 +131,8 @@ class AdaptiveKriging:
         automatically called. The user may also call the :meth:`run` method directly to generate samples.
         The :meth:`run` method of the :class:`.AdaptiveKriging` class can be invoked many times.
 
-        The :meth:`run` method has no returns, although it creates and/or appends the `samples` attribute of the
-        :class:`.AdaptiveKriging` class.
+        The :meth:`run` method has no returns, although it creates and/or appends the :py:attr:`samples` attribute of
+        the :class:`.AdaptiveKriging` class.
 
         :param nsamples: Total number of samples to be drawn (including the initial samples).
         :param samples: Samples at which to evaluate the model.

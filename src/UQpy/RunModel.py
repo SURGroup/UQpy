@@ -39,7 +39,7 @@ class RunModel:
     @beartype
     def __init__(
         self,
-        samples=None,
+        samples: Union[list, NumpyFloatArray] = None,
         model_script: str = None,
         model_object_name: str = None,
         input_template: str = None,
@@ -67,8 +67,7 @@ class RunModel:
         input file, the name of the Python script that runs the model, and an (optional) output Python script.
 
 
-        :param list samples: Samples to be passed as inputs to the model.
-
+        :param samples: Samples to be passed as inputs to the model.
          Regardless of data type, the first dimension of ``samples`` must be equal to the number of samples at which
          to execute the model. That is, ``len(samples) = nsamples``.
 
@@ -81,18 +80,18 @@ class RunModel:
 
          Used in both python and third-party model execution.
 
-        :param str model_script: The filename (with .py extension) of the Python script which contains commands to
+        :param model_script: The filename (with .py extension) of the Python script which contains commands to
          execute the model.
 
          The named file must be present in the current working directory from which :class:`.RunModel` is called.
-        :param str model_object_name: In the Python workflow, `model_object_name` specifies the name of the function or
+        :param model_object_name: In the Python workflow, `model_object_name` specifies the name of the function or
          class within `model_script' that executes the model. If there is only one function or class in the
          `model_script`, then it is not necessary to specify the model_object_name. If there are multiple objects within
          the `model_script`, then `model_object_name` must be specified.
 
          `model_object_name` is not used in the third-party software model workflow.
 
-        :param str input_template: The name of the template input file that will be used to generate input files for
+        :param input_template: The name of the template input file that will be used to generate input files for
          each run of the model. When operating :class:`.RunModel` with a third-party software model, ``input_template`` must
          be specified.
 
@@ -100,7 +99,7 @@ class RunModel:
 
          `input_template` is not used in the Python model workflow.
 
-        :param list[str] var_names: A list containing the names of the variables present in `input_template`.
+        :param var_names: A list containing the names of the variables present in `input_template`.
 
          If `input template` is provided and  `var_names` is not passed, i.e. if ``var_names=None``, then the default
          variable names `x0`, `x1`, `x2`,..., `xn` are created and used by :class:`.RunModel`, where `n` is the number of
@@ -115,18 +114,18 @@ class RunModel:
          output files and return the quantities of interest to :class:`.RunModel` for subsequent :py:mod:`UQpy` processing (e.g. for
          adaptive methods that utilize the results of previous simulations to initialize new simulations).
 
-         If, in the third-party software model workflow, ``output_script = None`` (the default), then the qoi_list
-         attribute is empty and postprocessing must be handled outside of :py:mod:`UQpy`.
+         If, in the third-party software model workflow, ``output_script = None`` (the default), then the
+         :py:attr:`qoi_list` attribute is empty and postprocessing must be handled outside of :py:mod:`UQpy`.
 
          If used, the named file must be present in the current working directory from which :class:`.RunModel` is called.
 
          `output_script` is not used in the Python model workflow. In the Python model workflow, all model postprocessing
          is handled directly within `model_script`.
 
-        :param str output_object_name: The name of the function or class within `output_script` that is used to collect
+        :param output_object_name: The name of the function or class within `output_script` that is used to collect
          and process the output values from third-party software model output files. If the object is a class, the
-         output must be saved as an attribute called `qoi`. If it is a function, it should return the output quantity of
-         interest.
+         output must be saved as an attribute called :py:attr:`qoi`. If it is a function, it should return the output
+         quantity of interest.
 
          If there is only one function or only one class in `output_script`, then it is not necessary to specify
          `output_object_name`. If there are multiple objects in `output_script`, then output_object_name must be
@@ -134,7 +133,7 @@ class RunModel:
 
          `output_object_name` is not used in the Python model workflow.
 
-        :param int ntasks: Number of tasks to be run in parallel. By default, ``ntasks = 1`` and the models are executed
+        :param ntasks: Number of tasks to be run in parallel. By default, ``ntasks = 1`` and the models are executed
          serially.
 
          Setting ntasks equal to a positive integer greater than 1 will trigger the parallel workflow.
@@ -142,18 +141,18 @@ class RunModel:
          `ntasks` is used for both the Python and third-party model workflows. :class:`.RunModel` uses `GNU parallel` to
          execute third-party models in parallel and the multiprocessing module to execute Python models in parallel.
 
-        :param int cores_per_task: Number of cores to be used by each task. In cases where a third-party model runs across
+        :param cores_per_task: Number of cores to be used by each task. In cases where a third-party model runs across
          multiple CPUs, this optional attribute allocates the necessary resources to each model evaluation.
 
          `cores_per_task` is not used in the Python model workflow.
 
-        :param int nodes: Number of nodes across which to distribute individual tasks on an HPC cluster in the third-party
+        :param nodes: Number of nodes across which to distribute individual tasks on an HPC cluster in the third-party
          model workflow. If more than one compute node is necessary to execute individual runs in parallel, `nodes` must
          be specified.
 
          `nodes` is not used in the Python model workflow.
 
-        :param bool cluster: Set ``cluster = True`` to run on an HPC cluster.
+        :param cluster: Set ``cluster = True`` to run on an HPC cluster.
 
          :class:`.RunModel` currently supports computations on HPC clusters using the SLURM scheduler
          (https://slurm.schedmd.com). The set of model evaulations is submitted using the GNU `parallel` command with
@@ -164,7 +163,7 @@ class RunModel:
 
          `cluster` is not used for the Python model workflow.
 
-        :param bool resume: If ``resume = True``, `GNU parallel` enables :py:mod:`UQpy` to resume execution of any model
+        :param resume: If ``resume = True``, `GNU parallel` enables :py:mod:`UQpy` to resume execution of any model
          evaluations that failed to execute in the third-party software model workflow.
 
          To use this feature, execute the same call to :class:`.RunModel` that failed to complete but with ``resume = True``.
@@ -172,11 +171,11 @@ class RunModel:
 
          `resume` is not used in the Python model workflow.
 
-        :param str model_dir: Specifies the name of the sub-directory from which the model will be executed and to which
+        :param model_dir: Specifies the name of the sub-directory from which the model will be executed and to which
          output files will be saved.  A new directory is created by :class:`.RunModel` within the current directory whose name
          is `model_dir` appended with a timestamp.
 
-        :param str fmt: If the `template_input` requires variables to be written in specific format, this format can be
+        :param fmt: If the `template_input` requires variables to be written in specific format, this format can be
          specified here.
 
          Format specification follows standard Python conventions for the str.format() command described at:
@@ -188,11 +187,11 @@ class RunModel:
 
          `fmt` is not used in the Python model workflow.
 
-        :param str separator: A string used to delimit values when printing arrays to the `template_input`.
+        :param separator: A string used to delimit values when printing arrays to the `template_input`.
 
          `separator` is not used in the Python model workflow.
 
-        :param bool vec: Specifies vectorized (``vec = True``) or looped (``vec = False``) model evaluation in the
+        :param vec: Specifies vectorized (``vec = True``) or looped (``vec = False``) model evaluation in the
          serial Python model workflow.
 
          In the Python model workflow, `model_script` may be written to accept a single sample or multiple samples at a
@@ -202,49 +201,15 @@ class RunModel:
 
          `vec` is not used in the third-party model workflow.
 
-        :param bool delete_files: Specifies whether or not to delete individual run output files after model execution
+        :param delete_files: Specifies whether or not to delete individual run output files after model execution
          and output processing.
 
          If `delete_files = True`, :class:`.RunModel` will remove all `run_i...` directories in the `model_dir`.
 
         :param kwargs: Additional inputs to the Python object specified by `model_object_name` in the Python model workflow.
 
-        `**kwargs` is not used in the third-party model workflow.
+         `**kwargs` is not used in the third-party model workflow.
 
-        **Attributes**
-
-    * **samples** (`ndarray`)
-        Internally, :class:`.RunModel` converts the input `samples` into a numpy `ndarray` with at least two dimension where
-        the first dimension of the `ndarray` corresponds to a single sample to be executed by the model.
-
-    * **nsim** (`int`)
-        Number of model evaluations to be performed, ``nsim = len(samples)``.
-
-    * **nexist** (`int`)
-        Number of pre-existing model evaluations, prior to a new :meth:`run` method call.
-
-        If the :meth:`run` methods has previously been called and model evaluations performed, subsequent calls to the
-        :meth:`run` method will be appended to the :class:`RunModel` object. `nexist` stores the number of previously existing
-        model evaluations.
-
-    * **n_vars** (`int`)
-        Number of variables to be passed for each model evaluation, ``n_vars = len(samples[0])``.
-
-        Note that variables do not need to be scalars. Variables can be scalars, vectors, matrices, or tensors. When
-        writing vectors, matrices, and tensors to a `input_template` they are first flattened and written in delimited
-        form.
-
-    * **qoi_list** (`list`)
-        A list containing the output quantities of interest
-
-        In the third-party model workflow, these output quantities of interest are extracted from the model output files
-        by `output_script`.
-
-        In the Python model workflow, the returned quantity of interest from the model evaluations is stored as
-        `qoi_list`.
-
-        This attribute is commonly used for adaptive algorithms that employ learning functions based on previous model
-        evaluations.
         """
         # Check the platform and build appropriate call to Python
         if platform.system() in ["Windows"]:
@@ -280,7 +245,12 @@ class RunModel:
         # Input related
         self.input_template = input_template
         self.var_names = var_names
-        self.n_vars = 0
+        self.n_vars: int = 0
+        """Number of variables to be passed for each model evaluation, ``n_vars = len(samples[0])``.
+
+        Note that variables do not need to be scalars. Variables can be scalars, vectors, matrices, or tensors. When
+        writing vectors, matrices, and tensors to a `input_template` they are first flattened and written in delimited
+        form."""
 
         # Check if var_names is a list of strings
         if self.var_names is not None:
@@ -356,17 +326,34 @@ class RunModel:
         self.cluster = cluster
 
         # Initialize sample related variables
-        self.samples = []
+        self.samples: Numpy2DFloatArray = []
+        """Internally, :class:`.RunModel` converts the input `samples` into a numpy `ndarray` with at least two 
+        dimension where the first dimension of the :class:`numpy.ndarray` corresponds to a single sample to be executed 
+        by the model."""
         self.samples = np.atleast_2d(self.samples)
-        self.qoi_list = []
-        self.nexist = 0
-        self.nsim = 0
+        self.qoi_list:list = []
+        """A list containing the output quantities of interest
+
+        In the third-party model workflow, these output quantities of interest are extracted from the model output files
+        by `output_script`.
+
+        In the Python model workflow, the returned quantity of interest from the model evaluations is stored as
+        :py:attr:`qoi_list`.
+
+        This attribute is commonly used for adaptive algorithms that employ learning functions based on previous model
+        evaluations."""
+        self.nexist: int = 0
+        """Number of pre-existing model evaluations, prior to a new :meth:`run` method call.
+
+        If the :meth:`run` methods has previously been called and model evaluations performed, subsequent calls to the
+        :meth:`run` method will be appended to the :class:`RunModel` object. :py:attr:`nexist` stores the number of 
+        previously existing model evaluations."""
+        self.nsim: int = 0
+        """Number of model evaluations to be performed, ``nsim = len(samples)``."""
 
         # Check if samples are provided.
         if samples is None:
-            self.logger.info(
-                "\nUQpy: No samples are provided. Creating the object and building the model directory.\n"
-            )
+            self.logger.info("\nUQpy: No samples are provided. Creating the object and building the model directory.\n")
         elif isinstance(samples, (list, np.ndarray)):
             self.run(samples)
         else:

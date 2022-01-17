@@ -116,8 +116,8 @@ class SpectralRepresentation:
          If the :meth:`run` method is invoked multiple times, the newly generated samples will be appended to the
          existing samples.
 
-        The :meth:`run` method has no returns, although it creates and/or appends the `samples` attribute of the
-        :class:`.SpectralRepresentation` class.
+        The :meth:`run` method has no returns, although it creates and/or appends the :py:attr:`samples` attribute of
+        the :class:`.SpectralRepresentation` class.
         """
         if nsamples is None:
             raise ValueError(

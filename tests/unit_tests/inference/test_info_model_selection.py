@@ -1,3 +1,4 @@
+from UQpy.inference.MLE import MLE
 from UQpy.inference.information_criteria import *
 from UQpy.distributions.collection import Gamma, Exponential, ChiSquare
 from UQpy.inference.inference_models.DistributionModel import DistributionModel
@@ -13,11 +14,10 @@ def test_aic():
                            n_parameters=3, name='chi-square')
 
     candidate_models = [m0, m1, m2]
-    selector = InformationModelSelection(candidate_models=candidate_models,
-                                         data=data,
-                                         criterion=AIC(),
-                                         random_state=0)
-    selector.run(optimizations_number=5)
+    mle1 = MLE(inference_model=m0, n_optimizations=5, random_state=0)
+    mle2 = MLE(inference_model=m1, n_optimizations=5, random_state=0)
+    mle3 = MLE(inference_model=m2, n_optimizations=5, random_state=0)
+    selector = InformationModelSelection(mle_estimators=[mle1, mle2, mle3], data=data, criterion=AIC(),)
     selector.sort_models()
     assert 2285.9685816790425 == selector.criterion_values[0]
     assert 2285.9685821390594 == selector.criterion_values[1]
@@ -32,12 +32,10 @@ def test_bic():
                            n_parameters=3, name='chi-square')
 
     candidate_models = [m0, m1, m2]
-
-    selector = InformationModelSelection(candidate_models=candidate_models,
-                                         data=data,
-                                         criterion=BIC(),
-                                         random_state=0)
-    selector.run(optimizations_number=5)
+    mle1 = MLE(inference_model=m0, n_optimizations=5, random_state=0)
+    mle2 = MLE(inference_model=m1, n_optimizations=5, random_state=0)
+    mle3 = MLE(inference_model=m2, n_optimizations=5, random_state=0)
+    selector = InformationModelSelection(mle_estimators=[mle1, mle2, mle3], data=data, criterion=BIC(),)
     selector.sort_models()
     assert 0.5000000575021204 == selector.probabilities[0]
     assert 0.4999999424978796 == selector.probabilities[1]
@@ -52,11 +50,11 @@ def test_aicc():
                            n_parameters=3, name='chi-square')
 
     candidate_models = [m0, m1, m2]
-    selector = InformationModelSelection(candidate_models=candidate_models,
-                                         data=data,
-                                         criterion=AICc(),
-                                         random_state=0)
-    selector.run(optimizations_number=5)
+    mle1 = MLE(inference_model=m0, n_optimizations=5, random_state=0)
+    mle2 = MLE(inference_model=m1, n_optimizations=5, random_state=0)
+    mle3 = MLE(inference_model=m2, n_optimizations=5, random_state=0)
+    selector = InformationModelSelection(mle_estimators=[mle1, mle2, mle3], data=data, criterion=AICc(), )
+
     selector.sort_models()
     assert 2286.0169687758166 == selector.criterion_values[0]
     assert 2286.0169692358336 == selector.criterion_values[1]

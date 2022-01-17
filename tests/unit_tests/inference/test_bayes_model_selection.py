@@ -46,9 +46,12 @@ def test_models():
                              jump=1, burn_length=500,
                              proposal=proposals[2], random_state=0, seed=[0., 0., 0.])
 
-    selection = BayesModelSelection(candidate_models=[model1, model2, model3],
+    e1 = BayesParameterEstimation(inference_model=model1, data=data_ex1, sampling_class=mh1)
+    e2 = BayesParameterEstimation(inference_model=model2, data=data_ex1, sampling_class=mh2)
+    e3 = BayesParameterEstimation(inference_model=model3, data=data_ex1, sampling_class=mh3)
+
+    selection = BayesModelSelection(parameter_estimators=[e1, e2, e3],
                                     data=data_ex1,
-                                    sampling_class=[mh1, mh2, mh3],
                                     prior_probabilities=[1. / 3., 1. / 3., 1. / 3.],
                                     nsamples=[2000, 2000, 2000])
 

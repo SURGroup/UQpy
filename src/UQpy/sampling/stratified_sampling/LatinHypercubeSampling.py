@@ -78,8 +78,8 @@ class LatinHypercubeSampling(StratifiedSampling):
         generate samples. The :meth:`run` method of the :class:`.LatinHypercubeSampling` class cannot be invoked
         multiple times for sample size extension.
 
-        The :meth:`run` method has no returns, although it creates and/or appends the `samples` and `samplesU01`
-        attributes of the :class:`.LatinHypercubeSampling` object.
+        The :meth:`run` method has no returns, although it creates and/or appends the :py:attr:`samples` and
+        :py:attr:`samplesU01` attributes of the :class:`.LatinHypercubeSampling` object.
         """
         self.nsamples = nsamples
         self.logger.info("UQpy: Running Latin Hypercube sampling...")

@@ -21,7 +21,7 @@ class InformationModelSelection:
     def __init__(
             self,
             mle_estimators: list[MLE],
-            data: NumpyFloatArray = None,
+            data: Union[list, np.ndarray] = None,
             criterion: InformationCriterion = AIC(),
     ):
         """
@@ -63,7 +63,7 @@ class InformationModelSelection:
         if self.data is not None:
             self.run(data=self.data)
 
-    def run(self, data: NumpyFloatArray):
+    def run(self, data: Union[list, np.ndarray]):
         """
         Run the model selection procedure, i.e. compute criterion value for all models.
 

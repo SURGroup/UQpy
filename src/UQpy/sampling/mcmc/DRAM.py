@@ -82,7 +82,7 @@ class DRAM(MCMC):
          Default: :math:`100`
         :param scale_parameter: Scale parameter for covariance updating. Default: :math:`2.38^2/dim`
         :param delayed_rejection_scale: Scale parameter for delayed rejection. Default: :math:`1/5`
-        :param save_covariance: If :any:`True`, updated covariance is saved in attribute adaptive_covariance.
+        :param save_covariance: If :any:`True`, updated covariance is saved in attribute :py:attr:`adaptive_covariance`.
          Default: :any:`False`
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is
          :any:`None`.

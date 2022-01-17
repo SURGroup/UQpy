@@ -99,12 +99,12 @@ class MCMC(ABC):
         :code:`(n_chains * nsamples,)` or  :code:`(nsamples, n_chains)`"""
         self.acceptance_rate = [0.0] * self.n_chains
         self.nsamples: int = 0
-        """Total number of samples; The `nsamples` attribute tallies the total number of generated samples. After 
-        each iteration, it is updated by :any:`1`. At the end of the simulation, the `nsamples` attribute equals the 
-        user-specified value for input `nsamples` given to the child class."""
+        """Total number of samples; The :py:attr:`nsamples` attribute tallies the total number of generated samples. 
+        After each iteration, it is updated by :any:`1`. At the end of the simulation, the :py:attr:`nsamples` attribute 
+        equals the user-specified value for input :py:attr:`nsamples` given to the child class."""
         self.nsamples_per_chain: int = 0
-        """Total number of samples per chain; Similar to the attribute `nsamples`, it is updated during iterations as 
-        new samples are saved."""
+        """Total number of samples per chain; Similar to the attribute :py:attr:`nsamples`, it is updated during 
+        iterations as new samples are saved."""
         self.iterations_number: int = (
             0  # total nb of iterations, grows if you call run several times
         )

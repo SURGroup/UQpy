@@ -43,7 +43,7 @@ invoked by calling :class:`.RunModel` without specifying an ``input_template`` (
 :py:mod:`UQpy` imports the ``model_script`` and executes the object defined by ``model_object_name``. The
 ``model_object`` can be structured such that it accepts one sample at a time or accepts an array/list of samples all at
 once. The ``model_object`` may be a class or a function. If the ``model_object`` is a class, the quantity of interest
-must be stored as an attribute of the class called ``qoi``. If the model object is a function, it must return the
+must be stored as an attribute of the class called :py:attr:`qoi`. If the model object is a function, it must return the
 quantity of interest after execution.
 
 Details for ``model_script`` can be found in the Section entitled :ref:`Files & Scripts Used by RunModel`.
@@ -76,13 +76,13 @@ This workflow operates in three steps as explained in the following:
    parallel over multiple processors (by setting ``ntask > 1``).
 
 3. For each simulation, the third-party model generates some set of outputs in Step 2. The user-defined ``output_script`` is used to post-process these outputs
-   and return them to :class:`.RunModel` in a list form, defined as an attribute of :class:`.RunModel` called ``qoi_list``. This script should extract any desired quantity of
+   and return them to :class:`.RunModel` in a list form, defined as an attribute of :class:`.RunModel` called :py:attr:`qoi_list`. This script should extract any desired quantity of
    interest from the generated output files, again using the sample index to link model outputs to their respective sample sets. :py:mod:`UQpy` imports the ``output_script``
    and executes the object defined by ``output_object_name``. The structure of the ``output_object`` must be such that it accepts, as input, the sample index. If the
-   ``output_object`` is a Class, the quantity of interest must be stored as an attribute of the class called ``qoi``. If the ``output_object`` it is a function, it
+   ``output_object`` is a Class, the quantity of interest must be stored as an attribute of the class called :py:attr:`qoi`. If the ``output_object`` it is a function, it
    must return the quantity of interest after execution. More details specifying the structure of ``output_script`` and the associated ``output_object`` can be found
    in the Section entitled :ref:`Files & Scripts Used by RunModel`. Finally, because :py:mod:`UQpy` imports the ``output_script`` and executes it within :class:`.RunModel`, the
-   values returned by the output object are directly stored according to their sample index in the :class:`.RunModel` attribute ``qoi_list``.
+   values returned by the output object are directly stored according to their sample index in the :class:`.RunModel` attribute :py:attr:`qoi_list`.
 
 
 Third-Party Model Workflow: Parallel Execution
@@ -267,7 +267,7 @@ The ``output_script`` is an optional user-defined Python script for post-process
 used to extract user-specified quantities of interest from third-party model output files and return them to
 :class:`.RunModel`. :py:mod:`UQpy` imports the ``output_script`` and executes the object defined by
 ``output_object_name``. The output object should accept only the sample index as input. If the model object is a Class,
-the quantity of interest must be stored as an attribute of the class called ``qoi``. If it is a function, it must return
+the quantity of interest must be stored as an attribute of the class called :py:attr:`qoi`. If it is a function, it must return
 the quantity of interest after execution. Examples for how the output object may be structured are provided below.
 
 **Example:** Output object as a class:

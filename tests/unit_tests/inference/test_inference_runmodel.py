@@ -30,7 +30,7 @@ def user_log_likelihood_uniform(data, params):
 
 def test_mle(setup):
     h_func = setup
-    candidate_model = ComputationalModel(parameters_number=2, runmodel_object=h_func, error_covariance=1.)
+    candidate_model = ComputationalModel(n_parameters=2, runmodel_object=h_func, error_covariance=1.)
     optimizer = MinimizeOptimizer(method='nelder-mead', bounds=((-2, 2), (-2, 2)))
     ml_estimator = MLE(inference_model=candidate_model, data=data, n_optimizations=2,
                        optimizer=optimizer, random_state=123)
@@ -39,7 +39,7 @@ def test_mle(setup):
 
 def test_mle_optimizer(setup):
     h_func = setup
-    candidate_model = ComputationalModel(parameters_number=2, runmodel_object=h_func, error_covariance=np.ones(4))
+    candidate_model = ComputationalModel(n_parameters=2, runmodel_object=h_func, error_covariance=np.ones(4))
     ml_estimator = MLE(inference_model=candidate_model, data=data, initial_parameters=[0., 0.], random_state=123)
     assert round(ml_estimator.mle[0], 3) == -0.039
 
@@ -47,7 +47,7 @@ def test_mle_optimizer(setup):
 def test_user_loglike(setup):
     h_func = setup
     candidate_model = ComputationalModel(
-        parameters_number=2, runmodel_object=h_func, log_likelihood=user_log_likelihood)
+        n_parameters=2, runmodel_object=h_func, log_likelihood=user_log_likelihood)
     optimizer = MinimizeOptimizer(method='nelder-mead', bounds=((-2, 2), (-2, 2)))
     ml_estimator = MLE(inference_model=candidate_model, optimizer=optimizer,
                        data=data, n_optimizations=2, random_state=123)
@@ -55,7 +55,7 @@ def test_user_loglike(setup):
 
 
 def test_user_loglike_uniform():
-    candidate_model = LogLikelihoodModel(parameters_number=2, log_likelihood=user_log_likelihood_uniform)
+    candidate_model = LogLikelihoodModel(n_parameters=2, log_likelihood=user_log_likelihood_uniform)
     optimizer = MinimizeOptimizer(method='nelder-mead', bounds=((-2, 2), (-2, 2)))
     ml_estimator = MLE(inference_model=candidate_model, data=data, n_optimizations=2,
                        optimizer=optimizer, random_state=123)

@@ -71,10 +71,10 @@ number of additional inputs compared to the :class:`.MCMC` base class. The reade
 A useful note is that the user has access to a number of useful attributes / utility methods as the algorithm proceeds, such as:
 
 * the attribute :meth:`evaluate_log_target` (and possibly :meth:`evaluate_log_target_marginals` if marginals were provided) is created at initialization. It is a callable that simply evaluates the log-pdf of the target distribution at a given point **x**. It can be called within the code of a new sampler as ``log_pdf_value = self.evaluate_log_target(x)``.
-* the `samples_number` and `samples_number_per_chain` attributes indicate the number of samples that have been stored up to the current iteration (i.e., they are updated dynamically as the algorithm proceeds),
-* the `samples` attribute contains all previously stored samples. Cautionary note: :code:`self.samples` also contains trailing zeros, for samples yet to be stored, thus to access all previously stored samples at a given iteration the user must call ``self.samples[:self.nsamples_per_chain]``, which will return an :class:`numpy.ndarray` of size :code:`(self.nsamples_per_chain, self.nchains, self.dimension)` ,
-* the `log_pdf_values` attribute contains all previously stored log target values. Same cautionary note as above,
-* the :meth:`_update_acceptance_rate` method updates the `acceptance_rate` attribute of the sampler, given a (list of) boolean(s) indicating if the candidate state(s) were accepted at a given iteration,
+* the :py:attr:`samples_number` and :py:attr:`samples_number_per_chain` attributes indicate the number of samples that have been stored up to the current iteration (i.e., they are updated dynamically as the algorithm proceeds),
+* the :py:attr:`samples` attribute contains all previously stored samples. Cautionary note: :code:`self.samples` also contains trailing zeros, for samples yet to be stored, thus to access all previously stored samples at a given iteration the user must call ``self.samples[:self.nsamples_per_chain]``, which will return an :class:`numpy.ndarray` of size :code:`(self.nsamples_per_chain, self.nchains, self.dimension)` ,
+* the :py:attr:`log_pdf_values` attribute contains all previously stored log target values. Same cautionary note as above,
+* the :meth:`_update_acceptance_rate` method updates the :py:attr:`acceptance_rate` attribute of the sampler, given a (list of) boolean(s) indicating if the candidate state(s) were accepted at a given iteration,
 * the :meth:`_check_methods_proposal` method checks whether a given proposal is adequate (i.e., has :meth:`rvs` and :meth:`log_pdf`/:meth:`pdf` methods).
 
 
