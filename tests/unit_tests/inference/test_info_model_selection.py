@@ -1,21 +1,21 @@
+from UQpy.inference.information_criteria import *
 from UQpy.distributions.collection import Gamma, Exponential, ChiSquare
 from UQpy.inference.inference_models.DistributionModel import DistributionModel
-from UQpy.inference.InformationTheoreticCriterion import *
 from UQpy.inference.InformationModelSelection import InformationModelSelection
 
 
 def test_aic():
     data = Gamma(a=2, loc=0, scale=2).rvs(nsamples=500, random_state=12)
 
-    m0 = DistributionModel(distributions=Gamma(a=None, loc=None, scale=None), parameters_number=3, name='gamma')
-    m1 = DistributionModel(distributions=Exponential(loc=None, scale=None), parameters_number=2, name='exponential')
+    m0 = DistributionModel(distributions=Gamma(a=None, loc=None, scale=None), n_parameters=3, name='gamma')
+    m1 = DistributionModel(distributions=Exponential(loc=None, scale=None), n_parameters=2, name='exponential')
     m2 = DistributionModel(distributions=ChiSquare(df=None, loc=None, scale=None),
-                           parameters_number=3, name='chi-square')
+                           n_parameters=3, name='chi-square')
 
     candidate_models = [m0, m1, m2]
     selector = InformationModelSelection(candidate_models=candidate_models,
                                          data=data,
-                                         criterion=InformationTheoreticCriterion.AIC,
+                                         criterion=AIC(),
                                          random_state=0)
     selector.run(optimizations_number=5)
     selector.sort_models()
@@ -26,15 +26,16 @@ def test_aic():
 
 def test_bic():
     data = Gamma(a=2, loc=0, scale=2).rvs(nsamples=500, random_state=12)
-    m0 = DistributionModel(distributions=Gamma(a=None, loc=None, scale=None), parameters_number=3, name='gamma')
-    m1 = DistributionModel(distributions=Exponential(loc=None, scale=None), parameters_number=2, name='exponential')
+    m0 = DistributionModel(distributions=Gamma(a=None, loc=None, scale=None), n_parameters=3, name='gamma')
+    m1 = DistributionModel(distributions=Exponential(loc=None, scale=None), n_parameters=2, name='exponential')
     m2 = DistributionModel(distributions=ChiSquare(df=None, loc=None, scale=None),
-                           parameters_number=3, name='chi-square')
+                           n_parameters=3, name='chi-square')
 
     candidate_models = [m0, m1, m2]
+
     selector = InformationModelSelection(candidate_models=candidate_models,
                                          data=data,
-                                         criterion=InformationTheoreticCriterion.BIC,
+                                         criterion=BIC(),
                                          random_state=0)
     selector.run(optimizations_number=5)
     selector.sort_models()
@@ -45,15 +46,15 @@ def test_bic():
 
 def test_aicc():
     data = Gamma(a=2, loc=0, scale=2).rvs(nsamples=500, random_state=12)
-    m0 = DistributionModel(distributions=Gamma(a=None, loc=None, scale=None), parameters_number=3, name='gamma')
-    m1 = DistributionModel(distributions=Exponential(loc=None, scale=None), parameters_number=2, name='exponential')
+    m0 = DistributionModel(distributions=Gamma(a=None, loc=None, scale=None), n_parameters=3, name='gamma')
+    m1 = DistributionModel(distributions=Exponential(loc=None, scale=None), n_parameters=2, name='exponential')
     m2 = DistributionModel(distributions=ChiSquare(df=None, loc=None, scale=None),
-                           parameters_number=3, name='chi-square')
+                           n_parameters=3, name='chi-square')
 
     candidate_models = [m0, m1, m2]
     selector = InformationModelSelection(candidate_models=candidate_models,
                                          data=data,
-                                         criterion=InformationTheoreticCriterion.AICc,
+                                         criterion=AICc(),
                                          random_state=0)
     selector.run(optimizations_number=5)
     selector.sort_models()

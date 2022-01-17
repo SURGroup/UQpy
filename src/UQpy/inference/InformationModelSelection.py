@@ -27,11 +27,16 @@ class InformationModelSelection:
         """
         Perform model selection using information theoretic criteria.
 
-        Supported criteria are :math:`BIC, AIC` (default), :math:`AICc`. This class leverages the :class:`.MLE` class
-        for maximum likelihood estimation, thus inputs to :class:`.MLE` can also be provided to
+        Supported criteria are :class:`.BIC`, :class:`.AIC` (default), :class:`.AICc`. This class leverages the
+        :class:`.MLE` class for maximum likelihood estimation, thus inputs to :class:`.MLE` can also be provided to
         :class:`InformationModelSelection`, as lists of length equal to the number of models.
 
-        :param criterion: Criterion to be used :math:`(AIC, BIC, AICc)`. Default is :math:`AIC`
+        :param mle_estimators: A list containing a maximum-likelihood estimator (:class:`.MLE`) for each one of the
+         models to be compared.
+        :param criterion: Criterion to be used (:class:`.AIC`, :class:`.BIC`, :class:`.AICc)`. Default is :class:`.AIC`
+        :param data: Available data. If this parameter is provided at :class:`.InformationModelSelection` object
+         initialization, the model selection algorithm will be automatically performed. Alternatively, the user must
+         execute the :meth:`.run` method.
         """
         self.candidate_models = [mle.inference_model for mle in mle_estimators]
         self.models_number = len(mle_estimators)
@@ -63,12 +68,10 @@ class InformationModelSelection:
         Run the model selection procedure, i.e. compute criterion value for all models.
 
         This function calls the :meth:`run` method of the :class:`.MLE` object for each model to compute the maximum
-        log-likelihood, then computes the criterion value and probability for each model.
+        log-likelihood, then computes the criterion value and probability for each model. If `data` are given when
+        creating the :class:`.MLE` object, this method is called automatically when the object is created.
 
-        :param n_optimizations: Number of iterations that the optimization is run, starting at random initial
-         guesses. It is only used if `initial_guess` is not provided. Default is 1. See :class:`.MLE` class.
-        :param initial_parameters: Starting point(s) for optimization for all models. Default is :any:`None`. If not
-         provided, see `n_optimizations`. See :class:`.MLE` class.
+        :param data: Available data.
         """
         self.data = data
 
@@ -92,9 +95,10 @@ class InformationModelSelection:
         """
         Sort models in descending order of model probability (increasing order of `criterion` value).
 
-        This function sorts - in place - the attribute lists `candidate_models, ml_estimators, criterion_values,
-        penalty_terms` and `probabilities` so that they are sorted from most probable to least probable model. It is a
-        stand-alone function that is provided to help the user to easily visualize which model is the best.
+        This function sorts - in place - the attribute lists :py:attr:`.candidate_models`, :py:attr:`.ml_estimators`,
+        :py:attr:`criterion_values`, :py:attr:`penalty_terms` and :py:attr:`probabilities` so that they are sorted from
+        most probable to least probable model. It is a stand-alone function that is provided to help the user to easily
+        visualize which model is the best.
 
         No inputs/outputs.
 

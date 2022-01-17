@@ -21,11 +21,11 @@ def test_models():
     prior3 = JointIndependent(marginals=[Normal(), Normal(), Normal()])
 
     model_n_params = [1, 2, 3]
-    model1 = ComputationalModel(parameters_number=1, runmodel_object=runmodel4, prior=prior1,
+    model1 = ComputationalModel(n_parameters=1, runmodel_object=runmodel4, prior=prior1,
                                 error_covariance=np.ones(50), name='model_linear')
-    model2 = ComputationalModel(parameters_number=2, runmodel_object=runmodel5, prior=prior2,
+    model2 = ComputationalModel(n_parameters=2, runmodel_object=runmodel5, prior=prior2,
                                 error_covariance=np.ones(50), name='model_quadratic')
-    model3 = ComputationalModel(parameters_number=3, runmodel_object=runmodel6, prior=prior3,
+    model3 = ComputationalModel(n_parameters=3, runmodel_object=runmodel6, prior=prior3,
                                 error_covariance=np.ones(50), name='model_cubic')
 
     proposals = [Normal(0, 10),
@@ -33,12 +33,18 @@ def test_models():
                  JointIndependent([Normal(0, 1), Normal(0, 2), Normal(0.025)])]
 
     # sampling =
-    mh1 = MetropolisHastings.create_for_inference(inference_model=model1, data=data_ex1, jump=1, burn_length=500,
-                                                  proposal=proposals[0], random_state=0, seed=[0.])
-    mh2 = MetropolisHastings.create_for_inference(inference_model=model2, data=data_ex1, jump=1, burn_length=500,
-                                                  proposal=proposals[1], random_state=0, seed=[0., 0.])
-    mh3 = MetropolisHastings.create_for_inference(inference_model=model3, data=data_ex1, jump=1, burn_length=500,
-                                                  proposal=proposals[2], random_state=0, seed=[0., 0., 0.])
+    mh1 = MetropolisHastings(args_target=(data_ex1,),
+                             log_pdf_target=model1.evaluate_log_posterior,
+                             jump=1, burn_length=500,
+                             proposal=proposals[0], random_state=0, seed=[0.])
+    mh2 = MetropolisHastings(args_target=(data_ex1,),
+                             log_pdf_target=model2.evaluate_log_posterior,
+                             jump=1, burn_length=500,
+                             proposal=proposals[1], random_state=0, seed=[0., 0.])
+    mh3 = MetropolisHastings(args_target=(data_ex1,),
+                             log_pdf_target=model3.evaluate_log_posterior,
+                             jump=1, burn_length=500,
+                             proposal=proposals[2], random_state=0, seed=[0., 0., 0.])
 
     selection = BayesModelSelection(candidate_models=[model1, model2, model3],
                                     data=data_ex1,

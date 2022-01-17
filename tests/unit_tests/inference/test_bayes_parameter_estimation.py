@@ -30,9 +30,12 @@ def test_probability_model_importance_sampling():
 
     # create an instance of class Model
     candidate_model = DistributionModel(distributions=Normal(loc=None, scale=None),
-                                        parameters_number=2, prior=prior)
+                                        n_parameters=2, prior=prior)
 
-    sampling = ImportanceSampling.create_for_inference(candidate_model, data, random_state=1)
+    sampling = ImportanceSampling(proposal=candidate_model.prior,
+                                  args_target=(data, ),
+                                  log_pdf_target=candidate_model.evaluate_log_posterior,
+                                  random_state=1)
 
     bayes_estimator = BayesParameterEstimation(sampling_class=sampling,
                                                inference_model=candidate_model,
@@ -57,11 +60,12 @@ def test_probability_model_mcmc():
 
     # create an instance of class Model
     candidate_model = DistributionModel(distributions=Normal(loc=None, scale=None),
-                                        parameters_number=2, prior=prior)
+                                        n_parameters=2, prior=prior)
 
-    sampling = MetropolisHastings.create_for_inference(inference_model=candidate_model,
-                                                       data=data,
-                                                       jump=10, burn_length=10, seed=[1.0, 0.2], random_state=1)
+    sampling = MetropolisHastings(jump=10, burn_length=10, seed=[1.0, 0.2], random_state=1,
+                                  args_target=(data, ),
+                                  log_pdf_target=candidate_model.evaluate_log_posterior)
+
     bayes_estimator = BayesParameterEstimation(sampling_class=sampling,
                                                inference_model=candidate_model,
                                                data=data,

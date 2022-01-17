@@ -19,7 +19,7 @@ candidate_model2 = DistributionModel(parameters_number=2, distributions=dist2, p
 
 
 def test_mle():
-    ml_estimator = MLE(inference_model=candidate_model, data=data, optimizations_number=3)
+    ml_estimator = MLE(inference_model=candidate_model, data=data, n_optimizations=3)
     assert round(ml_estimator.mle[0], 3) == 0.907
 
 

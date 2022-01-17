@@ -29,7 +29,9 @@ class MLE:
 
         :param inference_model: The inference model that defines the likelihood function.
         :param data: Available data, :class:`numpy.ndarray` of shape consistent with log likelihood function in
-         :class:`.InferenceModel`
+         :class:`.InferenceModel`. If this parameter is provided at :class:`.InformationModelSelection` object
+         initialization, the maximum likelihood estimation algorithm will be automatically performed. Alternatively,
+         the user must execute the :meth:`.run` method.
         :param n_optimizations: Number of iterations that the optimization is run, starting at random initial
          guesses. It is only used if `initial_parameters` is not provided. Default is :math:`1`.
          The random initial guesses are sampled uniformly between :math:`0` and :math:`1`, or uniformly between
@@ -66,13 +68,15 @@ class MLE:
         """
         Run the maximum likelihood estimation procedure.
 
-        This function runs the optimization and updates the `mle` and `max_log_like` attributes of the class. When
-        learning the parameters of a distribution, if `distributions` possesses an :meth:`mle` method this method is
-        used. If `initial_parameters` or `n_optimizations` are given when creating the :class:`.MLE` object, this
-        method is called automatically when the object is created.
+        This function runs the optimization and updates the :py:attr:`.mle` and :py:attr:`.max_log_like` attributes of
+        the class. When learning the parameters of a distribution, if `distributions` possesses an :meth:`mle` method
+        this method is used. If `data` are given when creating the :class:`.MLE` object, this method is called
+        automatically when the object is created.
 
         :param data: Available data, :class:`numpy.ndarray` of shape consistent with log likelihood function in
-         :class:`.InferenceModel`
+         :class:`.InferenceModel`. If this parameter is provided at :class:`.InformationModelSelection` object
+         initialization, the maximum likelihood estimation algorithm will be automatically performed. Alternatively,
+         the user must execute the :meth:`.run` method.
         """
         self.data = data
         # Run optimization (use x0 if provided, otherwise sample starting point from [0, 1] or bounds)

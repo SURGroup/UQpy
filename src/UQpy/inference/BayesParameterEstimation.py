@@ -30,7 +30,11 @@ class BayesParameterEstimation:
          :class:`.InferenceModel`
         :param sampling_class: Class instance, must be a subclass of :class:`.MCMC` or :class:`.ImportanceSampling`.
         :param nsamples: Number of samples used in :class:`.MCMC`/:class:`ImportanceSampling`, see
-         :meth:`run` method.
+         :meth:`run` method. If the `nsamples` parameter is provided then :class:`.BayesParameterEstimation` is
+         automatically performed. In case an :class:`.ImportanceSampling` method is used to perform the parameter
+         estimation, then `nsamples` equal to the total number of samples. In case an :class:`.MCMC` sampler is used,
+         and the given `nsamples` is not a multiple of `n_chains`, then `nsamples` is set to the next largest integer
+         that is a multiple of  `nchains`.
         """
         self.inference_model = inference_model
         self.data = data
@@ -80,7 +84,10 @@ class BayesParameterEstimation:
         This function calls the :meth:`run` method of the :py:attr:`.sampler` attribute to generate samples from the
         parameter posterior distribution.
 
-        :param nsamples: Number of samples used in :class:`.MCMC`/:class:`.ImportanceSampling`
+        :param nsamples: Number of samples used in :class:`.MCMC`/:class:`.ImportanceSampling`.  In case an
+         :class:`.ImportanceSampling` method is used to perform the parameter estimation, then `nsamples` equal to the
+         total number of samples. In case an :class:`.MCMC` sampler is used, and the given `nsamples` is not a multiple
+         of `n_chains`, then `nsamples` is set to the next largest integer that is a multiple of  `nchains`.
         """
         self.sampler.run(nsamples=nsamples)
 

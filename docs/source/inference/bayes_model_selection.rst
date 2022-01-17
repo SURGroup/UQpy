@@ -15,10 +15,26 @@ Currently, calculation of the evidence is performed using the method of the harm
 
 where :math:`\theta_{1,\cdots,B}` are samples from the posterior pdf of :math:`\theta`. In UQpy, these samples are
 obtained via the :class:`.BayesParameterEstimation` class. However, note that this method is known to yield evidence
-estimates with large variance. Future releases of :py:mod:`UQpy` will include more robust methods for computation of model
+estimates with large variance. The Harmonic mean method for calculating the evidence is provided to the initializer
+of the :class:`.BayesModelSelection` class. No input parameters are required for its initialization.
+
+.. autoclass:: UQpy.inference.HarmonicMean
+
+
+Future releases of :py:mod:`UQpy` will include more robust methods for computation of model
 evidences. Also, it is known that results of such Bayesian model selection procedure usually highly depends on the
 choice of prior for the parameters of the competing models, thus the user should carefully define such priors when
-creating instances of the :class:`.InferenceModel` class.
+creating instances of the :class:`.InferenceModel` class. The user can create custom methods for calculating
+evidences, by extending the :class:`.EvidenceMethod` abstract baseclass. To achieve that, a custom implementation
+of the :meth:`.estimate_evidence` must be provided.
+
+
+EvidenceMethod Class
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: UQpy.inference.EvidenceMethod
+    :members:
+
+
 
 BayesModelSelection Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -30,7 +46,7 @@ Methods
 
 Attributes
 """"""""""
-
+.. autoattribute:: UQpy.inference.BayesModelSelection.candidate_models
 .. autoattribute:: UQpy.inference.BayesModelSelection.bayes_estimators
 .. autoattribute:: UQpy.inference.BayesModelSelection.evidences
 .. autoattribute:: UQpy.inference.BayesModelSelection.probabilities

@@ -15,7 +15,7 @@ class ImportanceSampling:
     @beartype
     def __init__(self,
                  pdf_target: Callable = None,
-                 log_pdf_target: Callable = None,
+                 log_pdf_target: Callable = lambda *args: None,
                  args_target: tuple = None,
                  proposal: Union[None, Distribution] = None,
                  random_state: RandomStateType = None,
@@ -40,15 +40,8 @@ class ImportanceSampling:
         """
         # Initialize proposal: it should have an rvs and log pdf or pdf method
         self.proposal = proposal
-        if not isinstance(self.proposal, Distribution):
-            raise TypeError("UQpy: The proposal should be of type Distribution.")
-        if not hasattr(self.proposal, "rvs"):
-            raise AttributeError("UQpy: The proposal should have an rvs method")
-        if not hasattr(self.proposal, "log_pdf"):
-            if not hasattr(self.proposal, "pdf"):
-                raise AttributeError("UQpy: The proposal should have a log_pdf or pdf method")
-            self.proposal.log_pdf = lambda x: np.log(
-                np.maximum(self.proposal.pdf(x), 10 ** (-320) * np.ones((x.shape[0],))))
+        self._args_target = args_target
+        self._preprocess_proposal()
         self.evaluate_log_target = self._preprocess_target(
             log_pdf_=log_pdf_target,
             pdf_=pdf_target,
@@ -73,6 +66,17 @@ class ImportanceSampling:
         # Run IS if nsamples is provided
         if nsamples is not None and nsamples != 0:
             self.run(nsamples)
+
+    def _preprocess_proposal(self):
+        if not isinstance(self.proposal, Distribution):
+            raise TypeError("UQpy: The proposal should be of type Distribution.")
+        if not hasattr(self.proposal, "rvs"):
+            raise AttributeError("UQpy: The proposal should have an rvs method")
+        if not hasattr(self.proposal, "log_pdf"):
+            if not hasattr(self.proposal, "pdf"):
+                raise AttributeError("UQpy: The proposal should have a log_pdf or pdf method")
+            self.proposal.log_pdf = lambda x: np.log(
+                np.maximum(self.proposal.pdf(x), 10 ** (-320) * np.ones((x.shape[0],))))
 
     @beartype
     def run(self, nsamples: PositiveInteger):
@@ -143,17 +147,14 @@ class ImportanceSampling:
 
         if nsamples is None:
             nsamples = self.samples.shape[0]
-        if method == "multinomial":
-            multinomial_run = self.random_state.multinomial(
-                nsamples, self.weights, size=1
-            )[0]
-            idx = list()
-            for j in range(self.samples.shape[0]):
-                if multinomial_run[j] > 0:
-                    idx.extend([j for _ in range(multinomial_run[j])])
-            self.unweighted_samples = self.samples[idx, :]
-        else:
+        if method != "multinomial":
             raise ValueError("Exit code: Current available method: multinomial")
+        multinomial_run = self.random_state.multinomial(nsamples, self.weights, size=1)[0]
+        idx = []
+        for j in range(self.samples.shape[0]):
+            if multinomial_run[j] > 0:
+                idx.extend([j for _ in range(multinomial_run[j])])
+        self.unweighted_samples = self.samples[idx, :]
 
     @staticmethod
     def _preprocess_target(log_pdf_, pdf_, args):
@@ -170,9 +171,7 @@ class ImportanceSampling:
             if callable(pdf_):
                 if args is None:
                     args = ()
-                evaluate_log_pdf = lambda x: np.log(
-                    np.maximum(pdf_(x, *args), 10 ** (-320) * np.ones((x.shape[0],)))
-                )
+                evaluate_log_pdf = lambda x: np.log(np.maximum(pdf_(x, *args), 10 ** (-320) * np.ones((x.shape[0],))))
             else:
                 raise TypeError("UQpy: pdf_target must be a callable")
         else:

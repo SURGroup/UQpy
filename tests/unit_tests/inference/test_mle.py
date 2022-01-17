@@ -17,9 +17,9 @@ def test_simple_probability_model():
     data_1 = np.random.normal(mu, sigma, 1000).reshape((-1, 1))
     # set parameters to be learnt as None
     dist = Normal(loc=None, scale=None)
-    candidate_model = DistributionModel(distributions=dist, parameters_number=2)
+    candidate_model = DistributionModel(distributions=dist, n_parameters=2)
 
-    ml_estimator = MLE(inference_model=candidate_model, data=data_1, optimizations_number=3, random_state=1)
+    ml_estimator = MLE(inference_model=candidate_model, data=data_1, n_optimizations=3, random_state=1)
 
     assert ml_estimator.mle[0] == 0.003881247615960185
     assert ml_estimator.mle[1] == 0.09810041339322118
@@ -38,10 +38,10 @@ def test_regression_model():
     noise = Normal(loc=0., scale=np.sqrt(error_covariance)).rvs(nsamples=4, random_state=1).reshape((4,))
     data_3 = data_clean + noise
 
-    candidate_model = ComputationalModel(parameters_number=2, runmodel_object=h_func, error_covariance=error_covariance)
+    candidate_model = ComputationalModel(n_parameters=2, runmodel_object=h_func, error_covariance=error_covariance)
 
     optimizer = MinimizeOptimizer(method='nelder-mead')
-    ml_estimator = MLE(inference_model=candidate_model, data=data_3, optimizations_number=1, random_state=1,
+    ml_estimator = MLE(inference_model=candidate_model, data=data_3, n_optimizations=1, random_state=1,
                        optimizer=optimizer)
 
     assert ml_estimator.mle[0] == 0.8689097631871134
