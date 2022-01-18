@@ -117,11 +117,10 @@ Since :meth:`.karcher_mean` is a static method, it does not require instantiatio
 
 .. toctree::
    :maxdepth: 1
-   :caption: Optimization methods	
-   
-  
-  Optimization  <optimization/index>
-  
+   :caption: Optimization methods
+
+    Optimization  <optimization>
+
 
 Projections
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -130,9 +129,8 @@ A collection of methods to project data on the Grassmann manifold.
 .. toctree::
    :hidden:
    :maxdepth: 1
-   
-  
-  Methods <projections/index>
+
+    Methods <projections>
 
 
 
@@ -169,4 +167,4 @@ A description of the class signature is shown below:
    :hidden:
    :maxdepth: 1
 
-  Methods <interpolation/index>
+    Methods <interpolation>

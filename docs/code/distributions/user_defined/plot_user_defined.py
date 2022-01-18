@@ -1,7 +1,7 @@
 """
 
 User-defined Rosenbrock distribution
-==================================
+=====================================
 
 This examples shows the use of the multivariate normal distributions class. In particular:
 """
@@ -58,7 +58,7 @@ print(dist.parameters)
 #%% md
 #
 # Plot pdf of the user defined distribution
-# ----------------------------------
+# ------------------------------------------
 #
 
 #%%
@@ -76,7 +76,7 @@ plt.show()
 #%% md
 #
 # Check if the user-defined distribution has rvs, pdf and update_parameters method
-# ----------------------------------
+# ----------------------------------------------------------------------------------
 #
 
 #%%

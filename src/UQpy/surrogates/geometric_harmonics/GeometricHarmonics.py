@@ -38,7 +38,7 @@ class GeometricHarmonics:
         :param x: Training points of shape :code:`(n_samples, n_features)`.
         :param y: Target function values of shape :code:`(n_samples, n_targets)`
         :param kwargs: Scale parameter of the kernel. if :code:`epsilon is None` then the parameters for the
-        estimation of the kernel's scale must be provided.
+         estimation of the kernel's scale must be provided.
 
         See Also
         --------

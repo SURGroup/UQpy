@@ -1,2 +1,2 @@
-Examples
-^^^^^^^^^^^
+Monte Carlo Sampling Examples
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -25,4 +25,7 @@ Attributes
 ~~~~~~~~~~~~~~~~~~
 .. autoattribute:: UQpy.sampling.SimplexSampling.samples
 
-.. include::    ../auto_examples/sampling/simplex/index.rst
+.. toctree::
+   :hidden:
+
+   Examples <../auto_examples/sampling/simplex/index>

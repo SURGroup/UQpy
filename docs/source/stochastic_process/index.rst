@@ -48,4 +48,5 @@ the desired functionality. It does not require modification of any existing clas
     Spectral Representation Method <spectral_representation>
     Bispectral Representation Method <bispectral_representation>
     Karhunen Loeve Expansion <karhunen_loeve>
-    Non-Gaussian Translation Processes <translation>
+    Translation Processes <translation>
+    Inverse Translation Processes <inverse_translation>

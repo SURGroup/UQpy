@@ -335,8 +335,7 @@ class DiffusionMaps:
         Estimates the scale parameter for a Gaussian kernel, given a tolerance below which the kernel values are
         considered zero.
 
-        .. code::
-            scale = cut_off ** 2 / -log(tol)
+        ``scale = cut_off ** 2 / -log(tol)``
 
         :param data: Cloud of data points.
         :param tol: Tolerance where the *cut_off* should be made.

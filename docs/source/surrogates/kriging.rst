@@ -37,7 +37,7 @@ The :class:`.Kriging` class offers a variety of built-in regression models, spec
 
 
 Ordinary Kriging
-~~~~~~~~~~~~~~~~~~~~
+"""""""""""""""""""
 
 In ordinary Kriging, the regression model is assumed to take a constant value such that
 
@@ -45,7 +45,7 @@ In ordinary Kriging, the regression model is assumed to take a constant value su
 
 
 Universal Kriging
-~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""
 
 In universal Kriging, the regression model is assumed to take a general functional form. The :class:`.Kriging` class
 currenly supports two univeral Kriging models, the linear regression model given by:
@@ -58,7 +58,7 @@ and the quadratic regression model given by:
 
 
 User-Defined Regression Model
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""""""""""""""""""""""""""""""
 
 Adding a new regression model to the :class:`.Kriging` class is straightforward. This is done by creating a new class
 that evaluates the basis functions and the Jacobian, by extending the :class:`.Regression`.
@@ -95,7 +95,7 @@ Correlation Models
 The :class:`.Kriging` class offers a variety of built-in correlation models, specified by the `correlation_model` input described below.
 
 Exponential Correlation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""""""""""""""""""""""""
 
 The exponential correlation model takes the following form:
 
@@ -105,7 +105,7 @@ where :math:`h_i = s_i-x_i`.
 
 
 Gaussian Correlation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""
 
 The Gaussian correlation model takes the following form:
 
@@ -114,7 +114,7 @@ The Gaussian correlation model takes the following form:
 where :math:`h_i = s_i-x_i`.
 
 Linear Correlation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""
 
 The linear correlation model takes the following form:
 
@@ -124,7 +124,7 @@ where :math:`h_i = s_i-x_i`.
 
 
 Spherical Correlation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""
 
 The spherical correlation model takes the following form:
 
@@ -135,7 +135,7 @@ where :math:`\xi_i =  \min \bigg(1, \dfrac{|h_i|}{\theta_i}\bigg)` and :math:`h_
 
 
 Cubic Correlation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""""""""""""""""""
 
 The cubic correlation model takes the following form:
 
@@ -145,7 +145,7 @@ where :math:`\xi_i =  \min \bigg(1, \dfrac{|h_i|}{\theta_i}\bigg)` and :math:`h_
 
 
 Spline Correlation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""""""""""""""""""""
 
 The spline correlation model takes the following form:
 
@@ -155,7 +155,7 @@ where :math:`\xi_i =  \min \bigg(1, \dfrac{|h_i|}{\theta_i}\bigg)` and :math:`h_
 
 
 User-Defined Correlation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""""
 
 
 Adding a new correlation model to the :class:`.Kriging` class is straightforward. This is done by creating a new class

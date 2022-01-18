@@ -100,7 +100,7 @@ class MCMC(ABC):
         self.acceptance_rate = [0.0] * self.n_chains
         self.nsamples: int = 0
         """Total number of samples; The :py:attr:`nsamples` attribute tallies the total number of generated samples. 
-        After each iteration, it is updated by :any:`1`. At the end of the simulation, the :py:attr:`nsamples` attribute 
+        After each iteration, it is updated by :math:`1`. At the end of the simulation, the :py:attr:`nsamples` attribute 
         equals the user-specified value for input :py:attr:`nsamples` given to the child class."""
         self.nsamples_per_chain: int = 0
         """Total number of samples per chain; Similar to the attribute :py:attr:`nsamples`, it is updated during 

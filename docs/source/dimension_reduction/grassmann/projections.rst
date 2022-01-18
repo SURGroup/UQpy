@@ -32,5 +32,5 @@ The signature of the initializer is shown below:
 The abstract :class:`.ManifoldProjection` class is the parent class that allows the user to define a set of methods that
 must be created within any child classes built from this abstract class.
 
-.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.manifold_projections.baseclass.ManifoldProjection
+.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.projections.baseclass.ManifoldProjection
     :members:

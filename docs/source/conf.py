@@ -57,6 +57,10 @@ napoleon_use_param = True
 templates_path = ["_templates"]
 bibtex_bibfiles = ['bibliography.bib']
 bibtex_default_style = 'unsrt'
+
+# Try to remove duplicate labels
+autosectionlabel_prefix_document = True
+
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.

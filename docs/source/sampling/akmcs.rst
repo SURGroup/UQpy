@@ -30,7 +30,7 @@ custom learning function. These learning functions are described below.
 
 
 U-Function
-~~~~~~~~~~~~
+""""""""""""
 
 The U-function is a learning function adopted for Kriging-based reliability analysis adopted from :cite:`AKMCS1`. Given a Kriging model :math:`\hat{y}(\mathbf{x})`, point estimator of its standard devaition :math:`\sigma_{\hat{y}}(\mathbf{x})`, and a set of learning points :math:`S`, the U-function seeks out the point :math:`\mathbf{x}\in S` that minimizes the function:
 
@@ -49,7 +49,7 @@ where :math:`\epsilon_u` is a user-defined error threshold (typically set to 2).
 
 
 Weighted U-Function
-~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""
 
 The probability weighted U-function is a learning function for reliability analysis adapted from the U-function in :cite:`AKMCS3`. It modifies the U-function as follows:
 
@@ -62,7 +62,7 @@ As with the standard U-function, :class:`.AdaptiveKriging` with the weighted U-f
 .. autoclass:: UQpy.sampling.WeightedUFunction
 
 Expected Feasibility Function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""""""""
 
 The Expected Feasibility Function (EFF) is a learning function for reliability analysis introduced as part of the Efficient Global Reliability Analysis (EGRA) method :cite:`AKMCS4`. The EFF provides assesses how well the true value of the peformance function, :math:`y(\mathbf{x})`, is expected to satisfy the constraint :math:`y(\mathbf{x}) = a` over a region :math:`a-\epsilon \le y(\mathbf{x}) \le a+\epsilon`. It is given by:
 
@@ -77,7 +77,7 @@ At each iteration, the new point that is selected is the point that maximizes th
 .. autoclass:: UQpy.sampling.ExpectedFeasibility
 
 Expected Improvement Function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""""""""""""""""""""""""""""""
 
 The Expected Improvement Function (EIF) is a Kriging-based learning function for global optimization introduced as part of the Efficient Global Optimization (EGO) method in :cite:`AKMCS2`. The EIF seeks to find the global minimum of a function. It searches the space by placing samples at locations that maximize the expected improvement, where the improvement is defined as :math:`I(\mathbf{x})=\max(y_{min}-y(\mathbf{x}), 0)`, where the model response :math:`y(\mathbf{x})` is assumed to be a Gaussian random variable and :math:`y_{min}` is the current minimum model response. The EIF is then expressed as:
 
@@ -94,7 +94,7 @@ Typically a value of :math:`0.01` is used for :math:`\epsilon_{eif}`.
 .. autoclass:: UQpy.sampling.ExpectedImprovement
 
 Expected Improvement for Global Fit
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""""""""""""""
 
 The Expected Improvement for Global Fit (EIGF) learning function aims to build the surrogate model that is the best global representation of model. It was introduced in :cite:`AKMCS5`. It aims to balance between even space-filling design and sampling in regions of high variation and is given by:
 
@@ -107,7 +107,7 @@ No stopping criterion is suggested by the authors of :cite:`AKMCS5`, thus its im
 .. autoclass:: UQpy.sampling.ExpectedImprovementGlobalFit
 
 User-Defined Learning Functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""""""""
 
 The :class:`.AdaptiveKriging` class also allows new, user-defined learning functions to be specified in a straightforward way, by generating child classes of the :class:`.LearningFunction` abstract class.
 

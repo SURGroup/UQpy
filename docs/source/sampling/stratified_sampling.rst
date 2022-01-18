@@ -26,8 +26,10 @@ cells, and strata composed of Delaunay simplexes respectively. These classes liv
 .. toctree::
    :maxdepth: 1
 
-    Strata Class <strata/strata_class>
-    List of available Strata <strata/list_of_strata>
+    Strata Base Class <strata/strata_class>
+    Rectangular Strata <strata/rectangular_strata>
+    Delaunay Strata <strata/delaunay_strata>
+    Voronoi Strata <strata/voronoi_strata>
     Adding a new Strata <strata/adding_new_strata>
 
 2. The :class:`.TrueStratifiedSampling` class defines a set of subclasses used to draw samples from strata defined by a :class:`.Strata` class object.

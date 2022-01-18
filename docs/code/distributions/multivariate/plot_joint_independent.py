@@ -30,7 +30,7 @@ import matplotlib.pyplot as plt
 #%% md
 #
 # Define a multivariate distribution from independent univariate marginals.
-# ------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 #
 # In order to define a JointIndependent distribution, a list of marginal distributions is initially created.
 # These marginals are then provided as input to the JointIndependent class of UQpy.
@@ -48,7 +48,7 @@ print(dist.get_parameters())
 #%% md
 #
 # Sample the distribution  and plot the pdf of the distribution.
-# --------------------------------------------------------------
+# ---------------------------------------------------------------
 # In a similar manner to univariate distributions, samples can be drawn from an JointIndependent distribution
 # using its rvs method.
 

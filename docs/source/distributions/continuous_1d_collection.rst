@@ -73,6 +73,7 @@ Gamma
 Gamma distribution having probability density function:
 
 .. math:: f(x|a) = \dfrac{x^{a-1}\exp(-x)}{\Gamma(a)}
+
 for :math:`x\ge 0`, :math:`a>0`. Here :math:`\Gamma(a)` refers to the Gamma function.
 
 In this standard form :math:`(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
@@ -109,7 +110,7 @@ Inverse Gaussian distribution having probability density function
 
 .. math:: f(x|\mu) = \dfrac{1}{2\pi x^3}\exp{(-\dfrac{(x\\mu)^2}{2x\mu^2})}
 
-for :math:`x>0`. :py:meth:`cdf` method returns :any:`NaN` for :math:`\mu<0.0028`.
+for :math:`x>0`. :py:meth:`cdf` method returns :code:`NaN` for :math:`\mu<0.0028`.
 
 In this standard form :math:`(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
 this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.

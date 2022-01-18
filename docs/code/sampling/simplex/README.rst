@@ -1,2 +1,2 @@
-Examples
-^^^^^^^^^^^
+Simplex Sampling Examples
+^^^^^^^^^^^^^^^^^^^^^^^^^^^

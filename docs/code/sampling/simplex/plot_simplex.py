@@ -48,7 +48,7 @@ x = SimplexSampling(nodes=vertex, nsamples=10, random_state=1)
 
 #%% md
 #
-# Plot the samples
+# Plot the samples of the simplex
 # ------------------------------------
 # A schematic illustration of the 2-D simplex and new samples generated using Simplex class are presented below.
 

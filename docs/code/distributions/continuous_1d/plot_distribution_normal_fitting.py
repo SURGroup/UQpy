@@ -17,7 +17,7 @@ from UQpy.distributions.collection.Normal import Normal
 #%% md
 #
 # Define a Normal distribution and use the fit method.
-# ----------------------------------------------
+# ------------------------------------------------------
 #
 # Parameters to be learnt should be instantiated as None.
 # Note that the fit method of each distribution returns a dictionary containing as keys the names of parameters

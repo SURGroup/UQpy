@@ -27,7 +27,7 @@ from UQpy.sampling.stratified_sampling.latin_hypercube_criteria import *
 
 # %% md
 #
-# Define Latin Hypercube sampling
+# Define Latin Hypercube sampling class
 # ----------------------------------------------
 # In order to initialize the LatinHypercube sampling class, the user needs to define a list of distributions
 # for each one of the parameters that need to be sampled.
@@ -64,7 +64,7 @@ lhs_mincorrelate = LatinHypercubeSampling(distributions=[dist1, dist2],
 
 # %% md
 #
-# Plot the samples
+# Plot the generated samples
 # ------------------------------------
 # The *samples* attribute of the latin hypercube class is a numpy array of with shape (nsamples, len(distributions))
 # Both *samples* and *samplesU01* are populated at the same time since the Latin Hypercube samples are initially drawn

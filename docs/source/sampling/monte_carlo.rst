@@ -22,4 +22,8 @@ Attributes
 .. autoattribute:: UQpy.sampling.MonteCarloSampling.samplesU01
 
 
-.. include::    ../auto_examples/sampling/monte_carlo/index.rst
+
+.. toctree::
+   :hidden:
+
+   Examples <../auto_examples/sampling/monte_carlo/index>

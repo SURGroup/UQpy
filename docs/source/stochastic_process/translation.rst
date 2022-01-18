@@ -44,15 +44,3 @@ Attributes
 .. autoattribute:: UQpy.stochastic_process.Translation.correlation_function_non_gaussian
 .. autoattribute:: UQpy.stochastic_process.Translation.scaled_correlation_function_non_gaussian
 .. autoattribute:: UQpy.stochastic_process.Translation.power_spectrum_non_gaussian
-
-Inverse Translation Class
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Methods
-"""""""
-.. autoclass:: UQpy.stochastic_process.InverseTranslation
-
-Attributes
-""""""""""
-.. autoattribute:: UQpy.stochastic_process.InverseTranslation.samples_gaussian
-.. autoattribute:: UQpy.stochastic_process.InverseTranslation.power_spectrum_gaussian
-.. autoattribute:: UQpy.stochastic_process.InverseTranslation.correlation_function_gaussian

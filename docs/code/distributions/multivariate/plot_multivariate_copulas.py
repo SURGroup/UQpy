@@ -7,8 +7,7 @@ Multivariate from independent marginals and copula
 
 #%% md
 #
-# - How to define α bivariate distribution from independent marginals and change its structure based on a copula
-# supported by UQpy
+# - How to define α bivariate distribution from independent marginals and change its structure based on a copula supported by UQpy
 # - How to plot the pdf of the distribution
 # - How to modify the parameters of the distribution
 
@@ -20,15 +19,13 @@ Multivariate from independent marginals and copula
 
 #%%
 
-
-from UQpy.distributions.collection import Normal, Lognormal, JointIndependent
 import numpy as np
 import matplotlib.pyplot as plt
 
 #%% md
 #
 # Example of a multivariate distribution from joint independent marginals
-# ------------------------------------
+# ------------------------------------------------------------------------
 
 
 #%%
@@ -59,7 +56,7 @@ print(hasattr(dist_2, 'rvs'))
 #%% md
 #
 # Plot the pdf of the distribution before and after the copula
-# ------------------------------------
+# -------------------------------------------------------------
 #
 
 #%%
@@ -87,7 +84,7 @@ plt.show()
 
 #%% md
 #
-# Modify the parameters of the distribution.
+# Modify the parameters of the multivariate copula.
 # -------------------------------------------------
 #
 # Use the update_parameters method.

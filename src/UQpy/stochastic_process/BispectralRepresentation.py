@@ -25,16 +25,15 @@ class BispectralRepresentation:
          provided, then the :class:`.BispectralRepresentation` object is created but samples are not generated.
         :param power_spectrum: The discretized power spectrum.
          - For uni-variate, one-dimensional processes `power_spectrum` will be :class:`list` or :class:`numpy.ndarray`
-          of length `number_frequency_intervals`.
-         - For uni-variate, multi-dimensional processes, `power_spectrum` will be a :class:`list` or
-          :class:`numpy.ndarray` of size :code:`(number_frequency_intervals[0], ...,
-          number_frequency_intervals[number_of_dimensions-1])`
+         of length `number_frequency_intervals`.
+
+         - For uni-variate, multi-dimensional processes, `power_spectrum` will be a :class:`list` or :class:`numpy.ndarray` of size :code:`(number_frequency_intervals[0], ..., number_frequency_intervals[number_of_dimensions-1])`
+
         :param bispectrum: The prescribed bispectrum.
-         - For uni-variate, one-dimensional processes, `bispectrum` will be a :class:`list` or :class:`numpy.ndarray` of
-          size :code:`(number_frequency_intervals, number_frequency_intervals)`
-         - For uni-variate, multi-dimensional processes, `bispectrum` will be a :class:`list` or :class:`numpy.ndarray`
-          of size :code:`(number_frequency_intervals[0], ..., number_frequency_intervals[number_of_dimensions-1],
-          number_frequency_intervals[0], ..., number_frequency_intervals[number_of_dimensions-1])`
+         - For uni-variate, one-dimensional processes, `bispectrum` will be a :class:`list` or :class:`numpy.ndarray` of size :code:`(number_frequency_intervals, number_frequency_intervals)`
+
+         - For uni-variate, multi-dimensional processes, `bispectrum` will be a :class:`list` or :class:`numpy.ndarray` of size :code:`(number_frequency_intervals[0], ..., number_frequency_intervals[number_of_dimensions-1], number_frequency_intervals[0], ..., number_frequency_intervals[number_of_dimensions-1])`
+
         :param time_interval: Length of time discretizations (:math:`\Delta t`) for each dimension of size
          `number_of_dimensions`.
         :param frequency_interval: Length of frequency discretizations (:math:`\Delta \omega`) for each dimension of

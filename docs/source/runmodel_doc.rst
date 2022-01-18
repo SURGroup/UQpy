@@ -46,7 +46,7 @@ once. The ``model_object`` may be a class or a function. If the ``model_object``
 must be stored as an attribute of the class called :py:attr:`qoi`. If the model object is a function, it must return the
 quantity of interest after execution.
 
-Details for ``model_script`` can be found in the Section entitled :ref:`Files & Scripts Used by RunModel`.
+Details for ``model_script`` can be found in the Section entitled `Files & Scripts Used by RunModel`_.
 
 
 Python Model Workflow: Parallel Execution
@@ -56,7 +56,7 @@ The python model is executed in parallel by setting ``ntasks`` equal to the desi
 case, the ``model_script`` and corresponding ``model_object`` should be defined to accept a single sample. :class:`.RunModel` uses the ``multiprocessing`` library for
 parallel execution of python models, which restricts parallelization to the cores available within a single computer. A workaround to this, to run in parallel across multiple compute nodes, is to treat the python model as a third-party model and run with the third-party parallel execution workflow discussed below.
 
-Details for ``model_script`` can be found in the Section entitled :ref:`Files & Scripts Used by RunModel`.
+Details for ``model_script`` can be found in the Section entitled `Files & Scripts Used by RunModel`_.
 
 Third-Party Model Workflow: Serial Execution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -68,7 +68,7 @@ This workflow operates in three steps as explained in the following:
 
 1. :py:mod:`UQpy` takes the file ``input_template`` and generates an indexed set of input files, one for each set of sample values passed through the ``samples`` input. For
    example, if the name of the template input file is ``input.inp``, then :py:mod:`UQpy` generates indexed input files by appending the sample number between the filename       and extension, as ``input_1.inp``, ``input_2.inp``, ... , ``input_n.inp``, where ``n`` is the number of sample sets in ``samples``. The details of how the
-   ``input_template`` should be structured are discussed in the Section entitled :ref:`Files & Scripts Used by RunModel`. During serial execution, one input file is
+   ``input_template`` should be structured are discussed in the Section entitled `Files & Scripts Used by RunModel`_. During serial execution, one input file is
    generated, the model is executed, another input file is generated, the model is executed, and so on.
 
 2. The third-party software model is executed for each set of sample values using the indexed model input file generated in Step 1 by calling the Python
@@ -81,7 +81,7 @@ This workflow operates in three steps as explained in the following:
    and executes the object defined by ``output_object_name``. The structure of the ``output_object`` must be such that it accepts, as input, the sample index. If the
    ``output_object`` is a Class, the quantity of interest must be stored as an attribute of the class called :py:attr:`qoi`. If the ``output_object`` it is a function, it
    must return the quantity of interest after execution. More details specifying the structure of ``output_script`` and the associated ``output_object`` can be found
-   in the Section entitled :ref:`Files & Scripts Used by RunModel`. Finally, because :py:mod:`UQpy` imports the ``output_script`` and executes it within :class:`.RunModel`, the
+   in the Section entitled `Files & Scripts Used by RunModel`_. Finally, because :py:mod:`UQpy` imports the ``output_script`` and executes it within :class:`.RunModel`, the
    values returned by the output object are directly stored according to their sample index in the :class:`.RunModel` attribute :py:attr:`qoi_list`.
 
 
@@ -99,10 +99,10 @@ at `https://www.gnu.org/software/parallel <https://www.gnu.org/software/parallel
 2. `GNU parallel` divides the total number of jobs into a number of chunks specified by the variable ``ntasks``.
    ``ntasks`` number of jobs are executed in parallel and
    this continues until all the jobs finish executing. Note that the jobs can be executed across multiple compute nodes when ``cluster = True`` using the SLURM 
-   workload manager. This is specified by setting ``cores_per_task`` and ``nodes`` appropriately. Details can be found in the description of the :ref:`RunModel Class`. 
+   workload manager. This is specified by setting ``cores_per_task`` and ``nodes`` appropriately. Details can be found in the description of the :class:`.RunModel`.
    Whether in serial or parallel, the sample index is used by :class:`.RunModel` to keep track of model execution and to link the samples to their corresponding outputs.
    :class:`.RunModel` achieves this by consistently naming all the input files using the sample index (see Step 1) and passing the sample index into ``model_script``. More
-   details on the precise structure of ``model_script`` are discussed in the Section entitled :ref:`Files & Scripts Used by RunModel`.
+   details on the precise structure of ``model_script`` are discussed in the Section entitled `Files & Scripts Used by RunModel`_.
 
 3. Output processing in the parallel case is performed after all the runs are completed, whereas in the serial case it is done after every individual run.
 
@@ -138,6 +138,7 @@ remains in this directory, as does the `InputFiles` directory. This is illustrat
 .. image:: _static/Runmodel_directory_3.png
    :width: 300
 
+.. _Files & Scripts Used by RunModel:
 
 Files & Scripts Used by RunModel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -223,7 +224,7 @@ Instead, :class:`.RunModel` calls the model script through
       os.system(command3)
 
 Examples of the ``model_script`` are given in the `example` folder on the :py:mod:`UQpy` repository as described in the
-Section entitled :ref:`Examples & Template Files`.
+Section entitled `Examples & Template Files`_.
 
 **input_template**
 
@@ -259,7 +260,7 @@ place-holder variables are replaced with numerical values from the ``samples`` p
    
    2. The second dimension of ``samples`` must correspond to the number of variables being passed into each model evaluation. Note that variables do not need to be scalars. Variables can be scalars, vectors, matrices, or tensors. When writing vectors, matrices, and tensors, they are first flattened and written in delimited form.
 
-Examples of the ``template_input`` are given in the `example` folder on the :py:mod:`UQpy` repository as described in the Section entitled :ref:`Examples & Template Files`.
+Examples of the ``template_input`` are given in the `example` folder on the :py:mod:`UQpy` repository as described in the Section entitled `Examples & Template Files`_.
 
 **output_script**
 
@@ -293,7 +294,9 @@ the quantity of interest after execution. Examples for how the output object may
 
 Often, the working directory will contain an executable software program. This is often the case for custom software and
 for software that does not lie in the user's path.
-  
+
+.. _Examples & Template Files:
+
 Examples & Template Files
 --------------------------
 

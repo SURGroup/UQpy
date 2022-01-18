@@ -31,7 +31,7 @@ class ImportanceSampling:
         :param proposal: Proposal to sample from. This :class:`.Distribution` object must have an :py:meth:`rvs` method
          and a `log_pdf` (or pdf) method.
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is
-         :any:`.None`.
+         :any:`None`.
 
          If an :any:`int` is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
          the object itself can be passed directly.
