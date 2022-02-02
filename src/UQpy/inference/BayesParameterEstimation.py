@@ -52,9 +52,8 @@ class BayesParameterEstimation:
                         "UQpy: A proposal density of the ImportanceSampling"
                         " or a prior to the Inference model  must be provided.")
                 self.sampler.proposal = inference_model.prior
-                self.sampler._preprocess_proposal()
             self.sampler._args_target = (data,)
-            self.evaluate_log_target = lambda x: inference_model.evaluate_log_posterior(x, (data,))
+            self.sampler.log_pdf_target = inference_model.evaluate_log_posterior
         elif isinstance(self.sampler, MCMC):
             if self.sampler._initialization_seed is None:
                 if inference_model.prior is None or not hasattr(inference_model.prior, "rvs"):

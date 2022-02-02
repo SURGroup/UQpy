@@ -18,9 +18,9 @@ class MLE:
     def __init__(
         self,
         inference_model: InferenceModel,
+        data: Union[list, np.ndarray],
         n_optimizations: Union[None, int] = 1,
         initial_parameters=None,
-        data: Union[list, np.ndarray] = None,
         optimizer: Optimizer = MinimizeOptimizer(),
         random_state=None,
     ):
@@ -60,11 +60,11 @@ class MLE:
         self.initial_parameters = initial_parameters
 
         # Run the optimization procedure
-        if self.data is not None:
-            self.run(self.data)
+        if (n_optimizations is not None) or (initial_parameters is not None):
+            self.run(n_optimizations=n_optimizations, initial_parameters=initial_parameters)
 
     @beartype
-    def run(self, data: Union[list, np.ndarray]):
+    def run(self, n_optimizations: Union[None, int] = 1, initial_parameters=None):
         """
         Run the maximum likelihood estimation procedure.
 
@@ -73,16 +73,23 @@ class MLE:
         this method is used. If `data` are given when creating the :class:`.MLE` object, this method is called
         automatically when the object is created.
 
-        :param data: Available data, :class:`numpy.ndarray` of shape consistent with log likelihood function in
-         :class:`.InferenceModel`. If this parameter is provided at :class:`.InformationModelSelection` object
-         initialization, the maximum likelihood estimation algorithm will be automatically performed. Alternatively,
-         the user must execute the :meth:`.run` method.
+        :param n_optimizations: Number of iterations that the optimization is run, starting at random initial
+         guesses. It is only used if `initial_parameters` is not provided. Default is :math:`1`.
+         The random initial guesses are sampled uniformly between :math:`0` and :math:`1`, or uniformly between
+         user-defined bounds if an input bounds is provided as a keyword argument to the `optimizer` input parameter.
+        :param initial_parameters: Initial guess(es) for optimization, :class:`numpy.ndarray` of shape
+         :code:`(nstarts, n_parameters)` or :code:`(n_parameters, )`, where :code:`nstarts` is the number of times the
+         optimizer will be called. Alternatively, the user can provide input `n_optimizations` to randomly sample
+         initial guess(es). The identified MLE is the one that yields the maximum log likelihood over all calls of the
+         optimizer.
         """
-        self.data = data
         # Run optimization (use x0 if provided, otherwise sample starting point from [0, 1] or bounds)
         self.logger.info(
             "UQpy: Evaluating maximum likelihood estimate for inference model "
             + self.inference_model.name)
+
+        self.n_optimizations = n_optimizations
+        self.initial_parameters = initial_parameters
 
         use_distribution_fit = (
             hasattr(self.inference_model, "distributions")

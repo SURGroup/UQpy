@@ -32,10 +32,7 @@ def test_probability_model_importance_sampling():
     candidate_model = DistributionModel(distributions=Normal(loc=None, scale=None),
                                         n_parameters=2, prior=prior)
 
-    sampling = ImportanceSampling(proposal=candidate_model.prior,
-                                  args_target=(data, ),
-                                  log_pdf_target=candidate_model.evaluate_log_posterior,
-                                  random_state=1)
+    sampling = ImportanceSampling(random_state=1)
 
     bayes_estimator = BayesParameterEstimation(sampling_class=sampling,
                                                inference_model=candidate_model,
@@ -62,10 +59,7 @@ def test_probability_model_mcmc():
     candidate_model = DistributionModel(distributions=Normal(loc=None, scale=None),
                                         n_parameters=2, prior=prior)
 
-    sampling = MetropolisHastings(jump=10, burn_length=10, seed=[1.0, 0.2], random_state=1,
-                                  args_target=(data, ),
-                                  log_pdf_target=candidate_model.evaluate_log_posterior)
-
+    sampling = MetropolisHastings(jump=10, burn_length=10, seed=[1.0, 0.2], random_state=1)
     bayes_estimator = BayesParameterEstimation(sampling_class=sampling,
                                                inference_model=candidate_model,
                                                data=data,

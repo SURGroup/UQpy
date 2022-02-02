@@ -74,7 +74,7 @@ class BayesModelSelection:
                 estimator.sampler.dimension = estimator.inference_model.n_parameters
 
     @beartype
-    def run(self, nsamples: Union[None, list[PositiveInteger]]):
+    def run(self, nsamples: Union[None, list[int]]):
         """
         Run the Bayesian model selection procedure, i.e., compute model posterior probabilities.
 
@@ -90,6 +90,8 @@ class BayesModelSelection:
         # Perform mcmc for all candidate models
         for i, (inference_model, bayes_estimator) in enumerate(zip(self.candidate_models, self.bayes_estimators)):
             self.logger.info("UQpy: Running mcmc for model " + inference_model.name)
+            if nsamples[i] == 0:
+                continue
             bayes_estimator.run(nsamples=nsamples[i])
             self.evidences[i] = \
                 self.evidence_method.estimate_evidence(inference_model=inference_model,

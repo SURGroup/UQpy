@@ -39,13 +39,11 @@ class ImportanceSampling:
          method is called when the object is created. Default is :any:`None`.
         """
         # Initialize proposal: it should have an rvs and log pdf or pdf method
+        self.evaluate_log_target = None
         self.proposal = proposal
         self._args_target = args_target
-        self._preprocess_proposal()
-        self.evaluate_log_target = self._preprocess_target(
-            log_pdf_=log_pdf_target,
-            pdf_=pdf_target,
-            args=args_target,)
+        self.log_pdf_target = log_pdf_target
+        self.pdf_target = pdf_target
 
         self.logger = logging.getLogger(__name__)
         self.random_state = process_random_state(random_state)
@@ -91,16 +89,19 @@ class ImportanceSampling:
         This function has no returns, but it updates the output attributes :py:attr:`samples`,
         :py:attr:`unnormalized_log_weights` and :py:attr:`weights` of the :class:`.ImportanceSampling` object.
         """
+        if self.evaluate_log_target is None:
+            self._preprocess_proposal()
+            self.evaluate_log_target = self._preprocess_target(
+                log_pdf_=self.log_pdf_target,
+                pdf_=self.pdf_target,
+                args=self._args_target, )
 
         self.logger.info("UQpy: Running Importance Sampling...")
         # Sample from proposal
-        new_samples = self.proposal.rvs(
-            nsamples=nsamples, random_state=self.random_state
-        )
+        new_samples = self.proposal.rvs(nsamples=nsamples, random_state=self.random_state)
         # Compute un-scaled weights of new samples
-        new_log_weights = self.evaluate_log_target(
-            x=new_samples
-        ) - self.proposal.log_pdf(x=new_samples)
+        a=self.evaluate_log_target(x=new_samples)
+        new_log_weights = self.evaluate_log_target(x=new_samples) - self.proposal.log_pdf(x=new_samples)
 
         # Save samples and weights (append to existing if necessary)
         if self.samples is None:
@@ -109,13 +110,10 @@ class ImportanceSampling:
         else:
             self.samples = np.concatenate([self.samples, new_samples], axis=0)
             self.unnormalized_log_weights = np.concatenate(
-                [self.unnormalized_log_weights, new_log_weights], axis=0
-            )
+                [self.unnormalized_log_weights, new_log_weights], axis=0)
 
         # Take the exponential and normalize the weights
-        weights = np.exp(
-            self.unnormalized_log_weights - max(self.unnormalized_log_weights)
-        )
+        weights = np.exp(self.unnormalized_log_weights - max(self.unnormalized_log_weights))
         # note: scaling with max avoids having NaN of Inf when taking the exp
         sum_w = np.sum(weights, axis=0)
         self.weights = weights / sum_w
@@ -123,9 +121,7 @@ class ImportanceSampling:
 
         # If a set of unweighted samples exist, delete them as they are not representative of the distribution anymore
         if self.unweighted_samples is not None:
-            self.logger.info(
-                "UQpy: unweighted samples are being deleted, call the resample method to regenerate them"
-            )
+            self.logger.info("UQpy: unweighted samples are being deleted, call the resample method to regenerate them")
             self.unweighted_samples = None
 
     def resample(self, method="multinomial", nsamples=None):

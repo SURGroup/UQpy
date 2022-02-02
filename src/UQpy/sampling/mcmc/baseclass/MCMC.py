@@ -78,8 +78,7 @@ class MCMC(ABC):
         self.evaluate_log_target_marginals: Callable = None
         """It is a callable that evaluates the log-pdf of the target marginal distributions at a given point **x**"""
         # Check target pdf
-        (self.evaluate_log_target, self.evaluate_log_target_marginals,) = \
-            self._preprocess_target(pdf_=pdf_target, log_pdf_=log_pdf_target, args=args_target)
+
         self.save_log_pdf = save_log_pdf
         self.concatenate_chains = concatenate_chains
         self.random_state = process_random_state(random_state)
@@ -127,7 +126,9 @@ class MCMC(ABC):
         is not a multiple of `n_chains`, `nsamples` is set to the next largest integer that is a multiple of
         `n_chains`.
         """
-
+        if (self.evaluate_log_target is None and self.evaluate_log_target_marginals is None):
+            (self.evaluate_log_target, self.evaluate_log_target_marginals,) = \
+                self._preprocess_target(pdf_=self.pdf_target, log_pdf_=self.log_pdf_target, args=self.args_target)
         # Initialize the runs: allocate space for the new samples and log pdf values
         (
             final_nsamples,

@@ -3,13 +3,8 @@ from typing import Union
 
 from UQpy.inference.information_criteria import AIC
 from UQpy.inference.information_criteria.baseclass.InformationCriterion import InformationCriterion
-from UQpy.optimization.MinimizeOptimizer import MinimizeOptimizer
-from UQpy.optimization.baseclass.Optimizer import Optimizer
 from beartype import beartype
-from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
 from UQpy.inference.MLE import MLE
-from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger, NumpyFloatArray
-from UQpy.utilities.Utilities import process_random_state
 import numpy as np
 
 
@@ -20,9 +15,10 @@ class InformationModelSelection:
     @beartype
     def __init__(
             self,
-            mle_estimators: list[MLE],
-            data: Union[list, np.ndarray] = None,
+            parameter_estimators: list[MLE],
             criterion: InformationCriterion = AIC(),
+            n_optimizations: list[int] = None,
+            initial_parameters: list[np.ndarray] = None
     ):
         """
         Perform model selection using information theoretic criteria.
@@ -31,20 +27,31 @@ class InformationModelSelection:
         :class:`.MLE` class for maximum likelihood estimation, thus inputs to :class:`.MLE` can also be provided to
         :class:`InformationModelSelection`, as lists of length equal to the number of models.
 
-        :param mle_estimators: A list containing a maximum-likelihood estimator (:class:`.MLE`) for each one of the
+        :param parameter_estimators: A list containing a maximum-likelihood estimator (:class:`.MLE`) for each one of the
          models to be compared.
         :param criterion: Criterion to be used (:class:`.AIC`, :class:`.BIC`, :class:`.AICc)`. Default is :class:`.AIC`
         :param data: Available data. If this parameter is provided at :class:`.InformationModelSelection` object
          initialization, the model selection algorithm will be automatically performed. Alternatively, the user must
          execute the :meth:`.run` method.
+         :param n_optimizations: Number of iterations that the optimization is run, starting at random initial
+         guesses. It is only used if `initial_parameters` is not provided. Default is :math:`1`.
+         The random initial guesses are sampled uniformly between :math:`0` and :math:`1`, or uniformly between
+         user-defined bounds if an input bounds is provided as a keyword argument to the `optimizer` input parameter.
+        :param initial_parameters: Initial guess(es) for optimization, :class:`numpy.ndarray` of shape
+         :code:`(nstarts, n_parameters)` or :code:`(n_parameters, )`, where :code:`nstarts` is the number of times the
+         optimizer will be called. Alternatively, the user can provide input `n_optimizations` to randomly sample
+         initial guess(es). The identified MLE is the one that yields the maximum log likelihood over all calls of the
+         optimizer.
         """
-        self.candidate_models = [mle.inference_model for mle in mle_estimators]
-        self.models_number = len(mle_estimators)
+        self.candidate_models = [mle.inference_model for mle in parameter_estimators]
+        self.models_number = len(parameter_estimators)
         self.criterion: InformationCriterion = criterion
         self.logger = logging.getLogger(__name__)
-        self.data = data
 
-        self.ml_estimators: list = mle_estimators
+        self.n_optimizations = n_optimizations
+        self.initial_parameters= initial_parameters
+
+        self.parameter_estimators: list = parameter_estimators
         """:class:`.MLE` results for each model (contains e.g. fitted parameters)"""
 
         # Initialize the outputs
@@ -60,10 +67,10 @@ class InformationModelSelection:
         where :math:`\Delta_i = criterion_i - min_i(criterion)`"""
 
         # Run the model selection procedure
-        if self.data is not None:
-            self.run(data=self.data)
+        if (self.n_optimizations is not None) or (self.initial_parameters is not None):
+            self.run(self.n_optimizations, self.initial_parameters)
 
-    def run(self, data: Union[list, np.ndarray]):
+    def run(self, n_optimizations: list[int], initial_parameters: list[np.ndarray]=None):
         """
         Run the model selection procedure, i.e. compute criterion value for all models.
 
@@ -71,23 +78,38 @@ class InformationModelSelection:
         log-likelihood, then computes the criterion value and probability for each model. If `data` are given when
         creating the :class:`.MLE` object, this method is called automatically when the object is created.
 
-        :param data: Available data.
+        :param n_optimizations: Number of iterations that the optimization is run, starting at random initial
+         guesses. It is only used if `initial_parameters` is not provided. Default is :math:`1`.
+         The random initial guesses are sampled uniformly between :math:`0` and :math:`1`, or uniformly between
+         user-defined bounds if an input bounds is provided as a keyword argument to the `optimizer` input parameter.
+        :param initial_parameters: Initial guess(es) for optimization, :class:`numpy.ndarray` of shape
+         :code:`(nstarts, n_parameters)` or :code:`(n_parameters, )`, where :code:`nstarts` is the number of times the
+         optimizer will be called. Alternatively, the user can provide input `n_optimizations` to randomly sample
+         initial guess(es). The identified MLE is the one that yields the maximum log likelihood over all calls of the
+         optimizer.
         """
-        self.data = data
-
+        if (n_optimizations is not None and (len(n_optimizations) != len(self.parameter_estimators))) or \
+           (initial_parameters is not None and len(initial_parameters) != len(self.parameter_estimators)):
+            raise ValueError("The length of n_optimizations and initial_parameters should be equal to the number of "
+                             "parameter estimators")
         # Loop over all the models
-        for i, ml_estimator in enumerate(self.ml_estimators):
+        for i, parameter_estimator in enumerate(self.parameter_estimators):
             # First evaluate ML estimate for all models, do several iterations if demanded
-            ml_estimator.run(data=self.data)
+            parameters = None
+            if initial_parameters is not None:
+                parameters = initial_parameters[i]
+
+            optimizations = 0
+            if n_optimizations is not None:
+                optimizations = n_optimizations[i]
+
+            parameter_estimator.run(n_optimizations=optimizations, initial_parameters=parameters)
 
             # Then minimize the criterion
             self.criterion_values[i], self.penalty_terms[i] = \
-                self._minimize_info_criterion(criterion=self.criterion,
-                                              data=self.data,
-                                              inference_model=ml_estimator.inference_model,
-                                              max_log_like=ml_estimator.max_log_like,
-                                              return_penalty=True)
-
+                self.criterion.minimize_criterion(data=parameter_estimator.data,
+                                                  parameter_estimator=parameter_estimator,
+                                                  return_penalty=True)
         # Compute probabilities from criterion values
         self.probabilities = self._compute_probabilities(self.criterion_values)
 
@@ -106,26 +128,10 @@ class InformationModelSelection:
         sort_idx = list(np.argsort(np.array(self.criterion_values)))
 
         self.candidate_models = [self.candidate_models[i] for i in sort_idx]
-        self.ml_estimators = [self.ml_estimators[i] for i in sort_idx]
+        self.parameter_estimators = [self.parameter_estimators[i] for i in sort_idx]
         self.criterion_values = [self.criterion_values[i] for i in sort_idx]
         self.penalty_terms = [self.penalty_terms[i] for i in sort_idx]
         self.probabilities = [self.probabilities[i] for i in sort_idx]
-
-    @staticmethod
-    def _minimize_info_criterion(
-            criterion: InformationCriterion,
-            data,
-            inference_model,
-            max_log_like,
-            return_penalty=False,
-    ):
-
-        n_parameters = inference_model.n_parameters
-        n_data = len(data)
-        penalty_term = criterion.evaluate_criterion(n_data, n_parameters)
-        if return_penalty:
-            return -2 * max_log_like + penalty_term, penalty_term
-        return -2 * max_log_like + penalty_term
 
     @staticmethod
     def _compute_probabilities(criterion_values):

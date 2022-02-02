@@ -25,24 +25,24 @@ def test_mle():
 
 
 def test_info_model_selection_bic():
-    mle1 = MLE(inference_model=candidate_model, n_optimizations=5)
-    mle2 = MLE(inference_model=candidate_model2, n_optimizations=5)
-    selector = InformationModelSelection(mle_estimators=[mle1, mle2], data=data, criterion=BIC())
+    mle1 = MLE(inference_model=candidate_model, data=data)
+    mle2 = MLE(inference_model=candidate_model2, data=data)
+    selector = InformationModelSelection(parameter_estimators=[mle1, mle2], criterion=BIC(), n_optimizations=[5]*2)
     assert round(selector.probabilities[0], 3) == 0.284
 
 
 def test_info_model_selection_aic():
-    mle1 = MLE(inference_model=candidate_model, n_optimizations=5)
-    mle2 = MLE(inference_model=candidate_model2, n_optimizations=5)
-    selector = InformationModelSelection(mle_estimators=[mle1, mle2], data=data, criterion=AIC())
+    mle1 = MLE(inference_model=candidate_model, data=data)
+    mle2 = MLE(inference_model=candidate_model2, data=data)
+    selector = InformationModelSelection(parameter_estimators=[mle1, mle2], criterion=AIC(), n_optimizations=[5]*2)
     selector.sort_models()
     assert round(selector.probabilities[0], 3) == 0.650
 
 
 def test_info_model_selection_aicc():
-    mle1 = MLE(inference_model=candidate_model, n_optimizations=5)
-    mle2 = MLE(inference_model=candidate_model2, n_optimizations=5)
-    selector = InformationModelSelection(mle_estimators=[mle1, mle2], data=data, criterion=AICc())
+    mle1 = MLE(inference_model=candidate_model, data=data)
+    mle2 = MLE(inference_model=candidate_model2, data=data)
+    selector = InformationModelSelection(parameter_estimators=[mle1, mle2], criterion=AICc(), n_optimizations=[5]*2)
     assert round(selector.probabilities[0], 3) == 0.988
 
 
