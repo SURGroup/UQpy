@@ -26,53 +26,55 @@ class DiffusionMaps:
         self,
         kernel_matrix: Numpy2DFloatArray,
         alpha: AlphaType = 0.5,
-        eigenvectors_number: IntegerLargerThanUnityType = 2,
+        n_eigenvectors: IntegerLargerThanUnityType = 2,
         is_sparse: bool = False,
-        neighbors_number: IntegerLargerThanUnityType = 1,
+        n_neighbors: IntegerLargerThanUnityType = 1,
         random_state: Union[None, int] = None,
         t: int = 1
     ):
         """
 
         :param alpha: Corresponds to different diffusion operators. It should be between 0 and 1.
-        :param eigenvectors_number: Number of eigenvectors to keep.
+        :param n_eigenvectors: Number of eigenvectors to keep.
         :param is_sparse: Work with sparse matrices. Increase the computational performance.
-        :param neighbors_number: Defines the number of nearest neighbors.
-        :param kernel_matrix: kernel matrix defining the similarity between the points.
+        :param n_neighbors: Defines the number of nearest neighbors.
+        :param kernel_matrix: kernel matrix defining the similarity between the points. Can be generated using kernels
+         from :py:mod:`.utilities`.
         :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
          provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
          object itself can be passed directly.
         :param t: Time exponent.
         """
         self.alpha = alpha
-        self.eigenvectors_number = eigenvectors_number
+        self.eigenvectors_number = n_eigenvectors
         self.is_sparse = is_sparse
-        self.neighbors_number = neighbors_number
+        self.neighbors_number = n_neighbors
         self.kernel_matrix = kernel_matrix
         self.random_state = random_state,
         self.t = t
 
         self.transition_matrix: NumpyFloatArray = None
-        """Transition kernel of a Markov chain on the data."""
+        """Transition probability matrix of a Markov chain on the data."""
         self.diffusion_coordinates: NumpyFloatArray = None
-        """Diffusion coordinates generated after the mapping of the Diffusion maps"""
+        """Diffusion coordinates generated from the Diffusion maps embedding"""
         self.eigenvectors: NumpyFloatArray = None
-        """Eigenvectors of the transition kernel of a Markov chain on the data."""
+        """Eigenvectors of the transition probability matrix of a Markov chain on the data."""
         self.eigenvalues: NumpyFloatArray = None
-        """Eigenvalues of the transition kernel of a Markov chain on the data."""
+        """Eigenvalues of the transition probability matrix of a Markov chain on the data."""
         self.cut_off = None
 
         if kernel_matrix is not None:
             self.kernel_matrix = kernel_matrix
 
     @classmethod
-    def create_from_data(
+    def build_from_data(
         cls,
         data: Numpy2DFloatArray,
         alpha: AlphaType = 0.5,
-        eigenvectors_number: IntegerLargerThanUnityType = 2,
+        n_eigenvectors: IntegerLargerThanUnityType = 2,
         is_sparse: bool = False,
         neighbors_number: IntegerLargerThanUnityType = 1,
+        kernel=GaussianKernel(),
         optimize_parameters: bool = False,
         t: int = 1,
         cut_off: float = None,
@@ -81,20 +83,20 @@ class DiffusionMaps:
         distance_matrix: Union[None, Numpy2DFloatArray] = None,
         random_state: Union[None, int] = None,
         tol: float = 1e-8,
-        kernel=GaussianKernel(),
     ):
 
         """
         Alternative way of generating a :class:`.DiffusionMaps` object in case of raw data.
 
-        :param data: Cloud of data points.
+        :param data: Array of data points.
         :param alpha: Corresponds to different diffusion operators. It should be between 0 and 1.
-        :param eigenvectors_number: Number of eigenvectors to keep.
+        :param n_eigenvectors: Number of eigenvectors to keep.
         :param is_sparse: Work with sparse matrices. Increase the computational performance.
         :param neighbors_number: Defines the number of nearest neighbors.
+        :param kernel: :class:`.EuclideanKernel` object. See :py:mod:`.utilities` for additional information.
         :param optimize_parameters: Estimate the kernel scale from the data.
         :param t: Time exponent.
-        :param cut_off: Cut-off for a Gaussian kernel, below which the kernel values are considered zero.
+        :param cut_off: Cut-off for a Euclidean kernel, below which the kernel values are considered zero.
         :param k_nn: k-th nearest neighbor distance to estimate the cut-off distance.
         :param n_partition: Maximum subsample used for the estimation. Ignored if *distance_matrix* is not None.
         :param distance_matrix:  Pre-computed distance matrix.
@@ -102,7 +104,7 @@ class DiffusionMaps:
          provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
          object itself can be passed directly.
         :param tol: Tolerance where the *cut_off* should be made.
-        :param kernel: Kernel matrix defining the similarity between the points.
+
 
 
         See Also
@@ -123,7 +125,7 @@ class DiffusionMaps:
 
         return cls(
             alpha=alpha,
-            eigenvectors_number=eigenvectors_number,
+            eigenvectors_number=n_eigenvectors,
             is_sparse=is_sparse,
             neighbors_number=neighbors_number,
             kernel_matrix=kernel_matrix,
@@ -240,7 +242,7 @@ class DiffusionMaps:
         return normalized_kernel
 
     @staticmethod
-    def parsimonious(eigenvectors: Numpy2DFloatArray, dim: int) -> tuple[list, NumpyFloatArray]:
+    def parsimonious(eigenvectors: Numpy2DFloatArray, dimension: int) -> tuple[list, NumpyFloatArray]:
         """
         Selection of independent vectors for parsimonious data manifold embedding, based on
         local regression.  The eigenvectors with the largest residuals are considered for the
@@ -251,7 +253,7 @@ class DiffusionMaps:
             scale = median(distances) / 3
 
         :param eigenvectors: Eigenvectors of the diffusion maps embedding.
-        :param dim: Number of eigenvectors to select with largest residuals.
+        :param dimension: Number of eigenvectors to select with largest residuals.
         :returns: indices, residuals
         """
 
@@ -265,7 +267,7 @@ class DiffusionMaps:
             residuals[i] = DiffusionMaps.__get_residual(f_mat=eigenvectors[:, 1:i], f=eigenvectors[:, i])
 
         # Get the index of the eigenvalues associated with each residual.
-        indices = np.argsort(residuals)[::-1][1:dim+1]
+        indices = np.argsort(residuals)[::-1][1:dimension + 1]
         return indices, residuals
 
     @staticmethod
@@ -293,9 +295,9 @@ class DiffusionMaps:
         return residual
 
     @staticmethod
-    def estimate_cut_off(data, k_nn: int = 20, n_partition: Union[None, int] = None,
-                         distance_matrix: Union[None, Numpy2DFloatArray] = None,
-                         random_state: Union[None, int] = None) -> float:
+    def _estimate_cut_off(data, k_nn: int = 20, n_partition: Union[None, int] = None,
+                          distance_matrix: Union[None, Numpy2DFloatArray] = None,
+                          random_state: Union[None, int] = None) -> float:
         """
         Estimates the cut-off for a Gaussian kernel, given a tolerance below which the kernel values are
         considered zero.
@@ -345,7 +347,7 @@ class DiffusionMaps:
         """
 
         if cut_off is None:
-            cut_off = DiffusionMaps.estimate_cut_off(data,  **estimate_cutoff_params)
+            cut_off = DiffusionMaps._estimate_cut_off(data, **estimate_cutoff_params)
 
         scale = cut_off ** 2 / (-np.log(tol))
         return scale, cut_off

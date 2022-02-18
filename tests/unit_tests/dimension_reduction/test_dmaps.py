@@ -27,7 +27,7 @@ def test_dmaps_swiss_roll():
 
     swiss_roll = np.array([X0, Y0, Z0]).transpose()
     dmaps = DiffusionMaps.create_from_data(data=swiss_roll,
-                                           alpha=0.5, eigenvectors_number=3,
+                                           alpha=0.5, n_eigenvectors=3,
                                            is_sparse=True, neighbors_number=100,
                                            kernel=GaussianKernel(epsilon=0.03))
 
@@ -61,7 +61,7 @@ def test_dmaps_circular():
 
     X = np.array([x, y, z]).transpose()
 
-    dmaps = DiffusionMaps.create_from_data(data=X, alpha=1, eigenvectors_number=3,
+    dmaps = DiffusionMaps.create_from_data(data=X, alpha=1, n_eigenvectors=3,
                                            kernel=GaussianKernel(epsilon=0.3))
 
     diff_coords, evals, evecs = dmaps.fit()
@@ -101,7 +101,7 @@ def test_diff_matrices():
 
         samples.append(M)
 
-    dmaps = DiffusionMaps.create_from_data(data=samples, alpha=0.5, eigenvectors_number=10)
+    dmaps = DiffusionMaps.create_from_data(data=samples, alpha=0.5, n_eigenvectors=10)
 
     diff_coords, evals, evecs = dmaps.fit()
 
