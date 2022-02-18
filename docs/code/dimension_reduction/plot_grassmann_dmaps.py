@@ -8,7 +8,7 @@ import numpy as np
 from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
 from UQpy.dimension_reduction.grassmann_manifold.projections import KernelComposition
 from UQpy.dimension_reduction.grassmann_manifold import Grassmann
-from UQpy.dimension_reduction.kernels import ProjectionKernel
+from UQpy.utilities.kernels import ProjectionKernel
 from UQpy.dimension_reduction.diffusion_maps.DiffusionMaps import DiffusionMaps
 import sys
 import matplotlib.pyplot as plt

@@ -3,7 +3,7 @@ import itertools
 import numpy as np
 from beartype import beartype
 
-from UQpy.dimension_reduction.distances.baseclass import RiemannianDistance
+from UQpy.utilities.distances import RiemannianDistance
 from UQpy.optimization.baseclass.OptimizationMethod import OptimizationMethod
 from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint, ListOfGrassmannPoints
 from UQpy.dimension_reduction.grassmann_manifold.projections.baseclass.ManifoldProjection import ManifoldProjection
@@ -34,7 +34,7 @@ class Grassmann:
         :param reference_point: Origin of the tangent space.
         :return: Point(s) on the tangent space.
         """
-        from UQpy.dimension_reduction.distances.baseclass.RiemannianDistance import RiemannianDistance
+        from UQpy.utilities.distances.baseclass.RiemannianDistance import RiemannianDistance
         number_of_points = len(manifold_points)
         for i in range(number_of_points):
             RiemannianDistance.check_rows(reference_point, manifold_points[i])

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
+from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 
 
 class ManifoldProjection(ABC):

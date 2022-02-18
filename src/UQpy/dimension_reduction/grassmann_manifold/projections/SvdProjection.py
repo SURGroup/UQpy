@@ -1,9 +1,7 @@
-import sys
 from typing import Union
 
 from beartype import beartype
 
-from UQpy.dimension_reduction.distances.baseclass import RiemannianDistance
 from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
 from UQpy.dimension_reduction.grassmann_manifold.projections.KernelComposition import (
     KernelComposition,
@@ -12,7 +10,7 @@ from UQpy.dimension_reduction.grassmann_manifold.projections.KernelComposition i
 from UQpy.dimension_reduction.grassmann_manifold.projections.baseclass.ManifoldProjection import (
     ManifoldProjection,
 )
-from UQpy.dimension_reduction.kernels.baseclass.Kernel import Kernel
+from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 from UQpy.utilities.Utilities import *
 

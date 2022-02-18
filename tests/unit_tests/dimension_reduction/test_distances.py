@@ -1,14 +1,9 @@
 from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
 from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
-from UQpy.dimension_reduction.distances.EuclideanDistance import EuclideanDistance
-from UQpy.dimension_reduction.distances.AsimovDistance import AsimovDistance
-from UQpy.dimension_reduction.distances.FubiniStudyDistance import FubiniStudyDistance
-from UQpy.dimension_reduction.distances.GeodesicDistance import GeodesicDistance
-from UQpy.dimension_reduction.distances.MartinDistance import MartinDistance
-from UQpy.dimension_reduction.distances.ProjectionDistance import ProjectionDistance
-from UQpy.dimension_reduction.distances.SpectralDistance import SpectralDistance
-from UQpy.dimension_reduction.distances.BinetCauchyDistance import BinetCauchyDistance
-from UQpy.dimension_reduction.distances.ProcrustesDistance import ProcrustesDistance
+from UQpy.utilities.distances.euclidean_distances import EuclideanDistance
+from UQpy.utilities.distances.grassmannian_distances import AsimovDistance, BinetCauchyDistance, FubiniStudyDistance, \
+    GeodesicDistance, ProcrustesDistance, ProjectionDistance, SpectralDistance
+from UQpy.utilities.distances import MartinDistance
 from UQpy.utilities.DistanceMetric import DistanceMetric
 import numpy as np
 import sys

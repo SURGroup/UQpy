@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import scipy
 
-from UQpy.dimension_reduction.distances.GeodesicDistance import GeodesicDistance
+from UQpy.utilities.distances.grassmannian_distances import GeodesicDistance
 from UQpy.dimension_reduction.grassmann_manifold.interpolation.methods.LinearInterpolation import LinearInterpolation
 from UQpy.dimension_reduction.grassmann_manifold.interpolation.baseclass.InterpolationMethod import InterpolationMethod
 from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection

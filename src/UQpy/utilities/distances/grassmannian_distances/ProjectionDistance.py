@@ -1,0 +1,38 @@
+import numpy as np
+
+from UQpy.utilities.distances.baseclass.RiemannianDistance import (
+    RiemannianDistance,
+)
+from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
+
+
+class ProjectionDistance(RiemannianDistance):
+    """
+    A class to calculate the Projection distance between two Grassmann points defined as:
+
+    .. math::
+
+        d_{C}(x_i, x_j) =  (\sum_{l} \sin^2(\Theta_l))^{1/2}
+
+    """
+    def compute_distance(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:
+        """
+        Compute the Projection distance between two points on the Grassmann manifold.
+
+        :param xi: Orthonormal matrix representing the first point.
+        :param xj: Orthonormal matrix representing the second point.
+
+        """
+        RiemannianDistance.check_rows(xi, xj)
+
+        rank_i = xi.data.shape[1]
+        rank_j = xj.data.shape[1]
+
+        r = np.dot(xi.data.T, xj.data)
+        (ui, si, vi) = np.linalg.svd(r, full_matrices=True)
+        si[np.where(si > 1)] = 1.0
+        theta = np.arccos(si)
+        distance = np.sqrt(abs(rank_i - rank_j) + np.sum(np.sin(theta) ** 2))
+
+        return distance
+

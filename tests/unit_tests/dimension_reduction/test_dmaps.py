@@ -1,9 +1,4 @@
-import numpy as np
-import scipy
-from line_profiler_pycharm import profile
-
-from UQpy import GrassmannPoint, ProjectionKernel
-from UQpy.dimension_reduction.kernels.GaussianKernel import GaussianKernel
+from UQpy.utilities.kernels.GaussianKernel import GaussianKernel
 from UQpy.dimension_reduction.diffusion_maps.DiffusionMaps import DiffusionMaps
 
 

@@ -13,7 +13,7 @@ from beartype import beartype
 from typing import Annotated, Union
 from beartype.vale import Is
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray, NumpyFloatArray
-from UQpy.dimension_reduction.kernels.GaussianKernel import GaussianKernel
+from UQpy.utilities.kernels.GaussianKernel import GaussianKernel
 
 
 class DiffusionMaps:

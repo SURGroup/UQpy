@@ -1,6 +1,6 @@
 from UQpy.dimension_reduction.diffusion_maps.DiffusionMaps import DiffusionMaps
 from UQpy.utilities import *
-from UQpy.dimension_reduction.kernels import GaussianKernel
+from UQpy.utilities.kernels import GaussianKernel
 
 
 class GeometricHarmonics:

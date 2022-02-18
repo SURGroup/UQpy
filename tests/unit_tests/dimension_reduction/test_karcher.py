@@ -3,7 +3,7 @@ import copy
 import numpy as np
 from beartype import beartype
 
-from UQpy.dimension_reduction.distances.GeodesicDistance import GeodesicDistance
+from UQpy.utilities.distances.grassmannian_distances import GeodesicDistance
 from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
 from UQpy.optimization.baseclass.OptimizationMethod import \
     OptimizationMethod
@@ -144,7 +144,7 @@ def test_user_karcher():
             # return the Karcher mean.
             return mean_element
 
-    from UQpy.dimension_reduction.distances.baseclass.RiemannianDistance import RiemannianDistance
+    from UQpy.utilities.distances.baseclass.RiemannianDistance import RiemannianDistance
 
     class UserDistance(RiemannianDistance):
         @beartype
