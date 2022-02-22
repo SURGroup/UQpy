@@ -16,13 +16,16 @@ The :class:`.DiffusionMaps` class is imported using the following command:
 
 One can use the following method to instantiate the class :class:`.DiffusionMaps`
 
+DiffusionMaps Class
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Methods
-""""""""
+~~~~~~~~~~~
 .. autoclass:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps
-    :members: create_from_data, fit, parsimonious, estimate_cut_off, estimate_epsilon
+    :members: build_from_data, fit, parsimonious, estimate_cut_off, estimate_epsilon
 
 Attributes
-"""""""""""
+~~~~~~~~~~~~~
 .. autoattribute:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps.transition_matrix
 .. autoattribute:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps.diffusion_coordinates
 .. autoattribute:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps.eigenvectors

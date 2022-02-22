@@ -3,16 +3,17 @@ from abc import ABC, abstractmethod
 from typing import Union
 
 import numpy as np
+from beartype import beartype
 
-from UQpy import PositiveInteger
+from UQpy.utilities.ValidationTypes import PositiveInteger, PositiveFloat
 
 
 class POD(ABC):
-
+    @beartype
     def __init__(self,
                  solution_snapshots: Union[np.ndarray, list],
                  modes: PositiveInteger = 10 ** 10,
-                 reconstruction_percentage: float = 10 ** 10):
+                 reconstruction_percentage: Union[PositiveInteger,PositiveFloat] = 10 ** 10):
         self.logger = logging.getLogger(__name__)
         if reconstruction_percentage <= 0:
             raise ValueError("Invalid input, the reconstruction percentage is defined in the range (0,100].")
@@ -63,7 +64,7 @@ class POD(ABC):
 
         columns, rows, snapshot_number, u = self.check_input()
 
-        c, n_iterations = self._calculate_c_and_iterations(u, snapshot_number)
+        c, n_iterations = self._calculate_c_and_iterations(u, snapshot_number, rows, columns)
 
         eigenvalues, phi = np.linalg.eig(c)
         phi = phi.real

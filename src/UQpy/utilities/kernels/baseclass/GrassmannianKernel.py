@@ -1,6 +1,6 @@
 from abc import ABC
 
-from UQpy.utilities.kernels import Kernel
+from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 
 
 class GrassmannianKernel(Kernel, ABC):
