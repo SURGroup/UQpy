@@ -25,18 +25,22 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
         self.inputs_number = inputs_number
 
     @classmethod
-    def create_total_degree_basis(cls, distributions, max_degree):
+    def create_total_degree_basis(cls, distributions, max_degree, hyperbolic=1):
         """
         Create tensor-product polynomial basis.
         The size is equal to :code:`(max_degree+1)**n_inputs` (exponential complexity).
 
         :param distributions: List of univariate distributions.
         :param max_degree: Maximum polynomial degree of the 1D chaos polynomials.
+        :param hyperbolic: Parameter of hyperbolic truncation reducing interaction terms <0,1>
         """
         inputs_number = 1 if not isinstance(distributions, (JointIndependent, JointCopula)) \
             else len(distributions.marginals)
         multi_index_set = PolynomialBasis.calculate_total_degree_set(inputs_number=inputs_number,
                                                                      degree=max_degree)
+        if 0< hyperbolic < 1:
+            mask = np.round(np.sum(multi_index_set**hyperbolic, axis=1)**(1/hyperbolic), 4) <= max_degree
+            multi_index_set=multi_index_set[mask]  
         polynomials = PolynomialBasis.construct_arbitrary_basis(inputs_number, distributions, multi_index_set)
         return cls._create(inputs_number, len(multi_index_set), multi_index_set, polynomials)
 
