@@ -5,7 +5,7 @@ from beartype import beartype
 from UQpy.distributions import Uniform
 from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import Polynomials
 from scipy.special import eval_legendre
-
+import math
 
 class Legendre(Polynomials):
 
@@ -45,3 +45,47 @@ class Legendre(Polynomials):
         l = np.sqrt(2) * l / st_lege_norm
 
         return l
+    
+    @staticmethod
+    def legendre_triple_product (k,l,m):
+    
+        normk=1/((2*k)+1)
+        norml=1/((2*l)+1)
+        normm=1/((2*m)+1)
+        norm=np.sqrt(normm/(normk*norml))
+
+
+        return norm*(2*m+1)*Legendre.wigner_3j_PCE(k,l,m)**2
+    
+    @staticmethod
+    def wigner_3j_PCE(j_1, j_2, j_3):
+    
+        cond1 = j_1 + j_2 - j_3
+        cond2 = j_1 - j_2 + j_3
+        cond3 = -j_1 + j_2 + j_3
+        if cond1 < 0 or cond2 < 0 or cond3 < 0:
+            return 0
+        else:
+
+            factarg = (math.factorial(j_1 + j_2 - j_3) *math.factorial(j_1 - j_2 + j_3)*
+                          math.factorial(-j_1 + j_2 + j_3)*math.factorial(j_1)**2*math.factorial(j_2)**2*
+                          math.factorial(j_3)**2) / math.factorial(j_1 + j_2 + j_3 + 1)
+
+            factfinal = np.sqrt(factarg)
+
+            imin = max(-j_3 + j_1, -j_3 + j_2, 0)
+            imax = min(j_2, j_1, j_1 + j_2 - j_3)
+            summfinal = 0
+
+            for i in range(imin, imax + 1):
+                sumfact = math.factorial(i) * \
+                    math.factorial(i + j_3 - j_1) * \
+                    math.factorial(j_2 - i) * \
+                    math.factorial(j_1 - i) * \
+                    math.factorial(i + j_3 - j_2 ) * \
+                    math.factorial(j_1 + j_2 - j_3 - i)
+                summfinal = summfinal + int((-1) ** i) / sumfact
+
+            const1 = int((-1) ** int(j_1 - j_2))
+
+            return factfinal * summfinal * const1

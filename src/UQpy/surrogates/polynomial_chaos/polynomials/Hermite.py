@@ -62,3 +62,13 @@ class Hermite(Polynomials):
         h = h / st_herm_norm
 
         return h
+    
+    @staticmethod
+    def hermite_triple_product (k,l,m):
+        tripleproduct=0
+        g=(k+l+m)/ 2
+        if ((k+l+m)% 2) == 0 and m<=(k+l) and m>=abs(k-l):
+            tripleproduct=np.sqrt(special.comb(k,g-m)*special.comb(l,g-m)*special.comb(m,g-k))
+        else:
+            tripleproduct=0
+        return tripleproduct

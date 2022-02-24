@@ -7,7 +7,8 @@ from UQpy.utilities.ValidationTypes import NumpyFloatArray
 from UQpy.surrogates.baseclass.Surrogate import Surrogate
 from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
 from UQpy.surrogates.polynomial_chaos.polynomials.PolynomialBasis import PolynomialBasis
-
+from UQpy.distributions import Uniform, Normal
+from UQpy.surrogates.polynomial_chaos.polynomials import Legendre,Hermite
 
 class PolynomialChaosExpansion(Surrogate):
 
@@ -82,6 +83,29 @@ class PolynomialChaosExpansion(Surrogate):
             y = y + self.bias
         return y
 
+    def leaveoneout_error(self):
+        """
+        Returns the cross validation error (leave-one-out) based on experimental design.
+
+        :return: Cross validation error of experimental design.
+        """
+        x=self.experimental_design_input
+        y=self.experimental_design_output
+        n_samples = x.shape[0]
+        mu_yval = (1 / n_samples) * np.sum(y, axis=0)
+        y_val = self.predict(x, )
+        polynomialbasis= self.design_matrix
+        
+        H = np.dot(polynomialbasis, np.linalg.inv(np.dot(polynomialbasis.T, polynomialbasis)))
+        H *= polynomialbasis
+        Hdiag = np.sum(H, axis=1)
+        
+        eps_val=((n_samples - 1) / n_samples * (np.sum(((y - y_val)/(1 - Hdiag))**2) / n_samples) /  (np.sum((y - mu_yval) ** 2, axis=0)))
+        if y.ndim == 1 or y.shape[1] == 1:
+            eps_val = float(eps_val)
+
+        return np.round(eps_val, 7)
+    
     def validation_error(self, x, y):
         """
         Returns the validation error.
@@ -107,13 +131,17 @@ class PolynomialChaosExpansion(Surrogate):
 
         return np.round(eps_val, 7)
 
-    def get_moments(self):
+    def get_moments(self, higher=False):
         """
-        Returns the first two moments of the polynomial_chaos surrogate which are directly
+        Returns the first four moments of the polynomial_chaos surrogate which are directly
         estimated from the polynomial_chaos coefficients.
-
+        
+        :param higher: True corresponds to calculation of skewness and kurtosis (computationaly expensive for large basis set).
         :return: Returns the mean and variance.
         """
+        
+        
+        
         if self.bias is not None:
             mean = self.coefficients[0, :] + np.squeeze(self.bias)
         else:
@@ -125,4 +153,63 @@ class PolynomialChaosExpansion(Surrogate):
             variance = float(variance)
             mean = float(mean)
 
-        return np.round(mean, 4), np.round(variance, 4)
+        if higher==False:
+            return np.round(mean, 4), np.round(variance, 4)
+        else:
+            multindex=self.multi_index_set
+            P,inputs_number=multindex.shape
+            if inputs_number==1:
+                marginals=[self.polynomial_basis.distributions]
+            else:
+                marginals=self.polynomial_basis.distributions.marginals
+            
+
+            skewness=np.zeros(self.outputs_number)
+            kurtosis=np.zeros(self.outputs_number)
+            for ii in range (0,self.outputs_number):
+                Beta=self.coefficients[:, ii]
+                TripleProduct=np.ones((P,P,P))
+                ThirdMoment=np.ones((P,P,P))
+                QuadIval=np.ones((P,P,P,P))
+                Quadproduct=np.zeros((P,P,P,P))
+                skewsum=0
+                kurtosissum=0
+                for p1 in range (1,P):
+                    for p2 in range (1,P):
+                        for p3 in range (1,P):
+                            for m in range (0,inputs_number):
+                                if type(marginals[m])==Normal:
+                                    tripleproduct=Hermite.hermite_triple_product(multindex[p1,m],multindex[p2,m],multindex[p3,m])
+                                if type(marginals[m])==Uniform:   
+                                    tripleproduct=Legendre.legendre_triple_product(multindex[p1,m],multindex[p2,m],multindex[p3,m])
+                                TripleProduct[p1,p2,p3]=TripleProduct[p1,p2,p3]*tripleproduct
+
+                            ThirdMoment[p1,p2,p3]=TripleProduct[p1,p2,p3]*Beta[p1]*Beta[p2]*Beta[p3]
+                            skewsum+=ThirdMoment[p1,p2,p3]
+
+                            for p4 in range(1,P):
+                                for m in range (0,inputs_number):
+                                    Quadproduct[p1,p2,p3,p4]=0
+
+                                    for n in range (0,multindex[p1,m]+multindex[p2,m]+1):
+                                        if type(marginals[m])==Normal:
+                                            tripproduct1=Hermite.hermite_triple_product(multindex[p1,m],multindex[p2,m],n)
+                                            tripproduct2=Hermite.hermite_triple_product(multindex[p3,m],multindex[p4,m],n)
+                                        if type(marginals[m])==Uniform: 
+                                            tripproduct1=Legendre.legendre_triple_product(multindex[p1,m],multindex[p2,m],n)
+                                            tripproduct2=Legendre.legendre_triple_product(multindex[p3,m],multindex[p4,m],n)
+
+                                        Quadproduct[p1,p2,p3,p4]=Quadproduct[p1,p2,p3,p4]+tripproduct1*tripproduct2
+
+                                    QuadIval[p1,p2,p3,p4]=QuadIval[p1,p2,p3,p4]*Quadproduct[p1,p2,p3,p4]
+
+                                kurtosissum+=QuadIval[p1,p2,p3,p4]*Beta[p1]*Beta[p2]*Beta[p3]*Beta[p4]
+
+                skewness[ii]=1/(np.sqrt(variance)**3)*skewsum
+                kurtosis[ii]=1/(variance**2)*kurtosissum
+                if self.coefficients.ndim == 1 or self.coefficients.shape[1] == 1:
+                    skewness = float(skewness[0])
+                    kurtosis = float(kurtosis[0])
+            
+            
+            return mean,variance,skewness,kurtosis
