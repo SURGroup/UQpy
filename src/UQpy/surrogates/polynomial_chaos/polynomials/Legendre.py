@@ -45,3 +45,14 @@ class Legendre(Polynomials):
         l = np.sqrt(2) * l / st_lege_norm
 
         return l
+    
+    @staticmethod
+    def legendre_triple_product (k,l,m):
+    
+        normk=1/((2*k)+1)
+        norml=1/((2*l)+1)
+        normm=1/((2*m)+1)
+        norm=np.sqrt(normm/(normk*norml))
+
+
+        return norm*(2*m+1)*Legendre.wigner_3j_PCE(k,l,m)**2
