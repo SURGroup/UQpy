@@ -140,8 +140,6 @@ class PolynomialChaosExpansion(Surrogate):
         :return: Returns the mean and variance.
         """
         
-        
-        
         if self.bias is not None:
             mean = self.coefficients[0, :] + np.squeeze(self.bias)
         else:
@@ -155,61 +153,75 @@ class PolynomialChaosExpansion(Surrogate):
 
         if higher==False:
             return np.round(mean, 4), np.round(variance, 4)
+        
         else:
             multindex=self.multi_index_set
             P,inputs_number=multindex.shape
+            
             if inputs_number==1:
                 marginals=[self.polynomial_basis.distributions]
+                
             else:
                 marginals=self.polynomial_basis.distributions.marginals
             
-
+            
             skewness=np.zeros(self.outputs_number)
             kurtosis=np.zeros(self.outputs_number)
+            
             for ii in range (0,self.outputs_number):
+                
                 Beta=self.coefficients[:, ii]
-                TripleProduct=np.ones((P,P,P))
-                ThirdMoment=np.ones((P,P,P))
-                QuadIval=np.ones((P,P,P,P))
-                Quadproduct=np.zeros((P,P,P,P))
-                skewsum=0
-                kurtosissum=0
-                for p1 in range (1,P):
-                    for p2 in range (1,P):
-                        for p3 in range (1,P):
-                            for m in range (0,inputs_number):
-                                if type(marginals[m])==Normal:
-                                    tripleproduct=Hermite.hermite_triple_product(multindex[p1,m],multindex[p2,m],multindex[p3,m])
-                                if type(marginals[m])==Uniform:   
-                                    tripleproduct=Legendre.legendre_triple_product(multindex[p1,m],multindex[p2,m],multindex[p3,m])
-                                TripleProduct[p1,p2,p3]=TripleProduct[p1,p2,p3]*tripleproduct
+                third_moment=0
+                fourth_moment=0
+                
+                indices=np.array(np.meshgrid(range(1,P),range(1,P),range(1,P),range(1,P))).T.reshape(-1,4)
+                i=0
+                for index in indices:
+                    tripleproduct_ND=1
+                    quadproduct_ND=1
+                    
+                    
+                    for m in range (0,inputs_number):
+   
+                        if i<(P-1)**3:
+        
+                            if type(marginals[m])==Normal:
+                                tripleproduct_1D=Hermite.hermite_triple_product(multindex[index[0],m],multindex[index[1],m],multindex[index[2],m])
+                            
+                            if type(marginals[m])==Uniform:   
+                                tripleproduct_1D=Legendre.legendre_triple_product(multindex[index[0],m],multindex[index[1],m],multindex[index[2],m])
+                            
+                            tripleproduct_ND=tripleproduct_ND*tripleproduct_1D
+                        
+                        else:
+                            tripleproduct_ND=0
+                        
+                        quadproduct_1D=0
+                        
+                        for n in range (0,multindex[index[0],m]+multindex[index[1],m]+1):
+                            
+                            if type(marginals[m])==Normal:
+                                tripproduct1=Hermite.hermite_triple_product(multindex[index[0],m],multindex[index[1],m],n)
+                                tripproduct2=Hermite.hermite_triple_product(multindex[index[2],m],multindex[index[3],m],n)
+                           
+                            if type(marginals[m])==Uniform: 
+                                tripproduct1=Legendre.legendre_triple_product(multindex[index[0],m],multindex[index[1],m],n)
+                                tripproduct2=Legendre.legendre_triple_product(multindex[index[2],m],multindex[index[3],m],n)
 
-                            ThirdMoment[p1,p2,p3]=TripleProduct[p1,p2,p3]*Beta[p1]*Beta[p2]*Beta[p3]
-                            skewsum+=ThirdMoment[p1,p2,p3]
+                            quadproduct_1D=quadproduct_1D+tripproduct1*tripproduct2
 
-                            for p4 in range(1,P):
-                                for m in range (0,inputs_number):
-                                    Quadproduct[p1,p2,p3,p4]=0
+                        quadproduct_ND=quadproduct_ND*quadproduct_1D
+                    
+                    third_moment+=tripleproduct_ND*Beta[index[0]]*Beta[index[1]]*Beta[index[2]]
+                    fourth_moment+=quadproduct_ND*Beta[index[0]]*Beta[index[1]]*Beta[index[2]]*Beta[index[3]]
 
-                                    for n in range (0,multindex[p1,m]+multindex[p2,m]+1):
-                                        if type(marginals[m])==Normal:
-                                            tripproduct1=Hermite.hermite_triple_product(multindex[p1,m],multindex[p2,m],n)
-                                            tripproduct2=Hermite.hermite_triple_product(multindex[p3,m],multindex[p4,m],n)
-                                        if type(marginals[m])==Uniform: 
-                                            tripproduct1=Legendre.legendre_triple_product(multindex[p1,m],multindex[p2,m],n)
-                                            tripproduct2=Legendre.legendre_triple_product(multindex[p3,m],multindex[p4,m],n)
+                    i+=1
 
-                                        Quadproduct[p1,p2,p3,p4]=Quadproduct[p1,p2,p3,p4]+tripproduct1*tripproduct2
-
-                                    QuadIval[p1,p2,p3,p4]=QuadIval[p1,p2,p3,p4]*Quadproduct[p1,p2,p3,p4]
-
-                                kurtosissum+=QuadIval[p1,p2,p3,p4]*Beta[p1]*Beta[p2]*Beta[p3]*Beta[p4]
-
-                skewness[ii]=1/(np.sqrt(variance)**3)*skewsum
-                kurtosis[ii]=1/(variance**2)*kurtosissum
+                skewness[ii]=1/(np.sqrt(variance)**3)*third_moment
+                kurtosis[ii]=1/(variance**2)*fourth_moment
+                
                 if self.coefficients.ndim == 1 or self.coefficients.shape[1] == 1:
                     skewness = float(skewness[0])
                     kurtosis = float(kurtosis[0])
-            
-            
+
             return mean,variance,skewness,kurtosis
