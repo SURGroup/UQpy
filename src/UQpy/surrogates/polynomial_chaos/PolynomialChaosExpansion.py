@@ -91,16 +91,21 @@ class PolynomialChaosExpansion(Surrogate):
         """
         x=self.experimental_design_input
         y=self.experimental_design_output
+        
+        if y.ndim == 1 or y.shape[1] == 1:
+            y = y.reshape(-1, 1)
+            
         n_samples = x.shape[0]
         mu_yval = (1 / n_samples) * np.sum(y, axis=0)
-        y_val = self.predict(x, )
+        y_val = self.predict(x, )    
         polynomialbasis= self.design_matrix
         
         H = np.dot(polynomialbasis, np.linalg.inv(np.dot(polynomialbasis.T, polynomialbasis)))
         H *= polynomialbasis
-        Hdiag = np.sum(H, axis=1)
-        
-        eps_val=((n_samples - 1) / n_samples * (np.sum(((y - y_val)/(1 - Hdiag))**2) / n_samples) /  (np.sum((y - mu_yval) ** 2, axis=0)))
+        Hdiag = np.sum(H, axis=1).reshape(-1,1)
+
+
+        eps_val=((n_samples - 1) / n_samples *np.sum(((y - y_val)/(1 - Hdiag))**2,axis=0)) / (np.sum((y - mu_yval) ** 2, axis=0))
         if y.ndim == 1 or y.shape[1] == 1:
             eps_val = float(eps_val)
 
