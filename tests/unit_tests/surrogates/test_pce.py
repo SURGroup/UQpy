@@ -199,3 +199,57 @@ def test_18():
     pce_sensitivity = PceSensitivity(pce_2)
     generalized_total_sobol = pce_sensitivity.generalized_total_order_indices()
     assert round(generalized_total_sobol[0], 4) == 0.1921
+    
+    
+def test_19():
+    """
+    Test Higher statistical moments on Uniform distribution (skewness=0, kurtosis=1.8 from definition)
+    """
+    polynomial_basis = PolynomialBasis.create_total_degree_basis(dist, max_degree)
+    least_squares = LeastSquareRegression()
+    pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
+    pce.fit(x, x)
+    mean,var,skew,kurtosis=pce.get_moments(True)
+   
+    assert round(kurtosis, 3) == 1.8 and round(skew, 3) == 0
+    
+def test_20():
+    """
+    Test Higher statistical moments on Gaussian distribution (skewness=0, kurtosis=3 from definition)
+    """
+    dist_Gauss = Normal(loc=0, scale=1)
+
+    x = dist.rvs(n_samples)
+    
+    polynomial_basis = PolynomialBasis.create_total_degree_basis(dist_Gauss, max_degree)
+    least_squares = LeastSquareRegression()
+    pceGauss=PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
+    pceGauss.fit(x,x)
+    mean,var,skew,kurtosis=pceGauss.get_moments(True)
+    
+    assert round(kurtosis, 3) == 3 and round(skew, 3) == 0   
+    
+    
+def functionLAR(x):
+    u1 = x[:, 0]**2 + x[:, 2]**2 + x[:, 3]**2
+   
+    return u1
+
+n_samples_2 = 100
+x_2 = joint.rvs(n_samples_2)
+y_2 = functionLAR(x_2)
+
+polynomial_basis = PolynomialBasis.create_total_degree_basis(joint, 6)
+least_squares = LeastSquareRegression()
+pce_2 = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
+pce_2.fit(x_2, y_2)
+    
+def test_21():
+    """
+    Test Model Selection Algorithm based on Least Angle Regression (select only important basis functions from large set)
+    """
+
+    pceLAR=polynomial_chaos.regressions.LeastAngleRegression.model_selection(pce_2)
+    pce2LAR_sens=PceSensitivity(pceLAR)
+    
+    assert all((np.argwhere(np.round(pce2LAR_sens.generalized_total_order_indices(),3)>0)==[[0],[2],[3]]))
