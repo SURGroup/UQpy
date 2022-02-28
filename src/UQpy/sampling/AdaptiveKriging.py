@@ -25,7 +25,7 @@ class AdaptiveKriging:
         runmodel_object: RunModel,
         surrogate: SurrogateType,
         learning_function: LearningFunction,
-        samples: Numpy2DFloatArray =None,
+        samples: Numpy2DFloatArray = None,
         nsamples: PositiveInteger = None,
         learning_nsamples: PositiveInteger = None,
         qoi_name: str = None,
@@ -110,9 +110,6 @@ class AdaptiveKriging:
                                           "evaluation in RunModel object should be same.")
 
         if self.nsamples is not None:
-            if self.nsamples <= 0 or type(self.nsamples).__name__ != "int":
-                raise NotImplementedError("UQpy: Number of samples to be generated 'nsamples' should be a positive "
-                                          "integer.")
             if samples is not None:
                 self.run(nsamples=self.nsamples)
 

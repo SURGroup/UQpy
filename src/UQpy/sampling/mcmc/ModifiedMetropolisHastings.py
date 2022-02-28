@@ -32,7 +32,9 @@ class ModifiedMetropolisHastings(MCMC):
 
         In this algorithm, candidate samples are drawn separately in each dimension, thus the proposal consists of a
         list of 1D distributions. The target pdf can be given as a joint pdf or a list of marginal pdfs in all
-        dimensions. This will trigger two different algorithms.
+        dimensions. This will trigger two different algorithms. If a list of marginals is provided, the acceptance ratio
+        is computed for every dimension independently using the marginal densities. If a joint pdf is provided, the
+        acceptance ratio for each component is computed in a loop using this joint pdf.
 
         :param pdf_target: Target density function from which to draw random samples. Either `pdf_target` or
          `log_pdf_target` must be provided (the latter should be preferred for better numerical stability).
