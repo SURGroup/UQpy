@@ -4,7 +4,7 @@ import numpy as np
 from beartype import beartype
 
 from UQpy.utilities.distances.grassmannian_distances import GeodesicDistance
-from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
+from UQpy.utilities.GrassmannPoint import GrassmannPoint
 from UQpy.optimization.baseclass.OptimizationMethod import \
     OptimizationMethod
 from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
@@ -80,7 +80,7 @@ def test_user_karcher():
             fmean = []
             for i in range(points_number):
                 fmean.append(
-                    Grassmann.frechet_variance(reference_point=data_points[i], manifold_points=data_points,
+                    Grassmann.frechet_variance(reference_point=data_points[i], grassmann_points=data_points,
                                                distance=distance)
                 )
 
@@ -144,12 +144,12 @@ def test_user_karcher():
             # return the Karcher mean.
             return mean_element
 
-    from UQpy.utilities.distances.baseclass.RiemannianDistance import RiemannianDistance
+    from UQpy.utilities.distances.baseclass.GrassmannianDistance import GrassmannianDistance
 
-    class UserDistance(RiemannianDistance):
+    class UserDistance(GrassmannianDistance):
         @beartype
         def compute_distance(self, xi: GrassmannPoint, xj: GrassmannPoint):
-            RiemannianDistance.check_rows(xi, xj)
+            GrassmannianDistance.check_rows(xi, xj)
 
             rank_i = xi.data.shape[1]
             rank_j = xj.data.shape[1]

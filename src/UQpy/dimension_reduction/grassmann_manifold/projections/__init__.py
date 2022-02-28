@@ -1,4 +1,2 @@
 from UQpy.dimension_reduction.grassmann_manifold.projections.baseclass import *
-
-from UQpy.dimension_reduction.grassmann_manifold.projections.KernelComposition import KernelComposition
 from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection

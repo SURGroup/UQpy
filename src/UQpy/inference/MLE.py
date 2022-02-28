@@ -2,13 +2,12 @@ import logging
 from typing import Union
 
 import numpy as np
-from UQpy.optimization.MinimizeOptimizer import MinimizeOptimizer
-from UQpy.optimization.baseclass.Optimizer import Optimizer
+from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 from beartype import beartype
 
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
 from UQpy.utilities.Utilities import process_random_state
-from UQpy.utilities.ValidationTypes import PositiveInteger, NumpyFloatArray
+from UQpy.utilities.ValidationTypes import NumpyFloatArray
 
 
 class MLE:
@@ -21,7 +20,7 @@ class MLE:
         data: Union[list, np.ndarray],
         n_optimizations: Union[None, int] = 1,
         initial_parameters=None,
-        optimizer: Optimizer = MinimizeOptimizer(),
+        optimizer=MinimizeOptimizer(),
         random_state=None,
     ):
         """

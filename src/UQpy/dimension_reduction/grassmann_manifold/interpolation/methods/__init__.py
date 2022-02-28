@@ -1,3 +1,0 @@
-from UQpy.dimension_reduction.grassmann_manifold.interpolation.methods.LinearInterpolation import LinearInterpolation
-from UQpy.dimension_reduction.grassmann_manifold.interpolation.methods.\
-    SurrogateInterpolation import SurrogateInterpolation

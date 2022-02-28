@@ -1,12 +1,12 @@
 import numpy as np
 
-from UQpy.utilities.distances.baseclass.RiemannianDistance import (
-    RiemannianDistance,
+from UQpy.utilities.distances.baseclass.GrassmannianDistance import (
+    GrassmannianDistance,
 )
-from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
+from UQpy.utilities.GrassmannPoint import GrassmannPoint
 
 
-class SpectralDistance(RiemannianDistance):
+class SpectralDistance(GrassmannianDistance):
     """
     A class to calculate the Spectral distance between two Grassmann points defined as:
 
@@ -23,7 +23,7 @@ class SpectralDistance(RiemannianDistance):
         :param xj: Orthonormal matrix representing the second point.
 
         """
-        RiemannianDistance.check_rows(xi, xj)
+        GrassmannianDistance.check_rows(xi, xj)
 
         r = np.dot(xi.data.T, xj.data)
         (ui, si, vi) = np.linalg.svd(r, full_matrices=True)

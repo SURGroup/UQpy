@@ -1,12 +1,9 @@
-from UQpy.RunModel import RunModel
-from UQpy.optimization.MinimizeOptimizer import MinimizeOptimizer
 from UQpy.inference.inference_models.ComputationalModel import *
 from UQpy.inference.inference_models.LogLikelihoodModel import *
 from UQpy.inference.MLE import *
 from UQpy.distributions import *
 import pytest
 import shutil
-from scipy.optimize import minimize
 import numpy as np
 
 data = [0., 1., -1.5, -0.2]

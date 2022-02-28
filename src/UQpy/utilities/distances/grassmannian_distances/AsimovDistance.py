@@ -1,13 +1,13 @@
 import numpy as np
 from beartype import beartype
 
-from UQpy.utilities.distances.baseclass.RiemannianDistance import (
-    RiemannianDistance,
+from UQpy.utilities.distances.baseclass.GrassmannianDistance import (
+    GrassmannianDistance,
 )
-from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
+from UQpy.utilities.GrassmannPoint import GrassmannPoint
 
 
-class AsimovDistance(RiemannianDistance):
+class AsimovDistance(GrassmannianDistance):
     """
     A class to calculate the Asimov distance between two  Grassmann points defined as:
 
@@ -25,7 +25,7 @@ class AsimovDistance(RiemannianDistance):
         :param xj: Orthonormal matrix representing the second point.
 
         """
-        RiemannianDistance.check_rows(xi, xj)
+        GrassmannianDistance.check_rows(xi, xj)
 
         r = np.dot(xi.data.T, xj.data)
         (ui, si, vi) = np.linalg.svd(r, full_matrices=True)

@@ -1,1 +1,1 @@
-from UQpy.utilities.distances.baseclass.RiemannianDistance import RiemannianDistance
+from UQpy.utilities.distances.baseclass.GrassmannianDistance import GrassmannianDistance

@@ -1,5 +1,7 @@
 from beartype import beartype
 
+from UQpy.RunModel import RunModel
+from UQpy.distributions.baseclass import Distribution
 from UQpy.inference.inference_models.baseclass.InferenceModel import *
 from UQpy.distributions.collection.MultivariateNormal import MultivariateNormal
 from UQpy.utilities.ValidationTypes import *

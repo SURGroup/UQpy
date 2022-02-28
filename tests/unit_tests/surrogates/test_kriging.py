@@ -1,5 +1,5 @@
 import pytest
-from UQpy.optimization.MinimizeOptimizer import MinimizeOptimizer
+from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 from beartype.roar import BeartypeCallHintPepParamException
 
 from UQpy.surrogates.kriging.Kriging import Kriging

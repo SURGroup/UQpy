@@ -20,8 +20,3 @@ class GrassmannPoint:
         The matrix containing the Grassmann point
         """
         return self._data
-
-
-ListOfGrassmannPoints = Annotated[
-    list[GrassmannPoint],
-    Is[lambda points: all(point.data.shape[0] == points[0].data.shape[0] for point in points) and len(points) >= 2]]

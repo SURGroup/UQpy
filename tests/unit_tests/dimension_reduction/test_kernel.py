@@ -1,6 +1,6 @@
 import sys
 
-from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
+from UQpy.utilities.GrassmannPoint import GrassmannPoint
 from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
 from UQpy.utilities.kernels.ProjectionKernel import ProjectionKernel
 from UQpy.utilities.kernels.BinetCauchyKernel import BinetCauchyKernel
@@ -15,7 +15,7 @@ def test_kernel_projection():
     xk = GrassmannPoint(np.array([[-0.69535592, -0.0546034], [-0.34016974, -0.85332868],
                                   [-0.63305978, 0.51850616]]))
     points = [xi, xj, xk]
-    kernel = np.matrix.round(ProjectionKernel().kernel_operator(points), 4)
+    kernel = np.matrix.round(ProjectionKernel().calculate_kernel_matrix(points), 4)
 
     assert np.allclose(kernel, np.array([[2, 1.0063, 1.2345], [1.0063, 2, 1.0101], [1.2345, 1.0101, 2]]))
 
@@ -26,7 +26,7 @@ def test_kernel_binet_cauchy():
     xj = GrassmannPoint(np.array([[0, np.sqrt(2) / 2], [1, 0], [0, -np.sqrt(2) / 2]]))
     xk = GrassmannPoint(np.array([[-0.69535592, -0.0546034], [-0.34016974, -0.85332868], [-0.63305978, 0.51850616]]))
     points = [xi, xj, xk]
-    kernel = np.matrix.round(BinetCauchyKernel().kernel_operator(points), 4)
+    kernel = np.matrix.round(BinetCauchyKernel().calculate_kernel_matrix(points), 4)
 
     assert np.allclose(kernel, np.array([[1, 0.0063, 0.2345], [0.0063, 1, 0.0101], [0.2345, 0.0101, 1]]))
 
@@ -37,7 +37,7 @@ def test_kernel_gaussian_1d():
     xk = np.array([1, 2, 3, 4])
     points = [xi, xj, xk]
     gaussian = GaussianKernel(epsilon=2.0)
-    kernel = gaussian.kernel_operator(points)
+    kernel = gaussian.calculate_kernel_matrix(points)
 
     assert np.allclose(np.matrix.round(kernel, 4), np.array([[1., 0.2645, 1.], [0.2645, 1., 0.2645], [1, 0.2645, 1]]),
                        atol=1e-04)
@@ -50,7 +50,7 @@ def test_kernel_gaussian_2d():
     xk = np.array([[-0.69535592, -0.0546034], [-0.34016974, -0.85332868], [-0.63305978, 0.51850616]])
     points = [xi, xj, xk]
     gaussian = GaussianKernel()
-    kernel = gaussian.kernel_operator(points)
+    kernel = gaussian.calculate_kernel_matrix(points)
 
     assert np.allclose(np.matrix.round(kernel, 4), np.array([[1., 0.8834, 0.7788], [0.8834, 1., 0.6937],
                                                              [0.7788, 0.6937, 1.]]))

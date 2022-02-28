@@ -1,6 +1,6 @@
 import numpy as np
 
-from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
+from UQpy.utilities.GrassmannPoint import GrassmannPoint
 from UQpy.utilities.kernels import GrassmannianKernel
 
 
@@ -14,7 +14,7 @@ class ProjectionKernel(GrassmannianKernel):
 
     """
     def apply_method(self, points):
-        points.evaluate_matrix(self, self.kernel_operator)
+        points.evaluate_matrix(self, self.calculate_kernel_matrix)
 
     def kernel_entry(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:
         """

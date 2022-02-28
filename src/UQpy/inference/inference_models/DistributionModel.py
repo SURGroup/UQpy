@@ -1,7 +1,9 @@
 from typing import Union
 
+import numpy as np
 from beartype import beartype
 
+from UQpy.distributions.baseclass import Distribution
 from UQpy.inference.inference_models.baseclass.InferenceModel import *
 
 

@@ -8,7 +8,7 @@ from UQpy.dimension_reduction.grassmann_manifold.interpolation.methods.LinearInt
 from UQpy.dimension_reduction.grassmann_manifold.interpolation.baseclass.InterpolationMethod import InterpolationMethod
 from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
 from UQpy.optimization.GradientDescent import GradientDescent
-from UQpy.dimension_reduction.grassmann_manifold.interpolation.ManifoldInterpolation import ManifoldInterpolation
+from UQpy.dimension_reduction.grassmann_manifold.ManifoldInterpolation import ManifoldInterpolation
 
 
 def test_solution_reconstruction():

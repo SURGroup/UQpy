@@ -128,7 +128,7 @@ class DiffusionMaps:
                                                               random_state=random_state)
         kernel.epsilon = epsilon
 
-        kernel_matrix = kernel.kernel_operator(points=data)
+        kernel_matrix = kernel.calculate_kernel_matrix(points=data)
 
         return cls(
             alpha=alpha,

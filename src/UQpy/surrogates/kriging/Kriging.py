@@ -1,6 +1,5 @@
 import logging
 import numpy as np
-from UQpy.optimization.baseclass import Optimizer
 from scipy.linalg import cholesky
 import scipy.stats as stats
 from beartype import beartype
@@ -19,7 +18,7 @@ class Kriging(Surrogate):
         regression_model: Regression,
         correlation_model: Correlation,
         correlation_model_parameters: list,
-        optimizer: Optimizer,
+        optimizer,
         bounds=None,
         optimize: bool = True,
         optimizations_number: int = 1,
@@ -80,7 +79,7 @@ class Kriging(Surrogate):
         self.G = None
         self.F, self.R = None, None
 
-        if optimizer.bounds is None:
+        if optimizer._bounds is None:
             optimizer.update_bounds([[0.001, 10 ** 7]] * self.correlation_model_parameters.shape[0])
 
         self.jac = optimizer.supports_jacobian()
@@ -154,8 +153,8 @@ class Kriging(Surrogate):
                 fun_value[i__, 0] = p_.fun
                 # Generating new starting points using log-uniform distribution
                 if i__ != self.optimizations_number - 1:
-                    starting_point = stats.reciprocal.rvs([j[0] for j in self.optimizer.bounds],
-                                                          [j[1] for j in self.optimizer.bounds], 1,
+                    starting_point = stats.reciprocal.rvs([j[0] for j in self.optimizer._bounds],
+                                                          [j[1] for j in self.optimizer._bounds], 1,
                                                           random_state=self.random_state)
                     print(starting_point)
 

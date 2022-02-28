@@ -2,15 +2,8 @@ from typing import Union
 
 from beartype import beartype
 
-from UQpy.dimension_reduction.grassmann_manifold.GrassmannPoint import GrassmannPoint
-from UQpy.dimension_reduction.grassmann_manifold.projections.KernelComposition import (
-    KernelComposition,
-    CompositionAction,
-)
-from UQpy.dimension_reduction.grassmann_manifold.projections.baseclass.ManifoldProjection import (
-    ManifoldProjection,
-)
-from UQpy.utilities.kernels.baseclass.Kernel import Kernel
+from UQpy.utilities.GrassmannPoint import GrassmannPoint
+from UQpy.dimension_reduction.grassmann_manifold.projections.baseclass.ManifoldProjection import ManifoldProjection
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 from UQpy.utilities.Utilities import *
 
@@ -18,20 +11,17 @@ from UQpy.utilities.Utilities import *
 class SvdProjection(ManifoldProjection):
     @beartype
     def __init__(
-        self,
-        data: list[Numpy2DFloatArray],
-        p: Union[int,str],
-        tol: float = None,
-        kernel_composition: KernelComposition = KernelComposition.LEFT,
+            self,
+            data: list[Numpy2DFloatArray],
+            p: Union[int, str],
+            tol: float = None,
     ):
         """
 
         :param data: Raw data given as a list of matrices.
         :param p: Number of independent p-planes of each Grassmann point.
-        :param kernel_composition: Composition of the kernel.
         :param tol: Tolerance on the SVD decomposition
         """
-        self.kernel_composition = kernel_composition
         self.data = data
         self.tolerance = tol
 
@@ -48,13 +38,10 @@ class SvdProjection(ManifoldProjection):
 
         if bool_left and bool_right:
             raise TypeError("UQpy: The shape of the input matrices must be the same.")
-        else:
-            n_psi = n_left[0]
-            n_phi = n_right[0]
+        n_psi = n_left[0]
+        n_phi = n_right[0]
 
-        ranks = []
-        for i in range(points_number):
-            ranks.append(np.linalg.matrix_rank(data[i], tol=self.tolerance))
+        ranks = [np.linalg.matrix_rank(data[i], tol=self.tolerance) for i in range(points_number)]
 
         if p is str and p == "min":
             p = int(min(ranks))
@@ -65,9 +52,8 @@ class SvdProjection(ManifoldProjection):
         else:
             for i in range(points_number):
                 if min(np.shape(data[i])) < p:
-                    raise ValueError(
-                        "UQpy: The dimension of the input data is not consistent with `p` of G(n,p)."
-                    )  # write something that makes sense
+                    raise ValueError("UQpy: The dimension of the input data is not consistent with `p` of G(n,p).")
+                    # write something that makes sense
 
         ranks = np.ones(points_number) * [int(p)]
         ranks = ranks.tolist()
@@ -94,10 +80,3 @@ class SvdProjection(ManifoldProjection):
         self.ranks = ranks
         self.points_number = points_number
         self.max_rank = int(np.max(ranks))
-
-    @beartype
-    def evaluate_matrix(self, kernel: Kernel):
-        kernel_psi = kernel.kernel_operator(self.psi, p=self.p)
-        kernel_phi = kernel.kernel_operator(self.phi, p=self.p)
-        return CompositionAction[self.kernel_composition.name](kernel_psi, kernel_phi)
-

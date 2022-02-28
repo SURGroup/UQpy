@@ -1,13 +1,11 @@
 from scipy.optimize import minimize
-
-from UQpy.optimization.baseclass.Optimizer import Optimizer
 import logging
 
 
-class MinimizeOptimizer(Optimizer):
+class MinimizeOptimizer:
 
     def __init__(self, method: str = 'bfgs', bounds=None):
-        super().__init__(bounds)
+        # super().__init__(bounds)
         self.logger = logging.getLogger(__name__)
         self.optimization = minimize
         self.method = method

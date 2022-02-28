@@ -62,7 +62,7 @@ class GeometricHarmonics:
             epsilon = kwargs['epsilon']
 
         self.kernel_object.epsilon = epsilon
-        kernel_matrix = self.kernel_object.kernel_operator(points=x)
+        kernel_matrix = self.kernel_object.calculate_kernel_matrix(points=x)
 
         eigenvalues, eigenvectors = DiffusionMaps.eig_solver(kernel_matrix, self.n_eigen_pairs)
 
@@ -99,7 +99,7 @@ class GeometricHarmonics:
             epsilon = self.kwargs_kernel['epsilon']
 
         self.kernel_object.epsilon = epsilon
-        kernel_matrix = self.kernel_object.kernel_operator(points=x)
+        kernel_matrix = self.kernel_object.calculate_kernel_matrix(points=x)
         y = kernel_matrix.T @ self.basis
         score = self.score(x, y, self.kwargs_kernel['score'])
         return y, score

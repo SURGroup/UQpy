@@ -1,7 +1,7 @@
 import pytest
 from beartype.roar import BeartypeCallHintPepParamException
 
-from UQpy.optimization.MinimizeOptimizer import MinimizeOptimizer
+from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 from UQpy.sampling.stratified_sampling.refinement.GradientEnhancedRefinement import GradientEnhancedRefinement
 from UQpy.distributions.collection.Uniform import Uniform
 from UQpy.sampling.stratified_sampling.RefinedStratifiedSampling import *

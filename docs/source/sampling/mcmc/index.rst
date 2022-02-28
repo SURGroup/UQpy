@@ -21,7 +21,7 @@ attention must be given to that choice as it plays a major role in the accuracy 
 following figure shows samples accepted (blue) and rejected (red) when trying to sample from a 2d Gaussian distribution
 using MH, for different scale parameters of the proposal distribution. If the scale is too small, the space is not well
 explored; if the scale is too large, many candidate samples will be rejected, yielding a very inefficient algorithm.
-As a rule of thumb, an acceptance rate of 10\%-50\% could be targeted (see `Diagnostics` in the `Utilities` module).
+As a rule of thumb, an acceptance rate of 10\%-50\% could be targeted.
 
 .. image:: ../../_static/SampleMethods_MCMC_samples.png
    :scale: 40 %

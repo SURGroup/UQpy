@@ -7,6 +7,3 @@ class ManifoldProjection(ABC):
     """
     The parent class to all classes used to represent data on the Grassmann manifold.
     """
-    @abstractmethod
-    def evaluate_matrix(self, operator: Kernel):
-        pass
