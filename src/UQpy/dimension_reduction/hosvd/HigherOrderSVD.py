@@ -23,7 +23,9 @@ class HigherOrderSVD:
         """
         self.reconstruction_error = None
         self.s3hat = None
+        """Normalized core tensor produced by the HOSVD decomposition."""
         self.u3hat = None
+        """Normalized unitary array produced by the HOSVD decomposition"""
         self.reduced_solutions = None
         self.s3 = None
         self.v3 = None
@@ -32,9 +34,11 @@ class HigherOrderSVD:
         self.v2 = None
         self.sig_2 = None
         self.u2 = None
+        """Unitary array of the SVD of the second unfolded matrix."""
         self.v1 = None
         self.sig_1 = None
         self.u1 = None
+        """Unitary array of the SVD of the first unfolded matrix"""
         self.solution_snapshots = solution_snapshots
         self.logger = logging.getLogger(__name__)
         self.modes = modes
@@ -135,7 +139,7 @@ class HigherOrderSVD:
 
         :param u1: Unitary array of the SVD of the first unfolded matrix.
         :param u2: Unitary array of the SVD of the second unfolded matrix.
-        :param u3hat: Normalized unitary array produced by the HOSVD decomposition
+        :param u3hat: Normalized unitary array produced by the HOSVD decomposition.
         :param s3hat: Normalized core tensor produced by the HOSVD decomposition
         :return: An :class:`ndarray` containing the reconstruction of the approximated solution.
         """
@@ -149,8 +153,6 @@ class HigherOrderSVD:
 
         reconstructed_solutions = np.zeros((rows, columns, snapshot_number))
         for i in range(snapshot_number):
-            reconstructed_solutions[0:rows, 0:columns, i] = d[i, :].reshape(
-                (rows, columns)
-            )
+            reconstructed_solutions[0:rows, 0:columns, i] = d[i, :].reshape((rows, columns))
 
         return reconstructed_solutions

@@ -151,7 +151,7 @@ EuclideanDistance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-The abstract :class:`.EuclideanDistance` class is a blueprint for classes in :mod:`.euclidean_distances` module.
+The abstract :class:`UQpy.utilities.distances.baseclass.EuclideanDistance` class is a blueprint for classes in :mod:`.euclidean_distances` module.
 It allows the user to define a set of methods that must be created within any child classes built from this abstract class.
 
 .. autoclass:: UQpy.utilities.distances.baseclass.EuclideanDistance
@@ -248,11 +248,11 @@ One can use the following command to instantiate the class :class:`.DiceDistance
 Euclidean Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :class:`.EuclideanDistance` class is imported using the following command:
+The :class:`UQpy.utilities.distances.euclidean_distances.EuclideanDistance` class is imported using the following command:
 
 >>> from UQpy.utilities.distances.euclidean_distances.EuclideanDistance import EuclideanDistance
 
-One can use the following command to instantiate the class :class:`.EuclideanDistance`
+One can use the following command to instantiate the class :class:`UQpy.utilities.distances.euclidean_distances.EuclideanDistance`
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.EuclideanDistance
     :members:
