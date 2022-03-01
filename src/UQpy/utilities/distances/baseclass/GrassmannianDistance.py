@@ -21,6 +21,13 @@ class GrassmannianDistance(Distance, ABC):
     def calculate_distance_matrix(self,
                                   points: Union[list[Numpy2DFloatArrayOrthonormal],  list[GrassmannPoint]],
                                   p_dim,):
+        """
+        Given a list of points that belong on a Grassmann Manifold
+
+        :param points: List of points belonging on the Grassmann Manifold. Either a list of :class:`.GrassmannPoint` or
+         a list of orthonormal :class:`.ndarray`.
+        :param p_dim: Number of independent p-planes of each Grassmann point.
+        """
         nargs = len(points)
 
         # Define the pairs of points to compute the grassmann_manifold distance.

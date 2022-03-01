@@ -17,16 +17,28 @@ two Grassmann kernels have been proposed in literature and have demonstrated the
 problems.
 
 
+Kernel
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: UQpy.utilities.kernels.baseclass.Kernel
+    :members: kernel_entry
+
+Grassmannian Kernel
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: UQpy.utilities.kernels.baseclass.GrassmannianKernel
+    :members: calculate_kernel_matrix
+
 Projection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :class:`.ProjectionKernel` class is imported using the following command:
 
->>> from UQpy.dimension_reduction.kernels.ProjectionKernel import ProjectionKernel
+>>> from UQpy.utilities.kernels.ProjectionKernel import ProjectionKernel
 
 One can use the following command to instantiate the class :class:`.ProjectionKernel`
 
-.. autoclass:: UQpy.dimension_reduction.kernels.ProjectionKernel
+.. autoclass:: UQpy.utilities.kernels.ProjectionKernel
     :members:
 
 
@@ -36,22 +48,28 @@ Binet-Cauchy
 
 The :class:`.BinetCauchyKernel` class is imported using the following command:
 
->>> from UQpy.dimension_reduction.kernels.BinetCauchyKernel import BinetCauchyKernel
+>>> from UQpy.utilities.kernels.BinetCauchyKernel import BinetCauchyKernel
 
 One can use the following command to instantiate the class :class:`.BinetCauchyKernel`
 
-.. autoclass:: UQpy.dimension_reduction.kernels.BinetCauchyKernel
+.. autoclass:: UQpy.utilities.kernels.BinetCauchyKernel
     :members:
 
+
+Euclidean Kernel
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: UQpy.utilities.kernels.baseclass.EuclideanKernel
+    :members: calculate_kernel_matrix
 
 Gaussian
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :class:`.GaussianKernel` class is imported using the following command:
 
->>> from UQpy.dimension_reduction.kernels.GaussianKernel import GaussianKernel
+>>> from UQpy.utilities.kernels.GaussianKernel import GaussianKernel
 
 One can use the following command to instantiate the class :class:`.GaussianKernel`
 
-.. autoclass:: UQpy.dimension_reduction.kernels.GaussianKernel
+.. autoclass:: UQpy.utilities.kernels.GaussianKernel
     :members:

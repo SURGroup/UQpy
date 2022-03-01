@@ -7,6 +7,12 @@ amounts of data in order to gain a better understanding of the simulated process
 two variants, the Direct POD and Snapshot POD. In cases where the dataset is large, the Snapshot POD is recommended as
 it is much faster.
 
+POD Baseclass
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+.. autoclass:: UQpy.dimension_reduction.pod.baseclass.POD
+    :members: run
 
 DirectPOD
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -70,7 +76,7 @@ The :class:`.DirectPOD` class is imported using the following command:
 One can use the following command to instantiate the class :class:`.DirectPOD`
 
 .. autoclass:: UQpy.dimension_reduction.pod.DirectPOD
-    :members:
+    :members: run
 
 
 SnapshotPOD
@@ -106,4 +112,4 @@ The :class:`.SnapshotPOD` class is imported using the following command:
 One can use the following command to instantiate the class :class:`.SnapshotPOD`
 
 .. autoclass:: UQpy.dimension_reduction.pod.SnapshotPOD
-    :members:
+    :members: run

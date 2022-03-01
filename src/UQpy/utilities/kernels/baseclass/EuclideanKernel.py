@@ -9,13 +9,13 @@ from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 
 
 class EuclideanKernel(Kernel, ABC):
+    """This is a blueprint for Euclidean kernels implemented in the :py:mod:`kernels` module ."""
 
     def calculate_kernel_matrix(self, points: Union[list, NumpyFloatArray]) -> NumpyFloatArray:
         """
-        Compute the Gaussian kernel entry for two points on the Euclidean space.
+        Compute the Gaussian kernel matrix given a list of points on the Euclidean space.
 
         :param points: Coordinates of the points in the Euclidean space
-        :param p:
 
         """
         distance_pairs = None

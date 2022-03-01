@@ -2,7 +2,6 @@ from abc import abstractmethod, ABC
 
 
 class Distance(ABC):
-
-    @abstractmethod
-    def compute_distance(self, xi, xj) -> float:
-        pass
+    """
+    This class serves as a baseclass under which the distance implementations for all spaces exist.
+    """

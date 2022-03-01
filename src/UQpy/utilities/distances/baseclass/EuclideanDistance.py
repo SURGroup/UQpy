@@ -1,5 +1,5 @@
 import itertools
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import numpy as np
 from beartype import beartype
@@ -10,11 +10,24 @@ from UQpy.utilities.distances.baseclass.Distance import Distance
 
 class EuclideanDistance(Distance, ABC):
 
-    def calculate_distance_matrix(self, points):
+    @abstractmethod
+    def compute_distance(self, points) -> float:
+        """
+        This is an abstract method that needs to be implemented in case of specific distances.
+
+        :param points: Point used to compute the distance.
+        :return: A float representing the distance between the points.
+        """
         pass
 
     @beartype
     def calculate_distance_matrix(self, points: list[NumpyFloatArray]):
+        """
+        Given a list of cartesian points calculates a matrix that contains the distances between them.
+
+        :param points: A list of cartesian points.
+        :return: :class:`.ndarray`
+        """
         nargs = len(points)
 
         # Define the pairs of points to compute the grassmann_manifold distance.

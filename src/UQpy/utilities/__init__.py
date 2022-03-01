@@ -4,3 +4,6 @@ from UQpy.utilities.UQpyLoggingFormatter import *
 from UQpy.utilities.Utilities import *
 from UQpy.utilities.ValidationTypes import *
 from UQpy.utilities.DistanceMetric import *
+from UQpy.utilities.GrassmannPoint import GrassmannPoint
+from UQpy.utilities.distances import *
+from UQpy.utilities.kernels import *

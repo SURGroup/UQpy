@@ -83,6 +83,7 @@ listing of the occurring events. This can performed by including the following l
    /stochastic_process/index
    /surrogates/index
    /transformations/index
+   /utilities/index
    runmodel_doc
    paper.rst
    bibliography.rst

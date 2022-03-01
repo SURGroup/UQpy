@@ -13,7 +13,15 @@ class POD(ABC):
     def __init__(self,
                  solution_snapshots: Union[np.ndarray, list],
                  modes: PositiveInteger = 10 ** 10,
-                 reconstruction_percentage: Union[PositiveInteger,PositiveFloat] = 10 ** 10):
+                 reconstruction_percentage: Union[PositiveInteger, PositiveFloat] = 10 ** 10):
+        """
+
+        :param solution_snapshots: Second order tensor or list containing the solution snapshots. Third dimension or
+         length of list corresponds to the number of snapshots.
+        :param modes: Number of POD modes used to approximate the input solution. Must be less than or equal to the
+         number of grid points.
+        :param reconstruction_percentage: Dataset reconstruction percentage.
+        """
         self.logger = logging.getLogger(__name__)
         if reconstruction_percentage <= 0:
             raise ValueError("Invalid input, the reconstruction percentage is defined in the range (0,100].")
@@ -56,7 +64,8 @@ class POD(ABC):
 
     def run(self):
         """
-        Executes the Direct POD method.
+        Executes the POD method. Since :class:`.POD` is an abstract baseclass, the one of the concrete implementations
+        will be executed
 
         :return: Second order tensor containing the reconstructed solution snapshots in their initial spatial and
          temporal dimensions and an array containing the solution snapshots reduced in the spatial dimension.
