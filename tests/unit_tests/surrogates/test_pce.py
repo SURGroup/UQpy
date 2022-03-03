@@ -1,6 +1,7 @@
 import pytest
 
-from UQpy import JointIndependent
+from UQpy.distributions import JointIndependent,  Normal
+from UQpy.sampling import MonteCarloSampling
 from UQpy.distributions import Uniform
 from UQpy.sensitivity.PceSensitivity import PceSensitivity
 from UQpy.surrogates import *
@@ -33,7 +34,7 @@ def test_2():
     """
     Test tp basis
     """
-    polynomial_basis = PolynomialBasis.create_tensor_product_basis(dist, max_degree).polynomials
+    polynomial_basis = PolynomialBasis.create_tensor_product_basis(distributions=dist, max_degree=max_degree).polynomials
     value = polynomial_basis[1].evaluate(x)[0]
     assert round(value, 4) == -0.2874
 
@@ -219,7 +220,7 @@ def test_20():
     """
     dist_Gauss = Normal(loc=0, scale=1)
 
-    x = dist.rvs(n_samples)
+    mcs=MonteCarloSampling(dist,nsamples=n_samples, random_state=1)
     
     polynomial_basis = PolynomialBasis.create_total_degree_basis(dist_Gauss, max_degree)
     least_squares = LeastSquareRegression()

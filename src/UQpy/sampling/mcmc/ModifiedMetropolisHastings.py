@@ -98,6 +98,7 @@ class ModifiedMetropolisHastings(MCMC):
             n_chains=n_chains,
         )
 
+        self.target_type = None
         self.logger = logging.getLogger(__name__)
         # If proposal is not provided: set it as a list of standard gaussians
         from UQpy.distributions import Normal
@@ -140,12 +141,7 @@ class ModifiedMetropolisHastings(MCMC):
                 "UQpy: Proposal_is_symmetric should be a (list of) boolean(s)"
             )
 
-        # check with algo type is used
-        if self.evaluate_log_target_marginals is not None:
-            self.target_type = "marginals"
-            self.current_log_pdf_marginals = None
-        else:
-            self.target_type = "joint"
+        
 
         self.logger.info(
             "\nUQpy: Initialization of "
@@ -165,6 +161,12 @@ class ModifiedMetropolisHastings(MCMC):
         Run one iteration of the mcmc chain for MMH algorithm, starting at current state -
         see :class:`MCMC` class.
         """
+        # check with algo type is used
+        if self.evaluate_log_target_marginals is not None:
+            self.target_type = "marginals"
+            self.current_log_pdf_marginals = None
+        else:
+            self.target_type = "joint"
         # The target pdf is provided via its marginals
         accept_vec = np.zeros((self.n_chains,))
         if self.target_type == "marginals":
@@ -242,7 +244,7 @@ class ModifiedMetropolisHastings(MCMC):
                     .rvs(nsamples=self.n_chains, random_state=self.random_state)
                     .reshape((-1,))
                 )
-                for nc, (cand, log_p_cand, r_) in enumerate(zip(candidate_j[0], log_p_candidate, log_ratios)):
+                for nc, (cand, log_p_cand, r_) in enumerate(zip(candidate_j, log_p_candidate, log_ratios)):
                     accept = np.log(unif_rvs[nc]) < r_
                     if accept:
                         current_state[nc, j] = cand
