@@ -67,3 +67,13 @@ Ridge Class
 ^^^^^^^^^^^^^^^^^
 .. autoclass:: UQpy.surrogates.polynomial_chaos.regressions.RidgeRegression
     :members:
+    
+LAR Regression
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+....
+
+LAR Class
+^^^^^^^^^^^^^^^
+.. autoclass:: UQpy.surrogates.polynomial_chaos.regressions.LeastAngleRegression
+    :members:
