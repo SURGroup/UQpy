@@ -15,7 +15,8 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
     def __init__(self, inputs_number: int,
                  polynomials_number,
                  multi_index_set,
-                 polynomials, distributions):
+                 polynomials,
+                 distributions):
         """
         Create polynomial basis for a given multi index set.
         """
@@ -23,8 +24,8 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
         self.multi_index_set = multi_index_set
         self.polynomials_number = polynomials_number
         self.inputs_number = inputs_number
-        self.distributions= distributions
-        
+        self.distributions = distributions
+
     @classmethod
     def create_total_degree_basis(cls, distributions, max_degree, hyperbolic=1):
         """
@@ -39,9 +40,9 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
             else len(distributions.marginals)
         multi_index_set = PolynomialBasis.calculate_total_degree_set(inputs_number=inputs_number,
                                                                      degree=max_degree)
-        if 0< hyperbolic < 1:
-            mask = np.round(np.sum(multi_index_set**hyperbolic, axis=1)**(1/hyperbolic), 4) <= max_degree
-            multi_index_set=multi_index_set[mask]  
+        if 0 < hyperbolic < 1:
+            mask = np.round(np.sum(multi_index_set ** hyperbolic, axis=1) ** (1 / hyperbolic), 4) <= max_degree
+            multi_index_set = multi_index_set[mask]
         polynomials = PolynomialBasis.construct_arbitrary_basis(inputs_number, distributions, multi_index_set)
         return cls._create(inputs_number, len(multi_index_set), multi_index_set, polynomials, distributions)
 
@@ -60,7 +61,7 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
         multi_index_set = PolynomialBasis.calculate_tensor_product_set(inputs_number=inputs_number,
                                                                        degree=max_degree)
         polynomials = PolynomialBasis.construct_arbitrary_basis(inputs_number, distributions, multi_index_set)
-        return cls._create(inputs_number, len(multi_index_set), multi_index_set, polynomials)
+        return cls._create(inputs_number, len(multi_index_set), multi_index_set, polynomials, distributions)
 
     def evaluate_basis(self, samples):
         samples_number = len(samples)
@@ -155,13 +156,13 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
     @staticmethod
     def construct_arbitrary_basis(inputs_number, distributions, multi_index_set):
         # populate polynomial basis
-        poly_basis = list()
+        poly_basis = []
         if inputs_number == 1:
-            poly_basis = [PolynomialBasis.distribution_to_polynomial[type(distributions)]
-                          (distributions=distributions, degree=int(idx[0])) for idx in multi_index_set]
+            return [
+                PolynomialBasis.distribution_to_polynomial[type(distributions)](
+                    distributions=distributions, degree=int(idx[0])) for idx in multi_index_set]
         else:
-            poly_basis = [PolynomialsND(distributions, idx) for idx in multi_index_set]
-        return poly_basis
+            return [PolynomialsND(distributions, idx) for idx in multi_index_set]
 
     distribution_to_polynomial = {
         Uniform: Legendre,

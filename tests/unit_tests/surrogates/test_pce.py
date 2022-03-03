@@ -177,7 +177,8 @@ marg.extend(marg_1)
 joint = JointIndependent(marginals=marg)
 
 n_samples_2 = 10
-x_2 = joint.rvs(n_samples_2)
+mcs_2 = MonteCarloSampling(distributions=joint, nsamples=n_samples_2, random_state=0)
+x_2 = mcs_2.samples
 y_2 = function(x_2)
 
 polynomial_basis = PolynomialBasis.create_total_degree_basis(joint, 2)
@@ -191,7 +192,7 @@ def test_17():
     """
     pce_sensitivity = PceSensitivity(pce_2)
     generalized_first_sobol = pce_sensitivity.generalized_first_order_indices()
-    assert round(generalized_first_sobol[0], 4) == 0.1073
+    assert round(generalized_first_sobol[0], 4) == 0.0137
 
 def test_18():
     """
@@ -199,7 +200,7 @@ def test_18():
     """
     pce_sensitivity = PceSensitivity(pce_2)
     generalized_total_sobol = pce_sensitivity.generalized_total_order_indices()
-    assert round(generalized_total_sobol[0], 4) == 0.1921
+    assert round(generalized_total_sobol[0], 4) == 0.4281
     
     
 def test_19():
