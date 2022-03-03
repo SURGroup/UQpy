@@ -33,6 +33,9 @@ class LatinHypercubeSampling(StratifiedSampling):
         :param distributions: List of :class:`.Distribution` objects
          corresponding to each random variable.
         :param nsamples: Number of samples to be drawn from each distribution.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
+         provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
+         object itself can be passed directly.
         :param criterion: The criterion for pairing the generating sample points. This parameter must be of
          type :class:`.Criterion`.
 
