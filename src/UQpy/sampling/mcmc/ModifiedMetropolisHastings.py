@@ -1,6 +1,7 @@
 import logging
 from typing import Callable, List
 
+import numpy as np
 from beartype import beartype
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
@@ -241,13 +242,11 @@ class ModifiedMetropolisHastings(MCMC):
                     .rvs(nsamples=self.n_chains, random_state=self.random_state)
                     .reshape((-1,))
                 )
-                for nc, (cand, log_p_cand, r_) in enumerate(
-                    zip(candidate_j, log_p_candidate, log_ratios)
-                ):
+                for nc, (cand, log_p_cand, r_) in enumerate(zip(candidate_j[0], log_p_candidate, log_ratios)):
                     accept = np.log(unif_rvs[nc]) < r_
                     if accept:
                         current_state[nc, j] = cand
-                        current_log_pdf[nc] = log_p_cand
+                        current_log_pdf[nc] = float(log_p_cand)
                         accept_vec[nc] += 1.0 / self.dimension
                     else:
                         candidate[:, j] = current_state[:, j]

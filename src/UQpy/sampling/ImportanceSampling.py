@@ -15,7 +15,7 @@ class ImportanceSampling:
     @beartype
     def __init__(self,
                  pdf_target: Callable = None,
-                 log_pdf_target: Callable = lambda *args: None,
+                 log_pdf_target: Callable = None,
                  args_target: tuple = None,
                  proposal: Union[None, Distribution] = None,
                  random_state: RandomStateType = None,
