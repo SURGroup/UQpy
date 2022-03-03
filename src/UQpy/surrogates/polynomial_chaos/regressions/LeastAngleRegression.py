@@ -65,7 +65,7 @@ class LeastAngleRegression(Regression):
         measured by Cross validation: Leave-one-out error (1 is perfect approximation). Option to check overfitting by 
         empirical rule: if three steps in a row have a decreasing accuracy, stop the algorithm.
 
-        :param PolynomialChaosExpansion: :class:`UQpy.surrogates.PolynomialChaosExpansion` existing target PCE for model_selection
+        :param PolynomialChaosExpansion: existing target PCE for model_selection
         :param TargetError: Target error of an approximation (stoping criterion).
         :param CheckOverfitting: Whether to check over-fitting by empirical rule.
         :return: copy of input PolynomialChaosExpansion containing the best possible model for given data identified by LARs  
