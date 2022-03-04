@@ -38,6 +38,12 @@ Uncertainty Quantification with python (UQpy)
 | **Contributors:**     | Michael Gardner, Ulrich Römer, Julius Schultz                    |
 +-----------------------+------------------------------------------------------------------+
 
+Contact
+===========
+
+To engage in conversations about uncertainty quantification, or ask question about UQpy usage and functionality refer to the UQpy's discussions tab:
+
+`Discussions <https://github.com/SURGroup/UQpy/discussions>`_
 
 Description
 ===========
