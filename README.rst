@@ -24,8 +24,19 @@ Uncertainty Quantification with python (UQpy)
 
 ====
 
-:Authors: Michael D. Shields, Dimitris G. Giovanis, Audrey Olivier, Aakash Bangalore Satish, Mohit Singh Chauhan, Lohit Vandanapu, Ketson RM dos Santos, Katiana Kontolati
-:Contact: UQpy.info@gmail.com
++-----------------------+------------------------------------------------------------------+
+| **Product Owner:**    | Micheal D. Shields                                               |
++-----------------------+------------------------------------------------------------------+
+| **Lead Developers:**  | Dimitris Giovanis, Audrey Olivier, Dimitris Tsapetis             |
++-----------------------+------------------------------------------------------------------+
+| **Development Team:** | Aakash Bangalore Satish, Mohit Singh Chauhan, Lohit Vandanapu,   |
++                       +                                                                  +
+|                       | Ketson RM dos Santos, Katiana Kontolati, Dimitris Loukrezis,     |
++                       +                                                                  +
+|                       | Promit Chakroborty, Lukáš Novák, Andrew Solanto                  |
++-----------------------+------------------------------------------------------------------+
+| **Contributors:**     | Michael Gardner, Ulrich Römer, Julius Schultz                    |
++-----------------------+------------------------------------------------------------------+
 
 
 Description

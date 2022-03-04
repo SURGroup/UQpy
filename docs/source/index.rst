@@ -9,6 +9,22 @@ as a set of modules centered around core capabilities in Uncertainty Quantificat
 
 ------------
 
++-----------------------+------------------------------------------------------------------+
+| **Product Owner:**    | Micheal D. Shields                                               |
++-----------------------+------------------------------------------------------------------+
+| **Lead Developers:**  | Dimitris Giovanis, Audrey Olivier, Dimitris Tsapetis             |
++-----------------------+------------------------------------------------------------------+
+| **Development Team:** | Aakash Bangalore Satish, Mohit Singh Chauhan, Lohit Vandanapu,   |
++                       +                                                                  +
+|                       | Ketson RM dos Santos, Katiana Kontolati, Dimitris Loukrezis,     |
++                       +                                                                  +
+|                       | Promit Chakroborty, Lukáš Novák, Andrew Solanto                  |
++-----------------------+------------------------------------------------------------------+
+| **Contributors:**     | Michael Gardner, Ulrich Römer, Julius Schultz                    |
++-----------------------+------------------------------------------------------------------+
+
+
+
 Introduction
 ------------
 
