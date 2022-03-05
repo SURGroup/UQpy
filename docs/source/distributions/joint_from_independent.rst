@@ -14,5 +14,9 @@ The parameters of the distribution are only stored as attributes of the marginal
 parameter of the joint is assigned a unique string identifier as :code:`key_index` - where :code:`key` is the parameter name and
 :code:`index` the index of the marginal (e.g., location parameter of the 2nd marginal is identified as :code:`loc_1`).
 
+The :class:`.JointIndependent` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.JointIndependent import JointIndependent
+
 .. autoclass:: UQpy.distributions.collection.JointIndependent
     :members:

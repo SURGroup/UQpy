@@ -58,6 +58,16 @@ Attributes
 .. autoattribute:: UQpy.sampling.mcmc.MCMC.nsamples_per_chain
 .. autoattribute:: UQpy.sampling.mcmc.MCMC.iterations_number
 
+List of MCMC algorithms
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. toctree::
+   :maxdepth: 1
+
+    Metropolis Hastings <mh>
+    Modified Metropolis Hastings <mmh>
+    DRAM <dram>
+    DREAM <dream>
+    Stretch <stretch>
 
 
 Adding New MCMC Algorithms
@@ -78,13 +88,3 @@ A useful note is that the user has access to a number of useful attributes / uti
 * the :meth:`_check_methods_proposal` method checks whether a given proposal is adequate (i.e., has :meth:`rvs` and :meth:`log_pdf`/:meth:`pdf` methods).
 
 
-List of MCMC algorithms
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. toctree::
-   :maxdepth: 1
-
-    Metropolis Hastings <mh>
-    Modified Metropolis Hastings <mmh>
-    DRAM <dram>
-    DREAM <dream>
-    Stretch <stretch>

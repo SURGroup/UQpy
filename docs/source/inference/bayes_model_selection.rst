@@ -18,6 +18,10 @@ obtained via the :class:`.BayesParameterEstimation` class. However, note that th
 estimates with large variance. The Harmonic mean method for calculating the evidence is provided to the initializer
 of the :class:`.BayesModelSelection` class. No input parameters are required for its initialization.
 
+The :class:`.HarmonicMean` class is imported using the following command:
+
+>>> from UQpy.inference.evidence_methods.HarmonicMean import HarmonicMean
+
 .. autoclass:: UQpy.inference.HarmonicMean
 
 
@@ -31,6 +35,11 @@ of the :meth:`.estimate_evidence` must be provided.
 
 EvidenceMethod Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.EvidenceMethod` class is imported using the following command:
+
+>>> from UQpy.inference.evidence_methods.baseclass.EvidenceMethod import EvidenceMethod
+
 .. autoclass:: UQpy.inference.EvidenceMethod
     :members:
 
@@ -38,6 +47,10 @@ EvidenceMethod Class
 
 BayesModelSelection Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.BayesModelSelection` class is imported using the following command:
+
+>>> from UQpy.inference.BayesModelSelection import BayesModelSelection
 
 Methods
 """""""

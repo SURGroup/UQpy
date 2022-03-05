@@ -20,11 +20,19 @@ problems.
 Kernel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The :class:`.Kernel` class is imported using the following command:
+
+>>> from UQpy.utilities.kernels.baseclass.Kernel import Kernel
+
 .. autoclass:: UQpy.utilities.kernels.baseclass.Kernel
     :members: kernel_entry
 
 Grassmannian Kernel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.GrassmannianKernel` class is imported using the following command:
+
+>>> from UQpy.utilities.kernels.baseclass.GrassmannianKernel import GrassmannianKernel
 
 .. autoclass:: UQpy.utilities.kernels.baseclass.GrassmannianKernel
     :members: calculate_kernel_matrix
@@ -58,6 +66,10 @@ One can use the following command to instantiate the class :class:`.BinetCauchyK
 
 Euclidean Kernel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.EuclideanKernel` class is imported using the following command:
+
+>>> from UQpy.utilities.kernels.baseclass.EuclideanKernel import EuclideanKernel
 
 .. autoclass:: UQpy.utilities.kernels.baseclass.EuclideanKernel
     :members: calculate_kernel_matrix

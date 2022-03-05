@@ -13,5 +13,9 @@ the joint is assigned a unique string identifier as :code:`key_index` - where :c
 index of the marginal (e.g., location parameter of the 2nd marginal is identified as :code:`loc_1`); and :code:`key_c` for
 copula parameters.
 
+The :class:`.JointCopula` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.JointCopula import JointCopula
+
 .. autoclass:: UQpy.distributions.collection.JointCopula
     :members:

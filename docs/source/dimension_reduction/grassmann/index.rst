@@ -120,6 +120,10 @@ must be created within any child classes built from this abstract class.
 .. autoclass:: UQpy.dimension_reduction.grassmann_manifold.projections.baseclass.ManifoldProjection
     :members:
 
+The :class:`.ManifoldProjection` class is imported using the following command:
+
+>>> from UQpy.dimension_reduction.grassmann_manifold.projections.baseclass.ManifoldProjection import ManifoldProjection
+
 SVD Projection
 ~~~~~~~~~~~~~~~~~~~~~~
 

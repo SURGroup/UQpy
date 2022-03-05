@@ -1,6 +1,10 @@
 FORM
 ~~~~~~~~~~
 
+The :class:`.FORM` class is imported using the following command:
+
+>>> from UQpy.reliability.taylor_series.FORM import FORM
+
 Methods
 """""""
 .. autoclass:: UQpy.reliability.taylor_series.FORM

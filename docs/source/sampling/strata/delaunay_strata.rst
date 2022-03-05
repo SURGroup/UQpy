@@ -1,5 +1,10 @@
 Delaunay
 ~~~~~~~~~~~~~~~~~~
+
+The :class:`.DelaunayStrata` class is imported using the following command:
+
+>>> from UQpy.sampling.stratified_sampling.strata.DelaunayStrata import DelaunayStrata
+
 Methods
 """""""
 .. autoclass:: UQpy.sampling.stratified_sampling.strata.DelaunayStrata

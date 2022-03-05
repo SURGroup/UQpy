@@ -6,13 +6,25 @@ theoretic criteria can be used to compute a model's quality and perform model se
 
 * Bayesian information criterion,  :math:`BIC = \ln(n) k - 2 \ln(\hat{L})`
 
+The :class:`.BIC` class is imported using the following command:
+
+>>> from UQpy.inference.information_criteria.BIC import BIC
+
 .. autoclass:: UQpy.inference.information_criteria.BIC
 
 * Akaike information criterion, :math:`AIC = 2 k - 2 \ln (\hat{L})`
 
+The :class:`.AIC` class is imported using the following command:
+
+>>> from UQpy.inference.information_criteria.AIC import AIC
+
 .. autoclass:: UQpy.inference.information_criteria.AIC
 
 * Corrected formula for :math:`AIC (AICc)`, for small data sets , :math:`AICc = AIC + \frac{2k(k+1)}{n-k-1}`
+
+The :class:`.AICc` class is imported using the following command:
+
+>>> from UQpy.inference.information_criteria.AICc import AICc
 
 .. autoclass:: UQpy.inference.information_criteria.AICc
 
@@ -28,11 +40,19 @@ All of these criteria are child classes of the :class:`.InformationCriterion` ab
 new type of criteria by extending the :class:`.InformationCriterion` and providing an alternative implementation to the
 :py:meth:`evaluate_criterion` method.
 
+The :class:`.InformationCriterion` class is imported using the following command:
+
+>>> from UQpy.inference.information_criteria.baseclass.InformationCriterion import InformationCriterion
+
 .. autoclass:: UQpy.inference.information_criteria.baseclass.InformationCriterion
     :members:
 
 InfoModelSelection Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.InformationModelSelection` class is imported using the following command:
+
+>>> from UQpy.inference.InformationModelSelection import InformationModelSelection
 
 Methods
 """""""

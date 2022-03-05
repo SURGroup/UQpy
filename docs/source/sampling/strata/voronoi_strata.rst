@@ -1,5 +1,10 @@
 Voronoi
 ~~~~~~~~~~~~~~~~~~
+
+The :class:`.VoronoiStrata` class is imported using the following command:
+
+>>> from UQpy.sampling.stratified_sampling.strata.VoronoiStrata import VoronoiStrata
+
 Methods
 """""""
 .. autoclass:: UQpy.sampling.stratified_sampling.strata.VoronoiStrata

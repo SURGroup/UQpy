@@ -39,7 +39,8 @@ class Strata:
     @abc.abstractmethod
     def sample_strata(self, nsamples_per_stratum, random_state):
         """
-        Abstract class that need to be implemented in each new Stratum. It defines a way to draw samples from
+        Abstract class that need to be implemented in each new Stratum. It defines a way to draw samples from each
+        stratum.
 
         :param nsamples_per_stratum: Number of samples to draw in each stratum
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.

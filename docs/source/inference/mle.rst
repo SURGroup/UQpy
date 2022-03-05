@@ -16,6 +16,10 @@ A numerical optimization procedure is performed to compute the MLE. By default, 
 MLE Class
 ^^^^^^^^^^^^^^^^^^^^^
 
+The :class:`.MLE` class is imported using the following command:
+
+>>> from UQpy.inference.MLE import MLE
+
 Methods
 """""""
 .. autoclass:: UQpy.inference.MLE

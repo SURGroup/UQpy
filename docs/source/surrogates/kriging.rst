@@ -63,6 +63,9 @@ User-Defined Regression Model
 Adding a new regression model to the :class:`.Kriging` class is straightforward. This is done by creating a new class
 that evaluates the basis functions and the Jacobian, by extending the :class:`.Regression`.
 
+The :class:`.Regression` class is imported using the following command:
+
+>>> from UQpy.surrogates.kriging.regression_models.baseclass.Regression import Regreesion
 
 .. autoclass:: UQpy.surrogates.kriging.Regression
     :members:
@@ -103,6 +106,10 @@ The exponential correlation model takes the following form:
 
 where :math:`h_i = s_i-x_i`.
 
+The :class:`.ExponentialCorrelation` class is imported using the following command:
+
+>>> from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import ExponentialCorrelation
+
 
 Gaussian Correlation
 """"""""""""""""""""""
@@ -113,6 +120,10 @@ The Gaussian correlation model takes the following form:
 
 where :math:`h_i = s_i-x_i`.
 
+The :class:`.GaussianCorrelation` class is imported using the following command:
+
+>>> from UQpy.surrogates.kriging.correlation_models.GaussianCorrelation import GaussianCorrelation
+
 Linear Correlation
 """"""""""""""""""""
 
@@ -121,6 +132,10 @@ The linear correlation model takes the following form:
 .. math:: \mathcal{R}_i(h_i, \theta_i) = \max \bigg(0, 1-\dfrac{|h_i|}{\theta_i}\bigg)
 
 where :math:`h_i = s_i-x_i`.
+
+The :class:`.LinearCorrelation` class is imported using the following command:
+
+>>> from UQpy.surrogates.kriging.correlation_models.LinearCorrelation import LinearCorrelation
 
 
 Spherical Correlation
@@ -132,6 +147,9 @@ The spherical correlation model takes the following form:
 
 where :math:`\xi_i =  \min \bigg(1, \dfrac{|h_i|}{\theta_i}\bigg)` and :math:`h_i = s_i-x_i`.
 
+The :class:`.SphericalCorrelation` class is imported using the following command:
+
+>>> from UQpy.surrogates.kriging.correlation_models.SphericalCorrelation import SphericalCorrelation
 
 
 Cubic Correlation
@@ -143,6 +161,9 @@ The cubic correlation model takes the following form:
 
 where :math:`\xi_i =  \min \bigg(1, \dfrac{|h_i|}{\theta_i}\bigg)` and :math:`h_i = s_i-x_i`.
 
+The :class:`.CubicCorrelation` class is imported using the following command:
+
+>>> from UQpy.surrogates.kriging.correlation_models.CubicCorrelation import CubicCorrelation
 
 Spline Correlation
 """""""""""""""""""""
@@ -153,6 +174,9 @@ The spline correlation model takes the following form:
 
 where :math:`\xi_i =  \min \bigg(1, \dfrac{|h_i|}{\theta_i}\bigg)` and :math:`h_i = s_i-x_i`.
 
+The :class:`.SplineCorrelation` class is imported using the following command:
+
+>>> from UQpy.surrogates.kriging.correlation_models.SplineCorrelation import SplineCorelation
 
 User-Defined Correlation
 """"""""""""""""""""""""""""
@@ -164,6 +188,10 @@ This requires a method takes as input the new points, training points, hyperpara
 computation of the derivative of correlation matrix (i.e. dt and dx).
 This method evaluates the correlation matrix, its derivative with respect to the variables and its derivative
 with respect to the hyperparameters.
+
+The :class:`.Correlation` class is imported using the following command:
+
+>>> from UQpy.surrogates.kriging.correlation_models.baseclass.Correlation import Correlation
 
 .. autoclass:: UQpy.surrogates.kriging.Correlation
     :members:
@@ -197,6 +225,10 @@ An example user-defined model is given below:
 
 Kriging Class
 ^^^^^^^^^^^^^^
+
+The :class:`.Kriging` class is imported using the following command:
+
+>>> from UQpy.surrogates.kriging.Kriging import Kriging
 
 Methods
 """""""

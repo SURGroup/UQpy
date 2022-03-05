@@ -20,6 +20,10 @@ can add samples as they wish by calling the :meth:`run` method several times.
 BayesParameterEstimation Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The :class:`.BayesParameterEstimation` class is imported using the following command:
+
+>>> from UQpy.inference.BayesParameterEstimation import BayesParameterEstimation
+
 Methods
 """""""
 .. autoclass:: UQpy.inference.BayesParameterEstimation

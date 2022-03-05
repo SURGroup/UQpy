@@ -16,6 +16,11 @@ vector corresponds to the polynomial coefficients. The above method can be used 
 
 LeastSquares Class
 ^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.LeastSquaresRegression` class is imported using the following command:
+
+>>> from UQpy.surrogates.polynomial_chaos.regressions.LeastSquareRegression import LeastSquareRegression
+
 .. autoclass:: UQpy.surrogates.polynomial_chaos.regressions.LeastSquareRegression
     :members:
 
@@ -45,6 +50,11 @@ where :math:`i` is the iteration step, and :math:`\epsilon` is the learning rate
 
 Lasso Class
 ^^^^^^^^^^^^^^^
+
+The :class:`.LassoRegression` class is imported using the following command:
+
+>>> from UQpy.surrogates.polynomial_chaos.regressions.LassoRegression import LassoRegression
+
 .. autoclass:: UQpy.surrogates.polynomial_chaos.regressions.LassoRegression
     :members:
 
@@ -65,6 +75,11 @@ gradient descent. The Ridge regression method can be used from the `.RidgeRegres
 
 Ridge Class
 ^^^^^^^^^^^^^^^^^
+
+The :class:`.PceSensitivity` class is imported using the following command:
+
+>>> from UQpy.sensitivity.PceSensitivity import PceSensitivity
+
 .. autoclass:: UQpy.surrogates.polynomial_chaos.regressions.RidgeRegression
     :members:
     
@@ -73,7 +88,12 @@ LAR Regression
 
 ....
 
-LAR Class
-^^^^^^^^^^^^^^^
+LeastAngleRegression Class
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.LeastAngleRegression` class is imported using the following command:
+
+>>> from UQpy.surrogates.polynomial_chaos.regressions.LeastAngleRegression import LeastAngleRegression
+
 .. autoclass:: UQpy.surrogates.polynomial_chaos.regressions.LeastAngleRegression
     :members:

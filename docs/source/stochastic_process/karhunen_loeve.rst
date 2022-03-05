@@ -10,6 +10,10 @@ where :math:`\theta_i(\omega)` are uncorrelated standardized random variables an
 KarhunenLoeve Class
 ^^^^^^^^^^^^^^^^^^^^
 
+The :class:`.KarhunenLoaeve` class is imported using the following command:
+
+>>> from UQpy.stochastic_process.KarhunenLoeveExpansion import KarhunenLoeveExpansion
+
 Methods
 """""""
 .. autoclass:: UQpy.stochastic_process.KarhunenLoeveExpansion

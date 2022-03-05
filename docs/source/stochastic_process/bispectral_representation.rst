@@ -9,6 +9,10 @@ references :cite:`StochasticProcess8` and :cite:`StochasticProcess9`. The multi-
 BispectralRepresentation Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The :class:`.BispectralRepresentation` class is imported using the following command:
+
+>>> from UQpy.stochastic_process.BispectralRepresentation import BispectralRepresentation
+
 Methods
 """""""
 .. autoclass:: UQpy.stochastic_process.BispectralRepresentation

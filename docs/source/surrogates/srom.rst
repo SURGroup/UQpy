@@ -18,6 +18,11 @@ Here, :math:`F(x_{k,i})` and :math:`\hat{F}(x_{k,i})` denote the marginal cumula
 
 SROM Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.SRMO` class is imported using the following command:
+
+>>> from UQpy.surrogates.stochastic_reduced_order_models.SROM import SROM
+
 Methods
 """""""
 .. autoclass:: UQpy.surrogates.stochastic_reduced_order_models.SROM

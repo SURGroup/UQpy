@@ -1,6 +1,10 @@
 LatinHypercubeSampling Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The :class:`.LatinHypercubeSampling` class is imported using the following command:
+
+>>> from UQpy.sampling.stratified_sampling.LatinHypercubeSampling import LatinHypercubeSampling
+
 Methods
 ~~~~~~~~~~~~~~~~~~
 .. autoclass:: UQpy.sampling.LatinHypercubeSampling

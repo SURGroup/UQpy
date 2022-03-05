@@ -23,6 +23,10 @@ information can be found in :cite:`Distances_2`.
 Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The :class:`.Distances` class is imported using the following command:
+
+>>> from UQpy.utilities.distances.baseclass.Distance import Distance
+
 .. autoclass:: UQpy.utilities.distances.baseclass.Distance
     :members: compute_distance
 
@@ -30,6 +34,9 @@ Distance
 GrassmannianDistance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The :class:`.GrassmannianDistance` class is imported using the following command:
+
+>>> from UQpy.utilities.distances.baseclass.GrassmannianDistance import GrassmannianDistance
 
 The abstract :class:`.GrassmannianDistance` class is a blueprint for all classes in :mod:`.grassmannian_distances` module.
 It allows the user to define a set of methods that must be created within any child classes built from this abstract class.
@@ -48,6 +55,7 @@ The :class:`.AsimovDistance` class is imported using the following command:
 
 One can use the following command to instantiate the class :class:`.AsimovDistance`
 
+
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.AsimovDistance
     :members:
 
@@ -61,6 +69,7 @@ The :class:`.BinetCauchyDistance` class is imported using the following command:
 
 One can use the following command to instantiate the class :class:`.BinetCauchyDistance`
 
+
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.BinetCauchyDistance
     :members:
 
@@ -73,6 +82,7 @@ The :class:`.FubiniStudyDistance` class is imported using the following command:
 >>> from UQpy.utilities.distances.grassmannian_distances.FubiniStudyDistance import FubiniStudyDistance
 
 One can use the following command to instantiate the class :class:`.FubiniStudyDistance`
+
 
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.FubiniStudyDistance
     :members:
@@ -88,6 +98,7 @@ The :class:`.GeodesicDistance` class is imported using the following command:
 
 One can use the following command to instantiate the class :class:`.GeodesicDistance`
 
+
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.GeodesicDistance
     :members:
 
@@ -100,6 +111,7 @@ The :class:`.MartinDistance` class is imported using the following command:
 >>> from UQpy.utilities.distances.grassmannian_distances.MartinDistance import MartinDistance
 
 One can use the following command to instantiate the class :class:`.MartinDistance`
+
 
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.MartinDistance
     :members:

@@ -23,15 +23,6 @@ as a set of modules centered around core capabilities in Uncertainty Quantificat
 | **Contributors:**     | Michael Gardner, Ulrich Römer, Julius Schultz                    |
 +-----------------------+------------------------------------------------------------------+
 
-Contact
-===========
-
-To engage in conversations about uncertainty quantification, or ask question about UQpy usage and functionality refer to the UQpy's discussions tab:
-
-`Discussions <https://github.com/SURGroup/UQpy/discussions>`_
-
-
-
 Introduction
 ------------
 
@@ -130,6 +121,13 @@ https://github.com/SURGroup/UQpy_paper
 
 ------------
 
+Contact
+------------
+
+To engage in conversations about uncertainty quantification, or ask question about UQpy usage and functionality refer to the UQpy's discussions tab:
+
+`Discussions <https://github.com/SURGroup/UQpy/discussions>`_
+
 Help & Support
 ---------------------------
 
@@ -137,3 +135,6 @@ For assistance with the ``UQpy`` software package, please raise an issue on the 
 
 
 .. _issues: https://github.com/SURGroup/UQpy/issues
+
+
+

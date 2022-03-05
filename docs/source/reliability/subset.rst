@@ -27,6 +27,10 @@ and in the second stage is accepted/rejected based on whether the sample belongs
 SubsetSimulation Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The :class:`.SubsetSimulation` class is imported using the following command:
+
+>>> from UQpy.reliability.SubsetSimulation import SubsetSimulation
+
 Methods
 """""""
 .. autoclass:: UQpy.reliability.SubsetSimulation

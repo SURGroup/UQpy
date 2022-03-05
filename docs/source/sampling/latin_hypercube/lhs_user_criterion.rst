@@ -13,6 +13,10 @@ The user may also pass criterion-specific parameters into the :meth:`__init__` m
 The output of this function should be a numpy array of at least two-dimensions with the first dimension being the
 number of samples and the second dimension being the number of variables.
 
+The :class:`.Criterion` class is imported using the following command:
+
+>>> from UQpy.sampling.stratified_sampling.latin_hypercube_criteria.baseclass.Criterion import Criterion
+
 .. autoclass:: UQpy.sampling.Criterion
     :members:
 

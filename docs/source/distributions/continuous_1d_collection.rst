@@ -16,6 +16,10 @@ In this standard form :math:`(loc=0, scale=1)`, the distribution is defined over
 `scale` to shift the distribution to interval :math:`(loc, loc + scale)`. Specifically, this is equivalent to computing
 :math:`f(y|a,b)` where :math:`y=(x-loc)/scale`.
 
+The :class:`.Beta` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Beta import Beta
+
 .. autoclass:: UQpy.distributions.collection.Beta
 
 ______
@@ -29,6 +33,10 @@ Cauchy distribution having probability density function
 
 In this standard form :math:`(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
 this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
+
+The :class:`.Cauchy` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Cauchy import Cauchy
 
 .. autoclass:: UQpy.distributions.collection.Cauchy
 
@@ -45,6 +53,10 @@ for :math:`x\ge 0`, :math:`k>0`. Here :math:`\Gamma(\cdot)` refers to the Gamma 
 
 In this standard form :math:`(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
 this is equivalent to computing :math:`f(y|k)` where :math:`y=(x-loc)/scale`.
+
+The :class:`.ChiSquare` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.ChiSquare import ChiSquare
 
 .. autoclass:: UQpy.distributions.collection.ChiSquare
 
@@ -63,6 +75,10 @@ this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 A common parameterization for Exponential is in terms of the rate parameter :math:`\lambda`, which corresponds to
 using :math:`scale = 1 / \lambda`.
 
+The :class:`.Exponential` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Exponential import Exponential
+
 .. autoclass:: UQpy.distributions.collection.Exponential
 
 ___________
@@ -78,6 +94,10 @@ for :math:`x\ge 0`, :math:`a>0`. Here :math:`\Gamma(a)` refers to the Gamma func
 
 In this standard form :math:`(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
 this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
+
+The :class:`.Gamma` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Gamma import Gamma
 
 .. autoclass:: UQpy.distributions.collection.Gamma
 
@@ -99,6 +119,10 @@ For :math:`c=0`
 In this standard form :math:`(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
 this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 
+The :class:`.GeneralizedExtreme` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.GeneralizedExtreme import GeneralizedExtreme
+
 .. autoclass:: UQpy.distributions.collection.GeneralizedExtreme
 
 ________________
@@ -115,6 +139,10 @@ for :math:`x>0`. :py:meth:`cdf` method returns :code:`NaN` for :math:`\mu<0.0028
 In this standard form :math:`(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
 this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 
+The :class:`.InverseGauss` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.InverseGaussian import InverseGauss
+
 .. autoclass:: UQpy.distributions.collection.InverseGauss
 
 _______
@@ -128,6 +156,10 @@ Laplace distribution having probability density function
 
 In this standard form :math:`(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
 this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
+
+The :class:`.Laplace` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Laplace import Laplace
 
 .. autoclass:: UQpy.distributions.collection.Laplace
 
@@ -145,6 +177,10 @@ for :math:`x\ge 0`.
 In this standard form :math:`(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
 this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 
+The :class:`.Levy` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Levy import Levy
+
 .. autoclass:: UQpy.distributions.collection.Levy
 
 ________
@@ -158,6 +194,10 @@ Logistic distribution having probability density function
 
 In this standard form :math:`(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
 this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
+
+The :class:`.Logistic` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Logistic import Logistic
 
 .. autoclass:: UQpy.distributions.collection.Logistic
 
@@ -176,6 +216,10 @@ A common parametrization for a lognormal random variable :math:`Y` is in terms o
 sigma, of the gaussian random variable :math:`X` such that :math:`exp(X) = Y`. This parametrization corresponds to setting
 :math:`s = sigma` and :math:`scale = exp(mu)`.
 
+The :class:`.Lognormal` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Lognormal import Lognormal
+
 .. autoclass:: UQpy.distributions.collection.Lognormal
 
 _______
@@ -192,6 +236,10 @@ for :math:`x\ge0`.
 In this standard form :math:`(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
 this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 
+The :class:`.Maxwell` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Maxwell import Maxwell
+
 .. autoclass:: UQpy.distributions.collection.Maxwell
 
 _______
@@ -205,6 +253,10 @@ Normal distribution having probability density function
 
 In this standard form :math:`(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
 this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
+
+The :class:`.Normal` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Normal import Normal
 
 .. autoclass:: UQpy.distributions.collection.Normal
 
@@ -222,6 +274,10 @@ for :math:`x\ge 1, b>0`.
 In this standard form :math:`(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
 this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 
+The :class:`.Pareto` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Pareto import Pareto
+
 .. autoclass:: UQpy.distributions.collection.Pareto
 
 _______
@@ -238,6 +294,10 @@ for :math:`x\ge 0`.
 In this standard form :math:`(loc=0, scale=1)`. Use `loc` and `scale` to shift and scale the distribution. Specifically,
 this is equivalent to computing :math:`f(y)` where :math:`y=(x-loc)/scale`.
 
+The :class:`.Rayleigh` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Rayleigh import Rayleigh
+
 .. autoclass:: UQpy.distributions.collection.Rayleigh
 
 _______
@@ -249,6 +309,10 @@ Truncated normal distribution
 
 The standard form of this distribution :math:`(loc=0, scale=1)` is a standard normal truncated to the range :math:`[a, b]`.
 Note that *a* and *b* are defined over the domain of the standard normal.
+
+The :class:`.TruncatedNormal` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.TruncatedNormal import TruncatedNormal
 
 .. autoclass:: UQpy.distributions.collection.TruncatedNormal
 
@@ -262,5 +326,9 @@ Uniform distribution having probability density function
 .. math:: f(x|a, b) = \dfrac{1}{b-a}
 
 where :math:`a=loc` and :math:`b=loc+scale`
+
+The :class:`.Uniform` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Uniform import Uniform
 
 .. autoclass:: UQpy.distributions.collection.Uniform

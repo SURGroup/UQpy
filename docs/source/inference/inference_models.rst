@@ -49,14 +49,26 @@ InferenceModel Class
 ComputationalModel Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The :class:`.ComputationalModel` class is imported using the following command:
+
+>>> from UQpy.inference.inference_models.ComputationalModel import ComputationalModel
+
 .. autoclass:: UQpy.inference.inference_models.ComputationalModel
 
 DistributionModel Class
 ^^^^^^^^^^^^^^^^^^^^^^^
 
+The :class:`.DistributionModel` class is imported using the following command:
+
+>>> from UQpy.inference.inference_models.DistributionModel import DistributionModel
+
 .. autoclass:: UQpy.inference.inference_models.DistributionModel
 
 LogLikelihoodModel Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.LogLikelihoodModel` class is imported using the following command:
+
+>>> from UQpy.inference.inference_models.LogLikelihoodModel import LogLikelihoodModel
 
 .. autoclass:: UQpy.inference.inference_models.LogLikelihoodModel

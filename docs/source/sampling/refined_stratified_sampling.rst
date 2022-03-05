@@ -18,6 +18,10 @@ This class provides the framework for refined stratified sampling. with the aid 
 in a previous sampling of type :class:`TrueStratifiedSampling`, as well as a :class:`.Refinement` algorithm an adaptive
 sampling and refinement of the stratification can be performed.
 
+The :class:`.RefinedStratifiedSampling` class is imported using the following command:
+
+>>> from UQpy.sampling.stratified_sampling.RefinedStratifiedSampling import RefinedStratifiedSampling
+
 Methods
 """"""""""""""""""""""""
 .. autoclass:: UQpy.sampling.RefinedStratifiedSampling
@@ -42,7 +46,14 @@ refinement techniques.
 .. autoclass:: UQpy.sampling.stratified_sampling.refinement.baseclass.Refinement
     :members: update_samples
 
+The :class:`.RandomRefinement` class is imported using the following command:
+
+>>> from UQpy.sampling.stratified_sampling.refinement.RandomRefinement import RandomRefinement
 
 .. autoclass:: UQpy.sampling.stratified_sampling.refinement.RandomRefinement
+
+The :class:`.GradientEnhancedRefinement` class is imported using the following command:
+
+>>> from UQpy.sampling.stratified_sampling.refinement.GradientEnhancedRefinement import GradientEnhancedRefinement
 
 .. autoclass:: UQpy.sampling.stratified_sampling.refinement.GradientEnhancedRefinement

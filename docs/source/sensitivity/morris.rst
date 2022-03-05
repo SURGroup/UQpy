@@ -33,6 +33,10 @@ These indices allow differentiation between three groups of inputs (see example 
 Morris Class
 ^^^^^^^^^^^^^^^^^^
 
+The :class:`.MorrisSensitivity` class is imported using the following command:
+
+>>> from UQpy.sensitivity.MorrisSensitivity import MorrisSensitivity
+
 Methods
 """""""
 .. autoclass:: UQpy.sensitivity.MorrisSensitivity

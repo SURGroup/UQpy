@@ -1,1 +1,1 @@
-from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import *
+from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import Polynomials

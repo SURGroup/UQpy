@@ -11,6 +11,10 @@ Multinomial distribution having probability mass function
 
 for :math:`x=\{x_1,\dots,x_k\}` where each :math:`x_i` is a non-negative integer and :math:`\sum_i x_i = n`.
 
+The :class:`.Multinomial` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Multinomial import Multinomial
+
 .. autoclass:: UQpy.distributions.collection.Multinomial
     :members:
 
@@ -29,6 +33,10 @@ Multivariate normal distribution having probability density function
 
 where :math:`\mu` is the mean vector, :math:`\Sigma` is the covariance matrix, and :math:`k` is the dimension of
 `x`.
+
+The :class:`.MultivariateNormal` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.MultivariateNormal import MultivariateNormal
 
 .. autoclass:: UQpy.distributions.collection.MultivariateNormal
     :members:

@@ -16,6 +16,11 @@ Additional details can be found in :cite:`Simplex1`.
 
 Simplex Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.SimplexSampling` class is imported using the following command:
+
+>>> from UQpy.sampling.SimplexSampling import SimplexSampling
+
 Methods
 ~~~~~~~~~~~~~~~~~~
 .. autoclass:: UQpy.sampling.SimplexSampling

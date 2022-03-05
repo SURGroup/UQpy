@@ -13,6 +13,10 @@ computational efficiency, the SRM is implemented using the Fast Fourier Transfor
 SpectralRepresentation Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The :class:`.SpectralRepresentation` class is imported using the following command:
+
+>>> from UQpy.stochastic_process.SpectralRepresentation import SpectralRepresentation
+
 Methods
 """""""
 .. autoclass:: UQpy.stochastic_process.SpectralRepresentation

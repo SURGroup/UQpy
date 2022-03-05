@@ -16,6 +16,10 @@ If :math:`p` is only known up to a constant, i.e., one can only evaluate :math:`
 ImportanceSampling Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The :class:`.ImportanceSampling` class is imported using the following command:
+
+>>> from UQpy.sampling.ImportanceSampling import ImportanceSampling
+
 Methods
 """"""""""""""""""
 .. autoclass:: UQpy.sampling.ImportanceSampling

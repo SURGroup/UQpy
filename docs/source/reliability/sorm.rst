@@ -1,6 +1,10 @@
 SORM
 ~~~~~~~~~~
 
+The :class:`.SORM` class is imported using the following command:
+
+>>> from UQpy.reliability.taylor_series.SORM import SORM
+
 Methods
 """""""
 .. autoclass:: UQpy.reliability.taylor_series.SORM

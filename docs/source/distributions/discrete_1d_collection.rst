@@ -17,6 +17,10 @@ for :math:`x \in \{0, 1, 2, ..., n\}`.
 In this standard form :math:`(loc=0)`. Use `loc` to shift the distribution. Specifically, this is equivalent to computing
 :math:`f(y)` where :math:`y=x-loc`.
 
+The :class:`.Binomial` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Binomial import Binomial
+
 .. autoclass:: UQpy.distributions.collection.Binomial
 
 ______
@@ -32,5 +36,9 @@ for :math:`x\ge 0`.
 
 In this standard form :math:`(loc=0)`. Use `loc` to shift the distribution. Specifically, this is equivalent to computing
 :math:`f(y)` where :math:`y=x-loc`.
+
+The :class:`.Poisson` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Poisson import Poisson
 
 .. autoclass:: UQpy.distributions.collection.Poisson

@@ -25,6 +25,11 @@ which are also orthonormal.
 
 PCE Class
 ^^^^^^^^^^^
+
+The :class:`.PolynomialChaosSensitivity` class is imported using the following command:
+
+>>> from UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion import PolynomialChaosExpansion
+
 Methods
 """""""
 .. autoclass:: UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion

@@ -44,6 +44,10 @@ matrix :math:`\textbf{C}_x=[\rho_{ij}]` according to:
 Nataf Class
 ^^^^^^^^^^^^^^
 
+The :class:`.Nataf` class is imported using the following command:
+
+>>> from UQpy.transformations.Nataf import Nataf
+
 Methods
 """""""
 .. autoclass:: UQpy.transformations.Nataf

@@ -12,6 +12,10 @@ where :math:`\mathbf{H}` is the lower triangular matrix resulting from the Chole
 Correlate Class
 ^^^^^^^^^^^^^^^^^
 
+The :class:`.Correlate` class is imported using the following command:
+
+>>> from UQpy.transformations.Correlate import Correlate
+
 Methods
 """""""
 .. autoclass:: UQpy.transformations.Correlate

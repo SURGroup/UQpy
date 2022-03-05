@@ -10,6 +10,10 @@ for integration with other :py:mod:`UQpy` modules.
 Monte Carlo Sampling Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The :class:`.MonteCarloSampling` class is imported using the following command:
+
+>>> from UQpy.sampling.MonteCarloSampling import MonteCarloSampling
+
 Methods
 ~~~~~~~~~~~~~~~~~~
 

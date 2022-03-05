@@ -1,5 +1,10 @@
 Rectangular
 ~~~~~~~~~~~~~~~~~~
+
+The :class:`.RectangularStrata` class is imported using the following command:
+
+>>> from UQpy.sampling.stratified_sampling.strata.RectangularStrata import RectangularStrata
+
 Methods
 """""""
 .. autoclass:: UQpy.sampling.stratified_sampling.strata.RectangularStrata

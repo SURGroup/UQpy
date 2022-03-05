@@ -13,6 +13,11 @@ Efficient Global Optimization (EGO) :cite:`AKMCS2`.
 
 AdaptiveKriging Class
 ^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.AdaptiveKriging` class is imported using the following command:
+
+>>> from UQpy.sampling.AdaptiveKriging import AdaptiveKriging
+
 Methods
 """""""""""
 .. autoclass:: UQpy.sampling.AdaptiveKriging
@@ -44,6 +49,9 @@ The :class:`.AdaptiveKriging` then adds the corresponding point to the training 
 
 where :math:`\epsilon_u` is a user-defined error threshold (typically set to 2).
 
+The :class:`.UFunction` class is imported using the following command:
+
+>>> from UQpy.sampling.adaptive_kriging_functions.UFunction import UFunction
 
 .. autoclass:: UQpy.sampling.UFunction
 
@@ -59,6 +67,10 @@ where :math:`p(\mathbf{x})` is the probability density function of :math:`\mathb
 
 As with the standard U-function, :class:`.AdaptiveKriging` with the weighted U-function iterates until :math:`\min(U(\mathbf{x})) > \epsilon_u` (the same stopping criterion as the U-function).
 
+The :class:`.WeightedUFunction` class is imported using the following command:
+
+>>> from UQpy.sampling.adaptive_kriging_functions.WeightedUFunction import WeightedUFunction
+
 .. autoclass:: UQpy.sampling.WeightedUFunction
 
 Expected Feasibility Function
@@ -73,6 +85,10 @@ where :math:`\Phi(\cdot)` and :math:`\phi(\cdot)` are the standard normal cdf an
 At each iteration, the new point that is selected is the point that maximizes the EFF and iterations continue until
 
 .. math:: \max_x(EFF(\mathbf{x})) < \epsilon_{eff}
+
+The :class:`.Expectedfeasibility` class is imported using the following command:
+
+>>> from UQpy.sampling.adaptive_kriging_functions.Expectedfeasibility import ExpectedFeasibility
 
 .. autoclass:: UQpy.sampling.ExpectedFeasibility
 
@@ -91,6 +107,10 @@ At each iteration, the EGO algorithm selects the point in the learning set that 
 
 Typically a value of :math:`0.01` is used for :math:`\epsilon_{eif}`.
 
+The :class:`.ExpectedImprovement` class is imported using the following command:
+
+>>> from UQpy.sampling.adaptive_kriging_functions.ExpectedImprovement import ExpectedImprovement
+
 .. autoclass:: UQpy.sampling.ExpectedImprovement
 
 Expected Improvement for Global Fit
@@ -104,12 +124,20 @@ where :math:`\mathbf{x}_*` is the point in the training set closest in distance 
 
 No stopping criterion is suggested by the authors of :cite:`AKMCS5`, thus its implementation in :class:`.AdaptiveKriging` uses a fixed number of iterations.
 
+The :class:`.ExpectedImprovementGlobalFit` class is imported using the following command:
+
+>>> from UQpy.sampling.adaptive_kriging_functions.ExpectedImprovementGlobalFit import ExpectedImprovementGlobalFit
+
 .. autoclass:: UQpy.sampling.ExpectedImprovementGlobalFit
 
 User-Defined Learning Functions
 """"""""""""""""""""""""""""""""
 
 The :class:`.AdaptiveKriging` class also allows new, user-defined learning functions to be specified in a straightforward way, by generating child classes of the :class:`.LearningFunction` abstract class.
+
+The :class:`.Learning` class is imported using the following command:
+
+>>> from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import LearningFunction
 
 .. autoclass:: UQpy.sampling.LearningFunction
     :members:

@@ -31,6 +31,10 @@ Clayton copula having cumulative distribution function
 
 where :math:`u_1 = F_1(x_1), u_2 = F_2(x_2)` are uniformly distributed on the interval `[0, 1]`.
 
+The :class:`.Clayton` class is imported using the following command:
+
+>>> from UQpy.distributions.copulas.Clayton import Clayton
+
 .. autoclass:: UQpy.distributions.copulas.Clayton
     :members:
 
@@ -45,6 +49,9 @@ Frank copula having cumulative distribution function
 
 where :math:`u_1 = F_1(x_1), u_2 = F_2(x_2)` are uniformly distributed on the interval `[0, 1]`.
 
+The :class:`.Frank` class is imported using the following command:
+
+>>> from UQpy.distributions.copulas.Frank import Frank
 
 .. autoclass:: UQpy.distributions.copulas.Frank
     :members:
@@ -59,6 +66,10 @@ Gumbel copula having cumulative distribution function
 .. math:: F(u_1, u_2) = \exp(-(-\log(u_1))^{\Theta} + (-\log(u_2))^{\Theta})^{1/{\Theta}}
 
 where :math:`u_1 = F_1(x_1), u_2 = F_2(x_2)` are uniformly distributed on the interval `[0, 1]`.
+
+The :class:`.Gumbel` class is imported using the following command:
+
+>>> from UQpy.distributions.collection.Gumbel import Gumbel
 
 .. autoclass:: UQpy.distributions.copulas.Gumbel
     :members:
