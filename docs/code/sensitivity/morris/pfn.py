@@ -1,3 +1,10 @@
+"""
+
+Auxiliary file
+==============================================
+
+"""
+
 import numpy as np
 import sys
 

@@ -77,7 +77,8 @@ sphinx_gallery_conf = {
                       '../code/inference/info_model_selection',
                       '../code/inference/bayes_parameter_estimation',
                       '../code/inference/bayes_model_selection',
-                      '../code/transformations/nataf',],  # path to your example scripts
+                      '../code/transformations/nataf',
+                      '../code/sensitivity/morris',],  # path to your example scripts
     'gallery_dirs': ['auto_examples/dimension_reduction',
                      'auto_examples/distributions/continuous_1d',
                      'auto_examples/distributions/discrete_1d',
@@ -90,7 +91,8 @@ sphinx_gallery_conf = {
                      'auto_examples/inference/info_model_selection',
                      'auto_examples/inference/bayes_parameter_estimation',
                      'auto_examples/inference/bayes_model_selection',
-                     'auto_examples/transformations/nataf',],  # path to where to save gallery generated output
+                     'auto_examples/transformations/nataf',
+                     'auto_examples/sensitivity/morris',],  # path to where to save gallery generated output
     'binder': {
         # Required keys
         'org': 'SURGroup',

@@ -50,6 +50,14 @@ Attributes
 .. autoattribute:: UQpy.sensitivity.MorrisSensitivity.mustar_indices
 .. autoattribute:: UQpy.sensitivity.MorrisSensitivity.sigma_indices
 
+Examples
+""""""""""
+
+.. toctree::
+
+   Morris Examples <../auto_examples/sensitivity/morris/index>
+
+
 .. Note::
     **Subclassing the Morris class.**
     The user can subclass the Morris class to implement algorithms with better sampling of the trajectories for instance.
