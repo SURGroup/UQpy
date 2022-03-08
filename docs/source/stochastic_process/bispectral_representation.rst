@@ -28,3 +28,11 @@ Attributes
 .. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.phi
 .. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.samples
 .. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.number_of_variables
+
+
+Examples
+""""""""""
+
+.. toctree::
+
+   Bispectral representation Examples <../auto_examples/stochastic_processes/bispectral/index>

@@ -47,3 +47,11 @@ Attributes
 .. autoattribute:: UQpy.stochastic_process.Translation.correlation_function_non_gaussian
 .. autoattribute:: UQpy.stochastic_process.Translation.scaled_correlation_function_non_gaussian
 .. autoattribute:: UQpy.stochastic_process.Translation.power_spectrum_non_gaussian
+
+
+Examples
+""""""""""
+
+.. toctree::
+
+   Translation Examples <../auto_examples/stochastic_processes/translation/index>

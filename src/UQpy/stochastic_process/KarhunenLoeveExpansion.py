@@ -10,7 +10,7 @@ class KarhunenLoeveExpansion:
         self,
         samples_number: int,
         correlation_function: np.ndarray,
-        time_interval: np.ndarray,
+        time_interval: Union[np.ndarray, float],
         threshold: int = None,
         random_state: RandomStateType = None,
     ):

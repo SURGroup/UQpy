@@ -78,7 +78,11 @@ sphinx_gallery_conf = {
                       '../code/inference/bayes_parameter_estimation',
                       '../code/inference/bayes_model_selection',
                       '../code/transformations/nataf',
-                      '../code/sensitivity/morris',],  # path to your example scripts
+                      '../code/sensitivity/morris',
+                      '../code/stochastic_processes/bispectral',
+                      '../code/stochastic_processes/karhunen_loeve',
+                      '../code/stochastic_processes/spectral',
+                      '../code/stochastic_processes/translation',],  # path to your example scripts
     'gallery_dirs': ['auto_examples/dimension_reduction',
                      'auto_examples/distributions/continuous_1d',
                      'auto_examples/distributions/discrete_1d',
@@ -92,7 +96,11 @@ sphinx_gallery_conf = {
                      'auto_examples/inference/bayes_parameter_estimation',
                      'auto_examples/inference/bayes_model_selection',
                      'auto_examples/transformations/nataf',
-                     'auto_examples/sensitivity/morris',],  # path to where to save gallery generated output
+                     'auto_examples/sensitivity/morris',
+                     'auto_examples/stochastic_processes/bispectral',
+                     'auto_examples/stochastic_processes/karhunen_loeve',
+                     'auto_examples/stochastic_processes/spectral',
+                     'auto_examples/stochastic_processes/translation',],  # path to where to save gallery generated output
     'binder': {
         # Required keys
         'org': 'SURGroup',

@@ -23,3 +23,10 @@ Attributes
 """"""""""
 .. autoattribute:: UQpy.stochastic_process.KarhunenLoeveExpansion.samples
 .. autoattribute:: UQpy.stochastic_process.KarhunenLoeveExpansion.xi
+
+Examples
+""""""""""
+
+.. toctree::
+
+   Karhunen Loeve Examples <../auto_examples/stochastic_processes/karhunen_loeve/index>

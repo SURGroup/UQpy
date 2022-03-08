@@ -28,3 +28,11 @@ Attributes
 .. autoattribute:: UQpy.stochastic_process.SpectralRepresentation.number_of_dimensions
 .. autoattribute:: UQpy.stochastic_process.SpectralRepresentation.phi
 .. autoattribute:: UQpy.stochastic_process.SpectralRepresentation.number_of_variables
+
+
+Examples
+""""""""""
+
+.. toctree::
+
+   Spectral Representation Examples <../auto_examples/stochastic_processes/spectral/index>

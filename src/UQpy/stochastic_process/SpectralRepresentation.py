@@ -6,11 +6,11 @@ class SpectralRepresentation:
     def __init__(
         self,
         nsamples: int,
-        power_spectrum: Union[list, np.ndarray],
-        time_interval: Union[list, np.ndarray],
-        frequency_interval: Union[list, np.ndarray],
-        number_time_intervals: Union[list, np.ndarray],
-        number_frequency_intervals: Union[list, np.ndarray],
+        power_spectrum: Union[list, np.ndarray, float],
+        time_interval: Union[list, np.ndarray, float],
+        frequency_interval: Union[list, np.ndarray, float],
+        number_time_intervals: Union[list, np.ndarray, float],
+        number_frequency_intervals: Union[list, np.ndarray, float],
         random_state: RandomStateType = None,
     ):
         """
