@@ -1,4 +1,5 @@
 from beartype import beartype
+import numpy as np
 
 from UQpy.inference.inference_models.baseclass.InferenceModel import *
 
