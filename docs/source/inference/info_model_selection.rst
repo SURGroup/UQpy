@@ -65,3 +65,10 @@ Attributes
 .. autoattribute:: UQpy.inference.InformationModelSelection.criterion_values
 .. autoattribute:: UQpy.inference.InformationModelSelection.penalty_terms
 .. autoattribute:: UQpy.inference.InformationModelSelection.probabilities
+
+Examples
+""""""""""
+
+.. toctree::
+
+   Informational Model Selection Examples <../auto_examples/inference/info_model_selection/index>

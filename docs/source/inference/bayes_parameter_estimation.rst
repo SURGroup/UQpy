@@ -33,6 +33,13 @@ Attributes
 """"""""""
 .. autoattribute:: UQpy.inference.BayesParameterEstimation.sampler
 
+Examples
+""""""""""
+
+.. toctree::
+
+   Bayes Parameter Estimation Examples <../auto_examples/inference/bayes_parameter_estimation/index>
+
 ----
 
 Below, an example of the :class:`.BayesParameterEstimation` usage is provided. The goal is to learn the parameters of

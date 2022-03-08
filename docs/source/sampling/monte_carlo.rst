@@ -25,9 +25,9 @@ Attributes
 .. autoattribute:: UQpy.sampling.MonteCarloSampling.samples
 .. autoattribute:: UQpy.sampling.MonteCarloSampling.samplesU01
 
-
+Examples
+~~~~~~~~~~~~~~~~~~
 
 .. toctree::
-   :hidden:
 
-   Examples <../auto_examples/sampling/monte_carlo/index>
+   Monte Carlo Examples <../auto_examples/sampling/monte_carlo/index>

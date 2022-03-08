@@ -30,3 +30,10 @@ Attributes
 """"""""""
 .. autoattribute:: UQpy.inference.MLE.mle
 .. autoattribute:: UQpy.inference.MLE.max_log_like
+
+Examples
+""""""""""
+
+.. toctree::
+
+   MLE Examples <../auto_examples/inference/mle/index>

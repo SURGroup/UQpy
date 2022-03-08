@@ -15,7 +15,6 @@ import sys
 
 sys.path.insert(0, os.path.abspath("./src/UQpy/docs"))
 
-
 # -- Project information -----------------------------------------------------
 
 project = "UQpy"
@@ -27,7 +26,6 @@ author = (
 
 # The full version, including alpha/beta/rc tags
 release = "v4.0.0"
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -64,25 +62,45 @@ autosectionlabel_prefix_document = True
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "Model_Runs*"]
 
 sphinx_gallery_conf = {
-     'examples_dirs': ['../code/dimension_reduction',
-                       '../code/distributions/continuous_1d',
-                       '../code/distributions/discrete_1d',
-                       '../code/distributions/multivariate',
-                       '../code/distributions/user_defined',
-                       '../code/sampling/monte_carlo',
-                       '../code/sampling/latin_hypercube',
-                       '../code/sampling/simplex'],   # path to your example scripts
-     'gallery_dirs': ['auto_examples/dimension_reduction',
-                      'auto_examples/distributions/continuous_1d',
-                      'auto_examples/distributions/discrete_1d',
-                      'auto_examples/distributions/multivariate',
-                      'auto_examples/distributions/user_defined',
-                      'auto_examples/sampling/monte_carlo',
-                      'auto_examples/sampling/latin_hypercube',
-                      'auto_examples/sampling/simplex'],  # path to where to save gallery generated output
+    'examples_dirs': ['../code/dimension_reduction',
+                      '../code/distributions/continuous_1d',
+                      '../code/distributions/discrete_1d',
+                      '../code/distributions/multivariate',
+                      '../code/distributions/user_defined',
+                      '../code/sampling/monte_carlo',
+                      '../code/sampling/latin_hypercube',
+                      '../code/sampling/simplex',
+                      '../code/inference/mle',
+                      '../code/inference/info_model_selection',
+                      '../code/inference/bayes_parameter_estimation',
+                      '../code/inference/bayes_model_selection'],  # path to your example scripts
+    'gallery_dirs': ['auto_examples/dimension_reduction',
+                     'auto_examples/distributions/continuous_1d',
+                     'auto_examples/distributions/discrete_1d',
+                     'auto_examples/distributions/multivariate',
+                     'auto_examples/distributions/user_defined',
+                     'auto_examples/sampling/monte_carlo',
+                     'auto_examples/sampling/latin_hypercube',
+                     'auto_examples/sampling/simplex',
+                     'auto_examples/inference/mle',
+                     'auto_examples/inference/info_model_selection',
+                     'auto_examples/inference/bayes_parameter_estimation',
+                     'auto_examples/inference/bayes_model_selection',],  # path to where to save gallery generated output
+    'binder': {
+        # Required keys
+        'org': 'SURGroup',
+        'repo': 'UQpy',
+        'branch': 'master',  # Can be any branch, tag, or commit hash. Use a branch that hosts your docs.
+        'binderhub_url': 'https://mybinder.org',
+        # Any URL of a binderhub deployment. Must be full URL (e.g. https://mybinder.org).
+        'dependencies': './binder/requirements.txt',
+        'notebooks_dir': 'notebooks',
+        'use_jupyter_lab': True
+        # Jupyter notebooks for Binder will be copied to this directory (relative to built documentation root).
+    }
 }
 
 # -- Options for HTML output -------------------------------------------------
@@ -101,7 +119,6 @@ html_theme_options = {
     'vcs_pageview_mode': 'view'
 }
 
-
 github_url = "https://github.com/SURGroup/UQpy"
 html_logo = "_static/logo.png"
 
@@ -111,7 +128,7 @@ html_logo = "_static/logo.png"
 html_static_path = ["_static"]
 
 html_sidebars = {
-    "**": ["about.html", "navigation.html", "relations.html", "searchbox.html",]
+    "**": ["about.html", "navigation.html", "relations.html", "searchbox.html", ]
 }
 
 # The suffix(es) of source filenames.
@@ -154,13 +171,11 @@ latex_documents = [
     (master_doc, "uqpy.tex", "UQpy Documentation", "Michael D. Shields", "manual"),
 ]
 
-
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [(master_doc, "uqpy", "UQpy Documentation", [author], 1)]
-
 
 # -- Options for Texinfo output ----------------------------------------------
 
@@ -179,7 +194,6 @@ texinfo_documents = [
     ),
 ]
 
-
 # -- Options for Epub output -------------------------------------------------
 
 # Bibliographic Dublin Core info.
@@ -196,7 +210,6 @@ epub_title = project
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ["search.html"]
-
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {

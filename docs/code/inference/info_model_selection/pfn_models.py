@@ -1,4 +1,9 @@
+"""
 
+Auxiliary file
+==============================================
+
+"""
 import numpy as np
 
 domain = np.linspace(0, 10, 50)

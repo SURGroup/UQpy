@@ -120,8 +120,8 @@ class MLE:
                 Uniform()
                 .rvs(nsamples=n_optimizations * self.inference_model.n_parameters, random_state=self.random_state,)
                 .reshape((n_optimizations, self.inference_model.n_parameters)))
-            if self.optimizer.bounds is not None:
-                bounds = np.array(self.optimizer.bounds)
+            if self.optimizer._bounds is not None:
+                bounds = np.array(self.optimizer._bounds)
                 initial_parameters = (bounds[:, 0].reshape((1, -1))
                                       + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) * initial_parameters)
         else:

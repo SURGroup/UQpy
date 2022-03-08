@@ -63,3 +63,10 @@ Attributes
 .. autoattribute:: UQpy.inference.BayesModelSelection.bayes_estimators
 .. autoattribute:: UQpy.inference.BayesModelSelection.evidences
 .. autoattribute:: UQpy.inference.BayesModelSelection.probabilities
+
+Examples
+""""""""""
+
+.. toctree::
+
+   Bayes Model Selection Examples <../auto_examples/inference/bayes_model_selection/index>
