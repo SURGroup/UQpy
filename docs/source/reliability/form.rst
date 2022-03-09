@@ -24,3 +24,11 @@ Attributes
 .. autoattribute:: UQpy.reliability.taylor_series.FORM.alpha_record
 .. autoattribute:: UQpy.reliability.taylor_series.FORM.g_record
 .. autoattribute:: UQpy.reliability.taylor_series.FORM.error_record
+
+
+Examples
+""""""""""
+
+.. toctree::
+
+   FORM Examples <../auto_examples/reliability/taylor/index>

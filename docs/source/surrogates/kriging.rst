@@ -239,3 +239,10 @@ Attributes
 """"""""""
 .. autoattribute:: UQpy.surrogates.kriging.Kriging.beta
 .. autoattribute:: UQpy.surrogates.kriging.Kriging.err_var
+
+Examples
+""""""""""
+
+.. toctree::
+
+   Gaussian Process Regression Examples <../auto_examples/surrogates/gpr/index>

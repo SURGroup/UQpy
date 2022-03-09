@@ -31,3 +31,11 @@ Methods
 Attributes
 """"""""""
 .. autoattribute:: UQpy.surrogates.stochastic_reduced_order_models.SROM.sample_weights
+
+
+Examples
+""""""""""
+
+.. toctree::
+
+   Stochastic Reduced Order Model Examples <../auto_examples/surrogates/srom/index>

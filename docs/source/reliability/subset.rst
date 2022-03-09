@@ -44,3 +44,11 @@ Attributes
 .. autoattribute:: UQpy.reliability.SubsetSimulation.failure_probability
 .. autoattribute:: UQpy.reliability.SubsetSimulation.independent_chains_CoV
 .. autoattribute:: UQpy.reliability.SubsetSimulation.dependent_chains_CoV
+
+
+Examples
+""""""""""
+
+.. toctree::
+
+   Subset Simulation Examples <../auto_examples/reliability/subset_simulation/index>

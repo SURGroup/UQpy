@@ -82,7 +82,12 @@ sphinx_gallery_conf = {
                       '../code/stochastic_processes/bispectral',
                       '../code/stochastic_processes/karhunen_loeve',
                       '../code/stochastic_processes/spectral',
-                      '../code/stochastic_processes/translation',],  # path to your example scripts
+                      '../code/stochastic_processes/translation',
+                      '../code/reliability/taylor',
+                      '../code/reliability/subset_simulation',
+                      '../code/surrogates/srom',
+                      '../code/surrogates/gpr',
+                      '../code/surrogates/pce'],  # path to your example scripts,
     'gallery_dirs': ['auto_examples/dimension_reduction',
                      'auto_examples/distributions/continuous_1d',
                      'auto_examples/distributions/discrete_1d',
@@ -100,7 +105,12 @@ sphinx_gallery_conf = {
                      'auto_examples/stochastic_processes/bispectral',
                      'auto_examples/stochastic_processes/karhunen_loeve',
                      'auto_examples/stochastic_processes/spectral',
-                     'auto_examples/stochastic_processes/translation',],  # path to where to save gallery generated output
+                     'auto_examples/stochastic_processes/translation',
+                     'auto_examples/reliability/taylor',
+                     'auto_examples/reliability/subset_simulation',
+                     'auto_examples/surrogates/srom',
+                     'auto_examples/surrogates/gpr',
+                     'auto_examples/surrogates/pce',],  # path to where to save gallery generated output
     'binder': {
         # Required keys
         'org': 'SURGroup',

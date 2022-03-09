@@ -46,6 +46,13 @@ Attributes
 .. autoattribute:: UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion.experimental_design_input
 .. autoattribute:: UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion.experimental_design_output
 
+Examples
+""""""""""
+
+.. toctree::
+
+   Polynomial Chaos Expansion Examples <../auto_examples/surrogates/pce/index>
+
 
 Univariate Orthonormal Polynomials
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
