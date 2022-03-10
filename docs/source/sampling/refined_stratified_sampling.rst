@@ -32,6 +32,13 @@ Attributes
 .. autoattribute:: UQpy.sampling.RefinedStratifiedSampling.samples
 .. autoattribute:: UQpy.sampling.RefinedStratifiedSampling.samplesU01
 
+Examples
+""""""""""""""""""""""""
+
+.. toctree::
+
+   Refined Stratified Sampling Examples <../auto_examples/sampling/refined_stratified_sampling/index>
+
 
 Stratification Refinement Algorithms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

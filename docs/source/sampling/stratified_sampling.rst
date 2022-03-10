@@ -33,6 +33,12 @@ Attributes
 .. autoattribute:: UQpy.sampling.stratified_sampling.TrueStratifiedSampling.samples
 .. autoattribute:: UQpy.sampling.stratified_sampling.TrueStratifiedSampling.samplesU01
 
+Examples
+"""""""""""
+.. toctree::
+
+   True Stratified Sampling Examples <../auto_examples/sampling/true_stratified_sampling/index>
+
 :py:mod:`UQpy` supports several stratified sampling variations that vary from conventional stratified sampling designs
 to advanced gradient informed methods for adaptive stratified sampling. These class structures facilitate a highly flexible and varied range of stratified
 sampling designs that can be extended in a straightforward way. Specifically, the existing classes allow stratification

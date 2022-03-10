@@ -15,7 +15,7 @@ sample per bin, and then randomly pairing the samples.
     Latin Hypercube Class <latin_hypercube/lhs_class>
     List of Available Latin Hypercube Criteria <latin_hypercube/lhs_criteria>
     Adding new Latin Hypercube Design Criteria <latin_hypercube/lhs_user_criterion>
-    Examples <../auto_examples/sampling/latin_hypercube/index>
+
 
 
 

@@ -17,10 +17,10 @@ class SORM(TaylorSeries):
     def __init__(
         self,
         form_object: FORM,
+        runmodel_object: RunModel,
         distributions: Optional[Union[None, Distribution, list[Distribution]]] = None,
         seed_u: np.ndarray = None,
         seed_x: np.ndarray = None,
-        runmodel_object: RunModel = None,
         df_step: Union[float, int] = 0.01,
         corr_x: np.ndarray = None,
         corr_z: np.ndarray = None,

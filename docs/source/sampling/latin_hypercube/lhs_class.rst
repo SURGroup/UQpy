@@ -14,3 +14,11 @@ Attributes
 ~~~~~~~~~~~~~~~~~~
 .. autoattribute:: UQpy.sampling.LatinHypercubeSampling.samples
 .. autoattribute:: UQpy.sampling.LatinHypercubeSampling.samplesU01
+
+Examples
+~~~~~~~~~~~~~~~~~~
+
+.. toctree::
+
+   Latin Hypercube Examples <../../auto_examples/sampling/latin_hypercube/index>
+

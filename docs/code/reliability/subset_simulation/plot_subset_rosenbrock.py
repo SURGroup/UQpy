@@ -46,7 +46,7 @@ mcmc_init1.run(10000)
 
 sampling=Stretch(log_pdf_target=dist.log_pdf, dimension=2, n_chains=1000, random_state=38546)
 x_ss_MMH = SubsetSimulation(sampling=sampling, runmodel_object=model, conditional_probability=0.1,
-                            samples_number_per_subset=10000, samples_init=mcmc_init1.samples)
+                            nsamples_per_subset=10000, samples_init=mcmc_init1.samples)
 
 for i in range(len(x_ss_MMH.performance_function_per_level)):
     plt.scatter(x_ss_MMH.samples[i][:, 0], x_ss_MMH.samples[i][:, 1], marker='o')
@@ -80,7 +80,7 @@ mcmc_init2.run(10000)
 
 sampling=Stretch(log_pdf_target=dist.log_pdf, dimension=2, n_chains=1000, random_state=83456)
 x_ss_Stretch = SubsetSimulation(sampling=sampling, runmodel_object=model, conditional_probability=0.1,
-                                samples_number_per_subset=10000, samples_init=mcmc_init2.samples)
+                                nsamples_per_subset=10000, samples_init=mcmc_init2.samples)
 
 for i in range(len(x_ss_Stretch.performance_function_per_level)):
     plt.scatter(x_ss_Stretch.samples[i][:, 0], x_ss_Stretch.samples[i][:, 1], marker='o')

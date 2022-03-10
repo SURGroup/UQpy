@@ -153,7 +153,7 @@ for i in range(ntrials):
 
     sampling=Stretch(dimension=2, n_chains=100, log_pdf_target=dist.log_pdf)
     x_ss_stretch = SubsetSimulation(sampling=sampling, runmodel_object=model, conditional_probability=0.1,
-                                    samples_number_per_subset=1000, samples_init=xx, )
+                                    nsamples_per_subset=1000, samples_init=xx, )
     shutil.rmtree(model.model_dir)
     pf_stretch[i] = x_ss_stretch.failure_probability
     cov1_stretch[i] = x_ss_stretch.independent_chains_CoV
@@ -197,7 +197,7 @@ for i in range(ntrials):
 
     sampling = ModifiedMetropolisHastings(dimension=2, n_chains=100, log_pdf_target=dist.log_pdf)
     x_ss_mmh = SubsetSimulation(sampling=sampling, runmodel_object=model, conditional_probability=0.1,
-                                samples_number_per_subset=1000, samples_init=xx)
+                                nsamples_per_subset=1000, samples_init=xx)
 
     shutil.rmtree(model.model_dir)
     pf_mmh[i] = x_ss_mmh.failure_probability

@@ -30,7 +30,8 @@ Attributes
 ~~~~~~~~~~~~~~~~~~
 .. autoattribute:: UQpy.sampling.SimplexSampling.samples
 
+Examples
+~~~~~~~~~~~~~~~~~~
 .. toctree::
-   :hidden:
 
-   Examples <../auto_examples/sampling/simplex/index>
+   Simplex Sampling Examples <../auto_examples/sampling/simplex/index>

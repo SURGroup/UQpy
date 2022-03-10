@@ -10,7 +10,7 @@ as a set of modules centered around core capabilities in Uncertainty Quantificat
 ------------
 
 +-----------------------+------------------------------------------------------------------+
-| **Product Owner:**    | Micheal D. Shields                                               |
+| **Product Owner:**    | Michael D. Shields                                               |
 +-----------------------+------------------------------------------------------------------+
 | **Lead Developers:**  | Dimitris Giovanis, Audrey Olivier, Dimitris Tsapetis             |
 +-----------------------+------------------------------------------------------------------+

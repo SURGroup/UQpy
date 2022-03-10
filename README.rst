@@ -25,7 +25,7 @@ Uncertainty Quantification with python (UQpy)
 ====
 
 +-----------------------+------------------------------------------------------------------+
-| **Product Owner:**    | Micheal D. Shields                                               |
+| **Product Owner:**    | Michael D. Shields                                               |
 +-----------------------+------------------------------------------------------------------+
 | **Lead Developers:**  | Dimitris Giovanis, Audrey Olivier, Dimitris Tsapetis             |
 +-----------------------+------------------------------------------------------------------+

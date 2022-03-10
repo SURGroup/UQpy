@@ -98,3 +98,96 @@ plt.hist(x.samples[:, 1])
 ax.yaxis.grid(True)
 ax.xaxis.grid(True)
 plt.show()
+
+#%% md
+#
+# Use the MCS.run method in order to add 2 samples in the existing ones.
+
+#%%
+
+x.run(nsamples=2)
+print()
+print('MCS extended samples:')
+print(x.samples)
+
+# Use the MCS.transform_u01 method in order transform the samples to the Uniform [0,1] space.
+x.transform_u01()
+print()
+print('MCS transformed samples:')
+print(x.samplesU01)
+
+#%% md
+#
+# We are going to run MCS for a multivariate normal distribution random variables.
+
+#%%
+
+from UQpy.distributions import MultivariateNormal
+dist = MultivariateNormal(mean=[1., 2.], cov=[[4., -0.9], [-0.9, 1.]])
+
+x1 = MonteCarloSampling(distributions=dist, nsamples=5, random_state=np.random.RandomState(456))
+print()
+print(x1.samples)
+
+# plot the samples
+fig, ax = plt.subplots()
+plt.title('MC sampling')
+plt.scatter(x1.samples[:, 0], x1.samples[:, 1], marker='o')
+ax.yaxis.grid(True)
+ax.xaxis.grid(True)
+plt.show()
+
+# Use the MCS.run method in order to add 2 samples in the existing ones.
+x1.run(nsamples=2)
+print()
+print('MCS extended samples:', x1.samples)
+
+#%% md
+#
+# Use the MCS.transform_u01 method in order transform the samples to the Uniform [0,1] space.
+# However, in order to use this method all distributions need to have a ``cdf`` method.
+# For example, in this case the MVNormal distribution does not have a ``cdf`` method so the code
+# will give an error.
+
+#%%
+
+x1.transform_u01()
+
+
+#%% md
+#
+# We are going to run MCS for a multivariate normal distribution and a standard normal distribution.
+
+#%%
+
+x2 = MonteCarloSampling(distributions=[dist1, dist], nsamples=5, random_state=np.random.RandomState(789))
+print()
+print('MCS samples:', x2.samples)
+
+print(len(x2.samples))
+print(len(x2.samples[0]))
+
+# Extract samples for the multivariate distribution
+samples = np.zeros(shape=(len(x2.samples), len(x2.samples[1])))
+for i in range(len(x2.samples)):
+    samples[i, :] = x2.samples[i][1]
+print()
+print('MVNormal samples:', samples)
+
+# Use the MCS.run method in order to add 2 samples in the existing ones.
+x2.run(nsamples=2)
+print()
+print('MCS extended samples:', x2.samples)
+
+#%% md
+#
+# Draw samples from a continuous and discrete distribution
+
+#%%
+
+from UQpy.distributions import Binomial
+dist3 = Binomial(n=5, p=0.4)
+x3 = MonteCarloSampling(distributions=[dist1, dist3], nsamples=5)
+
+print()
+print('MCS samples:', x3.samples)

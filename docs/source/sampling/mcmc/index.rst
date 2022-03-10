@@ -58,6 +58,14 @@ Attributes
 .. autoattribute:: UQpy.sampling.mcmc.MCMC.nsamples_per_chain
 .. autoattribute:: UQpy.sampling.mcmc.MCMC.iterations_number
 
+
+Examples
+~~~~~~~~~~~~~~~~~~
+.. toctree::
+
+   Markov Chain Monte Carlo Sampling Examples <../../auto_examples/sampling/mcmc/index>
+
+
 List of MCMC algorithms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. toctree::

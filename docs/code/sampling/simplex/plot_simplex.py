@@ -57,3 +57,13 @@ x = SimplexSampling(nodes=vertex, nsamples=10, random_state=1)
 plt.plot(np.array([0, 0.5, 1, 0]), np.array([0, 1, 0, 0]), color='blue')
 plt.scatter(x.samples[:, 0], x.samples[:, 1], color='red')
 plt.show()
+
+#%% md
+#
+# User can also define a Simplex object using vertices and generate samples using 'run' method.
+
+#%%
+
+y = SimplexSampling(nodes=vertex)
+y.run(nsamples=5)
+

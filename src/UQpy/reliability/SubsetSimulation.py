@@ -8,11 +8,11 @@ class SubsetSimulation:
     @beartype
     def __init__(
         self,
-        runmodel_object,
+        runmodel_object: RunModel,
         sampling: MCMC,
         samples_init: np.ndarray = None,
         conditional_probability: Annotated[Union[float, int], Is[lambda x: 0 <= x <= 1]] = 0.1,
-        samples_number_per_subset: int = 1000,
+        nsamples_per_subset: int = 1000,
         max_level: int = 10,
     ):
         """
@@ -21,7 +21,7 @@ class SubsetSimulation:
         This class estimates probability of failure for a user-defined model using Subset Simulation. The class can
         use one of several mcmc algorithms to draw conditional samples.
 
-        :param runmodel_object: The computational model. It should be of type `RunModel` (see :class:`.RunModel` class).
+        :param runmodel_object: The computational model. It should be of type :class:`.RunModel`.
         :param sampling: Specifies the :class:`MCMC` algorithm.
         :param samples_init: A set of samples from the specified probability distribution. These are the samples from
          the original distribution. They are not conditional samples. The samples must be an array of size
@@ -29,7 +29,7 @@ class SubsetSimulation:
          If `samples_init` is not specified, the :class:`.SubsetSimulation` class will use the :class:`.MCMC` class
          created with the aid of `sampling` to draw the initial samples.
         :param conditional_probability: Conditional probability for each conditional level.
-        :param samples_number_per_subset: Number of samples to draw in each conditional level.
+        :param nsamples_per_subset: Number of samples to draw in each conditional level.
         :param max_level: Maximum number of allowable conditional levels.
         """
         # Initialize other attributes
@@ -38,7 +38,7 @@ class SubsetSimulation:
         self.runmodel_object = runmodel_object
         self.samples_init = samples_init
         self.conditional_probability = conditional_probability
-        self.samples_number_per_subset = samples_number_per_subset
+        self.nsamples_per_subset = nsamples_per_subset
         self.max_level = max_level
         self.logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class SubsetSimulation:
         :class:`.SubsetSimulation` class is instantiated.
         """
         step = 0
-        n_keep = int(self.conditional_probability * self.samples_number_per_subset)
+        n_keep = int(self.conditional_probability * self.nsamples_per_subset)
         d12 = list()
         d22 = list()
 
@@ -87,7 +87,7 @@ class SubsetSimulation:
                 "or\n - Provide a robust mcmc object that will draw independent initial samples from "
                 "the distribution."
             )
-            self.mcmc_objects[0].run(samples_number=self.samples_number_per_subset)
+            self.mcmc_objects[0].run(samples_number=self.nsamples_per_subset)
             self.samples.append(self.mcmc_objects[0].samples)
         else:
             self.samples.append(self.samples_init)
@@ -122,9 +122,9 @@ class SubsetSimulation:
             self.mcmc_objects.append(copy.deepcopy(self._sampling_class))
 
             # Set the number of samples to propagate each chain (n_prop) in the conditional level
-            n_prop_test = (self.samples_number_per_subset / self.mcmc_objects[step].n_chains)
+            n_prop_test = (self.nsamples_per_subset / self.mcmc_objects[step].n_chains)
             if n_prop_test.is_integer():
-                n_prop = (self.samples_number_per_subset // self.mcmc_objects[step].n_chains)
+                n_prop = (self.nsamples_per_subset // self.mcmc_objects[step].n_chains)
             else:
                 raise AttributeError(
                     "UQpy: The number of samples per subset (nsamples_per_ss) must be an integer multiple of "
@@ -192,7 +192,7 @@ class SubsetSimulation:
 
         n_fail = len([value for value in self.performance_function_per_level[step] if value < 0])
 
-        failure_probability = (self.conditional_probability ** step * n_fail / self.samples_number_per_subset)
+        failure_probability = (self.conditional_probability ** step * n_fail / self.nsamples_per_subset)
         probability_cov_independent = np.sqrt(np.sum(d12))
         probability_cov_dependent = np.sqrt(np.sum(d22))
 
@@ -208,16 +208,16 @@ class SubsetSimulation:
         if step == 0:
             independent_chains_cov = np.sqrt(
                 (1 - self.conditional_probability)
-                / (self.conditional_probability * self.samples_number_per_subset)
+                / (self.conditional_probability * self.nsamples_per_subset)
             )
             dependent_chains_cov = np.sqrt(
                 (1 - self.conditional_probability)
-                / (self.conditional_probability * self.samples_number_per_subset)
+                / (self.conditional_probability * self.nsamples_per_subset)
             )
 
             return independent_chains_cov, dependent_chains_cov
         else:
-            n_c = int(self.conditional_probability * self.samples_number_per_subset)
+            n_c = int(self.conditional_probability * self.nsamples_per_subset)
             n_s = int(1 / self.conditional_probability)
             indicator = np.reshape(self.performance_function_per_level[step] < self.performance_threshold_per_level[step], (n_s, n_c))
             gamma = self._correlation_factor_gamma(indicator, n_s, n_c)
@@ -227,14 +227,14 @@ class SubsetSimulation:
             independent_chains_cov = np.sqrt(
                 (
                     (1 - self.conditional_probability)
-                    / (self.conditional_probability * self.samples_number_per_subset)
+                    / (self.conditional_probability * self.nsamples_per_subset)
                 )
                 * (1 + gamma)
             )
             dependent_chains_cov = np.sqrt(
                 (
                     (1 - self.conditional_probability)
-                    / (self.conditional_probability * self.samples_number_per_subset)
+                    / (self.conditional_probability * self.nsamples_per_subset)
                 )
                 * (1 + gamma + beta_hat)
             )

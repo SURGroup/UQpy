@@ -28,6 +28,14 @@ Attributes
 .. autoattribute:: UQpy.sampling.AdaptiveKriging.samples
 
 
+Examples
+~~~~~~~~~~~~~~~~~~
+
+.. toctree::
+
+    Adaptive Kriging Examples <../auto_examples/sampling/adaptive_kriging/index>
+
+
 Learning Functions
 ^^^^^^^^^^^^^^^^^^^^
 :class:`.AdaptiveKriging` provides a number of built-in learning functions as well as allowing the user to provide a

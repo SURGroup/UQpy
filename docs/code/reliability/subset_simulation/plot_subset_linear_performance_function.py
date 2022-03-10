@@ -74,7 +74,7 @@ for i in range(ntrials):
                                           n_chains=100, random_state=342985)
 
     x_ss = SubsetSimulation(sampling=sampling, runmodel_object=model, samples_init=x, conditional_probability=0.1,
-                            samples_number_per_subset=1000)
+                            nsamples_per_subset=1000)
     shutil.rmtree(model.model_dir)
     pf[i] = x_ss.failure_probability
     cov1[i] = x_ss.independent_chains_CoV
@@ -128,7 +128,7 @@ for i in range(ntrials):
     sampling = Stretch(dimension=dim, log_pdf_target=dist.log_pdf, n_chains=100, random_state=342985)
 
     x_ss = SubsetSimulation(sampling=sampling, runmodel_object=model, samples_init=x, conditional_probability=0.1,
-                            samples_number_per_subset=1000)
+                            nsamples_per_subset=1000)
     shutil.rmtree(model.model_dir)
     pf[i] = x_ss.failure_probability
     cov1[i] = x_ss.independent_chains_CoV

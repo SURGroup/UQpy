@@ -31,3 +31,11 @@ Attributes
 .. autoattribute:: UQpy.sampling.ImportanceSampling.unnormalized_log_weights
 .. autoattribute:: UQpy.sampling.ImportanceSampling.weights
 .. autoattribute:: UQpy.sampling.ImportanceSampling.unweighted_samples
+
+
+Examples
+""""""""""""""""""
+
+.. toctree::
+
+   Importance Sampling Examples <../auto_examples/sampling/importance_sampling/index>
