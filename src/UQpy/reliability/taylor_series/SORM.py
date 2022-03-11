@@ -146,7 +146,7 @@ class SORM(TaylorSeries):
         r1 = np.fliplr(q).T
         self.logger.info("UQpy: Calculating the hessian for SORM..")
 
-        hessian_g = self.derivatives(
+        hessian_g = self._derivatives(
             point_u=self.DesignPoint_U,
             point_x=self.DesignPoint_X,
             runmodel_object=model,

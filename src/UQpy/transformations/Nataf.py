@@ -245,7 +245,7 @@ class Nataf:
         return corr_z, itam_error1, itam_error2
 
     @staticmethod
-    def distortion_z2x(distributions, corr_z):
+    def distortion_z2x(distributions:  Union[Distribution, list[Distribution]], corr_z: np.ndarray):
         """
         This is a method to calculate the correlation matrix :math:`\mathbf{C_x}` of the random vector
         :math:`\mathbf{x}`  given the correlation matrix :math:`\mathbf{C_z}` of the standard normal random vector

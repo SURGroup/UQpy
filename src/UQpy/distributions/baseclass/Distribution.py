@@ -3,7 +3,7 @@ from abc import ABC
 
 class Distribution(ABC):
 
-    def __init__(self, ordered_parameters: list = None, **kwargs):
+    def __init__(self, ordered_parameters: list = None, **kwargs: dict):
         """
         A parent class to all :class:`.Distribution` classes.
 
@@ -44,7 +44,7 @@ class Distribution(ABC):
                 "Inconsistent dimensions between order_params tuple and params dictionary."
             )
 
-    def update_parameters(self, **kwargs):
+    def update_parameters(self, **kwargs: dict):
         """
         Update the parameters of a :class:`.Distribution` object.
 

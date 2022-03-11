@@ -188,4 +188,4 @@ Examples
 
 .. toctree::
 
-   Grassmann Manifold Examples <../auto_examples/dimension_reduction/grassmann/index>
+   Grassmann Manifold Examples <../../auto_examples/dimension_reduction/grassmann/index>

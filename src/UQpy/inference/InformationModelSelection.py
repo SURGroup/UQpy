@@ -30,13 +30,6 @@ class InformationModelSelection:
         :param parameter_estimators: A list containing a maximum-likelihood estimator (:class:`.MLE`) for each one of the
          models to be compared.
         :param criterion: Criterion to be used (:class:`.AIC`, :class:`.BIC`, :class:`.AICc)`. Default is :class:`.AIC`
-        :param data: Available data. If this parameter is provided at :class:`.InformationModelSelection` object
-         initialization, the model selection algorithm will be automatically performed. Alternatively, the user must
-         execute the :meth:`.run` method.
-         :param n_optimizations: Number of iterations that the optimization is run, starting at random initial
-         guesses. It is only used if `initial_parameters` is not provided. Default is :math:`1`.
-         The random initial guesses are sampled uniformly between :math:`0` and :math:`1`, or uniformly between
-         user-defined bounds if an input bounds is provided as a keyword argument to the `optimizer` input parameter.
         :param initial_parameters: Initial guess(es) for optimization, :class:`numpy.ndarray` of shape
          :code:`(nstarts, n_parameters)` or :code:`(n_parameters, )`, where :code:`nstarts` is the number of times the
          optimizer will be called. Alternatively, the user can provide input `n_optimizations` to randomly sample

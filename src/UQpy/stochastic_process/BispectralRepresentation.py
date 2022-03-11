@@ -213,7 +213,7 @@ class BispectralRepresentation:
         samples = samples[:, np.newaxis]
         return np.real(samples)
 
-    def run(self, samples_number):
+    def run(self, samples_number: int):
         """
         Execute the random sampling in the :class:`.BispectralRepresentation` class.
 

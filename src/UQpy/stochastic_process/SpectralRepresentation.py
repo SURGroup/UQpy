@@ -19,7 +19,7 @@ class SpectralRepresentation:
         class uses Singular Value Decomposition, as opposed to Cholesky Decomposition, to ensure robust, near-positive
         definite multi-dimensional power spectra.
 
-        :param int nsamples: Number of samples of the stochastic process to be simulated.
+        :param nsamples: Number of samples of the stochastic process to be simulated.
          The :meth:`run` method is automatically called if `nsamples` is provided. If `nsamples` is not
          provided, then the :class:`.SpectralRepresentation` object is created but samples are not generated.
         :param power_spectrum: The discretized power spectrum.

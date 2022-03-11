@@ -19,7 +19,7 @@ class BayesModelSelection:
     @beartype
     def __init__(
             self,
-            data,
+            data: np.ndarray,
             parameter_estimators: list[BayesParameterEstimation],
             prior_probabilities=None,
             evidence_method: EvidenceMethod = HarmonicMean(),

@@ -4,6 +4,7 @@ import numpy
 import numpy as np
 from beartype import beartype
 
+from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 from UQpy.distributions.baseclass import Copula
 from numpy import log, exp
 
@@ -17,7 +18,7 @@ class Gumbel(Copula):
         """
         super().__init__(theta=theta)
 
-    def evaluate_cdf(self, unit_uniform_samples) -> np.ndarray:
+    def evaluate_cdf(self, unit_uniform_samples: Numpy2DFloatArray) -> np.ndarray:
         """
         Compute the copula cdf :math:`C(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.
 
@@ -41,7 +42,7 @@ class Gumbel(Copula):
 
         return cdf_val
 
-    def evaluate_pdf(self, unit_uniform_samples) -> numpy.ndarray:
+    def evaluate_pdf(self, unit_uniform_samples: Numpy2DFloatArray) -> numpy.ndarray:
         """
         Compute the copula pdf :math:`c(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.
 

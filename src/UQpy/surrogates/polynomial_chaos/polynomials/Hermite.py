@@ -1,5 +1,8 @@
+from typing import Union
+
 from beartype import beartype
 
+from UQpy.distributions.baseclass import Distribution
 from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import (
     Polynomials,
 )
@@ -13,7 +16,7 @@ import math
 class Hermite(Polynomials):
 
     @beartype
-    def __init__(self, degree: int, distributions):
+    def __init__(self, degree: int, distributions:  Union[Distribution, list[Distribution]]):
         """
         Class of univariate polynomials appropriate for data generated from a normal distribution.
 

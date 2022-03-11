@@ -20,7 +20,7 @@ class GrassmannianDistance(Distance, ABC):
     @beartype
     def calculate_distance_matrix(self,
                                   points: Union[list[Numpy2DFloatArrayOrthonormal],  list[GrassmannPoint]],
-                                  p_dim,):
+                                  p_dim: int):
         """
         Given a list of points that belong on a Grassmann Manifold
 

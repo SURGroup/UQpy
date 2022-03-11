@@ -1,3 +1,5 @@
+from typing import Callable
+
 from beartype import beartype
 
 from UQpy.RunModel import RunModel
@@ -7,12 +9,16 @@ from UQpy.distributions.collection.MultivariateNormal import MultivariateNormal
 from UQpy.utilities.ValidationTypes import *
 from UQpy.distributions.collection import Normal
 
+import warnings
+
+warnings.filterwarnings('ignore')
+
 
 class ComputationalModel(InferenceModel):
     @beartype
     def __init__(self, n_parameters: PositiveInteger, runmodel_object: RunModel,
                  error_covariance: Union[np.ndarray, float] = 1.0, name: str = "", prior: Distribution = None,
-                 log_likelihood=None):
+                 log_likelihood: Callable = None):
         """
         Define a (non-)Gaussian error model for inference.
 

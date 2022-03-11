@@ -1,14 +1,19 @@
 from abc import abstractmethod
+from typing import Union, Callable
 
 import numpy as np
 import scipy.integrate as integrate
 from beartype import beartype
 
+from UQpy.distributions.baseclass import Distribution
+import warnings
+warnings.filterwarnings('ignore')
+
 
 class Polynomials:
 
     @beartype
-    def __init__(self, distributions, degree):
+    def __init__(self, distributions: Union[Distribution, list[Distribution]], degree: int):
         """
         Class for polynomials used for the polynomial_chaos method.
 
@@ -19,7 +24,7 @@ class Polynomials:
         self.degree = degree + 1
 
     @staticmethod
-    def standardize_normal(tensor, mean, std):
+    def standardize_normal(tensor: np.ndarray, mean: float, std: float):
         """
         Static method: Standardize data based on the standard normal distribution :math:`\mathcal{N}(0,1)`.
 
@@ -38,7 +43,7 @@ class Polynomials:
         return (2 * x - loc - upper) / (upper - loc)
 
     @staticmethod
-    def normalized(degree, samples, a, b, pdf_st, p):
+    def normalized(degree: int, samples: np.ndarray, a: float, b: float, pdf_st: Callable, p:list):
         """
         Calculates design matrix and normalized polynomials.
 
@@ -100,7 +105,7 @@ class Polynomials:
         return s
 
     @abstractmethod
-    def evaluate(self, x):
+    def evaluate(self, x: np.ndarray):
         pass
         # """
         # Calculates the design matrix. Rows represent the input samples and

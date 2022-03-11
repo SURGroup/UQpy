@@ -1,5 +1,8 @@
 import logging
 from abc import ABC, abstractmethod
+
+import numpy as np
+
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
@@ -23,7 +26,7 @@ class InferenceModel(ABC):
         self.logger = logging.getLogger(__name__)
 
     @abstractmethod
-    def evaluate_log_likelihood(self, parameters, data):
+    def evaluate_log_likelihood(self, parameters: np.ndarray, data: np.ndarray):
         """
         Evaluate the log likelihood, :code:`log p(data|parameters)`.
 
@@ -43,7 +46,7 @@ class InferenceModel(ABC):
         """
         pass
 
-    def evaluate_log_posterior(self, parameters, data):
+    def evaluate_log_posterior(self, parameters: np.ndarray, data: np.ndarray):
         """
         Evaluate the scaled log posterior :code:`log(p(data|parameters)p(parameters))`.
 

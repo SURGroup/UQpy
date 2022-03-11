@@ -186,7 +186,7 @@ class FORM(TaylorSeries):
             )
 
             # 2. evaluate Limit State Function and the gradient at point u_k and direction cosines
-            dg_u, qoi, _ = self.derivatives(
+            dg_u, qoi, _ = self._derivatives(
                 point_u=u[k, :],
                 point_x=self.x,
                 runmodel_object=self.runmodel_object,

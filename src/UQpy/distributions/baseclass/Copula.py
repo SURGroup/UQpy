@@ -6,7 +6,7 @@ from abc import ABC
 
 class Copula(ABC):
 
-    def __init__(self, ordered_parameters: dict = None, **kwargs):
+    def __init__(self, ordered_parameters: dict = None, **kwargs: dict):
         """
         Define a copula for a multivariate distribution whose dependence structure is defined with a copula.
         This class is used in support of the :class:`.JointCopula` class.

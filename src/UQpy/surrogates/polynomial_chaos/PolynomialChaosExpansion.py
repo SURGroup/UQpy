@@ -51,7 +51,7 @@ class PolynomialChaosExpansion(Surrogate):
     def inputs_number(self):
         return self.polynomial_basis.inputs_number
 
-    def fit(self, x, y):
+    def fit(self, x: np.ndarray, y: np.ndarray):
         """
         Fit the surrogate model using the training samples and the corresponding model values. This method calls the
         :py:meth:'run' method of the input method class.
@@ -69,7 +69,7 @@ class PolynomialChaosExpansion(Surrogate):
         self.coefficients, self.bias, self.outputs_number = self.regression_method.run(x, y, self.design_matrix)
         self.logger.info("UQpy: polynomial_chaos fit complete.")
 
-    def predict(self, points, **kwargs):
+    def predict(self, points: np.ndarray, **kwargs: dict):
         """
         Predict the model response at new points.
         This method evaluates the polynomial_chaos model at new sample points.
@@ -111,7 +111,7 @@ class PolynomialChaosExpansion(Surrogate):
 
         return np.round(eps_val, 7)
     
-    def validation_error(self, x, y):
+    def validation_error(self, x: np.ndarray, y: np.ndarray):
         """
         Returns the validation error.
 
@@ -136,7 +136,7 @@ class PolynomialChaosExpansion(Surrogate):
 
         return np.round(eps_val, 7)
 
-    def get_moments(self, higher=False):
+    def get_moments(self, higher: bool = False):
         """
         Returns the first four moments of the polynomial_chaos surrogate which are directly
         estimated from the polynomial_chaos coefficients.

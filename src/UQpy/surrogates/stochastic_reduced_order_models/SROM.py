@@ -2,6 +2,7 @@ import logging
 from typing import Union
 import numpy as np
 
+from UQpy.distributions.baseclass import Distribution
 from UQpy.utilities.ValidationTypes import NumpyFloatArray
 from UQpy.distributions import DistributionContinuous1D
 
@@ -10,14 +11,14 @@ class SROM:
     def __init__(
         self,
         samples: Union[list, np.ndarray],
-        target_distributions,
-        moments=None,
-        weights_errors=None,
-        weights_distribution=None,
-        weights_moments=None,
-        weights_correlation=None,
-        properties=None,
-        correlation=None,
+        target_distributions: list[Distribution],
+        moments:list = None,
+        weights_errors: list = None,
+        weights_distribution: Union[list, np.ndarray] = None,
+        weights_moments: list = None,
+        weights_correlation: np.ndarray = None,
+        properties: list = None,
+        correlation: np.ndarray = None,
     ):
         """
         Stochastic Reduced Order Model(stochastic_reduced_order_models) provide a low-dimensional, discrete
@@ -109,11 +110,11 @@ class SROM:
 
     def run(
         self,
-        weights_errors=None,
-        weights_distribution=None,
-        weights_moments=None,
-        weights_correlation=None,
-        properties=None,
+        weights_errors: list = None,
+        weights_distribution: list = None,
+        weights_moments: list = None,
+        weights_correlation: list = None,
+        properties: list = None,
     ):
         """
         Execute the stochastic reduced order model in the :class:`.SROM` class.

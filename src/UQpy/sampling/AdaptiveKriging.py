@@ -115,10 +115,10 @@ class AdaptiveKriging:
 
     def run(
         self,
-        nsamples,
-        samples=None,
-        append_samples=True,
-        initial_nsamples=None,
+        nsamples: int,
+        samples: np.ndarray=None,
+        append_samples: bool=True,
+        initial_nsamples: int=None,
     ):
         """
         Execute the :class:`.AdaptiveKriging` learning iterations.

@@ -1,6 +1,7 @@
 import logging
 from typing import Callable, Tuple, List
 
+import numpy as np
 from beartype import beartype
 from UQpy.distributions import Distribution
 from UQpy.utilities.ValidationTypes import *
@@ -111,7 +112,7 @@ class MCMC(ABC):
         as :code:`iterations_number=burn_length+jump*nsamples_per_chain`."""
 
     def run(
-            self, nsamples: PositiveInteger = None, nsamples_per_chain=None
+            self, nsamples: PositiveInteger = None, nsamples_per_chain:int = None
     ):
         """
         Run the mcmc algorithm.
@@ -170,7 +171,7 @@ class MCMC(ABC):
         if self.concatenate_chains:
             self._concatenate_chains()
 
-    def run_one_iteration(self, current_state, current_log_pdf):
+    def run_one_iteration(self, current_state: np.ndarray, current_log_pdf: np.ndarray):
         """
         Run one iteration of the mcmc algorithm, starting at `current_state`.
 

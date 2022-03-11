@@ -4,6 +4,7 @@ from scipy.linalg import cholesky
 import scipy.stats as stats
 from beartype import beartype
 
+from UQpy.utilities import MinimizeOptimizer
 from UQpy.utilities.Utilities import process_random_state
 from UQpy.surrogates.baseclass.Surrogate import Surrogate
 from UQpy.utilities.ValidationTypes import RandomStateType
@@ -18,8 +19,8 @@ class Kriging(Surrogate):
         regression_model: Regression,
         correlation_model: Correlation,
         correlation_model_parameters: list,
-        optimizer,
-        bounds=None,
+        optimizer: MinimizeOptimizer,
+        bounds: list = None,
         optimize: bool = True,
         optimizations_number: int = 1,
         normalize: bool = True,
@@ -89,8 +90,8 @@ class Kriging(Surrogate):
         self,
         samples,
         values,
-        optimizations_number=None,
-        correlation_model_parameters=None,
+        optimizations_number: int = None,
+        correlation_model_parameters: list = None,
     ):
         """
         Fit the surrogate model using the training samples and the corresponding model values.
@@ -202,7 +203,7 @@ class Kriging(Surrogate):
 
         return beta, gamma, (c, c_inv, g_, f_dash, y_dash, err_var)
 
-    def predict(self, points, return_std: bool = False, correlation_model_parameters: list = None):
+    def predict(self, points: np.ndarray, return_std: bool = False, correlation_model_parameters: list = None):
         """
         Predict the model response at new points.
 
@@ -254,7 +255,7 @@ class Kriging(Surrogate):
         else:
             return y
 
-    def jacobian(self, points):
+    def jacobian(self, points: np.ndarray):
         """
         Predict the gradient of the model at new points.
 

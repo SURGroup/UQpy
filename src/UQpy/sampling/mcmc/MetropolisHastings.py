@@ -1,5 +1,7 @@
 import logging
 from typing import Callable, List
+
+import numpy as np
 from beartype import beartype
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *
@@ -116,7 +118,7 @@ class MetropolisHastings(MCMC):
         if (nsamples is not None) or (nsamples_per_chain is not None):
             self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain,)
 
-    def run_one_iteration(self, current_state, current_log_pdf):
+    def run_one_iteration(self, current_state: np.ndarray, current_log_pdf: np.ndarray):
         """
         Run one iteration of the mcmc chain for MH algorithm, starting at current state -
         see :class:`MCMC` class.

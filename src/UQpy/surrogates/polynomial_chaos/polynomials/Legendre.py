@@ -1,16 +1,20 @@
+from typing import Union
+
 import numpy as np
 import scipy.special as special
 from beartype import beartype
 
 from UQpy.distributions import Uniform
+from UQpy.distributions.baseclass import Distribution
 from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import Polynomials
 from scipy.special import eval_legendre
 import math
 
+
 class Legendre(Polynomials):
 
     @beartype
-    def __init__(self, degree: int, distributions):
+    def __init__(self, degree: int, distributions: Union[Distribution, list[Distribution]]):
         """
         Class of univariate polynomials appropriate for data generated from a uniform distribution.
 
@@ -21,7 +25,7 @@ class Legendre(Polynomials):
         self.degree = degree
         self.pdf = self.distributions
 
-    def evaluate(self, x):
+    def evaluate(self, x: np.ndarray):
         """
         Calculates the normalized Legendre polynomials evaluated at sample points.
 
@@ -45,21 +49,20 @@ class Legendre(Polynomials):
         l = np.sqrt(2) * l / st_lege_norm
 
         return l
-    
+
     @staticmethod
-    def legendre_triple_product (k,l,m):
-    
-        normk=1/((2*k)+1)
-        norml=1/((2*l)+1)
-        normm=1/((2*m)+1)
-        norm=np.sqrt(normm/(normk*norml))
+    def legendre_triple_product(k, l, m):
 
+        normk = 1 / ((2 * k) + 1)
+        norml = 1 / ((2 * l) + 1)
+        normm = 1 / ((2 * m) + 1)
+        norm = np.sqrt(normm / (normk * norml))
 
-        return norm*(2*m+1)*Legendre.wigner_3j_PCE(k,l,m)**2
-    
+        return norm * (2 * m + 1) * Legendre.wigner_3j_PCE(k, l, m) ** 2
+
     @staticmethod
     def wigner_3j_PCE(j_1, j_2, j_3):
-    
+
         cond1 = j_1 + j_2 - j_3
         cond2 = j_1 - j_2 + j_3
         cond3 = -j_1 + j_2 + j_3
@@ -67,9 +70,9 @@ class Legendre(Polynomials):
             return 0
         else:
 
-            factarg = (math.factorial(j_1 + j_2 - j_3) *math.factorial(j_1 - j_2 + j_3)*
-                          math.factorial(-j_1 + j_2 + j_3)*math.factorial(j_1)**2*math.factorial(j_2)**2*
-                          math.factorial(j_3)**2) / math.factorial(j_1 + j_2 + j_3 + 1)
+            factarg = (math.factorial(j_1 + j_2 - j_3) * math.factorial(j_1 - j_2 + j_3) *
+                       math.factorial(-j_1 + j_2 + j_3) * math.factorial(j_1) ** 2 * math.factorial(j_2) ** 2 *
+                       math.factorial(j_3) ** 2) / math.factorial(j_1 + j_2 + j_3 + 1)
 
             factfinal = np.sqrt(factarg)
 
@@ -79,11 +82,11 @@ class Legendre(Polynomials):
 
             for i in range(imin, imax + 1):
                 sumfact = math.factorial(i) * \
-                    math.factorial(i + j_3 - j_1) * \
-                    math.factorial(j_2 - i) * \
-                    math.factorial(j_1 - i) * \
-                    math.factorial(i + j_3 - j_2 ) * \
-                    math.factorial(j_1 + j_2 - j_3 - i)
+                          math.factorial(i + j_3 - j_1) * \
+                          math.factorial(j_2 - i) * \
+                          math.factorial(j_1 - i) * \
+                          math.factorial(i + j_3 - j_2) * \
+                          math.factorial(j_1 + j_2 - j_3 - i)
                 summfinal = summfinal + int((-1) ** i) / sumfact
 
             const1 = int((-1) ** int(j_1 - j_2))

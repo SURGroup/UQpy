@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 import numpy as np
 
+from UQpy.utilities.ValidationTypes import RandomStateType
+
 
 class Refinement(ABC):
     """
@@ -10,13 +12,13 @@ class Refinement(ABC):
     @abstractmethod
     def update_samples(
         self,
-        nsamples,
-        samples_per_iteration,
-        random_state,
-        index,
-        dimension,
-        samples_u01,
-        training_points,
+        nsamples: int,
+        samples_per_iteration: int,
+        random_state: RandomStateType,
+        index: int,
+        dimension: int,
+        samples_u01: np.ndarray,
+        training_points: np.ndarray,
     ):
         """
         Method that need to be overridden in case of new :class:`.Refinement` techniques.

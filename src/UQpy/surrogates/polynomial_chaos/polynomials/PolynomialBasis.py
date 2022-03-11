@@ -1,3 +1,6 @@
+from typing import Union
+
+from UQpy.distributions.baseclass import Distribution
 from UQpy.distributions.collection import Uniform, Normal
 from UQpy.distributions.collection import JointIndependent, JointCopula
 from UQpy.surrogates.polynomial_chaos.polynomials import Hermite, Legendre
@@ -13,10 +16,10 @@ from scipy.special import comb
 class PolynomialBasis(metaclass=NoPublicConstructor):
 
     def __init__(self, inputs_number: int,
-                 polynomials_number,
-                 multi_index_set,
-                 polynomials,
-                 distributions):
+                 polynomials_number: int,
+                 multi_index_set: np.ndarray,
+                 polynomials: Polynomials,
+                 distributions: Union[Distribution, list[Distribution]]):
         """
         Create polynomial basis for a given multi index set.
         """
@@ -27,7 +30,9 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
         self.distributions = distributions
 
     @classmethod
-    def create_total_degree_basis(cls, distributions, max_degree, hyperbolic=1):
+    def create_total_degree_basis(cls, distributions:  Union[Distribution, list[Distribution]],
+                                  max_degree: int,
+                                  hyperbolic: float = 1):
         """
         Create tensor-product polynomial basis.
         The size is equal to :code:`(max_degree+1)**n_inputs` (exponential complexity).
@@ -47,7 +52,9 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
         return cls._create(inputs_number, len(multi_index_set), multi_index_set, polynomials, distributions)
 
     @classmethod
-    def create_tensor_product_basis(cls, distributions, max_degree):
+    def create_tensor_product_basis(cls,
+                                    distributions:  Union[Distribution, list[Distribution]],
+                                    max_degree: int):
         """
         Create total-degree polynomial basis.
         The size is equal to :code:`(total_degree+n_inputs)!/(total_degree!*n_inputs!)`
@@ -63,7 +70,7 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
         polynomials = PolynomialBasis.construct_arbitrary_basis(inputs_number, distributions, multi_index_set)
         return cls._create(inputs_number, len(multi_index_set), multi_index_set, polynomials, distributions)
 
-    def evaluate_basis(self, samples):
+    def evaluate_basis(self, samples: np.ndarray):
         samples_number = len(samples)
         eval_matrix = np.empty([samples_number, self.polynomials_number])
         for ii in range(self.polynomials_number):
@@ -72,7 +79,7 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
         return eval_matrix
 
     @staticmethod
-    def calculate_total_degree_set(inputs_number, degree):
+    def calculate_total_degree_set(inputs_number: int, degree: int):
         # size of the total degree multiindex set
         td_size = int(comb(inputs_number + degree, inputs_number))
 

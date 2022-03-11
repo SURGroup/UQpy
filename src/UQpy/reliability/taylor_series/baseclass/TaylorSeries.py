@@ -2,6 +2,8 @@ import logging
 from typing import Union
 import numpy as np
 from beartype import beartype
+
+from UQpy.RunModel import RunModel
 from UQpy.distributions import *
 from UQpy.transformations import *
 
@@ -12,8 +14,7 @@ class TaylorSeries:
     def __init__(
         self,
         distributions: Union[None, Distribution, list[Distribution]] = None,
-        runmodel_object=None,
-        form_object=None,
+        runmodel_object: RunModel=None,
         corr_x: Union[list, None, np.ndarray] = None,
         corr_z: Union[list, None, np.ndarray] = None,
         seed_x: Union[list, None, np.ndarray] = None,
@@ -31,7 +32,6 @@ class TaylorSeries:
         :param distributions: Marginal probability distributions of each random variable. Must be an object of type
          :class:`.DistributionContinuous1D` or :class:`.JointIndependent`.
         :param runmodel_object: The computational model. It should be of type :class:`RunModel`.
-        :param form_object: It should be of type :class:`FORM`. Used to calculate SORM correction.
         :param corr_x: Covariance matrix
          If `corr_x` is provided, it is the correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
          If `corr_z` is provided, it is the correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal random
@@ -88,7 +88,7 @@ class TaylorSeries:
         self.logger = logging.getLogger(__name__)
 
     @staticmethod
-    def derivatives(
+    def _derivatives(
         point_u,
         runmodel_object,
         nataf_object,
@@ -97,27 +97,6 @@ class TaylorSeries:
         point_qoi=None,
         df_step=0.01,
     ):
-        """
-        A method to estimate the derivatives (1st-order, 2nd-order, mixed) of a function using a central difference
-        scheme after transformation to the standard normal space. This is a static method of the :class:`.FORM` class.
-
-        :param point_u: Point in the uncorrelated standard normal space at which to evaluate the gradient with shape
-         :code:`samples.shape=(1, dimension)`. Either `point_u` or `point_x` must be specified. If `point_u` is
-         specified, the derivatives are computed directly.
-        :param runmodel_object: The computational model. It should be of type :class:`RunModel` .
-        :param nataf_object: An object of the :class:`.Nataf` class .
-        :param order: Order of the derivative. Available options: 'first', 'second', 'mixed'. Default: 'first'.
-        :param point_x: Point in the parameter space at which to evaluate the model with shape
-         :code:`samples.shape=(1, dimension)`. Either `point_u` or `point_x` must be specified. If `point_x` is
-         specified, the variable is transformed to standard normal using the :class:`.Nataf` transformation and
-         derivatives are computed.
-        :param point_qoi: Value of the model evaluated at `point_u`. Used only for second derivatives.
-        :param df_step: Finite difference step in standard normal space. Default: :math:`0.01`
-        :return:
-         - Vector of first-order derivatives :code:`(if order = 'first')`.
-         - Vector of second-order derivatives :code:`(if order = 'second')`.
-         - Vector of mixed derivatives :code:`(if order = 'mixed')`.
-        """
         if point_u is None and point_x is None:
             raise TypeError("UQpy: Either `point_u` or `point_x` must be specified.")
 

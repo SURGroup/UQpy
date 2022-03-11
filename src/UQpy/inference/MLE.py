@@ -7,7 +7,7 @@ from beartype import beartype
 
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
 from UQpy.utilities.Utilities import process_random_state
-from UQpy.utilities.ValidationTypes import NumpyFloatArray
+from UQpy.utilities.ValidationTypes import NumpyFloatArray, RandomStateType
 
 
 class MLE:
@@ -15,13 +15,13 @@ class MLE:
     # Last Modified: 12/19 by Audrey Olivier
     @beartype
     def __init__(
-        self,
-        inference_model: InferenceModel,
-        data: Union[list, np.ndarray],
-        n_optimizations: Union[None, int] = 1,
-        initial_parameters=None,
-        optimizer=MinimizeOptimizer(),
-        random_state=None,
+            self,
+            inference_model: InferenceModel,
+            data: Union[list, np.ndarray],
+            n_optimizations: Union[None, int] = 1,
+            initial_parameters: np.ndarray = None,
+            optimizer=MinimizeOptimizer(),
+            random_state: RandomStateType = None,
     ):
         """
         Estimate the maximum likelihood parameters of a model given some data.
@@ -63,7 +63,7 @@ class MLE:
             self.run(n_optimizations=n_optimizations, initial_parameters=initial_parameters)
 
     @beartype
-    def run(self, n_optimizations: Union[None, int] = 1, initial_parameters=None):
+    def run(self, n_optimizations: Union[None, int] = 1, initial_parameters: np.ndarray = None):
         """
         Run the maximum likelihood estimation procedure.
 
@@ -91,9 +91,9 @@ class MLE:
         self.initial_parameters = initial_parameters
 
         use_distribution_fit = (
-            hasattr(self.inference_model, "distributions")
-            and self.inference_model.distributions is not None
-            and hasattr(self.inference_model.distributions, "fit"))
+                hasattr(self.inference_model, "distributions")
+                and self.inference_model.distributions is not None
+                and hasattr(self.inference_model.distributions, "fit"))
 
         if use_distribution_fit:
             self._run_distribution_fit(self.n_optimizations)
@@ -118,8 +118,8 @@ class MLE:
             from UQpy.distributions import Uniform
             initial_parameters = (
                 Uniform()
-                .rvs(nsamples=n_optimizations * self.inference_model.n_parameters, random_state=self.random_state,)
-                .reshape((n_optimizations, self.inference_model.n_parameters)))
+                    .rvs(nsamples=n_optimizations * self.inference_model.n_parameters, random_state=self.random_state, )
+                    .reshape((n_optimizations, self.inference_model.n_parameters)))
             if self.optimizer._bounds is not None:
                 bounds = np.array(self.optimizer._bounds)
                 initial_parameters = (bounds[:, 0].reshape((1, -1))
@@ -141,4 +141,4 @@ class MLE:
     @beartype
     def _evaluate_func_to_minimize(self, one_param: np.ndarray):
         return (-1 * self.inference_model.evaluate_log_likelihood(
-                parameters=one_param.reshape((1, -1)), data=self.data)[0])
+            parameters=one_param.reshape((1, -1)), data=self.data)[0])

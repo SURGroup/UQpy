@@ -341,7 +341,8 @@ class DiffusionMaps:
         return float(est_cutoff)
 
     @staticmethod
-    def estimate_epsilon(data, tol=1e-8, cut_off: float = None, **estimate_cutoff_params) -> tuple[float, float]:
+    def estimate_epsilon(data:Numpy2DFloatArray, tol:float=1e-8, cut_off: float = None, **estimate_cutoff_params:dict) \
+            -> tuple[float, float]:
         """
         Estimates the scale parameter for a Gaussian kernel, given a tolerance below which the kernel values are
         considered zero.

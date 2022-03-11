@@ -2,6 +2,8 @@ import logging
 from typing import Callable
 import warnings
 
+import numpy as np
+
 warnings.filterwarnings('ignore')
 
 from beartype import beartype
@@ -149,7 +151,7 @@ class DRAM(MCMC):
             self.run(nsamples=nsamples,
                      nsamples_per_chain=nsamples_per_chain, )
 
-    def run_one_iteration(self, current_state, current_log_pdf):
+    def run_one_iteration(self, current_state: np.ndarray, current_log_pdf: np.ndarray):
         """
         Run one iteration of the mcmc chain for DRAM algorithm, starting at current state -
         see :class:`MCMC` class.

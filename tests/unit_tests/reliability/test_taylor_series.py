@@ -74,7 +74,7 @@ def test_derivatives_1_no_samples():
     for file_name in glob.glob("Model_Runs_*"):
         shutil.rmtree(file_name)
     with pytest.raises(Exception):
-        assert TaylorSeries.derivatives(nataf_object=ntf_obj, runmodel_object=model_i)
+        assert TaylorSeries._derivatives(nataf_object=ntf_obj, runmodel_object=model_i)
 
 
 def test_derivatives_3_no_nataf():
@@ -82,7 +82,7 @@ def test_derivatives_3_no_nataf():
     for file_name in glob.glob("Model_Runs_*"):
         shutil.rmtree(file_name)
     with pytest.raises(Exception):
-        assert TaylorSeries.derivatives(point_u=point_u, runmodel_object=model_i)
+        assert TaylorSeries._derivatives(point_u=point_u, runmodel_object=model_i)
 
 @pytest.fixture
 def setup():
@@ -96,9 +96,9 @@ def test_derivatives_4_callable_model(setup):
     point_u = np.array([-2, 1])
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = Nataf(distributions=[dist1, dist2], corr_x=rx)
-    gradient, qoi, array_of_samples = TaylorSeries.derivatives(point_u=point_u,
-                                                               runmodel_object=setup,
-                                                               nataf_object=ntf_obj)
+    gradient, qoi, array_of_samples = TaylorSeries._derivatives(point_u=point_u,
+                                                                runmodel_object=setup,
+                                                                nataf_object=ntf_obj)
     for file_name in glob.glob("Model_Runs_*"):
         shutil.rmtree(file_name)
     np.testing.assert_allclose(array_of_samples[0], [160, 160], rtol=1e-09)
@@ -111,9 +111,9 @@ def test_derivatives_5_run_model(setup):
     point_u = np.array([-2, 1])
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = Nataf(distributions=[dist1, dist2], corr_x=rx)
-    gradient, qoi, array_of_samples = TaylorSeries.derivatives(point_u=point_u,
-                                                               runmodel_object=setup,
-                                                               nataf_object=ntf_obj)
+    gradient, qoi, array_of_samples = TaylorSeries._derivatives(point_u=point_u,
+                                                                runmodel_object=setup,
+                                                                nataf_object=ntf_obj)
     for file_name in glob.glob("Model_Runs_*"):
         shutil.rmtree(file_name)
     np.testing.assert_allclose(array_of_samples[0], [160, 160], rtol=1e-09)
@@ -127,8 +127,8 @@ def test_derivatives_6_second():
     point_u = np.array([1.73673009, 0.16383283])
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = Nataf(distributions=[dist1, dist2], corr_x=rx)
-    hessian = TaylorSeries.derivatives(point_u=point_u, runmodel_object=h_func,
-                                       nataf_object=ntf_obj, order='second')
+    hessian = TaylorSeries._derivatives(point_u=point_u, runmodel_object=h_func,
+                                        nataf_object=ntf_obj, order='second')
     shutil.rmtree(h_func.model_dir)
     np.testing.assert_allclose(hessian, [[-0.00720754, 0.00477726], [0.00477726, -0.00316643]], rtol=1e-04)
 

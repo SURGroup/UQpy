@@ -2,6 +2,7 @@ import numpy
 import numpy as np
 from beartype import beartype
 
+from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 from UQpy.distributions.baseclass import Copula
 
 
@@ -14,7 +15,7 @@ class Frank(Copula):
         """
         super().__init__(theta=theta)
 
-    def evaluate_cdf(self, unit_uniform_samples) -> numpy.ndarray:
+    def evaluate_cdf(self, unit_uniform_samples: Numpy2DFloatArray) -> numpy.ndarray:
         """
         Compute the copula cdf :math:`C(u_1, u_2, ..., u_d)` for a `d`-variate uniform distribution.
 
@@ -35,7 +36,7 @@ class Frank(Copula):
         cdf_val = -1.0 / theta * np.log(1.0 + tmp_ratio)
         return cdf_val
 
-    def extract_data(self, unit_uniform_samples):
+    def extract_data(self, unit_uniform_samples: Numpy2DFloatArray):
         u = unit_uniform_samples[:, 0]
         v = unit_uniform_samples[:, 1]
         theta = self.parameters["theta"]

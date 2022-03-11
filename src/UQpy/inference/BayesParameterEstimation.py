@@ -1,6 +1,7 @@
 import logging
 from typing import Union
 
+import numpy as np
 from beartype import beartype
 from UQpy.utilities.ValidationTypes import PositiveInteger
 from UQpy.inference.inference_models.baseclass.InferenceModel import InferenceModel
@@ -14,7 +15,7 @@ class BayesParameterEstimation:
     def __init__(
         self,
         inference_model: InferenceModel,
-        data,
+        data: np.ndarray,
         sampling_class: Union[MCMC, ImportanceSampling] = None,
         nsamples: Union[None, int] = None,
     ):

@@ -66,7 +66,7 @@ class KarhunenLoeveExpansion:
         samples = samples[:, np.newaxis]
         return samples
 
-    def run(self, samples_number):
+    def run(self, samples_number: int):
         """
         Execute the random sampling in the :class:`.KarhunenLoeveExpansion` class.
 

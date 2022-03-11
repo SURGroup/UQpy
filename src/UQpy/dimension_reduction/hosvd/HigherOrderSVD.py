@@ -22,9 +22,9 @@ class HigherOrderSVD:
         :param reconstruction_percentage: Dataset reconstruction percentage.
         """
         self.reconstruction_error = None
-        self.s3hat = None
+        self.s3hat: Numpy2DFloatArray = None
         """Normalized core tensor produced by the HOSVD decomposition."""
-        self.u3hat = None
+        self.u3hat: Numpy2DFloatArray = None
         """Normalized unitary array produced by the HOSVD decomposition"""
         self.reduced_solutions = None
         self.s3 = None
@@ -33,11 +33,11 @@ class HigherOrderSVD:
         self.u3 = None
         self.v2 = None
         self.sig_2 = None
-        self.u2 = None
+        self.u2: Numpy2DFloatArray = None
         """Unitary array of the SVD of the second unfolded matrix."""
         self.v1 = None
         self.sig_1 = None
-        self.u1 = None
+        self.u1: Numpy2DFloatArray = None
         """Unitary array of the SVD of the first unfolded matrix"""
         self.solution_snapshots = solution_snapshots
         self.logger = logging.getLogger(__name__)
@@ -99,7 +99,7 @@ class HigherOrderSVD:
             self.logger.warning("Reduced-order reconstruction error: {0:.3%}".format(self.reconstruction_error))
 
     @staticmethod
-    def unfold3d(second_order_tensor):
+    def unfold3d(second_order_tensor: np.ndarray):
         """
 
         :param second_order_tensor: A three-dimensional :class:`ndarray` which contains the data to be unfolded.
@@ -133,7 +133,10 @@ class HigherOrderSVD:
         return matrix1, matrix2, matrix3
 
     @staticmethod
-    def reconstruct(u1, u2, u3hat, s3hat):
+    def reconstruct(u1: Numpy2DFloatArray,
+                    u2: Numpy2DFloatArray,
+                    u3hat: Numpy2DFloatArray,
+                    s3hat: Numpy2DFloatArray):
         """
         Reconstructs the approximated solution.
 

@@ -1,12 +1,17 @@
-from beartype import beartype
+from typing import Callable
+
 import numpy as np
+from beartype import beartype
+import warnings
+
+warnings.filterwarnings('ignore')
 
 from UQpy.inference.inference_models.baseclass.InferenceModel import *
 
 
 class LogLikelihoodModel(InferenceModel):
     @beartype
-    def __init__(self, n_parameters: PositiveInteger, log_likelihood, name: str = ""):
+    def __init__(self, n_parameters: PositiveInteger, log_likelihood: Callable, name: str = ""):
         """
         Define a log-likelihood model for inference.
 
@@ -19,7 +24,7 @@ class LogLikelihoodModel(InferenceModel):
         self.log_likelihood = log_likelihood
         self.n_parameters = n_parameters
 
-    def evaluate_log_likelihood(self, parameters, data):
+    def evaluate_log_likelihood(self, parameters: np.ndarray, data: np.ndarray):
         log_like_values = self.log_likelihood(data=data, params=parameters)
         if not isinstance(log_like_values, np.ndarray):
             log_like_values = np.array(log_like_values)

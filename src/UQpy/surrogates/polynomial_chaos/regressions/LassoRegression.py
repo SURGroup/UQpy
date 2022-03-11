@@ -27,7 +27,7 @@ class LassoRegression(Regression):
         self.penalty = penalty
         self.logger = logging.getLogger(__name__)
 
-    def run(self, x, y, design_matrix):
+    def run(self, x: np.ndarray, y: np.ndarray, design_matrix: np.ndarray):
         """
         Implements the LASSO method to compute the polynomial_chaos coefficients.
 

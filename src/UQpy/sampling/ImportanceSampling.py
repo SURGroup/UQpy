@@ -124,7 +124,7 @@ class ImportanceSampling:
             self.logger.info("UQpy: unweighted samples are being deleted, call the resample method to regenerate them")
             self.unweighted_samples = None
 
-    def resample(self, method="multinomial", nsamples=None):
+    def resample(self, method: str = "multinomial", nsamples:int = None):
         """
         Resample to get a set of un-weighted samples that represent the target pdf.
 

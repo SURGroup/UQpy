@@ -5,7 +5,7 @@ from UQpy.utilities.distances.baseclass.EuclideanDistance import EuclideanDistan
 from scipy.spatial.distance import pdist
 
 
-class Kulczynski1Distance(EuclideanDistance):
+class KulczynskiDistance(EuclideanDistance):
 
     def compute_distance(self, points: NumpyFloatArray) -> Union[float, NumpyFloatArray]:
         return pdist(points, "kulczynski1")
