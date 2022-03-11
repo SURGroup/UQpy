@@ -28,6 +28,7 @@ class DiffusionMaps:
         kernel_matrix: Numpy2DFloatArray,
         alpha: AlphaType = 0.5,
         n_eigenvectors: IntegerLargerThanUnityType = 2,
+        eigenvector_tolerance: float = 1e-14,
         is_sparse: bool = False,
         n_neighbors: IntegerLargerThanUnityType = 1,
         random_state: Union[None, int] = None,
@@ -39,6 +40,7 @@ class DiffusionMaps:
         :param n_eigenvectors: Number of eigenvectors to keep.
         :param is_sparse: Work with sparse matrices. Increase the computational performance.
         :param n_neighbors: Defines the number of nearest neighbors.
+        :param eigenvector_tolerance: Relative accuracy for computing eigenvalues.
         :param kernel_matrix: kernel matrix defining the similarity between the points. Can be generated using kernels
          from :py:mod:`.utilities` submodule of :py:mod:`UQpy`.
         :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
@@ -46,6 +48,7 @@ class DiffusionMaps:
          object itself can be passed directly.
         :param t: Time exponent.
         """
+        self.eigenvector_tolerance = eigenvector_tolerance
         self.alpha = alpha
         self.n_eigenvectors = n_eigenvectors
         self.is_sparse = is_sparse
@@ -76,6 +79,7 @@ class DiffusionMaps:
         n_eigenvectors: IntegerLargerThanUnityType = 2,
         is_sparse: bool = False,
         neighbors_number: IntegerLargerThanUnityType = 1,
+        eigenvector_tolerance: float = 1e-14,
         kernel: EuclideanKernel = GaussianKernel(),
         epsilon: float = None,
         t: int = 1,
@@ -93,6 +97,7 @@ class DiffusionMaps:
         :param data: Array of data points.
         :param alpha: Corresponds to different diffusion operators. It should be between 0 and 1.
         :param n_eigenvectors: Number of eigenvectors to keep.
+        :param eigenvector_tolerance: Relative accuracy for computing eigenvalues.
         :param is_sparse: Work with sparse matrices. Increase the computational performance.
         :param neighbors_number: Defines the number of nearest neighbors.
         :param kernel: :class:`.EuclideanKernel` object. See :py:mod:`.utilities` for additional information.
@@ -125,7 +130,8 @@ class DiffusionMaps:
             epsilon, cut_off = DiffusionMaps.estimate_epsilon(data, cut_off=cut_off, tol=tol,
                                                               k_nn=k_nn, n_partition=n_partition,
                                                               distance_matrix=distance_matrix,
-                                                              random_state=random_state)
+                                                              random_state=random_state,
+                                                              eigenvector_tolerance=eigenvector_tolerance)
         kernel.epsilon = epsilon
 
         kernel_matrix = kernel.calculate_kernel_matrix(points=data)
@@ -182,7 +188,8 @@ class DiffusionMaps:
 
         # Find the eigenvalues and eigenvectors of Ps.
         self.eigenvalues, self.eigenvectors = DiffusionMaps.eig_solver(transition_matrix, is_symmetric,
-                                                                       (self.n_eigenvectors + 1))
+                                                                       (self.n_eigenvectors + 1),
+                                                                       self.eigenvector_tolerance)
 
         ix = np.argsort(np.abs(self.eigenvalues))
         ix = ix[::-1]
@@ -355,7 +362,8 @@ class DiffusionMaps:
         return scale, cut_off
 
     @staticmethod
-    def eig_solver(kernel_matrix: Numpy2DFloatArray, is_symmetric: bool, n_eigenvectors: int) -> \
+    def eig_solver(kernel_matrix: Numpy2DFloatArray, is_symmetric: bool, n_eigenvectors: int,
+                   eigenvector_tolerance: float) -> \
             tuple[NumpyFloatArray, Numpy2DFloatArray]:
 
         n_samples, n_features = kernel_matrix.shape
@@ -379,7 +387,7 @@ class DiffusionMaps:
                 "k": n_eigenvectors,
                 "which": "LM",
                 "v0": np.ones(n_samples),
-                "tol": 1e-14,
+                "tol": eigenvector_tolerance,
             }
 
         eigenvalues, eigenvectors = solver(kernel_matrix, **solver_kwargs)

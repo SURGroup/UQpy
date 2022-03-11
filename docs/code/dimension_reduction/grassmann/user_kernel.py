@@ -1,3 +1,10 @@
+"""
+
+Auxiliary File
+==================================
+
+
+"""
 import numpy as np
 
 def my_kernel(x0, x1):

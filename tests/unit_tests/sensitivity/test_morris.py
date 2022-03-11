@@ -22,23 +22,23 @@ def setup():
 
 def test_morris(setup):
     runmodel_object, dist_object = setup
-    sens = MorrisSensitivity(runmodel_object=runmodel_object, distributions=dist_object, levels_number=8,
-                             random_state=123, trajectories_number=3)
+    sens = MorrisSensitivity(runmodel_object=runmodel_object, distributions=dist_object, n_levels=8,
+                             random_state=123, n_trajectories=3)
     assert round(sens.mustar_indices[1], 3) == 0.025
 
 
 def test_morris_2(setup):
     runmodel_object, dist_object = setup
-    sens = MorrisSensitivity(runmodel_object=runmodel_object, distributions=dist_object, levels_number=9,
+    sens = MorrisSensitivity(runmodel_object=runmodel_object, distributions=dist_object, n_levels=9,
                              random_state=123)
-    sens.run(trajectories_number=2)
-    sens.run(trajectories_number=2)
+    sens.run(n_trajectories=2)
+    sens.run(n_trajectories=2)
     assert round(sens.mustar_indices[1], 3) == 0.034
 
 
 def test_morris_max_dispersion(setup):
     runmodel_object, dist_object = setup
-    sens = MorrisSensitivity(runmodel_object=runmodel_object, distributions=dist_object, levels_number=9,
+    sens = MorrisSensitivity(runmodel_object=runmodel_object, distributions=dist_object, n_levels=9,
                              random_state=123, maximize_dispersion=True)
-    sens.run(trajectories_number=5)
+    sens.run(n_trajectories=5)
     assert round(sens.mustar_indices[1], 3) == 0.051

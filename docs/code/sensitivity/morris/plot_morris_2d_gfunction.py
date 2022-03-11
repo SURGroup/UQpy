@@ -51,8 +51,8 @@ plt.show()
 
 sens = MorrisSensitivity(runmodel_object=runmodel_object,
                          distributions=dist_object,
-                         levels_number=9)
-sens.run(trajectories_number=10)
+                         n_levels=9)
+sens.run(n_trajectories=10)
 
 
 fig, ax = plt.subplots(figsize=(4, 4))
@@ -60,10 +60,10 @@ for trajectory in sens.trajectories_physical_space[:5]:
     ax.plot(trajectory[:, 0], trajectory[:, 1], marker='x', linewidth=3)
 ax.set_xlim([0, 1])
 ax.set_ylim([0, 1])
-ax.set_xticks(np.arange(0., 1. + 0.5 / (sens.levels_number - 1), 1. / (sens.levels_number - 1)), minor=True)
+ax.set_xticks(np.arange(0., 1. + 0.5 / (sens.n_levels - 1), 1. / (sens.n_levels - 1)), minor=True)
 ax.set_xticks([0., 1.], minor=False)
 ax.set_xticklabels([0., 1.])
-ax.set_yticks(np.arange(0., 1. + 0.5 / (sens.levels_number - 1), 1. / (sens.levels_number - 1)), minor=True)
+ax.set_yticks(np.arange(0., 1. + 0.5 / (sens.n_levels - 1), 1. / (sens.n_levels - 1)), minor=True)
 ax.set_yticks([0., 1.], minor=False)
 ax.set_yticklabels([0., 1.])
 ax.grid(True, which='both')

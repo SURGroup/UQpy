@@ -23,29 +23,29 @@ class MorrisSensitivity:
         self,
         runmodel_object: RunModel,
         distributions: Union[JointIndependent, Union[list, tuple]],
-        levels_number: Annotated[int, Is[lambda x: x >= 3]],
+        n_levels: Annotated[int, Is[lambda x: x >= 3]],
         delta: Union[float, int] = None,
         random_state: RandomStateType = None,
-        trajectories_number: PositiveInteger = None,
+        n_trajectories: PositiveInteger = None,
         maximize_dispersion: bool = False,
     ):
         """
         Compute sensitivity indices based on the Morris screening method.
 
         :param runmodel_object: The computational model. It should be of type :class:`.RunModel`. The
-         output QoI can be a scalar or vector of length `ny`, then the sensitivity indices of all :code:`ny` outputs are
+         output QoI can be a scalar or vector of length :code:`ny`, then the sensitivity indices of all :code:`ny` outputs are
          computed independently.
         :param distributions: List of :class:`.Distribution` objects corresponding to each random variable, or
          :class:`.JointIndependent` object (multivariate RV with independent marginals).
-        :param levels_number: Number of levels that define the grid over the hypercube where evaluation points are
+        :param n_levels: Number of levels that define the grid over the hypercube where evaluation points are
          sampled. Must be an integer :math:`\ge 3`.
         :param delta: Size of the jump between two consecutive evaluation points, must be a multiple of delta should be
-         in :code:`{1/(levels_number-1), ..., 1-1/(levels_number-1)}`.
-         Default: :math:`delta=\\frac{levels\_number}{2 * (levels\_number-1)}` if `levels_number` is even,
-         :math:`delta=0.5` if levels_number is odd.
+         in :code:`{1/(n_levels-1), ..., 1-1/(n_levels-1)}`.
+         Default: :math:`delta=\\frac{levels\_number}{2 * (levels\_number-1)}` if `n_levels` is even,
+         :math:`delta=0.5` if n_levels is odd.
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.
-        :param trajectories_number: Number of random trajectories, usually chosen between :math:`5` and :math:`10`.
-         The number of model evaluations is :code:`trajectories_number * (d+1)`. If None, the `Morris` object is created
+        :param n_trajectories: Number of random trajectories, usually chosen between :math:`5` and :math:`10`.
+         The number of model evaluations is :code:`n_trajectories * (d+1)`. If None, the `Morris` object is created
          but not run (see :py:meth:`run` method)
         :param maximize_dispersion: If :any:`True`, generate a large number of design trajectories and keep the ones
          that maximize dispersion between all trajectories, allows for a better coverage of the input space.
@@ -70,32 +70,32 @@ class MorrisSensitivity:
                 "The number of distributions provided does not match the number of RunModel variables"
             )
 
-        self.levels_number = levels_number
+        self.n_levels = n_levels
         self.delta = delta
         self.check_levels_delta()
         self.random_state = process_random_state(random_state)
         self.maximize_dispersion = maximize_dispersion
 
         self.trajectories_unit_hypercube: NumpyFloatArray = None
-        """Trajectories in the unit hypercube, :class:`numpy.ndarray` of shape :code:`(trajectories_number, d+1, d)`"""
+        """Trajectories in the unit hypercube, :class:`numpy.ndarray` of shape :code:`(n_trajectories, d+1, d)`"""
         self.trajectories_physical_space: NumpyFloatArray = None
-        """Trajectories in the physical space, :class:`numpy.ndarray` of shape :code:`(trajectories_number, d+1, d)`"""
+        """Trajectories in the physical space, :class:`numpy.ndarray` of shape :code:`(n_trajectories, d+1, d)`"""
         self.elementary_effects: NumpyFloatArray = None
-        """Elementary effects :math:`EE_{k}`, :class:`numpy.ndarray` of shape :code:`(trajectories_number, d, ny)`."""
+        """Elementary effects :math:`EE_{k}`, :class:`numpy.ndarray` of shape :code:`(n_trajectories, d, ny)`."""
         self.mustar_indices: NumpyFloatArray = None
         """First Morris sensitivity index :math:`\mu_{k}^{\star}`, :class:`numpy.ndarray` of shape :code:`(d, ny)`"""
         self.sigma_indices: NumpyFloatArray = None
         """Second Morris sensitivity index :math:`\sigma_{k}`, :class:`numpy.ndarray` of shape :code:`(d, ny)`"""
 
-        if trajectories_number is not None:
-            self.run(trajectories_number)
+        if n_trajectories is not None:
+            self.run(n_trajectories)
 
     def check_levels_delta(self):
         # delta should be in {1/(nlevels-1), ..., 1-1/(nlevels-1)}
-        if (self.delta is None) and (self.levels_number % 2) == 0:
+        if (self.delta is None) and (self.n_levels % 2) == 0:
             # delta = trial_probability / (2 * (trial_probability-1))
-            self.delta = self.levels_number / (2 * (self.levels_number - 1))
-        elif (self.delta is None) and (self.levels_number % 2) == 1:
+            self.delta = self.n_levels / (2 * (self.n_levels - 1))
+        elif (self.delta is None) and (self.n_levels % 2) == 1:
             self.delta = (
                 1 / 2
             )  # delta = (trial_probability-1) / (2 * (trial_probability-1))
@@ -103,8 +103,8 @@ class MorrisSensitivity:
             isinstance(self.delta, (int, float))
             and float(self.delta)
             in [
-                float(j / (self.levels_number - 1))
-                for j in range(1, self.levels_number - 1)
+                float(j / (self.n_levels - 1))
+                for j in range(1, self.n_levels - 1)
             ]
         ):
             raise ValueError(
@@ -112,7 +112,7 @@ class MorrisSensitivity:
             )
 
     @beartype
-    def run(self, trajectories_number: PositiveInteger):
+    def run(self, n_trajectories: PositiveInteger):
         """
         Run the Morris indices evaluation.
 
@@ -120,15 +120,15 @@ class MorrisSensitivity:
         :py:meth:`sample_trajectories`), then runs the forward model to compute the elementary effects,
         and finally computes the sensitivity indices.
 
-        :param trajectories_number: Number of random trajectories. Usually chosen between :math:`5` and :math:`10`.
-         The number of model evaluations is :code:`trajectories_number * (d+1)`.
+        :param n_trajectories: Number of random trajectories. Usually chosen between :math:`5` and :math:`10`.
+         The number of model evaluations is :code:`n_trajectories * (d+1)`.
         """
         # Compute trajectories and elementary effects - append if any already exist
         (
             trajectories_unit_hypercube,
             trajectories_physical_space,
         ) = self.sample_trajectories(
-            trajectories_number=trajectories_number,
+            n_trajectories=n_trajectories,
             maximize_dispersion=self.maximize_dispersion,
         )
         elementary_effects = self._compute_elementary_effects(
@@ -164,13 +164,13 @@ class MorrisSensitivity:
 
     @beartype
     def sample_trajectories(
-        self, trajectories_number: PositiveInteger, maximize_dispersion: bool = False
+        self, n_trajectories: PositiveInteger, maximize_dispersion: bool = False
     ):
         """
         Create the trajectories, first in the unit hypercube then transform them in the physical space.
 
-        :param trajectories_number: Number of random trajectories. Usually chosen between :math:`5` and :math:`10`.
-         The number of model evaluations is :code:`trajectories_number * (d+1)`.
+        :param n_trajectories: Number of random trajectories. Usually chosen between :math:`5` and :math:`10`.
+         The number of model evaluations is :code:`n_trajectories * (d+1)`.
         :param maximize_dispersion: If :any:`True`, generate a large number of design trajectories and keep the ones
          that maximize dispersion between all trajectories, allows for a better coverage of the input space.
          Default :any:`False`.
@@ -179,7 +179,7 @@ class MorrisSensitivity:
         trajectories_unit_hypercube = []
         perms_indices = []
         ntrajectories_all = (
-            10 * trajectories_number if maximize_dispersion else 1 * trajectories_number
+            10 * n_trajectories if maximize_dispersion else 1 * n_trajectories
         )
         for r in range(ntrajectories_all):
             if self.random_state is None:
@@ -188,9 +188,9 @@ class MorrisSensitivity:
                 perms = self.random_state.permutation(self.dimension)
             initial_state = (
                 1.0
-                / (self.levels_number - 1)
+                / (self.n_levels - 1)
                 * randint(
-                    low=0, high=int((self.levels_number - 1) * (1 - self.delta) + 1)
+                    low=0, high=int((self.n_levels - 1) * (1 - self.delta) + 1)
                 ).rvs(size=(1, self.dimension), random_state=self.random_state)
             )
             trajectory_uh = np.tile(initial_state, [self.dimension + 1, 1])
@@ -225,11 +225,11 @@ class MorrisSensitivity:
             def compute_combi_and_dist():
                 if self.random_state is None:
                     combi = np.random.choice(
-                        ntrajectories_all, replace=False, size=trajectories_number
+                        ntrajectories_all, replace=False, size=n_trajectories
                     )
                 else:
                     combi = self.random_state.choice(
-                        ntrajectories_all, replace=False, size=trajectories_number
+                        ntrajectories_all, replace=False, size=n_trajectories
                     )
                 dist_combi = 0.0
                 for pairs in list(combinations(combi, 2)):

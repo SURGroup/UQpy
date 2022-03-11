@@ -1,3 +1,10 @@
+"""
+
+Auxiliary File
+==================================
+
+
+"""
 import numpy as np
 import itertools
 import scipy.spatial.distance as sd

@@ -1,3 +1,10 @@
+"""
+
+Auxiliary File
+==================================
+
+
+"""
 import numpy as np
 
 def my_distance(x0, x1):

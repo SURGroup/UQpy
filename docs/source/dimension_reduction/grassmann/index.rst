@@ -181,3 +181,11 @@ A description of the class signature is shown below:
    :maxdepth: 1
 
     Methods <interpolation>
+
+
+Examples
+~~~~~~~~~~~~~~~~~~
+
+.. toctree::
+
+   Grassmann Manifold Examples <../auto_examples/dimension_reduction/grassmann/index>

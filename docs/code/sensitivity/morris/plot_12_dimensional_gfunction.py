@@ -38,9 +38,9 @@ dist_object = [Uniform(), ] * na
 
 sens = MorrisSensitivity(runmodel_object=runmodel_object,
                          distributions=dist_object,
-                         levels_number=20,
+                         n_levels=20,
                          maximize_dispersion=True)
-sens.run(trajectories_number=10)
+sens.run(n_trajectories=10)
 
 
 print(['a{}={}'.format(i + 1, ai) for i, ai in enumerate(a_values)])

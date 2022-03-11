@@ -1,3 +1,10 @@
+"""
+
+Diffusion Equation File
+========================
+
+
+"""
 import numpy as np
 def diffusion(w, h, dx, dy, D, Tcool, Thot, r, cx, cy, nsteps):
     nx, ny = int(w/dx), int(h/dy)

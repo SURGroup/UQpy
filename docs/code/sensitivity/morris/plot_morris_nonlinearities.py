@@ -42,8 +42,8 @@ dist_object = [Uniform(), ] * 5
 
 sens = MorrisSensitivity(runmodel_object=runmodel_object,
                          distributions=dist_object,
-                         levels_number=20, maximize_dispersion=True)
-sens.run(trajectories_number=10)
+                         n_levels=20, maximize_dispersion=True)
+sens.run(n_trajectories=10)
 
 
 fig, ax = plt.subplots(figsize=(5, 3.5))

@@ -45,12 +45,14 @@ class SubsetSimulation:
         self.mcmc_objects = [sampling]
 
         self.samples: list = list()
-        """A list of arrays containing the samples in each conditional level."""
+        """A list of arrays containing the samples in each conditional level. The size of the list is equal to the 
+        number of levels."""
         self.performance_function_per_level: list = []
         """A list of arrays containing the evaluation of the performance function at each sample in each conditional 
-        level."""
+        level. The size of the list is equal to the number of levels."""
         self.performance_threshold_per_level: list = []
-        """Threshold value of the performance function for each conditional level"""
+        """Threshold value of the performance function for each conditional level. The size of the list is equal to the 
+        number of levels."""
 
         self.logger.info("UQpy: Running Subset Simulation with mcmc of type: " + str(type(sampling)))
         self.failure_probability: float = None

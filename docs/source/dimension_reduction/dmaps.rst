@@ -31,9 +31,11 @@ Attributes
 .. autoattribute:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps.eigenvectors
 .. autoattribute:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps.eigenvalues
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Diffusion Maps Examples
+Examples
+~~~~~~~~~~~~~
 
-    Examples <../auto_examples/dimension_reduction/index>
+.. toctree::
+
+   Diffusion Maps Examples <../auto_examples/dimension_reduction/diffusion_maps/index>
+
 

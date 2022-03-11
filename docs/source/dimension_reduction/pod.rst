@@ -14,6 +14,15 @@ POD Baseclass
 .. autoclass:: UQpy.dimension_reduction.pod.baseclass.POD
     :members: run
 
+Examples
+""""""""""
+
+.. toctree::
+
+   POD Examples <../auto_examples/dimension_reduction/pod/index>
+
+
+
 DirectPOD
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -67,6 +67,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "Model_Runs*"]
 sphinx_gallery_conf = {
     'examples_dirs': ['../code/dimension_reduction/diffusion_maps',
                       '../code/dimension_reduction/pod',
+                      '../code/dimension_reduction/grassmann',
                       '../code/distributions/continuous_1d',
                       '../code/distributions/discrete_1d',
                       '../code/distributions/multivariate',
@@ -96,6 +97,7 @@ sphinx_gallery_conf = {
                       '../code/surrogates/pce'],  # path to your example scripts,
     'gallery_dirs': ['auto_examples/dimension_reduction/diffusion_maps',
                      'auto_examples/dimension_reduction/pod',
+                     'auto_examples/dimension_reduction/grassmann',
                      'auto_examples/distributions/continuous_1d',
                      'auto_examples/distributions/discrete_1d',
                      'auto_examples/distributions/multivariate',

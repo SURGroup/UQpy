@@ -1,3 +1,10 @@
+"""
+
+Auxiliary File
+==================================
+
+
+"""
 import numpy as np
 from UQpy.dimension_reduction import Grassmann
 
