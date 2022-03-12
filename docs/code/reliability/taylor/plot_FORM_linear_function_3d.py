@@ -36,7 +36,7 @@ from UQpy.distributions import Lognormal, Gamma
 dist1 = Normal(loc=20., scale=3.5)
 dist2 = Normal(loc=5., scale=0.8)
 dist3 = Normal(loc=4., scale=0.4)
-RunModelObject3 = RunModel(model_script='pfn.py', model_object_name="example3", vec=False, ntasks=3)
+RunModelObject3 = RunModel(model_script='local_pfn.py', model_object_name="example3", vec=False, ntasks=3)
 Z0 = FORM(distributions=[dist1, dist2, dist3], runmodel_object=RunModelObject3)
 Z0.run()
 

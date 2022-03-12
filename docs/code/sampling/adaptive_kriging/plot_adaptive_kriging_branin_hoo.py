@@ -42,7 +42,7 @@ from UQpy.surrogates import Kriging
 from UQpy.sampling import MonteCarloSampling, AdaptiveKriging
 from UQpy.RunModel import RunModel
 from UQpy.distributions import Uniform
-from BraninHoo import function
+from local_BraninHoo import function
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import time
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
@@ -62,7 +62,7 @@ x = MonteCarloSampling(distributions=marginals, nsamples=20)
 
 # %%
 
-rmodel = RunModel(model_script='BraninHoo.py', vec=False)
+rmodel = RunModel(model_script='local_BraninHoo.py', vec=False)
 
 # %% md
 #

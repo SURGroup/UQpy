@@ -19,7 +19,7 @@ from UQpy.surrogates import Kriging
 from UQpy.sampling import MonteCarloSampling, AdaptiveKriging
 from UQpy.RunModel import RunModel
 from UQpy.distributions import Normal
-from series import series
+from local_series import series
 import numpy as np
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
@@ -44,7 +44,7 @@ x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
 
 # %%
 
-rmodel = RunModel(model_script='series.py', vec=False)
+rmodel = RunModel(model_script='local_series.py', vec=False)
 
 
 # %% md
@@ -153,7 +153,7 @@ class UserLearningFunction(LearningFunction):
 
 K1 = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimizer=optimizer,
              correlation_model_parameters=[1, 1], optimizations_number=10)
-rmodel1 = RunModel(model_script='series.py', vec=False)
+rmodel1 = RunModel(model_script='local_series.py', vec=False)
 
 # %% md
 #
@@ -205,7 +205,7 @@ start_time = time.time()
 
 # Code
 b = MonteCarloSampling(distributions=marginals, nsamples=10 ** 4, random_state=4)
-r1model = RunModel(model_script='series.py', vec=False)
+r1model = RunModel(model_script='local_series.py', vec=False)
 r1model.run(samples=b.samples)
 
 

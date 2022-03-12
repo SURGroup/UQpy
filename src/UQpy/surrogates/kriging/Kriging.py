@@ -19,7 +19,7 @@ class Kriging(Surrogate):
         regression_model: Regression,
         correlation_model: Correlation,
         correlation_model_parameters: list,
-        optimizer: MinimizeOptimizer,
+        optimizer,
         bounds: list = None,
         optimize: bool = True,
         optimizations_number: int = 1,

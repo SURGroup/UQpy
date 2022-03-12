@@ -5,15 +5,15 @@ Selection between regression models
 
 Here candidate models are defined as
 
-.. math:: y=f(\theta) + \epsilon
+.. math:: y=f(θ) + \epsilon
 
-where f consists in running RunModel. The three models considered are:
+where :math:`f` consists in running RunModel. The three models considered are:
 
-.. math:: f(\theta)=\theta_{0} x
+.. math:: f(θ)=θ_{0} x
 
-.. math:: f(\theta)=\theta_{0} x + \theta_{1} x^{2}
+.. math:: f(θ)=θ_{0} x + θ_{1} x^{2}
 
-.. math:: f(\theta)=\theta_{0} x + \theta_{1} x^{2} + \theta_{2} x^{3}
+.. math:: f(θ)=θ_{0} x + θ_{1} x^{2} + θ_{2} x^{3}
 
 
 """
@@ -43,7 +43,7 @@ from UQpy.inference import ComputationalModel
 param_true = np.array([1.0, 2.0]).reshape((1, -1))
 print('Shape of true parameter vector: {}'.format(param_true.shape))
 
-h_func = RunModel(model_script='pfn_models.py', model_object_name='model_quadratic', vec=False,
+h_func = RunModel(model_script='local_pfn_models.py', model_object_name='model_quadratic', vec=False,
                   var_names=['theta_0', 'theta_1'])
 h_func.run(samples=param_true)
 
@@ -54,6 +54,8 @@ noise = Normal(loc=0., scale=np.sqrt(error_covariance)).rvs(nsamples=50).reshape
 data_1 = data_clean + noise
 print('Shape of data: {}'.format(data_1.shape))
 
+shutil.rmtree(h_func.model_dir)
+
 #%% md
 #
 # Create instances of the Model class for three models: linear, quadratic and cubic
@@ -63,7 +65,7 @@ print('Shape of data: {}'.format(data_1.shape))
 names = ['linear', 'quadratic', 'cubic']
 estimators = []
 for i in range(3):
-    h_func = RunModel(model_script='pfn_models.py', model_object_name='model_' + names[i], vec=False,
+    h_func = RunModel(model_script='local_pfn_models.py', model_object_name='model_' + names[i], vec=False,
                       var_names=['theta_{}'.format(j) for j in range(i + 1)])
     M = ComputationalModel(runmodel_object=h_func, n_parameters=i + 1,
                            name=names[i], error_covariance=error_covariance)

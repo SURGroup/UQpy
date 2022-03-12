@@ -10,19 +10,16 @@ harmonic excitation with a given frequency.
 Problem Definition
 -------------------
 A stochastic single degree of freedom system having stiffness :math:`k\sim N(\mu_k,\sigma_k)` and mass
-:math:`m\sim N(\mu_m,\sigma_m)` is excited by a sinusoidal load with frequency :math:`\omega \text{rad/sec}`.
+:math:`m\sim N(\mu_m,\sigma_m)` is excited by a sinusoidal load with frequency :math:`\omega \ rad/sec`.
 The system is undamped and has equation of motion given by:
 
 .. math:: `m\ddot{u}+ku=sin(\omega t)`
 
-Resonance occurs when the natural frequency of the system :math:`\omega_n=\sqrt{\dfrac{k}{m}}=\omega\text{ rad/sec}`.
+Resonance occurs when the natural frequency of the system :math:`\omega_n=\sqrt{\dfrac{k}{m}}=\omega \ rad/sec`.
 To avoid resonance, we consider failure of the system to be associated with the natural frequency being within a
 threshold, :math:`\epsilon` of the excitation frequency $\omega$. That is, failure of the system occurs when
 :math:`\omega-\epsilon\le\sqrt{\dfrac{k}{m}}\le\omega+\epsilon`.
 
-Here, we use subset simulation to evaluate the probability of failure given by:
-
-.. math:: P\left(\omega-\epsilon\le\sqrt{\dfrac{k}{m}}\le\omega+\epsilon\right)=P\left(k-(\omega-\epsilon)^2m\le0 \cup (\omega+\epsilon)^2m-k\le 0\right)
 """
 
 # %% md
@@ -39,7 +36,7 @@ import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 import time
-from Resonance_pfn import RunPythonModel
+from local_Resonance_pfn import RunPythonModel
 from UQpy.distributions import Normal, JointIndependent, MultivariateNormal
 
 # %% md
@@ -116,7 +113,7 @@ plt.grid(True)
 plt.tight_layout()
 plt.show()
 
-model = RunModel(model_script='Resonance_pfn.py', model_object_name="RunPythonModel", ntasks=1)
+model = RunModel(model_script='local_Resonance_pfn.py', model_object_name="RunPythonModel", ntasks=1)
 
 # %% md
 #
@@ -146,7 +143,7 @@ C[0, 0] = 1
 C[1, 1] = 20 ** 2
 
 for i in range(ntrials):
-    model = RunModel(model_script='Resonance_pfn.py', model_object_name="RunPythonModel", ntasks=1)
+    model = RunModel(model_script='local_Resonance_pfn.py', model_object_name="RunPythonModel", ntasks=1)
     dist = MultivariateNormal(mean=m, cov=C)
     xx = dist.rvs(nsamples=1000, random_state=123)
     xx1 = dist.rvs(nsamples=100, random_state=123)
@@ -190,7 +187,7 @@ C[0, 0] = 1
 C[1, 1] = 20 ** 2
 
 for i in range(ntrials):
-    model = RunModel(model_script='Resonance_pfn.py', model_object_name="RunPythonModel", ntasks=1)
+    model = RunModel(model_script='local_Resonance_pfn.py', model_object_name="RunPythonModel", ntasks=1)
     dist = MultivariateNormal(mean=m, cov=C)
     xx = dist.rvs(nsamples=1000, random_state=123)
     xx1 = dist.rvs(nsamples=100, random_state=123)

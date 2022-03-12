@@ -88,7 +88,7 @@ plt.show()
 
 # %%
 
-model = RunModel(model_script='eigenvalue_model.py')
+model = RunModel(model_script='local_eigenvalue_model.py')
 model.run(samples=y.samples)
 r_srom = model.qoi_list
 

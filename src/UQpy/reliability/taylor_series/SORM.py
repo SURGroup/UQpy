@@ -15,19 +15,19 @@ class SORM(TaylorSeries):
 
     @beartype
     def __init__(
-        self,
-        form_object: FORM,
-        runmodel_object: RunModel,
-        distributions: Optional[Union[None, Distribution, list[Distribution]]] = None,
-        seed_u: np.ndarray = None,
-        seed_x: np.ndarray = None,
-        df_step: Union[float, int] = 0.01,
-        corr_x: np.ndarray = None,
-        corr_z: np.ndarray = None,
-        iterations_number: int = None,
-        tol1: Union[float, int] = None,
-        tol2: Union[float, int] = None,
-        tol3: Union[float, int] = None,
+            self,
+            form_object: FORM,
+            runmodel_object: RunModel = None,
+            distributions: Optional[Union[None, Distribution, list[Distribution]]] = None,
+            seed_u: np.ndarray = None,
+            seed_x: np.ndarray = None,
+            df_step: Union[float, int] = 0.01,
+            corr_x: np.ndarray = None,
+            corr_z: np.ndarray = None,
+            iterations_number: int = None,
+            tol1: Union[float, int] = None,
+            tol2: Union[float, int] = None,
+            tol3: Union[float, int] = None,
     ):
         """
         :class:`.SORM` is a child class of the :class:`.TaylorSeries` class. Input: The :class:`.SORM` class requires an

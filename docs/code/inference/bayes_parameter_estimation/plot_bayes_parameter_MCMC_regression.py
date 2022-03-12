@@ -5,9 +5,9 @@ Parameter estimation using MCMC - Regression Model
 
 Here a model is defined that is of the form
 
-.. math:: y=f(\theta) + \epsilon
+.. math:: y=f(θ) + \epsilon
 
-where f consists in running RunModel. In particular, here :math:`f(\theta)=\theta_{0} x + \theta_{1} x^{2}` is a
+where :math:`f` consists in running RunModel. In particular, here :math:`f(θ)=θ_{0} x + θ_{1} x^{2}` is a
 regression model.
 
 """
@@ -45,7 +45,7 @@ def pdf_from_kde(domain, samples1d):
 param_true = np.array([1.0, 2.0]).reshape((1, -1))
 print('Shape of true parameter vector: {}'.format(param_true.shape))
 
-h_func = RunModel(model_script='pfn_models.py', model_object_name='model_quadratic', vec=False,
+h_func = RunModel(model_script='local_pfn_models.py', model_object_name='model_quadratic', vec=False,
                   var_names=['theta_0', 'theta_1'])
 h_func.run(samples=param_true)
 data_clean = np.array(h_func.qoi_list[0])

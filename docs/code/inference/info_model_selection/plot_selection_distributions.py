@@ -5,9 +5,9 @@ Selection between univariate distributions
 
 Here a model is defined that is of the form
 
-.. math:: y=f(\theta) + \epsilon
+.. math:: y=f(θ) + \epsilon
 
-where f consists in running RunModel. In particular, here $f(\theta)=\theta_{0} x + \theta_{1} x^{2}$ is a regression model.
+where f consists in running RunModel. In particular, here :math:`f(θ)=θ_{0} x + θ_{1} x^{2}` is a regression model.
 
 
 """

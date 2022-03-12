@@ -67,7 +67,7 @@ plt.show()
 
 #%%
 
-rmodel = RunModel(model_script='python_model_function.py')
+rmodel = RunModel(model_script='local_python_model_function.py')
 
 #%% md
 #
@@ -75,7 +75,7 @@ rmodel = RunModel(model_script='python_model_function.py')
 
 #%%
 
-rmodel1 = RunModel(model_script='python_model_function.py')
+rmodel1 = RunModel(model_script='local_python_model_function.py')
 rmodel1.run(samples=x.samples)
 
 num = 50
@@ -83,7 +83,7 @@ x1 = np.linspace(0, 1, num)
 x2 = np.linspace(0, 1, num)
 x1v, x2v = np.meshgrid(x1, x2)
 y_act = np.zeros([num, num])
-r1 = RunModel(model_script='python_model_function.py')
+r1 = RunModel(model_script='local_python_model_function.py')
 for i in range(num):
     for j in range(num):
         r1.run(samples=np.array([[x1v[i, j], x2v[i, j]]]))

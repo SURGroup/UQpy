@@ -1,193 +1,192 @@
 """
 
-Monte Carlo Sampling
+Monte Carlo sampling with UQpy
 ==================================
-
-This example shows the use of the Monte Carlo sampling class. In particular:
 """
 
-#%% md
+# %% md
 #
-# - How to define the Monte Carlo sampling method supported by UQpy
-# - How to append new samples to the existing ones
-# - How to transform existing samples to the unit hypercube
-# - How to plot histograms for each one of the sampled parameters and 2D scatter of the produced samples
-
-#%%
-
-#%% md
+# We'll be using UQpy's Monte Carlo sampling functionalities. We also use Matplotlib to display results graphically.
 #
-# Initially we have to import the necessary modules.
+# Additionally, this demonstration opts to use Numpy's random state management to ensure that results are reproducible
+# between notebook runs.
 
-#%%
+# %%
 
 from UQpy.sampling import MonteCarloSampling
-from UQpy.distributions.collection.Normal import Normal
-import numpy as np
 import matplotlib.pyplot as plt
 
-#%% md
+from numpy.random import RandomState
+
+# %% md
 #
-# Define Monte Carlo sampling
-# ----------------------------------------------
-# In order to define a Monte Carlo sampling object, the user has to define a distribution for each one of the parameters
-# that need sampling. These distributions form a list that is provided to initializer and is the only necessary
-# argument. Two optional arguments also exist and are the *nsamples* and the a *random_state*. *nsamples* corresponds to
-# the number of samples that must be drawn using the sampling method. If *nsamples* is defined at the initializer,
-# sampling is automatically performed, otherwise no samples are drawn. *random_state* is a seed used as a starting point
-# for the random number generator.
+# Step-by-step: continuous univariate distribution
+# -------------------------------------------------
+# First, we import UQpy's normal distribution class.
 
+# %%
+from UQpy.distributions import Normal
 
-#%%
-
-dist1 = Normal(loc=0., scale=1.)
-dist2 = Normal(loc=0., scale=1.)
-
-x = MonteCarloSampling(distributions=[dist1, dist2], nsamples=5,
-                       random_state=np.random.RandomState(123))
-
-#%% md
+# %% md
 #
-# Add new samples to existing sampling object
-# ----------------------------------------------
-# Since we have already sampled 5 points by defining *nsamples* at the initializer, we can append new samples to the
-# monte carlo object by using the run method. This method draws and appends samples to existing ones, while allowing the
-# *random_state* to change.
+# We'll start by constructing two identical standard normal distributions :code:`normal1` and :code:`normal2`
+
+# %%
+
+normal1 = normal2 = Normal()
+
+# %% md
 #
-# Note that all samples drawn do not belong to the unit hypercube space. Even though the *samplesU01* attributes exists,
-# it will initially be None. To transform the samples and at the same time populate the attribute, the user need to call
-# the *transform_u01()* function.
-
-#%%
-
-print(x.samples)
-
-x.run(nsamples=2, random_state=np.random.RandomState(23))
-print(x.samples)
-
-x.transform_u01()
-print(x.samplesU01)
-
-#%% md
+# Next, we'll construct a :code:`MonteCarloSampling` object :code:`mc` to generate random samples following those
+# distributions. Here, we specify an optional initial number of samples, :code:`nsamples` to be generated at the
+# object's construction. For teh purposes of this demonstration, we also supply a random seed :code:`random_state`.
 #
-# Plot the samples
-# ------------------------------------
+# We access the generated samples via the :code:`samples` attribute.
+
+# %%
+
+mc = MonteCarloSampling(distributions=[normal1, normal2],
+                        nsamples=5,
+                        random_state=RandomState(123))
+
+mc.samples
+
+# %% md
 #
-# The samples generated using the MonteCarlo method can be retrieved using the *samples* attribute. Ths attribute is
-# a numpy.ndarray.
+# To generate more samples on :code:`mc` after construction, we call :code:`mc.run` and once again specify
+# :code:`nsamples`.
 
-#%%
+# %%
 
-# plot the samples
-fig, ax = plt.subplots()
-plt.title('MC sampling')
-plt.scatter(x.samples[:, 0], x.samples[:, 1], marker='o')
-ax.yaxis.grid(True)
-ax.xaxis.grid(True)
-plt.show()
+mc.run(nsamples=2, random_state=RandomState(23))
 
-fig, ax = plt.subplots()
-plt.title('Histogram:parameter #1')
-plt.hist(x.samples[:, 0])
-ax.yaxis.grid(True)
-ax.xaxis.grid(True)
+mc.samples
+
+# %% md
+#
+# We can transform the samples onto the unit hypercube via applying the probability integral transformation on the
+# samples to yield similar samples from the uniform distribution. We call :code:`mc.transform_u01`, from which results
+# are stored in the :code:`samplesU01` attribute.
+
+# %%
+
+mc.transform_u01()
+
+mc.samplesU01
+
+# %% md
+#
+# We can visualize the (untransformed) samples by plotting them on axes of each distribution's range.
+
+# %%
 
 fig, ax = plt.subplots()
-plt.title('Histogram:parameter #2')
-plt.hist(x.samples[:, 1])
+plt.title('Samples')
+
+plt.scatter(x=mc.samples[:, 0],
+            y=mc.samples[:, 1],
+            marker='o')
+
+plt.setp(ax, xlim=(-1.7, 1.7), ylim=(-2.6, 2.6))
 ax.yaxis.grid(True)
 ax.xaxis.grid(True)
-plt.show()
 
-#%% md
+# %% md
 #
-# Use the MCS.run method in order to add 2 samples in the existing ones.
+# As well, we can visualize each distribution's sample densities via histograms.
 
-#%%
+# %%
 
-x.run(nsamples=2)
-print()
-print('MCS extended samples:')
-print(x.samples)
+fig, ax = plt.subplots(1, 2)
 
-# Use the MCS.transform_u01 method in order transform the samples to the Uniform [0,1] space.
-x.transform_u01()
-print()
-print('MCS transformed samples:')
-print(x.samplesU01)
+for i in (0, 1):
+    ax[i].set_title('Distribution ' + str(i + 1))
+    ax[i].hist(mc.samples[:, i])
+    ax[i].yaxis.grid(True)
+    ax[i].xaxis.grid(True)
 
-#%% md
+plt.setp(ax, xlim=(-3, 3), ylim=(0, 2));
+
+# %% md
 #
-# We are going to run MCS for a multivariate normal distribution random variables.
+# Additional Examples
+# -------------------------------------------------
+# Continuous multivariate distribution
+# """"""""""""""""""""""""""""""""""""""""
+# We'll use UQpy's multivariate normal class.
 
-#%%
+# %%
 
 from UQpy.distributions import MultivariateNormal
-dist = MultivariateNormal(mean=[1., 2.], cov=[[4., -0.9], [-0.9, 1.]])
 
-x1 = MonteCarloSampling(distributions=dist, nsamples=5, random_state=np.random.RandomState(456))
-print()
-print(x1.samples)
-
-# plot the samples
-fig, ax = plt.subplots()
-plt.title('MC sampling')
-plt.scatter(x1.samples[:, 0], x1.samples[:, 1], marker='o')
-ax.yaxis.grid(True)
-ax.xaxis.grid(True)
-plt.show()
-
-# Use the MCS.run method in order to add 2 samples in the existing ones.
-x1.run(nsamples=2)
-print()
-print('MCS extended samples:', x1.samples)
-
-#%% md
+# %% md
 #
-# Use the MCS.transform_u01 method in order transform the samples to the Uniform [0,1] space.
-# However, in order to use this method all distributions need to have a ``cdf`` method.
-# For example, in this case the MVNormal distribution does not have a ``cdf`` method so the code
-# will give an error.
+# And we construct a multivariate normal distribution :code:`mvnormal` specifying parameters :code:`mean` with a vector
+# of mean values and :code:`cov` with a covariance matrix.
 
-#%%
+# %%
 
-x1.transform_u01()
+mvnormal = MultivariateNormal(mean=[1, 2],
+                              cov=[[4, -0.9],
+                                   [-0.9, 1]])
 
-
-#%% md
+# %% md
 #
-# We are going to run MCS for a multivariate normal distribution and a standard normal distribution.
+# With this distribution, we construct a :code:`MonteCarloSampling` object :code:`mvmc` and generate five samples on
+# construction.
 
-#%%
+# %%
 
-x2 = MonteCarloSampling(distributions=[dist1, dist], nsamples=5, random_state=np.random.RandomState(789))
-print()
-print('MCS samples:', x2.samples)
+mvmc = MonteCarloSampling(distributions=mvnormal,
+                          nsamples=5,
+                          random_state=RandomState(456))
 
-print(len(x2.samples))
-print(len(x2.samples[0]))
+mvmc.samples
 
-# Extract samples for the multivariate distribution
-samples = np.zeros(shape=(len(x2.samples), len(x2.samples[1])))
-for i in range(len(x2.samples)):
-    samples[i, :] = x2.samples[i][1]
-print()
-print('MVNormal samples:', samples)
-
-# Use the MCS.run method in order to add 2 samples in the existing ones.
-x2.run(nsamples=2)
-print()
-print('MCS extended samples:', x2.samples)
-
-#%% md
+# %% md
 #
-# Draw samples from a continuous and discrete distribution
+# Mixing a multivariate and a univariate continuous distribution
+# """"""""""""""""""""""""""""""""""""""""
+# Here, we use one of our normal distributions and our multivariate normal distribution. Notice how each distribution
+# has its own bundle (array) of samples per run of sampling—even when that bundle contains a single value.
 
-#%%
+# %%
+
+mixedmc = MonteCarloSampling(distributions=[normal1, mvnormal],
+                             nsamples=5,
+                             random_state=RandomState(789))
+
+mixedmc.samples
+
+# %% md
+#
+# Mixing a continuous and a discrete distribution
+# """""""""""""""""""""""""""""""""""""""""""""""""
+# We'll use UQpy's binomial distribution class for our discrete distribution.
+
+# %%
+
 
 from UQpy.distributions import Binomial
-dist3 = Binomial(n=5, p=0.4)
-x3 = MonteCarloSampling(distributions=[dist1, dist3], nsamples=5)
 
-print()
-print('MCS samples:', x3.samples)
+# %% md
+#
+# With that, we'll construct a :code:`binomial` distribution binomial with five trials :code:`n` and a 40% probability
+# :code:`p` of success per trial.
+
+# %%
+
+binomial = Binomial(n=5, p=0.4)
+
+# %% md
+#
+# And we construct a :code:`MonteCarloSampling` object :code:`cdmv` with five initial samples using our binomial
+# distribution and one of our normal distributions.
+
+# %%
+
+cdmv = MonteCarloSampling(distributions=[binomial, normal1],
+                          nsamples=5,
+                          random_state=RandomState(333))
+
+cdmv.samples

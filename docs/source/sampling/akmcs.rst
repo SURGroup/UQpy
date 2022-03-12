@@ -29,7 +29,7 @@ Attributes
 
 
 Examples
-~~~~~~~~~~~~~~~~~~
+"""""""""""
 
 .. toctree::
 

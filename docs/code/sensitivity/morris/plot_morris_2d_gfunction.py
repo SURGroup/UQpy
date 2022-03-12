@@ -29,7 +29,7 @@ na = len(a_values)
 
 var_names = ['X{}'.format(i) for i in range(na)]
 runmodel_object = RunModel(
-    model_script='pfn.py', model_object_name='gfun_sensitivity', var_names=var_names, vec=True,
+    model_script='local_pfn.py', model_object_name='gfun_sensitivity', var_names=var_names, vec=True,
     a_values=a_values)
 
 dist_object = [Uniform(), ] * na

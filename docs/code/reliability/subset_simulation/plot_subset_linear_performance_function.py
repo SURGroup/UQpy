@@ -4,8 +4,11 @@ Correlated Normal Random Variables with a Linear Performance Function
 ======================================================================
 
 This example runs subset simulation for a linear performance function having a specified reliability index
-:math:`\beta` and standard normal random variables with specified correlation using the affine invariate ensemble
-"stretch" sampler and the conventional Modified Metropolis Hastings algorithm. For more details, refer to:
+:math:`β` and standard normal random variables with specified correlation using the affine invariate ensemble
+"stretch" sampler and the conventional Modified Metropolis Hastings algorithm.
+
+For more details, refer to:
+
 - Shields, M.D. and Giovanis, D.G. and Sundar, V.S. "Subset Simulation for problems with strongly non-Gaussian, highly anisotropic, and degenerate distributions," Computers and Structures. (In Review)
 """
 
@@ -67,7 +70,7 @@ pf = np.zeros((ntrials, 1))
 cov1 = np.zeros((ntrials, 1))
 cov2 = np.zeros((ntrials, 1))
 for i in range(ntrials):
-    model = RunModel(model_script='pfn.py', model_object_name="RunPythonModel", ntasks=1, b_eff=beff, d=dim)
+    model = RunModel(model_script='local_pfn.py', model_object_name="RunPythonModel", ntasks=1, b_eff=beff, d=dim)
     dist = MultivariateNormal(mean=np.zeros((dim)), cov=C)
     x = dist.rvs(nsamples=1000, random_state=349857)
     sampling = ModifiedMetropolisHastings(dimension=dim, log_pdf_target=dist.log_pdf,
@@ -104,10 +107,11 @@ print(np.mean(cov2))
 # 5. Plot histograms of the failure probabilities and the reliability indices from subset simulation.
 
 # %%
-
+plt.figure()
 plt.hist(pf)
 plt.show()
 
+plt.figure()
 beta = -stats.norm.ppf(pf)
 plt.hist(beta)
 plt.show()
@@ -122,7 +126,7 @@ pf = np.zeros((ntrials, 1))
 cov1 = np.zeros((ntrials, 1))
 cov2 = np.zeros((ntrials, 1))
 for i in range(ntrials):
-    model = RunModel(model_script='pfn.py', model_object_name="RunPythonModel", ntasks=1, b_eff=beff, d=dim)
+    model = RunModel(model_script='local_pfn.py', model_object_name="RunPythonModel", ntasks=1, b_eff=beff, d=dim)
     dist = MultivariateNormal(mean=np.zeros((dim)), cov=C)
     x = dist.rvs(nsamples=1000, random_state=349857)
     sampling = Stretch(dimension=dim, log_pdf_target=dist.log_pdf, n_chains=100, random_state=342985)
@@ -158,10 +162,11 @@ print(np.mean(cov2))
 # 8. Plot histograms of the failure probabilities and the reliability indices from subset simulation.
 
 # %%
-
+plt.figure()
 plt.hist(pf)
 plt.show()
 
+plt.figure()
 beta = -stats.norm.ppf(pf)
 plt.hist(beta)
 plt.show()

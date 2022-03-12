@@ -36,7 +36,7 @@ from UQpy.RunModel import RunModel
 param_true = np.array([1.0, 2.0]).reshape((1, -1))
 print('Shape of true parameter vector: {}'.format(param_true.shape))
 
-h_func = RunModel(model_script='pfn_models.py', model_object_name='model_quadratic', vec=False,
+h_func = RunModel(model_script='local_pfn_models.py', model_object_name='model_quadratic', vec=False,
                   var_names=['theta_0', 'theta_1'])
 h_func.run(samples=param_true)
 

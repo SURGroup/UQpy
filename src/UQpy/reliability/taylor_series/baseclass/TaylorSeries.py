@@ -14,7 +14,8 @@ class TaylorSeries:
     def __init__(
         self,
         distributions: Union[None, Distribution, list[Distribution]] = None,
-        runmodel_object: RunModel=None,
+        runmodel_object: Union[None, RunModel] = None,
+        form_object=None,
         corr_x: Union[list, None, np.ndarray] = None,
         corr_z: Union[list, None, np.ndarray] = None,
         seed_x: Union[list, None, np.ndarray] = None,

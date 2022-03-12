@@ -19,7 +19,7 @@ class MLE:
             inference_model: InferenceModel,
             data: Union[list, np.ndarray],
             n_optimizations: Union[None, int] = 1,
-            initial_parameters: np.ndarray = None,
+            initial_parameters: Union[list, np.ndarray, None] = None,
             optimizer=MinimizeOptimizer(),
             random_state: RandomStateType = None,
     ):
@@ -63,7 +63,7 @@ class MLE:
             self.run(n_optimizations=n_optimizations, initial_parameters=initial_parameters)
 
     @beartype
-    def run(self, n_optimizations: Union[None, int] = 1, initial_parameters: np.ndarray = None):
+    def run(self, n_optimizations: Union[None, int] = 1, initial_parameters: Union[list, np.ndarray, None] = None):
         """
         Run the maximum likelihood estimation procedure.
 

@@ -35,7 +35,7 @@ from UQpy.reliability import FORM, SORM
 from UQpy.reliability import SORM
 from UQpy.distributions import Lognormal, Gamma
 
-RunModelObject = RunModel(model_script='pfn.py', model_object_name="example1", vec=False, ntasks=3)
+RunModelObject = RunModel(model_script='local_pfn.py', model_object_name="example1", vec=False, ntasks=3)
 dist1 = Normal(loc=200., scale=20.)
 dist2 = Normal(loc=150, scale=10.)
 Q = FORM(distributions=[dist1, dist2], runmodel_object=RunModelObject, tol1=1e-5, tol2=1e-5)

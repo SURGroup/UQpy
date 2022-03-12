@@ -58,7 +58,7 @@ x = TrueStratifiedSampling(distributions=marginals, strata_object=strata,
 
 # %%
 
-rmodel = RunModel(model_script='python_model_1Dfunction.py', delete_files=True)
+rmodel = RunModel(model_script='local_python_model_1Dfunction.py', delete_files=True)
 rmodel.run(samples=x.samples)
 
 

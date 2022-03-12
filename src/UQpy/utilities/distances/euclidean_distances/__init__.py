@@ -9,7 +9,7 @@ from UQpy.utilities.distances.euclidean_distances.EuclideanDistance import Eucli
 from UQpy.utilities.distances.euclidean_distances.HammingDistance import HammingDistance
 from UQpy.utilities.distances.euclidean_distances.JaccardDistance import JaccardDistance
 from UQpy.utilities.distances.euclidean_distances.JensenShannonDistance import JensenShannonDistance
-from UQpy.utilities.distances.euclidean_distances.KulczynskiDistance import Kulczynski1Distance
+from UQpy.utilities.distances.euclidean_distances.KulczynskiDistance import KulczynskiDistance
 from UQpy.utilities.distances.euclidean_distances.KulsinkiDistance import KulsinksiDistance
 from UQpy.utilities.distances.euclidean_distances.MahalanobisDistance import MahalanobisDistance
 from UQpy.utilities.distances.euclidean_distances.MatchingDistance import MatchingDistance

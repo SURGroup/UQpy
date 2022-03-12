@@ -26,6 +26,7 @@ from UQpy.distributions.collection.Binomial import Binomial
 #
 # Example of a 1D discrete distribution
 # --------------------------------------
+#
 # Define a univariate binomial distribution.
 # By using the __bases__ attribute we can verify that the Binomial distribution extends the DistributionDiscrete1D
 # baseclass, while in order to define the Binomial distribution, two parameters are required, namely, *n* and *p*.
@@ -39,7 +40,7 @@ dist = Binomial(n=5, p=0.4)
 #%% md
 #
 # Print the mean, standard deviation, skewness, and kurtosis of the distribution.
-# -------------------------------------------------------------------------------_
+# -------------------------------------------------------------------------------
 # Using the moments method existing in all univariate distributions, the user can retrieve the available
 # moments. The order in which the moments are extracted can be seen in the moments_list variable.
 

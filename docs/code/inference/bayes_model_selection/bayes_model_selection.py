@@ -7,31 +7,16 @@ In the following we present an example for which the posterior pdf of the parame
 can be computed analytically. We drop the :math:`m_{j}` subscript when referring to model parameters for simplicity. Three
 models are considered (the domain :math:`x` is fixed and consists in 50 equally spaced points):
 
-.. math:: m_{linear}: \quad y = \theta_{0} x + \epsilon
+.. math:: m_{linear}: \quad y = θ_{0} x + \epsilon
 
-.. math:: m_{quadratic}: \quad y = \theta_{0} x + \theta_{1} x^2 + \epsilon
+.. math:: m_{quadratic}: \quad y = θ_{0} x + θ_{1} x^2 + \epsilon
 
-.. math:: m_{cubic}: \quad y = \theta_{0} x + \theta_{1} x^2+ \theta_{2} x^3 + \epsilon
+.. math:: m_{cubic}: \quad y = θ_{0} x + θ_{1} x^2+ θ_{2} x^3 + \epsilon
 
-All three models can be written in a compact form as :math:`y=X \theta + \epsilon`, where :math:`X` contains the
-necessary powers of :math`x`. For all three models, the prior is chosen to be Gaussian,
-:math:`p(\theta) = N(\cdot, \theta_{prior}, \Sigma_{prior})`, and so is the noise
-:math:`\epsilon \sim N(\cdot; 0, \sigma_{n}^{2} I)`. Then the posterior of the parameters can be
-computed analytically as:
-
-.. math:: p(\theta \vert D={x,y}) =  N(\cdot; \theta_{post}(D), \Sigma_{post}(D))
-
-.. math:: \theta_{post}(D) = \left( \frac{1}{\sigma_{n}^{2}}X^{T}X + \Sigma_{prior}^{-1} \right)^{-1} \left(\frac{1}{\sigma_{n}^{2}}X^{T}y+\Sigma^{-1}\theta_{prior} \right)
-
-.. math:: \Sigma_{post}(D) = \left( \frac{1}{\sigma_{n}^{2}}X^{T}X + \Sigma_{prior}^{-1} \right)^{-1}
-
-Then the evidence of each model can be computed as
-
-.. math:: p(D) = \frac{p(D \vert \theta)p(\theta)}{p(\theta \vert D)}
-
-where :math:`p(D \vert \theta) = N(\cdot; X\theta, \sigma_{n}^{2} I)`, :math:`p(\theta) = N(\cdot, \theta_{prior}, \Sigma_{prior})`
-and :math:`p(\theta \vert D) = N(\cdot, \theta_{post}(D), \Sigma_{post}(D))`. This formula can be computed at any point :math:`\theta`.
-
+All three models can be written in a compact form as :math:`y=X θ + \epsilon`, where :math:`X` contains the
+necessary powers of :math:`x`. For all three models, the prior is chosen to be Gaussian,
+:math:`p(θ) = N(\cdot, θ_{prior}, \Sigma_{prior})`, and so is the noise
+:math:`\epsilon \sim N(\cdot; 0, \sigma_{n}^{2} I)`.
 """
 
 #%% md
@@ -61,7 +46,7 @@ var_n = 1
 error_covariance = var_n * np.eye(50)
 print(param_true.shape)
 
-z = RunModel(samples=param_true, model_script='pfn_models.py', model_object_name='model_quadratic', vec=False,
+z = RunModel(samples=param_true, model_script='local_pfn_models.py', model_object_name='model_quadratic', vec=False,
              var_names=['theta_1', 'theta_2'])
 data_clean = z.qoi_list[0].reshape((-1,))
 data = data_clean + Normal(scale=np.sqrt(var_n)).rvs(nsamples=data_clean.size, random_state=456).reshape((-1,))
@@ -129,7 +114,7 @@ print(model_posterior_probas)
 
 candidate_models = []
 for n, model_name in enumerate(model_names):
-    run_model = RunModel(model_script='pfn_models.py', model_object_name=model_name, vec=False)
+    run_model = RunModel(model_script='local_pfn_models.py', model_object_name=model_name, vec=False)
     prior = JointIndependent([Normal(loc=m, scale=std) for m, std in
                               zip(model_prior_means[n], model_prior_stds[n])])
     model = ComputationalModel(n_parameters=model_n_params[n],

@@ -136,7 +136,8 @@ sphinx_gallery_conf = {
         'notebooks_dir': 'notebooks',
         'use_jupyter_lab': True
         # Jupyter notebooks for Binder will be copied to this directory (relative to built documentation root).
-    }
+    },
+    'ignore_pattern': '/local_',
 }
 
 # -- Options for HTML output -------------------------------------------------

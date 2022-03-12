@@ -35,7 +35,7 @@ import matplotlib.pyplot as plt
 
 var_names = ['X{}'.format(i) for i in range(5)]
 runmodel_object = RunModel(
-    model_script='pfn.py', model_object_name='fun2_sensitivity', var_names=var_names, vec=True)
+    model_script='local_pfn.py', model_object_name='fun2_sensitivity', var_names=var_names, vec=True)
 
 dist_object = [Uniform(), ] * 5
 

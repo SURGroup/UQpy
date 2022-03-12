@@ -3,12 +3,24 @@
 Diagnostics for Importance Sampling
 ============================================
 
-This notebook illustrates the use of some simple diagnostics for Importance Sampling. For IS, in extreme settings only a few samples may have a significant weight, yielding poor approximations of the target pdf $p(x)$. A popular diagnostics is the Effective Sample Size (ESS), which is theoretically defined as the number of independent samples generated directly form the target distribution that are required to obtain an estimator with same variance as the one obtained from IS. Heuristically, ESS approximates how many i.i.d. samples, drawn from the target, are equivalent to $N$ weighted samples drawn from the IS or MCMC approximation. An approximation of the ESS is given by [1]:
-$$ ESS = \frac{1}{\sum \tilde{w}^2} $$
-where $\tilde{w}$ are the normalized weights.
-
-[1] *Sequential Monte Carlo Methods in Practice*, A. Doucet, N. de Freitas, and N. Gordon, 2001, Springer, New York
 """
+
+#%%
+#
+# This notebook illustrates the use of some simple diagnostics for Importance Sampling. For IS, in extreme settings
+# only a few samples may have a significant weight, yielding poor approximations of the target pdf :math:`p(x)`. A popular
+# diagnostics is the Effective Sample Size (ESS), which is theoretically defined as the number of independent samples
+# generated directly form the target distribution that are required to obtain an estimator with same variance as the
+# one obtained from IS. Heuristically, ESS approximates how many i.i.d. samples, drawn from the target, are equivalent
+# to :math:`N` weighted samples drawn from the IS or MCMC approximation.
+#
+# An approximation of the ESS is given by [1]:
+#
+# .. math::  ESS = \frac{1}{\sum \tilde{w}^2}
+#
+# where :math:`\tilde{w}` are the normalized weights.
+#
+# [1] *Sequential Monte Carlo Methods in Practice*, A. Doucet, N. de Freitas, and N. Gordon, 2001, Springer, New York
 
 from UQpy.distributions import Uniform, JointIndependent
 from UQpy.sampling import ImportanceSampling
