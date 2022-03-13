@@ -52,20 +52,24 @@ class LatinHypercubeSampling(StratifiedSampling):
         self.criterion = criterion
         self.nsamples = nsamples
         self.logger = logging.getLogger(__name__)
-        self.samples: NumpyFloatArray = None
-        """ The generated LHS samples."""
+        self._samples: NumpyFloatArray = None
         if isinstance(self.distributions, list):
-            self.samples = np.zeros([self.nsamples, len(self.distributions)])
+            self._samples = np.zeros([self.nsamples, len(self.distributions)])
         elif isinstance(self.distributions, DistributionContinuous1D):
-            self.samples = np.zeros([self.nsamples, 1])
+            self._samples = np.zeros([self.nsamples, 1])
         elif isinstance(self.distributions, JointIndependent):
-            self.samples = np.zeros([self.nsamples, len(self.distributions.marginals)])
+            self._samples = np.zeros([self.nsamples, len(self.distributions.marginals)])
 
-        self.samplesU01: NumpyFloatArray = np.zeros_like(self.samples)
+        self.samplesU01: NumpyFloatArray = np.zeros_like(self._samples)
         """The generated LHS samples on the unit hypercube."""
 
         if self.nsamples is not None:
             self.run(self.nsamples)
+
+    @property
+    def samples(self):
+        """ The generated LHS samples."""
+        return np.atleast_2d(self._samples)
 
     @beartype
     def run(self, nsamples: PositiveInteger):
@@ -86,7 +90,7 @@ class LatinHypercubeSampling(StratifiedSampling):
         """
         self.nsamples = nsamples
         self.logger.info("UQpy: Running Latin Hypercube sampling...")
-        self.criterion.create_bins(self.samples, self.random_state)
+        self.criterion.create_bins(self._samples, self.random_state)
 
         u_lhs = self.criterion.generate_samples(self.random_state)
         self.samplesU01 = u_lhs
@@ -94,15 +98,15 @@ class LatinHypercubeSampling(StratifiedSampling):
         if isinstance(self.distributions, list):
             for j in range(len(self.distributions)):
                 if hasattr(self.distributions[j], "icdf"):
-                    self.samples[:, j] = self.distributions[j].icdf(u_lhs[:, j])
+                    self._samples[:, j] = self.distributions[j].icdf(u_lhs[:, j])
 
         elif isinstance(self.distributions, JointIndependent):
             if all(hasattr(m, "icdf") for m in self.distributions.marginals):
                 for j in range(len(self.distributions.marginals)):
-                    self.samples[:, j] = self.distributions.marginals[j].icdf(u_lhs[:, j])
+                    self._samples[:, j] = self.distributions.marginals[j].icdf(u_lhs[:, j])
 
         elif isinstance(self.distributions, DistributionContinuous1D):
             if hasattr(self.distributions, "icdf"):
-                self.samples = self.distributions.icdf(u_lhs)
+                self._samples = self.distributions.icdf(u_lhs)
 
         self.logger.info("Successful execution of LHS design.")

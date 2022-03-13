@@ -73,7 +73,7 @@ dist2 = Uniform(loc=0., scale=1.)
 
 lhs_user_defined = LatinHypercubeSampling(distributions=[dist1, dist2], nsamples=5,
                                           criterion=UserCriterion())
-print(lhs_user_defined.samples)
+print(lhs_user_defined._samples)
 
 # %% md
 #
@@ -88,7 +88,7 @@ print(lhs_user_defined.samples)
 # plot the samples
 fig, ax = plt.subplots()
 plt.title('LHS sampling - User Criterion')
-plt.scatter(lhs_user_defined.samples[:, 0], lhs_user_defined.samples[:, 1], marker='o')
+plt.scatter(lhs_user_defined._samples[:, 0], lhs_user_defined._samples[:, 1], marker='o')
 ax.yaxis.grid(True)
 ax.xaxis.grid(True)
 plt.ylim(0, 1)

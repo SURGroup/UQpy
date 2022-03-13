@@ -172,7 +172,7 @@ class AdaptiveKriging:
                     nsamples=2,
                     criterion=random_criterion,
                     random_state=self.random_state)
-                self.samples = latin_hypercube_sampling.samples
+                self.samples = latin_hypercube_sampling._samples
                 self.runmodel_object.run(samples=self.samples)
 
         self.logger.info("UQpy: Performing AK-MCS design...")
@@ -199,7 +199,7 @@ class AdaptiveKriging:
                 criterion=random_criterion,
             )
 
-            self.learning_set = lhs.samples.copy()
+            self.learning_set = lhs._samples.copy()
 
             # Find all of the points in the population that have not already been integrated into the training set
             rest_pop = np.array([x for x in self.learning_set.tolist() if x not in self.samples.tolist()])

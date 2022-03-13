@@ -77,7 +77,7 @@ lhs_mincorrelate = LatinHypercubeSampling(distributions=[dist1, dist2],
 fig, axs = plt.subplots(2, 2)
 fig.subplots_adjust(hspace=0.5)
 axs[0, 0].set_title('Random-LHS design')
-axs[0, 0].scatter(lhs_random.samples[:, 0], lhs_random.samples[:, 1])
+axs[0, 0].scatter(lhs_random._samples[:, 0], lhs_random._samples[:, 1])
 axs[0, 0].set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
 axs[0, 0].set_xticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
 axs[0, 0].yaxis.grid(True)
@@ -85,7 +85,7 @@ axs[0, 0].xaxis.grid(True)
 
 
 axs[0, 1].set_title('Centered-LHS design')
-axs[0, 1].scatter(lhs_centered.samples[:, 0], lhs_centered.samples[:, 1])
+axs[0, 1].scatter(lhs_centered._samples[:, 0], lhs_centered._samples[:, 1])
 axs[0, 1].set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
 axs[0, 1].set_xticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
 axs[0, 1].yaxis.grid(True)
@@ -93,7 +93,7 @@ axs[0, 1].xaxis.grid(True)
 
 
 axs[1, 0].set_title('Maximin-LHS design')
-axs[1, 0].scatter(lhs_maximin.samples[:, 0], lhs_maximin.samples[:, 1])
+axs[1, 0].scatter(lhs_maximin._samples[:, 0], lhs_maximin._samples[:, 1])
 axs[1, 0].set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
 axs[1, 0].set_xticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
 axs[1, 0].yaxis.grid(True)
@@ -101,7 +101,7 @@ axs[1, 0].xaxis.grid(True)
 
 
 axs[1, 1].set_title('MinCorrelation-LHS design')
-axs[1, 1].scatter(lhs_random.samples[:, 0], lhs_random.samples[:, 1])
+axs[1, 1].scatter(lhs_random._samples[:, 0], lhs_random._samples[:, 1])
 axs[1, 1].set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
 axs[1, 1].set_xticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
 axs[1, 1].yaxis.grid(True)

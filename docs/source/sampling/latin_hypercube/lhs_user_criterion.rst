@@ -23,6 +23,78 @@ The :class:`.Criterion` class is imported using the following command:
 An example of a user-defined criterion is given below:
 
 
+    >>> class UserCriterion(Criterion):
+    >>>
+    >>>     def __init__(self):
+    >>>         super().__init__()
+    >>>
+    >>>     def generate_samples(self, random_state):
+    >>>         lhs_samples = np.zeros_like(self.samples)
+    >>>         samples_number = len(self._samples)
+    >>>         for j in range(self.samples.shape[1]):
+    >>>             if random_state is not None:
+    >>>                 order = random_state.permutation(samples_number)
+    >>>             else:
+    >>>                 order = np.random.permutation(samples_number)
+    >>>             lhs_samples[:, j] = self.samples[order, j]
+    >>>
+    >>>         return lhs_samplesAn example of a user-defined criterion is given below:
+
+
+    >>> class UserCriterion(Criterion):
+    >>>
+    >>>     def __init__(self):
+    >>>         super().__init__()
+    >>>
+    >>>     def generate_samples(self, random_state):
+    >>>         lhs_samples = np.zeros_like(self.samples)
+    >>>         samples_number = len(self._samples)
+    >>>         for j in range(self.samples.shape[1]):
+    >>>             if random_state is not None:
+    >>>                 order = random_state.permutation(samples_number)
+    >>>             else:
+    >>>                 order = np.random.permutation(samples_number)
+    >>>             lhs_samples[:, j] = self.samples[order, j]
+    >>>
+    >>>         return lhs_samplesAn example of a user-defined criterion is given below:
+
+
+    >>> class UserCriterion(Criterion):
+    >>>
+    >>>     def __init__(self):
+    >>>         super().__init__()
+    >>>
+    >>>     def generate_samples(self, random_state):
+    >>>         lhs_samples = np.zeros_like(self._samples)
+    >>>         samples_number = len(self._samples)
+    >>>         for j in range(self.samples.shape[1]):
+    >>>             if random_state is not None:
+    >>>                 order = random_state.permutation(samples_number)
+    >>>             else:
+    >>>                 order = np.random.permutation(samples_number)
+    >>>             lhs_samples[:, j] = self.samples[order, j]
+    >>>
+    >>>         return lhs_samplesAn example of a user-defined criterion is given below:
+
+
+    >>> class UserCriterion(Criterion):
+    >>>
+    >>>     def __init__(self):
+    >>>         super().__init__()
+    >>>
+    >>>     def generate_samples(self, random_state):
+    >>>         lhs_samples = np.zeros_like(self._samples)
+    >>>         samples_number = len(self._samples)
+    >>>         for j in range(self.samples.shape[1]):
+    >>>             if random_state is not None:
+    >>>                 order = random_state.permutation(samples_number)
+    >>>             else:
+    >>>                 order = np.random.permutation(samples_number)
+    >>>             lhs_samples[:, j] = self.samples[order, j]
+    >>>
+    >>>         return lhs_samplesAn example of a user-defined criterion is given below:
+
+
 >>> class UserCriterion(Criterion):
 >>>
 >>>     def __init__(self):

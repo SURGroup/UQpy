@@ -13,7 +13,7 @@ def test_lhs_random_criterion():
     latin_hypercube_sampling = \
         LatinHypercubeSampling(distributions=distribution, nsamples=2,
                                criterion=random_criterion, random_state=1)
-    actual_samples = latin_hypercube_sampling.samples.flatten()
+    actual_samples = latin_hypercube_sampling._samples.flatten()
     expected_samples = np.array([[1.208511], [1.86016225]]).flatten()
     np.testing.assert_allclose(expected_samples, actual_samples, rtol=1e-6)
 
@@ -23,7 +23,7 @@ def test_lhs_centered_criterion():
     latin_hypercube_sampling = \
         LatinHypercubeSampling(distributions=distribution, nsamples=2,
                                criterion=centered_criterion, random_state=1)
-    actual_samples = latin_hypercube_sampling.samples.flatten()
+    actual_samples = latin_hypercube_sampling._samples.flatten()
     expected_samples = np.array([[1.25], [1.75]]).flatten()
     np.testing.assert_allclose(expected_samples, actual_samples, rtol=1e-6)
 
@@ -33,7 +33,7 @@ def test_lhs_maximin_criterion():
     latin_hypercube_sampling = \
         LatinHypercubeSampling(distributions=distribution, nsamples=2,
                                criterion=maximin_criterion, random_state=1)
-    actual_samples = latin_hypercube_sampling.samples.flatten()
+    actual_samples = latin_hypercube_sampling._samples.flatten()
     expected_samples = np.array([[1.208511], [1.86016225]]).flatten()
     np.testing.assert_allclose(expected_samples, actual_samples, rtol=1e-6)
 
@@ -42,7 +42,7 @@ def test_lhs_maximin_criterion_joint_independent():
     latin_hypercube_sampling = \
         LatinHypercubeSampling(distributions=JointIndependent(marginals=[distribution, distribution1]),
                                nsamples=2, criterion=maximin_criterion, random_state=1)
-    actual_samples = latin_hypercube_sampling.samples.flatten()
+    actual_samples = latin_hypercube_sampling._samples.flatten()
     expected_samples = np.array([1.86016225, 1.00011437, 1.208511,   2.30233257]).flatten()
     np.testing.assert_allclose(expected_samples, actual_samples, rtol=1e-6)
 
@@ -69,18 +69,18 @@ x1h = LatinHypercubeSampling(distributions=[dist1, dist2], criterion=MaxiMin(), 
 def test_samples2():
     """ Check the samples attribute, when dist_object is a jointInd class object and criterion is 'correlate'."""
     expected_samples = np.array([[0.94, 0.54], [0.26, 0.08], [0.45, 0.88], [0.14, 0.7 ], [0.71, 0.4 ]])
-    assert (x1b.samples.round(2) == expected_samples).all()
+    assert (x1b._samples.round(2) == expected_samples).all()
 
 
 def test_samples4():
     """ Check the samples attribute, when dist_object is a list of distribution class object and criterion is
     'centered'."""
     expected_samples = np.array([0.1, 0.9, 0.5, 0.3, 0.7])
-    assert (x1d.samples.round(2) == expected_samples).all()
+    assert (x1d._samples.round(2) == expected_samples).all()
 
 
 def test_samples5():
     """ Check the samples attribute, when dist_object is a list of distribution class object, criterion is
     'maximin' and metric is callable."""
     expected_samples = np.array([[0.56, 0.2 ], [0.25, 0.62], [1.  , 0.4 ], [0.72, 0.91], [0.06, 0.15]])
-    assert (x1h.samples.round(2) == expected_samples).all()
+    assert (x1h._samples.round(2) == expected_samples).all()
