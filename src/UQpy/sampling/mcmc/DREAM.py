@@ -95,6 +95,8 @@ class DREAM(MCMC):
         :param nsamples: Number of samples to generate.
         :param nsamples_per_chain: Number of samples to generate per chain.
         """
+        self.nsamples = nsamples
+        self.nsamples_per_chain = nsamples_per_chain
         super().__init__(
             pdf_target=pdf_target,
             log_pdf_target=log_pdf_target,
@@ -153,7 +155,6 @@ class DREAM(MCMC):
 
         self.logger.info("UQpy: Initialization of " + self.__class__.__name__ + " algorithm complete.\n")
 
-        # If nsamples is provided, run the algorithm
         if (nsamples is not None) or (nsamples_per_chain is not None):
             self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain, )
 
@@ -233,7 +234,7 @@ class DREAM(MCMC):
             self.cross_prob = self.j_ind / self.n_id
             self.cross_prob /= sum(self.cross_prob)
         # check outlier chains (only if you have saved at least 100 values already)
-        if ((self.nsamples >= 100)
+        if ((self.samples_counter >= 100)
                 and (self.iterations_number < self.check_chains[0])
                 and (self.iterations_number % self.check_chains[1] == 0)):
             self.check_outlier_chains(replace_with_best=True)

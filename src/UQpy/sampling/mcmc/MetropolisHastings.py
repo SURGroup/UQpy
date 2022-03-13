@@ -84,6 +84,8 @@ class MetropolisHastings(MCMC):
         :param nsamples: Number of samples to generate.
         :param nsamples_per_chain: Number of samples to generate per chain.
         """
+        self.nsamples = nsamples
+        self.nsamples_per_chain = nsamples_per_chain
         super().__init__(
             pdf_target=pdf_target,
             log_pdf_target=log_pdf_target,
@@ -114,7 +116,6 @@ class MetropolisHastings(MCMC):
 
         self.logger.info("\nUQpy: Initialization of " + self.__class__.__name__ + " algorithm complete.")
 
-        # If nsamples is provided, run the algorithm
         if (nsamples is not None) or (nsamples_per_chain is not None):
             self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain,)
 

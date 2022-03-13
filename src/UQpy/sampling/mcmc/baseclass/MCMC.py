@@ -10,8 +10,6 @@ from abc import ABC
 
 
 class MCMC(ABC):
-
-    # Last Modified: 10/05/20 by Audrey Olivier
     @beartype
     def __init__(
             self,
@@ -98,22 +96,18 @@ class MCMC(ABC):
         """Values of the log pdf for the accepted samples, :class:`numpy.ndarray` of shape 
         :code:`(n_chains * nsamples,)` or  :code:`(nsamples, n_chains)`"""
         self.acceptance_rate = [0.0] * self.n_chains
-        self.nsamples: int = 0
+        self.samples_counter: int = 0
         """Total number of samples; The :py:attr:`nsamples` attribute tallies the total number of generated samples. 
-        After each iteration, it is updated by :math:`1`. At the end of the simulation, the :py:attr:`nsamples` attribute 
-        equals the user-specified value for input :py:attr:`nsamples` given to the child class."""
+        After each iteration, it is updated by :math:`1`. At the end of the simulation, the :py:attr:`nsamples` 
+        attribute equals the user-specified value for input :py:attr:`nsamples` given to the child class."""
         self.nsamples_per_chain: int = 0
         """Total number of samples per chain; Similar to the attribute :py:attr:`nsamples`, it is updated during 
         iterations as new samples are saved."""
-        self.iterations_number: int = (
-            0  # total nb of iterations, grows if you call run several times
-        )
+        self.iterations_number: int = 0  # total nb of iterations, grows if you call run several times
         """Total number of iterations, updated on-the-fly as the algorithm proceeds. It is related to number of samples 
         as :code:`iterations_number=burn_length+jump*nsamples_per_chain`."""
 
-    def run(
-            self, nsamples: PositiveInteger = None, nsamples_per_chain:int = None
-    ):
+    def run(self, nsamples: PositiveInteger = None, nsamples_per_chain: int = None):
         """
         Run the mcmc algorithm.
 
@@ -127,19 +121,12 @@ class MCMC(ABC):
         is not a multiple of `n_chains`, `nsamples` is set to the next largest integer that is a multiple of
         `n_chains`.
         """
-        if (self.evaluate_log_target is None and self.evaluate_log_target_marginals is None):
+        if self.evaluate_log_target is None and self.evaluate_log_target_marginals is None:
             (self.evaluate_log_target, self.evaluate_log_target_marginals,) = \
                 self._preprocess_target(pdf_=self.pdf_target, log_pdf_=self.log_pdf_target, args=self.args_target)
         # Initialize the runs: allocate space for the new samples and log pdf values
-        (
-            final_nsamples,
-            final_nsamples_per_chain,
-            current_state,
-            current_log_pdf,
-        ) = self._initialize_samples(
-            nsamples=nsamples,
-            nsamples_per_chain=nsamples_per_chain,
-        )
+        (final_nsamples, final_nsamples_per_chain, current_state, current_log_pdf,) = self._initialize_samples(
+            nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
         self.logger.info("UQpy: Running mcmc...")
 
@@ -148,22 +135,16 @@ class MCMC(ABC):
             # update the total number of iterations
             self.iterations_number += 1
             # run iteration
-            current_state, current_log_pdf = self.run_one_iteration(
-                current_state, current_log_pdf
-            )
+            current_state, current_log_pdf = self.run_one_iteration(current_state, current_log_pdf)
             # Update the chain, only if burn-in is over and the sample is not being jumped over
             # also increase the current number of samples and samples_per_chain
-            if (
-                    self.iterations_number > self.burn_length
-                    and (self.iterations_number - self.burn_length) % self.jump == 0
-            ):
+            if (self.iterations_number > self.burn_length
+                    and (self.iterations_number - self.burn_length) % self.jump == 0):
                 self.samples[self.nsamples_per_chain, :, :] = current_state.copy()
                 if self.save_log_pdf:
-                    self.log_pdf_values[
-                    self.nsamples_per_chain, :
-                    ] = current_log_pdf.copy()
+                    self.log_pdf_values[self.nsamples_per_chain, :] = current_log_pdf.copy()
                 self.nsamples_per_chain += 1
-                self.nsamples += self.n_chains
+                self.samples_counter += self.n_chains
 
         self.logger.info("UQpy: mcmc run successfully !")
 
@@ -228,7 +209,7 @@ class MCMC(ABC):
                 if self.save_log_pdf:
                     self.log_pdf_values[0, :] = current_log_pdf
                 self.nsamples_per_chain += 1
-                self.nsamples += self.n_chains
+                self.samples_counter += self.n_chains
             final_nsamples, final_nsamples_per_chain = (nsamples, nsamples_per_chain,)
 
         else:  # fetch previous samples to start the new run, current state is last saved sample
@@ -241,7 +222,7 @@ class MCMC(ABC):
             if self.save_log_pdf:
                 self.log_pdf_values = np.concatenate([self.log_pdf_values,
                                                       np.zeros((nsamples_per_chain, self.n_chains)), ], axis=0, )
-            final_nsamples = nsamples + self.nsamples
+            final_nsamples = nsamples + self.samples_counter
             final_nsamples_per_chain = (nsamples_per_chain + self.nsamples_per_chain)
 
         return final_nsamples, final_nsamples_per_chain, current_state, current_log_pdf
@@ -295,7 +276,7 @@ class MCMC(ABC):
                                                               10 ** (-320) * np.ones((x.shape[0],)), )),
                         range(len(pdf_)), ))
                 evaluate_log_pdf = lambda x: np.sum([np.log(np.maximum(pdf_[i](x[:, i, np.newaxis], *args[i]),
-                                                                       10 ** (-320) * np.ones((x.shape[0],)),))
+                                                                       10 ** (-320) * np.ones((x.shape[0],)), ))
                                                      for i in range(len(pdf_))])
             else:
                 raise TypeError("UQpy: pdf_target must be a callable or list of callables")

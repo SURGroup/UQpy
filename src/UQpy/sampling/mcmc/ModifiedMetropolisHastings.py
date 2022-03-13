@@ -14,22 +14,22 @@ from UQpy.utilities.ValidationTypes import *
 class ModifiedMetropolisHastings(MCMC):
     @beartype
     def __init__(
-        self,
-        pdf_target: Union[Callable, list[Callable]] = None,
-        log_pdf_target: Union[Callable, list[Callable]] = None,
-        args_target: tuple = None,
-        burn_length: Annotated[int, Is[lambda x: x >= 0]] = 0,
-        jump: PositiveInteger = 1,
-        dimension: int = None,
-        seed: list = None,
-        save_log_pdf: bool = False,
-        concatenate_chains: bool = True,
-        proposal: Union[Distribution, list[Distribution]] = None,
-        proposal_is_symmetric: Union[bool, list[bool]] = False,
-        random_state: RandomStateType = None,
-        n_chains: int = None,
-        nsamples: PositiveInteger = None,
-        nsamples_per_chain: PositiveInteger = None,
+            self,
+            pdf_target: Union[Callable, list[Callable]] = None,
+            log_pdf_target: Union[Callable, list[Callable]] = None,
+            args_target: tuple = None,
+            burn_length: Annotated[int, Is[lambda x: x >= 0]] = 0,
+            jump: PositiveInteger = 1,
+            dimension: int = None,
+            seed: list = None,
+            save_log_pdf: bool = False,
+            concatenate_chains: bool = True,
+            proposal: Union[Distribution, list[Distribution]] = None,
+            proposal_is_symmetric: Union[bool, list[bool]] = False,
+            random_state: RandomStateType = None,
+            n_chains: int = None,
+            nsamples: PositiveInteger = None,
+            nsamples_per_chain: PositiveInteger = None,
     ):
         """
         Component-wise Modified Metropolis-Hastings algorithm. :cite:`SubsetSimulation`
@@ -87,6 +87,8 @@ class ModifiedMetropolisHastings(MCMC):
         :param nsamples: Number of samples to generate.
         :param nsamples_per_chain: Number of samples to generate per chain.
         """
+        self.nsamples = nsamples
+        self.nsamples_per_chain = nsamples_per_chain
         super().__init__(
             pdf_target=pdf_target,
             log_pdf_target=log_pdf_target,
@@ -111,53 +113,37 @@ class ModifiedMetropolisHastings(MCMC):
 
         # set default proposal
         if self.proposal is None:
-            self.proposal = [Normal(),] * self.dimension
-            self.proposal_is_symmetric = [True,] * self.dimension
+            self.proposal = [Normal(), ] * self.dimension
+            self.proposal_is_symmetric = [True, ] * self.dimension
         # Proposal is provided, check it
         else:
             # only one Distribution is provided, check it and transform it to a list
             if isinstance(self.proposal, JointIndependent):
                 self.proposal = [m for m in self.proposal.marginals]
                 if len(self.proposal) != self.dimension:
-                    raise ValueError(
-                        "UQpy: Proposal given as a list should be of length dimension"
-                    )
+                    raise ValueError("UQpy: Proposal given as a list should be of length dimension")
                 [self._check_methods_proposal(p) for p in self.proposal]
             elif not isinstance(self.proposal, list):
                 self._check_methods_proposal(self.proposal)
                 self.proposal = [self.proposal] * self.dimension
             else:  # a list of proposals is provided
                 if len(self.proposal) != self.dimension:
-                    raise ValueError(
-                        "UQpy: Proposal given as a list should be of length dimension"
-                    )
+                    raise ValueError("UQpy: Proposal given as a list should be of length dimension")
                 [self._check_methods_proposal(p) for p in self.proposal]
 
         # check the symmetry of proposal, assign False as default
         if isinstance(self.proposal_is_symmetric, bool):
-            self.proposal_is_symmetric = [self.proposal_is_symmetric,] * self.dimension
-        elif not (
-            isinstance(self.proposal_is_symmetric, list)
-            and all(isinstance(b_, bool) for b_ in self.proposal_is_symmetric)
-        ):
-            raise TypeError(
-                "UQpy: Proposal_is_symmetric should be a (list of) boolean(s)"
-            )
+            self.proposal_is_symmetric = [self.proposal_is_symmetric, ] * self.dimension
+        elif not (isinstance(self.proposal_is_symmetric, list)
+                  and all(isinstance(b_, bool) for b_ in self.proposal_is_symmetric)):
+            raise TypeError("UQpy: Proposal_is_symmetric should be a (list of) boolean(s)")
 
-        
+        self.logger.info("\nUQpy: Initialization of " + self.__class__.__name__ + " algorithm complete.")
 
-        self.logger.info(
-            "\nUQpy: Initialization of "
-            + self.__class__.__name__
-            + " algorithm complete."
-        )
 
-        # If nsamples is provided, run the algorithm
+
         if (nsamples is not None) or (nsamples_per_chain is not None):
-            self.run(
-                nsamples=nsamples,
-                nsamples_per_chain=nsamples_per_chain,
-            )
+            self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
@@ -176,17 +162,13 @@ class ModifiedMetropolisHastings(MCMC):
             # Evaluate the current log_pdf
             if self.current_log_pdf_marginals is None:
                 self.current_log_pdf_marginals = [
-                    self.evaluate_log_target_marginals[j](
-                        current_state[:, j, np.newaxis]
-                    )
-                    for j in range(self.dimension)
-                ]
+                    self.evaluate_log_target_marginals[j](current_state[:, j, np.newaxis])
+                    for j in range(self.dimension)]
 
             # Sample candidate (independently in each dimension)
             for j in range(self.dimension):
                 candidate_j = current_state[:, j, np.newaxis] + self.proposal[j].rvs(
-                    nsamples=self.n_chains, random_state=self.random_state
-                )
+                    nsamples=self.n_chains, random_state=self.random_state)
 
                 # Compute log_pdf_target of candidate sample
                 log_p_candidate_j = self.evaluate_log_target_marginals[j](candidate_j)
@@ -199,21 +181,11 @@ class ModifiedMetropolisHastings(MCMC):
                     log_proposal_ratio = log_prop_j(
                         candidate_j - current_state[:, j, np.newaxis]
                     ) - log_prop_j(current_state[:, j, np.newaxis] - candidate_j)
-                    log_ratios = (
-                        log_p_candidate_j
-                        - self.current_log_pdf_marginals[j]
-                        - log_proposal_ratio
-                    )
+                    log_ratios = (log_p_candidate_j - self.current_log_pdf_marginals[j] - log_proposal_ratio)
 
                 # Compare candidate with current sample and decide or not to keep the candidate
-                unif_rvs = (
-                    Uniform()
-                    .rvs(nsamples=self.n_chains, random_state=self.random_state)
-                    .reshape((-1,))
-                )
-                for nc, (cand, log_p_cand, r_) in enumerate(
-                    zip(candidate_j, log_p_candidate_j, log_ratios)
-                ):
+                unif_rvs = Uniform().rvs(nsamples=self.n_chains, random_state=self.random_state).reshape((-1,))
+                for nc, (cand, log_p_cand, r_) in enumerate(zip(candidate_j, log_p_candidate_j, log_ratios)):
                     accept = np.log(unif_rvs[nc]) < r_
                     if accept:
                         current_state[nc, j] = cand
@@ -226,8 +198,7 @@ class ModifiedMetropolisHastings(MCMC):
             candidate = np.copy(current_state)
             for j in range(self.dimension):
                 candidate_j = current_state[:, j, np.newaxis] + self.proposal[j].rvs(
-                    nsamples=self.n_chains, random_state=self.random_state
-                )
+                    nsamples=self.n_chains, random_state=self.random_state)
                 candidate[:, j] = candidate_j[:, 0]
 
                 # Compute log_pdf_target of candidate sample
@@ -238,15 +209,10 @@ class ModifiedMetropolisHastings(MCMC):
                     log_ratios = log_p_candidate - current_log_pdf
                 else:  # If the proposal is non-symmetric, one needs to account for it in computing acceptance ratio
                     log_prop_j = self.proposal[j].log_pdf
-                    log_proposal_ratio = log_prop_j(
-                        candidate_j - current_state[:, j, np.newaxis]
-                    ) - log_prop_j(current_state[:, j, np.newaxis] - candidate_j)
+                    log_proposal_ratio = log_prop_j(candidate_j - current_state[:, j, np.newaxis]) -\
+                                         log_prop_j(current_state[:, j, np.newaxis] - candidate_j)
                     log_ratios = log_p_candidate - current_log_pdf - log_proposal_ratio
-                unif_rvs = (
-                    Uniform()
-                    .rvs(nsamples=self.n_chains, random_state=self.random_state)
-                    .reshape((-1,))
-                )
+                unif_rvs = Uniform().rvs(nsamples=self.n_chains, random_state=self.random_state).reshape((-1,))
                 for nc, (cand, log_p_cand, r_) in enumerate(zip(candidate_j, log_p_candidate, log_ratios)):
                     accept = np.log(unif_rvs[nc]) < r_
                     if accept:

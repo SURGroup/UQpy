@@ -82,6 +82,9 @@ class Stretch(MCMC):
                 raise ValueError("UQpy: Either `seed` or `dimension` and `n_chains` must be provided.")
             flag_seed = True
 
+        self.nsamples = nsamples
+        self.nsamples_per_chain = nsamples_per_chain
+
         super().__init__(
             pdf_target=pdf_target,
             log_pdf_target=log_pdf_target,
@@ -111,7 +114,6 @@ class Stretch(MCMC):
 
         self.logger.info("\nUQpy: Initialization of " + self.__class__.__name__ + " algorithm complete.")
 
-        # If nsamples is provided, run the algorithm
         if (nsamples is not None) or (nsamples_per_chain is not None):
             self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain,)
 

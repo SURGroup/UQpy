@@ -51,7 +51,7 @@ def test_mh_2d_burn_jump():
 def test_mh_2d_nsamples_check():
     target = Distributions.MultivariateNormal([0., 0.]).pdf
     x = MetropolisHastings(dimension=2, pdf_target=target, n_chains=2, random_state=123, nsamples=60)
-    assert x.nsamples_per_chain + x.nsamples == 90
+    assert x.nsamples_per_chain + x.samples_counter == 90
 
 
 def test_mh_2d_2chains():
