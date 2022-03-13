@@ -3,8 +3,10 @@ from typing import Union
 import numpy as np
 import scipy.stats as stats
 from beartype import beartype
-from UQpy.distributions.baseclass import Distribution
+
+from UQpy.RunModel import RunModel
 from UQpy.transformations import *
+from UQpy.distributions import *
 from UQpy.reliability.taylor_series.baseclass.TaylorSeries import TaylorSeries
 from UQpy.utilities.ValidationTypes import PositiveInteger
 from UQpy.transformations import Decorrelate
@@ -16,14 +18,13 @@ class FORM(TaylorSeries):
     def __init__(
         self,
         distributions: Union[None, Distribution, list[Distribution]],
-        runmodel_object,
-        form_object=None,
+        runmodel_object: RunModel,
         seed_x: Union[list, np.ndarray] = None,
         seed_u: Union[list, np.ndarray] = None,
         df_step: Union[int, float] = 0.01,
         corr_x: Union[list, np.ndarray] = None,
         corr_z: Union[list, np.ndarray] = None,
-        iterations_number: PositiveInteger = 100,
+        n_iterations: PositiveInteger = 100,
         tol1: Union[float, int] = None,
         tol2: Union[float, int] = None,
         tol3: Union[float, int] = None,
@@ -36,43 +37,71 @@ class FORM(TaylorSeries):
         :param distributions: Marginal probability distributions of each random variable. Must be an object of
          type :class:`.DistributionContinuous1D` or :class:`.JointIndependent`.
         :param runmodel_object: The computational model. It should be of type :class:`RunModel`.
-        :param form_object: It should be of type :class:`FORM`. Used to calculate SORM correction.
         :param seed_u: The initial starting point for the `Hasofer-Lind` algorithm.
          Either `seed_u` or `seed_x` must be provided.
          If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
          If `seed_x` is provided, it should be a point in the parameter space of **X**.
          Default: :code:`seed_u = (0, 0, ..., 0)`
+         If either `seed_u` or `seed_x` is provided, then the :py:meth:`run` method will be executed automatically.
+         Otherwise, the the :py:meth:`run` method must be executed by the user.
+        :param seed_x: The initial starting point for the `Hasofer-Lind` algorithm.
+         Either `seed_u` or `seed_x` must be provided.
+         If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
+         If `seed_x` is provided, it should be a point in the parameter space of **X**.
+         If either `seed_u` or `seed_x` is provided, then the :py:meth:`run` method will be executed automatically.
+         Otherwise, the the :py:meth:`run` method must be executed by the user.
         :param df_step: Finite difference step in standard normal space. Default: :math:`0.01`
+        :param corr_z: Covariance matrix
+         If `corr_z` is provided, it is the correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal random
+         vector **Z** .
+         If `corr_x` is provided, it is the correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
         :param corr_z: Covariance matrix
          If `corr_x` is provided, it is the correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
          If `corr_z` is provided, it is the correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal random
          vector **Z** .
          Default: `corr_z` is specified as the identity matrix.
-        :param iterations_number: Maximum number of iterations for the `HLRF` algorithm. Default: :math:`100`
+        :param n_iterations: Maximum number of iterations for the `HLRF` algorithm. Default: :math:`100`
         :param tol1: Convergence threshold for criterion `e1` of the `HLRF` algorithm. Default: :math:`1.0e-3`
         :param tol2: Convergence threshold for criterion `e2` of the `HLRF` algorithm. Default: :math:`1.0e-3`
         :param tol3: Convergence threshold for criterion `e3` of the  `HLRF` algorithm. Default: :math:`1.0e-3`
         
         """
-        super().__init__(
-            distributions,
-            runmodel_object,
-            form_object,
-            corr_x,
-            corr_z,
-            seed_x,
-            seed_u,
-            iterations_number,
-            tol1,
-            tol2,
-            tol3,
-            df_step,
-        )
+        if isinstance(distributions, list):
+            self.dimension = len(distributions)
+            self.dimension = 0
+            for i in range(len(distributions)):
+                if isinstance(distributions[i], DistributionContinuous1D):
+                    self.dimension += 1
+                elif isinstance(distributions[i], JointIndependent):
+                    self.dimension += len(distributions[i].marginals)
+                else:
+                    raise TypeError(
+                        "UQpy: A  ``DistributionContinuous1D`` or ``JointIndependent`` object must be "
+                        "provided.")
+        elif isinstance(distributions, DistributionContinuous1D):
+            self.dimension = 1
+        elif isinstance(distributions, JointIndependent):
+            self.dimension = len(distributions.marginals)
+        else:
+            raise TypeError("UQpy: A  ``DistributionContinuous1D``  or ``JointIndependent`` object must be provided.")
+
+        self.nataf_object = Nataf(distributions=distributions, corr_z=corr_z, corr_x=corr_x)
+
+        self.corr_x = corr_x
+        self.corr_z = corr_z
+        self.dist_object = distributions
+        self.n_iterations = n_iterations
+        self.runmodel_object = runmodel_object
+        self.tol1 = tol1
+        self.tol2 = tol2
+        self.tol3 = tol3
+        self.seed_u = seed_u
+        self.seed_x = seed_x
 
         self.logger = logging.getLogger(__name__)
 
         # Initialize output
-        self.beta_form: float = None
+        self.beta: float = None
         """Hasofer-Lind reliability index."""
         self.DesignPoint_U: list = None
         """Design point in the uncorrelated standard normal space U."""
@@ -84,10 +113,10 @@ class FORM(TaylorSeries):
         self.x = None
         self.alpha = None
         self.g0 = None
-        self.form_iterations: int = None
+        self.iterations: int = None
         """Number of model evaluations."""
         self.df_step = df_step
-        self.error_record: float = None
+        self.error_record: list = None
         """Record of the error defined by criteria `e1, e2, e3`."""
 
         self.tol1 = tol1
@@ -114,18 +143,18 @@ class FORM(TaylorSeries):
             self.run(seed_u=self.seed_u)
         elif self.seed_x is not None:
             self.run(seed_x=self.seed_x)
-        else:
-            pass
 
     def run(self, seed_x=None, seed_u=None):
         """
-        Runs FORM
+        Runs FORM.
 
-        :param seed_u | seed_x: The initial starting point for the `Hasofer-Lind` algorithm.
+        :param seed_u: Either `seed_u` or `seed_x` must be provided.
+         If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
+         If `seed_x` is provided, it should be a point in the parameter space of **X**.
+        :param seed_x: The initial starting point for the `Hasofer-Lind` algorithm.
          Either `seed_u` or `seed_x` must be provided.
          If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
          If `seed_x` is provided, it should be a point in the parameter space of **X**.
-         Default: :code:`seed_u = (0, 0, ..., 0)`
         """
         self.logger.info("UQpy: Running FORM...")
         if seed_u is None and seed_x is None:
@@ -147,11 +176,11 @@ class FORM(TaylorSeries):
 
         converged = False
         k = 0
-        beta = np.zeros(shape=(self.n_iter + 1,))
-        u = np.zeros([self.n_iter + 1, self.dimension])
+        beta = np.zeros(shape=(self.n_iterations + 1,))
+        u = np.zeros([self.n_iterations + 1, self.dimension])
         u[0, :] = seed
         g_record.append(0.0)
-        dg_u_record = np.zeros([self.n_iter + 1, self.dimension])
+        dg_u_record = np.zeros([self.n_iterations + 1, self.dimension])
 
         while not converged:
             self.logger.info("Number of iteration:", k)
@@ -160,18 +189,12 @@ class FORM(TaylorSeries):
                 if seed_x is not None:
                     x = seed_x
                 else:
-                    seed_z = Correlate(
-                        samples_u=seed.reshape(1, -1), corr_z=self.nataf_object.corr_z
-                    ).samples_z
-                    self.nataf_object.run(
-                        samples_z=seed_z.reshape(1, -1), jacobian=True
-                    )
+                    seed_z = Correlate(samples_u=seed.reshape(1, -1), corr_z=self.nataf_object.corr_z).samples_z
+                    self.nataf_object.run(samples_z=seed_z.reshape(1, -1), jacobian=True)
                     x = self.nataf_object.samples_x
                     self.jzx = self.nataf_object.jxz
             else:
-                z = Correlate(
-                    u[k, :].reshape(1, -1), self.nataf_object.corr_z
-                ).samples_z
+                z = Correlate(u[k, :].reshape(1, -1), self.nataf_object.corr_z).samples_z
                 self.nataf_object.run(samples_z=z, jacobian=True)
                 x = self.nataf_object.samples_x
                 self.jzx = self.nataf_object.jxz
@@ -182,8 +205,7 @@ class FORM(TaylorSeries):
             self.logger.info(
                 "Design point Y: {0}\n".format(u[k, :])
                 + "Design point X: {0}\n".format(self.x)
-                + "Jacobian Jzx: {0}\n".format(self.jzx)
-            )
+                + "Jacobian Jzx: {0}\n".format(self.jzx))
 
             # 2. evaluate Limit State Function and the gradient at point u_k and direction cosines
             dg_u, qoi, _ = self._derivatives(
@@ -192,8 +214,7 @@ class FORM(TaylorSeries):
                 runmodel_object=self.runmodel_object,
                 nataf_object=self.nataf_object,
                 df_step=self.df_step,
-                order="first",
-            )
+                order="first")
             g_record.append(qoi)
 
             dg_u_record[k + 1, :] = dg_u
@@ -203,8 +224,7 @@ class FORM(TaylorSeries):
                 "Directional cosines (alpha): {0}\n".format(alpha)
                 + "Gradient (dg_y): {0}\n".format(dg_u_record[k + 1, :])
                 + "norm dg_y:",
-                norm_grad,
-            )
+                norm_grad,)
 
             self.alpha = alpha.squeeze()
             alpha_record.append(self.alpha)
@@ -212,16 +232,11 @@ class FORM(TaylorSeries):
             beta[k + 1] = beta[k] + qoi / norm_grad
             self.logger.info(
                 "Beta: {0}\n".format(beta[k])
-                + "Pf: {0}".format(stats.norm.cdf(-beta[k]))
-            )
+                + "Pf: {0}".format(stats.norm.cdf(-beta[k])))
 
             u[k + 1, :] = -beta[k + 1] * self.alpha
 
-            if (
-                (self.tol1 is not None)
-                and (self.tol2 is not None)
-                and (self.tol3 is not None)
-            ):
+            if (self.tol1 is not None) and (self.tol2 is not None) and (self.tol3 is not None):
                 error1 = np.linalg.norm(u[k + 1, :] - u[k, :])
                 error2 = np.linalg.norm(beta[k + 1] - beta[k])
                 error3 = np.linalg.norm(dg_u_record[k + 1, :] - dg_u_record[k, :])
@@ -241,9 +256,7 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
-            elif (
-                (self.tol1 is not None) and (self.tol2 is None) and (self.tol3 is None)
-            ):
+            elif (self.tol1 is not None) and (self.tol2 is None) and (self.tol3 is None):
                 error1 = np.linalg.norm(u[k + 1, :] - u[k, :])
                 error_record.append(error1)
                 if error1 <= self.tol1:
@@ -261,9 +274,7 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
-            elif (
-                (self.tol1 is None) and (self.tol2 is None) and (self.tol3 is not None)
-            ):
+            elif (self.tol1 is None) and (self.tol2 is None) and (self.tol3 is not None):
                 error3 = np.linalg.norm(dg_u_record[k + 1, :] - dg_u_record[k, :])
                 error_record.append(error3)
                 if error3 < self.tol3:
@@ -271,11 +282,7 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
-            elif (
-                (self.tol1 is not None)
-                and (self.tol2 is not None)
-                and (self.tol3 is None)
-            ):
+            elif (self.tol1 is not None) and (self.tol2 is not None) and (self.tol3 is None):
                 error1 = np.linalg.norm(u[k + 1, :] - u[k, :])
                 error2 = np.linalg.norm(beta[k + 1] - beta[k])
                 error_record.append([error1, error2])
@@ -284,11 +291,7 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
-            elif (
-                (self.tol1 is not None)
-                and (self.tol2 is None)
-                and (self.tol3 is not None)
-            ):
+            elif (self.tol1 is not None) and (self.tol2 is None) and (self.tol3 is not None):
                 error1 = np.linalg.norm(u[k + 1, :] - u[k, :])
                 error3 = np.linalg.norm(dg_u_record[k + 1, :] - dg_u_record[k, :])
                 error_record.append([error1, error3])
@@ -297,11 +300,7 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
-            elif (
-                (self.tol1 is None)
-                and (self.tol2 is not None)
-                and (self.tol3 is not None)
-            ):
+            elif (self.tol1 is None) and (self.tol2 is not None) and (self.tol3 is not None):
                 error2 = np.linalg.norm(beta[k + 1] - beta[k])
                 error3 = np.linalg.norm(dg_u_record[k + 1, :] - dg_u_record[k, :])
                 error_record.append([error2, error3])
@@ -312,15 +311,12 @@ class FORM(TaylorSeries):
 
             self.logger.error("Error: %s", error_record[-1])
 
-            if converged is True or k > self.n_iter:
+            if converged is True or k > self.n_iterations:
                 break
 
-        if k > self.n_iter:
-            self.logger.info(
-                "UQpy: Maximum number of iterations {0} was reached before convergence.".format(
-                    self.n_iter
-                )
-            )
+        if k > self.n_iterations:
+            self.logger.info("UQpy: Maximum number of iterations {0} was reached before convergence."
+                             .format(self.n_iterations))
             self.error_record = error_record
             self.u_record = [u_record]
             self.x_record = [x_record]
@@ -331,11 +327,11 @@ class FORM(TaylorSeries):
             if self.call is None:
                 self.beta_record = [beta[:k]]
                 self.error_record = error_record
-                self.beta_form = [beta[k]]
+                self.beta = [beta[k]]
                 self.DesignPoint_U = [u[k, :]]
                 self.DesignPoint_X = [np.squeeze(self.x)]
-                self.failure_probability = [stats.norm.cdf(-self.beta_form[-1])]
-                self.form_iterations = [k]
+                self.failure_probability = [stats.norm.cdf(-self.beta[-1])]
+                self.iterations = [k]
                 self.u_record = [u_record[:k]]
                 self.x_record = [x_record[:k]]
                 self.g_record = [g_record]
@@ -343,14 +339,12 @@ class FORM(TaylorSeries):
                 self.alpha_record = [alpha_record]
             else:
                 self.beta_record = self.beta_record + [beta[:k]]
-                self.beta_form = self.beta_form + [beta[k]]
+                self.beta = self.beta + [beta[k]]
                 self.error_record = self.error_record + error_record
                 self.DesignPoint_U = self.DesignPoint_U + [u[k, :]]
                 self.DesignPoint_X = self.DesignPoint_X + [np.squeeze(self.x)]
-                self.failure_probability = self.failure_probability + [
-                    stats.norm.cdf(-beta[k])
-                ]
-                self.form_iterations = self.form_iterations + [k]
+                self.failure_probability = self.failure_probability + [stats.norm.cdf(-beta[k])]
+                self.iterations = self.iterations + [k]
                 self.u_record = self.u_record + [u_record[:k]]
                 self.x_record = self.x_record + [x_record[:k]]
                 self.g_record = self.g_record + [g_record]

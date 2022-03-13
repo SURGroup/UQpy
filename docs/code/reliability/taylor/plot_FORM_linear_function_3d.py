@@ -42,7 +42,7 @@ Z0.run()
 
 print('Design point in standard normal space: %s' % Z0.DesignPoint_U)
 print('Design point in original space: %s' % Z0.DesignPoint_X)
-print('Hasofer-Lind reliability index: %s' % Z0.beta_form)
+print('Hasofer-Lind reliability index: %s' % Z0.beta)
 print('FORM probability of failure: %s' % Z0.failure_probability)
 
 shutil.rmtree(RunModelObject3.model_dir)

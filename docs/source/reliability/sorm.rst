@@ -1,5 +1,5 @@
 SORM
-~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :class:`.SORM` class is imported using the following command:
 

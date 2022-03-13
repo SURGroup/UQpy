@@ -17,51 +17,6 @@ def model_i(samples):
     return qoi_list
 
 
-def test_dist_object1():
-    dist1 = Normal(loc=0.0, scale=1.0)
-    dist = [dist1]
-    obj = TaylorSeries(distributions=dist, runmodel_object=model_i)
-    for file_name in glob.glob("Model_Runs_*"):
-        shutil.rmtree(file_name)
-    assert obj.dimension == 1
-
-
-def test_dist_object2():
-    dist1 = Normal(loc=0.0, scale=1.0)
-    dist = [dist1, 'Beta']
-    for file_name in glob.glob("Model_Runs_*"):
-        shutil.rmtree(file_name)
-    with pytest.raises(Exception):
-        assert TaylorSeries(dist_object=dist, runmodel_object=model_i)
-
-
-def test_dist_object3():
-    dist1 = Normal(loc=0.0, scale=1.0)
-    obj = TaylorSeries(distributions=dist1, runmodel_object=model_i)
-    for file_name in glob.glob("Model_Runs_*"):
-        shutil.rmtree(file_name)
-    assert obj.dimension == 1
-
-
-def test_dist_object4():
-    dist1 = Normal(loc=0.0, scale=1.0)
-    dist2 = Normal(loc=0.0, scale=1.0)
-    dist3 = Normal(loc=0.0, scale=1.0)
-    obj = TaylorSeries(distributions=[dist1, JointIndependent(marginals=[dist2, dist3])], runmodel_object=model_i)
-    for file_name in glob.glob("Model_Runs_*"):
-        shutil.rmtree(file_name)
-    assert obj.dimension == 3
-
-
-def test_dist_object5():
-    dist1 = Normal(loc=0.0, scale=1.0)
-    dist2 = Normal(loc=0.0, scale=1.0)
-    dist3 = 'Beta'
-    for file_name in glob.glob("Model_Runs_*"):
-        shutil.rmtree(file_name)
-    with pytest.raises(Exception):
-        assert TaylorSeries(dist_object=[dist1, JointIndependent(marginals=[dist2, dist3])], runmodel_object=model_i)
-
 ########################################################################################################################
 # Tests for the derivatives function of the TaylorSeries class.
 

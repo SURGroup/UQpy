@@ -1,5 +1,5 @@
 FORM
-~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :class:`.FORM` class is imported using the following command:
 

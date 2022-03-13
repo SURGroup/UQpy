@@ -45,7 +45,7 @@ Q.run()
 # print results
 print('Design point in standard normal space: %s' % Q.DesignPoint_U)
 print('Design point in original space: %s' % Q.DesignPoint_X)
-print('Hasofer-Lind reliability index: %s' % Q.beta_form)
+print('Hasofer-Lind reliability index: %s' % Q.beta)
 print('FORM probability of failure: %s' % Q.failure_probability)
 print(Q.dg_u_record)
 

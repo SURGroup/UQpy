@@ -55,11 +55,9 @@ TaylorSeries Class
 .. autoclass:: UQpy.reliability.taylor_series.baseclass.TaylorSeries
     :members:
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
+.. include:: form.rst
 
-    FORM <form>
-    SORM <sorm>
+.. include:: sorm.rst
+
 
 

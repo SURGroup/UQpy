@@ -126,7 +126,7 @@ def test_form_example():
     # print results
     np.allclose(Q.DesignPoint_U, np.array([-2., 1.]))
     np.allclose(Q.DesignPoint_X, np.array([160., 160.]))
-    assert Q.beta_form[0] == 2.236067977499917
+    assert Q.beta[0] == 2.236067977499917
     assert Q.failure_probability[0] == 0.012673659338729965
     np.allclose(Q.dg_u_record, np.array([0., 0.]))
 
