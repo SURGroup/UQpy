@@ -37,17 +37,14 @@ class FORM(TaylorSeries):
         :param distributions: Marginal probability distributions of each random variable. Must be an object of
          type :class:`.DistributionContinuous1D` or :class:`.JointIndependent`.
         :param runmodel_object: The computational model. It should be of type :class:`RunModel`.
-        :param seed_u: The initial starting point for the `Hasofer-Lind` algorithm.
+        :param seed_u: The initial starting point in the uncorrelated standard normal space **U** for the `Hasofer-Lind`
+         algorithm.
          Either `seed_u` or `seed_x` must be provided.
-         If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
-         If `seed_x` is provided, it should be a point in the parameter space of **X**.
          Default: :code:`seed_u = (0, 0, ..., 0)`
          If either `seed_u` or `seed_x` is provided, then the :py:meth:`run` method will be executed automatically.
          Otherwise, the the :py:meth:`run` method must be executed by the user.
-        :param seed_x: The initial starting point for the `Hasofer-Lind` algorithm.
+        :param seed_x: The initial starting point in the parameter space **X** for the `Hasofer-Lind` algorithm.
          Either `seed_u` or `seed_x` must be provided.
-         If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
-         If `seed_x` is provided, it should be a point in the parameter space of **X**.
          If either `seed_u` or `seed_x` is provided, then the :py:meth:`run` method will be executed automatically.
          Otherwise, the the :py:meth:`run` method must be executed by the user.
         :param df_step: Finite difference step in standard normal space. Default: :math:`0.01`
@@ -111,7 +108,6 @@ class FORM(TaylorSeries):
         """Direction cosine."""
         self.failure_probability = None
         self.x = None
-        self.alpha = None
         self.g0 = None
         self.iterations: int = None
         """Number of model evaluations."""
@@ -135,8 +131,8 @@ class FORM(TaylorSeries):
         """Record of the alpha (directional cosine)."""
         self.beta_record: list = None
         """Record of all Hasofer-Lind reliability index values."""
-        self.jzx = None
-
+        self.jacobian_zx = None
+        """Jacobian of the transformation from correlated standard normal space to the parameter space."""
         self.call = None
 
         if self.seed_u is not None:
@@ -192,12 +188,12 @@ class FORM(TaylorSeries):
                     seed_z = Correlate(samples_u=seed.reshape(1, -1), corr_z=self.nataf_object.corr_z).samples_z
                     self.nataf_object.run(samples_z=seed_z.reshape(1, -1), jacobian=True)
                     x = self.nataf_object.samples_x
-                    self.jzx = self.nataf_object.jxz
+                    self.jacobian_zx = self.nataf_object.jxz
             else:
                 z = Correlate(u[k, :].reshape(1, -1), self.nataf_object.corr_z).samples_z
                 self.nataf_object.run(samples_z=z, jacobian=True)
                 x = self.nataf_object.samples_x
-                self.jzx = self.nataf_object.jxz
+                self.jacobian_zx = self.nataf_object.jxz
 
             self.x = x
             u_record.append(u)
@@ -205,7 +201,7 @@ class FORM(TaylorSeries):
             self.logger.info(
                 "Design point Y: {0}\n".format(u[k, :])
                 + "Design point X: {0}\n".format(self.x)
-                + "Jacobian Jzx: {0}\n".format(self.jzx))
+                + "Jacobian Jzx: {0}\n".format(self.jacobian_zx))
 
             # 2. evaluate Limit State Function and the gradient at point u_k and direction cosines
             dg_u, qoi, _ = self._derivatives(
