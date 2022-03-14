@@ -64,7 +64,10 @@ class FORM(TaylorSeries):
         :param tol1: Convergence threshold for criterion `e1` of the `HLRF` algorithm. Default: :math:`1.0e-3`
         :param tol2: Convergence threshold for criterion `e2` of the `HLRF` algorithm. Default: :math:`1.0e-3`
         :param tol3: Convergence threshold for criterion `e3` of the  `HLRF` algorithm. Default: :math:`1.0e-3`
-        
+
+        Any number of tolerances can be provided. Only the provided tolerances will be considered for the convergence
+        of the algorithm. In case none of the tolerances is provided then they are considered equal to :math:`1e-3` and
+        all are checked for the convergence.
         """
         if isinstance(distributions, list):
             self.dimension = len(distributions)
