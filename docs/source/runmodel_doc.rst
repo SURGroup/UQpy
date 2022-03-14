@@ -405,3 +405,10 @@ RunModel Class
 
 .. autoclass:: UQpy.RunModel.RunModel
 	:members:
+
+Examples
+---------
+
+.. toctree::
+
+   RunModel Examples <../auto_examples/RunModel/index>

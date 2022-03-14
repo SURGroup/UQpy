@@ -115,7 +115,7 @@ class Stretch(MCMC):
         self.logger.info("\nUQpy: Initialization of " + self.__class__.__name__ + " algorithm complete.")
 
         if (nsamples is not None) or (nsamples_per_chain is not None):
-            self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain,)
+            self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain, )
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
@@ -132,7 +132,7 @@ class Stretch(MCMC):
 
             # Get current and complementary sets
             sets = [current_state[inds == j01, :] for j01 in range(2)]
-            curr_set, comp_set = (sets[split],sets[1 - split],)  # current and complementary sets respectively
+            curr_set, comp_set = (sets[split], sets[1 - split],)  # current and complementary sets respectively
             ns, nc = len(curr_set), len(comp_set)
 
             # Sample new state for S1 based on S0

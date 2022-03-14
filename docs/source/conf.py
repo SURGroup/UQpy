@@ -94,7 +94,8 @@ sphinx_gallery_conf = {
                       '../code/reliability/subset_simulation',
                       '../code/surrogates/srom',
                       '../code/surrogates/gpr',
-                      '../code/surrogates/pce'],  # path to your example scripts,
+                      '../code/surrogates/pce',
+                      '../code/RunModel',],  # path to your example scripts,
     'gallery_dirs': ['auto_examples/dimension_reduction/diffusion_maps',
                      'auto_examples/dimension_reduction/pod',
                      'auto_examples/dimension_reduction/grassmann',
@@ -124,7 +125,8 @@ sphinx_gallery_conf = {
                      'auto_examples/reliability/subset_simulation',
                      'auto_examples/surrogates/srom',
                      'auto_examples/surrogates/gpr',
-                     'auto_examples/surrogates/pce',],  # path to where to save gallery generated output
+                     'auto_examples/surrogates/pce',
+                     'auto_examples/RunModel',],  # path to where to save gallery generated output
     'binder': {
         # Required keys
         'org': 'SURGroup',
