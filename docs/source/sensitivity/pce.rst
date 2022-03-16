@@ -35,7 +35,7 @@ The corresponding first-order and total-effect Sobol indices are then estimated 
 .. math:: S_n^{\text{F}} &\approx \frac{\sum_{\mathbf{k} \in \Lambda_n^{\text{F}}} y_{\mathbf{k}}^2}{\sum_{\mathbf{k} \in \Lambda \setminus \mathbf{0}} y_{\mathbf{k}}^2}, \\
 .. math:: S_n^{\text{T}} &\approx \frac{\sum_{\mathbf{k} \in \Lambda_n^{\text{T}}} y_{\mathbf{k}}^2}{\sum_{\mathbf{k} \in \Lambda \setminus \mathbf{0}} y_{\mathbf{k}}^2}. \\
 
-In case of a **multivariate QoI** :math:`\mathbf{Y} = \mathcal{M}(x)`, the procedure presented above can be applied element-wise
+In case of a **multivariate QoI** :math:`Y = \mathcal{M}(x)`, the procedure presented above can be applied element-wise
 to compute Sobol indices for each QoI component :math:`Y_m`, :math:`m=1,\dots,M`.
 Global sensitivity analysis based on the covariance decomposition approach requires the computation of the traces of
 the covariance matrices with respect to the components :math:`Y_m`, which depend on specific combinations of the input RV.
