@@ -147,7 +147,8 @@ class FORM(TaylorSeries):
         elif self.seed_x is not None:
             self.run(seed_x=self.seed_x)
 
-    def run(self, seed_x=None, seed_u=None):
+    def run(self, seed_x: Union[list, np.ndarray] = None,
+            seed_u: Union[list, np.ndarray] = None):
         """
         Runs FORM.
 

@@ -1,5 +1,7 @@
 import copy
 import logging
+
+from UQpy.utilities.Utilities import process_random_state
 from UQpy.sampling import *
 
 
@@ -34,7 +36,7 @@ class SubsetSimulation:
         """
         # Initialize other attributes
         self._sampling_class = sampling
-
+        self._random_state = process_random_state(sampling._random_state)
         self.runmodel_object = runmodel_object
         self.samples_init = samples_init
         self.conditional_probability = conditional_probability
@@ -76,8 +78,8 @@ class SubsetSimulation:
         """
         step = 0
         n_keep = int(self.conditional_probability * self.nsamples_per_subset)
-        d12 = list()
-        d22 = list()
+        d12 = []
+        d22 = []
 
         # Generate the initial samples - Level 0
         # Here we need to make sure that we have good initial samples from the target joint density.
@@ -89,7 +91,7 @@ class SubsetSimulation:
                 "or\n - Provide a robust mcmc object that will draw independent initial samples from "
                 "the distribution."
             )
-            self.mcmc_objects[0].run(samples_number=self.nsamples_per_subset)
+            self.mcmc_objects[0].run(nsamples=self.nsamples_per_subset)
             self.samples.append(self.mcmc_objects[0].samples)
         else:
             self.samples.append(self.samples_init)
@@ -111,7 +113,7 @@ class SubsetSimulation:
         while self.performance_threshold_per_level[step] > 0 and step < self.max_level:
 
             # Increment the conditional level
-            step = step + 1
+            step += 1
 
             # Initialize the samples and the performance function at the next conditional level
             self.samples.append(np.zeros_like(self.samples[step - 1]))
@@ -120,8 +122,11 @@ class SubsetSimulation:
             self.performance_function_per_level[step][:n_keep] = self.performance_function_per_level[step - 1][g_ind[:n_keep]]
 
             # Unpack the attributes
-
-            self.mcmc_objects.append(copy.deepcopy(self._sampling_class))
+            new_sampler = copy.deepcopy(self._sampling_class)
+            new_sampler.seed = np.atleast_2d(self.samples[step][:n_keep, :])
+            new_sampler.n_chains = len(np.atleast_2d(self.samples[step][:n_keep, :]))
+            new_sampler.random_state = process_random_state(self._random_state)
+            self.mcmc_objects.append(new_sampler)
 
             # Set the number of samples to propagate each chain (n_prop) in the conditional level
             n_prop_test = (self.nsamples_per_subset / self.mcmc_objects[step].n_chains)
@@ -143,9 +148,7 @@ class SubsetSimulation:
 
                 # Decide whether a new simulation is needed for each proposed state
                 a = self.mcmc_objects[step].samples[i * n_keep : (i + 1) * n_keep, :]
-                b = self.mcmc_objects[step].samples[
-                    (i + 1) * n_keep : (i + 2) * n_keep, :
-                ]
+                b = self.mcmc_objects[step].samples[(i + 1) * n_keep : (i + 2) * n_keep, :]
                 test1 = np.equal(a, b)
                 test = np.logical_and(test1[:, 0], test1[:, 1])
 

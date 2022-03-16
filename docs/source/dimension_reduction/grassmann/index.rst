@@ -63,15 +63,41 @@ Since :meth:`.log_map` is a static method, it does not require instantiation of 
 
 .. automethod:: UQpy.dimension_reduction.grassmann_manifold.Grassmann.log_map
 
+Karcher mean
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For a set of points :math:`\{\mathbf{X}_i\}_{i=1}^N`  on :math:`\mathcal{G}(p,n)` the Karcher mean is defined as the solution of the following minimization problem:
+
+.. math:: \mu = \arg_{\mathbf{Y}} \mathrm{min}(\frac{1}{N}\sum_{i=1}^N d(\mathbf{X}_i, \mathbf{Y})^2)
+
+where :math:`d(\cdot)` is a Grassmann distance metric and :math:`\mathbf{Y}` is a reference point on :math:`\mathcal{G}(p,n)`.
+
+In order to use the method :meth:`.karcher_mean` one needs to import the :class:`.Grassmann` class from the :mod:`UQpy.dimension_reduction.grassmann_manifold` module
+
+>>> from UQpy.dimension_reduction.grassmann_manifold import Grassmann
+>>> Grassmann.karcher_mean()
+
+Since :meth:`.karcher_mean` is a static method, it does not require instantiation of the class.
+
+.. automethod:: UQpy.dimension_reduction.grassmann_manifold.Grassmann.karcher_mean
+
+:mod:`UQpy` offers two classes for solving this optimization, the :class:`.GradientDescent` and the :class:`.StochasticGradientDescent`.
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Optimization methods
+
+    Optimization  <optimization>
+
 
 Frechet variance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For a set of points :math:`\{\mathbf{X}_i\}_{i=1}^N`  on :math:`\mathcal{G}(p,n)` the Frechet variance is defined as the solution of the following minimization problem: 
 
-.. math:: \sigma_{f}^2 = \mathrm{min}(\frac{1}{N}\sum_{i=1}^N d(\mathbf{X}_i - \mathbf{Y})^2)
+.. math:: \sigma_{f}^2 = \mathrm{min}(\frac{1}{N}\sum_{i=1}^N d(\mathbf{X}_i, \mu)^2)
 
-where :math:`d(\cdot)` is a Grassmann distance metric and :math:`\mathbf{Y}` is a reference point on :math:`\mathcal{G}(p,n)`.
+where :math:`d(\cdot)` is a Grassmann distance metric and :math:`\mu` the Karcher mean of set of points :math:`\{\mathbf{X}_i\}_{i=1}^N` on :math:`\mathcal{G}(p,n)`.
 
 In order to use the method :meth:`.frechet_variance` one needs to import the :class:`.Grassmann` class from the :mod:`UQpy.dimension_reduction.grassmann_manifold` module
 
@@ -81,33 +107,6 @@ In order to use the method :meth:`.frechet_variance` one needs to import the :cl
 Since :meth:`.frechet_variance` is a static method, it does not require instantiation of the class. 
 
 .. automethod:: UQpy.dimension_reduction.grassmann_manifold.Grassmann.frechet_variance
-	
-
-Karcher mean
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-For a set of points :math:`\{\mathbf{X}_i\}_{i=1}^N`  on :math:`\mathcal{G}(p,n)` the Karcher mean is defined as the solution of the following minimization problem: 
-
-.. math:: \mu = \arg \mathrm{min}(\frac{1}{N}\sum_{i=1}^N d(\mathbf{X}_i - \mathbf{Y})^2)
-
-where :math:`d(\cdot)` is a Grassmann distance metric and :math:`\mathbf{Y}` is a reference point on :math:`\mathcal{G}(p,n)`. 
-
-In order to use the method :meth:`.karcher_mean` one needs to import the :class:`.Grassmann` class from the :mod:`UQpy.dimension_reduction.grassmann_manifold` module
-
->>> from UQpy.dimension_reduction.grassmann_manifold import Grassmann
->>> Grassmann.karcher_mean()
-
-Since :meth:`.karcher_mean` is a static method, it does not require instantiation of the class. 
-
-.. automethod:: UQpy.dimension_reduction.grassmann_manifold.Grassmann.karcher_mean
-	
-:mod:`UQpy` offers two classes for solving this optimization, the :class:`.GradientDescent` and the :class:`.StochasticGradientDescent`.
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Optimization methods
-
-    Optimization  <optimization>
 
 
 Manifold Projections

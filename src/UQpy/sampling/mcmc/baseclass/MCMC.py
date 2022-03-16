@@ -80,6 +80,7 @@ class MCMC(ABC):
 
         self.save_log_pdf = save_log_pdf
         self.concatenate_chains = concatenate_chains
+        self._random_state = random_state
         self.random_state = process_random_state(random_state)
         self.logger = logging.getLogger(__name__)
 
