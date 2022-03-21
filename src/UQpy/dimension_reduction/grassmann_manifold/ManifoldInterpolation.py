@@ -15,7 +15,7 @@ class ManifoldInterpolation:
 
     def __init__(self, interpolation_method: Union[Surrogate, callable, None],
                  manifold_data: list[GrassmannPoint],
-                 coordinates: list[NumpyFloatArray],
+                 coordinates: Union[np.ndarray, list[NumpyFloatArray]],
                  distance: GrassmannianDistance,
                  optimization_method: str = "GradientDescent"):
         """
@@ -29,11 +29,11 @@ class ManifoldInterpolation:
         """
         self.interpolation_method = interpolation_method
 
-        self.mean = Grassmann.karcher_mean(manifold_points=manifold_data,
+        self.mean = Grassmann.karcher_mean(grassmann_points=manifold_data,
                                            optimization_method=optimization_method,
                                            distance=distance)
 
-        self.tangent_points = Grassmann.log_map(manifold_points=manifold_data,
+        self.tangent_points = Grassmann.log_map(grassmann_points=manifold_data,
                                                 reference_point=self.mean)
 
         if self.interpolation_method is Surrogate:
@@ -52,7 +52,7 @@ class ManifoldInterpolation:
         else:
             self.coordinates = coordinates
 
-    def interpolate_manifold(self, point: NumpyFloatArray, ):
+    def interpolate_manifold(self, point: np.ndarray):
         """
         :param point:  Point to interpolate.
         """
@@ -79,4 +79,4 @@ class ManifoldInterpolation:
             interp = LinearNDInterpolator(self.coordinates, self.tangent_points)
             interp_point = interp(point)
 
-        return Grassmann.exp_map(tangent_points=[interp_point], reference_point=self.mean)
+        return Grassmann.exp_map(tangent_points=[interp_point.squeeze()], reference_point=self.mean)[0]

@@ -1,6 +1,7 @@
 import itertools
 
 import numpy as np
+import scipy.sparse.linalg as spsl
 import scipy.sparse as sps
 import scipy as sp
 from scipy.sparse.linalg import eigsh, eigs
@@ -75,7 +76,7 @@ class DiffusionMaps:
     @beartype
     def build_from_data(
         cls,
-        data: np.ndarray,
+        data: Union[list, np.ndarray],
         alpha: AlphaType = 0.5,
         n_eigenvectors: IntegerLargerThanUnityType = 2,
         is_sparse: bool = False,
@@ -178,15 +179,20 @@ class DiffusionMaps:
         # Compute the transition matrix.
         transition_matrix = d_star_inv_d.dot(l_star)
 
-        if self.is_sparse:
-            is_symmetric = sp.sparse.linalg.norm(transition_matrix - transition_matrix.T, sp.inf) < 1e-08
-        else:
-            is_symmetric = np.allclose(transition_matrix, transition_matrix.T, rtol=1e-5,  atol=1e-08)
+        # if self.is_sparse:
+        #     is_symmetric = sp.sparse.linalg.norm(transition_matrix - transition_matrix.T, sp.inf) < 1e-08
+        # else:
+        #     is_symmetric = np.allclose(transition_matrix, transition_matrix.T, rtol=1e-5,  atol=1e-08)
+        #
+        # # Find the eigenvalues and eigenvectors of Ps.
+        # self.eigenvalues, self.eigenvectors = DiffusionMaps.eig_solver(transition_matrix, is_symmetric,
+        #                                                                (self.n_eigenvectors + 1),
+        #                                                                self.eigenvector_tolerance)
 
-        # Find the eigenvalues and eigenvectors of Ps.
-        self.eigenvalues, self.eigenvectors = DiffusionMaps.eig_solver(transition_matrix, is_symmetric,
-                                                                       (self.n_eigenvectors + 1),
-                                                                       self.eigenvector_tolerance)
+        if self.is_sparse:
+            self.eigenvalues, self.eigenvectors = spsl.eigs(transition_matrix, k=(self.n_eigenvectors + 1), which='LR')
+        else:
+            self.eigenvalues, self.eigenvectors = np.linalg.eig(transition_matrix)
 
         ix = np.argsort(np.abs(self.eigenvalues))
         ix = ix[::-1]

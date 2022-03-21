@@ -70,7 +70,7 @@ class Grassmann:
     @staticmethod
     @beartype
     def exp_map(tangent_points: list[Numpy2DFloatArray],
-                reference_point: Union[Numpy2DFloatArrayOrthonormal, GrassmannPoint]) -> list[GrassmannPoint]:
+                reference_point: Union[np.ndarray, GrassmannPoint]) -> list[GrassmannPoint]:
         """
         :param tangent_points: Tangent vector(s).
         :param reference_point: Origin of the tangent space.
