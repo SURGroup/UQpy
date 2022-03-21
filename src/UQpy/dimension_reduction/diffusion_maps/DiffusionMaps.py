@@ -1,5 +1,6 @@
 import itertools
 
+import numpy as np
 import scipy.sparse as sps
 import scipy as sp
 from scipy.sparse.linalg import eigsh, eigs
@@ -74,7 +75,7 @@ class DiffusionMaps:
     @beartype
     def build_from_data(
         cls,
-        data: Numpy2DFloatArray,
+        data: np.ndarray,
         alpha: AlphaType = 0.5,
         n_eigenvectors: IntegerLargerThanUnityType = 2,
         is_sparse: bool = False,
@@ -126,7 +127,7 @@ class DiffusionMaps:
 
         """
 
-        if epsilon is not None and optimize_parameters:
+        if epsilon is None:
             epsilon, cut_off = DiffusionMaps.estimate_epsilon(data, cut_off=cut_off, tol=tol,
                                                               k_nn=k_nn, n_partition=n_partition,
                                                               distance_matrix=distance_matrix,
@@ -162,11 +163,7 @@ class DiffusionMaps:
 
         # Compute L^alpha = D^(-alpha)*L*D^(-alpha).
         m = d_inv.shape[0]
-        if self.is_sparse:
-            d_alpha = sps.spdiags(d_inv, 0, m, m)
-        else:
-            d_alpha = np.diag(d_inv)
-
+        d_alpha = sps.spdiags(d_inv, 0, m, m) if self.is_sparse else np.diag(d_inv)
         l_star = d_alpha.dot(self.kernel_matrix.dot(d_alpha))
 
         # d_star, d_star_inv = self._d_matrix(l_star, 1.0)

@@ -43,11 +43,11 @@ class SvdProjection(ManifoldProjection):
 
         ranks = [np.linalg.matrix_rank(data[i], tol=self.tolerance) for i in range(points_number)]
 
-        if p is str and p == "min":
+        if isinstance(p, str) and p == "min":
             p = int(min(ranks))
-        elif p is str and p == "max":
+        elif isinstance(p, str) and p == "max":
             p = int(max(ranks))
-        elif p is str:
+        elif isinstance(p, str):
             raise ValueError("The input parameter p must me either 'min', 'max' or a integer.")
         else:
             for i in range(points_number):

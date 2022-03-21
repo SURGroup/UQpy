@@ -8,7 +8,7 @@ class SnapshotPOD(POD):
         """
         Executes proper orthogonal decomposition using the :class:`.SnapshotPOD` algorithm.
         """
-        super().run()
+        return super().run()
 
     def _calculate_reduced_and_reconstructed_solutions(self, u, phi, rows, columns, snapshot_number):
         phi_s = np.dot(u.T, phi)

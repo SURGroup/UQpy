@@ -13,7 +13,7 @@ from UQpy.utilities.kernels import GrassmannianKernel, ProjectionKernel
 
 class Grassmann:
     @beartype
-    def __init__(self, grassmann_points: Union[list[Numpy2DFloatArrayOrthonormal],  list[GrassmannPoint]],
+    def __init__(self, grassmann_points: Union[list[Numpy2DFloatArrayOrthonormal], list[GrassmannPoint]],
                  kernel: GrassmannianKernel = ProjectionKernel(),
                  p: Union[int, str] = "max", optimization_method: str = "GradientDescent",
                  distance: GrassmannianDistance = GeodesicDistance()):
@@ -26,22 +26,23 @@ class Grassmann:
         self.kernel_matrix = kernel.calculate_kernel_matrix(self.grassmann_points)
         self.distance_matrix = distance.calculate_distance_matrix(self.grassmann_points)
         self.karcher_mean = Grassmann.karcher_mean(self.grassmann_points, optimization_method, distance)
-        self.frechet_variance = Grassmann.frechet_variance(self.grassmann_points, self.karcher_mean,  distance)
+        self.frechet_variance = Grassmann.frechet_variance(self.grassmann_points, self.karcher_mean, distance)
 
     @staticmethod
-    def calculate_kernel_matrix(grassmann_points: Union[list[Numpy2DFloatArrayOrthonormal],  list[GrassmannPoint]],
+    def calculate_kernel_matrix(grassmann_points: Union[list[Numpy2DFloatArrayOrthonormal], list[GrassmannPoint]],
                                 kernel: GrassmannianKernel = ProjectionKernel()):
         return kernel.calculate_kernel_matrix(grassmann_points)
 
     @staticmethod
     @beartype
-    def log_map(grassmann_points: Union[list[Numpy2DFloatArrayOrthonormal],  list[GrassmannPoint]],
-                reference_point: Union[Numpy2DFloatArrayOrthonormal,GrassmannPoint]) -> list[Numpy2DFloatArray]:
+    def log_map(grassmann_points: Union[list[Numpy2DFloatArrayOrthonormal], list[GrassmannPoint]],
+                reference_point: Union[Numpy2DFloatArrayOrthonormal, GrassmannPoint]) -> list[Numpy2DFloatArray]:
         """
         :param grassmann_points: Point(s) on the Grassmann manifold.
         :param reference_point: Origin of the tangent space.
         :return: Point(s) on the tangent space.
         """
+        reference_point = reference_point.data if isinstance(reference_point, GrassmannPoint) else reference_point
         from UQpy.utilities.distances.baseclass.GrassmannianDistance import GrassmannianDistance
         number_of_points = len(grassmann_points)
         for i in range(number_of_points):
@@ -52,7 +53,7 @@ class Grassmann:
                                                       grassmann_points[i].data.shape[0], reference_point.data.shape[1]))
 
         # Multiply ref by its transpose.
-        reference_point_transpose = reference_point.data.T
+        reference_point_transpose = reference_point.T
         m_ = np.dot(reference_point.data, reference_point_transpose)
 
         tangent_points = []
@@ -117,7 +118,7 @@ class Grassmann:
 
         variance_nominator = 0
         for i in range(points_number):
-            distances = Grassmann.__estimate_distance([reference_point, grassmann_points[i]], p_dim, distance)
+            distances = distance.calculate_distance_matrix([reference_point, grassmann_points[i]], p_dim)
             variance_nominator += distances[0] ** 2
 
         return variance_nominator / points_number
@@ -125,9 +126,14 @@ class Grassmann:
     @staticmethod
     @beartype
     def karcher_mean(grassmann_points: Union[list[Numpy2DFloatArrayOrthonormal], list[GrassmannPoint]],
-                     optimization_method: str,
-                     distance: GrassmannianDistance) -> GrassmannPoint:
+                     optimization_method: str, distance: GrassmannianDistance,
+                     acceleration: bool = False, tolerance: float = 1e-3,
+                     maximum_iterations: int = 1000) -> GrassmannPoint:
         """
+        :param maximum_iterations: Maximum iterations performed by the optimization algorithm.
+        :param tolerance: Tolerance used as the convergence criterion of the optimization.
+        :param acceleration: Boolean flag used in combination with :code:`GradientDescent` optimization method which
+         activates the Nesterov acceleration scheme
         :param grassmann_points: Point(s) on the Grassmann manifold.
         :param optimization_method: The optimization method.
         :param distance: Distance metric to be used for the optimization.
@@ -138,67 +144,31 @@ class Grassmann:
             raise ValueError("UQpy: At least two matrices must be provided.")
 
         if optimization_method == "GradientDescent":
-            return Grassmann._gradient_descent(grassmann_points, distance)
+            return Grassmann._gradient_descent(grassmann_points, distance, acceleration, tolerance, maximum_iterations)
         else:
-            return Grassmann._stochastic_gradient_descent(grassmann_points, distance)
+            return Grassmann._stochastic_gradient_descent(grassmann_points, distance, tolerance, maximum_iterations)
 
     @staticmethod
-    def _gradient_descent(data_points, distance_fun, **kwargs):
-
-        """
-        Compute the Karcher mean using the gradient descent method.
-        This method computes the Karcher mean given a set of points on the Grassmann manifold. In this regard, the
-        ``gradient_descent`` method is implemented herein also considering the acceleration scheme due to Nesterov.
-        Further, this method is called by the method ``karcher_mean``.
-        **Input:**
-        * **data_points** (`list`)
-            Points on the Grassmann manifold.
-
-        * **distance_fun** (`callable`)
-            Distance function.
-        * **kwargs** (`dictionary`)
-            Contains the keywords for the used in the optimizers to find the Karcher mean.
-        **Output/Returns:**
-        * **mean_element** (`list`)
-            Karcher mean.
-        """
-
-        # acc is a boolean varible to activate the Nesterov acceleration scheme.
-        if 'acc' in kwargs.keys():
-            acc = kwargs['acc']
-        else:
-            acc = False
-
+    def _gradient_descent(data_points, distance_fun, acceleration, tolerance, maximum_iterations):
+        # acc is a boolean variable to activate the Nesterov acceleration scheme.
+        acc = acceleration
         # Error tolerance
-        if 'tol' in kwargs.keys():
-            tol = kwargs['tol']
-        else:
-            tol = 1e-3
-
+        tol = tolerance
         # Maximum number of iterations.
-        if 'maxiter' in kwargs.keys():
-            maxiter = kwargs['maxiter']
-        else:
-            maxiter = 1000
-
+        maxiter = maximum_iterations
         # Number of points.
         n_mat = len(data_points)
 
         # =========================================
         alpha = 0.5
-        rnk = []
-        for i in range(n_mat):
-            rnk.append(min(np.shape(data_points[i])))
-
+        rnk = [min(np.shape(data_points[i].data)) for i in range(n_mat)]
         max_rank = max(rnk)
-        fmean = []
-        for i in range(n_mat):
-            fmean.append(Grassmann.frechet_variance(data_points[i], data_points, distance_fun))
+        fmean = [Grassmann.frechet_variance(data_points, data_points[i], distance_fun) for i in range(n_mat)]
 
         index_0 = fmean.index(min(fmean))
-        mean_element = data_points[index_0].tolist()
+        mean_element = data_points[index_0].data.tolist()
 
-        avg_gamma = np.zeros([np.shape(data_points[0])[0], np.shape(data_points[0])[1]])
+        avg_gamma = np.zeros([np.shape(data_points[0].data)[0], np.shape(data_points[0].data)[1]])
 
         itera = 0
 
@@ -215,7 +185,8 @@ class Grassmann:
 
         # Main loop
         while itera <= maxiter:
-            _gamma = Grassmann.log_map(points_grassmann=data_points, ref=np.asarray(mean_element))
+            _gamma = Grassmann.log_map(grassmann_points=data_points,
+                                       reference_point=np.asarray(mean_element))
             avg_gamma.fill(0)
 
             for i in range(n_mat):
@@ -236,62 +207,33 @@ class Grassmann:
             else:
                 step = alpha * avg_gamma
 
-            x = Grassmann.exp_map(points_tangent=[step], ref=np.asarray(mean_element))
+            x = Grassmann.exp_map(tangent_points=[step],
+                                  reference_point=np.asarray(mean_element))
 
-            test_1 = np.linalg.norm(x[0] - mean_element, 'fro')
+            test_1 = np.linalg.norm(x[0].data - mean_element, 'fro')
 
             if test_1 < tol:
                 break
 
             mean_element = []
-            mean_element = x[0]
+            mean_element = x[0].data.tolist()
 
             itera += 1
 
         # return the Karcher mean.
-        return mean_element
+        return GrassmannPoint(np.asarray(mean_element))
 
     @staticmethod
-    def _stochastic_gradient_descent(data_points, distance_fun, **kwargs):
-        """
-        Compute the Karcher mean using the stochastic gradient descent method.
-        This method computes the Karcher mean given a set of points on the Grassmann manifold. In this regard, the
-        ``stochastic_gradient_descent`` method is implemented herein. Further, this method is called by the method
-        ``karcher_mean``.
-        **Input:**
-        * **data_points** (`list`)
-            Points on the Grassmann manifold.
+    def _stochastic_gradient_descent(data_points, distance_fun, tolerance, maximum_iterations):
 
-        * **distance_fun** (`callable`)
-            Distance function.
-        * **kwargs** (`dictionary`)
-            Contains the keywords for the used in the optimizers to find the Karcher mean.
-        **Output/Returns:**
-        * **mean_element** (`list`)
-            Karcher mean.
-        """
-
-        if 'tol' in kwargs.keys():
-            tol = kwargs['tol']
-        else:
-            tol = 1e-3
-
-        if 'maxiter' in kwargs.keys():
-            maxiter = kwargs['maxiter']
-        else:
-            maxiter = 1000
-
+        tol = tolerance
+        maxiter = maximum_iterations
         n_mat = len(data_points)
 
-        rnk = []
-        for i in range(n_mat):
-            rnk.append(min(np.shape(data_points[i])))
-
+        rnk = [min(np.shape(data_points[i])) for i in range(n_mat)]
         max_rank = max(rnk)
 
-        fmean = []
-        for i in range(n_mat):
-            fmean.append(Grassmann.frechet_variance(data_points[i], data_points, distance_fun))
+        fmean = [Grassmann.frechet_variance(data_points[i], data_points, distance_fun) for i in range(n_mat)]
 
         index_0 = fmean.index(min(fmean))
 
@@ -326,5 +268,3 @@ class Grassmann:
             itera += 1
 
         return mean_element
-
-

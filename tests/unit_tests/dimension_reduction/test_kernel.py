@@ -52,9 +52,10 @@ def test_kernel_gaussian_2d():
     gaussian = GaussianKernel()
     kernel = gaussian.calculate_kernel_matrix(points)
 
-    assert np.allclose(np.matrix.round(kernel, 4), np.array([[1., 0.8834, 0.7788], [0.8834, 1., 0.6937],
-                                                             [0.7788, 0.6937, 1.]]))
-    assert np.round(gaussian.epsilon, 4) == 3.7538
+    assert np.allclose(np.matrix.round(kernel, 4), np.array([[1., 0.628, 0.3912],
+                                                             [0.628, 1., 0.2534],
+                                                             [0.3912, 0.2534, 1.]]))
+    assert np.round(gaussian.epsilon, 4) == 1.0
 
 
 def test_kernel():
@@ -74,9 +75,10 @@ def test_kernel():
     # Creating a list of solutions.
     Solutions = [Sol0, Sol1, Sol2, Sol3]
     from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
-    manifold_projection = SvdProjection(Solutions, p=sys.maxsize)
-    manifold = Grassmann(manifold_projected_points=manifold_projection)
-    kernel = manifold.evaluate_kernel_matrix(kernel=ProjectionKernel())
+    manifold_projection = SvdProjection(Solutions, p="max")
+    kernel = ProjectionKernel()
+
+    kernel = kernel.calculate_kernel_matrix(manifold_projection.psi)
 
     assert kernel[0, 1] == 2.740411439218967
 

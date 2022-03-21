@@ -21,13 +21,14 @@ def test_dmaps_swiss_roll():
     Y0 = 1. / 6 * (phi + sigma * xi) * np.cos(phi)
 
     swiss_roll = np.array([X0, Y0, Z0]).transpose()
-    dmaps = DiffusionMaps.create_from_data(data=swiss_roll,
-                                           alpha=0.5, n_eigenvectors=3,
-                                           is_sparse=True, neighbors_number=100,
-                                           kernel=GaussianKernel(epsilon=0.03))
+    dmaps = DiffusionMaps.build_from_data(data=swiss_roll,
+                                          alpha=0.5, n_eigenvectors=3,
+                                          is_sparse=True, neighbors_number=100,
+                                          epsilon=0.03,
+                                          kernel=GaussianKernel())
 
-    diff_coords, evals, evecs = dmaps.fit()
-
+    dmaps.fit()
+    evals = dmaps.eigenvalues
     assert round(evals[0], 9) == 1.0
     assert round(evals[1], 9) == 0.999489295
     assert round(evals[2], 9) == 0.999116766
@@ -56,11 +57,11 @@ def test_dmaps_circular():
 
     X = np.array([x, y, z]).transpose()
 
-    dmaps = DiffusionMaps.create_from_data(data=X, alpha=1, n_eigenvectors=3,
-                                           kernel=GaussianKernel(epsilon=0.3))
+    dmaps = DiffusionMaps.build_from_data(data=X, alpha=1, n_eigenvectors=3,
+                                          kernel=GaussianKernel(), epsilon=0.3)
 
-    diff_coords, evals, evecs = dmaps.fit()
-
+    dmaps.fit()
+    evals = dmaps.eigenvalues
     assert evals[0] == 1.0000000000000002
     assert evals[1] == 0.9964842223723996
     assert evals[2] == 0.9964453129642372
@@ -96,11 +97,13 @@ def test_diff_matrices():
 
         samples.append(M)
 
-    dmaps = DiffusionMaps.create_from_data(data=samples, alpha=0.5, n_eigenvectors=10)
+    dmaps = DiffusionMaps.build_from_data(data=np.array(samples).transpose(), alpha=0.5, n_eigenvectors=10,
+                                          epsilon=1.0,
+                                          kernel=GaussianKernel())
 
-    diff_coords, evals, evecs = dmaps.fit()
+    dmaps.fit()
+    evals = dmaps.eigenvalues
 
     assert evals[0] == 1.0000000000000004
     assert evals[1] == 0.12956887787384186
     assert evals[2] == 0.07277038589085978
-

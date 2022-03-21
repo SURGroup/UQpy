@@ -98,7 +98,7 @@ def test_distances():
     # Creating a list of matrices.
     matrices = [Sol0, Sol1, Sol2, Sol3]
 
-    manifold_projection = SvdProjection(matrices, p=sys.maxsize)
+    manifold_projection = SvdProjection(matrices, p="max")
 
     distance_metric = GeodesicDistance()
     value = distance_metric.compute_distance(manifold_projection.psi[0], manifold_projection.psi[1])

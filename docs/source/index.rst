@@ -3,7 +3,7 @@
 Welcome to UQpy's documentation!
 ================================
 
-py:mod:`UQpy` (Uncertainty Quantification with python) is a general purpose python toolbox
+UQpy (Uncertainty Quantification with python) is a general purpose python toolbox
 for modeling uncertainty in physical and mathematical systems. The code is organized 
 as a set of modules centered around core capabilities in Uncertainty Quantification (UQ).
 

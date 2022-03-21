@@ -43,10 +43,6 @@ Q0 = SORM(form_object=form)
 
 
 # print results
-print('Design point: %s' % Q0.DesignPoint_X)
-print('Design point: %s' % Q0.DesignPoint_U)
-print('beta: %s' % Q0.beta)
-print('FORM probability of failure: %s' % Q0.Pf_form)
 print('SORM probability of failure: %s' % Q0.failure_probability)
 
 shutil.rmtree(RunModelObject4.model_dir)

@@ -27,61 +27,9 @@ The :class:`.Kernel` class is imported using the following command:
 .. autoclass:: UQpy.utilities.kernels.baseclass.Kernel
     :members: kernel_entry
 
-Grassmannian Kernel
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :class:`.GrassmannianKernel` class is imported using the following command:
+.. toctree::
+   :maxdepth: 1
 
->>> from UQpy.utilities.kernels.baseclass.GrassmannianKernel import GrassmannianKernel
-
-.. autoclass:: UQpy.utilities.kernels.baseclass.GrassmannianKernel
-    :members: calculate_kernel_matrix
-
-Projection
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.ProjectionKernel` class is imported using the following command:
-
->>> from UQpy.utilities.kernels.ProjectionKernel import ProjectionKernel
-
-One can use the following command to instantiate the class :class:`.ProjectionKernel`
-
-.. autoclass:: UQpy.utilities.kernels.ProjectionKernel
-    :members:
-
-
-
-Binet-Cauchy
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.BinetCauchyKernel` class is imported using the following command:
-
->>> from UQpy.utilities.kernels.BinetCauchyKernel import BinetCauchyKernel
-
-One can use the following command to instantiate the class :class:`.BinetCauchyKernel`
-
-.. autoclass:: UQpy.utilities.kernels.BinetCauchyKernel
-    :members:
-
-
-Euclidean Kernel
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.EuclideanKernel` class is imported using the following command:
-
->>> from UQpy.utilities.kernels.baseclass.EuclideanKernel import EuclideanKernel
-
-.. autoclass:: UQpy.utilities.kernels.baseclass.EuclideanKernel
-    :members: calculate_kernel_matrix
-
-Gaussian
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.GaussianKernel` class is imported using the following command:
-
->>> from UQpy.utilities.kernels.GaussianKernel import GaussianKernel
-
-One can use the following command to instantiate the class :class:`.GaussianKernel`
-
-.. autoclass:: UQpy.utilities.kernels.GaussianKernel
-    :members:
+    Grassmannian Kernels <grassmann_kernels>
+    Euclidean Kernels <euclidean_kernels>

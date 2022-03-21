@@ -141,6 +141,32 @@ A description of the class signature is shown below:
 .. autoclass:: UQpy.dimension_reduction.SvdProjection
     :members:
 
+Calculate Svd Projection SUM or PRODUCT kernel
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+>>> D1 = 6
+>>> r0 = 2  # rank sample 0
+>>> r1 = 3  # rank sample 1
+>>> r2 = 4  # rank sample 2
+>>> r3 = 3  # rank sample 2
+>>>
+>>> Sol0 = np.dot(np.random.rand(D1, r0), np.random.rand(r0, D1))
+>>> Sol1 = np.dot(np.random.rand(D1, r1), np.random.rand(r1, D1))
+>>> Sol2 = np.dot(np.random.rand(D1, r2), np.random.rand(r2, D1))
+>>> Sol3 = np.dot(np.random.rand(D1, r3), np.random.rand(r3, D1))
+>>>
+>>> # Creating a list of solutions.
+>>> Solutions = [Sol0, Sol1, Sol2, Sol3]
+>>> from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
+>>> manifold_projection = SvdProjection(Solutions, p="max")
+>>> kernel = ProjectionKernel()
+>>>
+>>> kernel_psi = kernel.calculate_kernel_matrix(manifold_projection.psi)
+>>> kernel_phi = kernel.calculate_kernel_matrix(manifold_projection.phi)
+>>>
+>>> sum_kernel = kernel_psi + kernel_phi
+>>> product_kernel = kernel_psi * kernel_phi
+
 
 
 

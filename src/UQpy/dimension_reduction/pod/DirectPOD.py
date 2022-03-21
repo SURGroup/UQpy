@@ -8,7 +8,7 @@ class DirectPOD(POD):
         """
         Executes proper orthogonal decomposition using the :class:`.DirectPOD` algorithm.
         """
-        super().run()
+        return super().run()
 
     def _calculate_c_and_iterations(self, u, snapshot_number, rows, columns):
         if snapshot_number < rows * columns and rows * columns > 1000:
