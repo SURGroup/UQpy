@@ -36,4 +36,4 @@ def test_solution_reconstruction():
                                           distance=GeodesicDistance())
 
     interpolated_solution = interpolation.interpolate_manifold(point=point)
-    assert round(interpolated_solution.data[0, 0], 9) == -0.4103152553233451
+    assert round(interpolated_solution.data[0, 0], 9) == -0.410315255
