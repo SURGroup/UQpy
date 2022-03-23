@@ -45,8 +45,14 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx_autodoc_typehints",
     "sphinxcontrib.bibtex",
-    "sphinx_gallery.gen_gallery"
+    "sphinx_gallery.gen_gallery",
+    "nbsphinx",
+    "sphinx_gallery.load_style",
 ]
+
+nbsphinx_custom_formats={
+    ".md": ["jupytext.reads", {"fmt": "mystnb"}]
+}
 autoclass_content = 'init'
 add_module_names = False
 autodoc_member_order = 'bysource'
@@ -62,7 +68,7 @@ autosectionlabel_prefix_document = True
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "Model_Runs*"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "Model_Runs**"]
 
 sphinx_gallery_conf = {
     'examples_dirs': ['../code/dimension_reduction/diffusion_maps',
@@ -174,8 +180,8 @@ html_sidebars = {
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-# source_suffix = ['.rst', '.md']
-source_suffix = ".rst"
+source_suffix = ['.rst', '.md']
+# source_suffix = ".rst"
 
 # The master toctree document.
 master_doc = "index"

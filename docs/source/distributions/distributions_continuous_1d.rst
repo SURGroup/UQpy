@@ -12,5 +12,10 @@ following methods: :py:meth:`cdf`, :py:meth:`pdf`, :py:meth:`log_pdf`, :py:meth:
    :maxdepth: 1
 
     List of 1D Continuous Distributions <continuous_1d_collection>
-    Examples <../auto_examples/distributions/continuous_1d/index.rst>
+
+Examples
+^^^^^^^^^^
+.. nbgallery::
+
+  /notebooks/test.md
 

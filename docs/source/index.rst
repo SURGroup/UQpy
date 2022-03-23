@@ -49,7 +49,7 @@ Using Conda::
     conda install -c conda-forge uqpy
 
 
-From GitHub: Clone your fork of the py:mod:`UQpy` repo from your GitHub account to your local disk (to get the latest version::
+From GitHub: Clone your fork of the :py:mod:`UQpy` repo from your GitHub account to your local disk (to get the latest version::
 
     git clone https://github.com/SURGroup/UQpy.git
     cd UQpy
@@ -60,7 +60,7 @@ From GitHub: Clone your fork of the py:mod:`UQpy` repo from your GitHub account 
 Development
 -----------
 
-py:mod:`UQpy` is designed to serve as a platform for developing new UQ methodologies and algorithms. To install py:mod:`UQpy` as a developer run::
+:py:mod:`UQpy` is designed to serve as a platform for developing new UQ methodologies and algorithms. To install :py:mod:`UQpy` as a developer run::
 
     python setup.py {version} develop
 
@@ -70,7 +70,7 @@ py:mod:`UQpy` is designed to serve as a platform for developing new UQ methodolo
 Logging
 -----------
 
-py:mod:`UQpy` adopts the built-in `logging` python library. This allows for a fine-grain logging of events of various severity levels.
+:py:mod:`UQpy` adopts the built-in `logging` python library. This allows for a fine-grain logging of events of various severity levels.
 The available logging levels allowed by the library are:
 
 **DEBUG**, **INFO**, **WARNING**, **ERROR**, **CRITICAL**
@@ -115,7 +115,7 @@ Olivier, A., Giovanis, D.G., Aakash, B.S., Chauhan, M., Vandanapu, L., and Shiel
 
 https://doi.org/10.1016/j.jocs.2020.101204
 
-Examples from the above article were performed using py:mod:`UQpy` version 3. These examples can be found at:
+Examples from the above article were performed using :py:mod:`UQpy` version 3. These examples can be found at:
 
 https://github.com/SURGroup/UQpy_paper
 
@@ -124,14 +124,14 @@ https://github.com/SURGroup/UQpy_paper
 Contact
 ------------
 
-To engage in conversations about uncertainty quantification, or ask question about py:mod:`UQpy` usage and functionality refer to the py:mod:`UQpy`'s discussions tab:
+To engage in conversations about uncertainty quantification, or ask questions about :py:mod:`UQpy` usage and functionality refer to the :py:mod:`UQpy`'s discussions tab:
 
 `Discussions <https://github.com/SURGroup/UQpy/discussions>`_
 
 Help & Support
 ---------------------------
 
-For assistance with the py:mod:`UQpy` software package, please raise an issue on the Github `issues`_ page. Please use the appropriate labels to indicate which module you are specifically inquiring about.
+For assistance with the :py:mod:`UQpy` software package, please raise an issue on the Github `issues`_ page. Please use the appropriate labels to indicate which module you are specifically inquiring about.
 
 
 .. _issues: https://github.com/SURGroup/UQpy/issues
