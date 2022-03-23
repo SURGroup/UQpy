@@ -2,25 +2,30 @@
 
 POD on Diffusion Equation 2D
 ============================
-
-In this example, the diffusion equation is solved and then methods from the POD class are used to decompose the output
-solutions/dataset and extract its basis functions which can be used for the reconstruction of the solution.
-
-2D Diffusion equation
----------------------
-> $\displaystyle \frac{\partial U}{\partial t} = D \bigg(\frac{\partial^2 U}{\partial x^2} + \frac{\partial^2 U}{\partial y^2}\bigg)$
-> <br>
-> <br>
-> where $D$ is the diffusion coefficient. $U$ describes the behavior of the particles in Brownian motion, resulting from their random movements and collisions.
-<img src="plate_and_disc.png" alt="plate_and_disc.png" height="160" width="160" align=right>
-
-### Problem description:
-
->  - A 2D metal plate is initially at temperature $T_{cool}$.
->  - A disc of a specified size inside the plate is at temperature $T_{hot}$.
->  - Suppose that the edges of the plate are held fixed at $T_{cool}$.
->  - The diffusion equation is applied to follow the evolution of the temperature of the plate.
 """
+
+# %% md
+#
+# In this example, the diffusion equation is solved and then methods from the POD class are used to decompose the output
+# solutions/dataset and extract its basis functions which can be used for the reconstruction of the solution.
+#
+# 2D Diffusion equation
+# ---------------------
+# ..math :: \displaystyle \frac{\partial U}{\partial t} = D \bigg(\frac{\partial^2 U}{\partial x^2} + \frac{\partial^2 U}{\partial y^2}\bigg)
+#
+# where :math:`D` is the diffusion coefficient. :math:`U` describes the behavior of the particles in Brownian motion,
+# resulting from their random movements and collisions.
+#
+# <img src="plate_and_disc.png" alt="plate_and_disc.png" height="160" width="160" align=right>
+#
+# ### Problem description:
+#
+# - A 2D metal plate is initially at temperature :math:`T_{cool}`.
+# - A disc of a specified size inside the plate is at temperature :math:`T_{hot}`.
+# - Suppose that the edges of the plate are held fixed at :math:`T_{cool}`.
+# - The diffusion equation is applied to follow the evolution of the temperature of the plate.
+
+# %%
 
 # %% md
 #

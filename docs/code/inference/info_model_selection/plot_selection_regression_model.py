@@ -1,6 +1,6 @@
 """
 
-Selection between regression models
+2. Selection between regression models
 ==============================================
 
 Here candidate models are defined as
@@ -43,7 +43,7 @@ from UQpy.inference import ComputationalModel
 param_true = np.array([1.0, 2.0]).reshape((1, -1))
 print('Shape of true parameter vector: {}'.format(param_true.shape))
 
-h_func = RunModel(model_script='local_pfn_models.py', model_object_name='model_quadratic', vec=False,
+h_func = RunModel(model_script='pfn_models.py', model_object_name='model_quadratic', vec=False,
                   var_names=['theta_0', 'theta_1'])
 h_func.run(samples=param_true)
 
@@ -62,10 +62,11 @@ shutil.rmtree(h_func.model_dir)
 
 #%%
 
-names = ['linear', 'quadratic', 'cubic']
+names = ['model_linear', 'model_quadratic', 'model_cubic']
 estimators = []
+
 for i in range(3):
-    h_func = RunModel(model_script='local_pfn_models.py', model_object_name='model_' + names[i], vec=False,
+    h_func = RunModel(model_script='pfn_models.py', model_object_name=names[i], vec=False,
                       var_names=['theta_{}'.format(j) for j in range(i + 1)])
     M = ComputationalModel(runmodel_object=h_func, n_parameters=i + 1,
                            name=names[i], error_covariance=error_covariance)

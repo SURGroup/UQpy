@@ -16,11 +16,12 @@ respectively. These classes can be imported in a python script using the followi
 >>> from UQpy.reliability.taylor_series import FORM, SORM
 
 
+.. toctree::
+   :maxdepth: 1
 
+    FORM <form>
+    SORM <sorm>
 
-.. include:: form.rst
-
-.. include:: sorm.rst
 
 
 

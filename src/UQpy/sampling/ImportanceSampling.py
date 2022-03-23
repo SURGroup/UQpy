@@ -100,7 +100,7 @@ class ImportanceSampling:
         # Sample from proposal
         new_samples = self.proposal.rvs(nsamples=nsamples, random_state=self.random_state)
         # Compute un-scaled weights of new samples
-        a=self.evaluate_log_target(x=new_samples)
+        a = self.evaluate_log_target(x=new_samples)
         new_log_weights = self.evaluate_log_target(x=new_samples) - self.proposal.log_pdf(x=new_samples)
 
         # Save samples and weights (append to existing if necessary)
@@ -124,7 +124,7 @@ class ImportanceSampling:
             self.logger.info("UQpy: unweighted samples are being deleted, call the resample method to regenerate them")
             self.unweighted_samples = None
 
-    def resample(self, method: str = "multinomial", nsamples:int = None):
+    def resample(self, method: str = "multinomial", nsamples: int = None):
         """
         Resample to get a set of un-weighted samples that represent the target pdf.
 
@@ -154,20 +154,17 @@ class ImportanceSampling:
     def _preprocess_target(log_pdf_, pdf_, args):
         # log_pdf is provided
         if log_pdf_ is not None:
-            if callable(log_pdf_):
-                if args is None:
-                    args = ()
-                evaluate_log_pdf = lambda x: log_pdf_(x, *args)
-            else:
+            if not callable(log_pdf_):
                 raise TypeError("UQpy: log_pdf_target must be a callable")
-        # pdf is provided
+            if args is None:
+                args = ()
+            evaluate_log_pdf = lambda x: log_pdf_(x, *args)
         elif pdf_ is not None:
-            if callable(pdf_):
-                if args is None:
-                    args = ()
-                evaluate_log_pdf = lambda x: np.log(np.maximum(pdf_(x, *args), 10 ** (-320) * np.ones((x.shape[0],))))
-            else:
+            if not callable(pdf_):
                 raise TypeError("UQpy: pdf_target must be a callable")
+            if args is None:
+                args = ()
+            evaluate_log_pdf = lambda x: np.log(np.maximum(pdf_(x, *args), 10 ** (-320) * np.ones((x.shape[0],))))
         else:
             raise ValueError("UQpy: log_pdf_target or pdf_target should be provided.")
         return evaluate_log_pdf

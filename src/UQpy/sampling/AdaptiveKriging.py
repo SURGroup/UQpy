@@ -83,17 +83,15 @@ class AdaptiveKriging:
         # Initialize and run preliminary error checks.
         self.dimension = len(distributions)
 
-        if samples is not None:
-            if self.dimension != self.samples.shape[1]:
-                raise NotImplementedError("UQpy Error: Dimension of samples and distribution are inconsistent.")
+        if samples is not None and self.dimension != self.samples.shape[1]:
+            raise NotImplementedError("UQpy Error: Dimension of samples and distribution are inconsistent.")
 
         if isinstance(distributions, list):
             for i in range(len(distributions)):
                 if not isinstance(distributions[i], DistributionContinuous1D):
                     raise TypeError("UQpy: A DistributionContinuous1D object must be provided.")
-        else:
-            if not isinstance(distributions, (DistributionContinuous1D, JointIndependent)):
-                raise TypeError("UQpy: A DistributionContinuous1D or JointInd object must be provided.")
+        elif not isinstance(distributions, (DistributionContinuous1D, JointIndependent)):
+            raise TypeError("UQpy: A DistributionContinuous1D or JointInd object must be provided.")
 
         self.random_state = process_random_state(random_state)
 
@@ -104,14 +102,15 @@ class AdaptiveKriging:
         # Evaluate model at the training points
         if len(self.runmodel_object.qoi_list) == 0 and samples is not None:
             self.runmodel_object.run(samples=self.samples, append_samples=False)
-        if samples is not None:
-            if len(self.runmodel_object.qoi_list) != self.samples.shape[0]:
-                raise NotImplementedError("UQpy: There should be no model evaluation or Number of samples and model "
-                                          "evaluation in RunModel object should be same.")
+        if (
+            samples is not None
+            and len(self.runmodel_object.qoi_list) != self.samples.shape[0]
+        ):
+            raise NotImplementedError("UQpy: There should be no model evaluation or Number of samples and model "
+                                      "evaluation in RunModel object should be same.")
 
-        if self.nsamples is not None:
-            if samples is not None:
-                self.run(nsamples=self.nsamples)
+        if self.nsamples is not None and samples is not None:
+            self.run(nsamples=self.nsamples)
 
     def run(
         self,
@@ -159,21 +158,20 @@ class AdaptiveKriging:
             self.logger.info("UQpy: Adaptive Kriging - Evaluating the model at the sample set using RunModel.")
 
             self.runmodel_object.run(samples=samples, append_samples=append_samples)
-        else:
-            if len(self.samples.shape) == 0:
-                if self.initial_nsamples is None:
-                    raise NotImplementedError("UQpy: User should provide either 'samples' or 'nstart' value.")
-                self.logger.info("UQpy: Adaptive Kriging - Generating the initial sample set using Latin hypercube "
-                                 "sampling.")
+        elif len(self.samples.shape) == 0:
+            if self.initial_nsamples is None:
+                raise NotImplementedError("UQpy: User should provide either 'samples' or 'nstart' value.")
+            self.logger.info("UQpy: Adaptive Kriging - Generating the initial sample set using Latin hypercube "
+                             "sampling.")
 
-                random_criterion = Random()
-                latin_hypercube_sampling = LatinHypercubeSampling(
-                    distributions=self.dist_object,
-                    nsamples=2,
-                    criterion=random_criterion,
-                    random_state=self.random_state)
-                self.samples = latin_hypercube_sampling._samples
-                self.runmodel_object.run(samples=self.samples)
+            random_criterion = Random()
+            latin_hypercube_sampling = LatinHypercubeSampling(
+                distributions=self.dist_object,
+                nsamples=2,
+                criterion=random_criterion,
+                random_state=self.random_state)
+            self.samples = latin_hypercube_sampling._samples
+            self.runmodel_object.run(samples=self.samples)
 
         self.logger.info("UQpy: Performing AK-MCS design...")
 

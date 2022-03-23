@@ -97,7 +97,7 @@ print(x_sts.samples)
 #%% md
 #
 # Create stratification using seeds and widths
-# --------------------------------
+# ------------------------------------------------
 # Strata object can be initiated by defining seeds and widths of the strata.
 
 #%%
@@ -141,8 +141,8 @@ sts_obj.weights
 #%% md
 #
 # Create stratification using input file
-# --------------------------------
-# Strata object can be defined using a input file, which contains the seeds and widths of each stratum.
+# -----------------------------------------
+# Strata object can be defined using an input file, which contains the seeds and widths of each stratum.
 
 #%%
 

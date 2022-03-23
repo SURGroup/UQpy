@@ -7,23 +7,23 @@ This notebook illustrates the use of a few diagnostics for MCMC. The example con
 regression model via Bayesian inference.
 """
 
-#%% md
+# %% md
 #
 # Import the necessary libraries.
 
-#%%
+# %%
 
 from UQpy.sampling import MetropolisHastings
 from UQpy.distributions import Normal, JointIndependent
 import numpy as np
 import matplotlib.pyplot as plt
 
-#%% md
+# %% md
 # Example setup
 # --------------
 # First generate data then define the target log pdf = log likelihood $p(data \vert x)$.
 
-#%%
+# %%
 
 param_true = [1., 2.]
 domain = np.linspace(0, 10, 50)
@@ -31,8 +31,9 @@ data_clean = param_true[0] * domain + param_true[1] * domain ** 2
 rstate = np.random.RandomState(123)
 data_noisy = data_clean + rstate.randn(*data_clean.shape)
 
-
 from scipy.stats import norm
+
+
 def log_target(x, data, x_domain):
     log_target_value = np.zeros(x.shape[0])
     for i, xx in enumerate(x):
@@ -54,48 +55,54 @@ plt.plot(samples[:, 0], samples[:, 1], 'o', alpha=0.5)
 plt.plot(1., 2., marker='x', color='orange')
 plt.show()
 
-
-#%% md
+# %% md
 # Look at acceptance rate of the chain(s)
-# --------------
+# -----------------------------------------
 #
 
-#%%
+# %%
 
 print(sampler.acceptance_rate)
 
-
-#%% md
+# %% md
 # This acceptance rate is quite low, showing that the proposal should probably be refined !
 #
 
-#%%
+# %%
 
-#%% md
+# %% md
 # Graphics
 # ---------
 
-#%%
+# %%
 
 fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(15, 7))
 for j in range(samples.shape[1]):
     ax[j, 0].plot(np.arange(samples.shape[0]), samples[:, j])
-    ax[j, 0].set_title('chain - parameter # {}'.format(j+1))
-    ax[j, 1].plot(np.arange(samples.shape[0]), np.cumsum(samples[:, j])/np.arange(samples.shape[0]))
+    ax[j, 0].set_title('chain - parameter # {}'.format(j + 1))
+    ax[j, 1].plot(np.arange(samples.shape[0]), np.cumsum(samples[:, j]) / np.arange(samples.shape[0]))
     ax[j, 1].set_title('parameter convergence')
     ax[j, 2].acorr(samples[:, j] - np.mean(samples[:, j]), maxlags=40, normed=True)
     ax[j, 2].set_title('correlation between samples')
 plt.show()
 
-#%% md
+
+# %% md
 # Compute effective sample size (ESS)
 # -----------------------------------
-# In MCMC, the $ESS$ has been used to derive termination rules, based on the quality of the estimation. In brief, the simulation stops when the computational uncertainty on a chosen quantity (for instance, the expected value of RV $x$) is small compared to its posterior uncertainty [1]. Mathematically, this allows computation of the $ESS$ and a minimum value $ESS_{min}$ (qualitatively, an acceptable approximation is reached if $ESS > ESS_{min}$). These quantities can be computed by looking at each marginal density (is $x$ is a multivariate random variable), or by looking at the joint. The reader is referred to [1, 2] for more details.
+# In MCMC, the :math:`ESS` has been used to derive termination rules, based on the quality of the estimation. In brief,
+# the simulation stops when the computational uncertainty on a chosen quantity (for instance, the expected value of RV
+# :math:`x`) is small compared to its posterior uncertainty [1]. Mathematically, this allows computation of the
+# :math:`ESS` and a minimum value :math:`ESS_{min}` (qualitatively, an acceptable approximation is reached if
+# :math:`ESS > ESS_{min}`). These quantities can be computed by looking at each marginal density (is :math:`x` is a
+# multivariate random variable), or by looking at the joint. The reader is referred to [1, 2] for more details.
 #
-# [1] *A practical sequential stopping rule for high-dimensional MCMC and its application to spatial-temporal Bayesian models*, Gong and Flegal, 2014. <br>
+# [1] *A practical sequential stopping rule for high-dimensional MCMC and its application to spatial-temporal Bayesian
+# models*, Gong and Flegal, 2014.
+#
 # [2] *Multivariate Output Analysis for Markov Chain Monte Carlo*, Vats and Flegal, 2015
 
-#%%
+# %%
 
 def compute_marginal_ESS(samples, eps_ESS=0.05, alpha_ESS=0.05):
     # Computation of ESS and min ESS, look at each marginal distribution separately
@@ -145,18 +152,19 @@ def compute_joint_ESS(samples, eps_ESS=0.05, alpha_ESS=0.05):
 
     return joint_ESS, min_joint_ESS
 
+
 marginal_ESS, min_marginal_ESS = compute_marginal_ESS(samples, eps_ESS=0.05, alpha_ESS=0.05)
 
 print('Univariate Effective Sample Size in each dimension:')
 for j in range(2):
     print('Dimension {}: ESS = {}, minimum ESS recommended = {}'.
-          format(j+1, marginal_ESS[j], min_marginal_ESS[j]))
+          format(j + 1, marginal_ESS[j], min_marginal_ESS[j]))
 
     joint_ESS, min_joint_ESS = compute_joint_ESS(samples, eps_ESS=0.05, alpha_ESS=0.05)
 
     print('\nMultivariate Effective Sample Size:')
     print('Multivariate ESS = {}, minimum ESS recommended = {}'.format(joint_ESS, min_joint_ESS))
 
-#%% md
+# %% md
 # Results above show that the chains should probably be run for a longer amount of time in order to obtain reliable
 # results in terms of the expected value of the parameters to be learnt.

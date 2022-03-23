@@ -169,7 +169,7 @@ The :class:`.KulsinskiDistance` class is imported using the following command:
 
 One can use the following command to instantiate the class :class:`.KulsinskiDistance`
 
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.KulsinskiDistance
+.. autoclass:: UQpy.utilities.distances.euclidean_distances.KulsinksiDistance
     :members:
 
 Mahalanobis Distance

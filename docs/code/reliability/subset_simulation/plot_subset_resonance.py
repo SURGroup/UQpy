@@ -1,6 +1,6 @@
 """
 
-Subset Simulation for a SDOF resonance problem
+2. Subset Simulation for a SDOF resonance problem
 ======================================================================
 
 Here, the Modified Metropolis Hastings Algorithm for MCMC is compared to the Affine Invariant Ensemble sampler for

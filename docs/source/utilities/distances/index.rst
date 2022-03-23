@@ -28,7 +28,6 @@ The :class:`.Distances` class is imported using the following command:
 >>> from UQpy.utilities.distances.baseclass.Distance import Distance
 
 .. autoclass:: UQpy.utilities.distances.baseclass.Distance
-    :members: compute_distance
 
 
 .. toctree::

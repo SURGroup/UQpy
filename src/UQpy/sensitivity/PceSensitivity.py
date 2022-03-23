@@ -17,10 +17,18 @@ class PceSensitivity:
         :param pce_object: Polynomial Chaos Expansion surrogate.
         """
         self.pce_object = pce_object
-        self.first_order_indices=None
+        self.first_order_indices = None
+        """PCE estimates for the first order Sobol indices"""
         self.total_order_indices = None
+        """PCE estimates for the total order Sobol indices"""
         self.generalized_first_order_indices = None
+        """PCE estimates of generalized first order Sobol indices, which characterize
+        the sensitivity of a vector-valued quantity of interest on the random
+        inputs."""
         self.generalized_total_order_indices = None
+        """PCE estimates of generalized total order Sobol indices, which characterize
+        the sensitivity of a vector-valued quantity of interest on the random
+        inputs."""
 
     def run(self):
         """
@@ -30,8 +38,6 @@ class PceSensitivity:
         self.calculate_total_order_indices()
         self.calculate_generalized_first_order_indices()
         self.calculate_generalized_total_order_indices()
-
-
 
     def calculate_first_order_indices(self) -> np.ndarray:
         """
@@ -92,7 +98,7 @@ class PceSensitivity:
             raise ValueError('Not applicable for scalar model outputs.')
 
         variance = self.pce_object.get_moments()[1]
-        first_order_indices = self.first_order_indices()
+        first_order_indices = self.calculate_first_order_indices()
         variance_contributions = first_order_indices * variance
         total_variance = np.sum(variance)
         total_variance_contribution_per_input = np.sum(variance_contributions, axis=1)
@@ -114,7 +120,7 @@ class PceSensitivity:
             raise ValueError('Not applicable for scalar model outputs.')
 
         variance = self.pce_object.get_moments()[1]
-        total_order_indices = self.total_order_indices()
+        total_order_indices = self.calculate_total_order_indices()
         variance_contributions = total_order_indices * variance
         total_variance = np.sum(variance)
         total_variance_contribution_per_input = np.sum(variance_contributions, axis=1)

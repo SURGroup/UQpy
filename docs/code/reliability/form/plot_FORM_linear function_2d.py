@@ -1,7 +1,7 @@
 """
 
-FORM - Linear function - Two Random variables
-==============================================
+1. FORM - Linear function - Two Random variables
+===================================================
 
 In the second example we have the limit state to be a linear function of two (:math:`d=2`) independent Gaussian random
 variables
@@ -31,7 +31,7 @@ from UQpy.distributions import Lognormal, Gamma
 
 dist1 = Normal(loc=0., scale=1.)
 dist2 = Normal(loc=0., scale=1.)
-RunModelObject2 = RunModel(model_script='local_pfn.py', model_object_name="example2", vec=False, ntasks=3)
+RunModelObject2 = RunModel(model_script='pfn.py', model_object_name="example2", vec=False, ntasks=3)
 Z = FORM(distributions=[dist1, dist2], runmodel_object=RunModelObject2)
 Z.run()
 

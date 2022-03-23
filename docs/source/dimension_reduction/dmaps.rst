@@ -22,7 +22,7 @@ DiffusionMaps Class
 Methods
 ~~~~~~~~~~~
 .. autoclass:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps
-    :members: build_from_data, fit, parsimonious, estimate_cut_off, estimate_epsilon
+    :members: build_from_data, fit, parsimonious, estimate_epsilon
 
 Attributes
 ~~~~~~~~~~~~~

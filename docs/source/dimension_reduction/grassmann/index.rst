@@ -81,13 +81,7 @@ Since :meth:`.karcher_mean` is a static method, it does not require instantiatio
 
 .. automethod:: UQpy.dimension_reduction.grassmann_manifold.Grassmann.karcher_mean
 
-:mod:`UQpy` offers two classes for solving this optimization, the :class:`.GradientDescent` and the :class:`.StochasticGradientDescent`.
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Optimization methods
-
-    Optimization  <optimization>
+:mod:`UQpy` offers two methods for solving this optimization, the :class:`.GradientDescent` and the :class:`.StochasticGradientDescent`.
 
 
 Frechet variance
@@ -197,15 +191,6 @@ A description of the class signature is shown below:
 
 .. autoclass:: UQpy.dimension_reduction.ManifoldInterpolation
     :members:
-
-
-:py:mod:`UQpy` provides a collection of methods to perform the interpolation on the tangent space.
-
-.. toctree::
-   :hidden:
-   :maxdepth: 1
-
-    Methods <interpolation>
 
 
 Examples

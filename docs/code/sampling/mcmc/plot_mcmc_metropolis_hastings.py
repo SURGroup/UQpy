@@ -27,11 +27,15 @@ import time
 #
 # Explore various ways of defining the target pdf
 # -----------------------------------------------
-# Define the Rosenbrock probability density function up to a scale factor. Here the pdf is defined directly in the python script <br>
-# - define the Rosenbrock probability density function up to a scale factor, this function only takes as input parameter the point x where to compute the pdf, <br>
+# Define the Rosenbrock probability density function up to a scale factor. Here the pdf is defined directly in the
+# python script
+#
+# - define the Rosenbrock probability density function up to a scale factor, this function only takes as input parameter
+# the point x where to compute the pdf,
 # - define a pdf function that also takes as argument a set of parameters params,
 # - define a function that computes the log pdf up to a constant.
-# Alternatively, the pdf can be defined in an external file that defines a distribution and its pdf or log_pdf methods (Rosenbrock.py)
+# Alternatively, the pdf can be defined in an external file that defines a distribution and its pdf or log_pdf methods
+# (Rosenbrock.py)
 
 # %%
 
@@ -40,7 +44,7 @@ def rosenbrock_no_params(x):
 
 
 def log_rosenbrock_with_param(x, p):
-    return (-(100 * (x[:, 1] - x[:, 0] ** 2) ** 2 + (1 - x[:, 0]) ** 2) / p)
+    return -(100 * (x[:, 1] - x[:, 0] ** 2) ** 2 + (1 - x[:, 0]) ** 2) / p
 
 
 x = MetropolisHastings(dimension=2, pdf_target=rosenbrock_no_params, burn_length=500, jump=50,
@@ -184,8 +188,9 @@ plt.show()
 
 # %% md
 #
-# Run another example with a bivariate distributon with copula dependence - use random_state to always have the same outputs
-# -------------------------------------------------------------------------------
+# Run another example with a bivariate distributon with copula dependence - use random_state to always have the
+# same outputs
+# ----------------------------------------------------------------------------------------------------------------------
 
 # %%
 

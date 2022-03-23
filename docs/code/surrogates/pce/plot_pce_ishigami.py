@@ -127,8 +127,9 @@ print('PCE variance estimate:', var_est)
 
 from UQpy.sensitivity import *
 pce_sensitivity = PceSensitivity(pce)
-sobol_first = pce_sensitivity.first_order_indices()
-sobol_total = pce_sensitivity.total_order_indices()
+pce_sensitivity.run()
+sobol_first = pce_sensitivity.first_order_indices
+sobol_total = pce_sensitivity.total_order_indices
 print('First-order Sobol indices:')
 print(sobol_first)
 print('Total-order Sobol indices:')

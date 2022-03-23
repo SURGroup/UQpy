@@ -1,6 +1,6 @@
 """
 
-Comparison of various MCMC aglorithms
+Comparison of various MCMC algorithms
 ============================================================
 
 This script illustrates performance of various MCMC algorithms currently integrated in UQpy:
@@ -16,11 +16,13 @@ This script illustrates performance of various MCMC algorithms currently integra
 
 # %%
 
-import numpy as np
-import matplotlib.pyplot as plt
 import time
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 from UQpy.sampling import MetropolisHastings, Stretch, ModifiedMetropolisHastings, DREAM, DRAM
+
 
 # %% md
 # Affine invariant with Stretch moves
@@ -32,6 +34,7 @@ from UQpy.sampling import MetropolisHastings, Stretch, ModifiedMetropolisHasting
 
 def log_Rosenbrock(x):
     return (-(100 * (x[:, 1] - x[:, 0] ** 2) ** 2 + (1 - x[:, 0]) ** 2) / 20)
+
 
 x = MetropolisHastings(dimension=2, burn_length=0, jump=10, n_chains=1, log_pdf_target=log_Rosenbrock,
                        nsamples=5000)
@@ -50,12 +53,11 @@ plt.show()
 
 # %% md
 # DREAM algorithm: compare with MH (inputs parameters are set as their default values)
-# -----------------------------------
+# --------------------------------------------------------------------------------------
 
 # %%
 
 # Define a function to sample seed uniformly distributed in the 2d space ([-20, 20], [-4, 4])
-from UQpy.distributions import Uniform, JointIndependent
 prior_sample = lambda nsamples: np.array([[-2, -2]]) + np.array([[4, 4]]) * JointIndependent(
     [Uniform(), Uniform()]).rvs(nsamples=nsamples)
 
@@ -66,12 +68,11 @@ x = MetropolisHastings(dimension=2, burn_length=500, jump=50, seed=seed.tolist()
                        log_pdf_target=log_Rosenbrock, nsamples=1000)
 ax[0].plot(x.samples[:, 0], x.samples[:, 1], 'o')
 
-x = DREAM(dimension = 2, burn_length = 500, jump = 50, seed = seed.tolist(), log_pdf_target = log_Rosenbrock,
+x = DREAM(dimension=2, burn_length=500, jump=50, seed=seed.tolist(), log_pdf_target=log_Rosenbrock,
           nsamples=1000)
 ax[1].plot(x.samples[:, 0], x.samples[:, 1], 'o')
 
 plt.show()
-
 
 # %% md
 # DRAM algorithm
@@ -83,7 +84,7 @@ fig, ax = plt.subplots(ncols=2, figsize=(12, 4))
 t = time.time()
 seed = prior_sample(nsamples=1)
 
-x = MetropolisHastings(dimension = 2, burn_length = 500, jump = 10, seed = seed.tolist(), log_pdf_target = log_Rosenbrock,
+x = MetropolisHastings(dimension=2, burn_length=500, jump=10, seed=seed.tolist(), log_pdf_target=log_Rosenbrock,
                        nsamples=1000)
 
 ax[0].plot(x.samples[:, 0], x.samples[:, 1], 'o')
@@ -98,8 +99,8 @@ x = DRAM(dimension=2, burn_length=500, jump=10, seed=seed.tolist(), log_pdf_targ
 ax[1].plot(x.samples[:, 0], x.samples[:, 1], 'o')
 ax[1].set_xlabel('x1')
 ax[1].set_ylabel('x2')
-ax[1].set_title('algorithm: DRAM' )
-print('time to run DRAM'  + ': {}s'.format(time.time() - t))
+ax[1].set_title('algorithm: DRAM')
+print('time to run DRAM' + ': {}s'.format(time.time() - t))
 
 plt.show()
 
@@ -114,12 +115,13 @@ plt.show()
 
 # %% md
 # MMH: target pdf is given as a joint pdf
-# -----------------------------------
+# ----------------------------------------
 # The target pdf should be a 1 dimensional distribution or set of 1d distributions.
 
 # %%
 
 from UQpy.distributions import Normal
+
 proposal = [Normal(), Normal()]
 proposal_is_symmetric = [False, False]
 
@@ -132,7 +134,7 @@ ax.plot(x.samples[:, 0], x.samples[:, 1], linestyle='none', marker='.')
 
 # %% md
 # MMH: target pdf is given as a couple of independent marginals
-# -----------------------------------
+# ----------------------------------------------------------------
 
 # %%
 
@@ -141,8 +143,8 @@ log_pdf_target = [Normal(loc=0., scale=5.).log_pdf, Normal(loc=0., scale=20.).lo
 proposal = [Normal(), Normal()]
 proposal_is_symmetric = [True, True]
 
-x = ModifiedMetropolisHastings(dimension = 2, burn_length = 100, jump = 10, log_pdf_target = log_pdf_target,
-                               proposal = proposal, proposal_is_symmetric = proposal_is_symmetric, n_chains = 1,
+x = ModifiedMetropolisHastings(dimension=2, burn_length=100, jump=10, log_pdf_target=log_pdf_target,
+                               proposal=proposal, proposal_is_symmetric=proposal_is_symmetric, n_chains=1,
                                nsamples=1000)
 
 fig, ax = plt.subplots()
@@ -152,11 +154,12 @@ print(x.samples.shape)
 
 # %% md
 # Use random_state to provide repeated results
-# -----------------------------------
+# ------------------------------------------------
 
 # %%
 
 from UQpy.distributions import Normal, Gumbel, JointCopula, JointIndependent, Uniform
+
 seed = Uniform().rvs(nsamples=2 * 10).reshape((10, 2))
 dist_true = JointCopula(marginals=[Normal(), Normal()], copula=Gumbel(theta=2.))
 proposal = JointIndependent(marginals=[Normal(scale=0.2), Normal(scale=0.2)])

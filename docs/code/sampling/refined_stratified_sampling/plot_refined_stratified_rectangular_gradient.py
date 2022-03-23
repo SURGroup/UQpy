@@ -1,7 +1,7 @@
 """
 
 Rectangular Refined Stratified Sampling - Gradient Enhanced Refinement
-===================================================================
+=======================================================================
 
 In this example, Stratified sampling is used to generate samples from Uniform distribution and sample expansion is done
 adaptively using Refined Stratified Sampling.

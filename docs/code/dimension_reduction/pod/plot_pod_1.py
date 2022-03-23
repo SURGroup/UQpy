@@ -62,9 +62,9 @@ Data_reconstr = pod.run()
 # %%
 
 print('Reconstructed snapshot no.1:')
-print(Data_reconstr[:, :, 0])
+print(Data_reconstr[0][:, :, 0])
 
-if np.allclose(Data, Data_reconstr) == True:
+if np.allclose(Data, Data_reconstr[0]) == True:
     print('Input data and reconstructed data are identical.')
 
 elapsed_time = time.time() - start_time

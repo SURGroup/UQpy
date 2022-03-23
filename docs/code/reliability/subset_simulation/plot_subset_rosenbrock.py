@@ -1,6 +1,6 @@
 """
 
-Rosenbrock performance function
+3. Rosenbrock performance function
 ======================================================================
 
 

@@ -182,7 +182,8 @@ if pick_model in {'scalar', 'all'}:
 #
 # Restructure the samples
 # -----------------------------------------------------
-# To pass the samples in as a single tri-variate variable, we need reshape the samples from shape (5, 3) to shape (5, 1, 3)
+# To pass the samples in as a single tri-variate variable, we need reshape the samples from shape (5, 3) to
+# shape (5, 1, 3)
 
 # %%
 
@@ -208,7 +209,7 @@ if pick_model in {'vector', 'all'}:
 # %% md
 #
 # 2.1 Pass samples as ndarray, Python function called, serial execution
-# -----------------------------------------------------
+# -----------------------------------------------------------------------
 # This example uses the following files:
 # - model_script = python_model.py
 
@@ -229,7 +230,7 @@ if pick_model in {'vector', 'all'}:
 # %% md
 #
 # 2.2 Pass samples as list, Python class called, parallel execution
-# -----------------------------------------------------
+# --------------------------------------------------------------------
 # This example uses the following files:
 # - model_script = python_model.py
 
@@ -323,7 +324,7 @@ if pick_model == 'mixed' or pick_model == 'vector' or pick_model == 'all':
 # %% md
 #
 # 3.1 Pass samples as ndarray, Python class called, serial execution
-# -----------------------------------------------------
+# ---------------------------------------------------------------------
 # This examples uses the following files:
 # - model_script = python_model.py
 
@@ -344,7 +345,7 @@ if pick_model == 'mixed' or pick_model == 'all':
 # %% md
 #
 # 3.2 Pass samples as list, Python function called, parallel execution
-# -----------------------------------------------------
+# ------------------------------------------------------------------------
 # This examples uses the following files:
 # - model_script = python_model.py
 
@@ -366,7 +367,7 @@ if pick_model == 'mixed' or pick_model == 'all':
 # %% md
 #
 # Example 4: Passing a fixed variable and an array of Random Variables to RunModel
-# -----------------------------------------------------
+# -----------------------------------------------------------------------------------
 # In this example, we pass a fixed value coefficient as well as an array of random variables into a Python model.
 #
 # Again, we will pass the samples both as an ndarray and as a list. Recall that UQpy converts all samples into an

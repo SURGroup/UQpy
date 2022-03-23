@@ -76,7 +76,7 @@ reconstruction of data as follows
 
 
 DirectPOD Class
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""""""
 
 The :class:`.DirectPOD` class is imported using the following command:
 
@@ -112,7 +112,7 @@ Spatial coefficients are therefore calculated as :math:`\Phi_s = \mathbf{U}^T A_
 
 
 SnapshotPOD Class
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""""""
 
 The :class:`.SnapshotPOD` class is imported using the following command:
 

@@ -54,7 +54,6 @@ Attributes
 .. autoattribute:: UQpy.sampling.mcmc.MCMC.evaluate_log_target_marginals
 .. autoattribute:: UQpy.sampling.mcmc.MCMC.samples
 .. autoattribute:: UQpy.sampling.mcmc.MCMC.log_pdf_values
-.. autoattribute:: UQpy.sampling.mcmc.MCMC.nsamples
 .. autoattribute:: UQpy.sampling.mcmc.MCMC.nsamples_per_chain
 .. autoattribute:: UQpy.sampling.mcmc.MCMC.iterations_number
 

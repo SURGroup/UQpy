@@ -146,7 +146,7 @@ mvmc.samples
 # %% md
 #
 # Mixing a multivariate and a univariate continuous distribution
-# """"""""""""""""""""""""""""""""""""""""
+# """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 # Here, we use one of our normal distributions and our multivariate normal distribution. Notice how each distribution
 # has its own bundle (array) of samples per run of sampling—even when that bundle contains a single value.
 

@@ -67,6 +67,7 @@ import numpy as np
 #
 # Pick which model to run
 # -----------------------
+#
 # Options:
 # - 'all'
 # - 'scalar'
@@ -181,7 +182,8 @@ if pick_model == 'scalar' or pick_model == 'all':
 #
 # Restructure the samples
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# To pass the samples in as a single tri-variate variable, we need reshape the samples from shape (5, 3) to shape (5, 1, 3)
+# To pass the samples in as a single tri-variate variable, we need reshape the samples from shape (5, 3) to
+# shape (5, 1, 3)
 
 # %%
 
@@ -207,7 +209,7 @@ if pick_model == 'vector' or pick_model == 'all':
 # %% md
 #
 # 2.1 Pass samples as ndarray, specify format in generated input file, serial execution, index samples in input_template
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # This examples uses the following files:
 # - model_script = matlab_model_sum_vector_indexed.py
 # - input_template = sum_vector_indexed.m
@@ -290,7 +292,7 @@ if pick_model == 'vector' or pick_model == 'all':
 # %% md
 #
 # Example 3: Passing a scalar and an array to RunModel
-# -----------------------------------------------
+# -----------------------------------------------------
 # In this example, we pass a single scalar random variable as well as an array into a Matlab model.
 #
 # Again, we will pass the samples both as an ndarray and as a list. Recall that UQpy converts all samples into an
@@ -392,7 +394,7 @@ if pick_model == 'mixed' or pick_model == 'all':
 # %% md
 #
 # 3.2 Pass samples as ndarray, specify format in generated input file, serial execution, index samples in input_template
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # This examples uses the following files:
 # - model_script = matlab_model_det_index.py
 # - input_template = prod_determinant_index.m
@@ -421,7 +423,7 @@ if pick_model == 'mixed' or pick_model == 'all':
 #
 # 3.3 Pass samples as list, do not specify format in generated input file, parallel execution, do not index samples in
 # input_template
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # This examples uses the following files:
 # - model_script = matlab_model_det.py
 # - input_template = prod_determinant.m

@@ -56,22 +56,15 @@ The :class:`.PceSensitivity` class is imported using the following command:
 
 >>> from UQpy.sensitivity.PceSensitivity import PceSensitivity
 
-.. autoclass:: UQpy.sensitivity.PceSensitivity
-    :members:
-
 Methods
 """""""
 .. autoclass:: UQpy.sensitivity.PceSensitivity
-    :members:
+    :members: run, calculate_first_order_indices, calculate_total_order_indices, calculate_generalized_first_order_indices, calculate_generalized_total_order_indices
 
 Attributes
 """"""""""
 .. autoattribute:: UQpy.sensitivity.PceSensitivity.first_order_indices
 .. autoattribute:: UQpy.sensitivity.PceSensitivity.total_order_indices
+.. autoattribute:: UQpy.sensitivity.PceSensitivity.generalized_first_order_indices
+.. autoattribute:: UQpy.sensitivity.PceSensitivity.generalized_total_order_indices
 
-Examples
-""""""""""
-
-.. toctree::
-
-   Morris Examples <../auto_examples/sensitivity/pce/index>

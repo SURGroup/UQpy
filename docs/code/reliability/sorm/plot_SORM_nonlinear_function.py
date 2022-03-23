@@ -1,7 +1,7 @@
 """
 
-FORM - Nonlinear function - Two Random variables
-==============================================
+4. SORM - Nonlinear function - Two Random variables
+=====================================================
 
 In the fourth example we have the limit state to be a nonlinear function of two (:math:`d=2`) random variables
 
@@ -36,7 +36,7 @@ loc_ = 0.0
 
 dist1 = Normal(loc=20., scale=2)
 dist2 = Lognormal(s=s, loc=0.0, scale=scale)
-RunModelObject4 = RunModel(model_script='local_pfn.py', model_object_name="example4", vec=False, ntasks=3)
+RunModelObject4 = RunModel(model_script='pfn.py', model_object_name="example4", vec=False, ntasks=3)
 form = FORM(distributions=[dist1, dist2], runmodel_object=RunModelObject4)
 form.run()
 Q0 = SORM(form_object=form)

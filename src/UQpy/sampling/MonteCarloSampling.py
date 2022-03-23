@@ -86,9 +86,9 @@ class MonteCarloSampling:
                         "UQpy: A UQpy.Distribution object must be provided."
                     )
                 if isinstance(distributions[i], DistributionContinuous1D):
-                    add_continuous_1d = add_continuous_1d + 1
+                    add_continuous_1d += 1
                 elif isinstance(distributions[i], DistributionND):
-                    add_continuous_nd = add_continuous_nd + 1
+                    add_continuous_nd += 1
             if add_continuous_1d == len(distributions):
                 self.list = False
                 self.array = True
@@ -130,7 +130,7 @@ class MonteCarloSampling:
         self.logger.info("UQpy: Running Monte Carlo Sampling.")
 
         if isinstance(self.dist_object, list):
-            temp_samples = list()
+            temp_samples = []
             for i in range(len(self.dist_object)):
                 if hasattr(self.dist_object[i], "rvs"):
                     temp_samples.append(
@@ -140,34 +140,29 @@ class MonteCarloSampling:
                     )
                 else:
                     raise ValueError("UQpy: rvs method is missing.")
-            self.x = list()
+            self.x = []
             for j in range(nsamples):
-                y = list()
-                for k in range(len(self.dist_object)):
-                    y.append(temp_samples[k][j])
+                y = [temp_samples[k][j] for k in range(len(self.dist_object))]
                 self.x.append(np.array(y))
-        else:
-            if hasattr(self.dist_object, "rvs"):
-                temp_samples = self.dist_object.rvs(
-                    nsamples=nsamples, random_state=self.random_state
-                )
-                self.x = temp_samples
+        elif hasattr(self.dist_object, "rvs"):
+            temp_samples = self.dist_object.rvs(
+                nsamples=nsamples, random_state=self.random_state
+            )
+            self.x = temp_samples
 
         if self.samples is None:
             if isinstance(self.dist_object, list) and self.array is True:
                 self.samples = np.hstack(np.array(self.x)).T
             else:
                 self.samples = np.array(self.x)
+        elif isinstance(self.dist_object, list) and self.array is True:
+            self.samples = np.concatenate(
+                [self.samples, np.hstack(np.array(self.x)).T], axis=0
+            )
+        elif isinstance(self.dist_object, Distribution):
+            self.samples = np.vstack([self.samples, self.x])
         else:
-            # If self.samples already has existing samples, append the new samples to the existing attribute.
-            if isinstance(self.dist_object, list) and self.array is True:
-                self.samples = np.concatenate(
-                    [self.samples, np.hstack(np.array(self.x)).T], axis=0
-                )
-            elif isinstance(self.dist_object, Distribution):
-                self.samples = np.vstack([self.samples, self.x])
-            else:
-                self.samples = np.vstack([self.samples, self.x])
+            self.samples = np.vstack([self.samples, self.x])
         self.nsamples = len(self.samples)
 
         self.logger.info("UQpy: Monte Carlo Sampling Complete.")
@@ -193,17 +188,16 @@ class MonteCarloSampling:
             self.samplesU01 = zi
 
         elif isinstance(self.dist_object, Distribution):
-            if hasattr(self.dist_object, "cdf"):
-                zi = np.zeros_like(self.samples)
-                for i in range(self.nsamples):
-                    z = self.samples[i, :]
-                    zi[i, :] = self.dist_object.cdf(z)
-                self.samplesU01 = zi
-            else:
+            if not hasattr(self.dist_object, "cdf"):
                 raise ValueError("UQpy: All distributions must have a cdf method.")
 
+            zi = np.zeros_like(self.samples)
+            for i in range(self.nsamples):
+                z = self.samples[i, :]
+                zi[i, :] = self.dist_object.cdf(z)
+            self.samplesU01 = zi
         elif isinstance(self.dist_object, list) and self.list is True:
-            temp_samples_u01 = list()
+            temp_samples_u01 = []
             for i in range(self.nsamples):
                 z = self.samples[i][:]
                 y = [None] * len(self.dist_object)

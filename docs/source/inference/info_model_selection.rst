@@ -61,7 +61,7 @@ Methods
 
 Attributes
 """"""""""
-.. autoattribute:: UQpy.inference.InformationModelSelection.ml_estimators
+.. autoattribute:: UQpy.inference.InformationModelSelection.parameter_estimators
 .. autoattribute:: UQpy.inference.InformationModelSelection.criterion_values
 .. autoattribute:: UQpy.inference.InformationModelSelection.penalty_terms
 .. autoattribute:: UQpy.inference.InformationModelSelection.probabilities

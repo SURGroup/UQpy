@@ -3,6 +3,7 @@ import numpy as np
 from beartype import beartype
 import copy
 
+from UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion import PolynomialChaosExpansion
 from UQpy.surrogates.polynomial_chaos.polynomials.PolynomialBasis import PolynomialBasis
 from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
 from UQpy.surrogates.polynomial_chaos.regressions import LeastSquareRegression
@@ -58,19 +59,20 @@ class LeastAngleRegression(Regression):
 
         return c_, None, np.shape(c_)[1]
 
-    def model_selection(self,PolynomialChaosExpansion, TargetError=1, CheckOverfitting=True):
+    @staticmethod
+    def model_selection(pce_object:PolynomialChaosExpansion, target_error=1, check_overfitting=True):
         """
         LARS model selection algorithm for given TargetError of approximation
         measured by Cross validation: Leave-one-out error (1 is perfect approximation). Option to check overfitting by 
         empirical rule: if three steps in a row have a decreasing accuracy, stop the algorithm.
 
         :param PolynomialChaosExpansion: existing target PCE for model_selection
-        :param TargetError: Target error of an approximation (stoping criterion).
-        :param CheckOverfitting: Whether to check over-fitting by empirical rule.
+        :param target_error: Target error of an approximation (stoping criterion).
+        :param check_overfitting: Whether to check over-fitting by empirical rule.
         :return: copy of input PolynomialChaosExpansion containing the best possible model for given data identified by LARs  
         """
 
-        pce = copy.deepcopy(PolynomialChaosExpansion)
+        pce = copy.deepcopy(pce_object)
         x = pce.experimental_design_input
         y = pce.experimental_design_output
 
@@ -95,13 +97,13 @@ class LeastAngleRegression(Regression):
         BestLarsError = 0
         step = 0
 
-        while BestLarsError < TargetError and step < steps - 2 and overfitting == False:
+        while BestLarsError < target_error and step < steps - 2 and overfitting == False:
 
             mask = LarsBeta[:, step + 2] != 0
             mask[0] = True
 
             larsindex.append(multindex[mask, :])
-            larsbasis.append(list(np.array(PolynomialChaosExpansion.polynomial_basis.polynomials)[mask]))
+            larsbasis.append(list(np.array(pce_object.polynomial_basis.polynomials)[mask]))
 
             pce.polynomial_basis.polynomials_number = len(larsbasis[step])
             pce.polynomial_basis.polynomials = larsbasis[step]
@@ -125,7 +127,7 @@ class LeastAngleRegression(Regression):
                     BestLarsBasis = larsbasis[step]
                     BestLarsError = LarsError[step]
 
-            if (step > 3) and (CheckOverfitting == True):
+            if (step > 3) and (check_overfitting == True):
                 if (BestLarsError > 0.6) and (error < LarsError[step - 1]) and (error < LarsError[step - 2]) and (
                         error < LarsError[step - 3]):
                     overfitting = True

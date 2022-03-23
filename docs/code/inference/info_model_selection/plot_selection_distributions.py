@@ -1,6 +1,6 @@
 """
 
-Selection between univariate distributions
+1. Selection between univariate distributions
 ==============================================
 
 Here a model is defined that is of the form
