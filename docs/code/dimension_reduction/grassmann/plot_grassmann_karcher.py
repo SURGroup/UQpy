@@ -18,7 +18,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import sys
-from UQpy.dimension_reduction.grassman.manifold_projections.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
 from UQpy.dimension_reduction import Grassmann
 
 #%% md
@@ -62,18 +62,18 @@ plt.show()
 
 #%%
 
-manifold_projection = SvdProjection(matrices, p_planes_dimensions=sys.maxsize)
+manifold_projection = SvdProjection(matrices, p="max")
 
 # Plot the points on the Grassmann manifold defined by the left singular eigenvectors.
 fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)
 ax1.title.set_text('Matrix 0')
-ax1.imshow(manifold_projection.psi[0])
+ax1.imshow(manifold_projection.psi[0].data)
 ax2.title.set_text('Matrix 1')
-ax2.imshow(manifold_projection.psi[0])
+ax2.imshow(manifold_projection.psi[0].data)
 ax3.title.set_text('Matrix 2')
-ax3.imshow(manifold_projection.psi[0])
+ax3.imshow(manifold_projection.psi[0].data)
 ax4.title.set_text('Matrix 3')
-ax4.imshow(manifold_projection.psi[0])
+ax4.imshow(manifold_projection.psi[0].data)
 plt.show()
 
 #%% md
@@ -82,19 +82,15 @@ plt.show()
 
 #%%
 
-from UQpy.dimension_reduction.grassman.optimization_methods.GradientDescent import GradientDescent
-from UQpy.dimension_reduction.distances.grassmanian.GrassmanDistance import GrassmannDistance
+from UQpy.utilities.distances.grassmannian_distances.GeodesicDistance import GeodesicDistance
 
-optimization_method = GradientDescent(acceleration=True, error_tolerance=1e-4, max_iterations=1000)
-distance_method = GrassmannDistance()
-karcher_psi = Grassmann.karcher_mean(points_grassmann=manifold_projection.psi,
-                                     p_planes_dimensions=manifold_projection.p_planes_dimensions,
+distance_method = GeodesicDistance()
+karcher_psi = Grassmann.karcher_mean(grassmann_points=manifold_projection.psi,
                                      distance=distance_method,
-                                     optimization_method=optimization_method)
-karcher_phi = Grassmann.karcher_mean(points_grassmann=manifold_projection.phi,
-                                     p_planes_dimensions=manifold_projection.p_planes_dimensions,
+                                     optimization_method="GradientDescent")
+karcher_phi = Grassmann.karcher_mean(grassmann_points=manifold_projection.phi,
                                      distance=distance_method,
-                                     optimization_method=optimization_method)
+                                     optimization_method="GradientDescent")
 
 #%% md
 #
@@ -102,7 +98,7 @@ karcher_phi = Grassmann.karcher_mean(points_grassmann=manifold_projection.phi,
 
 #%%
 
-points_tangent = Grassmann.log_map(points_grassmann=manifold_projection.psi,
+points_tangent = Grassmann.log_map(grassmann_points=manifold_projection.psi,
                                    reference_point=karcher_psi)
 
 print(points_tangent[0])
@@ -128,22 +124,17 @@ plt.show()
 
 #%%
 
-points_grassmann = Grassmann.exp_map(points_tangent=points_tangent,
+points_grassmann = Grassmann.exp_map(tangent_points=points_tangent,
                                      reference_point=manifold_projection.psi[0])
-
-print(points_grassmann[0])
-print(points_grassmann[1])
-print(points_grassmann[2])
-print(points_grassmann[3])
 
 # Plot the matrices
 fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)
 ax1.title.set_text('Matrix 0')
-ax1.imshow(points_grassmann[0])
+ax1.imshow(points_grassmann[0].data)
 ax2.title.set_text('Matrix 1')
-ax2.imshow(points_grassmann[1])
+ax2.imshow(points_grassmann[1].data)
 ax3.title.set_text('Matrix 2')
-ax3.imshow(points_grassmann[2])
+ax3.imshow(points_grassmann[2].data)
 ax4.title.set_text('Matrix 3')
-ax4.imshow(points_grassmann[3])
+ax4.imshow(points_grassmann[3].data)
 plt.show()

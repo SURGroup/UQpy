@@ -194,7 +194,7 @@ A description of the class signature is shown below:
 
 
 Examples
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
 
