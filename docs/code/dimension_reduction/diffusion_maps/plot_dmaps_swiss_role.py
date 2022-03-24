@@ -10,7 +10,8 @@ This example shows how to use the :class:`.DiffusionMaps` class to reveal the em
 
 import numpy as np
 import matplotlib.pyplot as plt
-from UQpy.dimension_reduction import DiffusionMaps, GaussianKernel
+from UQpy.utilities.kernels.GaussianKernel import GaussianKernel
+from UQpy.dimension_reduction.diffusion_maps.DiffusionMaps import DiffusionMaps
 from sklearn.datasets import make_swiss_roll
 
 #%% md
@@ -43,9 +44,11 @@ ax.view_init(10, 70)
 # Case 1: Find the optimal parameter of the Gaussian kernel scale epsilon
 kernel = GaussianKernel()
 
-dmaps_object = DiffusionMaps.create_from_data(data=X, alpha=1.0, n_eigenvectors=9,
-                                              optimize_parameters=True,
-                                              kernel=kernel)
+dmaps_object = DiffusionMaps.build_from_data(data=X,
+                                          alpha=0.5, n_eigenvectors=3,
+                                          is_sparse=True, neighbors_number=100,
+                                          epsilon=0.03,
+                                          kernel=GaussianKernel())
 
 
 print('epsilon', kernel.epsilon)
@@ -53,7 +56,7 @@ print('epsilon', kernel.epsilon)
 
 #%% md
 # Fit the data and calculate the embedding, the eigenvectors and eigenvalues
-diff_coords, eigenvalues, eigenvectors = dmaps_object.fit()
+dmaps_object.fit()
 
 
 #%% md
@@ -61,7 +64,7 @@ diff_coords, eigenvalues, eigenvectors = dmaps_object.fit()
 # Find the parsimonious representation of the eigenvectors. Identify the two most informative
 # eigenvectors.
 
-index, residuals = DiffusionMaps.parsimonious(eigenvectors, 2)
+index, residuals = DiffusionMaps.parsimonious(dmaps_object.eigenvectors, 2)
 
 print('most informative eigenvectors:', index)
 
@@ -69,6 +72,6 @@ print('most informative eigenvectors:', index)
 #
 # Plot the diffusion coordinates
 
-DiffusionMaps._plot_eigen_pairs(eigenvectors, pair_indices=[1, 2], color=X_color, figure_size=[12, 12])
+DiffusionMaps._plot_eigen_pairs(dmaps_object.eigenvectors, pair_indices=[1, 2], color=X_color, figure_size=[12, 12])
 plt.show()
 

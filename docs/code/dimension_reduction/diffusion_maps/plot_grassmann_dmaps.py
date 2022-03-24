@@ -6,7 +6,6 @@ Grassmannian Diffusion Maps
 """
 import numpy as np
 from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
-from UQpy.dimension_reduction.grassmann_manifold.projections import KernelComposition
 from UQpy.dimension_reduction.grassmann_manifold import Grassmann
 from UQpy.utilities.kernels import ProjectionKernel
 from UQpy.dimension_reduction.diffusion_maps.DiffusionMaps import DiffusionMaps
@@ -57,7 +56,7 @@ data = [data2dArray.reshape(1, -1).T for data2dArray in data_matrix]
 # Select the work with maximum rank (number of planes) from each data point (p=sys.maxsize).
 # Use the matrix of left eigenvectors to calculate the kernel (KernelComposition.LEFT).
 
-Grassmann_projection = SvdProjection(data=data[::10], p=sys.maxsize, kernel_composition=KernelComposition.LEFT)
+Grassmann_projection = SvdProjection(data=data[::10], p="max")
 psi = Grassmann_projection.psi
 
 #%%
@@ -89,20 +88,19 @@ plt.show()
 #%%
 #
 # Diffusion maps with Grassmann kernel
-Grassmann_object = Grassmann(Grassmann_projection)
 kernel = ProjectionKernel()
-kernel_matrix = Grassmann_object.evaluate_kernel_matrix(kernel)
+kernel_matrix = kernel.calculate_kernel_matrix(psi)
 
 Gdmaps_UQpy = DiffusionMaps(alpha=1.0, n_eigenvectors=5, is_sparse=True, n_neighbors=250,
                             kernel_matrix=kernel_matrix)
-diff_coords, evals_uqpy, evecs_uqpy = Gdmaps_UQpy.fit()
+Gdmaps_UQpy.fit()
 
 #%%
 #
 # Plot the first and second eigenvectors
-DiffusionMaps._plot_eigen_pairs(evecs_uqpy, pair_indices=[1, 2], color=evecs_uqpy[:, 1],
+DiffusionMaps._plot_eigen_pairs(Gdmaps_UQpy.eigenvectors, pair_indices=[1, 2], color=Gdmaps_UQpy.eigenvectors[:, 1],
                                 figure_size=[5, 5], font_size=18)
-DiffusionMaps._plot_eigen_pairs(evecs_uqpy, pair_indices=[1, 2], color=evecs_uqpy[:, 2],
+DiffusionMaps._plot_eigen_pairs(Gdmaps_UQpy.eigenvectors, pair_indices=[1, 2], color=Gdmaps_UQpy.eigenvectors[:, 2],
                                 figure_size=[5, 5], font_size=18)
 
 #%%

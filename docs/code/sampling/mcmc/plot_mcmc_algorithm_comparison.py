@@ -20,7 +20,7 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
-
+from UQpy.distributions import Normal, Gumbel, JointCopula, JointIndependent, Uniform
 from UQpy.sampling import MetropolisHastings, Stretch, ModifiedMetropolisHastings, DREAM, DRAM
 
 
@@ -157,8 +157,6 @@ print(x.samples.shape)
 # ------------------------------------------------
 
 # %%
-
-from UQpy.distributions import Normal, Gumbel, JointCopula, JointIndependent, Uniform
 
 seed = Uniform().rvs(nsamples=2 * 10).reshape((10, 2))
 dist_true = JointCopula(marginals=[Normal(), Normal()], copula=Gumbel(theta=2.))

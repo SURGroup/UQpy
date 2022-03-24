@@ -204,7 +204,7 @@ class DiffusionMaps:
 
         # Compute the diffusion coordinates
         eig_values_time = np.power(eigenvalues, self.t)
-        diffusion_coordinates = eigenvectors @ np.diag(eig_values_time)
+        self.diffusion_coordinates = eigenvectors @ np.diag(eig_values_time)
 
         self.transition_matrix = transition_matrix
 

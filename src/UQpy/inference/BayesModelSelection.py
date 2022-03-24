@@ -19,7 +19,6 @@ class BayesModelSelection:
     @beartype
     def __init__(
             self,
-            data: np.ndarray,
             parameter_estimators: list[BayesParameterEstimation],
             prior_probabilities=None,
             evidence_method: EvidenceMethod = HarmonicMean(),
@@ -43,7 +42,6 @@ class BayesModelSelection:
         self.candidate_models: list[InferenceModel] = [x.inference_model for x in self.bayes_estimators]
         """Probabilistic models used during the model selection process."""
         self.models_number = len(self.candidate_models)
-        self.data = data
         self.evidence_method = evidence_method
         self.logger = logging.getLogger(__name__)
 
