@@ -5,7 +5,7 @@
 
 
 variables:
-  pythonVersion: 3.7
+  pythonVersion: 3.9
   srcDirectory: src
   
 trigger:
