@@ -16,9 +16,7 @@ class UFunction(LearningFunction):
         """
         self.u_stop = u_stop
 
-    def evaluate_function(
-        self, distributions, n_add, surrogate, population, qoi=None, samples=None
-    ):
+    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
 
         g, sig = surrogate.predict(population, True)
 
@@ -29,10 +27,7 @@ class UFunction(LearningFunction):
         u = abs(g) / sig
         rows = u[:, 0].argsort()[:n_add]
 
-        stopping_criteria_indicator = False
-        if min(u[:, 0]) >= self.u_stop:
-            stopping_criteria_indicator = True
-
+        stopping_criteria_indicator = min(u[:, 0]) >= self.u_stop
         new_samples = population[rows, :]
         learning_function_values = u[rows, 0]
         return new_samples, learning_function_values, stopping_criteria_indicator

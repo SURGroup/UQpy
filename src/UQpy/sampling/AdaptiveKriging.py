@@ -17,20 +17,21 @@ from UQpy.utilities.Utilities import process_random_state
 SurrogateType = Union[Surrogate, GaussianProcessRegressor,
                       Annotated[object, Is[lambda x: hasattr(x, 'fit') and hasattr(x, 'predict')]]]
 
+
 class AdaptiveKriging:
     @beartype
     def __init__(
-        self,
-        distributions: Union[Distribution, list[Distribution]],
-        runmodel_object: RunModel,
-        surrogate: SurrogateType,
-        learning_function: LearningFunction,
-        samples: Numpy2DFloatArray = None,
-        nsamples: PositiveInteger = None,
-        learning_nsamples: PositiveInteger = None,
-        qoi_name: str = None,
-        n_add: int = 1,
-        random_state: RandomStateType = None,
+            self,
+            distributions: Union[Distribution, list[Distribution]],
+            runmodel_object: RunModel,
+            surrogate: SurrogateType,
+            learning_function: LearningFunction,
+            samples: Numpy2DFloatArray = None,
+            nsamples: PositiveInteger = None,
+            learning_nsamples: PositiveInteger = None,
+            qoi_name: str = None,
+            n_add: int = 1,
+            random_state: RandomStateType = None,
     ):
         """
         Adaptively sample for construction of a kriging surrogate for different objectives including reliability,
@@ -102,10 +103,7 @@ class AdaptiveKriging:
         # Evaluate model at the training points
         if len(self.runmodel_object.qoi_list) == 0 and samples is not None:
             self.runmodel_object.run(samples=self.samples, append_samples=False)
-        if (
-            samples is not None
-            and len(self.runmodel_object.qoi_list) != self.samples.shape[0]
-        ):
+        if samples is not None and len(self.runmodel_object.qoi_list) != self.samples.shape[0]:
             raise NotImplementedError("UQpy: There should be no model evaluation or Number of samples and model "
                                       "evaluation in RunModel object should be same.")
 
@@ -113,11 +111,11 @@ class AdaptiveKriging:
             self.run(nsamples=self.nsamples)
 
     def run(
-        self,
-        nsamples: int,
-        samples: np.ndarray=None,
-        append_samples: bool=True,
-        initial_nsamples: int=None,
+            self,
+            nsamples: int,
+            samples: np.ndarray = None,
+            append_samples: bool = True,
+            initial_nsamples: int = None,
     ):
         """
         Execute the :class:`.AdaptiveKriging` learning iterations.

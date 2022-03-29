@@ -81,7 +81,6 @@ class DiffusionMaps:
         n_eigenvectors: IntegerLargerThanUnityType = 2,
         is_sparse: bool = False,
         neighbors_number: IntegerLargerThanUnityType = 1,
-        eigenvector_tolerance: float = 1e-14,
         kernel: EuclideanKernel = GaussianKernel(),
         epsilon: float = None,
         t: int = 1,
@@ -132,8 +131,7 @@ class DiffusionMaps:
             epsilon, cut_off = DiffusionMaps.estimate_epsilon(data, cut_off=cut_off, tol=tol,
                                                               k_nn=k_nn, n_partition=n_partition,
                                                               distance_matrix=distance_matrix,
-                                                              random_state=random_state,
-                                                              eigenvector_tolerance=eigenvector_tolerance)
+                                                              random_state=random_state)
         kernel.epsilon = epsilon
 
         kernel_matrix = kernel.calculate_kernel_matrix(points=data)
@@ -366,7 +364,7 @@ class DiffusionMaps:
     @staticmethod
     def eig_solver(kernel_matrix: Numpy2DFloatArray, is_symmetric: bool, n_eigenvectors: int,
                    eigenvector_tolerance: float) -> \
-            tuple[NumpyFloatArray, Numpy2DFloatArray]:
+            tuple[NumpyFloatArray, Numpy2DFloatArray]: # pragma: no cover
 
         n_samples, n_features = kernel_matrix.shape
 
@@ -400,7 +398,7 @@ class DiffusionMaps:
 
     @staticmethod
     def _plot_eigen_pairs(eigenvectors: Numpy2DFloatArray,
-                          trivial: bool = False, pair_indices: list = None, **kwargs):
+                          trivial: bool = False, pair_indices: list = None, **kwargs): # pragma: no cover
         """
         Plot scatter plot of n-th eigenvector on x-axis and remaining eigenvectors on
         y-axis.

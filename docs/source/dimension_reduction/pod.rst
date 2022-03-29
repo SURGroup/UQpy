@@ -84,8 +84,16 @@ The :class:`.DirectPOD` class is imported using the following command:
 
 One can use the following command to instantiate the class :class:`.DirectPOD`
 
+Methods
+^^^^^^^^^^
+
 .. autoclass:: UQpy.dimension_reduction.pod.DirectPOD
     :members: run
+
+Attributes
+^^^^^^^^^^
+.. autoattribute:: UQpy.dimension_reduction.pod.DirectPOD.reconstructed_solution
+.. autoattribute:: UQpy.dimension_reduction.pod.DirectPOD.reduced_solution
 
 
 SnapshotPOD
@@ -120,5 +128,12 @@ The :class:`.SnapshotPOD` class is imported using the following command:
 
 One can use the following command to instantiate the class :class:`.SnapshotPOD`
 
+Methods
+^^^^^^^^^^
 .. autoclass:: UQpy.dimension_reduction.pod.SnapshotPOD
     :members: run
+
+Attributes
+^^^^^^^^^^
+.. autoattribute:: UQpy.dimension_reduction.pod.SnapshotPOD.reconstructed_solution
+.. autoattribute:: UQpy.dimension_reduction.pod.SnapshotPOD.reduced_solution

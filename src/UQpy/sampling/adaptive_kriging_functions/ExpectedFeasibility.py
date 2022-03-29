@@ -28,9 +28,7 @@ class ExpectedFeasibility(LearningFunction):
         self.eff_epsilon = eff_epsilon
         self.eff_stop = eff_stop
 
-    def evaluate_function(
-        self, distributions, n_add, surrogate, population, qoi=None, samples=None
-    ):
+    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
 
         g, sig = surrogate.predict(population, True)
 
@@ -50,10 +48,7 @@ class ExpectedFeasibility(LearningFunction):
         eff += ep * (stats.norm.cdf(t3) - stats.norm.cdf(t2))
         rows = eff[:, 0].argsort()[-n_add:]
 
-        stopping_criteria_indicator = False
-        if max(eff[:, 0]) <= self.eff_stop:
-            stopping_criteria_indicator = True
-
+        stopping_criteria_indicator = max(eff[:, 0]) <= self.eff_stop
         new_samples = population[rows, :]
         learning_function_values = eff[rows, :]
         return new_samples, learning_function_values, stopping_criteria_indicator

@@ -26,27 +26,31 @@ Data[:, :, 2] = [
 def test_DirectPOD_listData():
     list_data = list(Data)
     pod_dir = DirectPOD(solution_snapshots=list_data)
-    reconstructed_solutions, reduced_solutions = pod_dir.run()
+    pod_dir.run()
+    reconstructed_solutions = pod_dir.reconstructed_solution
     actual_result = reconstructed_solutions[0][1][1]
     expected_result = 0.3054
     assert expected_result == round(actual_result, 6)
 
-
 def test_DirectPOD():
     pod_dir = DirectPOD(solution_snapshots=Data, modes=1)
-    assert round(pod_dir.run()[0][0][1][1], 6) == 0.761704
+    pod_dir.run()
+    reconstructed_solutions = pod_dir.reconstructed_solution
+    assert round(reconstructed_solutions[0][1][1], 6) == 0.761704
 
 
 def test_SnapshotPOD():
     pod_snap = SnapshotPOD(solution_snapshots=Data, modes=1)
-    assert round(pod_snap.run()[0][0][1][1], 6) == -0.181528
+    pod_snap.run()
+    reconstructed_solutions = pod_snap.reconstructed_solution
+    assert round(reconstructed_solutions[0][1][1], 6) == -0.181528
 
 
 def test_SnapshotPOD_listData():
     list_data = list(Data)
     pod_dir = SnapshotPOD(solution_snapshots=list_data)
-    pod_output = pod_dir.run()
-    actual_result = pod_output[0][0][1][1]
+    pod_dir.run()
+    actual_result = pod_dir.reconstructed_solution[0][1][1]
     expected_result = 0.3054
     assert expected_result == round(actual_result, 6)
 

@@ -64,12 +64,12 @@ class SubsetSimulation:
         self.dependent_chains_CoV: float = None
         """Coefficient of variation of the probability of failure estimate with dependent chains."""
 
-        [self.failure_probability, self.independent_chains_CoV, self.dependent_chains_CoV] = self.run()
+        [self.failure_probability, self.independent_chains_CoV, self.dependent_chains_CoV] = self._run()
 
         self.logger.info("UQpy: Subset Simulation Complete!")
 
     # The run function executes the chosen subset simulation algorithm
-    def run(self):
+    def _run(self):
         """
         Execute subset simulation
 

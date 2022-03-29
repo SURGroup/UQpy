@@ -17,9 +17,7 @@ class WeightedUFunction(LearningFunction):
         """
         self.weighted_u_stop = weighted_u_stop
 
-    def evaluate_function(
-        self, distributions, n_add, surrogate, population, qoi=None, samples=None
-    ):
+    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
         g, sig = surrogate.predict(population, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array
@@ -39,10 +37,7 @@ class WeightedUFunction(LearningFunction):
         u_ = u * ((max_p - p1) / max_p)
         rows = u_[:, 0].argsort()[:n_add]
 
-        stopping_criteria_indicator = False
-        if min(u[:, 0]) >= self.weighted_u_stop:
-            stopping_criteria_indicator = True
-
+        stopping_criteria_indicator = min(u[:, 0]) >= self.weighted_u_stop
         new_samples = population[rows, :]
         learning_function_values = u_[rows, :]
         return new_samples, learning_function_values, stopping_criteria_indicator

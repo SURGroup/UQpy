@@ -14,7 +14,7 @@ solution snapshots in the form of second-order tensors.
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Current capabilities
 
     Grassmann manifold <grassmann/index>

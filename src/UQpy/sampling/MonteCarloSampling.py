@@ -82,9 +82,7 @@ class MonteCarloSampling:
             add_continuous_nd = 0
             for i in range(len(distributions)):
                 if not isinstance(distributions[i], Distribution):
-                    raise TypeError(
-                        "UQpy: A UQpy.Distribution object must be provided."
-                    )
+                    raise TypeError("UQpy: A UQpy.Distribution object must be provided.")
                 if isinstance(distributions[i], DistributionContinuous1D):
                     add_continuous_1d += 1
                 elif isinstance(distributions[i], DistributionND):
@@ -102,9 +100,7 @@ class MonteCarloSampling:
             self.array = True
 
     @beartype
-    def run(
-        self, nsamples: PositiveInteger, random_state: RandomStateType = None
-    ):
+    def run(self, nsamples: PositiveInteger, random_state: RandomStateType = None):
         """
         Execute the random sampling in the :class:`.MonteCarloSampling` class.
 
@@ -121,11 +117,7 @@ class MonteCarloSampling:
         :param random_state: Random seed used to initialize the pseudo-random number generator.
         """
         # Check if a random_state is provided.
-        self.random_state = (
-            process_random_state(random_state)
-            if random_state is not None
-            else self.random_state
-        )
+        self.random_state = (process_random_state(random_state) if random_state is not None else self.random_state)
 
         self.logger.info("UQpy: Running Monte Carlo Sampling.")
 
@@ -133,11 +125,7 @@ class MonteCarloSampling:
             temp_samples = []
             for i in range(len(self.dist_object)):
                 if hasattr(self.dist_object[i], "rvs"):
-                    temp_samples.append(
-                        self.dist_object[i].rvs(
-                            nsamples=nsamples, random_state=self.random_state
-                        )
-                    )
+                    temp_samples.append(self.dist_object[i].rvs(nsamples=nsamples, random_state=self.random_state))
                 else:
                     raise ValueError("UQpy: rvs method is missing.")
             self.x = []
@@ -145,9 +133,7 @@ class MonteCarloSampling:
                 y = [temp_samples[k][j] for k in range(len(self.dist_object))]
                 self.x.append(np.array(y))
         elif hasattr(self.dist_object, "rvs"):
-            temp_samples = self.dist_object.rvs(
-                nsamples=nsamples, random_state=self.random_state
-            )
+            temp_samples = self.dist_object.rvs(nsamples=nsamples, random_state=self.random_state)
             self.x = temp_samples
 
         if self.samples is None:
@@ -156,9 +142,7 @@ class MonteCarloSampling:
             else:
                 self.samples = np.array(self.x)
         elif isinstance(self.dist_object, list) and self.array is True:
-            self.samples = np.concatenate(
-                [self.samples, np.hstack(np.array(self.x)).T], axis=0
-            )
+            self.samples = np.concatenate([self.samples, np.hstack(np.array(self.x)).T], axis=0)
         elif isinstance(self.dist_object, Distribution):
             self.samples = np.vstack([self.samples, self.x])
         else:
@@ -182,9 +166,7 @@ class MonteCarloSampling:
                     if hasattr(self.dist_object[j], "cdf"):
                         zi[i, j] = self.dist_object[j].cdf(z[j])
                     else:
-                        raise ValueError(
-                            "UQpy: All distributions must have a cdf method."
-                        )
+                        raise ValueError("UQpy: All distributions must have a cdf method.")
             self.samplesU01 = zi
 
         elif isinstance(self.dist_object, Distribution):
@@ -205,9 +187,7 @@ class MonteCarloSampling:
                     if hasattr(self.dist_object[j], "cdf"):
                         zi = self.dist_object[j].cdf(z[j])
                     else:
-                        raise ValueError(
-                            "UQpy: All distributions must have a cdf method."
-                        )
+                        raise ValueError("UQpy: All distributions must have a cdf method.")
                     y[j] = zi
                 temp_samples_u01.append(np.array(y))
             self.samplesU01 = temp_samples_u01

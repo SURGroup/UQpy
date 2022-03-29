@@ -24,6 +24,7 @@ class SimplexSampling:
          If an :any:`int` is provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise,
          the object itself can be passed directly.
         """
+        self.samples: NumpyFloatArray = None
         self.nodes = np.atleast_2d(nodes)
         self.nsamples = nsamples
 
@@ -33,7 +34,7 @@ class SimplexSampling:
         self.random_state = process_random_state(random_state)
 
         if nsamples is not None:
-            self.samples: NumpyFloatArray = self.run(nsamples=nsamples)
+            self.run(nsamples=nsamples)
             """New random samples distributed uniformly inside the simplex."""
 
     @beartype
@@ -73,5 +74,5 @@ class SimplexSampling:
             a = min(self.nodes)
             b = max(self.nodes)
             sample = a + (b - a) * stats.uniform.rvs(size=[self.nsamples, dimension], random_state=self.random_state)
-        return sample
+        self.samples: NumpyFloatArray = sample
 

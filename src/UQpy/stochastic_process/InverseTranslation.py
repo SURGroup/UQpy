@@ -42,10 +42,7 @@ class InverseTranslation:
         self.frequency = np.arange(0, number_frequency_intervals) * frequency_interval
         self.time = np.arange(0, number_time_intervals) * time_interval
         self.error = percentage_error
-        if (
-            correlation_function_non_gaussian is None
-            and power_spectrum_non_gaussian is None
-        ):
+        if (correlation_function_non_gaussian is None and power_spectrum_non_gaussian is None):
             print(
                 "Either the Power Spectrum or the Autocorrelation function should be specified"
             )

@@ -22,6 +22,11 @@ class POD(ABC):
          number of grid points.
         :param reconstruction_percentage: Dataset reconstruction percentage.
         """
+        self.reduced_solution = None
+        """Second order tensor containing the reconstructed solution snapshots in their initial spatial and temporal 
+        dimensions."""
+        self.reconstructed_solution = None
+        """An array containing the solution snapshots reduced in the spatial dimension."""
         self.logger = logging.getLogger(__name__)
         if reconstruction_percentage <= 0:
             raise ValueError("Invalid input, the reconstruction percentage is defined in the range (0,100].")
@@ -97,4 +102,5 @@ class POD(ABC):
 
         self.logger.info("Dataset reconstruction: {:.3%}".format(percentages[self.modes - 1] / 100))
 
-        return reconstructed_solutions, reduced_solutions
+        self.reconstructed_solution = reconstructed_solutions
+        self.reduced_solution = reduced_solutions
