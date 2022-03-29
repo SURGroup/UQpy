@@ -46,13 +46,11 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinxcontrib.bibtex",
     "sphinx_gallery.gen_gallery",
-    "nbsphinx",
-    "sphinx_gallery.load_style",
 ]
 
-nbsphinx_custom_formats={
-    ".md": ["jupytext.reads", {"fmt": "mystnb"}]
-}
+# nbsphinx_custom_formats={
+#     ".md": ["jupytext.reads", {"fmt": "mystnb"}]
+# }
 autoclass_content = 'init'
 add_module_names = False
 autodoc_member_order = 'bysource'

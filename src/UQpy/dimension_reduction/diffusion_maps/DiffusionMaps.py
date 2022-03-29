@@ -332,12 +332,10 @@ class DiffusionMaps:
             if n_partition is not None:
                 random_indices = np.random.default_rng(random_state).permutation(n_points)
                 distance_matrix = sd.cdist(data[random_indices[:n_partition]], data,  metric='euclidean')
-                k = np.min([k_nn, distance_matrix.shape[1]])
-                k_smallest_values = np.partition(distance_matrix, k - 1, axis=1)[:, k - 1]
             else:
                 distance_matrix = sd.squareform(sd.pdist(data, metric='euclidean'))
-                k = np.min([k_nn, distance_matrix.shape[1]])
-                k_smallest_values = np.partition(distance_matrix, k - 1, axis=1)[:, k - 1]
+            k = np.min([k_nn, distance_matrix.shape[1]])
+            k_smallest_values = np.partition(distance_matrix, k - 1, axis=1)[:, k - 1]
         else:
             k_smallest_values = np.partition(distance_matrix, k_nn - 1, axis=1)[:, k_nn - 1]
         est_cutoff = np.max(k_smallest_values)
