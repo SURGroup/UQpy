@@ -73,7 +73,7 @@ steps:
 
   - script: |
       pip install pytest pytest-cov
-      PYTHONPATH=src pytest tests/*.py --cov=src tests/ --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
+      PYTHONPATH=src pytest tests/unit_test/*.py --cov=src tests/ --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
     workingDirectory: $(Build.SourcesDirectory)
     displayName: 'Test with pytest'
  
