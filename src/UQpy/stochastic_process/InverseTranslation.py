@@ -42,38 +42,31 @@ class InverseTranslation:
         self.frequency = np.arange(0, number_frequency_intervals) * frequency_interval
         self.time = np.arange(0, number_time_intervals) * time_interval
         self.error = percentage_error
-        if (correlation_function_non_gaussian is None and power_spectrum_non_gaussian is None):
-            print(
-                "Either the Power Spectrum or the Autocorrelation function should be specified"
-            )
+        self.logger = logging.getLogger(__name__)
+        if correlation_function_non_gaussian is None and power_spectrum_non_gaussian is None:
+            self.logger.info("Either the Power Spectrum or the Autocorrelation function should be specified")
         if correlation_function_non_gaussian is None:
             self.power_spectrum_non_gaussian = power_spectrum_non_gaussian
-            self.correlation_function_non_gaussian = wiener_khinchin_transform(
-                power_spectrum_non_gaussian, self.frequency, self.time
-            )
+            self.correlation_function_non_gaussian = wiener_khinchin_transform(power_spectrum_non_gaussian,
+                                                                               self.frequency, self.time)
         elif power_spectrum_non_gaussian is None:
             self.correlation_function_non_gaussian = correlation_function_non_gaussian
-            self.power_spectrum_non_gaussian = inverse_wiener_khinchin_transform(
-                correlation_function_non_gaussian, self.frequency, self.time
-            )
+            self.power_spectrum_non_gaussian = inverse_wiener_khinchin_transform(correlation_function_non_gaussian,
+                                                                                 self.frequency, self.time)
         self.num = self.correlation_function_non_gaussian.shape[0]
         self.dim = len(self.correlation_function_non_gaussian.shape)
         if samples_non_gaussian is not None:
             self.samples_shape = samples_non_gaussian.shape
             self.samples_non_gaussian = samples_non_gaussian.flatten()[:, np.newaxis]
             self.samples_gaussian: NumpyFloatArray = self._inverse_translate_non_gaussian_samples().reshape(
-                self.samples_shape
-            )
+                self.samples_shape)
             """The inverse translated Gaussian samples from the non-Gaussian samples."""
         self.power_spectrum_gaussian: NumpyFloatArray = self._itam_power_spectrum()
         """The power spectrum of the inverse translated Gaussian stochastic processes"""
         self.auto_correlation_function_gaussian = wiener_khinchin_transform(
-            self.power_spectrum_gaussian, self.frequency, self.time
-        )
+            self.power_spectrum_gaussian, self.frequency, self.time)
         self.correlation_function_gaussian: NumpyFloatArray = (
-            self.auto_correlation_function_gaussian
-            / self.auto_correlation_function_gaussian[0]
-        )
+            self.auto_correlation_function_gaussian / self.auto_correlation_function_gaussian[0])
         """The correlation function of the inverse translated Gaussian stochastic processes."""
 
     def _inverse_translate_non_gaussian_samples(self):
@@ -81,9 +74,7 @@ class InverseTranslation:
             non_gaussian_cdf = getattr(self.distributions, "cdf")
             samples_cdf = non_gaussian_cdf(self.samples_non_gaussian)
         else:
-            raise AttributeError(
-                "UQpy: The marginal dist_object needs to have an inverse cdf defined."
-            )
+            raise AttributeError("UQpy: The marginal dist_object needs to have an inverse cdf defined.")
         samples_g = Normal(loc=0.0, scale=1.0).icdf(samples_cdf)
         return samples_g
 

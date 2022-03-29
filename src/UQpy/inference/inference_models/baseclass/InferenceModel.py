@@ -21,6 +21,7 @@ class InferenceModel(ABC):
         :param name: Name of model - optional but useful in a model selection setting.
         """
         # Initialize some parameters
+        self.prior = None
         self.n_parameters = n_parameters
         self.name = name
         self.logger = logging.getLogger(__name__)
@@ -62,9 +63,7 @@ class InferenceModel(ABC):
         """
 
         # Compute log likelihood
-        log_likelihood_eval = self.evaluate_log_likelihood(
-            parameters=parameters, data=data
-        )
+        log_likelihood_eval = self.evaluate_log_likelihood(parameters=parameters, data=data)
 
         # If the prior is not provided it is set to an non-informative prior p(theta)=1, log_posterior = log_likelihood
         if self.prior is None:

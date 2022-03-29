@@ -74,8 +74,7 @@ def test_bayes_selection():
                              random_state=123, n_chains=2, dimension=1)
     parameter_estimator = BayesParameterEstimation(inference_model=candidate_model, data=data, sampling_class=mh1)
     parameter_estimator1 = BayesParameterEstimation(inference_model=candidate_model2, data=data, sampling_class=mh2)
-    selection = BayesModelSelection(parameter_estimators=[parameter_estimator, parameter_estimator1], data=data,
-                                    nsamples=[50, 50])
+    selection = BayesModelSelection(parameter_estimators=[parameter_estimator, parameter_estimator1], nsamples=[50, 50])
     assert round(selection.probabilities[0], 3) == 1.000
 
 
@@ -88,7 +87,6 @@ def test_bayes_selection2():
                              random_state=123, n_chains=2, dimension=1)
     parameter_estimator = BayesParameterEstimation(inference_model=candidate_model, data=data, sampling_class=mh1)
     parameter_estimator1 = BayesParameterEstimation(inference_model=candidate_model2, data=data, sampling_class=mh2)
-    selection = BayesModelSelection(data=data, parameter_estimators=[parameter_estimator, parameter_estimator1],
-                                    nsamples=[50, 50])
+    selection = BayesModelSelection(parameter_estimators=[parameter_estimator, parameter_estimator1], nsamples=[50, 50])
     selection.sort_models()
     assert round(selection.probabilities[0], 3) == 1.000

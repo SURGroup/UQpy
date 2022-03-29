@@ -366,10 +366,11 @@ class VoronoiStrata(Strata):
                     self.dy_dx[j, :] = self.dy_dx_old[int(self.mesh.new_to_old[j]), :]
 
             # For those simplices that will be updated, compute the new gradient
-            self.dy_dx[update_array, :] = self._estimate_gradient(
-                np.squeeze(self.samplesU01[neighbors]),
-                np.atleast_2d(np.array(qoi)[neighbors]),
-                self.mesh.centroids[update_array],)
+            from UQpy.utilities.Utilities import calculate_gradient
+            self.dy_dx[update_array, :] = calculate_gradient(surrogate, step_size,
+                                                             np.atleast_2d(training_points)[neighbors],
+                                                             np.atleast_2d(np.array(qoi)[neighbors]).T,
+                                                             self.mesh.centroids[update_array])
 
     def _update_strata(self, new_point, samples_u01):
         i_ = samples_u01.shape[0]
@@ -398,12 +399,8 @@ class VoronoiStrata(Strata):
         import itertools
 
         tmp_vertices = self.points[self.mesh.simplices[int(bin_), :]]
-        col_one = np.array(
-            list(itertools.combinations(np.arange(self.dimension + 1), self.dimension))
-        )
-        self.mesh.sub_simplex = np.zeros_like(
-            tmp_vertices
-        )  # node: an array containing mid-point of edges
+        col_one = np.array(list(itertools.combinations(np.arange(self.dimension + 1), self.dimension)))
+        self.mesh.sub_simplex = np.zeros_like(tmp_vertices)  # node: an array containing mid-point of edges
         for m in range(self.dimension + 1):
             self.mesh.sub_simplex[m, :] = (
                     np.sum(tmp_vertices[col_one[m] - 1, :], 0) / self.dimension)

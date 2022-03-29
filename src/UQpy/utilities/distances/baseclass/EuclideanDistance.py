@@ -44,7 +44,7 @@ class EuclideanDistance(Distance, ABC):
             x1 = points[jj]
 
             # Call the functions where the distance metric is implemented.
-            distance_value = self.compute_distance(x0, x1)
+            distance_value = self.compute_distance([x0, x1])
 
             distance_list.append(distance_value)
 

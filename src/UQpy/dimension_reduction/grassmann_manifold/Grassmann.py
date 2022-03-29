@@ -50,7 +50,7 @@ class Grassmann:
             if reference_point.data.shape[1] != grassmann_points[i].data.shape[1]:
                 raise ValueError("UQpy: Point {0} is on G({1},{2}) - Reference is on"
                                  " G({1},{2})".format(i, grassmann_points[i].data.shape[1],
-                                                      grassmann_points[i].data.shape[0], reference_point.data.shape[1]))
+                                                      grassmann_points[i].data.shape[0]))
 
         # Multiply ref by its transpose.
         reference_point_transpose = reference_point.T
@@ -80,8 +80,7 @@ class Grassmann:
         for i in range(number_of_points):
             if reference_point.data.shape[1] != tangent_points[i].shape[1]:
                 raise ValueError("UQpy: Point {0} is on G({1},{2}) - Reference is on"
-                                 " G({1},{2})".format(i, tangent_points[i].shape[1], tangent_points[i].shape[0],
-                                                      reference_point.data.shape[1]))
+                                 " G({1},{2})".format(i, tangent_points[i].shape[1], tangent_points[i].shape[0]))
 
         # Map the each point back to the manifold.
         manifold_points = []
@@ -176,7 +175,8 @@ class Grassmann:
         avg = []
         _gamma = []
         if acc:
-            _gamma = Grassmann.log_map(points_grassmann=data_points, ref=np.asarray(mean_element))
+            _gamma = Grassmann.log_map(grassmann_points=data_points,
+                                       reference_point=np.asarray(mean_element))
 
             avg_gamma.fill(0)
             for i in range(n_mat):
@@ -250,11 +250,13 @@ class Grassmann:
             for i in range(len(indices)):
                 alpha = 0.5 / k
                 idx = indices[i]
-                _gamma = Grassmann.log_map(points_grassmann=[data_points[idx]], ref=np.asarray(mean_element))
+                _gamma = Grassmann.log_map(grassmann_points=[data_points[idx]],
+                                           reference_point=np.asarray(mean_element))
 
                 step = 2 * alpha * _gamma[0]
 
-                X = Grassmann.exp_map(points_tangent=[step], ref=np.asarray(mean_element))
+                X = Grassmann.exp_map(tangent_points=[step],
+                                      reference_point=np.asarray(mean_element))
 
                 _gamma = []
                 mean_element = X[0]

@@ -201,26 +201,16 @@ class SubsetSimulation:
         probability_cov_independent = np.sqrt(np.sum(d12))
         probability_cov_dependent = np.sqrt(np.sum(d22))
 
-        return (
-            failure_probability,
-            probability_cov_independent,
-            probability_cov_dependent,
-        )
+        return failure_probability, probability_cov_independent, probability_cov_dependent
 
     def _compute_coefficient_of_variation(self, step):
         # Here, we assume that the initial samples are drawn to be uncorrelated such that the correction factors do not
         # need to be computed.
         if step == 0:
-            independent_chains_cov = np.sqrt(
-                (1 - self.conditional_probability)
-                / (self.conditional_probability * self.nsamples_per_subset)
-            )
-            dependent_chains_cov = np.sqrt(
-                (1 - self.conditional_probability)
-                / (self.conditional_probability * self.nsamples_per_subset)
-            )
-
-            return independent_chains_cov, dependent_chains_cov
+            independent_chains_cov = np.sqrt((1 - self.conditional_probability)
+                                             / (self.conditional_probability * self.nsamples_per_subset))
+            dependent_chains_cov = np.sqrt((1 - self.conditional_probability)
+                                           / (self.conditional_probability * self.nsamples_per_subset))
         else:
             n_c = int(self.conditional_probability * self.nsamples_per_subset)
             n_s = int(1 / self.conditional_probability)
@@ -229,22 +219,14 @@ class SubsetSimulation:
             g_temp = np.reshape(self.performance_function_per_level[step], (n_s, n_c))
             beta_hat = self._correlation_factor_beta(g_temp, step)
 
-            independent_chains_cov = np.sqrt(
-                (
-                    (1 - self.conditional_probability)
-                    / (self.conditional_probability * self.nsamples_per_subset)
-                )
-                * (1 + gamma)
-            )
-            dependent_chains_cov = np.sqrt(
-                (
-                    (1 - self.conditional_probability)
-                    / (self.conditional_probability * self.nsamples_per_subset)
-                )
-                * (1 + gamma + beta_hat)
-            )
+            independent_chains_cov = np.sqrt(((1 - self.conditional_probability)
+                                              / (self.conditional_probability * self.nsamples_per_subset))
+                                             * (1 + gamma))
+            dependent_chains_cov = np.sqrt(((1 - self.conditional_probability)
+                                            / (self.conditional_probability * self.nsamples_per_subset))
+                                           * (1 + gamma + beta_hat))
 
-            return independent_chains_cov, dependent_chains_cov
+        return independent_chains_cov, dependent_chains_cov
 
     # Computes the conventional correlation factor gamma from Au and Beck
     def _correlation_factor_gamma(self, indicator, n_s, n_c):
@@ -271,17 +253,13 @@ class SubsetSimulation:
         for i in range(np.shape(g)[1]):
             for j in range(i + 1, np.shape(g)[1]):
                 if g[0, i] == g[0, j]:
-                    beta = beta + 1
-        beta = beta * 2
+                    beta += 1
+        beta *= 2
 
         ar = np.asarray(self.mcmc_objects[step].acceptance_rate)
         ar_mean = np.mean(ar)
 
-        factor = 0
-        for i in range(np.shape(g)[0] - 1):
-            factor = factor + (1 - (i + 1) * np.shape(g)[0] / np.shape(g)[1]) * (
-                1 - ar_mean
-            )
+        factor = sum((1 - (i + 1) * np.shape(g)[0] / np.shape(g)[1]) * (1 - ar_mean) for i in range(np.shape(g)[0] - 1))
         factor = factor * 2 + 1
 
         beta = beta / np.shape(g)[1] * factor

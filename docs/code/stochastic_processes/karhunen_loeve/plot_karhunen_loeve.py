@@ -46,7 +46,7 @@ for i in range(m):
     for j in range(m):
         R[i, j] = 2 * np.exp(-((t[j] - t[i]) / 281) ** 2)  # var = 2
 
-KLE_Object = KarhunenLoeveExpansion(samples_number=n_sim, correlation_function=R, time_interval=dt)
+KLE_Object = KarhunenLoeveExpansion(n_samples=n_sim, correlation_function=R, time_interval=dt)
 samples = KLE_Object.samples
 
 fig, ax = plt.subplots()

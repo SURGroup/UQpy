@@ -51,7 +51,6 @@ def test_models():
     e3 = BayesParameterEstimation(inference_model=model3, data=data_ex1, sampling_class=mh3)
 
     selection = BayesModelSelection(parameter_estimators=[e1, e2, e3],
-                                    data=data_ex1,
                                     prior_probabilities=[1. / 3., 1. / 3., 1. / 3.],
                                     nsamples=[2000, 2000, 2000])
 

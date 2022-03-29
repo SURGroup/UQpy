@@ -15,7 +15,7 @@ class BayesParameterEstimation:
     def __init__(
         self,
         inference_model: InferenceModel,
-        data: np.ndarray,
+        data: Union[list, np.ndarray],
         sampling_class: Union[MCMC, ImportanceSampling] = None,
         nsamples: Union[None, int] = None,
     ):

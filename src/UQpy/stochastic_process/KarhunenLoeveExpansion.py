@@ -8,7 +8,7 @@ class KarhunenLoeveExpansion:
 
     def __init__(
         self,
-        samples_number: int,
+        n_samples: int,
         correlation_function: np.ndarray,
         time_interval: Union[np.ndarray, float],
         threshold: int = None,
@@ -18,7 +18,7 @@ class KarhunenLoeveExpansion:
         A class to simulate stochastic processes from a given auto-correlation function based on the Karhunen-Loeve
         Expansion
 
-        :param samples_number: Number of samples of the stochastic process to be simulated.
+        :param n_samples: Number of samples of the stochastic process to be simulated.
          The :meth:`run` method is automatically called if `samples_number` is provided. If `samples_number` is not
          provided, then the :class:`.KarhunenLoeveExpansion` object is created but samples are not generated.
         :param correlation_function: The correlation function of the stochastic process of size
@@ -30,29 +30,23 @@ class KarhunenLoeveExpansion:
         """
         self.correlation_function = correlation_function
         self.time_interval = time_interval
-        if threshold:
-            self.number_eigenvalues = threshold
-        else:
-            self.number_eigenvalues = len(self.correlation_function[0])
-
+        self.number_eigenvalues = threshold or len(self.correlation_function[0])
         self.random_state = random_state
         if isinstance(self.random_state, int):
             np.random.seed(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError(
-                "UQpy: random_state must be None, an int or an np.random.RandomState object."
-            )
+            raise TypeError("UQpy: random_state must be None, an int or an np.random.RandomState object.")
 
         self.logger = logging.getLogger(__name__)
-        self.nsamples = samples_number
+        self.n_samples = n_samples
 
         self.samples: NumpyFloatArray = None
         """Array of generated samples."""
         self.xi: NumpyFloatArray = None
         """The independent gaussian random variables used in the expansion."""
 
-        if self.nsamples is not None:
-            self.run(samples_number=self.nsamples)
+        if self.n_samples is not None:
+            self.run(n_samples=self.n_samples)
 
     def _simulate(self, xi):
         lam, phi = np.linalg.eig(self.correlation_function)
@@ -66,7 +60,7 @@ class KarhunenLoeveExpansion:
         samples = samples[:, np.newaxis]
         return samples
 
-    def run(self, samples_number: int):
+    def run(self, n_samples: int):
         """
         Execute the random sampling in the :class:`.KarhunenLoeveExpansion` class.
 
@@ -76,26 +70,22 @@ class KarhunenLoeveExpansion:
         samples. The :meth:`run`` method of the :class:`.KarhunenLoeveExpansion` class can be invoked many times and
         each time the generated samples are appended to the existing samples.
 
-        :param samples_number: Number of samples of the stochastic process to be simulated.
+        :param n_samples: Number of samples of the stochastic process to be simulated.
          If the :meth:`run` method is invoked multiple times, the newly generated samples will be appended to the
          existing samples.
 
         The :meth:`run` method has no returns, although it creates and/or appends the :py:attr:`samples` attribute of
         the :class:`KarhunenLoeveExpansion` class.
         """
-        if samples_number is None:
-            raise ValueError(
-                "UQpy: Stochastic Process: Number of samples must be defined."
-            )
-        if not isinstance(samples_number, int):
+        if n_samples is None:
+            raise ValueError("UQpy: Stochastic Process: Number of samples must be defined.")
+        if not isinstance(n_samples, int):
             raise ValueError("UQpy: Stochastic Process: nsamples should be an integer.")
 
         self.logger.info("UQpy: Stochastic Process: Running Karhunen Loeve Expansion.")
 
-        self.logger.info(
-            "UQpy: Stochastic Process: Starting simulation of Stochastic Processes."
-        )
-        xi = np.random.normal(size=(self.number_eigenvalues, self.nsamples))
+        self.logger.info("UQpy: Stochastic Process: Starting simulation of Stochastic Processes.")
+        xi = np.random.normal(size=(self.number_eigenvalues, self.n_samples))
         samples = self._simulate(xi)
 
         if self.samples is None:

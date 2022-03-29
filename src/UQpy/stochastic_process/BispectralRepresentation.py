@@ -211,7 +211,7 @@ class BispectralRepresentation:
 
         if self.case == "uni":
             self.logger.info("UQpy: Stochastic Process: Starting simulation of uni-variate Stochastic Processes.")
-            self.logger.info("UQpy: The number of dimensions is :", self.number_of_dimensions)
+            self.logger.info("UQpy: The number of dimensions is %i:", self.number_of_dimensions)
             phi = (np.random.uniform(
                 size=np.append(self.n_samples,
                                np.ones(self.number_of_dimensions, dtype=np.int32)

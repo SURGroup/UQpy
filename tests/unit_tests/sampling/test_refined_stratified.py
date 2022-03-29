@@ -74,18 +74,24 @@ def test_rect_gerss():
     from UQpy.surrogates.kriging.correlation_models import Exponential
 
     K = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimizations_number=20, random_state=0,
-                correlation_model_parameters=[1, 1], optimizer=MinimizeOptimizer('l-bfgs-b'),)
+                correlation_model_parameters=[1, 1], optimizer=MinimizeOptimizer('l-bfgs-b'), )
     K.fit(samples=x.samples, values=rmodel.qoi_list)
     refinement = GradientEnhancedRefinement(strata=x.strata_object, runmodel_object=rmodel,
                                             surrogate=K, nearest_points_number=4)
     z = RefinedStratifiedSampling(stratified_sampling=x, random_state=2, refinement_algorithm=refinement)
     z.run(nsamples=6)
+    # assert np.allclose(z.samples, np.array([[0.417022, 0.36016225], [1.00011437, 0.15116629],
+    #                                         [0.14675589, 0.5461693], [1.18626021, 0.67278036],
+    #                                         [1.59254104, 0.96577043], [1.97386531, 0.24237455]]))
     assert np.allclose(z.samples, np.array([[0.417022, 0.36016225], [1.00011437, 0.15116629],
                                             [0.14675589, 0.5461693], [1.18626021, 0.67278036],
-                                            [1.59254104, 0.96577043], [1.97386531, 0.24237455]]))
+                                            [1.59254104, 0.96577043], [1.7176612, 0.2101839]]))
+    # assert np.allclose(z.samplesU01, np.array([[0.208511, 0.36016225], [0.50005719, 0.15116629],
+    #                                            [0.07337795, 0.5461693], [0.59313011, 0.67278036],
+    #                                            [0.79627052, 0.96577043], [0.98693265, 0.24237455]]))
     assert np.allclose(z.samplesU01, np.array([[0.208511, 0.36016225], [0.50005719, 0.15116629],
                                                [0.07337795, 0.5461693], [0.59313011, 0.67278036],
-                                               [0.79627052, 0.96577043], [0.98693265, 0.24237455]]))
+                                               [0.79627052, 0.96577043], [0.8588306 , 0.2101839]]))
 
 
 def test_vor_rss():
@@ -127,10 +133,10 @@ def test_vor_gerss():
                                                                                       surrogate=K_,
                                                                                       nearest_points_number=4))
     assert np.allclose(z_vor.samples, np.array([[1.78345908, 0.01640854], [1.46201137, 0.70862104],
-                                                [0.4021338,  0.05290083], [0.1062376,  0.88958226],
+                                                [0.4021338, 0.05290083], [0.1062376, 0.88958226],
                                                 [0.61246269, 0.47160095], [1.16609055, 0.30832536]]))
     assert np.allclose(z_vor.samplesU01, np.array([[0.89172954, 0.01640854], [0.73100569, 0.70862104],
-                                                   [0.2010669 , 0.05290083], [0.0531188,  0.88958226],
+                                                   [0.2010669, 0.05290083], [0.0531188, 0.88958226],
                                                    [0.30623134, 0.47160095], [0.58304527, 0.30832536]]))
 
 
@@ -157,7 +163,7 @@ def test_rss_runmodel_object():
     from UQpy.surrogates.kriging.correlation_models import Exponential
 
     K = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimizations_number=20,
-                correlation_model_parameters=[1, 1], optimizer=MinimizeOptimizer('l-bfgs-b'),)
+                correlation_model_parameters=[1, 1], optimizer=MinimizeOptimizer('l-bfgs-b'), )
     rmodel = RunModel(model_script='python_model_function.py', vec=False)
     K.fit(samples=x.samples, values=rmodel.qoi_list)
     with pytest.raises(BeartypeCallHintPepParamException):

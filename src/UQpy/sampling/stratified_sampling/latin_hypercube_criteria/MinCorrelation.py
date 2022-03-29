@@ -38,6 +38,6 @@ class MinCorrelation(Criterion):
                 min_corr = np.max(np.abs(r1))
                 lhs_samples = copy.deepcopy(samples_try)
             i += 1
-        self.logger.info("UQpy: Achieved minimum correlation of ", min_corr)
+        self.logger.info("UQpy: Achieved minimum correlation of %c", min_corr)
 
         return lhs_samples
