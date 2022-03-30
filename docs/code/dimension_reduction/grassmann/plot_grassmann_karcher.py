@@ -94,7 +94,7 @@ karcher_phi = Grassmann.karcher_mean(grassmann_points=manifold_projection.phi,
 
 #%% md
 #
-# Project $\Psi$, the left singular eigenvectors, on the tangent space centered at the Karcher mean.
+# Project :math:`\Psi`, the left singular eigenvectors, on the tangent space centered at the Karcher mean.
 
 #%%
 

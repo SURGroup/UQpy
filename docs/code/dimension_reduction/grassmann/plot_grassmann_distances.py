@@ -63,8 +63,7 @@ plt.show()
 
 # %% md
 #
-# Instatiate the UQpy class Grassmann considering the `"grassmann_distance"` as the a definition of distance on the
-# manifold.
+# Instantiate the SvdProjection class that projects the raw data to the manifold.
 
 # %%
 
@@ -72,11 +71,11 @@ manifold_projection = SvdProjection(matrices, p="max")
 
 # %% md
 #
-# Compute the pairwise distances for $\Psi$ and $\Phi$, the left and right -singular eigenvectors, respectively, of
-# singular value decomposition of each solution.
+# Compute the pairwise distances for :math:`\Psi` and :math:`\Phi`, the left and right -singular eigenvectors,
+# respectively, of singular value decomposition of each solution.
 
 # %%
-p_dim=[manifold_projection.p]*len(manifold_projection.psi)
+p_dim = [manifold_projection.p] * len(manifold_projection.psi)
 pairwise_distance = GeodesicDistance().calculate_distance_matrix(points=manifold_projection.psi,
                                                                  p_dim=p_dim)
 print(pairwise_distance)
@@ -93,8 +92,9 @@ print(distance01)
 
 # %% md
 #
-# Compute the pairwise distances for $\Psi$ and $\Phi$, the left and right -singular eigenvectors, respectively, of
-# singular value decomposition of each solution. In this case, use an user defined function `my_distance`.
+# Compute the pairwise distances for :math:`\Psi` and :math:`\Phi`, the left and right -singular eigenvectors,
+# respectively, of singular value decomposition of each solution. In this case, use an user defined class
+# `UserDistance`.
 
 # %%
 
@@ -110,9 +110,8 @@ class UserDistance(GrassmannianDistance):
         (ui, si, vi) = np.linalg.svd(r, full_matrices=True)
         si[np.where(si > 1)] = 1.0
         theta = np.arccos(si)
-        distance = (np.sqrt(abs(rank_i - rank_j) * np.pi ** 2 / 4 + np.sum(theta ** 2)))
+        return np.sqrt(abs(rank_i - rank_j) * np.pi ** 2 / 4 + np.sum(theta ** 2))
 
-        return distance
 
 pairwise_distance_psi = UserDistance().calculate_distance_matrix(manifold_projection.psi, p_dim=p_dim)
 

@@ -77,7 +77,8 @@ ax2.title.set_text('Element 1')
 
 # %% md
 #
-# Instantiate the ``UQpy`` class ``DiffusionMaps`` and compute the diffusion coordinates using the method ``mapping``.
+# Instantiate the :py:mod:`UQpy` class :class:`.DiffusionMaps` and compute the diffusion coordinates using the method
+# :py:meth:`fit`.
 
 # %%
 

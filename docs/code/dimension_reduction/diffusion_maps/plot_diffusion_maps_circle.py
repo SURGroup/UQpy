@@ -53,8 +53,8 @@ plt.show()
 
 # %% md
 #
-# Instantiate the class `DiffusionMaps` using `alpha=1`; `n_evecs=3`, because the first eigenvector is non-informative.
-# Moreover, a Gaussian is used in the kernel construction.
+# Instantiate the class `DiffusionMaps` using `alpha=1`; `n_eigenvectors=3`, because the first eigenvector is
+# non-informative. Moreover, a Gaussian is used in the kernel construction.
 
 # %%
 

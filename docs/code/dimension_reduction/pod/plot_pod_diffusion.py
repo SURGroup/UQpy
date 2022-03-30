@@ -11,18 +11,21 @@ POD on Diffusion Equation 2D
 #
 # 2D Diffusion equation
 # ---------------------
-# ..math :: \displaystyle \frac{\partial U}{\partial t} = D \bigg(\frac{\partial^2 U}{\partial x^2} + \frac{\partial^2 U}{\partial y^2}\bigg)
+# :math:`\frac{\partial U}{\partial t}=D\bigg(\frac{\partial^2 U}{\partial x^2}+\frac{\partial^2 U}{\partial y^2}\bigg)`
 #
 # where :math:`D` is the diffusion coefficient. :math:`U` describes the behavior of the particles in Brownian motion,
 # resulting from their random movements and collisions.
 #
-# <img src="plate_and_disc.png" alt="plate_and_disc.png" height="160" width="160" align=right>
 #
-# ### Problem description:
+# Problem description:
+# ~~~~~~~~~~~~~~~~~~~~
 #
 # - A 2D metal plate is initially at temperature :math:`T_{cool}`.
+#
 # - A disc of a specified size inside the plate is at temperature :math:`T_{hot}`.
+#
 # - Suppose that the edges of the plate are held fixed at :math:`T_{cool}`.
+#
 # - The diffusion equation is applied to follow the evolution of the temperature of the plate.
 
 # %%
@@ -43,12 +46,18 @@ import time
 # %% md
 #
 # The diffusion equation is solved by calling the 'diffusion' function and a dataset (list) is obtained. To run this function the following need to be specified:
-# >  - w, h - Plate size, mm
-# >  - dx, dy - Intervals in x-, y- directions, mm
-# >  - D - Thermal diffusivity, mm2.s-1
-# >  - Tcool, Thot - Plate and disc temperature
-# >  - r, cx, cy - Initial conditions - ring of inner radius r, width dr centred at (cx,cy) (mm)
-# >  - nsteps - Number of time steps
+# - :math:`w, h` - Plate size, :math:`(mm)`
+#
+# - :math:`dx, dy` - Intervals in :math:`x-, y-` directions, :math:`(mm)`
+#
+# - :math:`D` - Thermal diffusivity, :math:`(mm^2/s)`
+#
+# - :math:`T_{cool}, T_{hot}` - Plate and disc temperature
+#
+# - :math:`r, cx, cy` - Initial conditions - ring of inner radius :math:`r`, width :math:`dr` centered at
+#  :math:`(cx,cy) (mm)`
+#
+# - `nsteps` - Number of time steps
 
 # %%
 
@@ -78,7 +87,9 @@ Data_modes = []
 
 for n_mode in n_modes:
     pod = DirectPOD(solution_snapshots=Data, modes=n_mode)
-    Data_reconstr, Data_reduced = pod.run()
+    pod.run()
+    Data_reconstr = pod.reconstructed_solution
+    Data_reduced = pod.reduced_solution
     Data_modes.append(Data_reconstr[:, :, frame])
     del Data_reconstr
 
@@ -93,7 +104,7 @@ print('Elapsed time: ', elapsed_time)
 # %%
 
 # Plot input solution
-plt.figure(figsize=(16, 2.5))
+plt.figure()
 c = plt.imshow(Data[frame], cmap=plt.get_cmap('coolwarm'), vmin=Tcool, vmax=Thot)
 plt.colorbar(c)
 plt.title('Input solution', fontweight="bold", size=15)

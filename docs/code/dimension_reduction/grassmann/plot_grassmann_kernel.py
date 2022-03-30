@@ -59,8 +59,7 @@ plt.show()
 
 # %% md
 #
-# Instatiate the UQpy class Grassmann considering the `projection_kernel` as the a kernel definition on the Grassmann
-# manifold.
+# Instantiate the SvdProjection class that projects the raw data to the manifold.
 
 # %%
 
@@ -68,8 +67,8 @@ manifold_projection = SvdProjection(matrices, p="max")
 
 # %% md
 #
-# Compute the kernels for $\Psi$ and $\Phi$, the left and right -singular eigenvectors, respectively, of singular value
-# decomposition of each solution.
+# Compute the kernels for :math:`\Psi` and :math:`\Phi`, the left and right -singular eigenvectors, respectively, of
+# singular value decomposition of each solution.
 
 # %%
 projection_kernel = ProjectionKernel()
@@ -98,14 +97,15 @@ fig = plt.figure()
 plt.imshow(kernel_01)
 plt.show()
 
-
 # %% md
 #
-# Compute the kernels for $\Psi$ and $\Phi$, the left and right -singular eigenvectors, respectively, of singular value
-# decomposition of each solution. In this case, use an user defined function `my_kernel`.
+# Compute the kernels for :math:`\Psi` and :math:`\Phi`, the left and right -singular eigenvectors, respectively, of
+# singular value decomposition of each solution. In this case, use a user defined class `UserKernel`.
 
 # %%
 from UQpy.utilities.kernels.baseclass.GrassmannianKernel import GrassmannianKernel
+
+
 class UserKernel(GrassmannianKernel):
 
     def kernel_entry(self, xi: GrassmannPoint, xj: GrassmannPoint):

@@ -1,9 +1,9 @@
 """
 
-Swiss role
+S-Curve
 =====================
 
-This example shows how to use the :class:`.DiffusionMaps` class to reveal the embedded structure of noisy Swiss role data.
+This example shows how to use the :class:`.DiffusionMaps` class to reveal the embedded structure of S-Curve data.
 """
 
 # %%
@@ -34,7 +34,7 @@ ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=X_color, cmap=plt.cm.Spectral,
 ax.set_xlabel("x")
 ax.set_ylabel("y")
 ax.set_zlabel("z")
-ax.set_title("Swiss role data")
+ax.set_title("S-curve data")
 ax.view_init(10, 70)
 
 # %% md

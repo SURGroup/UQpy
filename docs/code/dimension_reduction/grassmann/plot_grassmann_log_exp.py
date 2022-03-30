@@ -78,7 +78,7 @@ plt.show()
 
 #%% md
 #
-# Project $\Psi$, the left singular eigenvectors, on the tangent space centered at $\Psi_0$.
+# Project :math:`\Psi`, the left singular eigenvectors, on the tangent space centered at :math:`\Psi_0`.
 
 #%%
 
