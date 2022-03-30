@@ -7,8 +7,8 @@ import numpy as np
 
 
 d = Normal(loc=0, scale=1)
-x_mcs = MonteCarloSampling(distributions=[d, d, d], samples_number=5, random_state=1234)
-x_mcs_new = MonteCarloSampling(distributions=[d, d, d], samples_number=5, random_state=2345)
+x_mcs = MonteCarloSampling(distributions=[d, d, d], nsamples=5, random_state=1234)
+x_mcs_new = MonteCarloSampling(distributions=[d, d, d], nsamples=5, random_state=2345)
 verbose_parameter = True
 os.chdir('./tests/RunModel')
 
