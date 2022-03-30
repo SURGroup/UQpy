@@ -1,6 +1,6 @@
 import pytest
 
-from UQpy.distributions import JointIndependent,  Normal
+from UQpy.distributions import JointIndependent, Normal
 from UQpy.sampling import MonteCarloSampling
 from UQpy.distributions import Uniform
 from UQpy.sensitivity.PceSensitivity import PceSensitivity
@@ -13,8 +13,10 @@ np.random.seed(1)
 max_degree, n_samples = 2, 10
 dist = Uniform(loc=0, scale=10)
 
+
 def func(x):
     return x * np.sin(x) / 10
+
 
 x = dist.rvs(n_samples)
 x_test = dist.rvs(n_samples)
@@ -30,13 +32,16 @@ def test_1():
     value = polynomials[1].evaluate(x)[0]
     assert round(value, 4) == -0.2874
 
+
 def test_2():
     """
     Test tp basis
     """
-    polynomial_basis = PolynomialBasis.create_tensor_product_basis(distributions=dist, max_degree=max_degree).polynomials
+    polynomial_basis = PolynomialBasis.create_tensor_product_basis(distributions=dist,
+                                                                   max_degree=max_degree).polynomials
     value = polynomial_basis[1].evaluate(x)[0]
     assert round(value, 4) == -0.2874
+
 
 def test_3():
     """
@@ -47,6 +52,8 @@ def test_3():
     pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=lasso)
     pce.fit(x, y)
     assert round(pce.coefficients[0][0], 4) == 0.0004
+
+
 #
 def test_4():
     """
@@ -57,6 +64,8 @@ def test_4():
     pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=ridge)
     pce.fit(x, y)
     assert round(pce.coefficients[0][0], 4) == 0.0276
+
+
 #
 def test_5():
     """
@@ -67,6 +76,8 @@ def test_5():
     pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
     pce.fit(x, y)
     assert round(pce.coefficients[0][0], 4) == 0.2175
+
+
 #
 def test_6():
     """
@@ -78,6 +89,8 @@ def test_6():
     pce.fit(x, y)
     y_test = pce.predict(x_test)
     assert round(y_test[0][0], 4) == -0.1607
+
+
 #
 def test_7():
     """
@@ -88,8 +101,10 @@ def test_7():
     pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
     pce.fit(x, y)
     pce_sensitivity = PceSensitivity(pce)
-    first_order_sobol = pce_sensitivity.first_order_indices()
+    first_order_sobol = pce_sensitivity.calculate_first_order_indices()
     assert round(first_order_sobol[0][0], 3) == 1.0
+
+
 #
 def test_8():
     """
@@ -100,8 +115,11 @@ def test_8():
     pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
     pce.fit(x, y)
     pce_sensitivity = PceSensitivity(pce)
-    total_order_sobol = pce_sensitivity.total_order_indices()
+
+    total_order_sobol = pce_sensitivity.calculate_total_order_indices()
     assert round(total_order_sobol[0][0], 3) == 1.0
+
+
 #
 def test_9():
     """
@@ -112,6 +130,7 @@ def test_9():
     pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
     pce.fit(x, y)
     pce_sensitivity = PceSensitivity(pce)
+
 
 #
 def test_10():
@@ -124,7 +143,9 @@ def test_10():
     pce.fit(x, y)
     pce_sensitivity = PceSensitivity(pce)
     with pytest.raises(ValueError):
-        generalized_total_order_sobol = pce_sensitivity.generalized_total_order_indices()
+        generalized_total_order_sobol = pce_sensitivity.calculate_generalized_total_order_indices()
+
+
 #
 def test_11():
     """
@@ -136,6 +157,8 @@ def test_11():
     pce.fit(x, y)
     mean, _ = pce.get_moments()
     assert round(mean, 3) == 0.218
+
+
 #
 def test_12():
     """
@@ -167,11 +190,12 @@ def function(x):
 
     return (u1 + u2 + u3 + u4) ** 2 + (v1 + v2 + v3 + v4) ** 2
 
-dist_1 = Uniform(loc=0, scale=2*np.pi)
+
+dist_1 = Uniform(loc=0, scale=2 * np.pi)
 dist_2 = Uniform(loc=0, scale=1)
 
-marg = [dist_1]*4
-marg_1 = [dist_2]*4
+marg = [dist_1] * 4
+marg_1 = [dist_2] * 4
 marg.extend(marg_1)
 
 joint = JointIndependent(marginals=marg)
@@ -186,23 +210,27 @@ least_squares = LeastSquareRegression()
 pce_2 = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
 pce_2.fit(x_2, y_2)
 
+
 def test_17():
     """
     Test Sobol indices for vector-valued quantity of interest on the random inputs
     """
     pce_sensitivity = PceSensitivity(pce_2)
-    generalized_first_sobol = pce_sensitivity.generalized_first_order_indices()
+    pce_sensitivity.run()
+    generalized_first_sobol = pce_sensitivity.generalized_first_order_indices
     assert round(generalized_first_sobol[0], 4) == 0.0137
+
 
 def test_18():
     """
     Test Sobol indices for vector-valued quantity of interest on the random inputs
     """
     pce_sensitivity = PceSensitivity(pce_2)
-    generalized_total_sobol = pce_sensitivity.generalized_total_order_indices()
+    pce_sensitivity.run()
+    generalized_total_sobol = pce_sensitivity.generalized_total_order_indices
     assert round(generalized_total_sobol[0], 4) == 0.4281
-    
-    
+
+
 def test_19():
     """
     Test Higher statistical moments on Uniform distribution (skewness=0, kurtosis=1.8 from definition)
@@ -211,31 +239,33 @@ def test_19():
     least_squares = LeastSquareRegression()
     pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
     pce.fit(x, x)
-    mean,var,skew,kurtosis=pce.get_moments(True)
-   
+    mean, var, skew, kurtosis = pce.get_moments(True)
+
     assert round(kurtosis, 3) == 1.8 and round(skew, 3) == 0
-    
+
+
 def test_20():
     """
     Test Higher statistical moments on Gaussian distribution (skewness=0, kurtosis=3 from definition)
     """
     dist_Gauss = Normal(loc=0, scale=1)
 
-    mcs=MonteCarloSampling(dist,nsamples=n_samples, random_state=1)
-    
+    mcs = MonteCarloSampling(dist, nsamples=n_samples, random_state=1)
+
     polynomial_basis = PolynomialBasis.create_total_degree_basis(dist_Gauss, max_degree)
     least_squares = LeastSquareRegression()
-    pceGauss=PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
-    pceGauss.fit(x,x)
-    mean,var,skew,kurtosis=pceGauss.get_moments(True)
-    
-    assert round(kurtosis, 3) == 3 and round(skew, 3) == 0   
-    
-    
+    pceGauss = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
+    pceGauss.fit(x, x)
+    mean, var, skew, kurtosis = pceGauss.get_moments(True)
+
+    assert round(kurtosis, 3) == 3 and round(skew, 3) == 0
+
+
 def functionLAR(x):
-    u1 = x[:, 0]**2 + x[:, 2]**2 + x[:, 3]**2
-   
+    u1 = x[:, 0] ** 2 + x[:, 2] ** 2 + x[:, 3] ** 2
+
     return u1
+
 
 n_samples_2 = 100
 x_2 = joint.rvs(n_samples_2)
@@ -245,13 +275,15 @@ polynomial_basis = PolynomialBasis.create_total_degree_basis(joint, 6)
 least_squares = LeastSquareRegression()
 pce_2 = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
 pce_2.fit(x_2, y_2)
-    
+
+
 def test_21():
     """
     Test Model Selection Algorithm based on Least Angle Regression (select only important basis functions from large set)
     """
 
-    pceLAR=polynomial_chaos.regressions.LeastAngleRegression.model_selection(pce_2)
-    pce2LAR_sens=PceSensitivity(pceLAR)
-    
-    assert all((np.argwhere(np.round(pce2LAR_sens.generalized_total_order_indices(),3)>0)==[[0],[2],[3]]))
+    pce_lar = polynomial_chaos.regressions.LeastAngleRegression.model_selection(pce_2)
+    pce2_lar_sens = PceSensitivity(pce_lar)
+
+    assert all((np.argwhere(np.round(pce2_lar_sens.calculate_generalized_total_order_indices(), 3) > 0)
+                == [[0], [2], [3]]))

@@ -1,4 +1,6 @@
 import logging
+from typing import Callable
+
 import numpy as np
 from scipy.linalg import cholesky
 import scipy.stats as stats
@@ -79,6 +81,9 @@ class Kriging(Surrogate):
         self.C_inv = None
         self.G = None
         self.F, self.R = None, None
+
+        if isinstance(self.optimizer, str):
+            raise ValueError("The optimization function provided a input parameter cannot be None.")
 
         if optimizer._bounds is None:
             optimizer.update_bounds([[0.001, 10 ** 7]] * self.correlation_model_parameters.shape[0])

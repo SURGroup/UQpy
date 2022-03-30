@@ -168,7 +168,7 @@ def test_optimizer():
     """
         Raises an error if corr_model_params is not defined.
     """
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(ValueError):
         Kriging(regression_model=Linear(), correlation_model=Gaussian(),
                 correlation_model_parameters=[1], optimizer='A')
 
