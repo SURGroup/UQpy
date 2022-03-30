@@ -1,3 +1,7 @@
+import shutil
+
+from beartype.roar import BeartypeCallHintPepParamException
+
 from UQpy.sampling import MonteCarloSampling
 from UQpy.RunModel import RunModel
 from UQpy.distributions import Normal
@@ -16,114 +20,120 @@ verbose_parameter = True
 def test_div_zero():
     print(os.getcwd())
     with pytest.raises(TypeError):
-        RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs', fmt=20, delete_files=True)
+        model = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs', fmt=20,
+                         delete_files=True)
 
 
 def test_fmt_1():
     with pytest.raises(TypeError):
-        RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs', fmt=20, delete_files=True)
+        model = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs', fmt=20,
+                         delete_files=True)
 
 
 def test_fmt_2():
     with pytest.raises(ValueError):
-        RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs', fmt="random_string",
-                 delete_files=True)
+        model = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs', fmt="random_string",
+                         delete_files=True)
 
 
 def test_var_names():
-    with pytest.raises(ValueError):
-        RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs', var_names=[20],
-                 delete_files=True)
+    with pytest.raises(BeartypeCallHintPepParamException):
+        model = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs', var_names=[20],
+                         delete_files=True)
 
 
 def test_model_script():
     with pytest.raises(ValueError):
-        RunModel(ntasks=1, model_script='random_file_name', model_object_name='SumRVs', delete_files=True)
+        model = RunModel(ntasks=1, model_script='random_file_name', model_object_name='SumRVs', delete_files=True)
 
 
 def test_samples():
-    with pytest.raises(ValueError):
-        RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs', samples="samples_string",
-                 delete_files=True)
+    with pytest.raises(BeartypeCallHintPepParamException):
+        model = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs', samples="samples_string",
+                         delete_files=True)
 
 
 def test_python_serial_workflow_class_vectorized():
-    model_python_serial_class = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs',
-                                         verbose=verbose_parameter)
+    model_python_serial_class = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs')
     model_python_serial_class.run(samples=x_mcs.samples)
     assert np.allclose(np.array(model_python_serial_class.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
+    shutil.rmtree(model_python_serial_class.model_dir)
 
 
 def test_python_serial_workflow_class():
     model_python_serial_class = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs',
-                                         vec=False, verbose=verbose_parameter)
+                                         vec=False)
     model_python_serial_class.run(samples=x_mcs.samples)
     assert np.allclose(np.array(model_python_serial_class.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
+    shutil.rmtree(model_python_serial_class.model_dir)
 
 
 def test_direct_samples():
     model_python_serial_class = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs',
-                                         vec=False, verbose=verbose_parameter, samples=x_mcs.samples)
+                                         vec=False, samples=x_mcs.samples)
     assert np.allclose(np.array(model_python_serial_class.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
+    shutil.rmtree(model_python_serial_class.model_dir)
 
 
 def test_append_samples_true():
     model_python_serial_class = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs',
-                                         vec=False, verbose=verbose_parameter, samples=x_mcs.samples)
+                                         vec=False, samples=x_mcs.samples)
     assert np.allclose(np.array(model_python_serial_class.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
     model_python_serial_class.run(x_mcs_new.samples, append_samples=True)
     assert np.allclose(np.array(model_python_serial_class.qoi_list).flatten(),
                        np.sum(np.vstack((x_mcs.samples, x_mcs_new.samples)), axis=1))
+    shutil.rmtree(model_python_serial_class.model_dir)
 
 
 def test_append_samples_false():
     model_python_serial_class = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs',
-                                         vec=False, verbose=verbose_parameter, samples=x_mcs.samples)
+                                         vec=False, samples=x_mcs.samples)
     assert np.allclose(np.array(model_python_serial_class.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
     model_python_serial_class.run(x_mcs_new.samples, append_samples=False)
     assert np.allclose(np.array(model_python_serial_class.qoi_list).flatten(), np.sum(x_mcs_new.samples, axis=1))
+    shutil.rmtree(model_python_serial_class.model_dir)
 
 
 def test_python_serial_workflow_function_vectorized():
-    model_python_serial_function = RunModel(ntasks=1, model_script='python_model.py', model_object_name='sum_rvs',
-                                            verbose=verbose_parameter)
+    model_python_serial_function = RunModel(ntasks=1, model_script='python_model.py', model_object_name='sum_rvs')
     model_python_serial_function.run(samples=x_mcs.samples)
     assert np.allclose(np.array(model_python_serial_function.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
+    shutil.rmtree(model_python_serial_function.model_dir)
 
 
 def test_python_serial_workflow_function():
     model_python_serial_function = RunModel(ntasks=1, model_script='python_model.py', model_object_name='sum_rvs',
-                                            vec=False, verbose=verbose_parameter)
+                                            vec=False)
     model_python_serial_function.run(samples=x_mcs.samples)
     assert np.allclose(np.array(model_python_serial_function.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
+    shutil.rmtree(model_python_serial_function.model_dir)
 
 
 def test_python_serial_workflow_function_no_object_name():
-    model_python_serial_function = RunModel(ntasks=1, model_script='python_model_function.py', vec=False,
-                                            verbose=verbose_parameter)
+    model_python_serial_function = RunModel(ntasks=1, model_script='python_model_function.py', vec=False)
     model_python_serial_function.run(samples=x_mcs.samples)
     assert np.allclose(np.array(model_python_serial_function.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
+    shutil.rmtree(model_python_serial_function.model_dir)
 
 
 def test_python_serial_workflow_class_no_object_name():
-    model_python_serial_function = RunModel(ntasks=1, model_script='python_model_class.py', vec=False,
-                                            verbose=verbose_parameter)
+    model_python_serial_function = RunModel(ntasks=1, model_script='python_model_class.py', vec=False)
     model_python_serial_function.run(samples=x_mcs.samples)
     assert np.allclose(np.array(model_python_serial_function.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
 
 
 def test_python_parallel_workflow_class():
-    model_python_parallel_class = RunModel(ntasks=3, model_script='python_model.py', model_object_name='SumRVs',
-                                           verbose=verbose_parameter)
+    model_python_parallel_class = RunModel(ntasks=3, model_script='python_model.py', model_object_name='SumRVs')
     model_python_parallel_class.run(samples=x_mcs.samples)
     assert np.allclose(np.array(model_python_parallel_class.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
+    shutil.rmtree(model_python_parallel_class.model_dir)
 
 
 def test_python_parallel_workflow_function():
-    model_python_parallel_function = RunModel(ntasks=3, model_script='python_model.py', model_object_name='sum_rvs',
-                                              verbose=verbose_parameter)
+    model_python_parallel_function = RunModel(ntasks=3, model_script='python_model.py', model_object_name='sum_rvs')
     model_python_parallel_function.run(samples=x_mcs.samples)
     assert np.allclose(np.array(model_python_parallel_function.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
+    shutil.rmtree(model_python_parallel_function.model_dir)
 
 
 def test_third_party_serial():
@@ -131,9 +141,10 @@ def test_third_party_serial():
     m = RunModel(ntasks=1, model_script='python_model_sum_scalar.py',
                  input_template='sum_scalar.py', var_names=names, model_object_name="matlab",
                  output_script='process_third_party_output.py', output_object_name='read_output',
-                 resume=False, fmt="{:>10.4f}", verbose=verbose_parameter, delete_files=True)
+                 resume=False, fmt="{:>10.4f}", delete_files=True)
     m.run(x_mcs.samples)
     assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
+    shutil.rmtree(m.model_dir)
 
 
 def test_third_party_serial_output_class():
@@ -144,6 +155,7 @@ def test_third_party_serial_output_class():
                  resume=False, fmt="{:>10.4f}", verbose=verbose_parameter, delete_files=True)
     m.run(x_mcs.samples)
     assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
+    shutil.rmtree(m.model_dir)
 
 
 def test_third_party_serial_no_output_class():
@@ -153,6 +165,7 @@ def test_third_party_serial_no_output_class():
                  fmt="{:>10.4f}", verbose=verbose_parameter, delete_files=True)
     m.run(x_mcs.samples)
     assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
+    shutil.rmtree(m.model_dir)
 
 
 def test_third_party_serial_no_output_function():
@@ -162,6 +175,7 @@ def test_third_party_serial_no_output_function():
                  fmt="{:>10.4f}", verbose=verbose_parameter, delete_files=True)
     m.run(x_mcs.samples)
     assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
+    shutil.rmtree(m.model_dir)
 
 
 def test_third_party_parallel():
@@ -172,6 +186,7 @@ def test_third_party_parallel():
                  resume=False, fmt="{:>10.4f}", verbose=verbose_parameter, delete_files=True)
     m.run(x_mcs.samples)
     assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
+    shutil.rmtree(m.model_dir)
 
 
 def test_third_party_default_var_names():
@@ -183,6 +198,7 @@ def test_third_party_default_var_names():
                                                delete_files=True, samples=x_mcs.samples)
     assert np.allclose(np.array(model_third_party_default_names.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1),
                        atol=1e-4)
+    shutil.rmtree(model_third_party_default_names.model_dir)
 
 
 def test_third_party_var_names():
