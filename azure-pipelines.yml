@@ -62,14 +62,14 @@ steps:
         sonar.exclusions=**/example/**, **/tests/**, **/docs/**
         sonar.python.coverage.reportPaths=./coverage.xml
 
-  - task: Cache@2
-      inputs:
-        key: 'python | "$(Agent.OS)" | requirements.txt'
-        restoreKeys: |
-          python | "$(Agent.OS)"
-          python
-        path: $(PIP_CACHE_DIR)
-      displayName: Cache pip packages
+#  - task: Cache@2
+#      inputs:
+#        key: 'python | "$(Agent.OS)" | requirements.txt'
+#        restoreKeys: |
+#          python | "$(Agent.OS)"
+#          python
+#        path: $(PIP_CACHE_DIR)
+#      displayName: Cache pip packages
 
   - script: |
       pip install -r requirements.txt
