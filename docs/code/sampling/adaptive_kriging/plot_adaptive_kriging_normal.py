@@ -18,12 +18,9 @@ import shutil
 
 from UQpy.surrogates import Kriging
 from UQpy.sampling import MonteCarloSampling, AdaptiveKriging
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Normal
 from local_series import series
-import numpy as np
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import matplotlib.pyplot as plt
 import time
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer

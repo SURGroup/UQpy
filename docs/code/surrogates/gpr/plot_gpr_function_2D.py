@@ -21,7 +21,7 @@ from UQpy.surrogates.kriging.regression_models import Constant
 from UQpy.surrogates.kriging.correlation_models import Exponential
 from UQpy.sampling import RectangularStrata
 from UQpy.sampling import TrueStratifiedSampling
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Uniform
 import numpy as np
 import matplotlib.pyplot as plt

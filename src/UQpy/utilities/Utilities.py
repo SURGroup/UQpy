@@ -2,7 +2,7 @@ import numpy as np
 import scipy.stats as stats
 from UQpy.utilities.ValidationTypes import RandomStateType
 
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 
 
 def svd(matrix, rank=None, tol=None):

@@ -2,7 +2,7 @@ import logging
 from beartype import beartype
 from sklearn.gaussian_process import GaussianProcessRegressor
 
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions.baseclass import Distribution
 from UQpy.sampling.stratified_sampling.LatinHypercubeSampling import LatinHypercubeSampling
 from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import (

@@ -1,4 +1,4 @@
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import *
 from UQpy.reliability import FORM
 import glob

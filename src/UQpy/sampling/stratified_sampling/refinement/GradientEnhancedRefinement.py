@@ -3,7 +3,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 
 from UQpy.surrogates.baseclass import Surrogate
 from UQpy.utilities.ValidationTypes import *
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.sampling.stratified_sampling.refinement.baseclass.Refinement import *
 from UQpy.utilities.Utilities import gradient
 from UQpy.sampling.stratified_sampling.strata.VoronoiStrata import VoronoiStrata

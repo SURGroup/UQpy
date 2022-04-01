@@ -22,10 +22,9 @@ import shutil
 from UQpy.reliability import SubsetSimulation
 import matplotlib.pyplot as plt
 from UQpy.sampling import ModifiedMetropolisHastings, Stretch
-import time
 import numpy as np
 from UQpy.distributions import MultivariateNormal
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 import scipy.stats as stats
 
 # %% md

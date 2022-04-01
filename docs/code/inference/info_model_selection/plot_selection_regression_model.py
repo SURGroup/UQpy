@@ -25,12 +25,12 @@ where :math:`f` consists in running RunModel. The three models considered are:
 #%%
 import shutil
 
-from UQpy.inference import DistributionModel, InformationModelSelection, MLE
-from UQpy.RunModel import RunModel
+from UQpy.inference import InformationModelSelection, MLE
+from UQpy.run_model.RunModel import RunModel
 import numpy as np
-from UQpy.inference import BIC, AIC, AICc
+from UQpy.inference import BIC
 import matplotlib.pyplot as plt
-from UQpy.distributions import Gamma, Exponential, ChiSquare, Normal
+from UQpy.distributions import Normal
 from UQpy.inference import ComputationalModel
 
 

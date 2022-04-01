@@ -19,11 +19,10 @@ import matplotlib.pyplot as plt
 from UQpy.sampling import ModifiedMetropolisHastings, Stretch
 # First import the file that contains the newly defined Rosenbrock distribution
 from local_Rosenbrock import Rosenbrock
-import time
 import numpy as np
 # Import this newly defined Rosenbrock distribution into the Distributions module
 from UQpy.distributions import Normal
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 import scipy.stats as stats
 
 # %% md

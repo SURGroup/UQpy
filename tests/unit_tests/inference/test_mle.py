@@ -5,7 +5,7 @@ from UQpy.distributions.collection import Normal
 from UQpy.inference.inference_models.DistributionModel import DistributionModel
 from UQpy.inference.inference_models.ComputationalModel import ComputationalModel
 from UQpy.inference import MLE
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 import shutil
 
 

@@ -28,12 +28,9 @@ import shutil
 
 import numpy as np
 import matplotlib.pyplot as plt
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Normal
-from UQpy.sampling import MonteCarloSampling
-from UQpy.reliability import FORM, SORM
-from UQpy.reliability import SORM
-from UQpy.distributions import Lognormal, Gamma
+from UQpy.reliability import FORM
 
 RunModelObject = RunModel(model_script='pfn.py', model_object_name="example1", vec=False, ntasks=3)
 dist1 = Normal(loc=200., scale=20.)

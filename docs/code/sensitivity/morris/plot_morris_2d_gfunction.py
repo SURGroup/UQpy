@@ -12,7 +12,7 @@
 #%%
 import shutil
 
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Uniform
 from UQpy.sensitivity import MorrisSensitivity
 import numpy as np

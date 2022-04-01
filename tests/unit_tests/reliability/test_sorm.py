@@ -1,6 +1,6 @@
 from UQpy.distributions import Normal
 from UQpy.reliability import FORM, SORM
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 import glob
 import shutil
 import numpy as np

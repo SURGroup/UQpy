@@ -23,10 +23,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from UQpy.sampling.ImportanceSampling import ImportanceSampling
-from UQpy.inference import DistributionModel, BayesParameterEstimation, ComputationalModel
-from UQpy.RunModel import RunModel  # required to run the quadratic model
+from UQpy.inference import BayesParameterEstimation, ComputationalModel
+from UQpy.run_model.RunModel import RunModel  # required to run the quadratic model
 from sklearn.neighbors import KernelDensity  # for the plots
-from UQpy.distributions import JointIndependent, Uniform, Lognormal, Normal
+from UQpy.distributions import JointIndependent, Normal
 
 def pdf_from_kde(domain, samples1d):
     bandwidth = 1.06 * np.std(samples1d) * samples1d.size ** (-1 / 5)

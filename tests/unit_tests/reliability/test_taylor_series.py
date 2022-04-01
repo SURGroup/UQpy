@@ -1,11 +1,11 @@
-from UQpy.distributions import Normal, JointIndependent
+from UQpy.distributions import Normal
 from UQpy.reliability import TaylorSeries
 from UQpy.transformations import Nataf
 import glob
 import shutil
 import numpy as np
 import pytest
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 
 
 def model_i(samples):

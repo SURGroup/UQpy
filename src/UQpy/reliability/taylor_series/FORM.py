@@ -4,7 +4,7 @@ import numpy as np
 import scipy.stats as stats
 from beartype import beartype
 
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.transformations import *
 from UQpy.distributions import *
 from UQpy.reliability.taylor_series.baseclass.TaylorSeries import TaylorSeries

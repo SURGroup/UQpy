@@ -18,13 +18,11 @@ import shutil
 
 from UQpy.sampling import TrueStratifiedSampling, RefinedStratifiedSampling
 from UQpy.surrogates import Kriging
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Uniform
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from mpl_toolkits import mplot3d
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
-import matplotlib.patches as patches
 import numpy as np
 from UQpy.sampling.stratified_sampling.strata import RectangularStrata
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer

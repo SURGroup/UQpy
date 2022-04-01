@@ -57,9 +57,8 @@ Third-party - Matlab
 # %%
 
 from UQpy.sampling import MonteCarloSampling
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Normal
-import matplotlib.pyplot as plt
 import time
 import numpy as np
 

@@ -42,10 +42,9 @@ from matplotlib import pyplot as plt
 
 from UQpy.surrogates import Kriging
 from UQpy.sampling import MonteCarloSampling, AdaptiveKriging
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Uniform
 from local_BraninHoo import function
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import time
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 

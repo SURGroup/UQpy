@@ -21,7 +21,7 @@ standard deviation :math:`\sigma_{X_2}=1.4`.
 import shutil
 
 import numpy as np
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Normal
 from UQpy.reliability import FORM
 from UQpy.reliability import SORM

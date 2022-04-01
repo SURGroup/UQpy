@@ -15,7 +15,7 @@ import pickle
 import time
 
 from UQpy.distributions import Normal, Uniform
-from UQpy.RunModel import *
+from UQpy.run_model.RunModel import *
 from UQpy.sampling import MonteCarloSampling
 
 calling_directory = os.getcwd()

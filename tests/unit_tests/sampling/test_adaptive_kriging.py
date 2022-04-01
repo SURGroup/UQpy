@@ -1,11 +1,10 @@
 import pytest
 
-from UQpy import Multinomial
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 
 from UQpy.surrogates.kriging.Kriging import Kriging
 from UQpy.sampling import MonteCarloSampling, AdaptiveKriging
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions.collection import Normal
 from UQpy.sampling.adaptive_kriging_functions import *
 import shutil

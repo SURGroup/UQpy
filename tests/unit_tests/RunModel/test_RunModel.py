@@ -3,7 +3,7 @@ import shutil
 from beartype.roar import BeartypeCallHintPepParamException
 
 from UQpy.sampling import MonteCarloSampling
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Normal
 import pytest
 import os

@@ -24,10 +24,10 @@ import matplotlib.pyplot as plt
 
 from UQpy.sampling.mcmc.MetropolisHastings import MetropolisHastings
 from UQpy.inference.inference_models.ComputationalModel import ComputationalModel
-from UQpy.RunModel import RunModel
-from UQpy.inference import DistributionModel, BayesParameterEstimation
+from UQpy.run_model.RunModel import RunModel
+from UQpy.inference import BayesParameterEstimation
 from sklearn.neighbors import KernelDensity  # for the plots
-from UQpy.distributions import JointIndependent, Uniform, Lognormal, Normal
+from UQpy.distributions import JointIndependent, Normal
 
 def pdf_from_kde(domain, samples1d):
     bandwidth = 1.06 * np.std(samples1d) * samples1d.size ** (-1 / 5)

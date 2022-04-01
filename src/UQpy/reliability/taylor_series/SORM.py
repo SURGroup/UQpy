@@ -1,11 +1,11 @@
 import logging
-from typing import Union, Optional
+from typing import Union
 
 import numpy as np
 import scipy.stats as stats
 from beartype import beartype
 
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions.baseclass import Distribution
 from UQpy.utilities.ValidationTypes import PositiveInteger
 from UQpy.reliability.taylor_series.FORM import FORM

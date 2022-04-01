@@ -19,7 +19,7 @@ import shutil
 from UQpy.surrogates import Kriging
 from UQpy.sampling.stratified_sampling.strata import RectangularStrata
 from UQpy.sampling import TrueStratifiedSampling
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Gamma
 import numpy as np
 import matplotlib.pyplot as plt

@@ -30,13 +30,11 @@ threshold, :math:`\epsilon` of the excitation frequency $\omega$. That is, failu
 import shutil
 
 from UQpy.reliability import SubsetSimulation
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.sampling import Stretch, ModifiedMetropolisHastings, MonteCarloSampling
 import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
-import time
-from local_Resonance_pfn import RunPythonModel
 from UQpy.distributions import Normal, JointIndependent, MultivariateNormal
 
 # %% md

@@ -18,14 +18,11 @@ import shutil
 
 from UQpy.sampling import TrueStratifiedSampling, RefinedStratifiedSampling
 from UQpy.sampling import VoronoiStrata
-from UQpy.surrogates import Kriging
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Uniform
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from mpl_toolkits import mplot3d
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
-import matplotlib.patches as patches
 import numpy as np
 # from scipy.spatial import Delaunay
 from scipy.spatial import voronoi_plot_2d

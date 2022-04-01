@@ -1,8 +1,6 @@
 from UQpy.sensitivity.MorrisSensitivity import MorrisSensitivity
-from UQpy.RunModel import RunModel
-import numpy as np
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Uniform
-import os
 import pytest
 import shutil
 

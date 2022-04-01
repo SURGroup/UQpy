@@ -19,15 +19,9 @@ variables
 
 import shutil
 
-import numpy as np
-import matplotlib.pyplot as plt
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Normal
-from UQpy.sampling import MonteCarloSampling
-from UQpy.reliability import FORM, SORM
-from UQpy.reliability import SORM
-from UQpy.distributions import Lognormal, Gamma
-
+from UQpy.reliability import FORM
 
 dist1 = Normal(loc=0., scale=1.)
 dist2 = Normal(loc=0., scale=1.)

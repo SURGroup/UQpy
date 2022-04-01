@@ -15,10 +15,9 @@ Campolongo et al, 2007
 #%%
 import shutil
 
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Uniform
 from UQpy.sensitivity import MorrisSensitivity
-import numpy as np
 import matplotlib.pyplot as plt
 
 #%% md

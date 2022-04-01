@@ -1,5 +1,5 @@
 from UQpy.inference import *
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.inference.inference_models.ComputationalModel import ComputationalModel
 from UQpy.sampling.mcmc import MetropolisHastings
 from UQpy.distributions.collection.Normal import Normal

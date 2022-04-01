@@ -12,7 +12,7 @@ from beartype.vale import Is
 from UQpy.utilities.Utilities import process_random_state
 from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger, NumpyFloatArray
 from UQpy.distributions import *
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 import numpy as np
 from scipy.stats import randint
 

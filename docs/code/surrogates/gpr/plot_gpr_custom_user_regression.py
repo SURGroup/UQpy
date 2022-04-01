@@ -19,7 +19,7 @@ import shutil
 from UQpy.surrogates import Kriging
 from UQpy.sampling import RectangularStrata
 from UQpy.sampling import TrueStratifiedSampling
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.surrogates.kriging.regression_models.baseclass import Regression
 from UQpy.surrogates.kriging.correlation_models.baseclass import Correlation
 from UQpy.distributions import Gamma

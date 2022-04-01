@@ -21,7 +21,7 @@ from UQpy.sampling import MonteCarloSampling, TrueStratifiedSampling
 from UQpy.sampling import RectangularStrata
 from UQpy.distributions import Gamma
 from UQpy.surrogates import SROM
-from UQpy.RunModel import RunModel
+from UQpy.run_model.RunModel import RunModel
 from scipy.stats import gamma
 import numpy as np
 import matplotlib.pyplot as plt
