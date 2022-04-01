@@ -4,15 +4,15 @@ N-dimensional & one-variable
 =================================================================
 
 In this example, the Spectral Representation Method is used to generate stochastic processes from a prescribed Power
-Spectrum. This example illustrates how to use the SRM class for 'n' dimensional and one variable case and compare the
-statistics of the generated stochastic processes with the expected values.
+Spectrum. This example illustrates how to use the :class:`.SpectralRepresentation` class for 'n' dimensional and one
+variable case and compare the statistics of the generated stochastic processes with the expected values.
 
 """
 
 #%% md
 #
 # Import the necessary libraries. Here we import standard libraries such as numpy and matplotlib, but also need to
-# import the SRM class from the StochasticProcesses module of UQpy.
+# import the :class:`.SpectralRepresentation` class from the StochasticProcesses module of UQpy.
 
 #%%
 
@@ -24,7 +24,7 @@ plt.style.use('seaborn')
 
 #%% md
 #
-# The input parameters necessary for the generatino of the stochastic processes are given below:
+# The input parameters necessary for the generating of the stochastic processes are given below:
 
 #%%
 

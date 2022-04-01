@@ -11,7 +11,7 @@ random variable.
 # %% md
 #
 # Import the necessary libraries. Here we import standard libraries such as numpy and matplotlib, but also need to
-# import the STS and SROM class from UQpy.
+# import the :class:`.TrueStratifiedSampling` and :class:`.SROM` class from UQpy.
 
 # %%
 
@@ -25,7 +25,8 @@ import numpy as np
 
 # %% md
 #
-# Create a distribution object for Gamma distribution with shape, shift and scale parameters as 2, 1 and 3.
+# Create a distribution object for :class:`.Gamma` distribution with shape, shift and scale parameters as :math:`2`,
+# :math:`1` and :math:`3`.
 
 # %%
 
@@ -41,7 +42,8 @@ strata = RectangularStrata(strata_number=[4, 4])
 
 # %% md
 #
-# Using UQpy STS class to generate samples for two random variables having Gamma distribution.
+# Using UQpy :class:`.TrueStratifiedSampling` class to generate samples for two random variables having :class:`.Gamma`
+# distribution.
 
 # %%
 
@@ -51,11 +53,11 @@ x = TrueStratifiedSampling(distributions=marginals,
 
 # %% md
 #
-# Run SROM using the defined Gamma distribution. Here we use the following parameters.
+# Run :class:`.SROM` using the defined Gamma distribution. Here we use the following parameters.
 #
-# - Gamma distribution with shape, shift and scale parameters as 2, 1 and 3.
-# - First and second order moments about origin are 6 and 54.
-# - Notice that pdf_target references the Gamma function directly and does not designate it as a string.
+# - :class:`.Gamma` distribution with shape, shift and scale parameters as :math:`2`, :math:`1` and :math:`3`.
+# - First and second order moments about origin are :math:`6` and :math:`54`.
+# - Notice that :code:`pdf_target` references the :class:`.Gamma` function directly and does not designate it as a string.
 # - Samples are uncorrelated, i.e. also default value of correlation.
 
 # %%
@@ -65,8 +67,8 @@ y1 = SROM(samples=x.samples, target_distributions=marginals, moments=[[6., 6.], 
 
 # %% md
 #
-# In this case, sample_weights are generated using default values of weights_distribution, weights_moments and
-# weights_correlation. Default values are:
+# In this case, sample_weights are generated using default values of :code:`weights_distribution`,
+# :code:`weights_moments` and :code:`weights_correlation`. Default values are:
 
 # %%
 
@@ -80,9 +82,9 @@ y2 = SROM(samples=x.samples, target_distributions=marginals, moments=[[6., 6.], 
 
 # %% md
 #
-# In second case, weights_distribution is modified by SROM class. First, it defines an array of size 2×16 with all
-# elements equal to 1 and then multiply first column by 0.4 and second column by 0.5 . Similarly, weights_moments and
-# weights_correlation are modified.
+# In second case, :code:`weights_distribution` is modified by :class:`SROM` class. First, it defines an array of size
+# :math:`2×16` with all elements equal to :math:`1` and then multiply first column by :math:`0.4` and second column by
+# :math:`0.5` . Similarly, :code:`weights_moments` and :code:`weights_correlation` are modified.
 
 # %%
 
@@ -111,5 +113,4 @@ plt.show()
 #
 # A note on the weights corresponding to distribution, moments and correlation of random variables:
 #
-# - For this illustration, default weights_moments are square of reciprocal of moments. Thus, moments should be of
-# s'float list' type.
+# - For this illustration, default weights_moments are square of reciprocal of moments. Thus, moments should be of :any:'list[float]' type.

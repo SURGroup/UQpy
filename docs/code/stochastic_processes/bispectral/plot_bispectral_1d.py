@@ -12,7 +12,7 @@ compare the statistics of the generated stochastic processes with the expected v
 #%% md
 #
 # Import the necessary libraries. Here we import standard libraries such as numpy and matplotlib, but also need to
-# import the BSRM class from the StochasticProcesses module of UQpy.
+# import the :class:`.BispectralRepresentation` class from the :py:mod:`stochastic_processes` module of UQpy.
 
 #%%
 

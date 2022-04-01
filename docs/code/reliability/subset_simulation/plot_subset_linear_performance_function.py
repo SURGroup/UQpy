@@ -62,7 +62,7 @@ print(pf_true)
 
 # %% md
 #
-# 3. Execute subset simulation with the MMH algorithm.
+# 3. Execute subset simulation with the :class:`.ModifiedMetropolisHastings` algorithm.
 
 # %%
 
@@ -118,7 +118,7 @@ plt.show()
 
 # %% md
 #
-# 6. Execute subset simulation with the Stretch algorithm.
+# 6. Execute subset simulation with the :class:`.Stretch` algorithm.
 
 # %%
 

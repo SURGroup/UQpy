@@ -10,7 +10,7 @@ Voronoi stratification.
 #%% md
 #
 # Import the necessary libraries. Here we import standard libraries such as numpy and matplotlib, but also need to
-# import the VoronoiSTS class from UQpy.SampleMethods.
+# import the :class:`.TrueStratifiedSampling` class from :py:mode:`UQpy.sampling`.
 
 #%%
 
@@ -22,7 +22,7 @@ from scipy.spatial import voronoi_plot_2d
 
 #%% md
 #
-# Run STS for 25 samples.
+# Run :class:`.TrueStratifiedSampling` for 25 samples.
 #
 # - 2 dimensions
 # - Five strata in each dimension
@@ -38,7 +38,7 @@ marginals = [Exponential(loc=1., scale=1.), Exponential(loc=1., scale=1.)]
 #
 # Equal number of samples in each stratum
 # ----------------------------------------
-# Create strata object using VoronoiStrata class.
+# Create strata object using :class:`.VoronoiStrata` class.
 
 #%%
 
@@ -69,7 +69,7 @@ sts_vor_obj.run(nsamples_per_stratum=3)
 
 #%% md
 #
-# Plot the resulting stratified samples and the boundaries of the strata in the U(0,1) space.
+# Plot the resulting stratified samples and the boundaries of the strata in the :math:`U(0,1)` space.
 
 #%%
 
@@ -86,7 +86,7 @@ sts_vor_obj.weights
 #
 # Proportional Sampling
 # ---------------------
-# VoronoiSTS class can generate samples proportional to volume of each stratum.
+# :class:`.TrueStratifiedSampling` class can generate samples proportional to volume of each stratum.
 
 #%%
 

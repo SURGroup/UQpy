@@ -28,8 +28,9 @@ from UQpy.distributions.collection.Binomial import Binomial
 # --------------------------------------
 #
 # Define a univariate binomial distribution.
-# By using the __bases__ attribute we can verify that the Binomial distribution extends the DistributionDiscrete1D
-# baseclass, while in order to define the Binomial distribution, two parameters are required, namely, *n* and *p*.
+# By using the :code:`__bases__` attribute we can verify that the Binomial distribution extends the
+# :class:`DistributionDiscrete1D` baseclass, while in order to define the :class:`Binomial` distribution, two
+# parameters are required, namely, :code:`n` and :code:`p`.
 
 #%%
 
@@ -57,10 +58,10 @@ for i, moment in enumerate(moments_list):
 # Generate 5000 random samples from the binomial distribution.
 # -------------------------------------------------------------
 #
-# The number of samples is provided as nsamples (default 1).
+# The number of samples is provided as `nsamples` (default :math:`1`).
 # The user can fix the seed of the pseudo random generator via input random_state.
 #
-# Important: the output of rvs is a (nsamples, 1) ndarray.
+# Important: the output of rvs is a `(nsamples, 1)` ndarray.
 
 # %%
 

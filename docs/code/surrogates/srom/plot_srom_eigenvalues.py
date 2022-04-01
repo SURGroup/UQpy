@@ -3,16 +3,16 @@
 SROM on the eigenvalues of a system
 ======================================================================
 
-In this example, Uncertainty in eigenvalues of a system is studied using SROM and it is compared with the Monte Carlo
-Simulation results. Stiffness of each element (i.e. k1, k2 and k3) are treated as random variables which follows
-gamma distribution. SROM is created for all three random variables and distribution of eigenvalues are identified
-using SROM.
+In this example, Uncertainty in eigenvalues of a system is studied using :class:`.SROM` and it is compared with the
+Monte Carlo Simulation results. Stiffness of each element (i.e. k1, k2 and k3) are treated as random variables which
+follows gamma distribution. :class:`.SROM` is created for all three random variables and distribution of eigenvalues are
+identified using :class:`.SROM`.
 """
 
 # %% md
 #
 # Import the necessary libraries. Here we import standard libraries such as numpy and matplotlib, but also need to
-# import the MCS, STS and SROM class from UQpy.
+# import the :class:`.MonteCarloSampling`, :class:`.TrueStratifiedSampling` and :class:`.SROM` class from UQpy.
 
 # %%
 import shutil
@@ -28,7 +28,8 @@ import matplotlib.pyplot as plt
 
 # %% md
 #
-# Create a distribution object for Gamma distribution with shape, shift and scale parameters as 2, 1 and 3.
+# Create a distribution object for :class:`.Gamma` distribution with shape, shift and scale parameters as :math:`2`,
+# :math:`1` and :math:`3`.
 
 # %%
 
@@ -44,7 +45,8 @@ strata = RectangularStrata(strata_number=[3, 3, 3])
 
 # %% md
 #
-# Using UQpy STS class to generate samples for two random variables having Gamma distribution.
+# Using UQpy :class:`.TrueStratifiedSampling` class to generate samples for two random variables having :class:`.Gamma`
+# distribution.
 
 # %%
 
@@ -53,7 +55,7 @@ x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsampl
 
 # %% md
 #
-# Run SROM to minimize the error in distribution, first order and second order moment about origin.
+# Run :class:`.SROM` to minimize the error in distribution, first order and second order moment about origin.
 
 # %%
 
@@ -62,7 +64,7 @@ y = SROM(samples=x.samples, target_distributions=marginals, moments=[[6, 6, 6], 
 
 # %% md
 #
-# Plot the sample sets and weights from SROM class. Also, compared with the CDF of gamma distribution of k1.
+# Plot the sample sets and weights from :class:`.SROM` class. Also, compared with the CDF of gamma distribution of k1.
 
 # %%
 
@@ -83,8 +85,8 @@ plt.show()
 
 # %% md
 #
-# Run the model 'eigenvalue_model.py' for each sample generated through STS class. This model defines the stiffness
-# matrix corresponding to each sample and estimate the eigenvalues of the matrix.
+# Run the model 'eigenvalue_model.py' for each sample generated through :class:`.TrueStratifiedSampling` class. This
+# model defines the stiffness matrix corresponding to each sample and estimate the eigenvalues of the matrix.
 
 # %%
 
@@ -94,7 +96,7 @@ r_srom = model.qoi_list
 
 # %% md
 #
-# MCS class is used to generate 1000 samples.
+# :class:`MonteCarloSampling` class is used to generate 1000 samples.
 
 # %%
 
@@ -103,7 +105,7 @@ x_mcs = MonteCarloSampling(distributions=marginals, nsamples=1000)
 
 # %% md
 #
-# Run the model 'eigenvalue_model.py' for each sample generated through MCS class.
+# Run the model 'eigenvalue_model.py' for each sample generated through :class:`.MonteCarloSampling` class.
 
 # %%
 
@@ -113,7 +115,7 @@ shutil.rmtree(model.model_dir)
 
 # %% md
 #
-# Plot the distribution of each eigenvalue, estimated using SROM and MCS weights.
+# Plot the distribution of each eigenvalue, estimated using :class:`.SROM` and :class:`.MonteCarloSampling` weights.
 
 # %%
 

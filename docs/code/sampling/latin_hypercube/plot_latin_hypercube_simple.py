@@ -32,8 +32,8 @@ from UQpy.sampling.stratified_sampling.latin_hypercube_criteria import *
 # In order to initialize the LatinHypercube sampling class, the user needs to define a list of distributions
 # for each one of the parameters that need to be sampled.
 #
-# Apart from the distributions list, the number of samples  *nsamples* to be drawn is required. The *random_state*
-# parameter defines the seed of the random generator.
+# Apart from the distributions list, the number of samples  :code:`nsamples` to be drawn is required.
+# The :code:`random_state` parameter defines the seed of the random generator.
 #
 # Finally, the design criterion can be defined by the user. The default case is the :class:`.Random`.
 # For more details on the various criteria you can refer to the documentation of the criteria
@@ -66,10 +66,11 @@ lhs_mincorrelate = LatinHypercubeSampling(distributions=[dist1, dist2],
 #
 # Plot the generated samples
 # ------------------------------------
-# The *samples* attribute of the latin hypercube class is a numpy array of with shape (nsamples, len(distributions))
-# Both *samples* and *samplesU01* are populated at the same time since the Latin Hypercube samples are initially drawn
-# in the unit hypercube, thus in contrast to Monte Carlo sampling no transformation is required. Using the
-# :py:meth:`run` method to generate samples replaces the previously created ones.
+# The :code:`samples` attribute of the latin hypercube class is a numpy array of with shape
+# :code:`(nsamples, len(distributions))`
+# Both :code:`samples` and :code:`samplesU01` are populated at the same time since the Latin Hypercube samples are
+# initially drawn in the unit hypercube, thus in contrast to Monte Carlo sampling no transformation is required.
+# Using the :py:meth:`run` method to generate samples replaces the previously created ones.
 
 # %%
 

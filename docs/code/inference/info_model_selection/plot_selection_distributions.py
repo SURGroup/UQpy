@@ -36,8 +36,8 @@ print(data.shape)
 #
 # Define the models to be compared, then call InfoModelSelection to perform model selection. By default,
 # InfoModelSelection returns its outputs, fitted parameters, value of the chosen criteria, model probabilities and so
-# on, in a sorted order, i.e., starting with the most probable model. However, if setting sorted_outputs=False, the
-# class output attributes are given in the same order as the candidate_models.
+# on, in a sorted order, i.e., starting with the most probable model. However, if setting :code:`sorted_outputs=False`,
+# the class output attributes are given in the same order as the candidate_models.
 
 #%%
 

@@ -33,8 +33,8 @@ from UQpy.sampling.stratified_sampling.latin_hypercube_criteria import Criterion
 # Create user-defined criterion
 # ----------------------------------------------
 # In order to create a user defined criterion, a concrete implementation of the :class:`.Criterion` abstract class must
-# be created. The *generate_samples* method must be implemented, which receives as input the random_state, the randomly
-# generated latin hypercube samples.
+# be created. The :code:`generate_samples` method must be implemented, which receives as input the :code:`random_state`,
+# the randomly generated latin hypercube samples.
 
 # %%
 
@@ -55,8 +55,8 @@ class UserCriterion(Criterion):
 # In order to initialize the LatinHypercube sampling class, the user needs to define a list of distributions
 # for each one of the parameters that need to be sampled.
 #
-# Apart from the distributions list, the number of samples  *nsamples* to be drawn is required. The *random_state*
-# parameter defines the seed of the random generator.
+# Apart from the distributions list, the number of samples  :code:`nsamples` to be drawn is required.
+# The :code:`random_state` parameter defines the seed of the random generator.
 #
 # Finally, the design criterion can be defined by the user. The default case is the :class:`.Random`.
 # For more details on the various criteria you can refer to the documentation of the criteria
@@ -81,7 +81,7 @@ print(lhs_user_defined._samples)
 # ------------------------------------
 #
 # The samples generated using the LatinHypercube sampling method can be retrieved using the *samples* attribute. This
-# attribute is a numpy.ndarray
+# attribute is a :any:`numpy.ndarray`.
 
 # %%
 

@@ -16,12 +16,14 @@ import matplotlib.pyplot as plt
 # Example with a custom distribution
 # ----------------------------------
 # In order to define a new distribution, the user must extend the one of the abstract base classes
-# *DistributionContinuous1D*, *DistributionDiscrete1D* or *DistributionND*. For the purpose of this example a
-# new multivariate Rosenbrock distribution is defined. Note that three methods are implemented, namely, the __init__
+# :class:`.DistributionContinuous1D`, :class:`.DistributionDiscrete1D` or :class:`.DistributionND`.
+# For the purpose of this example a
+# new multivariate Rosenbrock distribution is defined. Note that three methods are implemented, namely, the
+# :code:`__init__`
 # which allows the user to define custom distribution arguments, as well as the pdf and log_pdf of this new
-# distribution. Note that it is required for the user to call the **__init__** method of the baseclass by providing all
-# arguments names and values required in the custom distribution initializer. In our case, the parameter name **p** and
-# its values are provided to the *super().__init__* method.
+# distribution. Note that it is required for the user to call the :code:`__init__` method of the baseclass by providing
+# all arguments names and values required in the custom distribution initializer. In our case, the parameter name
+# :code:`p` and its values are provided to the :code:`super().__init__` method.
 
 #%%
 
@@ -41,9 +43,11 @@ class Rosenbrock(DistributionND):
 # Initialize custom distribution
 # ----------------------------------
 # Given the newly defined distribution class, a Rosenbrock distribution object can be defined by providing to the
-# initializer the user-defined argument p. Since the Rosenbrock distribution extends the *DistributionND* class, methods
+# initializer the user-defined argument :code:`p`. Since the Rosenbrock distribution extends the
+# :class:`.DistributionND` class, methods
 # and attributes of the baseclass are already available. For instance, the user can retrieve the already defined
-# parameters using the *parameters* attribute and subsequently update them using the *update_parameters* method.
+# parameters using the :code:`parameters` attribute and subsequently update them using the :code:`update_parameters`
+# method.
 
 #%%
 

@@ -22,7 +22,7 @@ from UQpy.surrogates import *
 # %% md
 #
 # We then define the Ishigami function, which reads:
-# ..math:: f(x_1, x_2, x_3) = \sin(x_1) + a \sin^2(x_2) + b x_3^4 \sin(x_1)
+# :math:`f(x_1, x_2, x_3) = \sin(x_1) + a \sin^2(x_2) + b x_3^4 \sin(x_1)`
 
 # %%
 
@@ -56,8 +56,8 @@ joint = JointIndependent(marginals=marg)
 # We now define our PCE. Only thing we need is the joint distribution.
 #
 # We must now select a polynomial basis. Here we opt for a total-degree (TD) basis, such that the univariate
-# polynomials have a maximum degree equal to $P$ and all multivariate polynomial have a total-degree
-# (sum of degrees of corresponding univariate polynomials) at most equal to $P$. The size of the basis is then
+# polynomials have a maximum degree equal to :math:`P` and all multivariate polynomial have a total-degree
+# (sum of degrees of corresponding univariate polynomials) at most equal to :math:`P`. The size of the basis is then
 # given by :math:`\frac{(N+P)!}{N! P!}`
 # where :math:`N` is the number of random inputs (here, :math:`N+3`).
 
@@ -76,7 +76,7 @@ print('Size of PCE basis:', polynomial_basis.polynomials_number)
 #
 # We must now compute the PCE coefficients. For that we first need a training sample of input random variable
 # realizations and the corresponding model outputs. These two data sets form what is also known as an
-# ''experimental design''. It is generally advisable that the experimental design has $2-10$ times more data points
+# ''experimental design''. It is generally advisable that the experimental design has :math:`2-10` times more data points
 # than the number of PCE polynomials.
 
 # %%
@@ -137,9 +137,9 @@ print(sobol_total)
 
 # %% md
 #
-# The PCE should become increasingly more accurate as the maximum polynomial degree $P$ increases. We will test that
-# by computing the mean absolute error (MAE) between the PCE's predictions and the true model outputs, given a
-# validation sample of $10^5$ data points.
+# The PCE should become increasingly more accurate as the maximum polynomial degree :math:`P` increases. We will test
+# that by computing the mean absolute error (MAE) between the PCE's predictions and the true model outputs, given a
+# validation sample of :math:`10^5` data points.
 
 # %%
 

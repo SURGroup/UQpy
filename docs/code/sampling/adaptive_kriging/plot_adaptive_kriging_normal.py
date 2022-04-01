@@ -10,7 +10,8 @@ adaptively, using U-function as the learning criteria .
 # %% md
 #
 # Import the necessary libraries. Here we import standard libraries such as numpy, matplotlib and other necessary
-# library for plots, but also need to import the MCS, AKMCS, Kriging and RunModel class from UQpy.
+# library for plots, but also need to import the :class:`.MonteCarloSampling`,
+# :class:`.AdaptiveKriging`, :class:`.Kriging` and :class:`.RunModel` class from UQpy.
 
 # %%
 import shutil
@@ -30,8 +31,8 @@ from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 
 # %% md
 #
-# Using UQpy MCS class to generate samples for two random variables, which are normally distributed with mean 0 and
-# variance 1.
+# Using UQpy :class:`.MonteCarloSampling` class to generate samples for two random variables, which are normally
+# distributed with mean :math:`0` and variance :math:`1`.
 
 # %%
 
@@ -49,7 +50,7 @@ rmodel = RunModel(model_script='local_series.py', vec=False)
 
 # %% md
 #
-# Krig class defines an object to generate an surrogate model for a given set of data.
+# :class:`.Kriging` class defines an object to generate a surrogate model for a given set of data.
 
 # %%
 
@@ -63,7 +64,7 @@ K = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimize
 #
 # This example works for all three learning function based on reliability analysis.
 #
-# AKMCS class is used to generate new sample using 'U-function' as active learning function.
+# :class:`.AdaptiveKriging` class is used to generate new sample using :class:`.UFunction` as active learning function.
 
 # %%
 
@@ -147,7 +148,7 @@ class UserLearningFunction(LearningFunction):
 
 # %% md
 #
-# Creating new instances of Kriging and RunModel class.
+# Creating new instances of :class:`.Kriging` and :class:`.RunModel` class.
 
 # %%
 
@@ -157,7 +158,7 @@ rmodel1 = RunModel(model_script='local_series.py', vec=False)
 
 # %% md
 #
-# Executing AKMCS with the user-defined learning function.
+# Executing :class:`Adaptivekriging` with the user-defined learning function.
 
 # %%
 
@@ -197,7 +198,7 @@ plt.show()
 # Monte Carlo Simulation
 # -----------------------
 # Probability of failure and covariance is estimated using Monte Carlo Simulation. 10,000 samples are generated
-# randomly using MCS class and model is evaluated at all samples.
+# randomly using :class:`.MonteCarloSampling` class and model is evaluated at all samples.
 
 # %%
 

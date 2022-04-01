@@ -9,7 +9,7 @@ In this example, the stratified sampling method is employed to generate samples 
 #%% md
 #
 # Import the necessary libraries. Here we import standard libraries such as numpy and matplotlib, but also need to
-# import the STS class from UQpy.SampleMethods.
+# import the :class:`.TrueStratifiedSampling` class from :py:mod:`UQpy.sampling`.
 
 #%%
 
@@ -23,7 +23,7 @@ from UQpy.sampling.stratified_sampling.strata import RectangularStrata
 
 #%% md
 #
-# Run STS for 25 samples.
+# Run :class:`.TrueStratifiedSampling` for 25 samples.
 #
 # - 2 dimensions
 # - Five strata in each dimension
@@ -39,7 +39,7 @@ marginals = [Exponential(loc=1., scale=1.), Exponential(loc=1., scale=1.)]
 #
 # Create strata with equal volume
 # --------------------------------
-# Create a strata object using RectangularStrata class.
+# Create a strata object using :class:`.RectangularStrata` class.
 
 #%%
 
@@ -47,7 +47,7 @@ strata = RectangularStrata(strata_number=[5, 5])
 
 #%% md
 #
-# Generate samples using RectangularSTS class, one sample is generate inside each stratum.
+# Generate samples using :class:`.TrueStratifiedSampling` class, one sample is generate inside each stratum.
 
 #%%
 
@@ -58,7 +58,7 @@ x_sts = TrueStratifiedSampling(distributions=marginals,
 
 #%% md
 #
-# Plot the resulting stratified samples and the boundaries of the strata in the U(0,1) space.
+# Plot the resulting stratified samples and the boundaries of the strata in the :math:`U(0,1)` space.
 
 #%%
 
@@ -109,8 +109,9 @@ strata_obj = RectangularStrata(seeds=seeds, widths=widths)
 
 #%% md
 #
-# Generate samples using RectangularSTS class. User can control the number of samples generated inside each stratum.
-# In this illustration, 10 samples are generated such that nsamples_per_stratum governs the number of sa
+# Generate samples using :class:`.TrueStratifiedSampling` class. User can control the number of samples
+# generated inside each stratum. In this illustration, 10 samples are generated such that
+# :code:`nsamples_per_stratum` governs the number of samples.
 
 #%%
 
@@ -132,7 +133,7 @@ plt.show()
 
 #%% md
 #
-# Probability weights corresponding to each samples computed using Stratified sampling.
+# Probability weights corresponding to each sample computed using Stratified sampling.
 
 #%%
 
@@ -150,7 +151,7 @@ strata_obj1 = RectangularStrata(input_file='strata.txt')
 
 #%% md
 #
-# Generate samples inside eaach stratum using RectangularSTS class.
+# Generate samples inside each stratum using :class:`.TrueStratifiedSampling` class.
 
 #%%
 
@@ -167,7 +168,7 @@ plt.show()
 #
 # Proportional sampling
 # ----------------------
-# RectangularSTS class can generate samples proportional to volume of each stratum.
+# :class:`.TrueStratifiedSampling` class can generate samples proportional to volume of each stratum.
 
 #%%
 

@@ -66,8 +66,13 @@ plt.show()
 # Print the multivariate moments of the distribution.
 # ---------------------------------------------------
 # Providing a single or multiple consecutive initials of the following four distributions moments
-# 'm': mean, 'v': variance, 's': skewness, 'k': kurtosis
-# allows the user to obtains the respective moments from all underlying univariate distributions.
+#
+# - 'm': mean
+# - 'v': variance
+# - 's': skewness
+# - 'k': kurtosis
+#
+# allows the user to obtain the respective moments from all underlying univariate distributions.
 # In the following examples providing the string 'mv' to the moments function, returns the respective means and
 # variances.
 

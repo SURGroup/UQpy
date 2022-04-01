@@ -74,8 +74,9 @@ for i in range(3):
 
 #%% md
 #
-# Apart from the data, candidate models and method (BIC, AIC...), InfoModelSelection also takes as inputs lists of
-# inputs to the maximum likelihood class (iter_optim, method_optim, ...). Those inputs should be lists of length
+# Apart from the data, candidate models and method (:class:`.BIC`, :class:`.AIC`...),
+# :class:`.InformationModelSelection` also takes as inputs lists of
+# inputs to the maximum likelihood class. Those inputs should be lists of length
 # len(candidate_models).
 
 #%%

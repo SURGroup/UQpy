@@ -4,15 +4,15 @@ Karhunen Loeve Expansion
 =================================================================
 
 In this example, the KL Expansion is used to generate stochastic processes from a prescribed Autocorrelation Function.
-This example illustrates how to use the KLE class for a one dimensional and compare the statistics of the generated
-stochastic processes with the expected values.
+This example illustrates how to use the :class:`.KarhunenLoeveExpansion` class for a one dimensional and compare the
+statistics of the generated stochastic processes with the expected values.
 
 """
 
 #%% md
 #
 # Import the necessary libraries. Here we import standard libraries such as numpy and matplotlib, but also need to
-# import the KLE class from the StochasticProcesses module of UQpy.
+# import the :class:`.KarhunenLoeveExpansion` class from the :py:mod:`stochastic_processes` module of UQpy.
 
 #%%
 
@@ -50,7 +50,7 @@ KLE_Object = KarhunenLoeveExpansion(n_samples=n_sim, correlation_function=R, tim
 samples = KLE_Object.samples
 
 fig, ax = plt.subplots()
-plt.title('Realisation of the Karhunen Louve Expansion')
+plt.title('Realisation of the Karhunen Loeve Expansion')
 plt.plot(t, samples[0, 0])
 ax.yaxis.grid(True)
 ax.xaxis.grid(True)

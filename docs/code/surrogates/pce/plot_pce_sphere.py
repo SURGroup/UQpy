@@ -5,13 +5,11 @@ Sinusoidal Function  Sphere function (2 random inputs, scalar output)
 
 In this example, PCE is used to generate a surrogate model for a given set of 2D data.
 
-<img src="Example_Sphere_function.png" alt="Drawing" style="width: 400px;"/>
-
-.. math:: f(\textbf{x}) = x_1^2 + x_2^2
+.. math:: f(x) = x_1^2 + x_2^2
 
 **Description:**  Dimensions: 2
 
-**Input Domain:**  This function is evaluated on the hypercube :math:`x_i \in [-5.12, 5.12]` for all i = 1,2.
+**Input Domain:**  This function is evaluated on the hypercube :math:`x_i \in [-5.12, 5.12]` for all :math:`i = 1,2`.
 
 **Global minimum:** :math:`f(x^*)=0,` at :math:`x^* = (0,0)`.
 

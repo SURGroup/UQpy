@@ -3,9 +3,11 @@
 Sampling Rosenbrock distribution using Metropolis-Hastings
 ============================================================
 
-In this example, the Metropolis-Hastings is employed to generate samples from a Rosenbrock distribution. The method illustrates various aspects of the UQpy MCMC class:
+In this example, the Metropolis-Hastings is employed to generate samples from a Rosenbrock distribution.
+The method illustrates various aspects of the UQpy :class:`.MCMC` class:
+
 - various ways of defining the target pdf to sample from,
-- definition of input parameters required by the algorithm (proposal_type and proposal_scale for MH),
+- definition of input parameters required by the algorithm (proposal_type and proposal_scale for :class:`.MetropolisHastings`),
 - running several chains in parallel,
 - call diagnostics functions.
 """
@@ -13,7 +15,7 @@ In this example, the Metropolis-Hastings is employed to generate samples from a 
 # %% md
 #
 # Import the necessary libraries. Here we import standard libraries such as numpy and matplotlib, but also need to
-# import the MCMC class from UQpy.
+# import the :class:`.MCMC` class from UQpy.
 
 # %%
 
@@ -34,7 +36,8 @@ import time
 # the point x where to compute the pdf,
 # - define a pdf function that also takes as argument a set of parameters params,
 # - define a function that computes the log pdf up to a constant.
-# Alternatively, the pdf can be defined in an external file that defines a distribution and its pdf or log_pdf methods
+# Alternatively, the pdf can be defined in an external file that defines a distribution and its :code:`pdf` or
+# :code:`log_pdf` methods
 # (Rosenbrock.py)
 
 # %%
@@ -63,7 +66,7 @@ plt.show()
 
 # %% md
 #
-# In the following, a custom Rosenbrock distribution is defined and its log_pdf method is used.
+# In the following, a custom Rosenbrock distribution is defined and its :code:`log_pdf` method is used.
 
 # %%
 
@@ -88,7 +91,7 @@ x = MetropolisHastings(dimension=2, pdf_target=log_pdf_target, burn_length=500, 
 
 # %% md
 #
-# In the following, we show that if nburn is set to 0, the first sample is always the seed.
+# In the following, we show that if :code:`burn_length` is set to :math:`0`, the first sample is always the seed.
 
 # %%
 
@@ -107,7 +110,7 @@ print(x.samples[0, :, :])
 
 # %% md
 #
-# The algorithm-specific parameters for MH are proposal and proposal_is_symmetric
+# The algorithm-specific parameters for MetropolisHastings are proposal and proposal_is_symmetric
 # -------------------------------------------------------------------------------
 # The default proposal is standard normal (symmetric).
 
@@ -140,7 +143,8 @@ plt.show()
 #
 # Run several chains in parallel
 # -------------------------------------------------------------------------------
-# The user can provide the total number of samples nsamples, or the number of samples per chain nsamples_per_chain.
+# The user can provide the total number of samples :code:`nsamples`, or the number of samples per chain
+# :code:`nsamples_per_chain`.
 
 # %%
 

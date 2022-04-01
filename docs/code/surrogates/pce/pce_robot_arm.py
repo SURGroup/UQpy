@@ -5,18 +5,16 @@ Robot Arm function (8 random inputs, scalar output)
 
 In this example, PCE is used to generate a surrogate model for a given set of 8D data.
 
-<img src="Example_RobotArm_function.png" alt="Drawing" style="width: 200px;"/>
-
 **Dimensions:** 8
 
 **Description:**  Models the position of a robot arm which has four segments.
 
 **Input Domain:**  The input variables and their usual input ranges are: :math:`[0,1]` for the :math:`L_i` inputs
-and :math:`[0,2\pi]` for the :math:`\theta_i` inputs.
+and :math:`[0,2\pi]` for the :math:`θ_i` inputs.
 
 **Function:**
 
-.. math:: f(\textbf{x}) = \Big( \sum_{i=1}^{4}L_i cos\Big(\sum_{j=1}^{i} \theta_j\Big) \Big)^{2} + \Big( \sum_{i=1}^{4}L_i sin\Big(\sum_{j=1}^{i} \theta_j\Big) \Big)^{2}
+:math:`f(x) = \Big( \sum_{i=1}^{4}L_i cos\Big(\sum_{j=1}^{i} θ_j\Big) \Big)^{2} + \Big( \sum_{i=1}^{4}L_i sin\Big(\sum_{j=1}^{i} θ_j\Big) \Big)^{2}`
 
 **Output:** The square distance from the end of the robot arm to the origin.
 

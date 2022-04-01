@@ -28,7 +28,7 @@ import scipy.stats as stats
 
 # %% md
 #
-# MMH Initial Samples
+# :class:`.ModifiedMetropolisHastings` Initial Samples
 
 # %%
 
@@ -65,7 +65,7 @@ print(x_ss_MMH.failure_probability)
 
 # %% md
 #
-# Stretch Initial Samples
+# :class:`.Stretch` Initial Samples
 
 # %%
 

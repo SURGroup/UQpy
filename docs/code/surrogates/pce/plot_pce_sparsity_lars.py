@@ -24,7 +24,7 @@ from UQpy.surrogates import *
 # %% md
 #
 # We then define the Ishigami function, which reads:
-# .. math:: f(x_1, x_2, x_3) = \sin(x_1) + a \sin^2(x_2) + b x_3^4 \sin(x_1)
+# :math:` f(x_1, x_2, x_3) = \sin(x_1) + a \sin^2(x_2) + b x_3^4 \sin(x_1)`
 
 # %%
 
@@ -71,8 +71,9 @@ joint = JointIndependent(marginals=marg)
 # where :math:`N` is the number of random inputs (here, :math:`N=3`).
 #
 # Note that the size of the basis is highly dependent both on :math:`N` and :math:`P:math:`. It is generally advisable
-# that the experimental design has $2-10$ times more data points than the number of PCE polynomials. This might lead to
-# curse of dimensionality and thus we will utilize the best model selection algorithm based on Least Angle Regression.
+# that the experimental design has :math:`2-10` times more data points than the number of PCE polynomials. This might
+# lead to curse of dimensionality and thus we will utilize the best model selection algorithm based on
+# Least Angle Regression.
 
 # %%
 
@@ -236,16 +237,13 @@ for degree in range(16):
 
 # %% md
 #
-# In case of high-dimensional input and/or high $P$ it is also beneficial to reduce the TD basis set by hyperbolic trunction. The hyperbolic truncation reduces higher-order interaction terms in dependence to parameter $q$ in interval (0,1). The set of multi indices $\boldsymbol{\alpha}$ is reduced as follows:
-# \begin{equation}
-#         {\boldsymbol{\alpha}}\in \mathbb{N}^{N} :
-#         || \boldsymbol{\alpha}||_q
-#         \equiv
-#         \Big( \sum_{i=1}^{N} \alpha_i^q \Big)^{1/q}
-#         \leq P
-# \end{equation}
+# In case of high-dimensional input and/or high :math:P` it is also beneficial to reduce the TD basis set by hyperbolic
+# trunction. The hyperbolic truncation reduces higher-order interaction terms in dependence to parameter :math:`q` in
+# interval :math:`(0,1)`. The set of multi indices :math:`\alpha` is reduced as follows:
 #
-# Note that $q=1$ leads to full TD set.
+# :math:`\alpha\in \mathbb{N}^{N}: || \boldsymbol{\alpha}||_q \equiv \Big( \sum_{i=1}^{N} \alpha_i^q \Big)^{1/q} \leq P`
+#
+# Note that :math:`q=1` leads to full TD set.
 
 # %%
 

@@ -57,7 +57,8 @@ candidate_model = DistributionModel(distributions=Normal(loc=None, scale=None), 
 
 #%% md
 #
-# Learn the unknown parameters using IS. If no proposal is given, the samples are sampled from the prior.
+# Learn the unknown parameters using :class:`.ImportanceSampling`. If no proposal is given, the samples are sampled
+# from the prior.
 
 #%%
 

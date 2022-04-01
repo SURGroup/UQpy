@@ -12,7 +12,7 @@ Dette & Pepelyshev exponential function
 
 **Description:**  Dimensions: 3
 
-**Input Domain:**  This function is evaluated on the hypercube :math:`x_i \in [0,1] for all i = 1,2,3`.
+**Input Domain:**  This function is evaluated on the hypercube :math:`x_i \in [0,1]` for all :math:`i = 1,2,3`.
 
 **Reference:**  Dette, H., & Pepelyshev, A. (2010). Generalized Latin hypercube design for computer experiments. Technometrics, 52(4).
 """

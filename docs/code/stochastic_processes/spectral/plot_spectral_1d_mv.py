@@ -12,7 +12,7 @@ and 'm' variable case and compare the statistics of the generated stochastic pro
 #%% md
 #
 # Import the necessary libraries. Here we import standard libraries such as numpy and matplotlib, but also need to
-# import the SRM class from the StochasticProcesses module of UQpy.
+# import the :class:`.SpectralRepresentation` class from the :class:`stochastic_processes` module of UQpy.
 
 #%%
 

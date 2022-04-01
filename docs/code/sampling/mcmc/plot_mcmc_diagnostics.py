@@ -3,8 +3,8 @@
 Diagnostics for MCMC methods
 ==================================
 
-This notebook illustrates the use of a few diagnostics for MCMC. The example consists in learning the parameters of a
-regression model via Bayesian inference.
+This notebook illustrates the use of a few diagnostics for :class:`.MCMC`. The example consists in learning the
+parameters of a regression model via Bayesian inference.
 """
 
 # %% md
@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 # %% md
 # Example setup
 # --------------
-# First generate data then define the target log pdf = log likelihood $p(data \vert x)$.
+# First generate data then define the target log pdf = log likelihood :math:`p(data \vert x)`.
 
 # %%
 

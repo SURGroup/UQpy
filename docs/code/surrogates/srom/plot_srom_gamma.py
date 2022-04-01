@@ -10,7 +10,7 @@ Stochastic Reduce Order Model (SROM).
 #%% md
 #
 # Import the necessary libraries. Here we import standard libraries such as numpy and matplotlib, but also need to
-# import the STS and SROM class from UQpy.
+# import the :class:`.TrueStratifiedSampling` and :class:`.SROM` class from UQpy.
 
 #%%
 
@@ -24,7 +24,8 @@ import numpy as np
 
 #%% md
 #
-# Create a distribution object for Gamma distribution with shape, shift and scale parameters as 2, 1 and 3.
+# Create a distribution object for :class:`.Gamma` distribution with shape, shift and scale parameters as :math:`2`,
+# :math:`1` and :math:`3`.
 
 #%%
 
@@ -40,7 +41,8 @@ strata = RectangularStrata(strata_number=[4, 4])
 
 #%% md
 #
-# Using UQpy STS class to generate samples for two random variables having Gamma distribution.
+# Using UQpy :class:`.TrueStratifiedSampling` class to generate samples for two random variables having :class:`.Gamma`
+# distribution.
 
 #%%
 
@@ -48,11 +50,11 @@ x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsampl
 
 #%% md
 #
-# Run SROM using the defined Gamma distribution. Here we use the following parameters.
+# Run :class:`.SROM` using the defined :class:`.Gamma` distribution. Here we use the following parameters.
 #
-# - Gamma distribution with shape, shift and scale parameters as 2, 1 and 3.
-# - First and second order moments about origin are 6 and 54.
-# - Notice that pdf_target references the Gamma function directly and does not designate it as a string.
+# - :class:`.Gamma` distribution with shape, shift and scale parameters as :math:`2`, :math:`1` and :math:`3`.
+# - First and second order moments about origin are :math:`6` and :math:`54`.
+# - Notice that :code:`pdf_target` references the :class:`.Gamma` function directly and does not designate it as a string.
 # - Samples are uncorrelated, i.e. also default value of correlation.
 
 #%%
@@ -64,7 +66,7 @@ y.run(properties=[True, True, True, True])
 
 #%% md
 #
-# Plot the samples and weights from SROM class. Also, compared with the CDF of gamma distribution.
+# Plot the samples and weights from :class:`.SROM` class. Also, compared with the CDF of gamma distribution.
 
 #%%
 
@@ -85,8 +87,8 @@ plt.show()
 #
 # A note on the weights corresponding to error in distribution, moments and correlation of random variables:
 #
-# - For this illustration, error_weigths are not defined and default value is [1, 0.2, 0]. These weights can be changed
-# to obtain desired accuracy in certain properties.
+# - For this illustration, error_weights are not defined and default value is :math:`[1, 0.2, 0]`. These weights can be
+# changed to obtain desired accuracy in certain properties.
 
 #%%
 

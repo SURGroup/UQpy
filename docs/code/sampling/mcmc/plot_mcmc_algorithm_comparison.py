@@ -3,12 +3,18 @@
 Comparison of various MCMC algorithms
 ============================================================
 
-This script illustrates performance of various MCMC algorithms currently integrated in UQpy:
-- Metropolis Hastings (MH)
-- Modified Metropolis Hastings (MMH)
-- Affine Invariant with Stretch moves (Stretch)
-- Adaptive Metropolis with delayed rejection (DRAM)
 """
+
+# %% md
+#
+# This script illustrates performance of various MCMC algorithms currently integrated in UQpy:
+#
+# - Metropolis Hastings (MH)
+# - Modified Metropolis Hastings (MMH)
+# - Affine Invariant with Stretch moves (Stretch)
+# - Adaptive Metropolis with delayed rejection (DRAM)
+
+# %%
 
 # %% md
 #
@@ -27,8 +33,8 @@ from UQpy.sampling import MetropolisHastings, Stretch, ModifiedMetropolisHasting
 # %% md
 # Affine invariant with Stretch moves
 # -----------------------------------
-# This algorithm requires as seed a few samples near the region of interest. Here MH is first run to obtain few samples,
-# used as seed within the Stretch algorithm.
+# This algorithm requires as seed a few samples near the region of interest. Here :class:`.MetropolisHastings` is first
+# run to obtain few samples, used as seed within the :class:`.Stretch` algorithm.
 
 # %%
 
@@ -52,7 +58,7 @@ plt.plot(x.samples[:, 0], x.samples[:, 1], 'o')
 plt.show()
 
 # %% md
-# DREAM algorithm: compare with MH (inputs parameters are set as their default values)
+# DREAM algorithm: compare with :class:`.MetropolisHastings` (inputs parameters are set as their default values)
 # --------------------------------------------------------------------------------------
 
 # %%
@@ -116,7 +122,7 @@ plt.show()
 # %% md
 # MMH: target pdf is given as a joint pdf
 # ----------------------------------------
-# The target pdf should be a 1 dimensional distribution or set of 1d distributions.
+# The target pdf should be a 1 dimensional distribution or set of 1D distributions.
 
 # %%
 

@@ -10,7 +10,7 @@ using Delaunay stratification.
 #%% md
 #
 # Import the necessary libraries. Here we import standard libraries such as numpy and matplotlib, but also need to
-# import the DelaunayStrata and DelaunaySTS class from UQpy.sampling.
+# import the :class:`.DelaunayStrata` and :class:`.TrueStratifiedSampling` class from :py:mod:`UQpy.sampling`.
 
 #%%
 
@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 
 #%% md
 #
-# Run STS for 25 samples.
+# Run :class:`.TrueStratifiedSampling` for 25 samples.
 #
 # - 2 dimensions
 # - Five strata in each dimension
@@ -40,7 +40,7 @@ marginals = [Exponential(loc=1., scale=1.), Exponential(loc=1., scale=1.)]
 # Equal number of samples in each stratum
 # ---------------------------------------
 #
-# Create strata object using VoronoiStrata class.
+# Create strata object using :class:`.VoronoiStrata` class.
 
 #%%
 
@@ -51,9 +51,9 @@ sts_obj = TrueStratifiedSampling(distributions=marginals, strata_object=strata_o
 
 #%% md
 #
-# Figure shows the stratification of domain using randomly generated seed points. Notice that DelaunayStrata class
-# include the corners of [0, 1]^dimension hypercube before constructing Delaunay Triangulation. In this plot, orange
-# points are the seed points and left corner is also included in the delaunay construction
+# Figure shows the stratification of domain using randomly generated seed points. Notice that :class:`.DelaunayStrata`
+# class include the corners of :math:`[0, 1]^{dimension}` hypercube before constructing Delaunay Triangulation. In this
+# plot, orange points are the seed points and left corner is also included in the delaunay construction
 
 #%%
 
@@ -72,7 +72,7 @@ sts_obj.run(nsamples_per_stratum=2)
 
 #%% md
 #
-# Plot the resulting stratified samples and the boundaries of the strata in the U(0,1) space.
+# Plot the resulting stratified samples and the boundaries of the strata in the :math:`U(0,1)` space.
 
 #%%
 

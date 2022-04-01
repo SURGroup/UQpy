@@ -4,28 +4,29 @@ Translation
 =================================================================
 
 In this example, a Gaussian stochastic processes is translated into a stochastic processes of a number of distributions.
-This example illustrates how to use the Translate class to translate from Gaussian to other probability distributions
-and compare how the statistics of the translated stochastic processes change along with distributions.
+This example illustrates how to use the :class:`.Correlate` class to translate from Gaussian to other probability
+distributions and compare how the statistics of the translated stochastic processes change along with distributions.
 
 """
 
-#%% md
+# %% md
 #
 # Import the necessary libraries. Here we import standard libraries such as numpy and matplotlib, but also need to
-# import the Translate class from the StochasticProcesses module of UQpy.
+# import the class:`.Correlate` class from the :py:mod:`stochastic_processes` module of UQpy.
 
-#%%
+# %%
 
 from UQpy.stochastic_process import Translation, SpectralRepresentation
 import numpy as np
 import matplotlib.pyplot as plt
+
 plt.style.use('seaborn')
 
-#%% md
+# %% md
 #
 # Firstly we generate Gaussian Stochastic Processes using the Spectral Representation Method.
 
-#%%
+# %%
 
 n_sim = 10000  # Num of samples
 T = 100  # Time(1 / T = dw)
@@ -41,6 +42,7 @@ S = 125 * w ** 2 * np.exp(-2 * w)
 SRM_object = SpectralRepresentation(n_sim, S, dt, dw, nt, nw, random_state=128)
 samples = SRM_object.samples
 
+
 def S_to_R(S, w, t):
     dw = w[1] - w[0]
     fac = np.ones(len(w))
@@ -52,14 +54,15 @@ def S_to_R(S, w, t):
         R[i] = 2 * np.dot(fac, S * np.cos(w * t[i]))
     return R
 
+
 R_g = S_to_R(S, w, t)
-r_g = R_g/R_g[0]
+r_g = R_g / R_g[0]
 
-#%% md
+# %% md
 #
-# We translate the samples to be Uniform samples from 1 to 2
+# We translate the samples to be Uniform samples from :math:`1` to :math:`2`
 
-#%%
+# %%
 
 from UQpy.distributions import Lognormal
 
@@ -74,11 +77,11 @@ samples_ng = Translate_object.samples_non_gaussian
 R_ng = Translate_object.scaled_correlation_function_non_gaussian
 r_ng = Translate_object.correlation_function_non_gaussian
 
-#%% md
+# %% md
 #
 # Plotting the actual and translated autocorrelation functions
 
-#%%
+# %%
 
 fig1 = plt.figure()
 plt.plot(r_g, label='Gaussian')
