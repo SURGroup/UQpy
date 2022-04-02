@@ -1,7 +1,7 @@
 from UQpy.surrogates.kriging.correlation_models.baseclass.Correlation import *
 
 
-class Spline(Correlation):
+class SplineCorrelation(Correlation):
     def c(self, x, s, params, dt=False, dx=False):
         # x_, s_ = np.atleast_2d(x_), np.atleast_2d(s_)
         # # Create stack matrix, where each block is x_i with all s

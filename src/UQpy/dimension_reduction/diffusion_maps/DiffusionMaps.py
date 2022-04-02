@@ -1,22 +1,21 @@
 import itertools
 
-import numpy as np
-import scipy.sparse.linalg as spsl
 import scipy.sparse as sps
 import scipy as sp
 from scipy.sparse.linalg import eigsh, eigs
 import scipy.spatial.distance as sd
 import matplotlib.pyplot as plt
 import scipy
+import numpy as np
 from itertools import combinations
+
+from UQpy.utilities import GaussianKernel
 from UQpy.utilities.Utilities import *
 from UQpy.utilities.Utilities import _nn_coord
 from beartype import beartype
 from typing import Annotated, Union
 from beartype.vale import Is
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray, NumpyFloatArray
-from UQpy.utilities.kernels import EuclideanKernel
-from UQpy.utilities.kernels.GaussianKernel import GaussianKernel
 
 
 class DiffusionMaps:
@@ -30,7 +29,6 @@ class DiffusionMaps:
         kernel_matrix: Numpy2DFloatArray,
         alpha: AlphaType = 0.5,
         n_eigenvectors: IntegerLargerThanUnityType = 2,
-        eigenvector_tolerance: float = 1e-14,
         is_sparse: bool = False,
         n_neighbors: IntegerLargerThanUnityType = 1,
         random_state: Union[None, int] = None,
@@ -38,51 +36,40 @@ class DiffusionMaps:
     ):
         """
 
-        :param alpha: Corresponds to different diffusion operators. It should be between 0 and 1.
+        :param alpha: Corresponds to different diffusion operators. It should be between zero and one.
         :param n_eigenvectors: Number of eigenvectors to keep.
         :param is_sparse: Work with sparse matrices. Increase the computational performance.
-        :param n_neighbors: Defines the number of nearest neighbors.
-        :param eigenvector_tolerance: Relative accuracy for computing eigenvalues.
-        :param kernel_matrix: kernel matrix defining the similarity between the points. Can be generated using kernels
-         from :py:mod:`.utilities` submodule of :py:mod:`UQpy`.
-        :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
-         provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
-         object itself can be passed directly.
+        :param n_neighbors: If :code:`distance_matrix is True` defines the number of nearest neighbors.
+        :param kernel_matrix: kernel matrix defining the similarity between the points.
+        :param random_state: sets :code:`np.random.default_rng(random_state)`.
         :param t: Time exponent.
         """
-        self.eigenvector_tolerance = eigenvector_tolerance
         self.alpha = alpha
-        self.n_eigenvectors = n_eigenvectors
+        self.eigenvectors_number = n_eigenvectors
         self.is_sparse = is_sparse
-        self.n_neighbors = n_neighbors
+        self.neighbors_number = n_neighbors
         self.kernel_matrix = kernel_matrix
         self.random_state = random_state,
         self.t = t
 
-        self.transition_matrix: NumpyFloatArray = None
-        """Transition probability matrix of a Markov chain on the data."""
-        self.diffusion_coordinates: NumpyFloatArray = None
-        """Diffusion coordinates generated from the Diffusion maps embedding"""
-        self.eigenvectors: NumpyFloatArray = None
-        """Eigenvectors of the transition probability matrix of a Markov chain on the data."""
-        self.eigenvalues: NumpyFloatArray = None
-        """Eigenvalues of the transition probability matrix of a Markov chain on the data."""
+        self.transition_matrix = None
+        self.diffusion_coordinates = None
+        self.eigenvectors = None
+        self.eigenvalues = None
         self.cut_off = None
 
         if kernel_matrix is not None:
             self.kernel_matrix = kernel_matrix
 
     @classmethod
-    @beartype
     def build_from_data(
         cls,
-        data: Union[list, np.ndarray],
+        data: Numpy2DFloatArray,
         alpha: AlphaType = 0.5,
         n_eigenvectors: IntegerLargerThanUnityType = 2,
         is_sparse: bool = False,
-        neighbors_number: IntegerLargerThanUnityType = 1,
-        kernel: EuclideanKernel = GaussianKernel(),
-        epsilon: float = None,
+        n_neighbors: IntegerLargerThanUnityType = 1,
+        optimize_parameters: bool = False,
         t: int = 1,
         cut_off: float = None,
         k_nn: int = 10,
@@ -90,34 +77,25 @@ class DiffusionMaps:
         distance_matrix: Union[None, Numpy2DFloatArray] = None,
         random_state: Union[None, int] = None,
         tol: float = 1e-8,
+        kernel=GaussianKernel(),
     ):
 
         """
-        Alternative way of generating a :class:`.DiffusionMaps` object in case of raw data.
 
-        :param data: Array of data points.
-        :param alpha: Corresponds to different diffusion operators. It should be between 0 and 1.
+        :param data: Cloud of data points.
+        :param alpha: Corresponds to different diffusion operators. It should be between zero and one.
         :param n_eigenvectors: Number of eigenvectors to keep.
-        :param eigenvector_tolerance: Relative accuracy for computing eigenvalues.
         :param is_sparse: Work with sparse matrices. Increase the computational performance.
-        :param neighbors_number: Defines the number of nearest neighbors.
-        :param kernel: :class:`.EuclideanKernel` object. See :py:mod:`.utilities` for additional information.
+        :param n_neighbors: If :code:`distance_matrix is True` defines the number of nearest neighbors.
+        :param optimize_parameters: Estimate the kernel scale from the data.
         :param t: Time exponent.
-        :param epsilon: Kernel scale
-        :param cut_off: Cut-off for a Euclidean kernel, below which the kernel values are considered zero. This
-         parameter is used only when `optimize_parameters` is set to :any:`True`
-        :param k_nn: k-th nearest neighbor distance to estimate the cut-off distance. This
-         parameter is required kernel scale `epsilon` when it is not directly provided.
-        :param n_partition: Maximum subsample used for the estimation. Ignored if *distance_matrix* is not None.
-        :param distance_matrix:  Pre-computed distance matrix. This parameter is required kernel scale `epsilon`
-         when it is not directly provided.
-        :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
-         provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
-         object itself can be passed directly. This parameter is required kernel scale `epsilon` when it is not
-         directly provided.
-        :param tol: Tolerance where the *cut_off* should be made. This parameter is required kernel scale `epsilon`
-         when it is not directly provided.
-
+        :param cut_off: Cut-off for a Gaussian kernel, below which the kernel values are considered zero.
+        :param k_nn: k-th nearest neighbor distance to estimate the cut-off distance.
+        :param n_partition: Maximum subsample used for the estimation. Ignored if :code:`distance_matrix is not None`.
+        :param distance_matrix:  Pre-computed distance matrix.
+        :param random_state: sets :code:`np.random.default_rng(random_state)`.
+        :param tol: Tolerance where the cut_off should be made.
+        :param kernel: kernel matrix defining the similarity between the points.
 
 
         See Also
@@ -127,12 +105,12 @@ class DiffusionMaps:
 
         """
 
-        if epsilon is None:
+        if optimize_parameters:
             epsilon, cut_off = DiffusionMaps.estimate_epsilon(data, cut_off=cut_off, tol=tol,
                                                               k_nn=k_nn, n_partition=n_partition,
                                                               distance_matrix=distance_matrix,
                                                               random_state=random_state)
-        kernel.epsilon = epsilon
+            kernel.epsilon = epsilon
 
         kernel_matrix = kernel.calculate_kernel_matrix(points=data)
 
@@ -140,19 +118,22 @@ class DiffusionMaps:
             alpha=alpha,
             n_eigenvectors=n_eigenvectors,
             is_sparse=is_sparse,
-            n_neighbors=neighbors_number,
+            n_neighbors=n_neighbors,
             kernel_matrix=kernel_matrix,
             random_state=random_state,
             t=t
         )
 
-    def fit(self) -> None:
+    def fit(self) -> tuple[NumpyFloatArray, NumpyFloatArray, NumpyFloatArray]:
         """
         Perform diffusion map embedding.
+
+        :returns: diffusion_coordinates, eigenvalues, eigenvectors
+
         """
 
         if self.is_sparse:
-            self.kernel_matrix = self.__sparse_kernel(self.kernel_matrix, self.n_neighbors)
+            self.kernel_matrix = self.__sparse_kernel(self.kernel_matrix, self.neighbors_number)
 
         alpha = self.alpha
         # Compute the diagonal matrix D(i,i) = sum(Kernel(i,j)^alpha,j) and its inverse.
@@ -162,7 +143,11 @@ class DiffusionMaps:
 
         # Compute L^alpha = D^(-alpha)*L*D^(-alpha).
         m = d_inv.shape[0]
-        d_alpha = sps.spdiags(d_inv, 0, m, m) if self.is_sparse else np.diag(d_inv)
+        if self.is_sparse:
+            d_alpha = sps.spdiags(d_inv, 0, m, m)
+        else:
+            d_alpha = np.diag(d_inv)
+
         l_star = d_alpha.dot(self.kernel_matrix.dot(d_alpha))
 
         # d_star, d_star_inv = self._d_matrix(l_star, 1.0)
@@ -177,34 +162,32 @@ class DiffusionMaps:
         # Compute the transition matrix.
         transition_matrix = d_star_inv_d.dot(l_star)
 
-        # if self.is_sparse:
-        #     is_symmetric = sp.sparse.linalg.norm(transition_matrix - transition_matrix.T, sp.inf) < 1e-08
-        # else:
-        #     is_symmetric = np.allclose(transition_matrix, transition_matrix.T, rtol=1e-5,  atol=1e-08)
-        #
-        # # Find the eigenvalues and eigenvectors of Ps.
-        # self.eigenvalues, self.eigenvectors = DiffusionMaps.eig_solver(transition_matrix, is_symmetric,
-        #                                                                (self.n_eigenvectors + 1),
-        #                                                                self.eigenvector_tolerance)
-
         if self.is_sparse:
-            self.eigenvalues, self.eigenvectors = spsl.eigs(transition_matrix, k=(self.n_eigenvectors + 1), which='LR')
+            is_symmetric = sp.sparse.linalg.norm(transition_matrix - transition_matrix.T, sp.inf) < 1e-08
         else:
-            self.eigenvalues, self.eigenvectors = np.linalg.eig(transition_matrix)
+            is_symmetric = np.allclose(transition_matrix, transition_matrix.T, rtol=1e-5,  atol=1e-08)
 
-        ix = np.argsort(np.abs(self.eigenvalues))
+        # Find the eigenvalues and eigenvectors of Ps.
+        eigenvalues, eigenvectors = DiffusionMaps.eig_solver(transition_matrix, is_symmetric,
+                                                             (self.eigenvectors_number + 1))
+
+        ix = np.argsort(np.abs(eigenvalues))
         ix = ix[::-1]
-        s = np.real(self.eigenvalues[ix])
-        u = np.real(self.eigenvectors[:, ix])
+        s = np.real(eigenvalues[ix])
+        u = np.real(eigenvectors[:, ix])
 
-        eigenvalues = s[:self.n_eigenvectors]
-        eigenvectors = u[:, :self.n_eigenvectors]
+        eigenvalues = s[:self.eigenvectors_number]
+        eigenvectors = u[:, :self.eigenvectors_number]
 
         # Compute the diffusion coordinates
         eig_values_time = np.power(eigenvalues, self.t)
-        self.diffusion_coordinates = eigenvectors @ np.diag(eig_values_time)
+        diffusion_coordinates = eigenvectors @ np.diag(eig_values_time)
 
         self.transition_matrix = transition_matrix
+
+        self.diffusion_coordinates = diffusion_coordinates
+        self.eigenvalues = eigenvalues
+        self.eigenvectors = eigenvectors
 
     # Private method
     @staticmethod
@@ -215,9 +198,7 @@ class DiffusionMaps:
             index = _nn_coord(row_data, neighbors_number)
             kernel_matrix[i, index] = 0
             if sum(kernel_matrix[i, :]) <= 0:
-                raise ValueError(
-                    "UQpy: Consider increasing `neighbors_number` to have a connected graph."
-                )
+                raise ValueError("UQpy: Consider increasing `n_neighbors` to have a connected graph.")
 
         sparse_kernel_matrix = sps.csc_matrix(kernel_matrix)
 
@@ -252,7 +233,7 @@ class DiffusionMaps:
         return normalized_kernel
 
     @staticmethod
-    def parsimonious(eigenvectors: Numpy2DFloatArray, dimension: int) -> tuple[list, NumpyFloatArray]:
+    def parsimonious(eigenvectors: Numpy2DFloatArray, dim: int) -> tuple[list, NumpyFloatArray]:
         """
         Selection of independent vectors for parsimonious data manifold embedding, based on
         local regression.  The eigenvectors with the largest residuals are considered for the
@@ -263,7 +244,7 @@ class DiffusionMaps:
             scale = median(distances) / 3
 
         :param eigenvectors: Eigenvectors of the diffusion maps embedding.
-        :param dimension: Number of eigenvectors to select with largest residuals.
+        :param dim: Number of eigenvectors to select with largest residuals.
         :returns: indices, residuals
         """
 
@@ -277,7 +258,7 @@ class DiffusionMaps:
             residuals[i] = DiffusionMaps.__get_residual(f_mat=eigenvectors[:, 1:i], f=eigenvectors[:, i])
 
         # Get the index of the eigenvalues associated with each residual.
-        indices = np.argsort(residuals)[::-1][1:dimension + 1]
+        indices = np.argsort(residuals)[::-1][1:dim+1]
         return indices, residuals
 
     @staticmethod
@@ -305,22 +286,22 @@ class DiffusionMaps:
         return residual
 
     @staticmethod
-    def _estimate_cut_off(data, k_nn: int = 20, n_partition: Union[None, int] = None,
-                          distance_matrix: Union[None, Numpy2DFloatArray] = None,
-                          random_state: Union[None, int] = None) -> float:
+    def estimate_cut_off(data, k_nn: int = 20, n_partition: Union[None, int] = None,
+                         distance_matrix: Union[None, Numpy2DFloatArray] = None,
+                         random_state: Union[None, int] = None) -> float:
         """
         Estimates the cut-off for a Gaussian kernel, given a tolerance below which the kernel values are
         considered zero.
 
         :param data: Cloud of data points.
         :param k_nn: k-th nearest neighbor distance to estimate the cut-off distance.
-        :param n_partition: maximum subsample used for the estimation. Ignored if *distance_matrix* is not None.
+        :param n_partition: maximum subsample used for the estimation. Ignored if :code:`distance_matrix is not None`.
         :param distance_matrix:  Pre-computed distance matrix.
-        :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
-         provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
-         object itself can be passed directly.
-        """
+        :param random_state: sets :code:`np.random.default_rng(random_state)`.
+        :return:
 
+        """
+        data = np.atleast_2d(data)
         n_points = data.shape[0]
         if n_points < 10:
             d = scipy.spatial.distance.pdist(data)
@@ -330,41 +311,43 @@ class DiffusionMaps:
             if n_partition is not None:
                 random_indices = np.random.default_rng(random_state).permutation(n_points)
                 distance_matrix = sd.cdist(data[random_indices[:n_partition]], data,  metric='euclidean')
+                k = np.min([k_nn, distance_matrix.shape[1]])
+                k_smallest_values = np.partition(distance_matrix, k - 1, axis=1)[:, k - 1]
             else:
                 distance_matrix = sd.squareform(sd.pdist(data, metric='euclidean'))
-            k = np.min([k_nn, distance_matrix.shape[1]])
-            k_smallest_values = np.partition(distance_matrix, k - 1, axis=1)[:, k - 1]
+                k = np.min([k_nn, distance_matrix.shape[1]])
+                k_smallest_values = np.partition(distance_matrix, k - 1, axis=1)[:, k - 1]
         else:
             k_smallest_values = np.partition(distance_matrix, k_nn - 1, axis=1)[:, k_nn - 1]
         est_cutoff = np.max(k_smallest_values)
         return float(est_cutoff)
 
     @staticmethod
-    def estimate_epsilon(data:Numpy2DFloatArray, tol:float=1e-8, cut_off: float = None, **estimate_cutoff_params:dict) \
-            -> tuple[float, float]:
+    def estimate_epsilon(data, tol=1e-8, cut_off: float = None, **estimate_cutoff_params) -> tuple[float, float]:
         """
         Estimates the scale parameter for a Gaussian kernel, given a tolerance below which the kernel values are
         considered zero.
 
-        ``scale = cut_off ** 2 / -log(tol)``
+        .. code::
+            scale = cut_off ** 2 / -log(tol)
 
         :param data: Cloud of data points.
-        :param tol: Tolerance where the *cut_off* should be made.
+        :param tol: Tolerance where the cut_off should be made.
         :param cut_off: User-defined cut-off.
-        :param estimate_cutoff_params: Parameters to handle to method :py:meth:`estimate_cutoff`
-         if *cut_off* is None.
+        :param estimate_cutoff_params: Parameters to handle to method :py:meth:`estimate_cutoff` if :code:`cut_off is None`.
+        :return: scale, cut_off
+
         """
 
         if cut_off is None:
-            cut_off = DiffusionMaps._estimate_cut_off(data, **estimate_cutoff_params)
+            cut_off = DiffusionMaps.estimate_cut_off(data,  **estimate_cutoff_params)
 
         scale = cut_off ** 2 / (-np.log(tol))
         return scale, cut_off
 
     @staticmethod
-    def eig_solver(kernel_matrix: Numpy2DFloatArray, is_symmetric: bool, n_eigenvectors: int,
-                   eigenvector_tolerance: float) -> \
-            tuple[NumpyFloatArray, Numpy2DFloatArray]: # pragma: no cover
+    def eig_solver(kernel_matrix: Numpy2DFloatArray, is_symmetric: bool, n_eigenvectors: int) -> \
+            tuple[NumpyFloatArray, Numpy2DFloatArray]:
 
         n_samples, n_features = kernel_matrix.shape
 
@@ -387,7 +370,7 @@ class DiffusionMaps:
                 "k": n_eigenvectors,
                 "which": "LM",
                 "v0": np.ones(n_samples),
-                "tol": eigenvector_tolerance,
+                "tol": 1e-14,
             }
 
         eigenvalues, eigenvectors = solver(kernel_matrix, **solver_kwargs)
@@ -398,7 +381,7 @@ class DiffusionMaps:
 
     @staticmethod
     def _plot_eigen_pairs(eigenvectors: Numpy2DFloatArray,
-                          trivial: bool = False, pair_indices: list = None, **kwargs): # pragma: no cover
+                          trivial: bool = False, pair_indices: list = None, **kwargs):    # pragma: no cover
         """
         Plot scatter plot of n-th eigenvector on x-axis and remaining eigenvectors on
         y-axis.
@@ -423,7 +406,7 @@ class DiffusionMaps:
         elif figure_size is not None and font_size is None:
             plt.rcParams["figure.figsize"] = kwargs['figure_size']
             plt.rcParams.update({'font.size': 18})
-        elif figure_size is None and font_size is not None:
+        elif figure_size is None:
             plt.rcParams["figure.figsize"] = (10, 10)
             plt.rcParams.update({'font.size': kwargs['font_size']})
         else:
@@ -435,15 +418,8 @@ class DiffusionMaps:
 
         n_eigenvectors = eigenvectors.shape[1]
 
-        if not trivial:
-            start = 1
-        else:
-            start = 0
-
-        num_pairs = 0
-        for _ in combinations(range(start, n_eigenvectors), 2):
-            num_pairs = num_pairs + 1
-
+        start = 1 if not trivial else 0
+        num_pairs = sum(1 for _ in combinations(range(start, n_eigenvectors), 2))
         if num_pairs % 2 == 0:
             n_rows = int(np.ceil(num_pairs / 2))
         else:
@@ -454,8 +430,7 @@ class DiffusionMaps:
                 nrows=n_rows, ncols=2, sharex=True, sharey=True,
             )
 
-            count = 1
-            for arg in combinations(range(start, n_eigenvectors), 2):
+            for count, arg in enumerate(combinations(range(start, n_eigenvectors), 2), start=1):
                 i = arg[0]
                 j = arg[1]
                 plt.subplot(n_rows, 2, count)
@@ -463,7 +438,6 @@ class DiffusionMaps:
                 plt.title(
                     r"$\Psi_{{{}}}$ vs. $\Psi_{{{}}}$".format(i, j))
 
-                count = count + 1
         else:
             _, _ = plt.subplots(
                 nrows=1, ncols=1, sharex=True, sharey=True)

@@ -58,8 +58,8 @@ plt.show()
 
 # %%
 
-dmaps = DiffusionMaps.build_from_data(data=X, alpha=1, n_eigenvectors=3,
-                                      kernel=GaussianKernel(), epsilon=0.3)
+dmaps = DiffusionMaps.build_from_data(data=X, alpha=1, n_eigenvectors=5,
+                                      kernel=GaussianKernel(epsilon=0.3))
 
 # %% md
 #

@@ -1,4 +1,4 @@
 from UQpy.surrogates.kriging.regression_models.baseclass import *
-from UQpy.surrogates.kriging.regression_models.ConstantRegression import Constant
-from UQpy.surrogates.kriging.regression_models.LinearRegression import Linear
-from UQpy.surrogates.kriging.regression_models.QuadraticRegression import Quadratic
+from UQpy.surrogates.kriging.regression_models.ConstantRegression import ConstantRegression
+from UQpy.surrogates.kriging.regression_models.LinearRegression import LineaRegression
+from UQpy.surrogates.kriging.regression_models.QuadraticRegression import QuadraticRegression

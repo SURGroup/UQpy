@@ -1,7 +1,7 @@
 from UQpy.surrogates.kriging.correlation_models.baseclass.Correlation import *
 
 
-class Gaussian(Correlation):
+class GaussianCorrelation(Correlation):
     def c(self, x, s, params, dt=False, dx=False):
         stack = Correlation.check_samples_and_return_stack(x, s)
         rx = np.exp(np.sum(-params * (stack ** 2), axis=2))

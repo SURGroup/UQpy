@@ -112,9 +112,9 @@ plt.show()
 
 #%%
 
-from UQpy.surrogates.kriging.regression_models import Linear
-from UQpy.surrogates.kriging.correlation_models import Exponential
-K = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimizer=MinimizeOptimizer(method="L-BFGS-B"),
+from UQpy.surrogates.kriging.regression_models import LineaRegression
+from UQpy.surrogates.kriging.correlation_models import ExponentialCorrelation
+K = Kriging(regression_model=LineaRegression(), correlation_model=ExponentialCorrelation(), optimizer=MinimizeOptimizer(method="L-BFGS-B"),
             optimizations_number=20, correlation_model_parameters=[1, 1])
 K.fit(samples=x.samples, values=rmodel1.qoi_list)
 print(K.correlation_model_parameters)
@@ -185,7 +185,7 @@ plt.show()
 
 #%%
 
-K2 = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimizer=MinimizeOptimizer(method="L-BFGS-B"),
+K2 = Kriging(regression_model=LineaRegression(), correlation_model=ExponentialCorrelation(), optimizer=MinimizeOptimizer(method="L-BFGS-B"),
              correlation_model_parameters=K.correlation_model_parameters.tolist())
 K2.fit(samples=z.samples, values=rmodel.qoi_list)
 

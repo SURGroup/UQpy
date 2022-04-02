@@ -403,7 +403,7 @@ Note that this example is not intended to represent the accurate pushover analys
 RunModel Class
 --------------
 
-.. autoclass:: UQpy.RunModel.RunModel
+.. autoclass:: UQpy.run_model.RunModel
 	:members:
 
 Examples

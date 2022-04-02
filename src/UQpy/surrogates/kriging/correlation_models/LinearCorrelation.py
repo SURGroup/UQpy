@@ -1,7 +1,7 @@
 from UQpy.surrogates.kriging.correlation_models.baseclass.Correlation import *
 
 
-class Linear(Correlation):
+class LinearCorrelation(Correlation):
     def c(self, x, s, params, dt=False, dx=False):
         stack = Correlation.check_samples_and_return_stack(x, s)
         # Taking stack and turning each d value into 1-theta*dij

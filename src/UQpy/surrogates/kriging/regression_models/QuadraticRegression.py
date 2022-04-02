@@ -2,7 +2,7 @@ import numpy as np
 from UQpy.surrogates.kriging.regression_models.baseclass.Regression import Regression
 
 
-class Quadratic(Regression):
+class QuadraticRegression(Regression):
     def r(self, s):
         s = np.atleast_2d(s)
         fx = np.zeros(

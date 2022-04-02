@@ -4,19 +4,19 @@ from beartype.roar import BeartypeCallHintPepParamException
 
 from UQpy.surrogates.kriging.Kriging import Kriging
 import numpy as np
-from UQpy.surrogates.kriging.regression_models import Linear, Constant
-from UQpy.surrogates.kriging.correlation_models import Gaussian
+from UQpy.surrogates.kriging.regression_models import LineaRegression, ConstantRegression
+from UQpy.surrogates.kriging.correlation_models import GaussianCorrelation
 
 
 samples = np.linspace(0, 5, 20).reshape(-1, 1)
 values = np.cos(samples)
 optimizer = MinimizeOptimizer(method="L-BFGS-B")
-krig = Kriging(regression_model=Linear(), correlation_model=Gaussian(), optimizer=optimizer,
+krig = Kriging(regression_model=LineaRegression(), correlation_model=GaussianCorrelation(), optimizer=optimizer,
                correlation_model_parameters=[0.14], optimize=False, random_state=1)
 krig.fit(samples=samples, values=values, correlation_model_parameters=[0.3])
 
 optimizer = MinimizeOptimizer(method="L-BFGS-B")
-krig2 = Kriging(regression_model=Constant(), correlation_model=Gaussian(), optimizer=optimizer,
+krig2 = Kriging(regression_model=ConstantRegression(), correlation_model=GaussianCorrelation(), optimizer=optimizer,
                 correlation_model_parameters=[0.3], bounds=[[0.01, 5]],
                 optimize=False, optimizations_number=100, normalize=False,
                 random_state=2)
@@ -24,10 +24,10 @@ krig2.fit(samples=samples, values=values)
 
 
 # Using the in-built linear regression model as a function
-linear_regression_model = Kriging(regression_model=Linear(), correlation_model=Gaussian(), optimizer=optimizer,
+linear_regression_model = Kriging(regression_model=LineaRegression(), correlation_model=GaussianCorrelation(), optimizer=optimizer,
                                   correlation_model_parameters=[1]).regression_model
 optimizer = MinimizeOptimizer(method="L-BFGS-B")
-gaussian_corrleation_model = Kriging(regression_model=Linear(), correlation_model=Gaussian(), optimizer=optimizer,
+gaussian_corrleation_model = Kriging(regression_model=LineaRegression(), correlation_model=GaussianCorrelation(), optimizer=optimizer,
                                      correlation_model_parameters=[1]).correlation_model
 
 optimizer = MinimizeOptimizer(method="L-BFGS-B")
@@ -68,17 +68,17 @@ def test_jacobian1():
 
 
 def test_regression_models():
-    from UQpy.surrogates.kriging.regression_models import Constant, Linear, Quadratic
-    krig.regression_model = Constant()
+    from UQpy.surrogates.kriging.regression_models import ConstantRegression, LineaRegression, QuadraticRegression
+    krig.regression_model = ConstantRegression()
     tmp = krig.regression_model.r([[0], [1]])
     tmp_test1 = (tmp[0] == np.array([[1.], [1.]])).all() and (tmp[1] == np.array([[[0.]], [[0.]]])).all()
 
-    krig.regression_model = Linear()
+    krig.regression_model = LineaRegression()
     tmp = krig.regression_model.r([[0], [1]])
     tmp_test2 = (tmp[0] == (np.array([[1., 0.], [1., 1.]]))).all() and \
                 (tmp[1] == np.array([[[0., 1.]], [[0., 1.]]])).all()
 
-    krig.regression_model = Quadratic()
+    krig.regression_model = QuadraticRegression()
     tmp = krig.regression_model.r([[-1, 1], [2, -0.5]])
     tmp_test3 = (tmp[0] == np.array([[1., -1.,  1.,  1., -1.,  1.], [1.,  2., -0.5,  4., -1.,  0.25]])).all() and \
                 (tmp[1] == np.array([[[0., 1., 0., -2., 1., 0.],
@@ -90,8 +90,8 @@ def test_regression_models():
 
 
 def test_correlation_models():
-    from UQpy.surrogates.kriging.correlation_models import Exponential, Linear, Spherical, Cubic, Spline
-    krig.correlation_model = Exponential()
+    from UQpy.surrogates.kriging.correlation_models import ExponentialCorrelation, LinearCorrelation, SphericalCorrelation, CubicCorrelation, SplineCorrelation
+    krig.correlation_model = ExponentialCorrelation()
     rx_exponential = (np.round(krig.correlation_model.c([[0], [1], [2]], [[2]], np.array([1])), 3) ==
                       np.array([[0.135], [0.368], [1.]])).all()
     drdt_exponential = (np.round(krig.correlation_model.c([[0], [1], [2]], [[2]], np.array([1]), dt=True)[1], 3) ==
@@ -100,7 +100,7 @@ def test_correlation_models():
                         np.array([[[0.135]], [[0.368]], [[0.]]])).all()
     expon = rx_exponential and drdt_exponential and drdx_exponential
 
-    krig.correlation_model = Linear()
+    krig.correlation_model = LinearCorrelation()
     rx_linear = (np.round(krig.correlation_model.c([[0], [1], [2]], [[2]], np.array([1])), 3) ==
                  np.array([[0.], [0.], [1.]])).all()
     drdt_linear = (np.round(krig.correlation_model.c([[0.4], [0.5], [0.6]], [[0.5]], np.array([1]), dt=True)[1], 3) ==
@@ -109,7 +109,7 @@ def test_correlation_models():
                    np.array([[[1.]], [[-0.]], [[-1.]]])).all()
     linear = rx_linear and drdt_linear and drdx_linear
 
-    krig.correlation_model = Spherical()
+    krig.correlation_model = SphericalCorrelation()
     rx_spherical = (np.round(krig.correlation_model.c([[0], [1], [2]], [[2]], np.array([1])), 3) ==
                     np.array([[0.], [0.], [1.]])).all()
     drdt_spherical = (np.round(krig.correlation_model.c([[0.4], [0.5], [0.6]], [[0.5]], np.array([1]), dt=True)[1], 3)
@@ -118,7 +118,7 @@ def test_correlation_models():
                       == np.array([[[1.485]], [[-0.]], [[-1.485]]])).all()
     spherical = rx_spherical and drdt_spherical and drdx_spherical
 
-    krig.correlation_model = Cubic()
+    krig.correlation_model = CubicCorrelation()
     rx_cubic = (np.round(krig.correlation_model.c([[0.2], [0.5], [1]], [[0.5]], np.array([1])), 3) ==
                 np.array([[0.784], [1.], [0.5]])).all()
     drdt_cubic = (np.round(krig.correlation_model.c([[0.4], [0.5], [0.6]], [[0.5]], np.array([1]), dt=True)[1], 3) ==
@@ -127,7 +127,7 @@ def test_correlation_models():
                   np.array([[[0.54]], [[0.]], [[-0.54]]])).all()
     cubic = rx_cubic and drdt_cubic and drdx_cubic
 
-    krig.correlation_model = Spline()
+    krig.correlation_model = SplineCorrelation()
     rx_spline = (np.round(krig.correlation_model.c([[0.2], [0.5], [1]], [[0.5]], np.array([1])), 3) ==
                  np.array([[0.429], [1.], [0.156]])).all()
     drdt_spline = (np.round(krig.correlation_model.c([[0.4], [0.5], [0.6]], [[0.5]], np.array([1]), dt=True)[1], 3) ==
@@ -144,7 +144,7 @@ def test_wrong_regression_model():
         Raises an error if reg_model is not callable or a string of an in-built model.
     """
     with pytest.raises(BeartypeCallHintPepParamException):
-        Kriging(regression_model='A', correlation_model=Gaussian(), correlation_model_parameters=[1])
+        Kriging(regression_model='A', correlation_model=GaussianCorrelation(), correlation_model_parameters=[1])
 
 
 def test_wrong_correlation_model():
@@ -152,7 +152,7 @@ def test_wrong_correlation_model():
         Raises an error if corr_model is not callable or a string of an in-built model.
     """
     with pytest.raises(BeartypeCallHintPepParamException):
-        Kriging(regression_model=Linear(), correlation_model='A', correlation_model_parameters=[1])
+        Kriging(regression_model=LineaRegression(), correlation_model='A', correlation_model_parameters=[1])
 
 
 def test_missing_correlation_model_parameters():
@@ -160,7 +160,7 @@ def test_missing_correlation_model_parameters():
         Raises an error if corr_model_params is not defined.
     """
     with pytest.raises(TypeError):
-        Kriging(regression_model=Linear(), correlation_model=Gaussian(), bounds=[[0.01, 5]],
+        Kriging(regression_model=LineaRegression(), correlation_model=GaussianCorrelation(), bounds=[[0.01, 5]],
                 optimizations_number=100, random_state=1)
 
 
@@ -169,7 +169,7 @@ def test_optimizer():
         Raises an error if corr_model_params is not defined.
     """
     with pytest.raises(ValueError):
-        Kriging(regression_model=Linear(), correlation_model=Gaussian(),
+        Kriging(regression_model=LineaRegression(), correlation_model=GaussianCorrelation(),
                 correlation_model_parameters=[1], optimizer='A')
 
 
@@ -178,7 +178,7 @@ def test_random_state():
         Raises an error if type of random_state is not correct.
     """
     with pytest.raises(BeartypeCallHintPepParamException):
-        Kriging(regression_model=Linear(), correlation_model=Gaussian(),
+        Kriging(regression_model=LineaRegression(), correlation_model=GaussianCorrelation(),
                 correlation_model_parameters=[1], random_state='A')
 
 

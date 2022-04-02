@@ -72,11 +72,11 @@ rmodel = RunModel(model_script='local_BraninHoo.py', vec=False)
 
 # %%
 
-from UQpy.surrogates.kriging.regression_models import Linear
-from UQpy.surrogates.kriging.correlation_models import Exponential
+from UQpy.surrogates.kriging.regression_models import LineaRegression
+from UQpy.surrogates.kriging.correlation_models import ExponentialCorrelation
 
 optimizer = MinimizeOptimizer(method="L-BFGS-B")
-K = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimizer=optimizer,
+K = Kriging(regression_model=LineaRegression(), correlation_model=ExponentialCorrelation(), optimizer=optimizer,
             correlation_model_parameters=[1, 1], optimizations_number=10)
 
 # %% md

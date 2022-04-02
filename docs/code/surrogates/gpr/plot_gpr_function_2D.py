@@ -17,8 +17,8 @@ generated using STS class and functional value at sample points are estimated us
 import shutil
 
 from UQpy.surrogates import Kriging
-from UQpy.surrogates.kriging.regression_models import Constant
-from UQpy.surrogates.kriging.correlation_models import Exponential
+from UQpy.surrogates.kriging.regression_models import ConstantRegression
+from UQpy.surrogates.kriging.correlation_models import ExponentialCorrelation
 from UQpy.sampling import RectangularStrata
 from UQpy.sampling import TrueStratifiedSampling
 from UQpy.run_model.RunModel import RunModel
@@ -71,8 +71,8 @@ shutil.rmtree(rmodel.model_dir)
 
 # %%
 
-regression_model = Constant()
-correlation_model = Exponential()
+regression_model = ConstantRegression()
+correlation_model = ExponentialCorrelation()
 
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 

@@ -23,14 +23,14 @@ from sklearn.datasets import make_swiss_roll, make_s_curve
 n = 4000  # number of samples
 
 # generate point cloud
+# X, X_color = make_s_curve(n, random_state=3, noise=0)
 X, X_color = make_s_curve(n, random_state=3, noise=0)
 
 # %% md
 # plot the point cloud
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(111, projection="3d")
-ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=X_color, cmap=plt.cm.Spectral,
-           )
+ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=X_color, cmap=plt.cm.Spectral)
 ax.set_xlabel("x")
 ax.set_ylabel("y")
 ax.set_zlabel("z")
@@ -44,8 +44,8 @@ kernel = GaussianKernel()
 
 dmaps_object = DiffusionMaps.build_from_data(data=X,
                                              alpha=1.0, n_eigenvectors=9,
-                                             is_sparse=True, neighbors_number=100,
-                                             # epsilon=0.0018,
+                                             is_sparse=True, n_neighbors=100,
+                                             optimize_parameters=True,
                                              kernel=kernel)
 
 print('epsilon', kernel.epsilon)

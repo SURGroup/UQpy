@@ -34,3 +34,26 @@ def test_karcher():
     assert round(psi_mean.data[0, 0], 9) == -0.398422602
     assert round(phi_mean.data[0, 0], 9) == -0.382608986
 
+def test_karcher_stochastic():
+    np.random.seed(1111)
+    # Solutions: original space.
+    sol0 = np.dot(np.random.rand(6, 2), np.random.rand(2, 6))
+    sol1 = np.dot(np.random.rand(6, 3), np.random.rand(3, 6))
+    sol2 = np.dot(np.random.rand(6, 4), np.random.rand(4, 6))
+    sol3 = np.dot(np.random.rand(6, 3), np.random.rand(3, 6))
+
+    # Creating a list of matrices.
+    matrices = [sol0, sol1, sol2, sol3]
+    manifold_projection = SvdProjection(matrices, p="max")
+
+    # optimization_method = GradientDescent(acceleration=True, error_tolerance=1e-4, max_iterations=1000)
+    psi_mean = Grassmann.karcher_mean(grassmann_points=manifold_projection.psi,
+                                      optimization_method="StochasticGradientDescent",
+                                      distance=GeodesicDistance())
+
+    phi_mean = Grassmann.karcher_mean(grassmann_points=manifold_projection.phi,
+                                      optimization_method="StochasticGradientDescent",
+                                      distance=GeodesicDistance())
+
+    assert round(psi_mean.data[0, 0], 9) == -0.386896317
+    assert round(phi_mean.data[0, 0], 9) == -0.422693823

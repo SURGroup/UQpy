@@ -70,10 +70,10 @@ def test_rect_gerss():
     strata = RectangularStrata(strata_number=[2, 2], random_state=1)
     x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1)
     rmodel = RunModel(model_script='python_model_function.py', vec=False)
-    from UQpy.surrogates.kriging.regression_models import Linear
-    from UQpy.surrogates.kriging.correlation_models import Exponential
+    from UQpy.surrogates.kriging.regression_models import LineaRegression
+    from UQpy.surrogates.kriging.correlation_models import ExponentialCorrelation
 
-    K = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimizations_number=20, random_state=0,
+    K = Kriging(regression_model=LineaRegression(), correlation_model=ExponentialCorrelation(), optimizations_number=20, random_state=0,
                 correlation_model_parameters=[1, 1], optimizer=MinimizeOptimizer('l-bfgs-b'), )
     K.fit(samples=x.samples, values=rmodel.qoi_list)
     refinement = GradientEnhancedRefinement(strata=x.strata_object, runmodel_object=rmodel,
@@ -119,10 +119,10 @@ def test_vor_gerss():
     marginals = [Uniform(loc=0., scale=2.), Uniform(loc=0., scale=1.)]
     strata_vor = VoronoiStrata(seeds_number=4, dimension=2, random_state=10)
     x_vor = TrueStratifiedSampling(distributions=marginals, strata_object=strata_vor, nsamples_per_stratum=1, )
-    from UQpy.surrogates.kriging.regression_models.LinearRegression import Linear
-    from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import Exponential
+    from UQpy.surrogates.kriging.regression_models.LinearRegression import LineaRegression
+    from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import ExponentialCorrelation
     rmodel_ = RunModel(model_script='python_model_function.py', vec=False)
-    K_ = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimizations_number=20,
+    K_ = Kriging(regression_model=LineaRegression(), correlation_model=ExponentialCorrelation(), optimizations_number=20,
                  optimizer=MinimizeOptimizer('l-bfgs-b'), random_state=0,
                  correlation_model_parameters=[1, 1])
 
@@ -159,10 +159,10 @@ def test_rss_runmodel_object():
     marginals = [Uniform(loc=0., scale=2.), Uniform(loc=0., scale=1.)]
     strata = RectangularStrata(strata_number=[2, 2])
     x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1, random_state=1)
-    from UQpy.surrogates.kriging.regression_models import Linear
-    from UQpy.surrogates.kriging.correlation_models import Exponential
+    from UQpy.surrogates.kriging.regression_models import LineaRegression
+    from UQpy.surrogates.kriging.correlation_models import ExponentialCorrelation
 
-    K = Kriging(regression_model=Linear(), correlation_model=Exponential(), optimizations_number=20,
+    K = Kriging(regression_model=LineaRegression(), correlation_model=ExponentialCorrelation(), optimizations_number=20,
                 correlation_model_parameters=[1, 1], optimizer=MinimizeOptimizer('l-bfgs-b'), )
     rmodel = RunModel(model_script='python_model_function.py', vec=False)
     K.fit(samples=x.samples, values=rmodel.qoi_list)

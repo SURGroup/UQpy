@@ -53,7 +53,8 @@ Data[:, :, 2] = [
 start_time = time.time()
 
 pod = DirectPOD(solution_snapshots=Data, modes=1)
-Data_reconstr = pod.run()
+pod.run()
+Data_reconstr =pod.reconstructed_solution
 
 # %% md
 #
@@ -62,7 +63,7 @@ Data_reconstr = pod.run()
 # %%
 
 print('Reconstructed snapshot no.1:')
-print(Data_reconstr[0][:, :, 0])
+print(Data_reconstr[:, :, 0])
 
 if np.allclose(Data, Data_reconstr[0]) == True:
     print('Input data and reconstructed data are identical.')

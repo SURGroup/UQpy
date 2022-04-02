@@ -60,12 +60,12 @@ x = TrueStratifiedSampling(distributions=marginals, strata_object=strata,
 rmodel = RunModel(model_script='local_python_model_1Dfunction.py', delete_files=True)
 rmodel.run(samples=x.samples)
 
-from UQpy.surrogates.kriging.regression_models import Linear
-from UQpy.surrogates.kriging.correlation_models import Gaussian
+from UQpy.surrogates.kriging.regression_models import LineaRegression
+from UQpy.surrogates.kriging.correlation_models import GaussianCorrelation
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 
 optimizer = MinimizeOptimizer(method="L-BFGS-B")
-K = Kriging(regression_model=Linear(), correlation_model=Gaussian(), optimizer=optimizer,
+K = Kriging(regression_model=LineaRegression(), correlation_model=GaussianCorrelation(), optimizer=optimizer,
             optimizations_number=20, correlation_model_parameters=[1], random_state=2)
 K.fit(samples=x.samples, values=rmodel.qoi_list)
 print(K.correlation_model_parameters)

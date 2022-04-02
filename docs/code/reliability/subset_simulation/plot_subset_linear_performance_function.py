@@ -69,7 +69,7 @@ pf = np.zeros((ntrials, 1))
 cov1 = np.zeros((ntrials, 1))
 cov2 = np.zeros((ntrials, 1))
 for i in range(ntrials):
-    model = RunModel(model_script='local_pfn.py', model_object_name="run_python_model", ntasks=1, b_eff=beff, d=dim)
+    model = RunModel(model_script='pfn.py', model_object_name="run_python_model", ntasks=1, b_eff=beff, d=dim)
     dist = MultivariateNormal(mean=np.zeros((dim)), cov=C)
     x = dist.rvs(nsamples=1000, random_state=349857)
     sampling = ModifiedMetropolisHastings(dimension=dim, log_pdf_target=dist.log_pdf,
@@ -125,7 +125,7 @@ pf = np.zeros((ntrials, 1))
 cov1 = np.zeros((ntrials, 1))
 cov2 = np.zeros((ntrials, 1))
 for i in range(ntrials):
-    model = RunModel(model_script='local_pfn.py', model_object_name="run_python_model", ntasks=1, b_eff=beff, d=dim)
+    model = RunModel(model_script='pfn.py', model_object_name="run_python_model", ntasks=1, b_eff=beff, d=dim)
     dist = MultivariateNormal(mean=np.zeros((dim)), cov=C)
     x = dist.rvs(nsamples=1000, random_state=349857)
     sampling = Stretch(dimension=dim, log_pdf_target=dist.log_pdf, n_chains=100, random_state=342985)

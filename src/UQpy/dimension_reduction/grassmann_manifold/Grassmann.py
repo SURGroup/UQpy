@@ -230,14 +230,14 @@ class Grassmann:
         maxiter = maximum_iterations
         n_mat = len(data_points)
 
-        rnk = [min(np.shape(data_points[i])) for i in range(n_mat)]
+        rnk = [min(np.shape(data_points[i].data)) for i in range(n_mat)]
         max_rank = max(rnk)
 
-        fmean = [Grassmann.frechet_variance(data_points[i], data_points, distance_fun) for i in range(n_mat)]
+        fmean = [Grassmann.frechet_variance(data_points, data_points[i], distance_fun) for i in range(n_mat)]
 
         index_0 = fmean.index(min(fmean))
 
-        mean_element = data_points[index_0].tolist()
+        mean_element = data_points[index_0].data.tolist()
         itera = 0
         _gamma = []
         k = 1
@@ -259,7 +259,7 @@ class Grassmann:
                                       reference_point=np.asarray(mean_element))
 
                 _gamma = []
-                mean_element = X[0]
+                mean_element = X[0].data
 
                 k += 1
 
@@ -269,4 +269,4 @@ class Grassmann:
 
             itera += 1
 
-        return mean_element
+        return GrassmannPoint(np.asarray(mean_element))

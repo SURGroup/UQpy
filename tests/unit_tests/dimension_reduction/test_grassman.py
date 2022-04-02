@@ -37,3 +37,26 @@ def test_solution_reconstruction():
 
     interpolated_solution = interpolation.interpolate_manifold(point=point)
     assert round(interpolated_solution.data[0, 0], 9) == -0.410315255
+
+
+def test_parsimonious():
+    from UQpy.utilities.kernels.GaussianKernel import GaussianKernel
+    from UQpy.dimension_reduction.diffusion_maps.DiffusionMaps import DiffusionMaps
+    from sklearn.datasets import make_s_curve
+
+    n = 4000
+    X, X_color = make_s_curve(n, random_state=3, noise=0)
+    kernel = GaussianKernel()
+
+    dmaps_object = DiffusionMaps.build_from_data(data=X,
+                                                 alpha=1.0, n_eigenvectors=9,
+                                                 is_sparse=True, n_neighbors=100,
+                                                 optimize_parameters=True,
+                                                 kernel=kernel)
+
+    dmaps_object.fit()
+    index, residuals = DiffusionMaps.parsimonious(dmaps_object.eigenvectors, 2)
+
+    assert index[0] == 1
+    assert index[1] == 5
+

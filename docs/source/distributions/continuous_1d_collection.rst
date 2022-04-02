@@ -77,6 +77,10 @@ using :math:`scale = 1 / \lambda`.
 
 The :class:`.Exponential` class is imported using the following command:
 
+>>> from UQpy.distributions.collection.ExponentialCorrelation import Exponential
+
+>>> from UQpy.distributions.collection.ExponentialCorrelation import Exponential
+
 >>> from UQpy.distributions.collection.Exponential import Exponential
 
 .. autoclass:: UQpy.distributions.collection.Exponential

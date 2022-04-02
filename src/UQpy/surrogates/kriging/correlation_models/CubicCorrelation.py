@@ -1,7 +1,7 @@
 from UQpy.surrogates.kriging.correlation_models.baseclass.Correlation import *
 
 
-class Cubic(Correlation):
+class CubicCorrelation(Correlation):
     def c(self, x, s, params, dt=False, dx=False):
         zeta_matrix, dtheta_derivs, dx_derivs = Correlation.derivatives(
             x_=x, s_=s, params=params
