@@ -45,9 +45,9 @@ print('Example: Created the model object.')
 # %% md
 #
 # Towards defining the sampling scheme
-# The fire load density is assumed to be uniformly distributed between 50 MJ/m^2 and 450 MJ/m^2.
+# The fire load density is assumed to be uniformly distributed between 50 :math:`MJ/m^2` and 450 :math:`MJ/m^2`.
 # The yield strength is assumed to be normally distributed, with the parameters
-# being: mean = 250 MPa and coefficient of variation of 7%.
+# being: mean = 250 :math:`MPa` and coefficient of variation of :math:`7%`.
 #
 # Creating samples using MCS.
 

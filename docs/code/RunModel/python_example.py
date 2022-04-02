@@ -13,6 +13,7 @@ Python
 #
 # The RunModel class is capable of passing input in different formats into a single computational model. This means that
 # the samples passed into a model can be passed as:
+#
 # - floating point values
 # - numpy arrays
 # - lists
@@ -25,15 +26,19 @@ Python
 # above.
 #
 # Some notes on their use:
+#
 # 1. UQpy converts all sample input to a numpy array with at least two dimensions. The first dimension,
 # i.e. len(samples) must correspond to the number of samples being passed for model execution. The second dimension,
 # i.e. len(samples[0]) must correspond to the number of variables that each sample possesses.
+#
 # 2. Each individual sample, i.e. sample[j], may be composed of multiple data types -- with each variable having a
 # different data type. For example, sample[j][k] may be a floating point value and sample[j][l] may be an array of
 # arbitrary dimension.
+#
 # 3. If a specific variable has multiple dimensions, the user may specify the index to be return in the input file.
-# For example, the place holder for a variable x1 corresponding to sample[j][l] that is an array of shape (1,4) can be
+# For example, the placeholder for a variable x1 corresponding to sample[j][l] that is an array of shape (1,4) can be
 # read as <x1[0, 3]>, which will return the final (0,3) component of samples[j][l].
+#
 # 4. If the user does not specify the index for a multidimensional variable, then the entire multidimensional variable
 # is flattened and written with comma delimiters.
 

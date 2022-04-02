@@ -21,15 +21,19 @@ Third-party - Matlab
 # that are combinations of the above.
 #
 # Some notes on their use:
+#
 # 1. UQpy converts all sample input to a numpy array with at least two dimensions. The first dimension,
 # i.e. len(samples) must correspond to the number of samples being passed for model execution. The second dimension,
 # i.e. len(samples[0]) must correspond to the number of variables that each sample possesses.
+#
 # 2. Each individual sample, i.e. sample[j], may be composed of multiple data types -- with each variable having a
 # different data type. For example, sample[j][k] may be a floating point value and sample[j][l] may be an array of
 # arbitrary dimension.
+#
 # 3. If a specific variable has multiple dimensions, the user may specify the index to be return in the input file.
 # For example, the place holder for a variable x1 corresponding to sample[j][l] that is an array of shape (1,4) can be
 # read as <x1[0, 3]>, which will return the final (0,3) component of samples[j][l].
+#
 # 4. If the user does not specify the index for a multidimensional variable, then the entire multidimensional variable
 # is flattened and written with comma delimiters.
 #
@@ -42,6 +46,7 @@ Third-party - Matlab
 #
 # Examples 1-2:
 # The provided Matlab models take the sum of three random variables:
+#
 # .. math:: s = \sum_{i=1}^3 x_i
 #
 # .. math:: x_i \sim N(0,1)
@@ -118,6 +123,7 @@ if pick_model == 'scalar' or pick_model == 'vector' or pick_model == 'all':
 # 1.1 Pass sampled as ndarray, specify format in generated input file, serial execution
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # This examples uses the following files:
+#
 # - model_script = matlab_model_sum_scalar.py
 # - input_template = sum_scalar.m
 # - output_script = process_matlab_output.py
@@ -145,6 +151,7 @@ if pick_model == 'scalar' or pick_model == 'all':
 # 1.2 Samples passed as list, no format specification, parallel execution
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # This examples uses the following files:
+#
 # - model_script = matlab_model_sum_scalar.py
 # - input_template = sum_scalar.m
 # - output_script = process_matlab_output.py
@@ -211,6 +218,7 @@ if pick_model == 'vector' or pick_model == 'all':
 # 2.1 Pass samples as ndarray, specify format in generated input file, serial execution, index samples in input_template
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # This examples uses the following files:
+#
 # - model_script = matlab_model_sum_vector_indexed.py
 # - input_template = sum_vector_indexed.m
 # - output_script = process_matlab_output.py
