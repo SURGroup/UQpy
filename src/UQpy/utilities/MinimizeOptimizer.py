@@ -30,7 +30,6 @@ class MinimizeOptimizer:
                             method=self.method, bounds=self._bounds, jac=jac,
                             options={'disp': True, 'maxiter': 10000, 'catol': 0.002})
 
-
     def apply_constraints(self, constraints):
         if self.method.lower() in ['cobyla', 'slsqp', 'trust-constr']:
             self.constraints = constraints
@@ -42,4 +41,4 @@ class MinimizeOptimizer:
 
     def supports_jacobian(self):
         return self.method.lower() in ['cg', 'bfgs', 'newton-cg', 'l-bfgs-b', 'tnc', 'slsqp', 'dogleg', 'trust-ncg',
-                                        'trust-krylov', 'trust-exact', 'trust-constr']
+                                       'trust-krylov', 'trust-exact', 'trust-constr']

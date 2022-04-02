@@ -1,10 +1,9 @@
 import logging
 import numpy as np
-from scipy.linalg import cholesky
-import scipy.stats as stats
+from scipy.linalg import cholesky, cho_solve
+
 from beartype import beartype
-import inspect
-from scipy.optimize import minimize
+
 
 from UQpy.utilities.Utilities import process_random_state
 from UQpy.surrogates.baseclass.Surrogate import Surrogate
@@ -12,8 +11,6 @@ from UQpy.utilities.ValidationTypes import RandomStateType
 from UQpy.surrogates.gpr.kernels.baseclass.Kernel import Kernel
 # from UQpy.surrogates.gpr.regression_models.baseclass.Regression import Regression
 from UQpy.surrogates.gpr.constraints.baseclass.Constraints import ConstraintsGPR
-from UQpy.utilities.optimization.baseclass import Optimizer
-from scipy.linalg import cho_solve
 
 
 class GaussianProcessRegressor(Surrogate):
@@ -23,36 +20,39 @@ class GaussianProcessRegressor(Surrogate):
             # regression_model: Regression,
             kernel: Kernel,
             hyperparameters: list,
-            optimizer: Optimizer,
+            optimizer=None,
             bounds=None,
-            optimize: bool = True,
             optimize_constraints: ConstraintsGPR = None,
-            # optimize_constraints=None,
             optimizations_number: int = 1,
             normalize: bool = False,
+            noise: bool = False,
             random_state: RandomStateType = None,
     ):
         """
-        Κriging generates an Gaussian process regression-based surrogate model to predict the model output at new sample
-        points.
+        GaussianProcessRegressor an Gaussian process regression-based surrogate model to predict the model output at
+        new sample points.
 
-        :param regression_model: `regression_model` specifies and evaluates the basis functions and their coefficients,
-         which defines the trend of the model. Built-in options: Constant, Linear, Quadratic
+        # :param regression_model: `regression_model` specifies and evaluates the basis functions and their coefficients,
+        #  which defines the trend of the model. Built-in options: Constant, Linear, Quadratic
         :param kernel: `kernel` specifies and evaluates the kernel.
          Built-in options: RBF
-        :param hyperparameters: List or array of initial values for the correlation model
-         hyperparameters/scale parameters.
-        :param bounds: Bounds on the hyperparameters used to solve optimization problem to estimate maximum likelihood
-         estimator. This should be a closed bound.
-         Default: [-3, 3] for each hyperparameter.
-        :param optimize: Indicator to solve MLE problem or not. If 'True' corr_model_params will be used as initial
-         solution for optimization problem. Otherwise, corr_model_params will be directly use as the hyperparamters.
-         Default: True.
+        :param hyperparameters: List or array of initial values for the kernel hyperparameters/scale parameters. This
+         input attribute defines the dimension of input training point, thus its length/shape should be equal to the
+         input dimension (d). In case of noisy observations/output, its length/shape should be equal to the input
+         dimension plus one (d+1).
+        :param bounds: This input attribute defines the bounds of the loguniform distributions, which randomly generates
+         new starting point for optimization problem to estimate maximum likelihood estimator. This should be a closed
+         bound.
+         Default: [10**-3, 10**3] for each hyperparameter and [10**-10, 10**-1] for variance in noise (if applicable).
         :param optimizations_number: Number of times MLE optimization problem is to be solved with a random starting
          point. Default: 1.
         :param normalize: Boolean flag used in case data normalization is required.
-        :param optimizer: String of the :class:`scipy.stats` optimizer used during the Kriging surrogate.
-        Default: 'L-BFGS-B'.
+        :param optimizer: A class object of 'MinimizeOptimizer' or 'FminCobyla' from UQpy.utilities module. If optimizer
+         is not defined, this class will not solve MLE problem and predictions will be based on hyperparameters provided
+         as input.
+         Default: None.
+        :param noise: Boolean flag used in case of noisy training data.
+         Default: False
         :param random_state: Random seed used to initialize the pseudo-random number generator. If an integer is
          provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
          object itself can be passed directly.
@@ -63,9 +63,9 @@ class GaussianProcessRegressor(Surrogate):
         self.bounds = bounds
         self.optimizer = optimizer
         self.optimizations_number = optimizations_number
-        self.optimize = optimize
         self.optimize_constraints = optimize_constraints
         self.normalize = normalize
+        self.noise = noise
         self.logger = logging.getLogger(__name__)
         self.random_state = random_state
 
@@ -90,7 +90,8 @@ class GaussianProcessRegressor(Surrogate):
         if bounds is None:
             if self.optimizer._bounds is None:
                 bounds_ = [[10**-3, 10**3]] * self.hyperparameters.shape[0]
-                bounds_[-1] = [10**-10, 10**-1]
+                if self.noise:
+                    bounds_[-1] = [10**-10, 10**-1]
                 self.bounds = bounds_
             else:
                 self.bounds = self.optimizer._bounds
@@ -108,20 +109,19 @@ class GaussianProcessRegressor(Surrogate):
         """
         Fit the surrogate model using the training samples and the corresponding model values.
 
-        The user can run this method multiple time after initiating the :class:`.Kriging` class object.
+        The user can run this method multiple time after initiating the :class:`.GaussianProcessRegressor` class object.
 
-        This method updates the samples and parameters of the :class:`.Kriging` object. This method uses
-        `corr_model_params` from previous run as the starting point for MLE problem unless user provides a new starting
-        point.
+        This method updates the samples and parameters of the :class:`.GaussianProcessRegressor` object. This method
+        uses `hyperparameters` from previous run as the starting point for MLE problem unless user provides a new
+        starting point.
 
         :param samples: `ndarray` containing the training points.
         :param values: `ndarray` containing the model evaluations at the training points.
         :param optimizations_number: number of optimization iterations
-        :param hyperparameters: List or array of initial values for the correlation model
-         hyperparameters/scale parameters.
+        :param hyperparameters: List or array of initial values for the kernel hyperparameters/scale parameters.
 
         The :meth:`fit` method has no returns, although it creates the `beta`, `err_var` and `C_inv` attributes of the
-        :class:`.Kriging` class.
+        :class:`.GaussianProcessRegressor` class.
         """
         self.logger.info("UQpy: Running gpr.fit")
 
@@ -134,6 +134,16 @@ class GaussianProcessRegressor(Surrogate):
         # Number of samples and dimensions of samples and values
         nsamples, input_dim = self.samples.shape
         output_dim = int(np.size(values) / nsamples)
+
+        # Verify the length of hyperparameters and input dimension
+        if self.noise:
+            if self.hyperparameters.shape[0] != input_dim + 2:
+                raise RuntimeError("UQpy: The length/shape of attribute 'hyperparameter' and input dimension are not "
+                                   "consistent.")
+        else:
+            if self.hyperparameters.shape[0] != input_dim + 1:
+                raise RuntimeError("UQpy: The length/shape of attribute 'hyperparameter' and input dimension are not "
+                                   "consistent.")
 
         self.values = np.array(values).reshape(nsamples, output_dim)
 
@@ -150,16 +160,13 @@ class GaussianProcessRegressor(Surrogate):
         # self.F, jf_ = self.regression_model.r(s_)
 
         # Maximum Likelihood Estimation : Solving optimization problem to calculate hyperparameters
-        if self.optimize:
+        if self.optimizer is not None:
             # To ensure that cholesky of covariance matrix is computed again during optimization
             self.alpha_ = None
             lb = [np.log10(xy[0]) for xy in self.bounds]
             ub = [np.log10(xy[1]) for xy in self.bounds]
-            # r = np.random.standard_normal(size=(self.optimizations_number, input_dim+2))
-            # x0 = r + lb
-            # starting_point = x0
 
-            starting_point = np.random.uniform(low=lb, high=ub, size=(self.optimizations_number, input_dim+2))
+            starting_point = np.random.uniform(low=lb, high=ub, size=(self.optimizations_number, len(self.bounds)))
             starting_point[0, :] = np.log10(self.hyperparameters)
 
             if self.optimize_constraints is not None:
@@ -170,18 +177,18 @@ class GaussianProcessRegressor(Surrogate):
                 log_bounds = [[np.log10(xy[0]), np.log10(xy[1])] for xy in self.bounds]
                 self.optimizer.update_bounds(bounds=log_bounds)
 
-            minimizer = np.zeros([self.optimizations_number, input_dim + 2])
+            minimizer = np.zeros([self.optimizations_number, len(self.bounds)])
             fun_value = np.zeros([self.optimizations_number, 1])
 
             for i__ in range(self.optimizations_number):
                 p_ = self.optimizer.optimize(function=GaussianProcessRegressor.log_likelihood,
                                              initial_guess=starting_point[i__, :],
-                                             args=(self.kernel, s_, y_),
+                                             args=(self.kernel, s_, y_, self.noise),
                                              jac=self.jac)
 
                 if isinstance(p_, np.ndarray):
                     minimizer[i__, :] = p_
-                    fun_value[i__, 0] = GaussianProcessRegressor.log_likelihood(p_, self.kernel, s_, y_)
+                    fun_value[i__, 0] = GaussianProcessRegressor.log_likelihood(p_, self.kernel, s_, y_, self.noise)
                 else:
                     minimizer[i__, :] = p_.x
                     fun_value[i__, 0] = p_.fun
@@ -193,8 +200,11 @@ class GaussianProcessRegressor(Surrogate):
             self.hyperparameters = 10**minimizer[t, :]
 
         # Updated Correlation matrix corresponding to MLE estimates of hyperparameters
-        self.K = self.kernel.c(x=s_, s=s_, params=self.hyperparameters[:-1]) + \
-                 np.eye(nsamples)*(self.hyperparameters[-1])**2
+        if self.noise:
+            self.K = self.kernel.c(x=s_, s=s_, params=self.hyperparameters[:-1]) + \
+                     np.eye(nsamples)*(self.hyperparameters[-1])**2
+        else:
+            self.K = self.kernel.c(x=s_, s=s_, params=self.hyperparameters)
 
         self.cc = cholesky(self.K + 1e-10 * np.eye(nsamples), lower=True)
         self.alpha_ = cho_solve((self.cc, True), y_)
@@ -225,17 +235,23 @@ class GaussianProcessRegressor(Surrogate):
 
         if hyperparameters is None:
             hyperparameters = self.hyperparameters
-        
+
+        noise_std = 0
+        kernelparameters = hyperparameters
+        if self.noise:
+            kernelparameters = hyperparameters[:-1]
+            noise_std = hyperparameters[-1]
+
         if self.alpha_ is None:
             # This is used during MLE computation
-            K = self.kernel.c(x=s_, s=s_, params=hyperparameters[:-1]) + \
-                np.eye(self.samples.shape[0])*(hyperparameters[-1])**2
+            K = self.kernel.c(x=s_, s=s_, params=kernelparameters) + \
+                np.eye(self.samples.shape[0]) * (noise_std ** 2)
             cc = np.linalg.cholesky(K + 1e-10 * np.eye(self.samples.shape[0]))
             alpha_ = cho_solve((cc, True), y_)
         else:
             cc, alpha_ = self.cc, self.alpha_
         k = self.kernel.c(
-            x=x_, s=s_, params=hyperparameters[:-1]
+            x=x_, s=s_, params=kernelparameters
         )
         y = k @ alpha_
         if self.normalize:
@@ -245,7 +261,7 @@ class GaussianProcessRegressor(Surrogate):
 
         if return_std:
             k1 = self.kernel.c(
-                 x=x_, s=x_, params=hyperparameters[:-1]
+                 x=x_, s=x_, params=kernelparameters
             )
             var = (k1 - k @ cho_solve((cc, True), k.T)).diagonal()
             mse = np.sqrt(var)
@@ -288,7 +304,7 @@ class GaussianProcessRegressor(Surrogate):
     #     return x_
 
     @staticmethod
-    def log_likelihood(p0, k_, s, y):
+    def log_likelihood(p0, k_, s, y, ind_noise):
         """
 
         :param p0: An 1-D numpy array of hyperparameters, that are identified through MLE. The last two elements are
@@ -296,22 +312,18 @@ class GaussianProcessRegressor(Surrogate):
         :param k_: Kernel
         :param s: Input training data
         :param y: Output training data
+        :param ind_noise: Boolean flag to indicate the noisy output
         :return:
         """
         # Return the log-likelihood function and it's gradient. Gradient is calculated using Central Difference
         m = s.shape[0]
-        k__ = k_.c(x=s, s=s, params=10**p0[:-1]) + np.eye(m)*(10**p0[-1])**2
+        if ind_noise:
+            k__ = k_.c(x=s, s=s, params=10 ** p0[:-1]) + np.eye(m) * (10 ** p0[-1]) ** 2
+        else:
+            k__ = k_.c(x=s, s=s, params=10 ** p0)
         cc = cholesky(k__ + 1e-10 * np.eye(m), lower=True)
-        # try:
-        #     cc = cholesky(k__ + 1e-10 * np.eye(m), lower=True)
-        # except np.linalg.LinAlgError:
-        #     return np.inf
-        #
-        # # Product of diagonal terms is negligible sometimes, even when cc exists.
-        # if np.prod(np.diagonal(cc)) == 0:
-        #     return np.inf
 
         term1 = y.T @ (cho_solve((cc, True), y))
-        term2 = 2*np.sum(np.log(np.abs(np.diag(cc))))
+        term2 = 2 * np.sum(np.log(np.abs(np.diag(cc))))
 
-        return 0.5*(term1 + term2 + m*np.log(2*np.pi))[0, 0]
+        return 0.5 * (term1 + term2 + m * np.log(2 * np.pi))[0, 0]

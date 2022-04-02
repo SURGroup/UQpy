@@ -2,18 +2,32 @@ from UQpy.surrogates.gpr.constraints.baseclass.Constraints import *
 
 
 class Nonnegative(ConstraintsGPR):
-    def __init__(self, candidate_points, observed_error=0.01, z_value=2):
-        self.candidate_points = candidate_points
+    def __init__(self, constraint_points, observed_error=0.01, z_value=2):
+        """
+        Nonnegative class defines constraints for the MLE optimization problem, such that `GaussianProcessRegressor`
+        surrogate prediction has positive prediction over the input domain.
+
+        :params constraint_points: Points over which 'Z' standard deviation below the mean is still nonnegative.
+        :params z_value: The value 'Z' used in the inequality for constraint points.
+         Default: z_value = 2.
+        :params observed_error: Tolerance on the absolute difference between observed output and its prediction.
+        """
+        self.constraint_points = constraint_points
         self.observed_error = observed_error
         self.z_value = z_value
         self.args = None
 
     def constraints(self, x_train, y_train, predict_function):
-        self.args = (predict_function, self.candidate_points, self.observed_error, self.z_value, x_train, y_train)
-        return self.constraints_candidate
+        """
+        :params x_train: Input training data, used to train the GPR.
+        :params y_train: Output training data.
+        :params prediction_function: The 'predict' method from the GaussianProcessRegressor
+        """
+        self.args = (predict_function, self.constraint_points, self.observed_error, self.z_value, x_train, y_train)
+        return self.final_constraints
 
     @staticmethod
-    def constraints_candidate(theta_, pred, cand_points, obs_err, z_, x_t, y_t):
+    def final_constraints(theta_, pred, cand_points, obs_err, z_, x_t, y_t):
         tmp_predict, tmp_error = pred(cand_points, True, hyperparameters=10**theta_)
         constraint1 = tmp_predict - z_ * tmp_error
 

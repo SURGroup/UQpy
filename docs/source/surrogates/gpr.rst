@@ -1,7 +1,7 @@
-Kriging
+Gaussian Process Regression
 ---------------------------------------
 
-The :class:`.Kriging` class defines an approximate surrogate model or response surface which can be used to predict the model response and its uncertainty at points where the model has not been previously evaluated. Kriging gives the best unbiased linear predictor at the interpolated points. This class generates a model :math:`\hat{y}` that express the response as a realization of regression model and Gaussian random process as:
+The :class:`.GaussianProcessRegressor` class defines an approximate surrogate model or response surface which can be used to predict the model response and its uncertainty at points where the model has not been previously evaluated. Gaussian Process regressor gives the best unbiased linear predictor at the interpolated points. This class generates a model :math:`\hat{y}` that express the response as a realization of regression model and Gaussian random process as:
 
 .. math:: \hat{y}(x) = \mathcal{F}(\beta, x) + z(x).
 
@@ -11,24 +11,24 @@ The regression model (:math:`\mathcal{F}`) is given as a linear combination of '
 
 The random process :math:`z(x)` has zero mean and its covariance is defined through the separable correlation function:
 
-.. math:: E\big[z(s)z(x)] = \sigma^2 \mathcal{R}(\theta, s, x)
+.. math:: E\big[z(s)z(x)] = \mathcal{K}(l, s, x)
 
 where,
 
-.. math:: \mathcal{R}(s, x; \theta) = \prod_{i=1}^d \mathcal{R}_i(s_i, x_i; \theta_i),
+.. math:: \mathcal{K}(s, x; \theta) = \sigma^2 \prod_{i=1}^d \mathcal{R}_i(s_i, x_i; l_i),
 
-and :math:`\theta` are a set of hyperparameters generally governing the correlation length of the model determined by maximixing the log-likelihood function
+and :math:`\theta=\{l_1, ..., l_d, \sigma \}` are a set of hyperparameters generally governing the correlation length (lengthscale, :math:`l_i`) and the process variance (:math:`\sigma`) of the model, determined by maximixing the log-likelihood function
 
-.. math:: \text{log}(p(y|x, \theta)) = -\frac{1}{2}y^T \mathcal{R}^{-1} y - \frac{1}{2}\text{log}(|\mathcal{R}|) - \frac{n}{2}\text{log}(2\pi)
+.. math:: \text{log}(p(y|x, \theta)) = -\frac{1}{2}y^T \mathcal{K}^{-1} y - \frac{1}{2}\text{log}(|\mathcal{K}|) - \frac{n}{2}\text{log}(2\pi)
 
 
-The correlation is evaluated between a set of existing sample points :math:`s` and points :math:`x` in the domain of interest to form the correlation matrix :math:`R`, and the basis functions are evaluated at the sample points :math:`s` to form the matrix :math:`F`. Using these matrices, the regression coefficients, :math:`\beta`, and process variance, :math:`\sigma^2` are computed as
+The correlation is evaluated between a set of existing sample points :math:`s` and points :math:`x` in the domain of interest to form the correlation matrix :math:`R`, and the basis functions are evaluated at the sample points :math:`s` to form the matrix :math:`F`. Using these matrices, the regression coefficients, :math:`\beta`, is computed as
 
-.. math:: (F^T R^{-1} F)\beta^* & = F^T R^{-1} Y \\ \sigma^2 & = \frac{1}{m} (Y - F\beta^*)^T R{-1}(Y - F\beta^*)
+.. math:: (F^T K^{-1} F)\beta^* & = F^T K^{-1} Y
 
 The final predictor function is then given by:
 
-.. math:: \hat{y}(x) = f(x)^T \beta^* + r(x)^T R^{-1}(Y - F\beta^*)
+.. math:: \hat{y}(x) = f(x)^T \beta^* + k(x)^T K^{-1}(Y - F\beta^*)
 
 Regression Models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -92,17 +92,17 @@ An example user-defined model is given below:
 >>>        return fx, jf
 
 
-Correlation Models
+Kernels
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :class:`.Kriging` class offers a variety of built-in correlation models, specified by the `correlation_model` input described below.
+The :class:`.GaussianProcessRegressor` class offers a variety of built-in kernels, specified by the `kernel` input described below.
 
-Exponential Correlation
+Radial Basis Function Kernel
 """""""""""""""""""""""""
 
-The exponential correlation model takes the following form:
+The RBF kernel takes the following form:
 
-.. math:: \mathcal{R}_i(h_i, \theta_i) = \exp\bigg[ -\dfrac{|h_i|}{\theta_i}\bigg]
+.. math:: \mathcal{K}(h_i, \theta_i) = \sigma^2 \prod_{1}^{d} \mathcal{R}_i(h_i, l_i) = \sigma^2 \prod_{1}^{d} \exp\bigg[ -\frac{h_i^2}{2l_i^2}\bigg]
 
 where :math:`h_i = s_i-x_i`.
 
