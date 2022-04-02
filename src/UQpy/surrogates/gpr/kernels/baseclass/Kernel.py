@@ -9,7 +9,7 @@ class Kernel(ABC):
     """
 
     @abstractmethod
-    def c(self, x, s, params, dt=False, dx=False):
+    def c(self, x, s, params):
         """
         Abstract method that needs to be implemented by the user when creating a new Correlation function.
         """

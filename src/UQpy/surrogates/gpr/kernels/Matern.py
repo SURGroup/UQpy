@@ -5,6 +5,12 @@ from scipy.special import gamma, kv
 
 class Matern(Kernel):
     def __init__(self, nu=1.5):
+        """
+        Matern Kernel is a generalization of Radial Basis Function kernel.
+
+        :params nu: Shape parameter. For nu=0.5, 1.5, 2.5 and infinity, matern coincides with the exonential,
+         matern-3/2, matern-5/2 and RBF covariance function, respectively.
+        """
         self.nu = nu
 
     def c(self, x, s, params):
