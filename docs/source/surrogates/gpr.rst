@@ -44,6 +44,15 @@ The RBF kernel takes the following form:
 
 where :math:`h_i = s_i-x_i`.
 
+Matern Kernel
+"""""""""""""""""""""""""""""
+
+The Matern kernel takes the following form:
+
+.. math:: \mathcal{K}(x, s, \theta) = \sigma^2 \frac{2^{1-\nu}}{\Gamma(\nu)} \bigg( \sqrt{2 \nu} \frac{d}{l} \bigg)^{\nu} K_v \bigg(\sqrt{2 \nu} \frac{d}{l} \bigg)
+
+where :math:`d = ||x-s||_2^{1/2}` is the euclidean distance and :math:`\theta` is consist of lengthscale (:math:`l`), process variance (:math:`\sigma^2`) and smoothing parameter (:math:`\nu`). Also, :math:`\Gamma` is tha gamma function and :math:`K_v` is the modified Bessel function. This kernel concides with exponential and RBF kernel for :math:`\nu=0.5` and :math:`\infty`, respectively.
+
 GaussianProcessRegressor Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
