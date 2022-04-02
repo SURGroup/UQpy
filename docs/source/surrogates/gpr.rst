@@ -38,6 +38,10 @@ The :class:`.GaussianProcessRegressor` class offers a variety of built-in kernel
 Radial Basis Function Kernel
 """""""""""""""""""""""""""""
 
+The :class:`.RBF` class is imported using the following command:
+
+>>> from UQpy.surrogates.gaussian_process.kernels.RBF import RBF
+
 The RBF kernel takes the following form:
 
 .. math:: \mathcal{K}(h_i, \theta_i) = \sigma^2 \prod_{1}^{d} \mathcal{R}_i(h_i, l_i) = \sigma^2 \prod_{1}^{d} \exp\bigg[ -\frac{h_i^2}{2l_i^2}\bigg]
@@ -46,6 +50,10 @@ where :math:`h_i = s_i-x_i`.
 
 Matern Kernel
 """""""""""""""""""""""""""""
+
+The :class:`.Matern` class is imported using the following command:
+
+>>> from UQpy.surrogates.gaussian_process.kernels.Matern import Matern
 
 The Matern kernel takes the following form:
 
