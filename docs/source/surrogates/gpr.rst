@@ -44,37 +44,6 @@ The RBF kernel takes the following form:
 
 where :math:`h_i = s_i-x_i`.
 
-The :class:`.ExponentialCorrelation` class is imported using the following command:
-
->>> from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import ExponentialCorrelation
-
-If both indicators are :any:`False`, then the method should return correlation matrix, i.e. a 2-D array with first dimension
-being the number of points and second dimension being the number of training points.
-
-If `dx` parameter is :any:`True`, the method should return the derivative of the correlation matrix respect to the
-variables, i.e. a 3-D array with first dimension being the number of points, second dimension being the number of
-training points and third dimension being the number of variables.
-
-If `dt` is :any:`True`, then the method should return the correlation matrix and it's derivative with respect to the
-hyperparameters, i.e. a 3-D array with first dimension being the number of points, second dimension being the number
-of training points and third dimension being the number of variables.
-
-An example user-defined model is given below:
-
-
->>> class Gaussian(Correlation):
->>>
->>>    def c(self, x, s, params, dt=False, dx=False):
->>>        stack = Correlation.check_samples_and_return_stack(x, s)
->>>        rx = np.exp(np.sum(-params * (stack ** 2), axis=2))
->>>        if dt:
->>>            drdt = -(stack ** 2) * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
->>>            return rx, drdt
->>>        if dx:
->>>            drdx = - 2 * params * stack * np.transpose(np.tile(rx, (np.size(x, 1), 1, 1)), (1, 2, 0))
->>>            return rx, drdx
->>>        return rx
-
 GaussianProcessRegressor Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
