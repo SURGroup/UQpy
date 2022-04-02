@@ -98,6 +98,7 @@ sphinx_gallery_conf = {
                       '../code/reliability/sorm',
                       '../code/reliability/subset_simulation',
                       '../code/surrogates/srom',
+                      '../code/surrogates/kriging',
                       '../code/surrogates/gpr',
                       '../code/surrogates/pce',
                       '../code/RunModel',],  # path to your example scripts,
@@ -130,6 +131,7 @@ sphinx_gallery_conf = {
                      'auto_examples/reliability/sorm',
                      'auto_examples/reliability/subset_simulation',
                      'auto_examples/surrogates/srom',
+                     'auto_examples/surrogates/kriging',
                      'auto_examples/surrogates/gpr',
                      'auto_examples/surrogates/pce',
                      'auto_examples/RunModel',],  # path to where to save gallery generated output
