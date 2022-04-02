@@ -10,7 +10,7 @@ Voronoi stratification.
 #%% md
 #
 # Import the necessary libraries. Here we import standard libraries such as numpy and matplotlib, but also need to
-# import the :class:`.TrueStratifiedSampling` class from :py:mode:`UQpy.sampling`.
+# import the :class:`.TrueStratifiedSampling` class from :py:mod:`UQpy.sampling`.
 
 #%%
 

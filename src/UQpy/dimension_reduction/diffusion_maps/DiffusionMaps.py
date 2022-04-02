@@ -329,12 +329,14 @@ class DiffusionMaps:
         considered zero.
 
         .. code::
+
             scale = cut_off ** 2 / -log(tol)
 
         :param data: Cloud of data points.
         :param tol: Tolerance where the cut_off should be made.
         :param cut_off: User-defined cut-off.
-        :param estimate_cutoff_params: Parameters to handle to method :py:meth:`estimate_cutoff` if :code:`cut_off is None`.
+        :param estimate_cutoff_params: Parameters to handle to method :py:meth:`estimate_cutoff` if :code:`cut_off is
+         None`.
         :return: scale, cut_off
 
         """

@@ -1,4 +1,5 @@
-from UQpy.surrogates.gpr.constraints.baseclass.Constraints import *
+from UQpy.surrogates.gaussian_process.constraints.baseclass.Constraints import *
+import numpy as np
 
 
 class Nonnegative(ConstraintsGPR):

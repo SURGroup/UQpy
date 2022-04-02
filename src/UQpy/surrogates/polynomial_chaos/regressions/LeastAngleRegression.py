@@ -19,11 +19,10 @@ class LeastAngleRegression(Regression):
         Class to select the best model approximation and calculate the polynomial_chaos coefficients with the Least Angle 
         Regression method combined with ordinary least squares.
 
-
         :param n_nonzero_coefs: Maximum number of non-zero coefficients.
-        :param fit_intercept: Whether to calculate the intercept for this model. Recommended false for PCE, since intercept 
-        is included in basis functions.
-        :verbose: Sets the verbosity amount.
+        :param fit_intercept: Whether to calculate the intercept for this model. Recommended false for PCE, since
+         intercept is included in basis functions.
+        :param verbose: Sets the verbosity amount.
         """
         self.fit_intercept = fit_intercept
         self.n_nonzero_coefs = n_nonzero_coefs

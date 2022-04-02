@@ -1,4 +1,3 @@
-
 Least Squares Regression
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -86,7 +85,6 @@ The :class:`.PceSensitivity` class is imported using the following command:
 LAR Regression
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-....
 
 LeastAngleRegression Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

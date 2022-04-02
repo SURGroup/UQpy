@@ -34,7 +34,6 @@ The :class:`.SubsetSimulation` class is imported using the following command:
 Methods
 """""""
 .. autoclass:: UQpy.reliability.SubsetSimulation
-    :members: run
 
 Attributes
 """"""""""

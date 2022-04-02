@@ -54,8 +54,7 @@ import time
 #
 # - :math:`T_{cool}, T_{hot}` - Plate and disc temperature
 #
-# - :math:`r, cx, cy` - Initial conditions - ring of inner radius :math:`r`, width :math:`dr` centered at
-#  :math:`(cx,cy) (mm)`
+# - :math:`r, cx, cy` - Initial conditions - ring of inner radius :math:`r`, width :math:`dr` centered at :math:`(cx,cy) (mm)`
 #
 # - `nsteps` - Number of time steps
 

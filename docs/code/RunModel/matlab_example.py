@@ -52,6 +52,7 @@ Third-party - Matlab
 # .. math::z = x \det(Y)
 #
 # .. math:: x \sim N(0,1)
+#
 # :math:`y` is a :math:`3x3` matrix of standard normal random variables.
 
 # %%

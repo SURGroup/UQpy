@@ -32,10 +32,10 @@ import time
 # Define the Rosenbrock probability density function up to a scale factor. Here the pdf is defined directly in the
 # python script
 #
-# - define the Rosenbrock probability density function up to a scale factor, this function only takes as input parameter
-# the point x where to compute the pdf,
+# - define the Rosenbrock probability density function up to a scale factor, this function only takes as input parameter the point x where to compute the pdf,
 # - define a pdf function that also takes as argument a set of parameters params,
 # - define a function that computes the log pdf up to a constant.
+#
 # Alternatively, the pdf can be defined in an external file that defines a distribution and its :code:`pdf` or
 # :code:`log_pdf` methods
 # (Rosenbrock.py)
@@ -111,7 +111,7 @@ print(x.samples[0, :, :])
 # %% md
 #
 # The algorithm-specific parameters for MetropolisHastings are proposal and proposal_is_symmetric
-# -------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------
 # The default proposal is standard normal (symmetric).
 
 # %%

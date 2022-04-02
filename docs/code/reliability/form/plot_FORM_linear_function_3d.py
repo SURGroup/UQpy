@@ -6,7 +6,7 @@
 
 # %% md
 #
-# In the third example we have the limit state to be a linear function of three (:math:`d`=3) independent Gaussian
+# In the third example we have the limit state to be a linear function of three (:math:`d=3`) independent Gaussian
 # random variables
 #
 # .. math:: g(X_1, X_2, X_3) = 6.2X_1 -X_2X_3^2

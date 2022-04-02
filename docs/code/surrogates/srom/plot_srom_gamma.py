@@ -87,8 +87,7 @@ plt.show()
 #
 # A note on the weights corresponding to error in distribution, moments and correlation of random variables:
 #
-# - For this illustration, error_weights are not defined and default value is :math:`[1, 0.2, 0]`. These weights can be
-# changed to obtain desired accuracy in certain properties.
+# - For this illustration, error_weights are not defined and default value is :math:`[1, 0.2, 0]`. These weights can be changed to obtain desired accuracy in certain properties.
 
 #%%
 

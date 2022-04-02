@@ -8,9 +8,8 @@ from beartype import beartype
 from UQpy.utilities.Utilities import process_random_state
 from UQpy.surrogates.baseclass.Surrogate import Surrogate
 from UQpy.utilities.ValidationTypes import RandomStateType
-from UQpy.surrogates.gpr.kernels.baseclass.Kernel import Kernel
-# from UQpy.surrogates.gpr.regression_models.baseclass.Regression import Regression
-from UQpy.surrogates.gpr.constraints.baseclass.Constraints import ConstraintsGPR
+from UQpy.surrogates.gaussian_process.kernels.baseclass.Kernel import Kernel
+from UQpy.surrogates.gaussian_process.constraints.baseclass.Constraints import ConstraintsGPR
 
 
 class GaussianProcessRegressor(Surrogate):
@@ -32,8 +31,6 @@ class GaussianProcessRegressor(Surrogate):
         GaussianProcessRegressor an Gaussian process regression-based surrogate model to predict the model output at
         new sample points.
 
-        # :param regression_model: `regression_model` specifies and evaluates the basis functions and their coefficients,
-        #  which defines the trend of the model. Built-in options: Constant, Linear, Quadratic
         :param kernel: `kernel` specifies and evaluates the kernel.
          Built-in options: RBF
         :param hyperparameters: List or array of initial values for the kernel hyperparameters/scale parameters. This
@@ -140,10 +137,9 @@ class GaussianProcessRegressor(Surrogate):
             if self.hyperparameters.shape[0] != input_dim + 2:
                 raise RuntimeError("UQpy: The length/shape of attribute 'hyperparameter' and input dimension are not "
                                    "consistent.")
-        else:
-            if self.hyperparameters.shape[0] != input_dim + 1:
-                raise RuntimeError("UQpy: The length/shape of attribute 'hyperparameter' and input dimension are not "
-                                   "consistent.")
+        elif self.hyperparameters.shape[0] != input_dim + 1:
+            raise RuntimeError("UQpy: The length/shape of attribute 'hyperparameter' and input dimension are not "
+                               "consistent.")
 
         self.values = np.array(values).reshape(nsamples, output_dim)
 
@@ -250,9 +246,7 @@ class GaussianProcessRegressor(Surrogate):
             alpha_ = cho_solve((cc, True), y_)
         else:
             cc, alpha_ = self.cc, self.alpha_
-        k = self.kernel.c(
-            x=x_, s=s_, params=kernelparameters
-        )
+        k = self.kernel.c(x=x_, s=s_, params=kernelparameters)
         y = k @ alpha_
         if self.normalize:
             y = self.value_mean + y * self.value_std
@@ -260,9 +254,7 @@ class GaussianProcessRegressor(Surrogate):
             y = y.flatten()
 
         if return_std:
-            k1 = self.kernel.c(
-                 x=x_, s=x_, params=kernelparameters
-            )
+            k1 = self.kernel.c(x=x_, s=x_, params=kernelparameters)
             var = (k1 - k @ cho_solve((cc, True), k.T)).diagonal()
             mse = np.sqrt(var)
             if self.normalize:
@@ -272,36 +264,6 @@ class GaussianProcessRegressor(Surrogate):
             return y, mse
         else:
             return y
-
-    # def jacobian(self, points):
-    #     """
-    #     Predict the gradient of the model at new points.
-    #
-    #     This method evaluates the regression and correlation model at new sample point. Then, it predicts the gradient
-    #     using the regression coefficients and the training second_order_tensor.
-    #
-    #     :param points: Points at which to evaluate the gradient.
-    #     :return: Gradient of the surrogate model evaluated at the new points.
-    #     """
-    #     x_ = np.atleast_2d(points)
-    #     # if self.normalize:
-    #     #     x_ = (x_ - self.sample_mean) / self.sample_std
-    #     #     s_ = (self.samples - self.sample_mean) / self.sample_std
-    #     # else:
-    #     #     s_ = self.samples
-    #     #
-    #     # fx, jf = self.regression_model.r(x_)
-    #     # rx, drdx = self.correlation_model.c(
-    #     #     x=x_, s=s_, params=self.correlation_model_parameters, dx=True
-    #     # )
-    #     # y_grad = np.einsum("ikj,jm->ik", jf, self.beta) + np.einsum(
-    #     #     "ijk,jm->ki", drdx.T, self.gamma
-    #     # )
-    #     # if self.normalize:
-    #     #     y_grad = y_grad * self.value_std / self.sample_std
-    #     # if x_.shape[1] == 1:
-    #     #     y_grad = y_grad.flatten()
-    #     return x_
 
     @staticmethod
     def log_likelihood(p0, k_, s, y, ind_noise):

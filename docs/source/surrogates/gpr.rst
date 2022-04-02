@@ -24,7 +24,7 @@ and :math:`\theta=\{l_1, ..., l_d, \sigma \}` are a set of hyperparameters gener
 
 The correlation is evaluated between a set of existing sample points :math:`s` and points :math:`x` in the domain of interest to form the correlation matrix :math:`R`, and the basis functions are evaluated at the sample points :math:`s` to form the matrix :math:`F`. Using these matrices, the regression coefficients, :math:`\beta`, is computed as
 
-.. math:: (F^T K^{-1} F)\beta^* & = F^T K^{-1} Y
+.. math:: (F^T K^{-1} F)\beta^* = F^T K^{-1} Y
 
 The final predictor function is then given by:
 
@@ -98,7 +98,7 @@ Kernels
 The :class:`.GaussianProcessRegressor` class offers a variety of built-in kernels, specified by the `kernel` input described below.
 
 Radial Basis Function Kernel
-"""""""""""""""""""""""""
+"""""""""""""""""""""""""""""
 
 The RBF kernel takes the following form:
 
@@ -223,22 +223,23 @@ An example user-defined model is given below:
 >>>            return rx, drdx
 >>>        return rx
 
-Kriging Class
-^^^^^^^^^^^^^^
+GaussianProcessRegressor Class
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :class:`.Kriging` class is imported using the following command:
+The :class:`.GaussianProcessRegressor` class is imported using the following command:
 
->>> from UQpy.surrogates.kriging.Kriging import Kriging
+>>> from UQpy.surrogates.gaussian_process.GaussianProcessRegressor import GaussianProcessRegressor
 
 Methods
 """""""
-.. autoclass:: UQpy.surrogates.kriging.Kriging
-    :members: fit, predict, jacobian
+.. autoclass:: UQpy.surrogates.gaussian_process.GaussianProcessRegressor
+    :members: fit, predict
 
 Attributes
 """"""""""
-.. autoattribute:: UQpy.surrogates.kriging.Kriging.beta
-.. autoattribute:: UQpy.surrogates.kriging.Kriging.err_var
+.. autoattribute:: UQpy.surrogates.gaussian_process.GaussianProcessRegressor.beta
+.. autoattribute:: UQpy.surrogates.gaussian_process.GaussianProcessRegressor.err_var
+.. autoattribute:: UQpy.surrogates.gaussian_process.GaussianProcessRegressor.C_inv
 
 Examples
 """"""""""
