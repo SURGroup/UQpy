@@ -14,7 +14,8 @@ class Matern(Kernel):
         self.nu = nu
 
     def c(self, x, s, params, dt=False, dx=False):
-        stack = cdist(x/params, s/params, metric='euclidean')
+        l, sigma = params[:-1], params[-1]
+        stack = cdist(x/l, s/l, metric='euclidean')
         if self.nu == 0.5:
             return np.exp(-stack)
         elif self.nu == 1.5:
@@ -28,4 +29,4 @@ class Matern(Kernel):
             tmp = 1/(gamma(self.nu)*(2**(self.nu-1)))
             tmp1 = stack ** self.nu
             tmp2 = kv(tmp1)
-            return tmp*tmp1*tmp2
+            return sigma**2 * tmp * tmp1 * tmp2

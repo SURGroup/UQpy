@@ -1,7 +1,7 @@
 Gaussian Process Regression
 ---------------------------------------
 
-The :class:`.GaussianProcessRegressor` class defines an approximate surrogate model or response surface which can be used to predict the model response and its uncertainty at points where the model has not been previously evaluated. Gaussian Process regressor gives the best unbiased linear predictor at the interpolated points. This class generates a model :math:`\hat{y}` that express the response as a realization of regression model and Gaussian random process as:
+The :class:`.GaussianProcessRegression` class defines an approximate surrogate model or response surface which can be used to predict the model response and its uncertainty at points where the model has not been previously evaluated. Gaussian Process regressor gives the best unbiased linear predictor at the interpolated points. This class generates a model :math:`\hat{y}` that express the response as a realization of regression model and Gaussian random process as:
 
 .. math:: \hat{y}(x) = \mathcal{F}(\beta, x) + z(x).
 
@@ -33,7 +33,7 @@ The final predictor function is then given by:
 Kernels
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :class:`.GaussianProcessRegressor` class offers a variety of built-in kernels, specified by the `kernel` input described below.
+The :class:`.GaussianProcessRegression` class offers a variety of built-in kernels, specified by the `kernel` input described below.
 
 Radial Basis Function Kernel
 """""""""""""""""""""""""""""
@@ -64,20 +64,20 @@ where :math:`d = ||x-s||_2^{1/2}` is the euclidean distance and :math:`\theta` i
 GaussianProcessRegressor Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :class:`.GaussianProcessRegressor` class is imported using the following command:
+The :class:`.GaussianProcessRegression` class is imported using the following command:
 
->>> from UQpy.surrogates.gaussian_process.GaussianProcessRegressor import GaussianProcessRegressor
+>>> from UQpy.surrogates.gaussian_process.GaussianProcessRegression import GaussianProcessRegression
 
 Methods
 """""""
-.. autoclass:: UQpy.surrogates.gaussian_process.GaussianProcessRegressor
+.. autoclass:: UQpy.surrogates.gaussian_process.GaussianProcessRegression
     :members: fit, predict
 
 Attributes
 """"""""""
-.. autoattribute:: UQpy.surrogates.gaussian_process.GaussianProcessRegressor.beta
-.. autoattribute:: UQpy.surrogates.gaussian_process.GaussianProcessRegressor.err_var
-.. autoattribute:: UQpy.surrogates.gaussian_process.GaussianProcessRegressor.C_inv
+.. autoattribute:: UQpy.surrogates.gaussian_process.GaussianProcessRegression.beta
+.. autoattribute:: UQpy.surrogates.gaussian_process.GaussianProcessRegression.err_var
+.. autoattribute:: UQpy.surrogates.gaussian_process.GaussianProcessRegression.C_inv
 
 Examples
 """"""""""

@@ -1,0 +1,4 @@
+from UQpy.surrogates.gaussian_process.regression_models.baseclass import *
+from UQpy.surrogates.gaussian_process.regression_models.ConstantRegression import ConstantRegression
+from UQpy.surrogates.gaussian_process.regression_models.LinearRegression import LineaRegression
+from UQpy.surrogates.gaussian_process.regression_models.QuadraticRegression import QuadraticRegression

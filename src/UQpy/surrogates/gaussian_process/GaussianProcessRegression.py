@@ -10,15 +10,16 @@ from UQpy.surrogates.baseclass.Surrogate import Surrogate
 from UQpy.utilities.ValidationTypes import RandomStateType
 from UQpy.surrogates.gaussian_process.kernels.baseclass.Kernel import Kernel
 from UQpy.surrogates.gaussian_process.constraints.baseclass.Constraints import ConstraintsGPR
+from UQpy.surrogates.gaussian_process.regression_models.baseclass.Regression import Regression
 
 
-class GaussianProcessRegressor(Surrogate):
+class GaussianProcessRegression(Surrogate):
     @beartype
     def __init__(
             self,
-            # regression_model: Regression,
             kernel: Kernel,
             hyperparameters: list,
+            regression_model=None,
             optimizer=None,
             bounds=None,
             optimize_constraints: ConstraintsGPR = None,
@@ -35,8 +36,12 @@ class GaussianProcessRegressor(Surrogate):
          Built-in options: RBF
         :param hyperparameters: List or array of initial values for the kernel hyperparameters/scale parameters. This
          input attribute defines the dimension of input training point, thus its length/shape should be equal to the
-         input dimension (d). In case of noisy observations/output, its length/shape should be equal to the input
-         dimension plus one (d+1).
+         input dimension plus one (d+1), this list/array includes 'd' length scale and process standard deviation. In
+         case of noisy observations/output, its length/shape should be equal to the input dimension plus two (d+2), this
+         list/array includes 'd' lengthscales, process standar deviation and noise variance.
+        :param regression_model: A class object, which computes the basis function at a sample point. If
+         regression_model is None, this class will train GP with regression.
+         Default: None
         :param bounds: This input attribute defines the bounds of the loguniform distributions, which randomly generates
          new starting point for optimization problem to estimate maximum likelihood estimator. This should be a closed
          bound.
@@ -54,7 +59,7 @@ class GaussianProcessRegressor(Surrogate):
          provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
          object itself can be passed directly.
         """
-        # self.regression_model = regression_model
+        self.regression_model = regression_model
         self.kernel = kernel
         self.hyperparameters = np.array(hyperparameters)
         self.bounds = bounds
@@ -83,6 +88,7 @@ class GaussianProcessRegressor(Surrogate):
         self.G = None
         self.F, self.K = None, None
         self.cc, self.alpha_ = None, None
+        self.mu = 0
 
         if bounds is None:
             if self.optimizer._bounds is None:
@@ -153,7 +159,8 @@ class GaussianProcessRegressor(Surrogate):
             s_ = self.samples
             y_ = self.values
 
-        # self.F, jf_ = self.regression_model.r(s_)
+        if self.regression_model is not None:
+            self.F = self.regression_model.r(s_)
 
         # Maximum Likelihood Estimation : Solving optimization problem to calculate hyperparameters
         if self.optimizer is not None:
@@ -177,14 +184,15 @@ class GaussianProcessRegressor(Surrogate):
             fun_value = np.zeros([self.optimizations_number, 1])
 
             for i__ in range(self.optimizations_number):
-                p_ = self.optimizer.optimize(function=GaussianProcessRegressor.log_likelihood,
+                p_ = self.optimizer.optimize(function=GaussianProcessRegression.log_likelihood,
                                              initial_guess=starting_point[i__, :],
-                                             args=(self.kernel, s_, y_, self.noise),
+                                             args=(self.kernel, s_, y_, self.noise, self.F),
                                              jac=self.jac)
 
                 if isinstance(p_, np.ndarray):
                     minimizer[i__, :] = p_
-                    fun_value[i__, 0] = GaussianProcessRegressor.log_likelihood(p_, self.kernel, s_, y_, self.noise)
+                    fun_value[i__, 0] = GaussianProcessRegression.log_likelihood(p_, self.kernel, s_, y_,
+                                                                                 self.noise, self.F)
                 else:
                     minimizer[i__, :] = p_.x
                     fun_value[i__, 0] = p_.fun
@@ -204,6 +212,20 @@ class GaussianProcessRegressor(Surrogate):
 
         self.cc = cholesky(self.K + 1e-10 * np.eye(nsamples), lower=True)
         self.alpha_ = cho_solve((self.cc, True), y_)
+
+        if self.regression_model is not None:
+            # Compute the regression coefficient (solving this linear equation: F * beta = Y)
+            # Eq: 3.8, DACE
+            f_dash = np.linalg.solve(self.cc, self.F)
+            y_dash = np.linalg.solve(self.cc, y_)
+            q_, g_ = np.linalg.qr(f_dash)  # Eq: 3.11, DACE
+            # Check if F is a full rank matrix
+            if np.linalg.matrix_rank(g_) != min(np.size(self.F, 0), np.size(self.F, 1)):
+                raise NotImplementedError("Chosen regression functions are not sufficiently linearly independent")
+            # Design parameters (beta: regression coefficient)
+            self.beta = np.linalg.solve(g_, np.matmul(np.transpose(q_), y_dash))
+            self.mu = np.einsum("ij,jk->ik", self.F, self.beta)
+            self.alpha_ = cho_solve((self.cc, True), y_ - self.mu)
 
         self.logger.info("UQpy: gpr fit complete.")
 
@@ -227,7 +249,11 @@ class GaussianProcessRegressor(Surrogate):
         else:
             s_ = self.samples
             y_ = self.values
-        # fx, jf = self.regression_model.r(x_)
+
+        mu1 = 0
+        if self.regression_model is not None:
+            fx = self.regression_model.r(x_)
+            mu1 = np.einsum("ij,jk->ik", fx, self.beta)
 
         if hyperparameters is None:
             hyperparameters = self.hyperparameters
@@ -238,16 +264,26 @@ class GaussianProcessRegressor(Surrogate):
             kernelparameters = hyperparameters[:-1]
             noise_std = hyperparameters[-1]
 
-        if self.alpha_ is None:
-            # This is used during MLE computation
+        if hyperparameters is not None:
+            # This is used for MLE constraints, if constraints call 'predict' method.
             K = self.kernel.c(x=s_, s=s_, params=kernelparameters) + \
                 np.eye(self.samples.shape[0]) * (noise_std ** 2)
             cc = np.linalg.cholesky(K + 1e-10 * np.eye(self.samples.shape[0]))
-            alpha_ = cho_solve((cc, True), y_)
+            f_dash = np.linalg.solve(cc, self.F)
+            y_dash = np.linalg.solve(cc, y_)
+            q_, g_ = np.linalg.qr(f_dash)  # Eq: 3.11, DACE
+            # Check if F is a full rank matrix
+            if np.linalg.matrix_rank(g_) != min(np.size(self.F, 0), np.size(self.F, 1)):
+                raise NotImplementedError("Chosen regression functions are not sufficiently linearly independent")
+            # Design parameters (beta: regression coefficient)
+            beta = np.linalg.solve(g_, np.matmul(np.transpose(q_), y_dash))
+            mu = np.einsum("ij,jk->ik", self.F, beta)
+            alpha_ = cho_solve((cc, True), y_-mu)
         else:
             cc, alpha_ = self.cc, self.alpha_
+
         k = self.kernel.c(x=x_, s=s_, params=kernelparameters)
-        y = k @ alpha_
+        y = mu1 + k @ alpha_
         if self.normalize:
             y = self.value_mean + y * self.value_std
         if x_.shape[1] == 1:
@@ -266,7 +302,7 @@ class GaussianProcessRegressor(Surrogate):
             return y
 
     @staticmethod
-    def log_likelihood(p0, k_, s, y, ind_noise):
+    def log_likelihood(p0, k_, s, y, ind_noise, fx_):
         """
 
         :param p0: An 1-D numpy array of hyperparameters, that are identified through MLE. The last two elements are
@@ -275,17 +311,31 @@ class GaussianProcessRegressor(Surrogate):
         :param s: Input training data
         :param y: Output training data
         :param ind_noise: Boolean flag to indicate the noisy output
+        :param fx_: Basis function evaluated at training points
         :return:
         """
         # Return the log-likelihood function and it's gradient. Gradient is calculated using Central Difference
         m = s.shape[0]
+
         if ind_noise:
             k__ = k_.c(x=s, s=s, params=10 ** p0[:-1]) + np.eye(m) * (10 ** p0[-1]) ** 2
         else:
             k__ = k_.c(x=s, s=s, params=10 ** p0)
         cc = cholesky(k__ + 1e-10 * np.eye(m), lower=True)
 
-        term1 = y.T @ (cho_solve((cc, True), y))
+        mu = 0
+        if fx_ is not None:
+            f_dash = np.linalg.solve(cc, fx_)
+            y_dash = np.linalg.solve(cc, y)
+            q_, g_ = np.linalg.qr(f_dash)  # Eq: 3.11, DACE
+            # Check if F is a full rank matrix
+            if np.linalg.matrix_rank(g_) != min(np.size(fx_, 0), np.size(fx_, 1)):
+                raise NotImplementedError("Chosen regression functions are not sufficiently linearly independent")
+            # Design parameters (beta: regression coefficient)
+            beta = np.linalg.solve(g_, np.matmul(np.transpose(q_), y_dash))
+            mu = np.einsum("ij,jk->ik", fx_, beta)
+
+        term1 = (y-mu).T @ (cho_solve((cc, True), y-mu))
         term2 = 2 * np.sum(np.log(np.abs(np.diag(cc))))
 
         return 0.5 * (term1 + term2 + m * np.log(2 * np.pi))[0, 0]
