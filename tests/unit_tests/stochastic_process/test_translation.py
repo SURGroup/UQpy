@@ -33,7 +33,7 @@ R_g = S_to_R(S, w, t)
 distribution = Uniform(0, 1)
 
 Translate_object = Translation(distributions=distribution, time_interval=dt, frequency_interval=dw,
-                               number_time_intervals=nt, number_frequency_intervals=nw,
+                               n_time_intervals=nt, n_frequency_intervals=nw,
                                correlation_function_gaussian=R_g, samples_gaussian=samples)
 samples_ng = Translate_object.samples_non_gaussian
 

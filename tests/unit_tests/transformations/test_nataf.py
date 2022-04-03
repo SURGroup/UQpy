@@ -11,7 +11,7 @@ def test_correct_distribution_dimensions():
     dist2 = Normal(loc=0.0, scale=1.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = Nataf(distributions=[dist1, dist2], corr_x=rx)
-    assert ntf_obj.dimension == 2
+    assert ntf_obj.n_dimensions == 2
 
 
 def test_wrong_distribution_in_list():

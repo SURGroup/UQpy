@@ -20,14 +20,14 @@ Methods
 
 Attributes
 """"""""""
-.. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.number_of_dimensions
+.. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.n_dimensions
 .. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.bispectrum_amplitude
 .. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.bispectrum_real
 .. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.bispectrum_imaginary
 .. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.biphase
 .. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.phi
 .. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.samples
-.. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.number_of_variables
+.. autoattribute:: UQpy.stochastic_process.BispectralRepresentation.n_variables
 
 
 Examples

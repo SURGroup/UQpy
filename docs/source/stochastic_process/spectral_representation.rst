@@ -25,9 +25,9 @@ Methods
 Attributes
 """"""""""
 .. autoattribute:: UQpy.stochastic_process.SpectralRepresentation.samples
-.. autoattribute:: UQpy.stochastic_process.SpectralRepresentation.number_of_dimensions
+.. autoattribute:: UQpy.stochastic_process.SpectralRepresentation.n_dimensions
 .. autoattribute:: UQpy.stochastic_process.SpectralRepresentation.phi
-.. autoattribute:: UQpy.stochastic_process.SpectralRepresentation.number_of_variables
+.. autoattribute:: UQpy.stochastic_process.SpectralRepresentation.n_variables
 
 
 Examples
