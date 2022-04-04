@@ -136,11 +136,11 @@ User-Defined Kernel
 """"""""""""""""""""""""""""
 
 Adding a new kernel to the :class:`.GaussianProcessRegression` class is straightforward. This is done by creating a new class
-that extends the :class:`.Kernel` abstract base class.
+that extends the :class:`UQpy.surrogates.gaussian_process.kernels.baseclass.Kernel` abstract base class.
 This new class must have a method ``c(self, x, s, params)`` that takes as input the new points, training points and hyperparameters.
 Notice that the input ``params`` include lengthscales and process standard deviation, not noise standard deviation (even for noisy data).
 
-The :class:`.Kernel` class is imported using the following command:
+The :class:`UQpy.surrogates.gaussian_process.kernels.baseclass.Kernel` class is imported using the following command:
 
 >>> from UQpy.surrogates.gaussian_process.correlation_models.baseclass.kernels import Kernel
 

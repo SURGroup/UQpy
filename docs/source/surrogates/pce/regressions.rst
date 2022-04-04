@@ -5,10 +5,6 @@ namely the Least Squares regression (:class:`.LeastSquaresRegression` class), th
 (:class:`.LassoRegression` class) and Ridge
 regression (:class:`.RidgeRegression` class) methods.
 
-.. toctree::
-   :maxdepth: 1
-
-    Regressions <pce/regressions>
 
 Least Squares Regression
 """""""""""""""""""""""""""""""""""

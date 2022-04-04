@@ -20,7 +20,7 @@ problems.
 Kernel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :class:`.Kernel` class is imported using the following command:
+The :class:`UQpy.utilities.kernels.baseclass.Kernel` class is imported using the following command:
 
 >>> from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 
