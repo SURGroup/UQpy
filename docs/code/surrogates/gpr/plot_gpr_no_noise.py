@@ -25,7 +25,7 @@ import warnings
 warnings.filterwarnings('ignore')
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 from UQpy.utilities.FminCobyla import FminCobyla
-from UQpy.surrogates import GaussianProcessRegressor, Nonnegative, RBF
+from UQpy.surrogates import GaussianProcessRegression, Nonnegative, RBF
 
 
 # %% md
@@ -106,8 +106,8 @@ optimizer1 = MinimizeOptimizer(method='L-BFGS-B', bounds=bounds_1)
 
 # %%
 
-gpr1 = GaussianProcessRegressor(kernel=kernel1, hyperparameters=[10 ** (-3), 10 ** (-2)], optimizer=optimizer1,
-                                optimizations_number=10, noise=False)
+gpr1 = GaussianProcessRegression(kernel=kernel1, hyperparameters=[10 ** (-3), 10 ** (-2)], optimizer=optimizer1,
+                                 optimizations_number=10, noise=False)
 
 # %% md
 #

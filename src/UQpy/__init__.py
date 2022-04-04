@@ -32,7 +32,9 @@ from UQpy.utilities.Utilities import *
 from UQpy.sensitivity import *
 from UQpy.utilities.UQpyLoggingFormatter import *
 import logging
+import warnings
 
+warnings.filterwarnings('ignore')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
