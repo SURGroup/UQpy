@@ -4,7 +4,6 @@ from typing import Union
 from UQpy.distributions.baseclass import Distribution
 from UQpy.distributions.collection import Uniform, Normal
 from UQpy.distributions.collection import JointIndependent, JointCopula
-from UQpy.surrogates.polynomial_chaos.polynomials import Hermite, Legendre
 from UQpy.surrogates.polynomial_chaos.polynomials.PolynomialsND import PolynomialsND
 from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import Polynomials
 from UQpy.utilities import NoPublicConstructor
@@ -126,12 +125,7 @@ class PolynomialBasis(ABC):
         poly_basis = []
         if inputs_number == 1:
             return [
-                PolynomialBasis.distribution_to_polynomial[type(distributions)](
+                Polynomials.distribution_to_polynomial[type(distributions)](
                     distributions=distributions, degree=int(idx[0])) for idx in multi_index_set]
         else:
             return [PolynomialsND(distributions, idx) for idx in multi_index_set]
-
-    distribution_to_polynomial = {
-        Uniform: Legendre,
-        Normal: Hermite
-    }

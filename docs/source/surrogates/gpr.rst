@@ -161,7 +161,7 @@ An example user-defined kernel is given below:
 >>>         cx = sigma**2 * np.exp(-(stack**2)/2)
 >>>         return cx
 
-GaussianProcessRegressor Class
+GaussianProcessRegression Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :class:`.GaussianProcessRegression` class is imported using the following command:

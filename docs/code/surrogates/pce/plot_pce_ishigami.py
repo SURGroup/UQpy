@@ -67,7 +67,7 @@ joint = JointIndependent(marginals=marg)
 P = 6
 
 # construct total-degree polynomial basis
-polynomial_basis = PolynomialBasis.create_total_degree_basis(joint, P)
+polynomial_basis = TotalDegreeBasis(joint, P)
 
 # check the size of the basis
 print('Size of PCE basis:', polynomial_basis.polynomials_number)
@@ -152,7 +152,7 @@ yy_val = np.array([ishigami(x) for x in xx_val])
 mae = []  # to hold MAE for increasing polynomial degree
 for degree in range(16):
     # define PCE
-    polynomial_basis = PolynomialBasis.create_total_degree_basis(joint, degree)
+    polynomial_basis = TotalDegreeBasis(joint, degree)
     least_squares = LeastSquareRegression()
     pce_metamodel = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
 

@@ -80,7 +80,7 @@ joint = JointIndependent(marginals=marg)
 # maximum polynomial degree
 P = 15
 # construct total-degree polynomial basis
-polynomial_basis = PolynomialBasis.create_total_degree_basis(joint, P)
+polynomial_basis = TotalDegreeBasis(joint, P)
 
 # %% md
 #
@@ -213,7 +213,7 @@ yy_val = np.array([ishigami(x) for x in xx_val])
 mae = []  # to hold MAE for increasing polynomial degree
 for degree in range(16):
     # define PCE
-    polynomial_basis = PolynomialBasis.create_total_degree_basis(joint, degree)
+    polynomial_basis = TotalDegreeBasis(joint, degree)
     least_squares = LeastSquareRegression()
     pce_metamodel = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
 
@@ -247,9 +247,9 @@ for degree in range(16):
 
 # %%
 
-print('Size of the full set of PCE basis:', PolynomialBasis.create_total_degree_basis(joint, P).polynomials_number)
+print('Size of the full set of PCE basis:', TotalDegreeBasis(joint, P).polynomials_number)
 q = 0.8
-polynomial_basis_hyperbolic = PolynomialBasis.create_total_degree_basis(joint, P, q)
+polynomial_basis_hyperbolic = TotalDegreeBasis(joint, P, q)
 # check the size of the basis
 print('Size of the hyperbolic full set of PCE basis:', polynomial_basis_hyperbolic.polynomials_number)
 

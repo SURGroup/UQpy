@@ -120,11 +120,7 @@ class PolynomialChaosExpansion(Surrogate):
         Here, we compute the generalization error  in the form of the relative mean squared error normalized by the
         model variance.
         The user must create an independent validation dataset :math:`[x_{val}, y_{val} = M(x_{val})]`
-        (i.e. a set of inputs and outputs of the computational model). The validation error is computed as
-
-        :math:`\epsilon_{val} = \frac{N-1}{N} \Bigg[\frac{\sum_{i=1}^{N} (M(x_{val}^{(i)}) - M^{PCE}(x_{val}^{(i)}) )^{2} }{\sum_{i=1}^{N} (M(x_{val}^{(i)}) - \hat{\mu}_{Y_{val}})^{2}} \Bigg]`
-
-        where :math:`\hat{\mu}_{Y_{val}}` is the sample mean value of the validation dataset output.
+        (i.e. a set of inputs and outputs of the computational model).
 
         In case where the computational model is very expensive, the use of an alternative error measure is recommended,
         for example the cross-validation error which partitions the existing training dataset into subsets and computes

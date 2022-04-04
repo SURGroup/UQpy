@@ -7,6 +7,9 @@ from beartype import beartype
 
 from UQpy.distributions.baseclass import Distribution
 import warnings
+
+from UQpy.distributions.collection import Uniform, Normal
+
 warnings.filterwarnings('ignore')
 
 
@@ -107,89 +110,5 @@ class Polynomials:
     @abstractmethod
     def evaluate(self, x: np.ndarray):
         pass
-        # """
-        # Calculates the design matrix. Rows represent the input samples and
-        # columns the multiplied polynomials whose degree must not exceed the
-        # maximum degree of polynomials.
-        #
-        # :param x: `ndarray` containing the samples.
-        # :return: Returns an array with the design matrix.
-        # """
-        # if not type(self.distributions) == JointIndependent:
-        #     if type(self.distributions) == Normal:
-        #         from UQpy.surrogates.polynomial_chaos.polynomials.Hermite import Hermite
-        #
-        #         return Hermite(self.degree, self.distributions).get_polys(x)[0]
-        #         # design matrix (second_order_tensor x polynomials)
-        #
-        #     if type(self.distributions) == Uniform:
-        #         from UQpy.surrogates.polynomial_chaos.polynomials.Legendre import (
-        #             Legendre,
-        #         )
-        #
-        #         return Legendre(self.degree, self.distributions).get_polys(x)[0]
-        #
-        #     else:
-        #         raise TypeError("Warning: This distribution is not supported.")
-        #
-        # else:
-        #
-        #     a = []
-        #     for i in range(len(self.distributions.marginals)):
-        #
-        #         if isinstance(self.distributions.marginals[i], Normal):
-        #             from UQpy.surrogates.polynomial_chaos.polynomials.Hermite import (
-        #                 Hermite,
-        #             )
-        #
-        #             a.append(
-        #                 Hermite(self.degree, self.distributions.marginals[i]).get_polys(
-        #                     x[:, i]
-        #                 )[0]
-        #             )
-        #
-        #         elif isinstance(self.distributions.marginals[i], Uniform):
-        #             from UQpy.surrogates.polynomial_chaos.polynomials.Legendre import (
-        #                 Legendre,
-        #             )
-        #
-        #             a.append(
-        #                 Legendre(self.degree, self.distributions.marginals[i]).get_polys(
-        #                     x[:, i]
-        #                 )[0]
-        #             )
-        #
-        #         else:
-        #             raise TypeError("Warning: This distribution is not supported.")
-        #
-        #     # Compute all possible valid combinations
-        #     m = len(a)  # number of variables
-        #     p = self.degree  # maximum polynomial order
-        #
-        #     p_ = np.arange(0, p, 1).tolist()
-        #     res = list(itertools.product(p_, repeat=m))
-        #     # sum of poly orders
-        #     sum_ = [int(math.fsum(res[i])) for i in range(len(res))]
-        #     indices = sorted(range(len(sum_)), key=lambda k: sum_[k])
-        #     res_new = [res[indices[i]] for i in range(len(res))]
-        #     comb = [(0,) * m]
-        #
-        #     for i in range(m):
-        #         t = [0] * m
-        #         t[i] = 1
-        #         comb.append(tuple(t))
-        #
-        #     for i in range(len(res_new)):
-        #         if 1 < int(math.fsum(res_new[i])) <= p - 1:
-        #             rev = res_new[i][::-1]
-        #             comb.append(rev)
-        #
-        #     design = np.ones((x.shape[0], len(comb)))
-        #     for i in range(len(comb)):
-        #         for j in range(m):
-        #             h = [a[j][k][comb[i][j]] for k in range(x.shape[0])]
-        #             design[:, i] *= h
-        #
-        #     return design
 
-
+    distribution_to_polynomial = { }

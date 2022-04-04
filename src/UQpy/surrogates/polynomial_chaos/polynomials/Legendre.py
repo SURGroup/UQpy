@@ -92,3 +92,5 @@ class Legendre(Polynomials):
             const1 = int((-1) ** int(j_1 - j_2))
 
             return factfinal * summfinal * const1
+
+Polynomials.distribution_to_polynomial[Uniform] = Legendre
