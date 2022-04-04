@@ -32,14 +32,14 @@ R = S_to_R(S, w, t)
 distribution = Uniform(0, 1)
 
 Translate_object = Translation(distributions=distribution, time_interval=dt, frequency_interval=dw,
-                               number_time_intervals=nt, number_frequency_intervals=nw, correlation_function_gaussian=R,
+                               n_time_intervals=nt, n_frequency_intervals=nw, correlation_function_gaussian=R,
                                samples_gaussian=samples)
 
 samples_ng = Translate_object.samples_non_gaussian
 R_ng = Translate_object.scaled_correlation_function_non_gaussian
 
 InverseTranslate_object = InverseTranslation(distributions=distribution, time_interval=dt, frequency_interval=dw,
-                                             number_time_intervals=nt, number_frequency_intervals=nw,
+                                             n_time_intervals=nt, n_frequency_intervals=nw,
                                              correlation_function_non_gaussian=R_ng, samples_non_gaussian=samples_ng,
                                              percentage_error=5.0)
 samples_g = InverseTranslate_object.samples_gaussian

@@ -37,9 +37,13 @@ The :class:`.Translation` class is imported using the following command:
 
 >>> from UQpy.stochastic_process.Translation import Translation
 
+Translation Class
+^^^^^^^^^^^^^^^^^^^^
+
 Methods
 """""""
 .. autoclass:: UQpy.stochastic_process.Translation
+    :members: run
 
 Attributes
 """"""""""
@@ -55,3 +59,7 @@ Examples
 .. toctree::
 
    Translation Examples <../auto_examples/stochastic_processes/translation/index>
+
+-----------
+
+.. include:: inverse_translation.rst

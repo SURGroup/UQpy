@@ -49,4 +49,3 @@ the desired functionality. It does not require modification of any existing clas
     Bispectral Representation Method <bispectral_representation>
     Karhunen Loeve Expansion <karhunen_loeve>
     Translation Processes <translation>
-    Inverse Translation Processes <inverse_translation>

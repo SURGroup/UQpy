@@ -38,10 +38,10 @@ class Nataf:
 
         :param distributions: Probability distribution of each random variable. Must be an object of type
          :class:`.DistributionContinuous1D` or :class:`.JointIndependent`.
-        :param samples_x: Random vector of shape ``(samples_number, dimension)`` with prescribed probability
+        :param samples_x: Random vector of shape ``(nsamples, n_dimensions)`` with prescribed probability
          distributions.
          If `samples_x` is provided, the :class:`.Nataf` class transforms them to `samples_z`.
-        :param samples_z: Standard normal random vector of shape ``(samples_number, dimension)``
+        :param samples_z: Standard normal random vector of shape ``(nsamples_, n_dimensions)``
          If `samples_z` is provided, the :class:`.Nataf` class transforms them to `samples_x`.
         :param jacobian: A boolean whether to return the jacobian of the transformation. Default: :any:`False`
         :param corr_z: The correlation  matrix (:math:`\mathbf{C_Z}`) of the standard normal random vector **Z** .
@@ -64,7 +64,7 @@ class Nataf:
          Default: :math:`0.01`
         :param itam_max_iter: Maximum number of iterations for the ITAM method. Default: :math:`100`
         """
-        self.dimension = 0
+        self.n_dimensions = 0
         if isinstance(distributions, list):
             for i in range(len(distributions)):
                 self.update_dimensions(distributions[i])
@@ -72,14 +72,14 @@ class Nataf:
             self.update_dimensions(distributions)
         self.dist_object = distributions
         self.samples_x: NumpyFloatArray = samples_x
-        """Random vector of shape ``(samples_number, dimension)`` with prescribed probability distributions."""
+        """Random vector of shape ``(nsamples, n_dimensions)`` with prescribed probability distributions."""
         self.samples_z:NumpyFloatArray = samples_z
-        """Standard normal random vector of shape ``(samples_number, dimension)``"""
+        """Standard normal random vector of shape ``(nsamples, n_dimensions)``"""
         self.jacobian = jacobian
         self.jzx: NumpyFloatArray = None
-        """The Jacobian of the transformation of shape ``(dimension, dimension)``."""
+        """The Jacobian of the transformation of shape ``(n_dimensions, n_dimensions)``."""
         self.jxz: NumpyFloatArray = None
-        """The Jacobian of the transformation of shape ``(dimension, dimension)``."""
+        """The Jacobian of the transformation of shape ``(n_dimensions, n_dimensions)``."""
         self.itam_max_iter = itam_max_iter
         self.itam_beta = float(itam_beta)
         self.itam_threshold1 = float(itam_threshold1)
@@ -87,13 +87,13 @@ class Nataf:
         self.logger = logging.getLogger(__name__)
 
         if corr_x is None and corr_z is None:
-            self.corr_x: NumpyFloatArray = np.eye(self.dimension)
+            self.corr_x: NumpyFloatArray = np.eye(self.n_dimensions)
             """Distorted correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X**."""
-            self.corr_z: NumpyFloatArray = np.eye(self.dimension)
+            self.corr_z: NumpyFloatArray = np.eye(self.n_dimensions)
             """Distorted correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal vector **Z**."""
         elif corr_x is not None:
             self.corr_x = corr_x
-            if np.all(np.equal(self.corr_x, np.eye(self.dimension))):
+            if np.all(np.equal(self.corr_x, np.eye(self.n_dimensions))):
                 self.corr_z = self.corr_x
             elif all(isinstance(x, Normal) for x in distributions):
                 self.corr_z = self.corr_x
@@ -103,7 +103,7 @@ class Nataf:
                               self.itam_threshold1, self.itam_threshold2,)
         elif corr_z is not None:
             self.corr_z = corr_z
-            if np.all(np.equal(self.corr_z, np.eye(self.dimension))):
+            if np.all(np.equal(self.corr_z, np.eye(self.n_dimensions))):
                 self.corr_x = self.corr_z
             elif all(isinstance(x, Normal) for x in distributions):
                 self.corr_x = self.corr_z
@@ -130,8 +130,11 @@ class Nataf:
         provided, the :meth:`run` method performs the inverse Nataf transformation.
 
         :param samples_x: Random vector **X**  with prescribed probability distributions or standard normal random
-         vector **Z** of shape :code:`(nsamples, dimension)`.
-        :param jacobian: The jacobian of the transformation of shape ``(dimension, dimension)``. Default: :any:`False`
+         vector **Z** of shape :code:`(nsamples, n_dimensions)`.
+        :param samples_z: Standard normal random vector of shape ``(nsamples, n_dimensions)``
+         If `samples_z` is provided, the :class:`.Nataf` class transforms them to `samples_x`.
+        :param jacobian: The jacobian of the transformation of shape ``(n_dimensions, n_dimensions)``. Default:
+         :any:`False`
         """
         self.jacobian = jacobian
 
@@ -295,11 +298,11 @@ class Nataf:
         samples  according to: :math:`Z_{i}=\Phi^{-1}(F_i(X_{i}))`, where :math:`\Phi` is the cumulative
         distribution function of a standard  normal variable.
 
-        :param samples_x: Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions.
+        :param samples_x: Random vector of shape ``(nsamples, n_dimensions)`` with prescribed probability distributions.
         :param jacobian: A boolean whether to return the jacobian of the transformation.
          Default: False
-        :return: Standard normal random vector of shape ``(nsamples, dimension)``, the jacobian of the transformation of
-         shape ``(dimension, dimension)``.
+        :return: Standard normal random vector of shape ``(nsamples, n_dimensions)``, the jacobian of the transformation
+         of shape ``(n_dimensions, n_dimensions)``.
         """
 
         m, n = np.shape(samples_x)
@@ -339,10 +342,10 @@ class Nataf:
         :math:`F_i(x_i)` to samples  according to: :math:`Z_{i}=\Phi^{-1}(F_i(X_{i}))`, where :math:`\Phi` is the
         cumulative distribution function of a standard  normal variable.
 
-        :param samples_z: Standard normal random vector of shape ``(nsamples, dimension)``
+        :param samples_z: Standard normal random vector of shape ``(nsamples, n_dimensions)``
         :param jacobian: A boolean whether to return the jacobian of the transformation. Default: False
-        :return: Random vector of shape ``(nsamples, dimension)`` with prescribed probability distributions,
-         The jacobian of the transformation of shape ``(dimension, dimension)``.
+        :return: Random vector of shape ``(nsamples, n_dimensions)`` with prescribed probability distributions,
+         The jacobian of the transformation of shape ``(n_dimensions, n_dimensions)``.
         """
         m, n = np.shape(samples_z)
         h = cholesky(self.corr_z, lower=True)
@@ -373,17 +376,17 @@ class Nataf:
         return samples_x, jzx
 
     @beartype
-    def rvs(self, samples_number: PositiveInteger):
+    def rvs(self, nsamples: PositiveInteger):
         """
         Generate realizations from the joint pdf of the random vector **X**.
 
-        :param samples_number: Number of samples to generate.
-        :return: Random vector in the parameter space of shape ``(nsamples, dimension)``.
+        :param nsamples: Number of samples to generate.
+        :return: Random vector in the parameter space of shape ``(nsamples, n_dimensions)``.
         """
         h = cholesky(self.corr_z, lower=True)
-        n = int(samples_number)
+        n = int(nsamples)
         m = np.size(self.dist_object)
-        y = np.random.randn(samples_number, m)
+        y = np.random.randn(nsamples, m)
         z = np.dot(h, y.T).T
         samples_x = np.zeros([n, m])
         for i in range(m):
@@ -392,8 +395,8 @@ class Nataf:
 
     def update_dimensions(self, dist_object):
         if isinstance(dist_object, DistributionContinuous1D):
-            self.dimension += 1
+            self.n_dimensions += 1
         elif isinstance(dist_object, JointIndependent):
-            self.dimension += len(dist_object.marginals)
+            self.n_dimensions += len(dist_object.marginals)
         else:
             raise TypeError("UQpy: A  ``DistributionContinuous1D``  or ``JointIndependent`` object must be provided.")

@@ -70,7 +70,7 @@ distribution = Lognormal(0.5)
 samples = samples.flatten()[:, np.newaxis]
 
 Translate_object = Translation(distributions=distribution, time_interval=dt, frequency_interval=dw,
-                               number_time_intervals=nt, number_frequency_intervals=nw,
+                               n_time_intervals=nt, n_frequency_intervals=nw,
                                correlation_function_gaussian=R_g, samples_gaussian=samples)
 samples_ng = Translate_object.samples_non_gaussian
 

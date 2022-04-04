@@ -12,8 +12,8 @@ class InverseTranslation:
         distributions: Distribution,
         time_interval: Union[list, np.ndarray],
         frequency_interval: Union[list, np.ndarray],
-        number_time_intervals: Union[list, np.ndarray],
-        number_frequency_intervals: Union[list, np.ndarray],
+        n_time_intervals: Union[list, np.ndarray],
+        n_frequency_intervals: Union[list, np.ndarray],
         correlation_function_non_gaussian: Union[list, np.ndarray] = None,
         power_spectrum_non_gaussian: Union[list, np.ndarray] = None,
         samples_non_gaussian: Union[list, np.ndarray] = None,
@@ -27,8 +27,8 @@ class InverseTranslation:
          distribution of the non-Gaussian stochastic process.
         :param time_interval: The value of time discretization.
         :param frequency_interval: The value of frequency discretization.
-        :param number_time_intervals: The number of time discretizations.
-        :param number_frequency_intervals: The number of frequency discretizations.
+        :param n_time_intervals: The number of time discretizations.
+        :param n_frequency_intervals: The number of frequency discretizations.
         :param correlation_function_non_gaussian: The auto correlation function of the non-Gaussian stochastic
          processes. Either the power spectrum or the auto correlation function of the Gaussian stochastic process needs
          to be defined.
@@ -38,9 +38,13 @@ class InverseTranslation:
          compute the underlying Gaussian correlation using the ITAM.
         :param percentage_error:
         """
+        self.samples_gaussian = None
+        """The inverse translated Gaussian samples from the non-Gaussian samples."""
+        self.samples_non_gaussian = None
+        self.samples_shape = None
         self.distributions = distributions
-        self.frequency = np.arange(0, number_frequency_intervals) * frequency_interval
-        self.time = np.arange(0, number_time_intervals) * time_interval
+        self.frequency = np.arange(0, n_frequency_intervals) * frequency_interval
+        self.time = np.arange(0, n_time_intervals) * time_interval
         self.error = percentage_error
         self.logger = logging.getLogger(__name__)
         if correlation_function_non_gaussian is None and power_spectrum_non_gaussian is None:
@@ -55,12 +59,10 @@ class InverseTranslation:
                                                                                  self.frequency, self.time)
         self.num = self.correlation_function_non_gaussian.shape[0]
         self.dim = len(self.correlation_function_non_gaussian.shape)
+
         if samples_non_gaussian is not None:
-            self.samples_shape = samples_non_gaussian.shape
-            self.samples_non_gaussian = samples_non_gaussian.flatten()[:, np.newaxis]
-            self.samples_gaussian: NumpyFloatArray = self._inverse_translate_non_gaussian_samples().reshape(
-                self.samples_shape)
-            """The inverse translated Gaussian samples from the non-Gaussian samples."""
+            self.run(samples_non_gaussian)
+
         self.power_spectrum_gaussian: NumpyFloatArray = self._itam_power_spectrum()
         """The power spectrum of the inverse translated Gaussian stochastic processes"""
         self.auto_correlation_function_gaussian = wiener_khinchin_transform(
@@ -69,14 +71,27 @@ class InverseTranslation:
             self.auto_correlation_function_gaussian / self.auto_correlation_function_gaussian[0])
         """The correlation function of the inverse translated Gaussian stochastic processes."""
 
+    def run(self, samples_non_gaussian):
+        """
+
+        :param samples_non_gaussian: Samples of non-Gaussian stochastic processes. If samples are provided at the
+         initialization, then the run method is executed automatically. If no samples are passed at the
+         initialization, the :class:`.InverseTranslation` class will compute the underlying Gaussian correlation using
+         the ITAM and the run method needs to be manually executed by the user.
+        """
+
+        self.samples_shape = samples_non_gaussian.shape
+        self.samples_non_gaussian = samples_non_gaussian.flatten()[:, np.newaxis]
+        self.samples_gaussian: NumpyFloatArray = self._inverse_translate_non_gaussian_samples().reshape(
+            self.samples_shape)
+
+
     def _inverse_translate_non_gaussian_samples(self):
-        if hasattr(self.distributions, "cdf"):
-            non_gaussian_cdf = getattr(self.distributions, "cdf")
-            samples_cdf = non_gaussian_cdf(self.samples_non_gaussian)
-        else:
+        if not hasattr(self.distributions, "cdf"):
             raise AttributeError("UQpy: The marginal dist_object needs to have an inverse cdf defined.")
-        samples_g = Normal(loc=0.0, scale=1.0).icdf(samples_cdf)
-        return samples_g
+        non_gaussian_cdf = getattr(self.distributions, "cdf")
+        samples_cdf = non_gaussian_cdf(self.samples_non_gaussian)
+        return Normal(loc=0.0, scale=1.0).icdf(samples_cdf)
 
     def _itam_power_spectrum(self):
         target_S = self.power_spectrum_non_gaussian

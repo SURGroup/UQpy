@@ -11,7 +11,7 @@ class Decorrelate:
         """
         A class to remove correlation from correlated standard normal random variables.
 
-        :param samples_z: Correlated standard normal vector of shape ``(samples_number, dimension)``.
+        :param samples_z: Correlated standard normal vector of shape ``(n_samples, n_dimensions)``.
         :param corr_z: The correlation  matrix (:math:`\mathbf{C_Z}`) of the standard normal random vector **Z** .
         """
         self.samples_z = samples_z
@@ -20,4 +20,4 @@ class Decorrelate:
         """The lower diagonal matrix resulting from the Cholesky decomposition of the correlation  matrix
         (:math:`\mathbf{C_Z}`)."""
         self.samples_u: NumpyFloatArray = np.linalg.solve(self.H, samples_z.T.squeeze()).T
-        """Uncorrelated standard normal vector of shape ``(samples_number, dimension)``."""
+        """Uncorrelated standard normal vector of shape ``(n_samples, n_dimensions)``."""

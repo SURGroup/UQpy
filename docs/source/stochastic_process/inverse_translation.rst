@@ -8,6 +8,7 @@ The :class:`.InverseTranslation` class is imported using the following command:
 Methods
 """""""
 .. autoclass:: UQpy.stochastic_process.InverseTranslation
+    :members: run
 
 Attributes
 """"""""""
