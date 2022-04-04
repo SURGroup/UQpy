@@ -16,7 +16,7 @@ class PolynomialsND(Polynomials):
         self.distributions = distributions
         marginals = distributions.marginals
         N = len(multi_index)  # dimensions
-        from UQpy.surrogates.polynomial_chaos.polynomials.PolynomialBasis import PolynomialBasis
+        from UQpy.surrogates.polynomial_chaos.polynomials.TotalDegreeBasis import PolynomialBasis
         self.polynomials1d = [PolynomialBasis.distribution_to_polynomial[type(marginals[n])]
                               (distributions=marginals[n], degree=int(multi_index[n])) for n in range(N)]
 

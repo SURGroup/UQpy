@@ -1,3 +1,4 @@
+from abc import ABC
 from typing import Union
 
 from UQpy.distributions.baseclass import Distribution
@@ -13,7 +14,7 @@ import numpy as np
 from scipy.special import comb
 
 
-class PolynomialBasis(metaclass=NoPublicConstructor):
+class PolynomialBasis(ABC):
 
     def __init__(self, inputs_number: int,
                  polynomials_number: int,
@@ -28,47 +29,6 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
         self.polynomials_number = polynomials_number
         self.inputs_number = inputs_number
         self.distributions = distributions
-
-    @classmethod
-    def create_total_degree_basis(cls, distributions:  Union[Distribution, list[Distribution]],
-                                  max_degree: int,
-                                  hyperbolic: float = 1):
-        """
-        Create tensor-product polynomial basis.
-        The size is equal to :code:`(max_degree+1)**n_inputs` (exponential complexity).
-
-        :param distributions: List of univariate distributions.
-        :param max_degree: Maximum polynomial degree of the 1D chaos polynomials.
-        :param hyperbolic: Parameter of hyperbolic truncation reducing interaction terms <0,1>
-        """
-        inputs_number = 1 if not isinstance(distributions, (JointIndependent, JointCopula)) \
-            else len(distributions.marginals)
-        multi_index_set = PolynomialBasis.calculate_total_degree_set(inputs_number=inputs_number,
-                                                                     degree=max_degree)
-        if 0 < hyperbolic < 1:
-            mask = np.round(np.sum(multi_index_set ** hyperbolic, axis=1) ** (1 / hyperbolic), 4) <= max_degree
-            multi_index_set = multi_index_set[mask]
-        polynomials = PolynomialBasis.construct_arbitrary_basis(inputs_number, distributions, multi_index_set)
-        return cls._create(inputs_number, len(multi_index_set), multi_index_set, polynomials, distributions)
-
-    @classmethod
-    def create_tensor_product_basis(cls,
-                                    distributions:  Union[Distribution, list[Distribution]],
-                                    max_degree: int):
-        """
-        Create total-degree polynomial basis.
-        The size is equal to :code:`(total_degree+n_inputs)!/(total_degree!*n_inputs!)`
-        (polynomial complexity).
-
-        :param distributions: List of univariate distributions.
-        :param max_degree: Maximum polynomial degree of the 1D chaos polynomials.
-        """
-        inputs_number = 1 if not isinstance(distributions, (JointIndependent, JointCopula)) \
-            else len(distributions.marginals)
-        multi_index_set = PolynomialBasis.calculate_tensor_product_set(inputs_number=inputs_number,
-                                                                       degree=max_degree)
-        polynomials = PolynomialBasis.construct_arbitrary_basis(inputs_number, distributions, multi_index_set)
-        return cls._create(inputs_number, len(multi_index_set), multi_index_set, polynomials, distributions)
 
     def evaluate_basis(self, samples: np.ndarray):
         samples_number = len(samples)
@@ -90,7 +50,7 @@ class PolynomialBasis(metaclass=NoPublicConstructor):
         row_start = 0
 
         # iterate by polynomial order
-        for i in range(0, degree + 1):
+        for i in range(degree + 1):
             # compute number of rows
             rows = PolynomialBasis._setsize(inputs_number, i)
 

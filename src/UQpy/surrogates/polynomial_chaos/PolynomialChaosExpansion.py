@@ -6,7 +6,7 @@ from beartype import beartype
 from UQpy.utilities.ValidationTypes import NumpyFloatArray
 from UQpy.surrogates.baseclass.Surrogate import Surrogate
 from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
-from UQpy.surrogates.polynomial_chaos.polynomials.PolynomialBasis import PolynomialBasis
+from UQpy.surrogates.polynomial_chaos.polynomials.TotalDegreeBasis import PolynomialBasis
 from UQpy.distributions import Uniform, Normal
 from UQpy.surrogates.polynomial_chaos.polynomials import Legendre,Hermite
 
@@ -54,7 +54,7 @@ class PolynomialChaosExpansion(Surrogate):
     def fit(self, x: np.ndarray, y: np.ndarray):
         """
         Fit the surrogate model using the training samples and the corresponding model values. This method calls the
-        :py:meth:'run' method of the input method class.
+        :py:meth:`run` method of the input method class.
 
         :param x: containing the training points.
         :param y: containing the model evaluations at the training points.
@@ -115,6 +115,21 @@ class PolynomialChaosExpansion(Surrogate):
         """
         Returns the validation error.
 
+        The :meth:`.PolynomialChaosExpansion.validation_error` method can be used to estimate the accuracy of the PCE
+        predictor.
+        Here, we compute the generalization error  in the form of the relative mean squared error normalized by the
+        model variance.
+        The user must create an independent validation dataset :math:`[x_{val}, y_{val} = M(x_{val})]`
+        (i.e. a set of inputs and outputs of the computational model). The validation error is computed as
+
+        :math:`\epsilon_{val} = \frac{N-1}{N} \Bigg[\frac{\sum_{i=1}^{N} (M(x_{val}^{(i)}) - M^{PCE}(x_{val}^{(i)}) )^{2} }{\sum_{i=1}^{N} (M(x_{val}^{(i)}) - \hat{\mu}_{Y_{val}})^{2}} \Bigg]`
+
+        where :math:`\hat{\mu}_{Y_{val}}` is the sample mean value of the validation dataset output.
+
+        In case where the computational model is very expensive, the use of an alternative error measure is recommended,
+        for example the cross-validation error which partitions the existing training dataset into subsets and computes
+        the error as the average of the individual errors of each subset.
+
         :param x: :class:`numpy.ndarray` containing the samples of the validation dataset.
         :param y: :class:`numpy.ndarray` containing model evaluations for the validation dataset.
         :return: Validation error.
@@ -140,6 +155,20 @@ class PolynomialChaosExpansion(Surrogate):
         """
         Returns the first four moments of the polynomial_chaos surrogate which are directly
         estimated from the polynomial_chaos coefficients.
+
+        The :meth:`.PolynomialChaosExpansion.get_moments` method can be used for the calculation of the first two moments of the PCE model directly from the PCE coefficients. This is possible due to the orthonormality of the polynomial basis.
+
+        The first moment (mean value) is calculated as
+
+        .. math:: \mu_{PCE} = \mathbb{E} [ \mathcal{M}^{PCE}(x)] = y_{0}
+
+        where :math:`y_{0}` is the first PCE coefficient associated with the constant term.
+
+        The second moment (variance) is calculated as
+
+        .. math:: \sigma^{2}_{PCE} = \mathbb{E} [( \mathcal{M}^{PCE}(x) - \mu_{PCE} )^{2} ] = \sum_{i=1}^{p} y_{i}
+
+        where :math:`p` is the number of polynomials (first PCE coefficient is excluded).
         
         :param higher: True corresponds to calculation of skewness and kurtosis (computationaly expensive for large basis set).
         :return: Returns the mean and variance.

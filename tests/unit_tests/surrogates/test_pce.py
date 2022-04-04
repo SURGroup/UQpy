@@ -7,7 +7,7 @@ from UQpy.sensitivity.PceSensitivity import PceSensitivity
 from UQpy.surrogates import *
 import numpy as np
 
-from UQpy.surrogates.polynomial_chaos.polynomials.PolynomialBasis import PolynomialBasis
+from UQpy.surrogates.polynomial_chaos.polynomials.TotalDegreeBasis import PolynomialBasis
 
 np.random.seed(1)
 max_degree, n_samples = 2, 10

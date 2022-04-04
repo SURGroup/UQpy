@@ -23,96 +23,22 @@ The multivariate polynomials :math:`\Psi_{\alpha}(X)` are assembled as the tenso
 which are also orthonormal.
 
 
-PCE Class
-^^^^^^^^^^^
-
-The :class:`.PolynomialChaosSensitivity` class is imported using the following command:
-
->>> from UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion import PolynomialChaosExpansion
-
-Methods
-"""""""
-.. autoclass:: UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion
-    :members: fit, predict, validation_error, get_moments
-
-Attributes
-""""""""""
-.. autoattribute:: UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion.polynomial_basis
-.. autoattribute:: UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion.multi_index_set
-.. autoattribute:: UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion.coefficients
-.. autoattribute:: UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion.bias
-.. autoattribute:: UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion.outputs_number
-.. autoattribute:: UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion.design_matrix
-.. autoattribute:: UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion.experimental_design_input
-.. autoattribute:: UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion.experimental_design_output
-
-Examples
-""""""""""
-
-.. toctree::
-
-   Polynomial Chaos Expansion Examples <../auto_examples/surrogates/pce/index>
-
-
-Univariate Orthonormal Polynomials
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Different families of univariate polynomials can be used for the PCE method. These polynomials must always be orthonormal
-with respect to the arbitrary distribution. In UQpy, two families of polynomials are currently available that can be
-used from their corresponding classes, namely the :class:`.Legendre` and :class:`.Hermite` polynomial class, appropriate for
-data generated from a Uniform and a Normal distribution respectively.
-
 .. toctree::
    :maxdepth: 1
 
-    Polynomials <polynomials>
-
-
-Calculation of the PCE coefficients
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Several methods exist for the calculation of the PCE coefficients. In UQpy, three non-intrusive methods can be used,
-namely the Least Squares regression (:class:`.LeastSquaresRegression` class), the LASSO regression
-(:class:`.LassoRegression` class) and Ridge
-regression (:class:`.RidgeRegression` class) methods.
-
-.. toctree::
-   :maxdepth: 1
-
-    Regressions <regressions>
+    Polynomial Bases <pce/polynomial_bases>
+    Polynomials <pce/polynomials>
+    Regressions <pce/regressions>
+    Polynomial Chaos Expansion <pce/pce>
 
 
 
-Error Estimation
-^^^^^^^^^^^^^^^^
-
-The :meth:`.PolynomialChaosExpansion.validation_error` method can be used to estimate the accuracy of the PCE predictor.
-Here, we compute the generalization error  in the form of the relative mean squared error normalized by the model variance.
-The user must create an independent validation dataset :math:`[x_{val}, y_{val} = M(x_{val})]`
-(i.e. a set of inputs and outputs of the computational model). The validation error is computed as
-
-.. math:: \epsilon_{val} = \frac{N-1}{N} \Bigg[\frac{\sum_{i=1}^{N} (M(x_{val}^{(i)}) - M^{PCE}(x_{val}^{(i)}) )^{2} }{\sum_{i=1}^{N} (M(x_{val}^{(i)}) - \hat{\mu}_{Y_{val}})^{2}} \Bigg]
-
-where :math:`\hat{\mu}_{Y_{val}}` is the sample mean value of the validation dataset output.
-
-In case where the computational model is very expensive, the use of an alternative error measure is recommended,
-for example the cross-validation error which partitions the existing training dataset into subsets and computes the
-error as the average of the individual errors of each subset.
 
 
 
-Moment Estimation
-^^^^^^^^^^^^^^^^^
 
-The :meth:`.PolynomialChaosExpansion.get_moments` method can be used for the calculation of the first two moments of the PCE model directly from the PCE coefficients. This is possible due to the orthonormality of the polynomial basis.
 
-The first moment (mean value) is calculated as
 
-.. math:: \mu_{PCE} = \mathbb{E} [ \mathcal{M}^{PCE}(x)] = y_{0}
 
-where :math:`y_{0}` is the first PCE coefficient associated with the constant term.
 
-The second moment (variance) is calculated as
 
-.. math:: \sigma^{2}_{PCE} = \mathbb{E} [( \mathcal{M}^{PCE}(x) - \mu_{PCE} )^{2} ] = \sum_{i=1}^{p} y_{i}
-
-where :math:`p` is the number of polynomials (first PCE coefficient is excluded).
