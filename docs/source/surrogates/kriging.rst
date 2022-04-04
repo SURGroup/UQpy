@@ -50,11 +50,11 @@ Universal Kriging
 In universal Kriging, the regression model is assumed to take a general functional form. The :class:`.Kriging` class
 currenly supports two univeral Kriging models, the linear regression model given by:
 
-.. math:: \mathcal{F}(\beta, x) = \beta_0 = \sum_{i=1}^d \beta_i x_i
+.. math:: \mathcal{F}(\beta, x) = \beta_0 + \sum_{i=1}^d \beta_i x_i
 
 and the quadratic regression model given by:
 
-.. math:: \mathcal{F}(\beta, x) = \beta_0 = \sum_{i=1}^d \beta_i x_i + \sum_{i=1}^d \sum_{j=1}^d \beta_{ij} x_i x_j
+.. math:: \mathcal{F}(\beta, x) = \beta_0 + \sum_{i=1}^d \beta_i x_i + \sum_{i=1}^d \sum_{j=1}^d \beta_{ij} x_i x_j
 
 
 User-Defined Regression Model
