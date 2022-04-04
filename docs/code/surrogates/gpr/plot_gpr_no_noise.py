@@ -22,6 +22,9 @@ No noise
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
+
+from UQpy.surrogates.gaussian_process.regression_models.LinearRegression import LineaRegression
+
 warnings.filterwarnings('ignore')
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 from UQpy.utilities.FminCobyla import FminCobyla
@@ -96,7 +99,7 @@ kernel1 = RBF()
 
 # %%
 
-bounds_1 = [[10 ** (-3), 10 ** 3], [10 ** (-3), 10 ** 2]]
+bounds_1 = [[10 ** (-4), 10 ** 3], [10 ** (-3), 10 ** 2]]
 optimizer1 = MinimizeOptimizer(method='L-BFGS-B', bounds=bounds_1)
 
 # %% md
@@ -107,7 +110,7 @@ optimizer1 = MinimizeOptimizer(method='L-BFGS-B', bounds=bounds_1)
 # %%
 
 gpr1 = GaussianProcessRegression(kernel=kernel1, hyperparameters=[10 ** (-3), 10 ** (-2)], optimizer=optimizer1,
-                                 optimizations_number=10, noise=False)
+                                 optimizations_number=10, noise=False, regression_model=LineaRegression())
 
 # %% md
 #
