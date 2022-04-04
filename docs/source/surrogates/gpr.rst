@@ -1,34 +1,46 @@
 Gaussian Process Regression
 ---------------------------------------
 
-The :class:`.GaussianProcessRegression` class defines an approximate surrogate model or response surface which can be used to predict the model response and its uncertainty at points where the model has not been previously evaluated. Gaussian Process regressor gives the best unbiased linear predictor at the interpolated points. This class generates a model :math:`\hat{y}` that express the response as a realization of regression model and Gaussian random process as:
+The :class:`.GaussianProcessRegression` class defines an approximate surrogate model or response surface which can be used to predict the model response and its uncertainty at points where the model has not been previously evaluated. Gaussian Process regression utilizes the concepts of Bayesian modelling and identifies a suitable function, which fits the training data (:math:`X \in \mathbb{R}^{n \times d}, Y \in \mathbb{R}^{n, 1}`). First, it formulates a prior function over the output variable (:math:`y=g(x))`) as a Gaussian Process, which can be defined using a mean function and a kernel.
 
-.. math:: \hat{y}(x) = \mathcal{F}(\beta, x) + z(x).
+.. math:: p(y|x, \theta) = \mathcal{N}(m(x), K(x, x))
 
-The regression model (:math:`\mathcal{F}`) is given as a linear combination of ':math:`p`' chosen scalar basis functions as:
+The mean function :math:`m(x)` is given as a linear combination of ':math:`p`' chosen scalar basis functions as:
 
-.. math:: \mathcal{F}(\beta, x) = \beta_1 f_1(x) + \dots + \beta_p f_p(x) = f(x)^T \beta.
+.. math:: m(\beta, x) = \mathbb{E}[g(x)] = \beta_1 f_1(x) + \dots + \beta_p f_p(x) = f(x)^T \beta=f(x)^T \beta.
 
-The random process :math:`z(x)` has zero mean and its covariance is defined through the separable correlation function:
+The kernel :math:`k(x, s)` defines the covariance function as:
 
-.. math:: E\big[z(s)z(x)] = \mathcal{K}(l, s, x)
+.. math:: k(x, s) = \mathbb{E}[(g(x)-m(x))(g(s)-m(s))]
 
-where,
+and the Gaussian process can be written as,
 
-.. math:: \mathcal{K}(s, x; \theta) = \sigma^2 \prod_{i=1}^d \mathcal{R}_i(s_i, x_i; l_i),
+.. math:: y = g(x) \sim \mathcal{GP}(m(x, \beta), k(x,s, \theta)),
 
-and :math:`\theta=\{l_1, ..., l_d, \sigma \}` are a set of hyperparameters generally governing the correlation length (lengthscale, :math:`l_i`) and the process variance (:math:`\sigma`) of the model, determined by maximixing the log-likelihood function
+where, :math:`\beta` is the regression coefficient estimated by least square solution and :math:`\theta=\{l_1, ..., l_d, \sigma \}` are a set of hyperparameters generally governing the correlation length (lengthscale, :math:`l_i`) and the process variance (:math:`\sigma`) of the model, determined by maximixing the log-likelihood function
 
-.. math:: \text{log}(p(y|x, \theta)) = -\frac{1}{2}y^T \mathcal{K}^{-1} y - \frac{1}{2}\text{log}(|\mathcal{K}|) - \frac{n}{2}\text{log}(2\pi)
+.. math:: \text{log}(p(y|x, \theta)) = -\frac{1}{2}(Y-F\beta)^T K^{-1} (Y-F\beta) - \frac{1}{2}\text{log}(|K|) - \frac{n}{2}\text{log}(2\pi)
 
 
-The correlation is evaluated between a set of existing sample points :math:`s` and points :math:`x` in the domain of interest to form the correlation matrix :math:`R`, and the basis functions are evaluated at the sample points :math:`s` to form the matrix :math:`F`. Using these matrices, the regression coefficients, :math:`\beta`, is computed as
+The covariance is evaluated between a set of existing sample points :math:`X` in the domain of interest to form the covariance matrix :math:`K=K(X, X)`, and the basis functions are evaluated at the sample points :math:`X` to form the matrix :math:`F`. Using these matrices, the regression coefficients, :math:`\beta`, is computed as
 
 .. math:: (F^T K^{-1} F)\beta^* = F^T K^{-1} Y
 
-The final predictor function is then given by:
+The joint distribution between the training outputs (:math:`g(X)`) and test outputs (:math:`g(X^*)`) can be expressed as:
 
-.. math:: \hat{y}(x) = f(x)^T \beta^* + k(x)^T K^{-1}(Y - F\beta^*)
+.. math:: \begin{bmatrix} Y \\ g(X^*)\end{bmatrix} = \mathcal{N} \Bigg(\begin{bmatrix} m(X) \\ m(X^*)\end{bmatrix}, \begin{bmatrix} K(X, X) & K(X, X^*)\\ K(X^*, X) & K(X^*, X^*) \end{bmatrix}  \Bigg)
+
+The final predictor function is then given by the mean of the posterior distribution :math:`g(X*)|Y, X, X^*`, defined as:
+
+.. math:: \hat{g}(X^*) = f(X^*)^T \beta^* + K(X, X^*)^T K^{-1}(Y - F\beta^*)
+
+and the covariance matrix of the posterior distribution is expressed as:
+
+.. math:: cov(g(X^*)) = K(X^*, X^*) - K(X^*, X)K^{-1}K(X, X^*)
+
+In case of noisy output (i.e. :math:`y = g(x)+\epsilon`), where noise :math:`\epsilon` is a independent gaussian distribution with variance :math:`\sigma_n^2`. The :class:`.GaussianProcessRegression` class includes noise standard deviation in the hyperparameters (:math:`\theta=\{l_1, ..., l_d, \sigma, \sigma_n \}`) along with the lengthscales and process standard deviation, and identify them by maximixing log-likelihood function. The mean and covariance of the posterior distribution is modified by substituting :math:`K` as :math:`K+\sigma_n^2 I`:
+
+.. math:: \hat{g}(X^*) = f(X^*)^T \beta^* + K(X, X^*)^T (K+\sigma_n^2 I)^{-1}(Y - F\beta^*) \\ cov(g(X^*)) = K(X^*, X^*) - K(X^*, X)(K+\sigma_n^2 I)^{-1}K(X, X^*)
 
 Kernels
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
