@@ -4,14 +4,14 @@ import numpy as np
 
 class Kernel(ABC):
     """
-    Abstract base class of all Correlations. Serves as a template for creating new Kriging correlation
+    Abstract base class of all Kernels. Serves as a template for creating new Gaussian Process covariance
     functions.
     """
 
     @abstractmethod
     def c(self, x, s, params):
         """
-        Abstract method that needs to be implemented by the user when creating a new Correlation function.
+        Abstract method that needs to be implemented by the user when creating a new Covariance function.
         """
         pass
 

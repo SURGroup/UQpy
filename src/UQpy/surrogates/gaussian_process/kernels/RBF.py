@@ -2,7 +2,7 @@ from UQpy.surrogates.gaussian_process.kernels.baseclass.Kernel import *
 
 
 class RBF(Kernel):
-    def c(self, x, s, params, dt=False, dx=False):
+    def c(self, x, s, params):
         """
         This method compute the RBF kernel on sample points 'x' and 's'.
 
