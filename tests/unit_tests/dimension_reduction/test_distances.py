@@ -80,27 +80,3 @@ def test_spectral_distance():
     distance = np.round(SpectralDistance().compute_distance(GrassmannPoint(xi), GrassmannPoint(xj)), 6)
     assert distance == 1.356865
 
-
-def test_distances():
-    D1 = 6
-    r0 = 2  # rank sample 0
-    r1 = 3  # rank sample 1
-    r2 = 4  # rank sample 2
-    r3 = 3  # rank sample 2
-
-    np.random.seed(1111)  # For reproducibility.
-    # Solutions: original space.
-    Sol0 = np.dot(np.random.rand(D1, r0), np.random.rand(r0, D1))
-    Sol1 = np.dot(np.random.rand(D1, r1), np.random.rand(r1, D1))
-    Sol2 = np.dot(np.random.rand(D1, r2), np.random.rand(r2, D1))
-    Sol3 = np.dot(np.random.rand(D1, r3), np.random.rand(r3, D1))
-
-    # Creating a list of matrices.
-    matrices = [Sol0, Sol1, Sol2, Sol3]
-
-    manifold_projection = SvdProjection(matrices, p="max")
-
-    distance_metric = GeodesicDistance()
-    value = distance_metric.compute_distance(manifold_projection.psi[0], manifold_projection.psi[1])
-
-    assert value == 1.6024416339920522
