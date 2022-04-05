@@ -60,22 +60,22 @@ class SvdProjection(GrassmannProjection):
 
         ranks = list(map(int, ranks))
 
-        u = []  # initialize the left singular eigenvectors as a list.
+        phi = []  # initialize the left singular eigenvectors as a list.
         sigma = []  # initialize the singular values as a list.
-        v = []  # initialize the right singular eigenvectors as a list.
+        psi = []  # initialize the right singular eigenvectors as a list.
         for i in range(points_number):
             u, s, v = svd(data[i], int(ranks[i]))
-            u.append(GrassmannPoint(u))
+            phi.append(GrassmannPoint(u))
             sigma.append(np.diag(s))
-            v.append(GrassmannPoint(v))
+            psi.append(GrassmannPoint(v))
 
         self.input_points = data
-        self.u = u
+        self.u = phi
         """Left singular eigenvectors from the singular value decomposition of each sample in samples representing a 
         point on the Grassmann manifold. """
         self.sigma = sigma
         """Singular values from the singular value decomposition of each sample in samples."""
-        self.v = v
+        self.v = psi
         """Right singular eigenvector from the singular value decomposition of each sample in samples representing a 
         point on the Grassmann manifold."""
 

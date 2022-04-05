@@ -18,8 +18,16 @@ class GrassmannOperations:
                  p: Union[int, str] = "max", optimization_method: str = "GradientDescent",
                  distance: GrassmannianDistance = GeodesicDistance()):
         """
+        The GrassmannOperations class can used in two ways. In the first case, the used can invoke the initializer
+        by providing al the required data and subsequently calculate the kernel matrix, distance matrix, karcher mean
+        and frechet variance of the input Grassmann Points. The alternative is for the user to invoke each of the class
+        static methods and calculate only the required quantities, without having to instantiate a new object.
 
         :param grassmann_points: Points projected on the Grassmann manifold
+        :param kernel: Kernel to be used on order to evaluate the kernel matrix of the given Grassmann Points
+        :param p: Rank of the Grassmann projected points.
+        :param optimization_method: String that defines the optimization method.
+        :param distance: Distance metric to be used for the optimization.
         """
         self.grassmann_points = grassmann_points
         self.p = p
@@ -134,7 +142,7 @@ class GrassmannOperations:
         :param acceleration: Boolean flag used in combination with :code:`GradientDescent` optimization method which
          activates the Nesterov acceleration scheme
         :param grassmann_points: Point(s) on the Grassmann manifold.
-        :param optimization_method: The optimization method.
+        :param optimization_method: String that defines the optimization method.
         :param distance: Distance metric to be used for the optimization.
         """
         # Compute and test the number of input matrices necessary to compute the Karcher mean.

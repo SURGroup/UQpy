@@ -1,6 +1,8 @@
 Operations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. autoclass:: UQpy.dimension_reduction.grassmann_manifold.GrassmannOperations
+
 Exponential mapping
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -29,12 +31,12 @@ The exponential map, denoted as :math:`\mathcal{T}_{\mathbf{X}, \mathcal{G}(p,n)
 In order to use the method :meth:`.exp_map` one needs to import the :class:`.Grassmann` class from the :mod:`UQpy.dimension_reduction.grassmann_manifold` module
 
 >>> from UQpy.dimension_reduction.grassmann_manifold import GrassmannOperations
->>> Grassmann.exp_map()
 
+>>> GrassmannOperations.exp_map()
 
 Since :meth:`.exp_map` is a static method, it does not require instantiation of the class.
 
-.. automethod:: UQpy.dimension_reduction.grassmann_manifold.Grassmann.exp_map
+.. automethod:: UQpy.dimension_reduction.grassmann_manifold.GrassmannOperations.exp_map
 
 
 
@@ -49,13 +51,13 @@ The logarithmic map, denoted as :math:`\mathcal{G}(p, n) \rightarrow  \mathcal{T
 
 In order to use the method :meth:`.log_map` one needs to import the :class:`.Grassmann` class from the :mod:`UQpy.dimension_reduction.grassmann_manifold` module
 
->>> from UQpy.dimension_reduction.grassmann_manifold import Grassmann
+>>> from UQpy.dimension_reduction.grassmann_manifold import GrassmannOperations
 >>> GrassmannOperations.log_map()
 
 
 Since :meth:`.log_map` is a static method, it does not require instantiation of the class.
 
-.. automethod:: UQpy.dimension_reduction.grassmann_manifold.Grassmann.log_map
+.. automethod:: UQpy.dimension_reduction.grassmann_manifold.GrassmannOperations.log_map
 
 Karcher mean
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -73,7 +75,7 @@ In order to use the method :meth:`.karcher_mean` one needs to import the :class:
 
 Since :meth:`.karcher_mean` is a static method, it does not require instantiation of the class.
 
-.. automethod:: UQpy.dimension_reduction.grassmann_manifold.Grassmann.karcher_mean
+.. automethod:: UQpy.dimension_reduction.grassmann_manifold.GrassmannOperations.karcher_mean
 
 :mod:`UQpy` offers two methods for solving this optimization, the :class:`.GradientDescent` and the :class:`.StochasticGradientDescent`.
 
@@ -94,4 +96,4 @@ In order to use the method :meth:`.frechet_variance` one needs to import the :cl
 
 Since :meth:`.frechet_variance` is a static method, it does not require instantiation of the class.
 
-.. automethod:: UQpy.dimension_reduction.grassmann_manifold.Grassmann.frechet_variance
+.. automethod:: UQpy.dimension_reduction.grassmann_manifold.GrassmannOperations.frechet_variance
