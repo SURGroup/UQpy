@@ -6,13 +6,14 @@ from UQpy.distributions.collection.Normal import Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 import shutil
 
+import os
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+print(dir_path)
+print(os.getcwd())
+os.chdir(dir_path)
 
 def test_models():
-    import os
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    print(dir_path)
-    print(os.getcwd())
-    os.chdir(dir_path)
 
     data_ex1 = np.loadtxt('data_ex1a.txt')
 
