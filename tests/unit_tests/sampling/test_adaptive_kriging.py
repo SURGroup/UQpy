@@ -11,13 +11,13 @@ import shutil
 
 
 def test_akmcs_weighted_u():
-    from UQpy.surrogates.kriging.regression_models.LinearRegression import LineaRegression
+    from UQpy.surrogates.kriging.regression_models.LinearRegression import LinearRegression
     from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import ExponentialCorrelation
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=0)
     rmodel = RunModel(model_script='series.py', vec=False)
-    regression_model = LineaRegression()
+    regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
                 optimizer=MinimizeOptimizer('l-bfgs-b'),
@@ -36,13 +36,13 @@ def test_akmcs_weighted_u():
 
 
 def test_akmcs_u():
-    from UQpy.surrogates.kriging.regression_models.LinearRegression import LineaRegression
+    from UQpy.surrogates.kriging.regression_models.LinearRegression import LinearRegression
     from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import ExponentialCorrelation
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
     rmodel = RunModel(model_script='series.py', vec=False)
-    regression_model = LineaRegression()
+    regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
                 optimizer=MinimizeOptimizer('l-bfgs-b'),
@@ -61,13 +61,13 @@ def test_akmcs_u():
 
 
 def test_akmcs_expected_feasibility():
-    from UQpy.surrogates.kriging.regression_models.LinearRegression import LineaRegression
+    from UQpy.surrogates.kriging.regression_models.LinearRegression import LinearRegression
     from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import ExponentialCorrelation
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
     rmodel = RunModel(model_script='series.py', vec=False)
-    regression_model = LineaRegression()
+    regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
                 optimizations_number=10, correlation_model_parameters=[1, 1],
@@ -86,13 +86,13 @@ def test_akmcs_expected_feasibility():
 
 
 def test_akmcs_expected_improvement():
-    from UQpy.surrogates.kriging.regression_models.LinearRegression import LineaRegression
+    from UQpy.surrogates.kriging.regression_models.LinearRegression import LinearRegression
     from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import ExponentialCorrelation
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
     rmodel = RunModel(model_script='series.py', vec=False)
-    regression_model = LineaRegression()
+    regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
                 optimizations_number=10, correlation_model_parameters=[1, 1],
@@ -111,13 +111,13 @@ def test_akmcs_expected_improvement():
 
 
 def test_akmcs_expected_improvement_global_fit():
-    from UQpy.surrogates.kriging.regression_models.LinearRegression import LineaRegression
+    from UQpy.surrogates.kriging.regression_models.LinearRegression import LinearRegression
     from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import ExponentialCorrelation
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
     rmodel = RunModel(model_script='series.py', vec=False)
-    regression_model = LineaRegression()
+    regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
                 optimizations_number=10, correlation_model_parameters=[1, 1],
@@ -135,13 +135,13 @@ def test_akmcs_expected_improvement_global_fit():
     shutil.rmtree(rmodel.model_dir)
 
 def test_akmcs_samples_error():
-    from UQpy.surrogates.kriging.regression_models.LinearRegression import LineaRegression
+    from UQpy.surrogates.kriging.regression_models.LinearRegression import LinearRegression
     from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import ExponentialCorrelation
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=0)
     rmodel = RunModel(model_script='series.py', vec=False)
-    regression_model = LineaRegression()
+    regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
                 optimizer=MinimizeOptimizer('l-bfgs-b'),
@@ -156,13 +156,13 @@ def test_akmcs_samples_error():
     shutil.rmtree(rmodel.model_dir)
 
 def test_akmcs_u_run_from_init():
-    from UQpy.surrogates.kriging.regression_models.LinearRegression import LineaRegression
+    from UQpy.surrogates.kriging.regression_models.LinearRegression import LinearRegression
     from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import ExponentialCorrelation
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
     rmodel = RunModel(model_script='series.py', vec=False)
-    regression_model = LineaRegression()
+    regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
                 optimizer=MinimizeOptimizer('l-bfgs-b'),
