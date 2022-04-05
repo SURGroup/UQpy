@@ -20,7 +20,14 @@ class SvdProjection(GrassmannProjection):
 
         :param data: Raw data given as a list of matrices.
         :param p: Number of independent p-planes of each Grassmann point.
-        :param tol: Tolerance on the SVD decomposition
+            Options:
+                :class:`int`: Integer specifying the number of p-planes
+
+                :class:`str`:
+                    `"max"`: Set p equal to the maximum rank of all provided data matrices
+
+                    `"min"`: Set p equal to the minimum rank of all provided data matrices
+        :param tol: Tolerance on the SVD
         """
         self.data = data
         self.tolerance = tol
@@ -70,12 +77,12 @@ class SvdProjection(GrassmannProjection):
             v.append(GrassmannPoint(v))
 
         self.input_points = data
-        self.u = u
+        self.u:list[GrassmannPoint] = u
         """Left singular eigenvectors from the singular value decomposition of each sample in samples representing a 
         point on the Grassmann manifold. """
-        self.sigma = sigma
+        self.sigma:np.ndarray = sigma
         """Singular values from the singular value decomposition of each sample in samples."""
-        self.v = v
+        self.v:list[GrassmannPoint] = v
         """Right singular eigenvector from the singular value decomposition of each sample in samples representing a 
         point on the Grassmann manifold."""
 

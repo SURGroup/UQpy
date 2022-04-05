@@ -5,5 +5,5 @@ from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 
 class GrassmannProjection(ABC):
     """
-    The parent class to all classes used to represent data on the Grassmann manifold.
+    The parent class to all classes used to project data onto the Grassmann manifold.
     """
