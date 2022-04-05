@@ -11,7 +11,7 @@ from UQpy.reliability.SubsetSimulation import SubsetSimulation
 
 def test_subset():  # Define the structural problem
     n_variables = 2
-    model = 'pfn.py'
+    model = 'pfn5.py'
     Example = 'Example1'
 
     omega = 6
@@ -50,7 +50,6 @@ def test_subset():  # Define the structural problem
 
     print(SuS_object.failure_probability)
     assert SuS_object.failure_probability == 3.1200000000000006e-05
-    shutil.rmtree(RunModelObject_SuS.model_dir)
 
 
 
