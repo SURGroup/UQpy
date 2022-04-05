@@ -72,7 +72,7 @@ steps:
 #      displayName: Cache pip packages
 
   - script: |
-      pip install -r requirements.txt --install-option="--jobs=6"
+      pip install -r requirements.txt
     displayName: Install project dependencies
 
   - script: |
