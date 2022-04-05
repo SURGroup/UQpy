@@ -15,7 +15,8 @@ class ConstraintsGPR(ABC):
         """
         pass
 
-    @abstractmethod
+
+    @staticmethod
     def constraints(theta_, kwargs):
         """
         A static method, which take hyperaparameters and constraints argument and evaluate constraints value.

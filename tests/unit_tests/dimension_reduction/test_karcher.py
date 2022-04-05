@@ -1,6 +1,7 @@
 import copy
 
 import numpy as np
+import numpy.random
 from beartype import beartype
 
 from UQpy.utilities.distances.grassmannian_distances import GeodesicDistance
@@ -8,15 +9,16 @@ from UQpy.utilities.GrassmannPoint import GrassmannPoint
 from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
 from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
 import sys
-
+from numpy.random import RandomState
 
 def test_karcher():
-    np.random.seed(1111)
+    numpy.random.seed(0)
+    rnd = RandomState(0)
     # Solutions: original space.
-    sol0 = np.dot(np.random.rand(6, 2), np.random.rand(2, 6))
-    sol1 = np.dot(np.random.rand(6, 3), np.random.rand(3, 6))
-    sol2 = np.dot(np.random.rand(6, 4), np.random.rand(4, 6))
-    sol3 = np.dot(np.random.rand(6, 3), np.random.rand(3, 6))
+    sol0 = np.dot(np.random.rand(6, 2), rnd.rand(2, 6))
+    sol1 = np.dot(np.random.rand(6, 3), rnd.rand(3, 6))
+    sol2 = np.dot(np.random.rand(6, 4), rnd.rand(4, 6))
+    sol3 = np.dot(np.random.rand(6, 3), rnd.rand(3, 6))
 
     # Creating a list of matrices.
     matrices = [sol0, sol1, sol2, sol3]
@@ -31,16 +33,17 @@ def test_karcher():
                                       optimization_method="GradientDescent",
                                       distance=GeodesicDistance())
 
-    assert round(psi_mean.data[0, 0], 9) == -0.398422602
-    assert round(phi_mean.data[0, 0], 9) == -0.382608986
+    assert round(psi_mean.data[0, 0], 9) == -0.487551114
+    assert round(phi_mean.data[0, 0], 9) == -0.304366788
 
 def test_karcher_stochastic():
     np.random.seed(1111)
+    rnd = RandomState(0)
     # Solutions: original space.
-    sol0 = np.dot(np.random.rand(6, 2), np.random.rand(2, 6))
-    sol1 = np.dot(np.random.rand(6, 3), np.random.rand(3, 6))
-    sol2 = np.dot(np.random.rand(6, 4), np.random.rand(4, 6))
-    sol3 = np.dot(np.random.rand(6, 3), np.random.rand(3, 6))
+    sol0 = np.dot(np.random.rand(6, 2), rnd.rand(2, 6))
+    sol1 = np.dot(np.random.rand(6, 3), rnd.rand(3, 6))
+    sol2 = np.dot(np.random.rand(6, 4), rnd.rand(4, 6))
+    sol3 = np.dot(np.random.rand(6, 3), rnd.rand(3, 6))
 
     # Creating a list of matrices.
     matrices = [sol0, sol1, sol2, sol3]
@@ -55,5 +58,5 @@ def test_karcher_stochastic():
                                       optimization_method="StochasticGradientDescent",
                                       distance=GeodesicDistance())
 
-    assert round(psi_mean.data[0, 0], 9) == -0.386896317
-    assert round(phi_mean.data[0, 0], 9) == -0.422693823
+    assert round(psi_mean.data[0, 0], 9) == -0.302639781
+    assert round(phi_mean.data[0, 0], 9) == -0.406723204

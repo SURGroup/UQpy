@@ -39,10 +39,10 @@ def test_rss_simple_voronoi():
                                   samples_per_iteration=2,
                                   refinement_algorithm=algorithm,
                                   random_state=2)
-    assert y.samples[16, 0] == 0.3637932367281488
-    assert y.samples[16, 1] == 0.4676253860574614
-    assert y.samples[17, 0] == 0.4245856389630922
-    assert y.samples[17, 1] == 0.21730082648922827
+    assert np.round(y.samples[16, 0], 6) == 0.363793
+    assert np.round(y.samples[16, 1], 6) == 0.467625
+    assert np.round(y.samples[17, 0], 6) == 0.424586
+    assert np.round(y.samples[17, 1], 6) == 0.217301
 
 
 def test_rect_rss():

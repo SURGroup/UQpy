@@ -12,7 +12,7 @@ from beartype.vale import Is
 from UQpy.utilities.Utilities import process_random_state
 from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger, NumpyFloatArray
 from UQpy.distributions import *
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 import numpy as np
 from scipy.stats import randint
 
@@ -21,7 +21,7 @@ class MorrisSensitivity:
     @beartype
     def __init__(
             self,
-            runmodel_object: RunModel,
+            runmodel_object: RunModel_New,
             distributions: Union[JointIndependent, Union[list, tuple]],
             n_levels: Annotated[int, Is[lambda x: x >= 3]],
             delta: Union[float, int] = None,
@@ -59,7 +59,7 @@ class MorrisSensitivity:
         if any(icdf is None for icdf in self.icdfs):
             raise ValueError("At least one of the distributions provided has a None icdf")
         self.dimension = len(self.icdfs)
-        if self.dimension != len(self.runmodel_object.var_names):
+        if self.dimension != len(self.runmodel_object.model.var_names):
             raise ValueError("The number of distributions provided does not match the number of RunModel variables")
 
         self.n_levels = n_levels

@@ -1,3 +1,4 @@
+from UQpy.run_model import PythonModel, RunModel_New
 from UQpy.distributions import Normal
 from UQpy.reliability import TaylorSeries
 from UQpy.transformations import Nataf
@@ -5,7 +6,6 @@ import glob
 import shutil
 import numpy as np
 import pytest
-from UQpy.run_model.RunModel import RunModel
 import os
 
 path = os.path.abspath(os.path.dirname(__file__))
@@ -44,7 +44,8 @@ def test_derivatives_3_no_nataf():
 
 @pytest.fixture
 def setup():
-    h_func = RunModel(model_script='pfn.py', model_object_name='model_i', vec=False, delete_files=True)
+    model = PythonModel(model_script='pfn.py', model_object_name='model_i', delete_files=True)
+    h_func = RunModel_New(model=model)
     yield h_func
     # shutil.rmtree(h_func.model_dir)
 
@@ -79,7 +80,8 @@ def test_derivatives_5_run_model(setup):
 
 
 def test_derivatives_6_second():
-    h_func = RunModel(model_script='pfn.py', model_object_name='model_j', vec=False, delete_files=True)
+    model = PythonModel(model_script='pfn.py', model_object_name='model_j', delete_files=True)
+    h_func = RunModel_New(model=model)
     dist1 = Normal(loc=500, scale=100)
     dist2 = Normal(loc=1000, scale=100)
     point_u = np.array([1.73673009, 0.16383283])
@@ -87,7 +89,6 @@ def test_derivatives_6_second():
     ntf_obj = Nataf(distributions=[dist1, dist2], corr_x=rx)
     hessian = TaylorSeries._derivatives(point_u=point_u, runmodel_object=h_func,
                                         nataf_object=ntf_obj, order='second')
-    shutil.rmtree(h_func.model_dir)
     np.testing.assert_allclose(hessian, [[-0.00720754, 0.00477726], [0.00477726, -0.00316643]], rtol=1e-04)
 
 

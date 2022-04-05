@@ -77,7 +77,7 @@ steps:
 
   - script: |
       pip install pylint
-      pylint --ignored-modules=numpy,scipy,matplotlib,sklearn --disable=E0202,E1136,E1120,E0401 --disable=R,C,W  src/UQpy
+      pylint --ignored-modules=numpy,scipy,matplotlib,sklearn --disable=E0202,E1136,E1120,E0401,E0213 --disable=R,C,W  src/UQpy
     displayName: "Running Pylint"
 
   - script: |

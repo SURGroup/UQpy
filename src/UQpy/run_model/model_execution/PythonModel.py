@@ -9,8 +9,11 @@ from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 
 class PythonModel:
 
-    def __init__(self, model_script, model_object_name, delete_files=False,
-                 resume=False, **model_object_name_kwargs):
+    def __init__(self, model_script, model_object_name, var_names=None, delete_files=False,
+                 **model_object_name_kwargs):
+        if var_names is None:
+            var_names = []
+        self.var_names = var_names
         self._model_output = None
         self.logger = logging.getLogger(__name__)
 
