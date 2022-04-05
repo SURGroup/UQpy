@@ -1,5 +1,5 @@
+from UQpy.run_model import PythonModel, RunModel_New
 from UQpy.inference import *
-from UQpy.run_model.RunModel import RunModel
 from UQpy.inference.inference_models.ComputationalModel import ComputationalModel
 from UQpy.sampling.mcmc import MetropolisHastings
 from UQpy.distributions.collection.Normal import Normal
@@ -16,11 +16,15 @@ def test_models():
 
     data_ex1 = np.loadtxt('data_ex1a.txt')
 
-    runmodel4 = RunModel(model_script='pfn.py', model_object_name='model_linear', vec=False, var_names=['theta_0'])
-    runmodel5 = RunModel(model_script='pfn1.py', model_object_name='model_quadratic', vec=False,
-                         var_names=['theta_0', 'theta_1'])
-    runmodel6 = RunModel(model_script='pfn2.py', model_object_name='model_cubic', vec=False,
+    model = PythonModel(model_script='pfn.py', model_object_name='model_linear', var_names=['theta_0'])
+    runmodel4 = RunModel_New(model=model)
+
+    model1 = PythonModel(model_script='pfn1.py', model_object_name='model_quadratic', var_names=['theta_0', 'theta_1'])
+    runmodel5 = RunModel_New(model=model1)
+
+    model2 = PythonModel(model_script='pfn2.py', model_object_name='model_cubic',
                          var_names=['theta_0', 'theta_1', 'theta_2'])
+    runmodel6 = RunModel_New(model=model1)
 
     prior1 = Normal()
     prior2 = JointIndependent(marginals=[Normal(), Normal()])
