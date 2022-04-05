@@ -2,6 +2,7 @@ import shutil
 
 from beartype.roar import BeartypeCallHintPepParamException
 
+from UQpy.run_model import ThirdPartyModel, RunModel_New
 from UQpy.sampling import MonteCarloSampling
 from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Normal
@@ -16,6 +17,7 @@ verbose_parameter = True
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 os.chdir(dir_path)
+
 
 def test_div_zero():
     print(os.getcwd())
@@ -138,13 +140,14 @@ def test_python_parallel_workflow_function():
 
 def test_third_party_serial():
     names = ['var1', 'var11', 'var111']
-    m = RunModel(ntasks=1, model_script='python_model_sum_scalar.py',
-                 input_template='sum_scalar.py', var_names=names, model_object_name="matlab",
-                 output_script='process_third_party_output.py', output_object_name='read_output',
-                 resume=False, fmt="{:>10.4f}", delete_files=True)
+    model = ThirdPartyModel(model_script='python_model_sum_scalar.py',
+                            input_template='sum_scalar.py', var_names=names, model_object_name="matlab",
+                            output_script='process_third_party_output.py', output_object_name='read_output',
+                            fmt="{:>10.4f}", delete_files=True)
+    m = RunModel_New(model=model)
     m.run(x_mcs.samples)
     assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
-    shutil.rmtree(m.model_dir)
+    shutil.rmtree(m.model.model_dir)
 
 
 def test_third_party_serial_output_class():
@@ -170,9 +173,11 @@ def test_third_party_serial_no_output_class():
 
 def test_third_party_serial_no_output_function():
     names = ['var1', 'var11', 'var111']
-    m = RunModel(ntasks=1, model_script='python_model_sum_scalar.py', input_template='sum_scalar.py', var_names=names,
-                 model_object_name="matlab", output_script='process_third_party_output.py', resume=False,
-                 fmt="{:>10.4f}", verbose=verbose_parameter, delete_files=True)
+    model = ThirdPartyModel(model_script='python_model_sum_scalar.py',
+                            input_template='sum_scalar.py', var_names=names, model_object_name="matlab",
+                            output_script='process_third_party_output.py', output_object_name='read_output',
+                            fmt="{:>10.4f}", delete_files=True)
+    m = RunModel_New(model=model)
     m.run(x_mcs.samples)
     assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
     shutil.rmtree(m.model_dir)
