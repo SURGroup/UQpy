@@ -4,14 +4,14 @@ from beartype.roar import BeartypeCallHintPepParamException
 
 from UQpy.surrogates.kriging.Kriging import Kriging
 import numpy as np
-from UQpy.surrogates.kriging.regression_models import LineaRegression, ConstantRegression
+from UQpy.surrogates.kriging.regression_models import LinearRegression, ConstantRegression
 from UQpy.surrogates.kriging.correlation_models import GaussianCorrelation
 
 
 samples = np.linspace(0, 5, 20).reshape(-1, 1)
 values = np.cos(samples)
 optimizer = MinimizeOptimizer(method="L-BFGS-B")
-krig = Kriging(regression_model=LineaRegression(), correlation_model=GaussianCorrelation(), optimizer=optimizer,
+krig = Kriging(regression_model=LinearRegression(), correlation_model=GaussianCorrelation(), optimizer=optimizer,
                correlation_model_parameters=[0.14], optimize=False, random_state=1)
 krig.fit(samples=samples, values=values, correlation_model_parameters=[0.3])
 
@@ -24,10 +24,10 @@ krig2.fit(samples=samples, values=values)
 
 
 # Using the in-built linear regression model as a function
-linear_regression_model = Kriging(regression_model=LineaRegression(), correlation_model=GaussianCorrelation(), optimizer=optimizer,
+linear_regression_model = Kriging(regression_model=LinearRegression(), correlation_model=GaussianCorrelation(), optimizer=optimizer,
                                   correlation_model_parameters=[1]).regression_model
 optimizer = MinimizeOptimizer(method="L-BFGS-B")
-gaussian_corrleation_model = Kriging(regression_model=LineaRegression(), correlation_model=GaussianCorrelation(), optimizer=optimizer,
+gaussian_corrleation_model = Kriging(regression_model=LinearRegression(), correlation_model=GaussianCorrelation(), optimizer=optimizer,
                                      correlation_model_parameters=[1]).correlation_model
 
 optimizer = MinimizeOptimizer(method="L-BFGS-B")
@@ -68,12 +68,12 @@ def test_jacobian1():
 
 
 def test_regression_models():
-    from UQpy.surrogates.kriging.regression_models import ConstantRegression, LineaRegression, QuadraticRegression
+    from UQpy.surrogates.kriging.regression_models import ConstantRegression, LinearRegression, QuadraticRegression
     krig.regression_model = ConstantRegression()
     tmp = krig.regression_model.r([[0], [1]])
     tmp_test1 = (tmp[0] == np.array([[1.], [1.]])).all() and (tmp[1] == np.array([[[0.]], [[0.]]])).all()
 
-    krig.regression_model = LineaRegression()
+    krig.regression_model = LinearRegression()
     tmp = krig.regression_model.r([[0], [1]])
     tmp_test2 = (tmp[0] == (np.array([[1., 0.], [1., 1.]]))).all() and \
                 (tmp[1] == np.array([[[0., 1.]], [[0., 1.]]])).all()
@@ -152,7 +152,7 @@ def test_wrong_correlation_model():
         Raises an error if corr_model is not callable or a string of an in-built model.
     """
     with pytest.raises(BeartypeCallHintPepParamException):
-        Kriging(regression_model=LineaRegression(), correlation_model='A', correlation_model_parameters=[1])
+        Kriging(regression_model=LinearRegression(), correlation_model='A', correlation_model_parameters=[1])
 
 
 def test_missing_correlation_model_parameters():
@@ -160,7 +160,7 @@ def test_missing_correlation_model_parameters():
         Raises an error if corr_model_params is not defined.
     """
     with pytest.raises(TypeError):
-        Kriging(regression_model=LineaRegression(), correlation_model=GaussianCorrelation(), bounds=[[0.01, 5]],
+        Kriging(regression_model=LinearRegression(), correlation_model=GaussianCorrelation(), bounds=[[0.01, 5]],
                 optimizations_number=100, random_state=1)
 
 
@@ -169,7 +169,7 @@ def test_optimizer():
         Raises an error if corr_model_params is not defined.
     """
     with pytest.raises(ValueError):
-        Kriging(regression_model=LineaRegression(), correlation_model=GaussianCorrelation(),
+        Kriging(regression_model=LinearRegression(), correlation_model=GaussianCorrelation(),
                 correlation_model_parameters=[1], optimizer='A')
 
 
@@ -178,7 +178,7 @@ def test_random_state():
         Raises an error if type of random_state is not correct.
     """
     with pytest.raises(BeartypeCallHintPepParamException):
-        Kriging(regression_model=LineaRegression(), correlation_model=GaussianCorrelation(),
+        Kriging(regression_model=LinearRegression(), correlation_model=GaussianCorrelation(),
                 correlation_model_parameters=[1], random_state='A')
 
 

@@ -13,18 +13,18 @@ from UQpy.surrogates.gaussian_process.regression_models import LinearRegression,
 from UQpy.surrogates.gaussian_process.kernels import RBF, Matern
 #
 #
-samples = np.linspace(0, 5, 20).reshape(-1, 1)
-values = np.cos(samples)
-optimizer = MinimizeOptimizer(method="L-BFGS-B")
-gpr = GaussianProcessRegression(kernel=RBF(), optimizer=optimizer,
-                                hyperparameters=[0.14], optimize=False, random_state=1)
-gpr.fit(samples=samples, values=values, hyperparameters=[0.3])
-
-optimizer = MinimizeOptimizer(method="L-BFGS-B")
-gpr2 = GaussianProcessRegression(kernel=Matern(nu=0.5), optimizer=optimizer,
-                                 hyperparameters=[0.3], bounds=[[0.01, 5]], optimize=False,
-                                 normalize=False, random_state=2)
-gpr2.fit(samples=samples, values=values)
+# samples = np.linspace(0, 5, 20).reshape(-1, 1)
+# values = np.cos(samples)
+# optimizer = MinimizeOptimizer(method="L-BFGS-B")
+# gpr = GaussianProcessRegression(kernel=RBF(), optimizer=optimizer,
+#                                 hyperparameters=[0.14], random_state=1)
+# gpr.fit(samples=samples, values=values, hyperparameters=[0.3])
+#
+# optimizer = MinimizeOptimizer(method="L-BFGS-B")
+# gpr2 = GaussianProcessRegression(kernel=Matern(nu=0.5), optimizer=optimizer,
+#                                  hyperparameters=[0.3], bounds=[[0.01, 5]], optimize=False,
+#                                  normalize=False, random_state=2)
+# gpr2.fit(samples=samples, values=values)
 
 
 # # Using the in-built linear regression model as a function
