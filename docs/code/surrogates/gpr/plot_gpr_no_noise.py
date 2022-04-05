@@ -23,7 +23,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 
-from UQpy.surrogates.gaussian_process.regression_models.LinearRegression import LineaRegression
+from UQpy.surrogates.gaussian_process.regression_models.LinearRegression import LinearRegression
 
 warnings.filterwarnings('ignore')
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
@@ -110,7 +110,7 @@ optimizer1 = MinimizeOptimizer(method='L-BFGS-B', bounds=bounds_1)
 # %%
 
 gpr1 = GaussianProcessRegression(kernel=kernel1, hyperparameters=[10 ** (-3), 10 ** (-2)], optimizer=optimizer1,
-                                 optimizations_number=10, noise=False, regression_model=LineaRegression())
+                                 optimizations_number=10, noise=False, regression_model=LinearRegression())
 
 # %% md
 #

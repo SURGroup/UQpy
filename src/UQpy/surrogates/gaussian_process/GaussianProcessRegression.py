@@ -269,15 +269,17 @@ class GaussianProcessRegression(Surrogate):
             K = self.kernel.c(x=s_, s=s_, params=kernelparameters) + \
                 np.eye(self.samples.shape[0]) * (noise_std ** 2)
             cc = np.linalg.cholesky(K + 1e-10 * np.eye(self.samples.shape[0]))
-            f_dash = np.linalg.solve(cc, self.F)
-            y_dash = np.linalg.solve(cc, y_)
-            q_, g_ = np.linalg.qr(f_dash)  # Eq: 3.11, DACE
-            # Check if F is a full rank matrix
-            if np.linalg.matrix_rank(g_) != min(np.size(self.F, 0), np.size(self.F, 1)):
-                raise NotImplementedError("Chosen regression functions are not sufficiently linearly independent")
-            # Design parameters (beta: regression coefficient)
-            beta = np.linalg.solve(g_, np.matmul(np.transpose(q_), y_dash))
-            mu = np.einsum("ij,jk->ik", self.F, beta)
+            mu = 0
+            if self.regression_model is not None:
+                f_dash = np.linalg.solve(cc, self.F)
+                y_dash = np.linalg.solve(cc, y_)
+                q_, g_ = np.linalg.qr(f_dash)  # Eq: 3.11, DACE
+                # Check if F is a full rank matrix
+                if np.linalg.matrix_rank(g_) != min(np.size(self.F, 0), np.size(self.F, 1)):
+                    raise NotImplementedError("Chosen regression functions are not sufficiently linearly independent")
+                # Design parameters (beta: regression coefficient)
+                beta = np.linalg.solve(g_, np.matmul(np.transpose(q_), y_dash))
+                mu = np.einsum("ij,jk->ik", self.F, beta)
             alpha_ = cho_solve((cc, True), y_-mu)
         else:
             cc, alpha_ = self.cc, self.alpha_
