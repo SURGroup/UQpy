@@ -15,7 +15,9 @@ x_mcs = MonteCarloSampling(distributions=[d, d, d], nsamples=5, random_state=123
 x_mcs_new = MonteCarloSampling(distributions=[d, d, d], nsamples=5, random_state=2345)
 verbose_parameter = True
 
-os.chdir('./tests/unit_tests/run_model')
+dir_path = os.path.dirname(os.path.realpath(__file__))
+os.chdir(dir_path)
+print("Current folder:" + os.getcwd())
 
 
 def test_div_zero():
