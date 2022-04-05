@@ -8,13 +8,14 @@ import shutil
 
 import os
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-print(dir_path)
-print(os.getcwd())
-os.chdir(dir_path)
+# dir_path = os.path.dirname(os.path.realpath(__file__))
+# print(dir_path)
+# print(os.getcwd())
+# os.chdir(dir_path)
+os.chdir("~/test/unit_tests/inference")
+
 
 def test_models():
-
     data_ex1 = np.loadtxt('data_ex1a.txt')
 
     model = PythonModel(model_script='pfn.py', model_object_name='model_linear', var_names=['theta_0'])
@@ -25,7 +26,7 @@ def test_models():
 
     model2 = PythonModel(model_script='pfn2.py', model_object_name='model_cubic',
                          var_names=['theta_0', 'theta_1', 'theta_2'])
-    runmodel6 = RunModel_New(model=model1)
+    runmodel6 = RunModel_New(model=model2)
 
     prior1 = Normal()
     prior2 = JointIndependent(marginals=[Normal(), Normal()])
@@ -74,6 +75,6 @@ def test_models():
     assert selection.candidate_models[1].name == 'model_cubic'
     assert selection.candidate_models[2].name == 'model_linear'
 
-    shutil.rmtree(runmodel4.model_dir)
-    shutil.rmtree(runmodel5.model_dir)
-    shutil.rmtree(runmodel6.model_dir)
+    shutil.rmtree(runmodel4.model.model_dir)
+    shutil.rmtree(runmodel5.model.model_dir)
+    shutil.rmtree(runmodel6.model.model_dir)
