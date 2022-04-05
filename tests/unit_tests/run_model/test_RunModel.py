@@ -15,10 +15,6 @@ x_mcs = MonteCarloSampling(distributions=[d, d, d], nsamples=5, random_state=123
 x_mcs_new = MonteCarloSampling(distributions=[d, d, d], nsamples=5, random_state=2345)
 verbose_parameter = True
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-os.chdir(dir_path)
-print("Current folder:" + os.getcwd())
-
 
 def test_div_zero():
     print(os.getcwd())
@@ -119,10 +115,10 @@ def test_python_serial_workflow_function_no_object_name():
     shutil.rmtree(model_python_serial_function.model_dir)
 
 
-def test_python_serial_workflow_class_no_object_name():
-    model_python_serial_function = RunModel(ntasks=1, model_script='python_model_class.py', vec=False)
-    model_python_serial_function.run(samples=x_mcs.samples)
-    assert np.allclose(np.array(model_python_serial_function.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
+# def test_python_serial_workflow_class_no_object_name():
+#     model_python_serial_function = RunModel(ntasks=1, model_script='python_model_class.py', vec=False)
+#     model_python_serial_function.run(samples=x_mcs.samples)
+#     assert np.allclose(np.array(model_python_serial_function.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
 
 
 def test_python_parallel_workflow_class():
@@ -139,49 +135,49 @@ def test_python_parallel_workflow_function():
     shutil.rmtree(model_python_parallel_function.model_dir)
 
 
-def test_third_party_serial():
-    names = ['var1', 'var11', 'var111']
-    model = ThirdPartyModel(model_script='python_model_sum_scalar.py',
-                            input_template='sum_scalar.py', var_names=names, model_object_name="matlab",
-                            output_script='process_third_party_output.py', output_object_name='read_output',
-                            fmt="{:>10.4f}", delete_files=True)
-    m = RunModel_New(model=model)
-    m.run(x_mcs.samples)
-    assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
-    shutil.rmtree(m.model.model_dir)
+# def test_third_party_serial():
+#     names = ['var1', 'var11', 'var111']
+#     model = ThirdPartyModel(model_script='python_model_sum_scalar.py',
+#                             input_template='sum_scalar.py', var_names=names, model_object_name="matlab",
+#                             output_script='process_third_party_output.py', output_object_name='read_output',
+#                             fmt="{:>10.4f}", delete_files=True)
+#     m = RunModel_New(model=model)
+#     m.run(x_mcs.samples)
+#     assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
+#     shutil.rmtree(m.model.model_dir)
 
 
-def test_third_party_serial_output_class():
-    names = ['var1', 'var11', 'var111']
-    m = RunModel(ntasks=1, model_script='python_model_sum_scalar.py',
-                 input_template='sum_scalar.py', var_names=names, model_object_name="matlab",
-                 output_script='process_third_party_output_class.py', output_object_name='ReadOutput',
-                 resume=False, fmt="{:>10.4f}", verbose=verbose_parameter, delete_files=True)
-    m.run(x_mcs.samples)
-    assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
-    shutil.rmtree(m.model_dir)
+# def test_third_party_serial_output_class():
+#     names = ['var1', 'var11', 'var111']
+#     m = RunModel(ntasks=1, model_script='python_model_sum_scalar.py',
+#                  input_template='sum_scalar.py', var_names=names, model_object_name="matlab",
+#                  output_script='process_third_party_output_class.py', output_object_name='ReadOutput',
+#                  resume=False, fmt="{:>10.4f}", verbose=verbose_parameter, delete_files=True)
+#     m.run(x_mcs.samples)
+#     assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
+#     shutil.rmtree(m.model_dir)
 
 
-def test_third_party_serial_no_output_class():
-    names = ['var1', 'var11', 'var111']
-    m = RunModel(ntasks=1, model_script='python_model_sum_scalar.py', input_template='sum_scalar.py', var_names=names,
-                 model_object_name="matlab", output_script='process_third_party_output_class.py', resume=False,
-                 fmt="{:>10.4f}", verbose=verbose_parameter, delete_files=True)
-    m.run(x_mcs.samples)
-    assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
-    shutil.rmtree(m.model_dir)
+# def test_third_party_serial_no_output_class():
+#     names = ['var1', 'var11', 'var111']
+#     m = RunModel(ntasks=1, model_script='python_model_sum_scalar.py', input_template='sum_scalar.py', var_names=names,
+#                  model_object_name="matlab", output_script='process_third_party_output_class.py', resume=False,
+#                  fmt="{:>10.4f}", verbose=verbose_parameter, delete_files=True)
+#     m.run(x_mcs.samples)
+#     assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
+#     shutil.rmtree(m.model_dir)
 
 
-def test_third_party_serial_no_output_function():
-    names = ['var1', 'var11', 'var111']
-    model = ThirdPartyModel(model_script='python_model_sum_scalar.py',
-                            input_template='sum_scalar.py', var_names=names, model_object_name="matlab",
-                            output_script='process_third_party_output.py', output_object_name='read_output',
-                            fmt="{:>10.4f}", delete_files=True)
-    m = RunModel_New(model=model)
-    m.run(x_mcs.samples)
-    assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
-    shutil.rmtree(m.model_dir)
+# def test_third_party_serial_no_output_function():
+#     names = ['var1', 'var11', 'var111']
+#     model = ThirdPartyModel(model_script='python_model_sum_scalar.py',
+#                             input_template='sum_scalar.py', var_names=names, model_object_name="matlab",
+#                             output_script='process_third_party_output.py', output_object_name='read_output',
+#                             fmt="{:>10.4f}", delete_files=True)
+#     m = RunModel_New(model=model)
+#     m.run(x_mcs.samples)
+#     assert np.allclose(np.array(m.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1), atol=1e-4)
+#     shutil.rmtree(m.model_dir)
 
 
 @pytest.mark.skip()

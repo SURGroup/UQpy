@@ -8,6 +8,12 @@ import shutil
 
 
 def test_models():
+    import os
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    print(dir_path)
+    print(os.getcwd())
+    os.chdir(dir_path)
+
     data_ex1 = np.loadtxt('data_ex1a.txt')
 
     runmodel4 = RunModel(model_script='pfn.py', model_object_name='model_linear', vec=False, var_names=['theta_0'])
