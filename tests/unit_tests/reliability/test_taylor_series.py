@@ -44,7 +44,7 @@ def test_derivatives_3_no_nataf():
 
 @pytest.fixture
 def setup():
-    model = PythonModel(model_script='pfn.py', model_object_name='model_i', delete_files=True)
+    model = PythonModel(model_script='pfn1.py', model_object_name='model_i', delete_files=True)
     h_func = RunModel_New(model=model)
     yield h_func
     # shutil.rmtree(h_func.model_dir)
@@ -80,7 +80,7 @@ def test_derivatives_5_run_model(setup):
 
 
 def test_derivatives_6_second():
-    model = PythonModel(model_script='pfn.py', model_object_name='model_j', delete_files=True)
+    model = PythonModel(model_script='pfn2.py', model_object_name='model_j', delete_files=True)
     h_func = RunModel_New(model=model)
     dist1 = Normal(loc=500, scale=100)
     dist2 = Normal(loc=1000, scale=100)

@@ -36,7 +36,12 @@ def test_subset():  # Define the structural problem
                             random_state=1)
 
     init_sus_samples = mc.samples
-    RunModelObject_SuS = RunModel(model_script=model, model_object_name=Example)
+    from UQpy.run_model.RunModel_New import RunModel_New
+    from UQpy.run_model.model_execution.PythonModel import PythonModel
+
+    model = PythonModel(model_script=model, model_object_name=Example)
+    RunModelObject_SuS = RunModel_New(model=model)
+
 
     sampling = Stretch(pdf_target=dist_nominal.pdf, dimension=2, n_chains=1000, random_state=0)
 
