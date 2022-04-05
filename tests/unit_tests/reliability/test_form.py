@@ -1,4 +1,5 @@
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.model_execution.PythonModel import PythonModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.distributions import *
 from UQpy.reliability import FORM
 import glob
@@ -10,7 +11,8 @@ import os
 
 @pytest.fixture
 def setup():
-    h_func = RunModel(model_script='pfn.py', model_object_name='model_i', vec=False, delete_files=True)
+    model = PythonModel(model_script='pfn.py', model_object_name='model_i', delete_files=True)
+    h_func = RunModel_New(model=model)
     yield h_func
     # shutil.rmtree(h_func.model_dir)
 
@@ -135,9 +137,8 @@ def test_tol123_is_not_none(setup):
 def test_form_example():
     path = os.path.abspath(os.path.dirname(__file__))
     os.chdir(path)
-    RunModelObject = RunModel(model_script='pfn.py',
-                              model_object_name="example1",
-                              vec=False, ntasks=3)
+    model = PythonModel(model_script='pfn.py', model_object_name='example1', delete_files=True)
+    RunModelObject = RunModel_New(model=model)
     dist1 = Normal(loc=200., scale=20.)
     dist2 = Normal(loc=150, scale=10.)
     Q = FORM(distributions=[dist1, dist2], runmodel_object=RunModelObject,
@@ -151,5 +152,3 @@ def test_form_example():
     assert Q.failure_probability[0] == 0.012673659338729965
     np.allclose(Q.dg_u_record, np.array([0., 0.]))
 
-    import shutil
-    shutil.rmtree(RunModelObject.model_dir)
