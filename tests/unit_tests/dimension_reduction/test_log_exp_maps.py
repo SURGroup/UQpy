@@ -1,6 +1,6 @@
 import numpy as np
 from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
-from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
+from UQpy.dimension_reduction.grassmann_manifold.GrassmannOperations import GrassmannOperations
 import sys
 
 
@@ -37,16 +37,16 @@ def test_log_exp_maps():
     matrices = [sol0, sol1, sol2, sol3]
     manifold_projection = SvdProjection(matrices, p="max")
 
-    points_tangent = Grassmann.log_map(grassmann_points=manifold_projection.psi,
-                                       reference_point=manifold_projection.psi[0])
+    points_tangent = GrassmannOperations.log_map(grassmann_points=manifold_projection.u,
+                                                 reference_point=manifold_projection.u[0])
 
     assert np.round(points_tangent[0][0][0], 2) == 0.0
     assert np.round(points_tangent[1][0][0], 8) == 0.0
     assert np.round(points_tangent[2][0][0], 8) == 0.0
     assert np.round(points_tangent[3][0][0], 8) == 0.0
 
-    manifold_points = Grassmann.exp_map(tangent_points=points_tangent,
-                                        reference_point=manifold_projection.psi[0])
+    manifold_points = GrassmannOperations.exp_map(tangent_points=points_tangent,
+                                                  reference_point=manifold_projection.u[0])
 
     assert np.round(manifold_points[0].data[0][0], 5) == -0.41808
     assert np.round(manifold_points[1].data[0][0], 8) == -0.4180759

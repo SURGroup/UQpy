@@ -3,12 +3,12 @@ from typing import Union
 from beartype import beartype
 
 from UQpy.utilities.GrassmannPoint import GrassmannPoint
-from UQpy.dimension_reduction.grassmann_manifold.projections.baseclass.ManifoldProjection import ManifoldProjection
+from UQpy.dimension_reduction.grassmann_manifold.projections.baseclass.GrassmannProjection import GrassmannProjection
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 from UQpy.utilities.Utilities import *
 
 
-class SvdProjection(ManifoldProjection):
+class SvdProjection(GrassmannProjection):
     @beartype
     def __init__(
             self,
@@ -38,8 +38,8 @@ class SvdProjection(ManifoldProjection):
 
         if bool_left and bool_right:
             raise TypeError("UQpy: The shape of the input matrices must be the same.")
-        n_psi = n_left[0]
-        n_phi = n_right[0]
+        n_u = n_left[0]
+        n_v = n_right[0]
 
         ranks = [np.linalg.matrix_rank(data[i], tol=self.tolerance) for i in range(points_number)]
 
@@ -60,22 +60,27 @@ class SvdProjection(ManifoldProjection):
 
         ranks = list(map(int, ranks))
 
-        psi = []  # initialize the left singular eigenvectors as a list.
+        u = []  # initialize the left singular eigenvectors as a list.
         sigma = []  # initialize the singular values as a list.
-        phi = []  # initialize the right singular eigenvectors as a list.
+        v = []  # initialize the right singular eigenvectors as a list.
         for i in range(points_number):
             u, s, v = svd(data[i], int(ranks[i]))
-            psi.append(GrassmannPoint(u))
+            u.append(GrassmannPoint(u))
             sigma.append(np.diag(s))
-            phi.append(GrassmannPoint(v))
+            v.append(GrassmannPoint(v))
 
         self.input_points = data
-        self.psi = psi
+        self.u = u
+        """Left singular eigenvectors from the singular value decomposition of each sample in samples representing a 
+        point on the Grassmann manifold. """
         self.sigma = sigma
-        self.phi = phi
+        """Singular values from the singular value decomposition of each sample in samples."""
+        self.v = v
+        """Right singular eigenvector from the singular value decomposition of each sample in samples representing a 
+        point on the Grassmann manifold."""
 
-        self.n_psi = n_psi
-        self.n_phi = n_phi
+        self.n_u = n_u
+        self.n_v = n_v
         self.p = p
         self.ranks = ranks
         self.points_number = points_number

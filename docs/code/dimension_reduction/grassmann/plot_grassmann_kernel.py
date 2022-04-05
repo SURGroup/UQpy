@@ -18,7 +18,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
-from UQpy.dimension_reduction import Grassmann
+from UQpy.dimension_reduction import GrassmannOperations
 from UQpy.utilities import GrassmannPoint
 from UQpy.utilities.kernels import Kernel, ProjectionKernel
 import sys
@@ -73,8 +73,8 @@ manifold_projection = SvdProjection(matrices, p="max")
 # %%
 projection_kernel = ProjectionKernel()
 
-kernel_psi = projection_kernel.calculate_kernel_matrix(points=manifold_projection.psi)
-kernel_phi = projection_kernel.calculate_kernel_matrix(points=manifold_projection.phi)
+kernel_psi = projection_kernel.calculate_kernel_matrix(points=manifold_projection.u)
+kernel_phi = projection_kernel.calculate_kernel_matrix(points=manifold_projection.v)
 
 fig, (ax1, ax2) = plt.subplots(1, 2)
 ax1.title.set_text('kernel_psi')
@@ -89,9 +89,9 @@ plt.show()
 
 # %%
 
-kernel_01 = projection_kernel.calculate_kernel_matrix(points=[manifold_projection.psi[0],
-                                                              manifold_projection.psi[1],
-                                                              manifold_projection.psi[2]])
+kernel_01 = projection_kernel.calculate_kernel_matrix(points=[manifold_projection.u[0],
+                                                              manifold_projection.u[1],
+                                                              manifold_projection.u[2]])
 
 fig = plt.figure()
 plt.imshow(kernel_01)
@@ -115,8 +115,8 @@ class UserKernel(GrassmannianKernel):
 
 
 user_kernel = UserKernel()
-kernel_user_psi = user_kernel.calculate_kernel_matrix(points=manifold_projection.psi)
-kernel_user_phi = user_kernel.calculate_kernel_matrix(points=manifold_projection.phi)
+kernel_user_psi = user_kernel.calculate_kernel_matrix(points=manifold_projection.u)
+kernel_user_phi = user_kernel.calculate_kernel_matrix(points=manifold_projection.v)
 
 fig, (ax1, ax2) = plt.subplots(1, 2)
 ax1.title.set_text('kernel_psi')

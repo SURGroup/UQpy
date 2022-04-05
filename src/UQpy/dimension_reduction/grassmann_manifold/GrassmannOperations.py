@@ -11,7 +11,7 @@ from UQpy.utilities.distances.baseclass import GrassmannianDistance
 from UQpy.utilities.kernels import GrassmannianKernel, ProjectionKernel
 
 
-class Grassmann:
+class GrassmannOperations:
     @beartype
     def __init__(self, grassmann_points: Union[list[Numpy2DFloatArrayOrthonormal], list[GrassmannPoint]],
                  kernel: GrassmannianKernel = ProjectionKernel(),
@@ -25,8 +25,8 @@ class Grassmann:
         self.p = p
         self.kernel_matrix = kernel.calculate_kernel_matrix(self.grassmann_points)
         self.distance_matrix = distance.calculate_distance_matrix(self.grassmann_points)
-        self.karcher_mean = Grassmann.karcher_mean(self.grassmann_points, optimization_method, distance)
-        self.frechet_variance = Grassmann.frechet_variance(self.grassmann_points, self.karcher_mean, distance)
+        self.karcher_mean = GrassmannOperations.karcher_mean(self.grassmann_points, optimization_method, distance)
+        self.frechet_variance = GrassmannOperations.frechet_variance(self.grassmann_points, self.karcher_mean, distance)
 
     @staticmethod
     def calculate_kernel_matrix(grassmann_points: Union[list[Numpy2DFloatArrayOrthonormal], list[GrassmannPoint]],
@@ -143,9 +143,9 @@ class Grassmann:
             raise ValueError("UQpy: At least two matrices must be provided.")
 
         if optimization_method == "GradientDescent":
-            return Grassmann._gradient_descent(grassmann_points, distance, acceleration, tolerance, maximum_iterations)
+            return GrassmannOperations._gradient_descent(grassmann_points, distance, acceleration, tolerance, maximum_iterations)
         else:
-            return Grassmann._stochastic_gradient_descent(grassmann_points, distance, tolerance, maximum_iterations)
+            return GrassmannOperations._stochastic_gradient_descent(grassmann_points, distance, tolerance, maximum_iterations)
 
     @staticmethod
     def _gradient_descent(data_points, distance_fun, acceleration, tolerance, maximum_iterations):
@@ -162,7 +162,7 @@ class Grassmann:
         alpha = 0.5
         rnk = [min(np.shape(data_points[i].data)) for i in range(n_mat)]
         max_rank = max(rnk)
-        fmean = [Grassmann.frechet_variance(data_points, data_points[i], distance_fun) for i in range(n_mat)]
+        fmean = [GrassmannOperations.frechet_variance(data_points, data_points[i], distance_fun) for i in range(n_mat)]
 
         index_0 = fmean.index(min(fmean))
         mean_element = data_points[index_0].data.tolist()
@@ -175,8 +175,8 @@ class Grassmann:
         avg = []
         _gamma = []
         if acc:
-            _gamma = Grassmann.log_map(grassmann_points=data_points,
-                                       reference_point=np.asarray(mean_element))
+            _gamma = GrassmannOperations.log_map(grassmann_points=data_points,
+                                                 reference_point=np.asarray(mean_element))
 
             avg_gamma.fill(0)
             for i in range(n_mat):
@@ -185,8 +185,8 @@ class Grassmann:
 
         # Main loop
         while itera <= maxiter:
-            _gamma = Grassmann.log_map(grassmann_points=data_points,
-                                       reference_point=np.asarray(mean_element))
+            _gamma = GrassmannOperations.log_map(grassmann_points=data_points,
+                                                 reference_point=np.asarray(mean_element))
             avg_gamma.fill(0)
 
             for i in range(n_mat):
@@ -207,8 +207,8 @@ class Grassmann:
             else:
                 step = alpha * avg_gamma
 
-            x = Grassmann.exp_map(tangent_points=[step],
-                                  reference_point=np.asarray(mean_element))
+            x = GrassmannOperations.exp_map(tangent_points=[step],
+                                            reference_point=np.asarray(mean_element))
 
             test_1 = np.linalg.norm(x[0].data - mean_element, 'fro')
 
@@ -233,7 +233,7 @@ class Grassmann:
         rnk = [min(np.shape(data_points[i].data)) for i in range(n_mat)]
         max_rank = max(rnk)
 
-        fmean = [Grassmann.frechet_variance(data_points, data_points[i], distance_fun) for i in range(n_mat)]
+        fmean = [GrassmannOperations.frechet_variance(data_points, data_points[i], distance_fun) for i in range(n_mat)]
 
         index_0 = fmean.index(min(fmean))
 
@@ -250,13 +250,13 @@ class Grassmann:
             for i in range(len(indices)):
                 alpha = 0.5 / k
                 idx = indices[i]
-                _gamma = Grassmann.log_map(grassmann_points=[data_points[idx]],
-                                           reference_point=np.asarray(mean_element))
+                _gamma = GrassmannOperations.log_map(grassmann_points=[data_points[idx]],
+                                                     reference_point=np.asarray(mean_element))
 
                 step = 2 * alpha * _gamma[0]
 
-                X = Grassmann.exp_map(tangent_points=[step],
-                                      reference_point=np.asarray(mean_element))
+                X = GrassmannOperations.exp_map(tangent_points=[step],
+                                                reference_point=np.asarray(mean_element))
 
                 _gamma = []
                 mean_element = X[0].data

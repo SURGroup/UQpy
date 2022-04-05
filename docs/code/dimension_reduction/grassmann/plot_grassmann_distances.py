@@ -24,7 +24,7 @@ from UQpy.utilities import GrassmannPoint
 from UQpy.utilities.distances.baseclass.GrassmannianDistance import GrassmannianDistance
 from UQpy.utilities.distances.grassmannian_distances.GeodesicDistance import GeodesicDistance
 
-from UQpy.dimension_reduction import Grassmann
+from UQpy.dimension_reduction import GrassmannOperations
 
 # %% md
 #
@@ -75,8 +75,8 @@ manifold_projection = SvdProjection(matrices, p="max")
 # respectively, of singular value decomposition of each solution.
 
 # %%
-p_dim = [manifold_projection.p] * len(manifold_projection.psi)
-pairwise_distance = GeodesicDistance().calculate_distance_matrix(points=manifold_projection.psi,
+p_dim = [manifold_projection.p] * len(manifold_projection.u)
+pairwise_distance = GeodesicDistance().calculate_distance_matrix(points=manifold_projection.u,
                                                                  p_dim=p_dim)
 print(pairwise_distance)
 
@@ -86,7 +86,7 @@ print(pairwise_distance)
 
 # %%
 
-distance01 = GeodesicDistance().compute_distance(manifold_projection.psi[0], manifold_projection.psi[1])
+distance01 = GeodesicDistance().compute_distance(manifold_projection.u[0], manifold_projection.u[1])
 print(distance01)
 
 
@@ -113,8 +113,8 @@ class UserDistance(GrassmannianDistance):
         return np.sqrt(abs(rank_i - rank_j) * np.pi ** 2 / 4 + np.sum(theta ** 2))
 
 
-pairwise_distance_psi = UserDistance().calculate_distance_matrix(manifold_projection.psi, p_dim=p_dim)
+pairwise_distance_psi = UserDistance().calculate_distance_matrix(manifold_projection.u, p_dim=p_dim)
 
-pairwise_distance_phi = UserDistance().calculate_distance_matrix(manifold_projection.phi, p_dim=p_dim)
+pairwise_distance_phi = UserDistance().calculate_distance_matrix(manifold_projection.v, p_dim=p_dim)
 print(pairwise_distance_psi)
 print(pairwise_distance_phi)
