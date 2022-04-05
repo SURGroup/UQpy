@@ -18,18 +18,18 @@ class Nonnegative(ConstraintsGPR):
         self.z_value = z_value
         self.args = None
 
-    def constraints(self, x_train, y_train, predict_function):
+    def define_arguments(self, x_train, y_train, predict_function):
         """
         :params x_train: Input training data, used to train the GPR.
         :params y_train: Output training data.
         :params prediction_function: The 'predict' method from the GaussianProcessRegressor
         """
         self.args = (predict_function, self.constraint_points, self.observed_error, self.z_value, x_train, y_train)
-        return self.final_constraints
+        return self.constraints
 
     @staticmethod
-    def final_constraints(theta_, pred, cand_points, obs_err, z_, x_t, y_t):
-        tmp_predict, tmp_error = pred(cand_points, True, hyperparameters=10**theta_)
+    def constraints(theta_, pred, const_points, obs_err, z_, x_t, y_t):
+        tmp_predict, tmp_error = pred(const_points, True, hyperparameters=10**theta_)
         constraint1 = tmp_predict - z_ * tmp_error
 
         tmp_predict2 = pred(x_t, False, hyperparameters=10**theta_)

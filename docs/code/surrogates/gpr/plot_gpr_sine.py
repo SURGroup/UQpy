@@ -67,13 +67,13 @@ x = TrueStratifiedSampling(distributions=marginals, strata_object=strata,
 rmodel = RunModel(model_script='local_python_model_1Dfunction.py', delete_files=True)
 rmodel.run(samples=x.samples)
 
-from UQpy.surrogates.gaussian_process.regression_models import LineaRegression
+from UQpy.surrogates.gaussian_process.regression_models import LinearRegression
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 
 bounds = [[10**(-3), 10**3], [10**(-3), 10**2]]
 optimizer = MinimizeOptimizer(method='L-BFGS-B', bounds=bounds)
 
-K = GaussianProcessRegression(regression_model=LineaRegression(), kernel=RBF(),
+K = GaussianProcessRegression(regression_model=LinearRegression(), kernel=RBF(),
                               optimizer=optimizer, optimizations_number=20, hyperparameters=[1, 0.1],
                               random_state=2)
 K.fit(samples=x.samples, values=rmodel.qoi_list)

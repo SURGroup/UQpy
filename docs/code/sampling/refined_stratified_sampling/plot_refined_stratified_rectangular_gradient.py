@@ -112,11 +112,11 @@ plt.show()
 
 #%%
 
-from UQpy.surrogates.gaussian_process.regression_models import LineaRegression
+from UQpy.surrogates.gaussian_process.regression_models import LinearRegression
 from UQpy.surrogates.gaussian_process.kernels import RBF
 
 bounds = [[10**(-3), 10**3], [10**(-3), 10**2], [10**(-3), 10**2]]
-K = GaussianProcessRegression(regression_model=LineaRegression(), kernel=RBF(),
+K = GaussianProcessRegression(regression_model=LinearRegression(), kernel=RBF(),
                               optimizer=MinimizeOptimizer(method="L-BFGS-B", bounds=bounds),
                               hyperparameters=[1, 1, 0.1], optimizations_number=20)
 K.fit(samples=x.samples, values=rmodel1.qoi_list)
@@ -189,7 +189,7 @@ plt.show()
 #%%
 
 hyperparameters=K.hyperparameters.tolist()
-K2 = GaussianProcessRegression(regression_model=LineaRegression(), kernel=RBF(),
+K2 = GaussianProcessRegression(kernel=RBF(),
                                optimizer=MinimizeOptimizer(method="L-BFGS-B"),
                                hyperparameters=hyperparameters,
                                noise=False)

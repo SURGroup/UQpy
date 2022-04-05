@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings('ignore')
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
-from UQpy.surrogates.gaussian_process.regression_models.LinearRegression import LineaRegression
+from UQpy.surrogates.gaussian_process.regression_models.LinearRegression import LinearRegression
 from UQpy.utilities.FminCobyla import FminCobyla
 from UQpy.surrogates import GaussianProcessRegression, Nonnegative, RBF
 
@@ -94,7 +94,7 @@ optimizer2 = MinimizeOptimizer(method='L-BFGS-B', bounds=bounds_2)
 # %%
 
 gpr2 = GaussianProcessRegression(kernel=kernel2, hyperparameters=[1, 1, 0.1], optimizer=optimizer2,
-                                 optimizations_number=10, noise=True, regression_model=LineaRegression())
+                                 optimizations_number=10, noise=True, regression_model=LinearRegression())
 
 
 # %% md

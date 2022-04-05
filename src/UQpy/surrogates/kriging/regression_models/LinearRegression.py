@@ -2,7 +2,7 @@ import numpy as np
 from UQpy.surrogates.kriging.regression_models.baseclass.Regression import Regression
 
 
-class LineaRegression(Regression):
+class LinearRegression(Regression):
     def r(self, s):
         s = np.atleast_2d(s)
         fx = np.concatenate((np.ones([np.size(s, 0), 1]), s), 1)
