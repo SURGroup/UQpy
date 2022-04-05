@@ -12,7 +12,7 @@ the Grassmann manifold.
    :maxdepth: 1
    :caption: Methods
 
-    Projections <manifold_projections>
-    Operations <grassmann_operations>
-    Interpolation <grassmann_interpolation>
-    Manifold Examples <../../auto_examples/dimension_reduction/grassmann/index>
+    Grassmann Projections <manifold_projections>
+    Grassmann Operations <grassmann_operations>
+    Grassmann Interpolation <grassmann_interpolation>
+    Grassmann Examples <../../auto_examples/dimension_reduction/grassmann/index>

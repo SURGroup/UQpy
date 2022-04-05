@@ -78,13 +78,13 @@ class SvdProjection(GrassmannProjection):
 
         self.input_points = data
         self.u:list[GrassmannPoint] = phi
-        """Left singular eigenvectors from the singular value decomposition of each sample in samples representing a 
-        point on the Grassmann manifold. """
+        """Left singular vectors from the SVD of each sample in `data` representing a point on the Grassmann 
+        manifold. """
         self.sigma:np.ndarray = sigma
-        """Singular values from the singular value decomposition of each sample in samples."""
+        """Singular values from the SVD of each sample in `data`."""
         self.v:list[GrassmannPoint] = psi
-        """Right singular eigenvector from the singular value decomposition of each sample in samples representing a 
-        point on the Grassmann manifold."""
+        """Right singular vectors from the SVD of each sample in `data` representing a point on the Grassmann 
+        manifold."""
 
         self.n_u = n_u
         self.n_v = n_v

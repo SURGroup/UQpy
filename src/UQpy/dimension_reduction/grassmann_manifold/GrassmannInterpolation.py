@@ -21,11 +21,13 @@ class GrassmannInterpolation:
         """
         A class to perform interpolation of points on the Grassmann manifold.
 
-        :param interpolation_method: Type of interpolation.
-        :param manifold_data: Data on the Grassmann manifold.
-        :param optimization_method: Optimization method for calculating the Karcher mean.
+        :param interpolation_method: Type of interpolation to perform. This may be specified as a :class:`Surrogate`
+            object or a callable function. If :any:`None`, then multi-linear interpolation is performed.
+        :param manifold_data: Data points on the Grassmann manifold.
+        :param optimization_method: Optimization method for calculating the Karcher mean. See
+            :py:meth:`.GrassmannOperations.karcher_mean`.
         :param coordinates: Nodes of the interpolant.
-        :param distance:  Distance metric.
+        :param distance:  Distance measure.
         """
         self.interpolation_method = interpolation_method
 
@@ -54,8 +56,8 @@ class GrassmannInterpolation:
 
     def interpolate_manifold(self, point: np.ndarray):
         """
-        :param point:  Point to interpolate.
-        :return: Interpolated point
+        :param point:  Point at which to interpolate.
+        :return: Interpolated point on the Grassmann manifold.
         """
 
         shape_ref = np.shape(self.tangent_points[0])

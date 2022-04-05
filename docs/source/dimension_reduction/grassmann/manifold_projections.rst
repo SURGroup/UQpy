@@ -13,6 +13,9 @@ The :class:`.GrassmannProjection` class is imported using the following command:
 
 >>> from UQpy.dimension_reduction.grassmann_manifold.projections.baseclass.GrassmannProjection import GrassmannProjection
 
+The user may create a new Grassmann projection method by subclassing :class:`.GrassmannProjection`. Any such class
+must create points with type :class:`.GrassmannPoint`.
+
 SVD Projection
 ~~~~~~~~~~~~~~~~~~~~~~
 
