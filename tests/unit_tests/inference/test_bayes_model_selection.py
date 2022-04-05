@@ -8,14 +8,18 @@ import shutil
 
 import os
 
-# dir_path = os.path.dirname(os.path.realpath(__file__))
+dir_path = os.path.dirname(os.path.realpath(__file__))
 # print(dir_path)
 # print(os.getcwd())
 # os.chdir(dir_path)
-os.chdir("~/test/unit_tests/inference")
+# print(os.getcwd())
+
+
+# os.chdir("~/test/unit_tests/inference")
 
 
 def test_models():
+    os.chdir(dir_path)
     data_ex1 = np.loadtxt('data_ex1a.txt')
 
     model = PythonModel(model_script='pfn.py', model_object_name='model_linear', var_names=['theta_0'])
