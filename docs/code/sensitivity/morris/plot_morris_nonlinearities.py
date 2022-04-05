@@ -21,7 +21,8 @@ ranking of input parameters:
 #%%
 import shutil
 
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Uniform
 from UQpy.sensitivity import MorrisSensitivity
 import matplotlib.pyplot as plt
@@ -32,9 +33,10 @@ import matplotlib.pyplot as plt
 
 #%%
 
-var_names = ['X{}'.format(i) for i in range(5)]
-runmodel_object = RunModel(
-    model_script='local_pfn.py', model_object_name='fun2_sensitivity', var_names=var_names, vec=True)
+
+model = PythonModel(model_script='local_pfn.py', model_object_name='fun2_sensitivity', delete_files=True,
+                    var_names=['X{}'.format(i) for i in range(5)])
+runmodel_object = RunModel_New(model=model)
 
 dist_object = [Uniform(), ] * 5
 
@@ -54,4 +56,3 @@ ax.set_ylabel(r'$\sigma$', fontsize=18)
 # ax.set_title('Morris sensitivity indices', fontsize=16)
 plt.show()
 
-shutil.rmtree(runmodel_object.model_dir)
