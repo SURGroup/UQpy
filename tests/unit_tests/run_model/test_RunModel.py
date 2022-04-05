@@ -108,11 +108,11 @@ def test_python_serial_workflow_function():
     shutil.rmtree(model_python_serial_function.model_dir)
 
 
-def test_python_serial_workflow_function_no_object_name():
-    model_python_serial_function = RunModel(ntasks=1, model_script='python_model_function.py', vec=False)
-    model_python_serial_function.run(samples=x_mcs.samples)
-    assert np.allclose(np.array(model_python_serial_function.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
-    shutil.rmtree(model_python_serial_function.model_dir)
+# def test_python_serial_workflow_function_no_object_name():
+#     model_python_serial_function = RunModel(ntasks=1, model_script='python_model_function.py', vec=False)
+#     model_python_serial_function.run(samples=x_mcs.samples)
+#     assert np.allclose(np.array(model_python_serial_function.qoi_list).flatten(), np.sum(x_mcs.samples, axis=1))
+#     shutil.rmtree(model_python_serial_function.model_dir)
 
 
 # def test_python_serial_workflow_class_no_object_name():

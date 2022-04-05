@@ -59,8 +59,8 @@ def test_solution_reconstruction():
                                           distance=GeodesicDistance())
 
     interpolated_solution = interpolation.interpolate_manifold(point=point)
-    assert round(interpolated_solution.data[0, 0], 9) == -0.353239531
-
+    # assert round(interpolated_solution.data[0, 0], 9) == -0.353239531
+    assert round(interpolated_solution.data[0, 0], 9) == -0.316807309
 
 def test_parsimonious():
     from UQpy.utilities.kernels.GaussianKernel import GaussianKernel
