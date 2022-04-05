@@ -1,7 +1,5 @@
 import logging
-from typing import Callable, List
-
-import numpy as np
+from typing import Callable
 from beartype import beartype
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
 from UQpy.distributions import *

@@ -16,7 +16,7 @@ adaptively, using U-function as the learning criteria .
 # %%
 import shutil
 
-from UQpy.surrogates import Kriging
+from UQpy.surrogates.gaussian_process import GaussianProcessRegression
 from UQpy.sampling import MonteCarloSampling, AdaptiveKriging
 from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Normal
@@ -51,11 +51,12 @@ rmodel = RunModel(model_script='local_series.py', vec=False)
 
 # %%
 
-from UQpy.surrogates.kriging.regression_models import LineaRegression
-from UQpy.surrogates.kriging.correlation_models import ExponentialCorrelation
-optimizer = MinimizeOptimizer(method="L-BFGS-B")
-K = Kriging(regression_model=LineaRegression(), correlation_model=ExponentialCorrelation(), optimizer=optimizer,
-            correlation_model_parameters=[1, 1], optimizations_number=10)
+from UQpy.surrogates.gaussian_process.regression_models import LineaRegression
+from UQpy.surrogates.gaussian_process.kernels import RBF
+bounds = [[10**(-3), 10**3], [10**(-3), 10**2], [10**(-3), 10**2]]
+optimizer = MinimizeOptimizer(method="L-BFGS-B", bounds=bounds)
+K = GaussianProcessRegression(regression_model=LineaRegression(), kernel=RBF(), optimizer=optimizer,
+                              hyperparameters=[1, 1, 0.1], optimizations_number=10, noise=False)
 
 # %% md
 #
@@ -148,9 +149,10 @@ class UserLearningFunction(LearningFunction):
 # Creating new instances of :class:`.Kriging` and :class:`.RunModel` class.
 
 # %%
-
-K1 = Kriging(regression_model=LineaRegression(), correlation_model=ExponentialCorrelation(), optimizer=optimizer,
-             correlation_model_parameters=[1, 1], optimizations_number=10)
+bounds = [[10**(-3), 10**3], [10**(-3), 10**2], [10**(-3), 10**2]]
+optimizer = MinimizeOptimizer(method="L-BFGS-B", bounds=bounds)
+K1 = GaussianProcessRegression(regression_model=LineaRegression(), kernel=RBF(), optimizer=optimizer,
+                               hyperparameters=[1, 1, 0.1], optimizations_number=1)
 rmodel1 = RunModel(model_script='local_series.py', vec=False)
 
 # %% md

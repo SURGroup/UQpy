@@ -6,7 +6,10 @@ import shutil
 import numpy as np
 import pytest
 from UQpy.run_model.RunModel import RunModel
+import os
 
+path = os.path.abspath(os.path.dirname(__file__))
+os.chdir(path)
 
 def model_i(samples):
     qoi_list = [0] * samples.shape[0]

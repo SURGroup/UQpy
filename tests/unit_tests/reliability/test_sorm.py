@@ -5,10 +5,13 @@ import glob
 import shutil
 import numpy as np
 import pytest
+import os
 
 
 @pytest.fixture
 def setup():
+    path = os.path.abspath(os.path.dirname(__file__))
+    os.chdir(path)
     h_func = RunModel(model_script='pfn.py', model_object_name='model_k', vec=False, delete_files=True)
     yield h_func
 

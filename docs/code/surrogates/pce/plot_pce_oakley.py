@@ -52,7 +52,7 @@ y = oakley_function(x)
 # %%
 
 max_degree = 8
-polynomial_basis = PolynomialBasis.create_total_degree_basis(dist, max_degree)
+polynomial_basis = TotalDegreeBasis(dist, max_degree)
 least_squares = LeastSquareRegression()
 pce_lstsq = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
 
@@ -65,7 +65,7 @@ pce_lstsq.fit(x,y)
 
 # %%
 
-polynomial_basis = PolynomialBasis.create_total_degree_basis(dist, max_degree)
+polynomial_basis = TotalDegreeBasis(dist, max_degree)
 lasso = LassoRegression()
 pce_lasso = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=lasso)
 
@@ -78,7 +78,7 @@ pce_lasso.fit(x,y)
 
 # %%
 
-polynomial_basis = PolynomialBasis.create_total_degree_basis(dist, max_degree)
+polynomial_basis = TotalDegreeBasis(dist, max_degree)
 ridge = RidgeRegression()
 pce_ridge = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=ridge)
 

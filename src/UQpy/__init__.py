@@ -32,6 +32,9 @@ from UQpy.utilities.Utilities import *
 from UQpy.sensitivity import *
 from UQpy.utilities.UQpyLoggingFormatter import *
 import logging
+from beartype.roar import BeartypeDecorHintPep585DeprecationWarning
+from warnings import filterwarnings
+filterwarnings("ignore", category=BeartypeDecorHintPep585DeprecationWarning)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)

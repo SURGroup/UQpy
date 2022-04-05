@@ -120,7 +120,7 @@ max_degree = 6
 
 # %%
 
-polynomial_basis = PolynomialBasis.create_total_degree_basis(joint, max_degree)
+polynomial_basis = TotalDegreeBasis(joint, max_degree)
 least_squares = LeastSquareRegression()
 pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
 
@@ -133,7 +133,7 @@ pce.fit(x,y)
 
 # %%
 
-polynomial_basis = PolynomialBasis.create_total_degree_basis(joint, max_degree)
+polynomial_basis = TotalDegreeBasis(joint, max_degree)
 lasso = LassoRegression()
 pce2 = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=lasso)
 
@@ -145,7 +145,7 @@ pce2.fit(x,y)
 
 # %%
 
-polynomial_basis = PolynomialBasis.create_total_degree_basis(joint, max_degree)
+polynomial_basis = TotalDegreeBasis(joint, max_degree)
 ridge = RidgeRegression()
 pce3 = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=ridge)
 

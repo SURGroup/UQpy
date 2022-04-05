@@ -89,7 +89,7 @@ for max_degree in range(1, 10):
 
     # PCE basis
     print('Total degree: ', max_degree)
-    polynomial_basis = PolynomialBasis.create_total_degree_basis(joint, max_degree)
+    polynomial_basis = TotalDegreeBasis(joint, max_degree)
     print('Size of basis:', polynomial_basis.polynomials_number)
 
     # generate training data

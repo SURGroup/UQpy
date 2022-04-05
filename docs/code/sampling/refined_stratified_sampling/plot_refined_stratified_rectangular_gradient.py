@@ -17,7 +17,7 @@ adaptively using Refined Stratified Sampling.
 import shutil
 
 from UQpy.sampling import TrueStratifiedSampling, RefinedStratifiedSampling
-from UQpy.surrogates import Kriging
+from UQpy.surrogates import GaussianProcessRegression
 from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Uniform
 import matplotlib.pyplot as plt
@@ -82,7 +82,7 @@ rmodel = RunModel(model_script='local_python_model_function.py', vec=False)
 
 rmodel1 = RunModel(model_script='local_python_model_function.py', vec=False)
 rmodel1.run(samples=x.samples)
-num = 50
+num = 100
 x1 = np.linspace(0, 1, num)
 x2 = np.linspace(0, 1, num)
 x1v, x2v = np.meshgrid(x1, x2)
@@ -112,12 +112,15 @@ plt.show()
 
 #%%
 
-from UQpy.surrogates.kriging.regression_models import LineaRegression
-from UQpy.surrogates.kriging.correlation_models import ExponentialCorrelation
-K = Kriging(regression_model=LineaRegression(), correlation_model=ExponentialCorrelation(), optimizer=MinimizeOptimizer(method="L-BFGS-B"),
-            optimizations_number=20, correlation_model_parameters=[1, 1])
+from UQpy.surrogates.gaussian_process.regression_models import LineaRegression
+from UQpy.surrogates.gaussian_process.kernels import RBF
+
+bounds = [[10**(-3), 10**3], [10**(-3), 10**2], [10**(-3), 10**2]]
+K = GaussianProcessRegression(regression_model=LineaRegression(), kernel=RBF(),
+                              optimizer=MinimizeOptimizer(method="L-BFGS-B", bounds=bounds),
+                              hyperparameters=[1, 1, 0.1], optimizations_number=20)
 K.fit(samples=x.samples, values=rmodel1.qoi_list)
-print(K.correlation_model_parameters)
+print(K.hyperparameters)
 
 #%% md
 #
@@ -185,8 +188,11 @@ plt.show()
 
 #%%
 
-K2 = Kriging(regression_model=LineaRegression(), correlation_model=ExponentialCorrelation(), optimizer=MinimizeOptimizer(method="L-BFGS-B"),
-             correlation_model_parameters=K.correlation_model_parameters.tolist())
+hyperparameters=K.hyperparameters.tolist()
+K2 = GaussianProcessRegression(regression_model=LineaRegression(), kernel=RBF(),
+                               optimizer=MinimizeOptimizer(method="L-BFGS-B"),
+                               hyperparameters=hyperparameters,
+                               noise=False)
 K2.fit(samples=z.samples, values=rmodel.qoi_list)
 
 #%% md

@@ -3,6 +3,7 @@ from typing import Union
 from beartype import beartype
 
 from UQpy.distributions.baseclass import Distribution
+from UQpy.distributions.collection import Uniform
 from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import (
     Polynomials,
 )
@@ -14,7 +15,6 @@ import math
 
 
 class Hermite(Polynomials):
-
     @beartype
     def __init__(self, degree: int, distributions:  Union[Distribution, list[Distribution]]):
         """
@@ -75,3 +75,5 @@ class Hermite(Polynomials):
         else:
             tripleproduct=0
         return tripleproduct
+
+Polynomials.distribution_to_polynomial[Normal] = Hermite

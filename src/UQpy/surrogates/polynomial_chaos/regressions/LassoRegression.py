@@ -2,7 +2,7 @@ import logging
 import numpy as np
 from beartype import beartype
 
-from UQpy.surrogates.polynomial_chaos.polynomials.PolynomialBasis import PolynomialBasis
+from UQpy.surrogates.polynomial_chaos.polynomials.TotalDegreeBasis import PolynomialBasis
 from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
 
 

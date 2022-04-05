@@ -7,12 +7,11 @@ import numpy as np
 import pytest
 import os
 
-path = os.path.abspath(os.path.dirname(__file__))
-os.chdir(path)
-
 
 @pytest.fixture
 def setup():
+    path = os.path.abspath(os.path.dirname(__file__))
+    os.chdir(path)
     h_func = RunModel(model_script='pfn.py', model_object_name='model_i', vec=False, delete_files=True)
     yield h_func
     # shutil.rmtree(h_func.model_dir)

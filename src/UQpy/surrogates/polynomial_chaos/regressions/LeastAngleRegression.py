@@ -4,7 +4,7 @@ from beartype import beartype
 import copy
 
 from UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion import PolynomialChaosExpansion
-from UQpy.surrogates.polynomial_chaos.polynomials.PolynomialBasis import PolynomialBasis
+from UQpy.surrogates.polynomial_chaos.polynomials.TotalDegreeBasis import PolynomialBasis
 from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
 from UQpy.surrogates.polynomial_chaos.regressions import LeastSquareRegression
 
