@@ -19,16 +19,18 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
 def test_models():
-    os.chdir(dir_path)
+    a = os.getcwd()
+    if "inference" not in a:
+        raise NotImplementedError(a)
     data_ex1 = np.loadtxt('data_ex1a.txt')
 
-    model = PythonModel(model_script='pfn.py', model_object_name='model_linear', var_names=['theta_0'])
+    model = PythonModel(model_script='pfn_linear.py', model_object_name='model_linear', var_names=['theta_0'])
     runmodel4 = RunModel_New(model=model)
 
-    model1 = PythonModel(model_script='pfn1.py', model_object_name='model_quadratic', var_names=['theta_0', 'theta_1'])
+    model1 = PythonModel(model_script='pfn_quadratic.py', model_object_name='model_quadratic', var_names=['theta_0', 'theta_1'])
     runmodel5 = RunModel_New(model=model1)
 
-    model2 = PythonModel(model_script='pfn2.py', model_object_name='model_cubic',
+    model2 = PythonModel(model_script='pfn_cubic.py', model_object_name='model_cubic',
                          var_names=['theta_0', 'theta_1', 'theta_2'])
     runmodel6 = RunModel_New(model=model2)
 
