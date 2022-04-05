@@ -1,6 +1,6 @@
 """
 
-Noise and Constraints
+Gaussian Process with Noise and Constraints
 ======================================================================
 
 """
@@ -61,23 +61,6 @@ y_train = funct(X_train)
 
 X_test = np.linspace(0, 1, 100).reshape(-1, 1)
 y_test = funct(X_test)
-
-# %% md
-#
-# The plot shows the test function in dashed red line and 13 training points are represented by blue dots.
-
-# %%
-
-fig, ax = plt.subplots(figsize=(8, 6))
-ax.plot(X_test, y_test, 'r--', linewidth=2, label='Test Function')
-ax.plot(X_train, y_train, 'bo', markerfacecolor='b', markersize=10, label='Training Data')
-ax.plot(X_test, np.zeros((X_test.shape[0], 1)))
-ax.tick_params(axis='both', which='major', labelsize=12)
-ax.set_xlabel('x', fontsize=15)
-ax.set_ylabel('f(x)', fontsize=15)
-ax.set_ylim([-0.3, 1.8])
-ax.legend(loc="upper right", prop={'size': 12});
-plt.grid()
 
 
 # %% md
