@@ -100,10 +100,10 @@ def test_kernel():
 
     # Creating a list of solutions.
     Solutions = [sol0, sol1, sol2, sol3]
-    from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
+    from UQpy.dimension_reduction.grassmann_manifold.GrassmannOperations import GrassmannOperations
     manifold_projection = SvdProjection(Solutions, p="max")
     kernel = ProjectionKernel()
 
-    kernel = kernel.calculate_kernel_matrix(manifold_projection.psi)
+    kernel = kernel.calculate_kernel_matrix(manifold_projection.u)
 
     assert np.round(kernel[0, 1], 8) == 6.0

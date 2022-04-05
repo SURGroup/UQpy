@@ -4,14 +4,14 @@ from typing import Union
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator
 
-from UQpy.dimension_reduction.grassmann_manifold import Grassmann
+from UQpy.dimension_reduction.grassmann_manifold import GrassmannOperations
 from UQpy.surrogates.baseclass import Surrogate
 from UQpy.utilities.GrassmannPoint import GrassmannPoint
 from UQpy.utilities.ValidationTypes import NumpyFloatArray
 from UQpy.utilities.distances import GrassmannianDistance
 
 
-class ManifoldInterpolation:
+class GrassmannInterpolation:
 
     def __init__(self, interpolation_method: Union[Surrogate, callable, None],
                  manifold_data: list[GrassmannPoint],
@@ -29,12 +29,12 @@ class ManifoldInterpolation:
         """
         self.interpolation_method = interpolation_method
 
-        self.mean = Grassmann.karcher_mean(grassmann_points=manifold_data,
-                                           optimization_method=optimization_method,
-                                           distance=distance)
+        self.mean = GrassmannOperations.karcher_mean(grassmann_points=manifold_data,
+                                                     optimization_method=optimization_method,
+                                                     distance=distance)
 
-        self.tangent_points = Grassmann.log_map(grassmann_points=manifold_data,
-                                                reference_point=self.mean)
+        self.tangent_points = GrassmannOperations.log_map(grassmann_points=manifold_data,
+                                                          reference_point=self.mean)
 
         if self.interpolation_method is Surrogate:
             self.surrogates = [[]]
@@ -55,6 +55,7 @@ class ManifoldInterpolation:
     def interpolate_manifold(self, point: np.ndarray):
         """
         :param point:  Point to interpolate.
+        :return: Interpolated point
         """
 
         shape_ref = np.shape(self.tangent_points[0])
@@ -79,4 +80,4 @@ class ManifoldInterpolation:
             interp = LinearNDInterpolator(self.coordinates, self.tangent_points)
             interp_point = interp(point)
 
-        return Grassmann.exp_map(tangent_points=[interp_point.squeeze()], reference_point=self.mean)[0]
+        return GrassmannOperations.exp_map(tangent_points=[interp_point.squeeze()], reference_point=self.mean)[0]
