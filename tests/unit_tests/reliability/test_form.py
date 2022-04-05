@@ -11,7 +11,7 @@ import os
 
 @pytest.fixture
 def setup():
-    model = PythonModel(model_script='pfn.py', model_object_name='model_i', delete_files=True)
+    model = PythonModel(model_script='pfn1.py', model_object_name='model_i', delete_files=True)
     h_func = RunModel_New(model=model)
     yield h_func
     # shutil.rmtree(h_func.model_dir)
@@ -137,7 +137,7 @@ def test_tol123_is_not_none(setup):
 def test_form_example():
     path = os.path.abspath(os.path.dirname(__file__))
     os.chdir(path)
-    model = PythonModel(model_script='pfn.py', model_object_name='example1', delete_files=True)
+    model = PythonModel(model_script='pfn3.py', model_object_name='example1', delete_files=True)
     RunModelObject = RunModel_New(model=model)
     dist1 = Normal(loc=200., scale=20.)
     dist2 = Normal(loc=150, scale=10.)
