@@ -51,6 +51,11 @@ The :class:`.GaussianProcessRegression` class offers a variety of built-in regre
 Constant Model
 """""""""""""""""""
 
+The :class:`.ConstantRegression` class is imported using the following command:
+
+>>> from UQpy.surrogates.gaussian_process.regression_models.ConstantRegression import ConstantRegression
+
+
 In Constant model, the regression model is assumed to take a constant value such that
 
 .. math:: f(\beta, x) = \beta_0
@@ -59,12 +64,21 @@ In Constant model, the regression model is assumed to take a constant value such
 Linear Model
 """"""""""""""""""""
 
+The :class:`.LinearRegression` class is imported using the following command:
+
+>>> from UQpy.surrogates.gaussian_process.regression_models.LinearRegression import LinearRegression
+
+
 The regression model is defined by the linear basis function on each input dimension.
 
 .. math:: f(\beta, x) = \beta_0 + \sum_{i=1}^d \beta_i x_i
 
 Quadratic Model
 """"""""""""""""""""
+
+The :class:`.QuadraticRegression` class is imported using the following command:
+
+>>> from UQpy.surrogates.gaussian_process.regression_models.QuadraticRegression import QuadraticRegression
 
 The quadratic regression model is given by:
 
@@ -142,7 +156,7 @@ Notice that the input ``params`` include lengthscales and process standard devia
 
 The :class:`UQpy.surrogates.gaussian_process.kernels.baseclass.Kernel` class is imported using the following command:
 
->>> from UQpy.surrogates.gaussian_process.correlation_models.baseclass.kernels import Kernel
+>>> from UQpy.surrogates.gaussian_process.kernels.baseclass.Kernel import Kernel
 
 .. autoclass:: UQpy.surrogates.gaussian_process.Kernel
     :members:
@@ -160,6 +174,81 @@ An example user-defined kernel is given below:
 >>>         stack = cdist(x/l, s/l, metric='euclidean')
 >>>         cx = sigma**2 * np.exp(-(stack**2)/2)
 >>>         return cx
+
+Constraints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`.GaussianProcessRegression` class offers a built-in constraints on the hyperparameters estimation while maximixing loglikelihood function.
+
+NonNegative
+"""""""""""""""""""""""""""""
+
+The :class:`.NonNegative` class is imported using the following command:
+
+>>> from UQpy.surrogates.gaussian_process.constraints.NonNegative import NonNegative
+
+The NonNegative constraints enforces non-negativity in the GP model, this is useful for treating many physical properties as output variable. This constraint improves prediction and error estimates, where model output is always greater than or equal to zero. This is ensured by solving the maximum likelihood problem with the following constraints.
+
+.. math:: \mathrm{argmax}_{\theta} \log{p(y|x, \theta)} \quad \quad \quad  \text{s.t.   } \begin{matrix} \hat{g}(X_c) - z\sigma_{\hat{g}}(X_c) \geq 0 \\ |Y-\hat{g}(X)| \geq \epsilon \end{matrix}
+
+where :math:`X_c` is the set of constraint points defined by user, :math:`z` is the number of standard deviation below mean, that is non-negative for constraint points. :math:`\epsilon` is the error tolerance between output value and prediction at the sample points.
+
+User-Defined Constraints
+""""""""""""""""""""""""""""
+
+Adding a new kernel to the :class:`.GaussianProcessRegression` class is straightforward. This is done by creating a new class
+that extends the :class:`UQpy.surrogates.gaussian_process.kernels.baseclass.Constraints` abstract base class.
+This new class must have two methods ``define_arguments(self, x_train, y_train, predict_function)`` and ``constraints(theta, kwargs)``.
+
+The :class:`UQpy.surrogates.gaussian_process.constraints.baseclass.Constraints` class is imported using the following command:
+
+>>> from UQpy.surrogates.gaussian_process.constraints.baseclass.Constraints import ConstraintsGPR
+
+.. autoclass:: UQpy.surrogates.gaussian_process.ConstraintsGPR
+    :members:
+
+The first method takes the sample points, output values and prediction method as inputs. This method combines the input attributes
+(defined while initiating the new class) and inputs of the ``define_arguments`` method. This method returns a list containing a dictionary of all the arguments to the constraints function.
+
+The second method ``constraints`` is static method, which takes first input as the log-transformed hyperparameters (:math:`\theta`) and second input is a dictionary containing all arguments as defined in the first method (``define_arguments``).
+User can unpacked the stored variables in the dictionary and return the constraints function. Notice that this is a static method as optimizers require constraints to be a callable.
+
+The constraints on the hyperparameters are only compatible with ``FminCobyla`` class as optimizer.
+
+An example user-defined kernel is given below:
+
+
+>>> class NonNegative(ConstraintsGPR):
+>>>     def __init__(self, constraint_points, observed_error=0.01, z_value=2):
+>>>         self.constraint_points = constraint_points
+>>>         self.observed_error = observed_error
+>>>         self.z_value = z_value
+>>>         self.kwargs = {}
+>>>         self.constraint_args = None
+>>>
+>>>     def define_arguments(self, x_train, y_train, predict_function):
+>>>         self.kwargs['x_t'] = x_train
+>>>         self.kwargs['y_t'] = y_train
+>>>         self.kwargs['pred'] = predict_function
+>>>         self.kwargs['const_points'] = self.constraint_points
+>>>         self.kwargs['obs_err'] = self.observed_error
+>>>         self.kwargs['z_'] = self.z_value
+>>>         self.constraint_args = [self.kwargs]
+>>>         return self.constraints
+>>>
+>>>     @staticmethod
+>>>     def constraints(theta_, kwargs):
+>>>         x_t, y_t, pred = kwargs['x_t'], kwargs['y_t'], kwargs['pred']
+>>>         const_points, obs_err, z_ = kwargs['const_points'], kwargs['obs_err'], kwargs['z_']
+>>>
+>>>         tmp_predict, tmp_error = pred(const_points, True, hyperparameters=10**theta_)
+>>>         constraint1 = tmp_predict - z_ * tmp_error
+>>>
+>>>         tmp_predict2 = pred(x_t, False, hyperparameters=10**theta_)
+>>>         constraint2 = obs_err - np.abs(y_t[:, 0] - tmp_predict2)
+>>>
+>>>         constraints = np.concatenate((constraint1, constraint2), axis=None)
+>>>         return constraints
 
 GaussianProcessRegression Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

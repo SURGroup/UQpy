@@ -28,7 +28,7 @@ from UQpy.surrogates.gaussian_process.regression_models.QuadraticRegression impo
 warnings.filterwarnings('ignore')
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 from UQpy.utilities.FminCobyla import FminCobyla
-from UQpy.surrogates import GaussianProcessRegression, Nonnegative, RBF
+from UQpy.surrogates import GaussianProcessRegression, NonNegative, RBF
 
 
 # %% md
@@ -109,7 +109,7 @@ optimizer3 = FminCobyla()
 
 # %%
 
-cons = Nonnegative(constraint_points=X_c, observed_error=0.03, z_value=2)
+cons = NonNegative(constraint_points=X_c, observed_error=0.03, z_value=2)
 
 # %% md
 #

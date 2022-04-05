@@ -10,6 +10,14 @@ class ConstraintsGPR(ABC):
     @abstractmethod
     def define_arguments(self, x_train, y_train, predict_function):
         """
-        Abstract method that needs to be implemented by the user when creating a new Correlation function.
+        Abstract method that needs to be implemented by the user which stores all the arguments in a dictionary and
+        return that dictionary inside a list.
+        """
+        pass
+
+    @abstractmethod
+    def constraints(theta_, kwargs):
+        """
+        A static method, which take hyperaparameters and constraints argument and evaluate constraints value.
         """
         pass

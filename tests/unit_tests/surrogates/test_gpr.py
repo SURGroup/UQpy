@@ -1,32 +1,32 @@
-# import pytest
-# from beartype.roar import BeartypeCallHintPepParamException
-#
-# from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
-# from UQpy.surrogates.gaussian_process.GaussianProcessRegression import GaussianProcessRegression
+import pytest
+from beartype.roar import BeartypeCallHintPepParamException
+
+from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
+from UQpy.surrogates.gaussian_process.GaussianProcessRegression import GaussianProcessRegression
 # # from UQpy.utilities.strata.Rectangular import Rectangular
 # # from UQpy.sampling.StratifiedSampling import StratifiedSampling
 # # from UQpy.RunModel import RunModel
 # # from UQpy.distributions.collection.Uniform import Uniform
-# import numpy as np
-# import shutil
-# # from UQpy.surrogates.kriging.regression_models import Linear, Constant
-# from UQpy.surrogates.gaussian_process.kernels import RBF, Matern
+import numpy as np
+import shutil
+from UQpy.surrogates.gaussian_process.regression_models import LinearRegression, ConstantRegression
+from UQpy.surrogates.gaussian_process.kernels import RBF, Matern
 #
 #
-# samples = np.linspace(0, 5, 20).reshape(-1, 1)
-# values = np.cos(samples)
-# optimizer = MinimizeOptimizer(method="L-BFGS-B")
-# gpr = GaussianProcessRegression(kernel=RBF(), optimizer=optimizer,
-#                                 hyperparameters=[0.14], optimize=False, random_state=1)
-# gpr.fit(samples=samples, values=values, hyperparameters=[0.3])
-#
-# optimizer = MinimizeOptimizer(method="L-BFGS-B")
-# gpr2 = GaussianProcessRegression(kernel=Matern(mu=0.5), optimizer=optimizer,
-#                                  hyperparameters=[0.3], bounds=[[0.01, 5]], optimize=False,
-#                                  normalize=False, random_state=2)
-# gpr2.fit(samples=samples, values=values)
-#
-#
+samples = np.linspace(0, 5, 20).reshape(-1, 1)
+values = np.cos(samples)
+optimizer = MinimizeOptimizer(method="L-BFGS-B")
+gpr = GaussianProcessRegression(kernel=RBF(), optimizer=optimizer,
+                                hyperparameters=[0.14], optimize=False, random_state=1)
+gpr.fit(samples=samples, values=values, hyperparameters=[0.3])
+
+optimizer = MinimizeOptimizer(method="L-BFGS-B")
+gpr2 = GaussianProcessRegression(kernel=Matern(nu=0.5), optimizer=optimizer,
+                                 hyperparameters=[0.3], bounds=[[0.01, 5]], optimize=False,
+                                 normalize=False, random_state=2)
+gpr2.fit(samples=samples, values=values)
+
+
 # # Using the in-built linear regression model as a function
 # # linear_regression_model = Kriging(regression_model=Linear(), correlation_model=Gaussian(), optimizer=optimizer,
 # #                                   correlation_model_parameters=[1]).regression_model

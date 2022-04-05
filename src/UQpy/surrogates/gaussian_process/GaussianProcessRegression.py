@@ -173,9 +173,9 @@ class GaussianProcessRegression(Surrogate):
             starting_point[0, :] = np.log10(self.hyperparameters)
 
             if self.optimize_constraints is not None:
-                cons = self.optimize_constraints.constraints(self.samples, self.values, self.predict)
+                cons = self.optimize_constraints.define_arguments(self.samples, self.values, self.predict)
                 self.optimizer.apply_constraints(constraints=cons)
-                self.optimizer.apply_constraints_argument(self.optimize_constraints.args)
+                self.optimizer.apply_constraints_argument(self.optimize_constraints.constraint_args)
             else:
                 log_bounds = [[np.log10(xy[0]), np.log10(xy[1])] for xy in self.bounds]
                 self.optimizer.update_bounds(bounds=log_bounds)
@@ -250,11 +250,6 @@ class GaussianProcessRegression(Surrogate):
             s_ = self.samples
             y_ = self.values
 
-        mu1 = 0
-        if self.regression_model is not None:
-            fx = self.regression_model.r(x_)
-            mu1 = np.einsum("ij,jk->ik", fx, self.beta)
-
         if hyperparameters is None:
             hyperparameters = self.hyperparameters
 
@@ -283,6 +278,14 @@ class GaussianProcessRegression(Surrogate):
             alpha_ = cho_solve((cc, True), y_-mu)
         else:
             cc, alpha_ = self.cc, self.alpha_
+
+        mu1 = 0
+        if self.regression_model is not None:
+            fx = self.regression_model.r(x_)
+            if self.beta is None:
+                mu1 = np.einsum("ij,jk->ik", fx, beta)
+            else:
+                mu1 = np.einsum("ij,jk->ik", fx, self.beta)
 
         k = self.kernel.c(x=x_, s=s_, params=kernelparameters)
         y = mu1 + k @ alpha_

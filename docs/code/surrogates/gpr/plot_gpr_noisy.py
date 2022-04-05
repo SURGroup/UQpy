@@ -26,7 +26,7 @@ warnings.filterwarnings('ignore')
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 from UQpy.surrogates.gaussian_process.regression_models.LinearRegression import LinearRegression
 from UQpy.utilities.FminCobyla import FminCobyla
-from UQpy.surrogates import GaussianProcessRegression, Nonnegative, RBF
+from UQpy.surrogates import GaussianProcessRegression, NonNegative, RBF
 
 
 # %% md
