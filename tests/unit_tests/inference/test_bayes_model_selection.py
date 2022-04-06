@@ -21,7 +21,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 def test_models():
     a = os.getcwd()
     if "inference" not in a:
-        raise NotImplementedError(a)
+        os.chdir("../inference")
     data_ex1 = np.loadtxt('data_ex1a.txt')
 
     model = PythonModel(model_script='pfn_linear.py', model_object_name='model_linear', var_names=['theta_0'])
