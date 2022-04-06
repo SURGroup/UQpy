@@ -25,16 +25,16 @@ class DiffusionMaps:
 
     @beartype
     def __init__(
-            self,
-            kernel_matrix: Numpy2DFloatArray = None,
-            data: Union[list[np.ndarray], list[GrassmannPoint]] = None,
-            kernel: Kernel = None,
-            alpha: AlphaType = 0.5,
-            n_eigenvectors: IntegerLargerThanUnityType = 2,
-            is_sparse: bool = False,
-            n_neighbors: IntegerLargerThanUnityType = 1,
-            random_state: Union[None, int] = None,
-            t: int = 1
+        self,
+        kernel_matrix: Numpy2DFloatArray,
+        data: Union[list[np.ndarray], list[GrassmannPoint]] = None,
+        kernel: Kernel = None,
+        alpha: AlphaType = 0.5,
+        n_eigenvectors: IntegerLargerThanUnityType = 2,
+        is_sparse: bool = False,
+        n_neighbors: IntegerLargerThanUnityType = 1,
+        random_state: RandomStateType = None,
+        t: int = 1
     ):
         """
 
@@ -47,11 +47,14 @@ class DiffusionMaps:
             provided.
         :param kernel: Kernel object defining the similarity between the points. Either `kernel_matrix` or both
             `data` and `kernel` parameters must be provided.
-        :param alpha: Corresponds to different diffusion operators. It should be between zero and one.
-        :param n_eigenvectors: Number of eigenvectors to keep.
-        :param is_sparse: Work with sparse matrices. Increase the computational performance.
+        :param alpha: A scalar that corresponds to different diffusion operators. `alpha` should be between zero and
+            one.
+        :param n_eigenvectors: Number of eigenvectors to retain.
+        :param is_sparse:  Work with sparse matrices to improve computational performance.
         :param n_neighbors: If :code:`distance_matrix is True` defines the number of nearest neighbors.
-        :param random_state: sets :code:`np.random.default_rng(random_state)`.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
+         provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
+         object itself can be passed directly.
         :param t: Time exponent.
         """
         if kernel_matrix is not None:
@@ -69,16 +72,28 @@ class DiffusionMaps:
         self.random_state = random_state,
         self.t = t
 
-        self.transition_matrix = None
-        self.diffusion_coordinates = None
-        self.eigenvectors = None
-        self.eigenvalues = None
+        self.transition_matrix: np.ndarray = None
+        '''
+        Markov Transition Probability Matrix.
+        '''
+        self.diffusion_coordinates: np.ndarray = None
+        '''
+        Coordinates of the data in the diffusion space.
+        '''
+        self.eigenvectors: np.ndarray = None
+        '''
+        Eigenvectors of the transition probability matrix.
+        '''
+        self.eigenvalues: np.ndarray = None
+        '''
+        Eigenvalues of the transition probability matrix.
+        '''
         self.cut_off = None
 
         if kernel_matrix is not None:
             self.kernel_matrix = kernel_matrix
 
-    def fit(self) -> tuple[NumpyFloatArray, NumpyFloatArray, NumpyFloatArray]:
+    def _fit(self) -> tuple[NumpyFloatArray, NumpyFloatArray, NumpyFloatArray]:
         """
         Perform diffusion map embedding.
 
@@ -276,30 +291,7 @@ class DiffusionMaps:
         est_cutoff = np.max(k_smallest_values)
         return float(est_cutoff)
 
-    @staticmethod
-    def estimate_epsilon(data, tol=1e-8, cut_off: float = None, **estimate_cutoff_params) -> tuple[float, float]:
-        """
-        Estimates the scale parameter for a Gaussian kernel, given a tolerance below which the kernel values are
-        considered zero.
 
-        .. code::
-
-            scale = cut_off ** 2 / -log(tol)
-
-        :param data: Cloud of data points.
-        :param tol: Tolerance where the cut_off should be made.
-        :param cut_off: User-defined cut-off.
-        :param estimate_cutoff_params: Parameters to handle to method :py:meth:`estimate_cutoff` if :code:`cut_off is
-         None`.
-        :return: scale, cut_off
-
-        """
-
-        if cut_off is None:
-            cut_off = DiffusionMaps.estimate_cut_off(data, **estimate_cutoff_params)
-
-        scale = cut_off ** 2 / (-np.log(tol))
-        return scale, cut_off
 
     @staticmethod
     def eig_solver(kernel_matrix: Numpy2DFloatArray, is_symmetric: bool, n_eigenvectors: int) -> \
@@ -401,3 +393,4 @@ class DiffusionMaps:
                         cmap=plt.cm.Spectral)
             plt.title(
                 r"$\Psi_{{{}}}$ vs. $\Psi_{{{}}}$".format(pair_indices[0], pair_indices[1]))
+
