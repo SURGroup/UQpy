@@ -30,7 +30,10 @@ class GaussianKernel(EuclideanKernel):
         :param xj: Second point.
         :return: Float representing the kernel entry.
         """
-        d = pdist([xi, xj], "sqeuclidean")
+        if len(xi.shape) == 1:
+            d = pdist([xi, xj], "sqeuclidean")
+        else:
+            d = np.linalg.norm(xi-xj, 'fro')
         return np.exp(-d ** 2 / (4*self.epsilon))
 
     def optimize_parameters(self, data: np.ndarray, tolerance: float,
