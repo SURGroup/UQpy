@@ -4,7 +4,8 @@ from typing import Union
 import scipy.spatial.distance as sd
 import numpy as np
 
-from UQpy.utilities.ValidationTypes import NumpyFloatArray
+from UQpy.utilities import GrassmannPoint
+from UQpy.utilities.ValidationTypes import NumpyFloatArray, Numpy2DFloatArray
 from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 
 
@@ -14,11 +15,11 @@ class EuclideanKernel(Kernel, ABC):
     def __init__(self):
         super().__init__()
 
-    def calculate_kernel_matrix(self, points: Union[list, NumpyFloatArray]):
+    def calculate_kernel_matrix(self, points: Numpy2DFloatArray):
         """
-        Compute the Gaussian kernel matrix given a list of points on the Euclidean space.
+        Using the kernel-specific :py:meth:`.kernel_entry` method, this function assembles the kernel matrix.
 
-        :param points: Coordinates of the points in the Euclidean space
+        :param points: Set of data points in the Euclidean space
 
         """
         nargs = len(points)

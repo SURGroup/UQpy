@@ -77,12 +77,12 @@ class SVDProjection(GrassmannProjection):
             psi.append(GrassmannPoint(v))
 
         self.input_points = data
-        self.u:list[GrassmannPoint] = phi
+        self.u: list[GrassmannPoint] = phi
         """Left singular vectors from the SVD of each sample in `data` representing a point on the Grassmann 
         manifold. """
-        self.sigma:np.ndarray = sigma
+        self.sigma: np.ndarray = sigma
         """Singular values from the SVD of each sample in `data`."""
-        self.v:list[GrassmannPoint] = psi
+        self.v: list[GrassmannPoint] = psi
         """Right singular vectors from the SVD of each sample in `data` representing a point on the Grassmann 
         manifold."""
 

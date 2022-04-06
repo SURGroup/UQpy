@@ -17,9 +17,13 @@ The :class:`UQpy.utilities.kernels.baseclass.Kernel` class is imported using the
 .. autoclass:: UQpy.utilities.kernels.baseclass.Kernel
     :members: kernel_entry, optimize_parameters, calculate_kernel_matrix
 
+Types of Kernels
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`Kernel` class has subclasses for the following types of kernels:
 
 .. toctree::
    :maxdepth: 1
 
-    Grassmannian Kernels <grassmann_kernels>
     Euclidean Kernels <euclidean_kernels>
+    Grassmannian Kernels <grassmann_kernels>

@@ -1,30 +1,35 @@
 Euclidean Kernels
 -----------------------------------
 
-Euclidean Kernel
+Euclidean Kernel Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :class:`.EuclideanKernel` class is imported using the following command:
+The :class:`.EuclideanKernel` class is the parent class for all Euclidean kernels. It is imported using the following
+command:
 
 >>> from UQpy.utilities.kernels.baseclass.EuclideanKernel import EuclideanKernel
 
 .. autoclass:: UQpy.utilities.kernels.baseclass.EuclideanKernel
     :members: calculate_kernel_matrix
 
-Gaussian
+Gaussian Kernel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The Gaussian kernel is defined by:
+
+.. math:: k(\mathbf{x}_i,\mathbf{x}_j) = \exp\left(\dfrac{||\mathbf{x}_i-\mathbf{x}_j||^2}{2\epsilon^2}\right)
 
 The :class:`.GaussianKernel` class is imported using the following command:
 
 >>> from UQpy.utilities.kernels.GaussianKernel import GaussianKernel
 
-One can use the following command to instantiate the class :class:`.GaussianKernel`
+One can use the following to instantiate the class :class:`.GaussianKernel`
 
 Methods
 ~~~~~~~~~
 
 .. autoclass:: UQpy.utilities.kernels.GaussianKernel
-    :members: optimize_parameters
+    :members: kernel_entry, optimize_parameters
 
 Attributes
 ~~~~~~~~~~
