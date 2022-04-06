@@ -4,6 +4,7 @@ import scipy.spatial.distance as sd
 
 from UQpy.utilities.ValidationTypes import RandomStateType
 from UQpy.utilities.kernels import EuclideanKernel
+from scipy.spatial.distance import pdist
 
 
 class GaussianKernel(EuclideanKernel):
@@ -30,11 +31,8 @@ class GaussianKernel(EuclideanKernel):
         :param xj: Second point.
         :return: Float representing the kernel entry.
         """
-
-        return np.linalg.norm(xi - xj, "fro") ** 2
-
-    def kernel_function(self, distance_pairs):
-        return np.exp(-sd.squareform(distance_pairs) / (4 * self.epsilon))
+        d = pdist([xi, xj], "sqeuclidean")
+        return np.exp(-d ** 2 / (4*self.epsilon))
 
     def optimize_parameters(self, data: np.ndarray, tolerance: float,
                             n_nearest_neighbors: int,
