@@ -22,7 +22,7 @@ One can use the following method to instantiate the :class:`.DiffusionMaps` clas
 Methods
 ~~~~~~~~~~~
 .. autoclass:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps
-    :members: build_from_data, fit, parsimonious, estimate_epsilon
+    :members: parsimonious
 
 Attributes
 ~~~~~~~~~~~~~
@@ -30,6 +30,8 @@ Attributes
 .. autoattribute:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps.diffusion_coordinates
 .. autoattribute:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps.eigenvectors
 .. autoattribute:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps.eigenvalues
+.. autoattribute:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps.parsimonious_indices
+.. autoattribute:: UQpy.dimension_reduction.diffusion_maps.DiffusionMaps.parsimonious_residuals
 
 Examples
 ~~~~~~~~~~~~~

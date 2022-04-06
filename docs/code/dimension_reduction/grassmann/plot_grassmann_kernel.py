@@ -73,8 +73,11 @@ manifold_projection = SVDProjection(matrices, p="max")
 # %%
 projection_kernel = ProjectionKernel()
 
-kernel_psi = projection_kernel.calculate_kernel_matrix(points=manifold_projection.u)
-kernel_phi = projection_kernel.calculate_kernel_matrix(points=manifold_projection.v)
+projection_kernel.calculate_kernel_matrix(points=manifold_projection.u)
+kernel_psi = projection_kernel.kernel_matrix
+
+projection_kernel.calculate_kernel_matrix(points=manifold_projection.v)
+kernel_phi = projection_kernel.kernel_matrix
 
 fig, (ax1, ax2) = plt.subplots(1, 2)
 ax1.title.set_text('kernel_psi')
@@ -89,9 +92,10 @@ plt.show()
 
 # %%
 
-kernel_01 = projection_kernel.calculate_kernel_matrix(points=[manifold_projection.u[0],
-                                                              manifold_projection.u[1],
-                                                              manifold_projection.u[2]])
+projection_kernel.calculate_kernel_matrix(points=[manifold_projection.u[0],
+                                                  manifold_projection.u[1],
+                                                  manifold_projection.u[2]])
+kernel_01 = projection_kernel.kernel_matrix
 
 fig = plt.figure()
 plt.imshow(kernel_01)
@@ -105,18 +109,20 @@ plt.show()
 # %%
 from UQpy.utilities.kernels.baseclass.GrassmannianKernel import GrassmannianKernel
 
-
 class UserKernel(GrassmannianKernel):
 
-    def kernel_entry(self, xi: GrassmannPoint, xj: GrassmannPoint):
+    def _kernel_entry(self, xi: GrassmannPoint, xj: GrassmannPoint):
         r = np.dot(xi.data.T, xj.data)
         det = np.linalg.det(r)
         return det * det
 
 
 user_kernel = UserKernel()
-kernel_user_psi = user_kernel.calculate_kernel_matrix(points=manifold_projection.u)
-kernel_user_phi = user_kernel.calculate_kernel_matrix(points=manifold_projection.v)
+user_kernel.calculate_kernel_matrix(points=manifold_projection.u)
+kernel_user_psi = user_kernel.kernel_matrix
+
+user_kernel.calculate_kernel_matrix(points=manifold_projection.v)
+kernel_user_phi = user_kernel.kernel_matrix
 
 fig, (ax1, ax2) = plt.subplots(1, 2)
 ax1.title.set_text('kernel_psi')

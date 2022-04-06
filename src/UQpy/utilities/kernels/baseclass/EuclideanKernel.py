@@ -12,9 +12,9 @@ class EuclideanKernel(Kernel, ABC):
     """This is a blueprint for Euclidean kernels implemented in the :py:mod:`kernels` module ."""
 
     def __init__(self):
-        self.kernel_matrix = None
+        super().__init__()
 
-    def calculate_kernel_matrix(self, points: Union[list, NumpyFloatArray]) -> NumpyFloatArray:
+    def calculate_kernel_matrix(self, points: Union[list, NumpyFloatArray]):
         """
         Compute the Gaussian kernel matrix given a list of points on the Euclidean space.
 
@@ -37,7 +37,7 @@ class EuclideanKernel(Kernel, ABC):
                 xi = points[i]
                 xj = points[j]
 
-                distance_pairs.append(self.kernel_entry(xi, xj))
+                distance_pairs.append(self._kernel_entry(xi, xj))
 
         self.kernel_matrix = self.kernel_function(distance_pairs)
 

@@ -25,16 +25,16 @@ class DiffusionMaps:
 
     @beartype
     def __init__(
-        self,
-        kernel_matrix: Numpy2DFloatArray,
-        data: Union[list[np.ndarray], list[GrassmannPoint]] = None,
-        kernel: Kernel = None,
-        alpha: AlphaType = 0.5,
-        n_eigenvectors: IntegerLargerThanUnityType = 2,
-        is_sparse: bool = False,
-        n_neighbors: IntegerLargerThanUnityType = 1,
-        random_state: RandomStateType = None,
-        t: int = 1
+            self,
+            kernel_matrix: Numpy2DFloatArray = None,
+            data: Union[np.ndarray, list[GrassmannPoint]] = None,
+            kernel: Kernel = None,
+            alpha: AlphaType = 0.5,
+            n_eigenvectors: IntegerLargerThanUnityType = 2,
+            is_sparse: bool = False,
+            n_neighbors: IntegerLargerThanUnityType = 1,
+            random_state: RandomStateType = None,
+            t: int = 1
     ):
         """
 
@@ -57,10 +57,18 @@ class DiffusionMaps:
          object itself can be passed directly.
         :param t: Time exponent.
         """
+        self.parsimonious_residuals = None
+        """Residuals calculated from the Parsimonious Representation. This attribute will only be populated if the 
+        :py:meth:`parsimonious`  method is invoked."""
+        self.parsimonious_indices = None
+        """Indices of the most important eigenvectors. This attribute will only be populated if the 
+        :py:meth:`parsimonious`  method is invoked."""
+
         if kernel_matrix is not None:
             self.kernel_matrix = kernel_matrix
         elif data is not None and kernel is not None:
-            self.kernel_matrix = kernel.calculate_kernel_matrix(points=data)
+            kernel.calculate_kernel_matrix(points=data)
+            self.kernel_matrix = kernel.kernel_matrix
         else:
             raise ValueError("Either `kernel_matrix` or both `data` and `kernel` must be provided")
 
@@ -90,15 +98,11 @@ class DiffusionMaps:
         '''
         self.cut_off = None
 
-        if kernel_matrix is not None:
-            self.kernel_matrix = kernel_matrix
+        self._fit()
 
-    def _fit(self) -> tuple[NumpyFloatArray, NumpyFloatArray, NumpyFloatArray]:
+    def _fit(self):
         """
         Perform diffusion map embedding.
-
-        :returns: diffusion_coordinates, eigenvalues, eigenvectors
-
         """
 
         if self.is_sparse:
@@ -112,11 +116,7 @@ class DiffusionMaps:
 
         # Compute L^alpha = D^(-alpha)*L*D^(-alpha).
         m = d_inv.shape[0]
-        if self.is_sparse:
-            d_alpha = sps.spdiags(d_inv, 0, m, m)
-        else:
-            d_alpha = np.diag(d_inv)
-
+        d_alpha = sps.spdiags(d_inv, 0, m, m) if self.is_sparse else np.diag(d_inv)
         l_star = d_alpha.dot(self.kernel_matrix.dot(d_alpha))
 
         # d_star, d_star_inv = self._d_matrix(l_star, 1.0)
@@ -169,9 +169,7 @@ class DiffusionMaps:
             if sum(kernel_matrix[i, :]) <= 0:
                 raise ValueError("UQpy: Consider increasing `n_neighbors` to have a connected graph.")
 
-        sparse_kernel_matrix = sps.csc_matrix(kernel_matrix)
-
-        return sparse_kernel_matrix
+        return sps.csc_matrix(kernel_matrix)
 
     @staticmethod
     def diffusion_distance(diffusion_coordinates: Numpy2DFloatArray) -> Numpy2DFloatArray:
@@ -201,8 +199,7 @@ class DiffusionMaps:
 
         return normalized_kernel
 
-    @staticmethod
-    def parsimonious(eigenvectors: Numpy2DFloatArray, dim: int) -> tuple[list, NumpyFloatArray]:
+    def parsimonious(self, dim: int):
         """
         Selection of independent vectors for parsimonious data manifold embedding, based on
         local regression.  The eigenvectors with the largest residuals are considered for the
@@ -212,23 +209,22 @@ class DiffusionMaps:
 
             scale = median(distances) / 3
 
-        :param eigenvectors: Eigenvectors of the diffusion maps embedding.
         :param dim: Number of eigenvectors to select with largest residuals.
-        :returns: indices, residuals
         """
 
-        residuals = np.zeros(eigenvectors.shape[1])
+        residuals = np.zeros(self.eigenvectors.shape[1])
         residuals[0] = np.nan
         # residual 1 for the first eigenvector.
         residuals[1] = 1.0
 
         # Get the residuals of each eigenvector.
-        for i in range(2, eigenvectors.shape[1]):
-            residuals[i] = DiffusionMaps.__get_residual(f_mat=eigenvectors[:, 1:i], f=eigenvectors[:, i])
+        for i in range(2, self.eigenvectors.shape[1]):
+            residuals[i] = DiffusionMaps.__get_residual(f_mat=self.eigenvectors[:, 1:i], f=self.eigenvectors[:, i])
 
         # Get the index of the eigenvalues associated with each residual.
         indices = np.argsort(residuals)[::-1][1:dim + 1]
-        return indices, residuals
+        self.parsimonious_indices = indices
+        self.parsimonious_residuals = residuals
 
     @staticmethod
     def __get_residual(f_mat, f):
@@ -255,64 +251,17 @@ class DiffusionMaps:
         return residual
 
     @staticmethod
-    def estimate_cut_off(data, k_nn: int = 20, n_partition: Union[None, int] = None,
-                         distance_matrix: Union[None, Numpy2DFloatArray] = None,
-                         random_state: Union[None, int] = None) -> float:
-        """
-        Estimates the cut-off for a Gaussian kernel, given a tolerance below which the kernel values are
-        considered zero.
-
-        :param data: Cloud of data points.
-        :param k_nn: k-th nearest neighbor distance to estimate the cut-off distance.
-        :param n_partition: maximum subsample used for the estimation. Ignored if :code:`distance_matrix is not None`.
-        :param distance_matrix:  Pre-computed distance matrix.
-        :param random_state: sets :code:`np.random.default_rng(random_state)`.
-        :return:
-
-        """
-        data = np.atleast_2d(data)
-        n_points = data.shape[0]
-        if n_points < 10:
-            d = scipy.spatial.distance.pdist(data)
-            return np.max(d)
-
-        if distance_matrix is None:
-            if n_partition is not None:
-                random_indices = np.random.default_rng(random_state).permutation(n_points)
-                distance_matrix = sd.cdist(data[random_indices[:n_partition]], data, metric='euclidean')
-                k = np.min([k_nn, distance_matrix.shape[1]])
-                k_smallest_values = np.partition(distance_matrix, k - 1, axis=1)[:, k - 1]
-            else:
-                distance_matrix = sd.squareform(sd.pdist(data, metric='euclidean'))
-                k = np.min([k_nn, distance_matrix.shape[1]])
-                k_smallest_values = np.partition(distance_matrix, k - 1, axis=1)[:, k - 1]
-        else:
-            k_smallest_values = np.partition(distance_matrix, k_nn - 1, axis=1)[:, k_nn - 1]
-        est_cutoff = np.max(k_smallest_values)
-        return float(est_cutoff)
-
-
-
-    @staticmethod
-    def eig_solver(kernel_matrix: Numpy2DFloatArray, is_symmetric: bool, n_eigenvectors: int) -> \
-            tuple[NumpyFloatArray, Numpy2DFloatArray]:
+    def eig_solver(kernel_matrix: Numpy2DFloatArray, is_symmetric: bool, n_eigenvectors: int) -> tuple[
+        NumpyFloatArray, Numpy2DFloatArray]:
 
         n_samples, n_features = kernel_matrix.shape
 
         if n_eigenvectors == n_features:
-            if is_symmetric:
-                solver = sp.linalg.eigh
-            else:
-                solver = sp.linalg.eig
-
+            solver = sp.linalg.eigh if is_symmetric else sp.linalg.eig
             solver_kwargs = {"check_finite": False}
 
         else:
-            if is_symmetric:
-                solver = eigsh
-            else:
-                solver = eigs
-
+            solver = eigsh if is_symmetric else eigs
             solver_kwargs = {
                 "sigma": None,
                 "k": n_eigenvectors,
@@ -393,4 +342,3 @@ class DiffusionMaps:
                         cmap=plt.cm.Spectral)
             plt.title(
                 r"$\Psi_{{{}}}$ vs. $\Psi_{{{}}}$".format(pair_indices[0], pair_indices[1]))
-

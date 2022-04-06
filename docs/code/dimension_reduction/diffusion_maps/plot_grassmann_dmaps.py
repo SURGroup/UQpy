@@ -89,11 +89,11 @@ plt.show()
 #
 # Diffusion maps with Grassmann kernel
 kernel = ProjectionKernel()
-kernel_matrix = kernel.calculate_kernel_matrix(psi)
+kernel.calculate_kernel_matrix(psi)
+
 
 Gdmaps_UQpy = DiffusionMaps(alpha=1.0, n_eigenvectors=5, is_sparse=True, n_neighbors=250,
-                            kernel_matrix=kernel_matrix)
-Gdmaps_UQpy.fit()
+                            kernel_matrix=kernel.kernel_matrix)
 
 #%%
 #

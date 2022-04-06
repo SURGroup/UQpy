@@ -18,7 +18,7 @@ class GaussianKernel(EuclideanKernel):
         super().__init__()
         self.epsilon = epsilon
 
-    def kernel_entry(self, xi, xj):
+    def _kernel_entry(self, xi, xj):
         return np.linalg.norm(xi - xj, "fro") ** 2
 
     def kernel_function(self, distance_pairs):
