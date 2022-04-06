@@ -37,7 +37,7 @@ class EuclideanKernel(Kernel, ABC):
                 xi = points[i]
                 xj = points[j]
 
-                distance_pairs.append(self._kernel_entry(xi, xj))
+                distance_pairs.append(self.kernel_entry(xi, xj))
 
         self.kernel_matrix = self.kernel_function(distance_pairs)
 
