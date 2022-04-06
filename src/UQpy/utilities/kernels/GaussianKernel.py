@@ -2,7 +2,7 @@ import numpy as np
 import scipy
 import scipy.spatial.distance as sd
 
-from UQpy.utilities.ValidationTypes import RandomStateType
+from UQpy.utilities.ValidationTypes import RandomStateType, Numpy2DFloatArray
 from UQpy.utilities.kernels import EuclideanKernel
 
 
@@ -21,10 +21,9 @@ class GaussianKernel(EuclideanKernel):
         super().__init__()
         self.epsilon = epsilon
 
-    def kernel_entry(self, xi, xj):
+    def kernel_entry(self, xi: Numpy2DFloatArray, xj: Numpy2DFloatArray):
         """
-        Given two points, this method calculates the respective kernel entry. Each concrete kernel implementation must
-        override this method and provide its own implementation.
+        Given two points, this method computes the Gaussian kernel value between those two points
 
         :param xi: First point.
         :param xj: Second point.
@@ -42,8 +41,8 @@ class GaussianKernel(EuclideanKernel):
                             random_state: RandomStateType):
         """
 
-        :param data: Cloud of data points.
-        :param tolerance: Tolerance below which the Gaussian kernels is assumed to be zero.
+        :param data: Set of data points.
+        :param tolerance: Tolerance below which the Gaussian kernel is assumed to be zero.
         :param n_nearest_neighbors: Number of neighbors to use for cut-off estimation.
         :param n_cutoff_samples: Number of samples to use for cut-off estimation.
         :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
