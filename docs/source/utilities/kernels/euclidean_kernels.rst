@@ -20,5 +20,13 @@ The :class:`.GaussianKernel` class is imported using the following command:
 
 One can use the following command to instantiate the class :class:`.GaussianKernel`
 
+Methods
+~~~~~~~~~
+
 .. autoclass:: UQpy.utilities.kernels.GaussianKernel
-    :members:
+    :members: optimize_epsilon
+
+Attributes
+~~~~~~~~~~
+
+.. autoattribute:: UQpy.utilities.kernels.GaussianKernel.kernel_matrix

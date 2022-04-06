@@ -5,8 +5,9 @@ import numpy.random
 from beartype import beartype
 
 from UQpy.utilities.distances.grassmannian_distances import GeodesicDistance
-from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
-from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
+from UQpy.utilities.GrassmannPoint import GrassmannPoint
+from UQpy.dimension_reduction.grassmann_manifold.projections.SVDProjection import SVDProjection
+from UQpy.dimension_reduction.grassmann_manifold.GrassmannOperations import GrassmannOperations
 import sys
 from numpy.random import RandomState
 
@@ -42,16 +43,16 @@ sol3 = np.array([[0.60547, 0.11492, 0.78956, 0.13796, 0.76685, 0.41661],
 def test_karcher():
     # Creating a list of matrices.
     matrices = [sol0, sol1, sol2, sol3]
-    manifold_projection = SvdProjection(matrices, p="max")
+    manifold_projection = SVDProjection(matrices, p="max")
 
     # optimization_method = GradientDescent(acceleration=True, error_tolerance=1e-4, max_iterations=1000)
-    psi_mean = Grassmann.karcher_mean(grassmann_points=manifold_projection.psi,
-                                      optimization_method="GradientDescent",
-                                      distance=GeodesicDistance())
+    psi_mean = GrassmannOperations.karcher_mean(grassmann_points=manifold_projection.u,
+                                                optimization_method="GradientDescent",
+                                                distance=GeodesicDistance())
 
-    phi_mean = Grassmann.karcher_mean(grassmann_points=manifold_projection.phi,
-                                      optimization_method="GradientDescent",
-                                      distance=GeodesicDistance())
+    phi_mean = GrassmannOperations.karcher_mean(grassmann_points=manifold_projection.v,
+                                                optimization_method="GradientDescent",
+                                                distance=GeodesicDistance())
 
     assert round(psi_mean.data[0, 0], 9) == -0.387197957
     # assert round(psi_mean.data[0, 0], 9) == -0.418075902
@@ -60,16 +61,13 @@ def test_karcher():
 
 def test_karcher_stochastic():
     matrices = [sol0, sol1, sol2, sol3]
-    manifold_projection = SvdProjection(matrices, p="max")
+    manifold_projection = SVDProjection(matrices, p="max")
 
     # optimization_method = GradientDescent(acceleration=True, error_tolerance=1e-4, max_iterations=1000)
-    psi_mean = Grassmann.karcher_mean(grassmann_points=manifold_projection.psi,
-                                      optimization_method="StochasticGradientDescent",
-                                      distance=GeodesicDistance())
+    psi_mean = GrassmannOperations.karcher_mean(grassmann_points=manifold_projection.u,
+                                                optimization_method="StochasticGradientDescent",
+                                                distance=GeodesicDistance())
 
-    phi_mean = Grassmann.karcher_mean(grassmann_points=manifold_projection.phi,
-                                      optimization_method="StochasticGradientDescent",
-                                      distance=GeodesicDistance())
-    assert round(psi_mean.data[0, 0], 9) == -0.387197957
-    # assert round(psi_mean.data[0, 0], 9) == -0.418075902
-    # assert round(phi_mean.data[0, 0], 9) == -0.353239531
+    phi_mean = GrassmannOperations.karcher_mean(grassmann_points=manifold_projection.v,
+                                                optimization_method="StochasticGradientDescent",
+                                                distance=GeodesicDistance())

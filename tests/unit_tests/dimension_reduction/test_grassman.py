@@ -4,8 +4,8 @@ import numpy as np
 import scipy
 
 from UQpy.utilities.distances.grassmannian_distances import GeodesicDistance
-from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
-from UQpy.dimension_reduction.grassmann_manifold.ManifoldInterpolation import ManifoldInterpolation
+from UQpy.dimension_reduction.grassmann_manifold.projections.SVDProjection import SVDProjection
+from UQpy.dimension_reduction.grassmann_manifold.GrassmannInterpolation import GrassmannInterpolation
 
 sol0 = np.array([[0.61415, 1.03029, 1.02001, 0.57327, 0.79874, 0.73274],
                  [0.56924, 0.91700, 0.88841, 0.53737, 0.68676, 0.67751],
@@ -51,12 +51,12 @@ def test_solution_reconstruction():
     # Creating a list of solutions.
     Solutions = [sol0, sol1, sol2, sol3]
 
-    manifold_projection = SvdProjection(Solutions, p="max")
+    manifold_projection = SVDProjection(Solutions, p="max")
 
-    interpolation = ManifoldInterpolation(interpolation_method=None,
-                                          manifold_data=manifold_projection.phi,
-                                          coordinates=nodes,
-                                          distance=GeodesicDistance())
+    interpolation = GrassmannInterpolation(interpolation_method=None,
+                                           manifold_data=manifold_projection.v,
+                                           coordinates=nodes,
+                                           distance=GeodesicDistance())
 
     interpolated_solution = interpolation.interpolate_manifold(point=point)
     # assert round(interpolated_solution.data[0, 0], 9) == -0.353239531

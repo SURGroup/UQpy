@@ -11,22 +11,34 @@ from UQpy.utilities.distances.baseclass import GrassmannianDistance
 from UQpy.utilities.kernels import GrassmannianKernel, ProjectionKernel
 
 
-class Grassmann:
+class GrassmannOperations:
     @beartype
     def __init__(self, grassmann_points: Union[list[Numpy2DFloatArrayOrthonormal], list[GrassmannPoint]],
                  kernel: GrassmannianKernel = ProjectionKernel(),
                  p: Union[int, str] = "max", optimization_method: str = "GradientDescent",
                  distance: GrassmannianDistance = GeodesicDistance()):
         """
+        The :class:`.GrassmannOperations` class can used in two ways. In the first case, the user can invoke the
+        initializer by providing all the required input data. The class will then automatically calculate the
+        kernel matrix, distance matrix, karcher mean, and frechet variance of the input Grassmann points. Alternatively,
+        the user may invoke each of the static methods individually and calculate only the required quantities, without
+        having to instantiate a new object.
 
-        :param grassmann_points: Points projected on the Grassmann manifold
+        :param grassmann_points: Data points projected on the Grassmann manifold
+        :param kernel: Kernel to be used to evaluate the kernel matrix of the given Grassmann points
+        :param p: Rank of the Grassmann projected points.
+        :param optimization_method: String that defines the optimization method for computation of the Karcher mean.
+
+            Options: `"GradientDescent"`, `"StochasticGradientDescent"`
+        :param distance: Distance measure to be used for the optimization in computation of the Karcher mean and Frechet
+            variance.
         """
         self.grassmann_points = grassmann_points
         self.p = p
         self.kernel_matrix = kernel.calculate_kernel_matrix(self.grassmann_points)
         self.distance_matrix = distance.calculate_distance_matrix(self.grassmann_points)
-        self.karcher_mean = Grassmann.karcher_mean(self.grassmann_points, optimization_method, distance)
-        self.frechet_variance = Grassmann.frechet_variance(self.grassmann_points, self.karcher_mean, distance)
+        self.karcher_mean = GrassmannOperations.karcher_mean(self.grassmann_points, optimization_method, distance)
+        self.frechet_variance = GrassmannOperations.frechet_variance(self.grassmann_points, self.karcher_mean, distance)
 
     @staticmethod
     def calculate_kernel_matrix(grassmann_points: Union[list[Numpy2DFloatArrayOrthonormal], list[GrassmannPoint]],
@@ -108,8 +120,9 @@ class Grassmann:
                          distance: GrassmannianDistance) -> float:
         """
         :param grassmann_points: Point(s) on the Grassmann manifold
-        :param reference_point: Reference point
-        :param distance: Distance metric to be used for the optimization.
+        :param reference_point: Reference point for the Frechet variance (:math:`\mu`). Typically assigned as the
+            Karcher mean.
+        :param distance: Distance measure to be used in the variance calculation.
         """
         p_dim = [min(np.shape(grassmann_points[i].data)) for i in range(len(grassmann_points))]
 
@@ -129,13 +142,15 @@ class Grassmann:
                      acceleration: bool = False, tolerance: float = 1e-3,
                      maximum_iterations: int = 1000) -> GrassmannPoint:
         """
-        :param maximum_iterations: Maximum iterations performed by the optimization algorithm.
+        :param maximum_iterations: Maximum number of iterations performed by the optimization algorithm.
         :param tolerance: Tolerance used as the convergence criterion of the optimization.
         :param acceleration: Boolean flag used in combination with :code:`GradientDescent` optimization method which
          activates the Nesterov acceleration scheme
         :param grassmann_points: Point(s) on the Grassmann manifold.
-        :param optimization_method: The optimization method.
-        :param distance: Distance metric to be used for the optimization.
+        :param optimization_method: String that defines the optimization method.
+
+            Options: `"GradientDescent"`, `"StochasticGradientDescent"`
+        :param distance: Distance measure to be used for the optimization.
         """
         # Compute and test the number of input matrices necessary to compute the Karcher mean.
         nargs = len(grassmann_points)
@@ -143,9 +158,9 @@ class Grassmann:
             raise ValueError("UQpy: At least two matrices must be provided.")
 
         if optimization_method == "GradientDescent":
-            return Grassmann._gradient_descent(grassmann_points, distance, acceleration, tolerance, maximum_iterations)
+            return GrassmannOperations._gradient_descent(grassmann_points, distance, acceleration, tolerance, maximum_iterations)
         else:
-            return Grassmann._stochastic_gradient_descent(grassmann_points, distance, tolerance, maximum_iterations)
+            return GrassmannOperations._stochastic_gradient_descent(grassmann_points, distance, tolerance, maximum_iterations)
 
     @staticmethod
     def _gradient_descent(data_points, distance_fun, acceleration, tolerance, maximum_iterations):
@@ -162,7 +177,7 @@ class Grassmann:
         alpha = 0.5
         rnk = [min(np.shape(data_points[i].data)) for i in range(n_mat)]
         max_rank = max(rnk)
-        fmean = [Grassmann.frechet_variance(data_points, data_points[i], distance_fun) for i in range(n_mat)]
+        fmean = [GrassmannOperations.frechet_variance(data_points, data_points[i], distance_fun) for i in range(n_mat)]
 
         index_0 = fmean.index(min(fmean))
         mean_element = data_points[index_0].data.tolist()
@@ -175,8 +190,8 @@ class Grassmann:
         avg = []
         _gamma = []
         if acc:
-            _gamma = Grassmann.log_map(grassmann_points=data_points,
-                                       reference_point=np.asarray(mean_element))
+            _gamma = GrassmannOperations.log_map(grassmann_points=data_points,
+                                                 reference_point=np.asarray(mean_element))
 
             avg_gamma.fill(0)
             for i in range(n_mat):
@@ -185,8 +200,8 @@ class Grassmann:
 
         # Main loop
         while itera <= maxiter:
-            _gamma = Grassmann.log_map(grassmann_points=data_points,
-                                       reference_point=np.asarray(mean_element))
+            _gamma = GrassmannOperations.log_map(grassmann_points=data_points,
+                                                 reference_point=np.asarray(mean_element))
             avg_gamma.fill(0)
 
             for i in range(n_mat):
@@ -207,8 +222,8 @@ class Grassmann:
             else:
                 step = alpha * avg_gamma
 
-            x = Grassmann.exp_map(tangent_points=[step],
-                                  reference_point=np.asarray(mean_element))
+            x = GrassmannOperations.exp_map(tangent_points=[step],
+                                            reference_point=np.asarray(mean_element))
 
             test_1 = np.linalg.norm(x[0].data - mean_element, 'fro')
 
@@ -233,7 +248,7 @@ class Grassmann:
         rnk = [min(np.shape(data_points[i].data)) for i in range(n_mat)]
         max_rank = max(rnk)
 
-        fmean = [Grassmann.frechet_variance(data_points, data_points[i], distance_fun) for i in range(n_mat)]
+        fmean = [GrassmannOperations.frechet_variance(data_points, data_points[i], distance_fun) for i in range(n_mat)]
 
         index_0 = fmean.index(min(fmean))
 
@@ -250,13 +265,13 @@ class Grassmann:
             for i in range(len(indices)):
                 alpha = 0.5 / k
                 idx = indices[i]
-                _gamma = Grassmann.log_map(grassmann_points=[data_points[idx]],
-                                           reference_point=np.asarray(mean_element))
+                _gamma = GrassmannOperations.log_map(grassmann_points=[data_points[idx]],
+                                                     reference_point=np.asarray(mean_element))
 
                 step = 2 * alpha * _gamma[0]
 
-                X = Grassmann.exp_map(tangent_points=[step],
-                                      reference_point=np.asarray(mean_element))
+                X = GrassmannOperations.exp_map(tangent_points=[step],
+                                                reference_point=np.asarray(mean_element))
 
                 _gamma = []
                 mean_element = X[0].data

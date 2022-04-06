@@ -25,16 +25,18 @@
 
 # %%
 
-import shutil
-
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Normal
 from UQpy.reliability import FORM
 
 dist1 = Normal(loc=20., scale=3.5)
 dist2 = Normal(loc=5., scale=0.8)
 dist3 = Normal(loc=4., scale=0.4)
-RunModelObject3 = RunModel(model_script='pfn.py', model_object_name="example3", vec=False, ntasks=3)
+
+model = PythonModel(model_script='pfn.py', model_object_name="example3",)
+RunModelObject3 = RunModel_New(model=model)
+
 Z0 = FORM(distributions=[dist1, dist2, dist3], runmodel_object=RunModelObject3)
 Z0.run()
 
@@ -43,4 +45,3 @@ print('Design point in original space: %s' % Z0.DesignPoint_X)
 print('Hasofer-Lind reliability index: %s' % Z0.beta)
 print('FORM probability of failure: %s' % Z0.failure_probability)
 
-shutil.rmtree(RunModelObject3.model_dir)

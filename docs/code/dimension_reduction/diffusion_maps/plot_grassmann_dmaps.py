@@ -5,8 +5,8 @@ Grassmannian Diffusion Maps
 
 """
 import numpy as np
-from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
-from UQpy.dimension_reduction.grassmann_manifold import Grassmann
+from UQpy.dimension_reduction.grassmann_manifold.projections.SVDProjection import SVDProjection
+from UQpy.dimension_reduction.grassmann_manifold import GrassmannOperations
 from UQpy.utilities.kernels import ProjectionKernel
 from UQpy.dimension_reduction.diffusion_maps.DiffusionMaps import DiffusionMaps
 import sys
@@ -56,8 +56,8 @@ data = [data2dArray.reshape(1, -1).T for data2dArray in data_matrix]
 # Select the work with maximum rank (number of planes) from each data point (p=sys.maxsize).
 # Use the matrix of left eigenvectors to calculate the kernel (KernelComposition.LEFT).
 
-Grassmann_projection = SvdProjection(data=data[::10], p="max")
-psi = Grassmann_projection.psi
+Grassmann_projection = SVDProjection(data=data[::10], p="max")
+psi = Grassmann_projection.u
 
 #%%
 #
@@ -89,11 +89,11 @@ plt.show()
 #
 # Diffusion maps with Grassmann kernel
 kernel = ProjectionKernel()
-kernel_matrix = kernel.calculate_kernel_matrix(psi)
+kernel.calculate_kernel_matrix(psi)
+
 
 Gdmaps_UQpy = DiffusionMaps(alpha=1.0, n_eigenvectors=5, is_sparse=True, n_neighbors=250,
-                            kernel_matrix=kernel_matrix)
-Gdmaps_UQpy.fit()
+                            kernel_matrix=kernel.kernel_matrix)
 
 #%%
 #

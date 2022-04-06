@@ -1,7 +1,7 @@
 import sys
 
 from UQpy.utilities.GrassmannPoint import GrassmannPoint
-from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassmann_manifold.projections.SVDProjection import SVDProjection
 from UQpy.utilities.kernels.ProjectionKernel import ProjectionKernel
 from UQpy.utilities.kernels.BinetCauchyKernel import BinetCauchyKernel
 from UQpy.utilities.kernels.GaussianKernel import GaussianKernel
@@ -100,10 +100,10 @@ def test_kernel():
 
     # Creating a list of solutions.
     Solutions = [sol0, sol1, sol2, sol3]
-    from UQpy.dimension_reduction.grassmann_manifold.Grassmann import Grassmann
-    manifold_projection = SvdProjection(Solutions, p="max")
+    from UQpy.dimension_reduction.grassmann_manifold.GrassmannOperations import GrassmannOperations
+    manifold_projection = SVDProjection(Solutions, p="max")
     kernel = ProjectionKernel()
 
-    kernel = kernel.calculate_kernel_matrix(manifold_projection.psi)
+    kernel = kernel.calculate_kernel_matrix(manifold_projection.u)
 
     assert np.round(kernel[0, 1], 8) == 6.0
