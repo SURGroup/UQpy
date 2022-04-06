@@ -21,7 +21,16 @@ class GaussianKernel(EuclideanKernel):
         super().__init__()
         self.epsilon = epsilon
 
-    def _kernel_entry(self, xi, xj):
+    def kernel_entry(self, xi, xj):
+        """
+        Given two points, this method calculates the respective kernel entry. Each concrete kernel implementation must
+        override this method and provide its own implementation.
+
+        :param xi: First point.
+        :param xj: Second point.
+        :return: Float representing the kernel entry.
+        """
+
         return np.linalg.norm(xi - xj, "fro") ** 2
 
     def kernel_function(self, distance_pairs):
