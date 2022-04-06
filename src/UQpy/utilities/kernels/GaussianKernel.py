@@ -31,15 +31,15 @@ class GaussianKernel(EuclideanKernel):
         :return: Float representing the kernel entry.
         """
         if len(xi.shape) == 1:
-            d = pdist([xi, xj], "sqeuclidean")
+            d = pdist(np.array([xi, xj]), "sqeuclidean")
         else:
-            d = np.linalg.norm(xi-xj, 'fro')
-        return np.exp(-d ** 2 / (4*self.epsilon))
+            d = np.linalg.norm(xi-xj, 'fro') ** 2
+        return np.exp(-d / (4*self.epsilon))
 
     def optimize_parameters(self, data: np.ndarray, tolerance: float,
                             n_nearest_neighbors: int,
                             n_cutoff_samples: int,
-                            random_state: RandomStateType):
+                            random_state: RandomStateType = None):
         """
 
         :param data: Set of data points.
