@@ -15,6 +15,7 @@ class GaussianKernel(EuclideanKernel):
         """
         :param epsilon: Scale parameter of the Gaussian kernel
         """
+        super().__init__()
         self.epsilon = epsilon
 
     def kernel_entry(self, xi, xj):

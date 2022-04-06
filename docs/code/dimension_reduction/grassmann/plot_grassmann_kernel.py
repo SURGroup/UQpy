@@ -17,7 +17,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassmann_manifold.projections.SVDProjection import SVDProjection
 from UQpy.dimension_reduction import GrassmannOperations
 from UQpy.utilities import GrassmannPoint
 from UQpy.utilities.kernels import Kernel, ProjectionKernel
@@ -63,7 +63,7 @@ plt.show()
 
 # %%
 
-manifold_projection = SvdProjection(matrices, p="max")
+manifold_projection = SVDProjection(matrices, p="max")
 
 # %% md
 #

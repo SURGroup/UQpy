@@ -4,7 +4,7 @@ import numpy as np
 import scipy
 
 from UQpy.utilities.distances.grassmannian_distances import GeodesicDistance
-from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassmann_manifold.projections.SVDProjection import SVDProjection
 from UQpy.dimension_reduction.grassmann_manifold.GrassmannInterpolation import GrassmannInterpolation
 
 sol0 = np.array([[0.61415, 1.03029, 1.02001, 0.57327, 0.79874, 0.73274],
@@ -51,7 +51,7 @@ def test_solution_reconstruction():
     # Creating a list of solutions.
     Solutions = [sol0, sol1, sol2, sol3]
 
-    manifold_projection = SvdProjection(Solutions, p="max")
+    manifold_projection = SVDProjection(Solutions, p="max")
 
     interpolation = GrassmannInterpolation(interpolation_method=None,
                                            manifold_data=manifold_projection.v,

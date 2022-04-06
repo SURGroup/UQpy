@@ -18,7 +18,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import sys
-from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassmann_manifold.projections.SVDProjection import SVDProjection
 from UQpy.dimension_reduction import GrassmannOperations
 
 #%% md
@@ -62,7 +62,7 @@ plt.show()
 
 #%%
 
-manifold_projection = SvdProjection(matrices, p="max")
+manifold_projection = SVDProjection(matrices, p="max")
 
 # Plot the points on the Grassmann manifold defined by the left singular eigenvectors.
 fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)

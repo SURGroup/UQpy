@@ -17,7 +17,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from UQpy import SvdProjection
+from UQpy import SVDProjection
 import sys
 
 from UQpy.utilities import GrassmannPoint
@@ -67,7 +67,7 @@ plt.show()
 
 # %%
 
-manifold_projection = SvdProjection(matrices, p="max")
+manifold_projection = SVDProjection(matrices, p="max")
 
 # %% md
 #

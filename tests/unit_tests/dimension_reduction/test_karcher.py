@@ -6,7 +6,7 @@ from beartype import beartype
 
 from UQpy.utilities.distances.grassmannian_distances import GeodesicDistance
 from UQpy.utilities.GrassmannPoint import GrassmannPoint
-from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassmann_manifold.projections.SVDProjection import SVDProjection
 from UQpy.dimension_reduction.grassmann_manifold.GrassmannOperations import GrassmannOperations
 import sys
 from numpy.random import RandomState
@@ -44,7 +44,7 @@ def test_karcher():
     rnd = RandomState(0)
     # Creating a list of matrices.
     matrices = [sol0, sol1, sol2, sol3]
-    manifold_projection = SvdProjection(matrices, p="max")
+    manifold_projection = SVDProjection(matrices, p="max")
 
     # optimization_method = GradientDescent(acceleration=True, error_tolerance=1e-4, max_iterations=1000)
     psi_mean = GrassmannOperations.karcher_mean(grassmann_points=manifold_projection.u,
@@ -65,7 +65,7 @@ def test_karcher_stochastic():
 
     # Creating a list of matrices.
     matrices = [sol0, sol1, sol2, sol3]
-    manifold_projection = SvdProjection(matrices, p="max")
+    manifold_projection = SVDProjection(matrices, p="max")
 
     # optimization_method = GradientDescent(acceleration=True, error_tolerance=1e-4, max_iterations=1000)
     psi_mean = GrassmannOperations.karcher_mean(grassmann_points=manifold_projection.u,

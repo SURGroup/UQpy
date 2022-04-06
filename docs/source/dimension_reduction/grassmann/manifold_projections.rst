@@ -19,7 +19,7 @@ must create points with type :class:`.GrassmannPoint`.
 SVD Projection
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The :class:`.SvdProjection` class is used to project each data point of a given dataset onto a Grassmann manifold using
+The :class:`.SVDProjection` class is used to project each data point of a given dataset onto a Grassmann manifold using
 the Singular Value Decomposition (SVD). The SVD factorizes a matrix :math:`\mathbf{X}\in \mathbb{R}^{n \times m}` into
 three matrices:
 
@@ -32,19 +32,19 @@ are orthonormal matrices we consider them to be representatives of the data poin
 data will reside by selecting the number of :math:`p-` planes, i.e., the rank of matrix :math:`\mathbf{U}` is equal to
 the number of :math:`p-` planes.
 
-The :class:`.SvdProjection` class is imported using the following command:
+The :class:`.SVDProjection` class is imported using the following command:
 
->>> from UQpy.dimension_reduction.SvdProjection import SvdProjection
+>>> from UQpy.dimension_reduction.SVDProjection import SVDProjection
 
 A description of the class signature is shown below:
 
-.. autoclass:: UQpy.dimension_reduction.SvdProjection
+.. autoclass:: UQpy.dimension_reduction.SVDProjection
 
 Attributes
 ~~~~~~~~~~~~~~~~~~
-.. autoattribute:: UQpy.dimension_reduction.SvdProjection.u
-.. autoattribute:: UQpy.dimension_reduction.SvdProjection.sigma
-.. autoattribute:: UQpy.dimension_reduction.SvdProjection.v
+.. autoattribute:: UQpy.dimension_reduction.SVDProjection.u
+.. autoattribute:: UQpy.dimension_reduction.SVDProjection.sigma
+.. autoattribute:: UQpy.dimension_reduction.SVDProjection.v
 
 
 

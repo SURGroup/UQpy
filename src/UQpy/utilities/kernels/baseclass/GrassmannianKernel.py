@@ -10,6 +10,9 @@ from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 class GrassmannianKernel(Kernel, ABC):
     """This is a blueprint for Euclidean kernels implemented in the :py:mod:`kernels` module ."""
 
+    def __init__(self):
+        self.kernel_matrix = None
+
     def calculate_kernel_matrix(self, points: list[GrassmannPoint], p: int = None):
         """
         Compute the kernel matrix given a list of points on the Grassmann manifold.
@@ -39,4 +42,4 @@ class GrassmannianKernel(Kernel, ABC):
             kernel[i, j] = self.kernel_entry(xi, xj)
             kernel[j, i] = kernel[i, j]
 
-        return kernel
+        self.kernel_matrix = kernel

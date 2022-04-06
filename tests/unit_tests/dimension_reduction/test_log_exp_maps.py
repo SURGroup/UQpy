@@ -1,5 +1,5 @@
 import numpy as np
-from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
+from UQpy.dimension_reduction.grassmann_manifold.projections.SVDProjection import SVDProjection
 from UQpy.dimension_reduction.grassmann_manifold.GrassmannOperations import GrassmannOperations
 import sys
 
@@ -35,7 +35,7 @@ def test_log_exp_maps():
 
     # Creating a list of matrices.
     matrices = [sol0, sol1, sol2, sol3]
-    manifold_projection = SvdProjection(matrices, p="max")
+    manifold_projection = SVDProjection(matrices, p="max")
 
     points_tangent = GrassmannOperations.log_map(grassmann_points=manifold_projection.u,
                                                  reference_point=manifold_projection.u[0])

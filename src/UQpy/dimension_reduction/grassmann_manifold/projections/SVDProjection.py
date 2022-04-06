@@ -8,7 +8,7 @@ from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 from UQpy.utilities.Utilities import *
 
 
-class SvdProjection(GrassmannProjection):
+class SVDProjection(GrassmannProjection):
     @beartype
     def __init__(
             self,
@@ -21,9 +21,9 @@ class SvdProjection(GrassmannProjection):
         :param data: Raw data given as a list of matrices.
         :param p: Number of independent p-planes of each Grassmann point.
             Options:
-                :class:`int`: Integer specifying the number of p-planes
+                :any:`int`: Integer specifying the number of p-planes
 
-                :class:`str`:
+                :any:`str`:
                     `"max"`: Set p equal to the maximum rank of all provided data matrices
 
                     `"min"`: Set p equal to the minimum rank of all provided data matrices
