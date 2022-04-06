@@ -2,7 +2,7 @@ import shutil
 
 import numpy as np
 
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.distributions.collection.Normal import Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sampling.MonteCarloSampling import MonteCarloSampling

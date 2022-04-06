@@ -81,6 +81,3 @@ def test_models():
     assert selection.candidate_models[1].name == 'model_cubic'
     assert selection.candidate_models[2].name == 'model_linear'
 
-    shutil.rmtree(runmodel4.model.model_dir)
-    shutil.rmtree(runmodel5.model.model_dir)
-    shutil.rmtree(runmodel6.model.model_dir)

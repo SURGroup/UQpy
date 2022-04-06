@@ -22,7 +22,7 @@ from local_Rosenbrock import Rosenbrock
 import numpy as np
 # Import this newly defined Rosenbrock distribution into the Distributions module
 from UQpy.distributions import Normal
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 import scipy.stats as stats
 
 # %% md

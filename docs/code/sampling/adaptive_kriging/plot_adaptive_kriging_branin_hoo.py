@@ -42,7 +42,7 @@ from matplotlib import pyplot as plt
 
 from UQpy.surrogates import GaussianProcessRegression
 from UQpy.sampling import MonteCarloSampling, AdaptiveKriging
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.distributions import Uniform
 from local_BraninHoo import function
 import time

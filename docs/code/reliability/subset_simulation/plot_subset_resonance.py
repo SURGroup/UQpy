@@ -30,7 +30,7 @@ threshold, :math:`\epsilon` of the excitation frequency $\omega$. That is, failu
 import shutil
 
 from UQpy.reliability import SubsetSimulation
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.sampling import Stretch, ModifiedMetropolisHastings, MonteCarloSampling
 import numpy as np
 import scipy.stats as stats

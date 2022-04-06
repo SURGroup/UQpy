@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 
 from UQpy.sampling.ImportanceSampling import ImportanceSampling
 from UQpy.inference import BayesParameterEstimation, ComputationalModel
-from UQpy.run_model.RunModel import RunModel  # required to run the quadratic model
+from UQpy.run_model.RunModel_New import RunModel_New  # required to run the quadratic model
 from sklearn.neighbors import KernelDensity  # for the plots
 from UQpy.distributions import JointIndependent, Normal
 

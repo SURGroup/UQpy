@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 
 from UQpy.sampling.mcmc.MetropolisHastings import MetropolisHastings
 from UQpy.inference.inference_models.ComputationalModel import ComputationalModel
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.inference import BayesParameterEstimation
 from sklearn.neighbors import KernelDensity  # for the plots
 from UQpy.distributions import JointIndependent, Normal

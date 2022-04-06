@@ -25,7 +25,7 @@ import shutil
 from UQpy.surrogates.gaussian_process.regression_models import ConstantRegression
 from UQpy.sampling import RectangularStrata
 from UQpy.sampling import TrueStratifiedSampling
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.distributions import Uniform
 import numpy as np
 import matplotlib.pyplot as plt

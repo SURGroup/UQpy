@@ -71,14 +71,11 @@ def test_parsimonious():
     X, X_color = make_s_curve(n, random_state=3, noise=0)
     kernel = GaussianKernel()
 
-    dmaps_object = DiffusionMaps.build_from_data(data=X,
-                                                 alpha=1.0, n_eigenvectors=9,
-                                                 is_sparse=True, n_neighbors=100,
-                                                 optimize_parameters=True,
-                                                 kernel=kernel)
+    dmaps_object = DiffusionMaps(data=X, alpha=1.0, n_eigenvectors=9,
+                                 is_sparse=True, n_neighbors=100,
+                                 kernel=kernel)
 
-    dmaps_object.fit()
-    index, residuals = DiffusionMaps.parsimonious(dmaps_object.eigenvectors, 2)
+    dmaps_object.parsimonious(dim=2)
 
-    assert index[0] == 1
-    assert index[1] == 5
+    assert dmaps_object.parsimonious_indices[0] == 1
+    assert dmaps_object.parsimonious_indices[1] == 5

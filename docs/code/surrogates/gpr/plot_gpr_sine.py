@@ -24,7 +24,7 @@ import shutil
 
 from UQpy.sampling.stratified_sampling.strata import RectangularStrata
 from UQpy.sampling import TrueStratifiedSampling
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.distributions import Gamma
 import numpy as np
 import matplotlib.pyplot as plt

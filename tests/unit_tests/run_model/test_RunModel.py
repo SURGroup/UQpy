@@ -4,7 +4,7 @@ from beartype.roar import BeartypeCallHintPepParamException
 
 from UQpy.run_model import ThirdPartyModel, RunModel_New
 from UQpy.sampling import MonteCarloSampling
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.distributions import Normal
 import pytest
 import os

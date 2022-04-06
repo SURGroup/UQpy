@@ -30,7 +30,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from UQpy.sampling.mcmc import MetropolisHastings
 from UQpy.inference import BayesModelSelection, BayesParameterEstimation, ComputationalModel
-from UQpy.run_model.RunModel import RunModel  # required to run the quadratic model
+from UQpy.run_model.RunModel_New import RunModel_New  # required to run the quadratic model
 from UQpy.distributions import Normal, JointIndependent
 from scipy.stats import multivariate_normal, norm
 

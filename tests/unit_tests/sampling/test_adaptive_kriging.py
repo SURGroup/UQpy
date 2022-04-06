@@ -1,10 +1,11 @@
 import pytest
 
+from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 
 from UQpy.surrogates.kriging.Kriging import Kriging
 from UQpy.sampling import MonteCarloSampling, AdaptiveKriging
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.distributions.collection import Normal
 from UQpy.sampling.adaptive_kriging_functions import *
 import shutil
@@ -16,7 +17,8 @@ def test_akmcs_weighted_u():
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=0)
-    rmodel = RunModel(model_script='series.py', vec=False)
+    model = PythonModel(model_script='series.py', model_object_name="series")
+    rmodel = RunModel_New(model=model)
     regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
@@ -32,7 +34,6 @@ def test_akmcs_weighted_u():
     assert a.samples[23, 0] == 1.083176685073489
     assert a.samples[20, 1] == 0.20293978126855253
 
-    shutil.rmtree(rmodel.model_dir)
 
 
 def test_akmcs_u():
@@ -41,7 +42,8 @@ def test_akmcs_u():
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
-    rmodel = RunModel(model_script='series.py', vec=False)
+    model = PythonModel(model_script='series.py', model_object_name="series")
+    rmodel = RunModel_New(model=model)
     regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
@@ -57,7 +59,6 @@ def test_akmcs_u():
     assert a.samples[23, 0] == -4.141979058326188
     assert a.samples[20, 1] == -1.6476534435429009
 
-    shutil.rmtree(rmodel.model_dir)
 
 
 def test_akmcs_expected_feasibility():
@@ -66,7 +67,8 @@ def test_akmcs_expected_feasibility():
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
-    rmodel = RunModel(model_script='series.py', vec=False)
+    model = PythonModel(model_script='series.py', model_object_name="series")
+    rmodel = RunModel_New(model=model)
     regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
@@ -82,7 +84,6 @@ def test_akmcs_expected_feasibility():
     assert a.samples[23, 0] == 1.366058523912817
     assert a.samples[20, 1] == -12.914668932772358
 
-    shutil.rmtree(rmodel.model_dir)
 
 
 def test_akmcs_expected_improvement():
@@ -91,7 +92,8 @@ def test_akmcs_expected_improvement():
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
-    rmodel = RunModel(model_script='series.py', vec=False)
+    model = PythonModel(model_script='series.py', model_object_name="series")
+    rmodel = RunModel_New(model=model)
     regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
@@ -107,7 +109,6 @@ def test_akmcs_expected_improvement():
     assert a.samples[23, 0] == 4.553078100499578
     assert a.samples[20, 1] == -3.508949564718469
 
-    shutil.rmtree(rmodel.model_dir)
 
 
 def test_akmcs_expected_improvement_global_fit():
@@ -116,7 +117,8 @@ def test_akmcs_expected_improvement_global_fit():
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
-    rmodel = RunModel(model_script='series.py', vec=False)
+    model = PythonModel(model_script='series.py', model_object_name="series")
+    rmodel = RunModel_New(model=model)
     regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
@@ -132,7 +134,6 @@ def test_akmcs_expected_improvement_global_fit():
     assert a.samples[23, 0] == 11.939859785098493
     assert a.samples[20, 1] == -8.429899469300118
 
-    shutil.rmtree(rmodel.model_dir)
 
 def test_akmcs_samples_error():
     from UQpy.surrogates.kriging.regression_models.LinearRegression import LinearRegression
@@ -140,7 +141,8 @@ def test_akmcs_samples_error():
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=0)
-    rmodel = RunModel(model_script='series.py', vec=False)
+    model = PythonModel(model_script='series.py', model_object_name="series")
+    rmodel = RunModel_New(model=model)
     regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
@@ -153,7 +155,6 @@ def test_akmcs_samples_error():
                             learning_nsamples=10**3, n_add=1, learning_function=learning_function,
                             random_state=2, samples=x.samples)
 
-    shutil.rmtree(rmodel.model_dir)
 
 def test_akmcs_u_run_from_init():
     from UQpy.surrogates.kriging.regression_models.LinearRegression import LinearRegression
@@ -161,7 +162,8 @@ def test_akmcs_u_run_from_init():
 
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
-    rmodel = RunModel(model_script='series.py', vec=False)
+    model = PythonModel(model_script='series.py', model_object_name="series")
+    rmodel = RunModel_New(model=model)
     regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
@@ -175,5 +177,3 @@ def test_akmcs_u_run_from_init():
 
     assert a.samples[23, 0] == -4.141979058326188
     assert a.samples[20, 1] == -1.6476534435429009
-
-    shutil.rmtree(rmodel.model_dir)

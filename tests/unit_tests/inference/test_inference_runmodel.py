@@ -3,7 +3,7 @@ from UQpy.inference.inference_models.LogLikelihoodModel import *
 from UQpy.inference.MLE import *
 from UQpy.distributions import *
 import pytest
-import shutil
+from UQpy.run_model.model_execution.PythonModel import PythonModel
 import numpy as np
 
 data = [0., 1., -1.5, -0.2]
@@ -11,10 +11,10 @@ data = [0., 1., -1.5, -0.2]
 
 @pytest.fixture
 def setup():
-    h_func = RunModel(model_script='pfn_models.py', model_object_name='model_quadratic', vec=False,
+    model = PythonModel(model_script='pfn_models.py', model_object_name='model_quadratic',
                       var_names=['theta_0', 'theta_1'], delete_files=True)
+    h_func = RunModel_New(model=model)
     yield h_func
-    shutil.rmtree(h_func.model_dir)
 
 
 def user_log_likelihood(data, model_outputs, params=None):

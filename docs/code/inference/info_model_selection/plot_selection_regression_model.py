@@ -26,7 +26,7 @@ where :math:`f` consists in running RunModel. The three models considered are:
 import shutil
 
 from UQpy.inference import InformationModelSelection, MLE
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 import numpy as np
 from UQpy.inference import BIC
 import matplotlib.pyplot as plt

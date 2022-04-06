@@ -10,7 +10,7 @@ import UQpy.sampling
 import UQpy.dimension_reduction
 import UQpy.inference
 import UQpy.reliability
-import UQpy.run_model.RunModel
+import UQpy.run_model.RunModel_New
 import UQpy.sampling
 import UQpy.stochastic_process
 import UQpy.surrogates

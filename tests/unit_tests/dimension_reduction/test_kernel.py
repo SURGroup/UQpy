@@ -15,7 +15,9 @@ def test_kernel_projection():
     xk = GrassmannPoint(np.array([[-0.69535592, -0.0546034], [-0.34016974, -0.85332868],
                                   [-0.63305978, 0.51850616]]))
     points = [xi, xj, xk]
-    kernel = np.matrix.round(ProjectionKernel().calculate_kernel_matrix(points), 4)
+    kernel = ProjectionKernel()
+    kernel.calculate_kernel_matrix(points)
+    kernel = np.matrix.round(kernel.kernel_matrix, 4)
 
     assert np.allclose(kernel, np.array([[2, 1.0063, 1.2345], [1.0063, 2, 1.0101], [1.2345, 1.0101, 2]]))
 
@@ -26,7 +28,10 @@ def test_kernel_binet_cauchy():
     xj = GrassmannPoint(np.array([[0, np.sqrt(2) / 2], [1, 0], [0, -np.sqrt(2) / 2]]))
     xk = GrassmannPoint(np.array([[-0.69535592, -0.0546034], [-0.34016974, -0.85332868], [-0.63305978, 0.51850616]]))
     points = [xi, xj, xk]
-    kernel = np.matrix.round(BinetCauchyKernel().calculate_kernel_matrix(points), 4)
+
+    kernel = BinetCauchyKernel()
+    kernel.calculate_kernel_matrix(points)
+    kernel = np.matrix.round(kernel.kernel_matrix, 4)
 
     assert np.allclose(kernel, np.array([[1, 0.0063, 0.2345], [0.0063, 1, 0.0101], [0.2345, 0.0101, 1]]))
 
@@ -37,10 +42,10 @@ def test_kernel_gaussian_1d():
     xk = np.array([1, 2, 3, 4])
     points = [xi, xj, xk]
     gaussian = GaussianKernel(epsilon=2.0)
-    kernel = gaussian.calculate_kernel_matrix(points)
+    gaussian.calculate_kernel_matrix(points)
 
-    assert np.allclose(np.matrix.round(kernel, 4), np.array([[1., 0.2645, 1.], [0.2645, 1., 0.2645], [1, 0.2645, 1]]),
-                       atol=1e-04)
+    assert np.allclose(np.matrix.round(gaussian.kernel_matrix, 4),
+                       np.array([[1., 0.2645, 1.], [0.2645, 1., 0.2645], [1, 0.2645, 1]]), atol=1e-04)
     assert np.round(gaussian.epsilon, 4) == 2
 
 
@@ -50,11 +55,11 @@ def test_kernel_gaussian_2d():
     xk = np.array([[-0.69535592, -0.0546034], [-0.34016974, -0.85332868], [-0.63305978, 0.51850616]])
     points = [xi, xj, xk]
     gaussian = GaussianKernel()
-    kernel = gaussian.calculate_kernel_matrix(points)
+    gaussian.calculate_kernel_matrix(points)
 
-    assert np.allclose(np.matrix.round(kernel, 4), np.array([[1., 0.628, 0.3912],
-                                                             [0.628, 1., 0.2534],
-                                                             [0.3912, 0.2534, 1.]]))
+    assert np.allclose(np.matrix.round(gaussian.kernel_matrix, 4), np.array([[1., 0.628, 0.3912],
+                                                                             [0.628, 1., 0.2534],
+                                                                             [0.3912, 0.2534, 1.]]))
     assert np.round(gaussian.epsilon, 4) == 1.0
 
 
@@ -88,11 +93,6 @@ sol3 = np.array([[0.60547, 0.11492, 0.78956, 0.13796, 0.76685, 0.41661],
 
 
 def test_kernel():
-    D1 = 6
-    r0 = 2  # rank sample 0
-    r1 = 3  # rank sample 1
-    r2 = 4  # rank sample 2
-    r3 = 3  # rank sample 2
 
     np.random.seed(1111)  # For reproducibility.
     from numpy.random import RandomState
@@ -100,10 +100,9 @@ def test_kernel():
 
     # Creating a list of solutions.
     Solutions = [sol0, sol1, sol2, sol3]
-    from UQpy.dimension_reduction.grassmann_manifold.GrassmannOperations import GrassmannOperations
     manifold_projection = SVDProjection(Solutions, p="max")
     kernel = ProjectionKernel()
 
-    kernel = kernel.calculate_kernel_matrix(manifold_projection.u)
+    kernel.calculate_kernel_matrix(manifold_projection.u)
 
-    assert np.round(kernel[0, 1], 8) == 6.0
+    assert np.round(kernel.kernel_matrix[0, 1], 8) == 6.0

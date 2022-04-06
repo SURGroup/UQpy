@@ -2,7 +2,7 @@ import numpy as np
 import scipy.stats as stats
 from UQpy.utilities.ValidationTypes import RandomStateType
 
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 
 
 def svd(matrix, rank=None, tol=None):
@@ -156,14 +156,12 @@ def gradient(runmodel_object=None, point=None, order="first", df_step=None):
         if len(df_step) == 1:
             df_step = [df_step[0]] * dimension
 
-    if not callable(runmodel_object) and not isinstance(runmodel_object, RunModel):
-        raise RuntimeError(
-            "A RunModel object or callable function must be provided as model."
-        )
+    if not callable(runmodel_object) and not isinstance(runmodel_object, RunModel_New):
+        raise RuntimeError("A RunModel object or callable function must be provided as model.")
 
     def func(m):
         def func_eval(x):
-            if isinstance(m, RunModel):
+            if isinstance(m, RunModel_New):
                 m.run(samples=x, append_samples=False)
                 return np.array(m.qoi_list).flatten()
             else:
