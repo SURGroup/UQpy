@@ -23,6 +23,8 @@ One can use the following command to instantiate the class :class:`.ProjectionKe
 .. autoclass:: UQpy.utilities.kernels.ProjectionKernel
     :members:
 
+.. autoattribute:: UQpy.utilities.kernels.ProjectionKernel.kernel_matrix
+
 
 
 Binet-Cauchy
@@ -36,6 +38,8 @@ One can use the following command to instantiate the class :class:`.BinetCauchyK
 
 .. autoclass:: UQpy.utilities.kernels.BinetCauchyKernel
     :members:
+
+.. autoattribute:: UQpy.utilities.kernels.BinetCauchyKernel.kernel_matrix
 
 
 Calculate Svd Projection SUM or PRODUCT kernel

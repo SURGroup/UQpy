@@ -22,3 +22,5 @@ One can use the following command to instantiate the class :class:`.GaussianKern
 
 .. autoclass:: UQpy.utilities.kernels.GaussianKernel
     :members:
+
+.. autoattribute:: UQpy.utilities.kernels.GaussianKernel.kernel_matrix

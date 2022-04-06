@@ -13,6 +13,7 @@ class Kernel(ABC):
     """
     def __init__(self):
         self.kernel_matrix = None
+        """Kernel matrix defining the similarity between the points"""
 
     def calculate_kernel_matrix(self, points: Union[list, NumpyFloatArray]):
         pass
