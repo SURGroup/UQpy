@@ -17,6 +17,8 @@ identified using :class:`.SROM`.
 # %%
 import shutil
 
+from UQpy import PythonModel
+from UQpy.run_model.RunModel import RunModel
 from UQpy.sampling import MonteCarloSampling, TrueStratifiedSampling
 from UQpy.sampling import RectangularStrata
 from UQpy.distributions import Gamma
@@ -90,7 +92,9 @@ plt.show()
 
 # %%
 
-model = RunModel(model_script='local_eigenvalue_model.py')
+m = PythonModel(model_script='local_eigenvalue_model.py',model_object_name="RunPythonModel" )
+model = RunModel_New(model=m)
+# model = RunModel(model_script='local_eigenvalue_model.py')
 model.run(samples=y.samples)
 r_srom = model.qoi_list
 
@@ -111,7 +115,6 @@ x_mcs = MonteCarloSampling(distributions=marginals, nsamples=1000)
 
 model.run(samples=x_mcs.samples, append_samples=False)
 r_mcs = model.qoi_list
-shutil.rmtree(model.model_dir)
 
 # %% md
 #
@@ -120,9 +123,9 @@ shutil.rmtree(model.model_dir)
 # %%
 
 # Plot SROM and MCS approximation for first eigenvalue
-r = np.array(r_srom)[:, 0]
-r_mcs = np.array(r_mcs)
-com = np.append(np.atleast_2d(r).T, np.transpose(np.matrix(y.sample_weights)), 1)
+r = np.array([x[:,0] for x in r_srom])
+r_mcs = np.squeeze(np.array(r_mcs))
+com = np.append(np.atleast_2d(r), np.transpose(np.matrix(y.sample_weights)), 1)
 srt = com[np.argsort(com[:, 0].flatten())]
 s = np.array(srt[0, :, 0])
 a = srt[0, :, 1]
@@ -136,8 +139,8 @@ plt.legend(['SROM', 'MCS'], loc=1, prop={'size': 12}, bbox_to_anchor=(1, 0.92))
 plt.show()
 
 # Plot SROM and MCS approximation for second eigenvalue
-r = np.array(r_srom)[:, 1]
-com = np.append(np.atleast_2d(r).T, np.transpose(np.matrix(y.sample_weights)), 1)
+r = np.array([x[:,1] for x in r_srom])
+com = np.append(np.atleast_2d(r), np.transpose(np.matrix(y.sample_weights)), 1)
 srt = com[np.argsort(com[:, 0].flatten())]
 s = np.array(srt[0, :, 0])
 a = srt[0, :, 1]
@@ -151,8 +154,8 @@ plt.legend(['SROM', 'MCS'], loc=1, prop={'size': 12}, bbox_to_anchor=(1, 0.92))
 plt.show()
 
 # Plot SROM and MCS approximation for third eigenvalue
-r = np.array(r_srom)[:, 2]
-com = np.append(np.atleast_2d(r).T, np.transpose(np.matrix(y.sample_weights)), 1)
+r = np.array([x[:,2] for x in r_srom])
+com = np.append(np.atleast_2d(r), np.transpose(np.matrix(y.sample_weights)), 1)
 srt = com[np.argsort(com[:, 0].flatten())]
 s = np.array(srt[0, :, 0])
 a = srt[0, :, 1]
