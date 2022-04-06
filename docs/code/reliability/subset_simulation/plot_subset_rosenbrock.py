@@ -12,18 +12,18 @@ Rosenbrock performance function
 
 # %%
 
-import shutil
-
-from UQpy.reliability import SubsetSimulation
 import matplotlib.pyplot as plt
+import numpy as np
+import scipy.stats as stats
+
+from UQpy import PythonModel
+# Import this newly defined Rosenbrock distribution into the Distributions module
+from UQpy.distributions import Normal
+from UQpy.reliability import SubsetSimulation
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.sampling import ModifiedMetropolisHastings, Stretch
 # First import the file that contains the newly defined Rosenbrock distribution
 from local_Rosenbrock import Rosenbrock
-import numpy as np
-# Import this newly defined Rosenbrock distribution into the Distributions module
-from UQpy.distributions import Normal
-from UQpy.run_model.RunModel_New import RunModel_New
-import scipy.stats as stats
 
 # %% md
 #
@@ -31,7 +31,8 @@ import scipy.stats as stats
 
 # %%
 
-model = RunModel(model_script='local_Rosenbrock_pfn.py', model_object_name="RunPythonModel", ntasks=1)
+m = PythonModel(model_script='local_Rosenbrock_pfn.py', model_object_name="RunPythonModel")
+model = RunModel_New(model=m)
 dist = Rosenbrock(p=100.)
 dist_prop1 = Normal(loc=0, scale=1)
 dist_prop2 = Normal(loc=0, scale=10)
@@ -57,7 +58,6 @@ plt.xlim((-10, 15))
 plt.tight_layout()
 plt.show()
 
-shutil.rmtree(model.model_dir)
 
 print(x_ss_MMH.failure_probability)
 
@@ -68,7 +68,8 @@ print(x_ss_MMH.failure_probability)
 
 # %%
 
-model = RunModel(model_script='local_Rosenbrock_pfn.py', model_object_name="RunPythonModel", ntasks=1)
+m = PythonModel(model_script='local_Rosenbrock_pfn.py', model_object_name="RunPythonModel")
+model = RunModel_New(model=m)
 dist = Rosenbrock(p=100.)
 
 x = stats.norm.rvs(loc=0, scale=1, size=(100, 2), random_state=83276)
@@ -104,4 +105,3 @@ plt.yticks(np.arange(-20, 180, step=20))
 plt.xlim((-10, 15))
 plt.tight_layout()
 plt.show()
-shutil.rmtree(model.model_dir)

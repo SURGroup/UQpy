@@ -22,6 +22,7 @@ Gaussian Process of a custom 2D function
 
 import shutil
 
+from UQpy import PythonModel
 from UQpy.surrogates.gaussian_process.regression_models import ConstantRegression
 from UQpy.sampling import RectangularStrata
 from UQpy.sampling import TrueStratifiedSampling
@@ -66,9 +67,10 @@ x = TrueStratifiedSampling(distributions=marginals, strata_object=strata,
 
 # %%
 
-rmodel = RunModel(model_script='local_python_model_function.py', vec=False)
+model = PythonModel(model_script='local_python_model_function.py', model_object_name="y_func")
+rmodel = RunModel_New(model=model)
+
 rmodel.run(samples=x.samples)
-shutil.rmtree(rmodel.model_dir)
 
 # %% md
 #
@@ -104,11 +106,10 @@ x1g, x2g = np.meshgrid(x1, x2)
 x1gv, x2gv = x1g.reshape(x1g.size, 1), x2g.reshape(x2g.size, 1)
 
 y2 = K.predict(np.concatenate([x1gv, x2gv], 1)).reshape(x1g.shape[0], x1g.shape[1])
-r2model = RunModel(model_script='local_python_model_function.py')
+model = PythonModel(model_script='local_python_model_function.py', model_object_name="y_func")
+r2model = RunModel_New(model=model)
 r2model.run(samples=np.concatenate([x1gv, x2gv], 1))
 y_act = np.array(r2model.qoi_list).reshape(x1g.shape[0], x1g.shape[1])
-
-shutil.rmtree(r2model.model_dir)
 
 fig1 = plt.figure()
 ax = fig1.gca(projection='3d')

@@ -25,6 +25,7 @@ where :math:`f` consists in running RunModel. The three models considered are:
 #%%
 import shutil
 
+from UQpy import PythonModel
 from UQpy.inference import InformationModelSelection, MLE
 from UQpy.run_model.RunModel_New import RunModel_New
 import numpy as np
@@ -43,8 +44,8 @@ from UQpy.inference import ComputationalModel
 param_true = np.array([1.0, 2.0]).reshape((1, -1))
 print('Shape of true parameter vector: {}'.format(param_true.shape))
 
-h_func = RunModel(model_script='pfn_models.py', model_object_name='model_quadratic', vec=False,
-                  var_names=['theta_0', 'theta_1'])
+model = PythonModel(model_script='pfn_models.py', model_object_name='model_quadratic', var_names=['theta_0', 'theta_1'])
+h_func = RunModel_New(model=model)
 h_func.run(samples=param_true)
 
 # Add noise
@@ -54,7 +55,6 @@ noise = Normal(loc=0., scale=np.sqrt(error_covariance)).rvs(nsamples=50).reshape
 data_1 = data_clean + noise
 print('Shape of data: {}'.format(data_1.shape))
 
-shutil.rmtree(h_func.model_dir)
 
 #%% md
 #
@@ -66,8 +66,9 @@ names = ['model_linear', 'model_quadratic', 'model_cubic']
 estimators = []
 
 for i in range(3):
-    h_func = RunModel(model_script='pfn_models.py', model_object_name=names[i], vec=False,
-                      var_names=['theta_{}'.format(j) for j in range(i + 1)])
+    model = PythonModel(model_script='pfn_models.py', model_object_name=names[i],
+                        var_names=['theta_{}'.format(j) for j in range(i + 1)])
+    h_func = RunModel_New(model=model)
     M = ComputationalModel(runmodel_object=h_func, n_parameters=i + 1,
                            name=names[i], error_covariance=error_covariance)
     estimators.append(MLE(inference_model=M, data=data_1))
@@ -104,7 +105,6 @@ for i, (model, estim) in enumerate(zip(selector.candidate_models, selector.param
     model.runmodel_object.run(samples=estim.mle.reshape((1, -1)), append_samples=False)
     y = model.runmodel_object.qoi_list[-1].reshape((-1,))
     ax.plot(domain, y, label=selector.candidate_models[i].name)
-    shutil.rmtree(model.runmodel_object.model_dir)
 
 plt.plot(domain, data_1, linestyle='none', marker='.', label='data')
 plt.xlabel('x')

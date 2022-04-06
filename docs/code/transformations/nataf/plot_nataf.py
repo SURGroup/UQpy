@@ -158,8 +158,8 @@ for i in range(N):
     w3[i] = ww[0, 1]
 
 plt.plot(rho, w3)
-plt.xlabel('$\rho_X$')
-plt.ylabel('$\rho_Z$')
+plt.xlabel('rho_X')
+plt.ylabel('rho_Z')
 plt.show()
 
 

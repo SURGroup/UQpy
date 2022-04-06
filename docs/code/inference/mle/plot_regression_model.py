@@ -22,6 +22,8 @@ regression model.
 import shutil
 
 import numpy as np
+
+from UQpy import PythonModel
 from UQpy.inference import ComputationalModel, MLE
 from UQpy.distributions import Normal
 from UQpy.inference import MinimizeOptimizer
@@ -38,8 +40,9 @@ from UQpy.run_model.RunModel_New import RunModel_New
 param_true = np.array([1.0, 2.0]).reshape((1, -1))
 print('Shape of true parameter vector: {}'.format(param_true.shape))
 
-h_func = RunModel(model_script='local_pfn_models.py', model_object_name='model_quadratic', vec=False,
-                  var_names=['theta_0', 'theta_1'])
+model = PythonModel(model_script='local_pfn_models.py', model_object_name='model_quadratic', delete_files=True,
+                    var_names=['theta_0', 'theta_1'])
+h_func = RunModel_New(model=model)
 h_func.run(samples=param_true)
 
 # Add noise
@@ -63,5 +66,3 @@ optimizer = MinimizeOptimizer(method='nelder-mead')
 ml_estimator = MLE(inference_model=candidate_model, data=data_3, n_optimizations=1)
 print('fitted parameters: theta_0={0:.3f} (true=1.), and theta_1={1:.3f} (true=2.)'.format(
     ml_estimator.mle[0], ml_estimator.mle[1]))
-
-shutil.rmtree(h_func.model_dir)

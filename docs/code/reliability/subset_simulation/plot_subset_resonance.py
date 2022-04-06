@@ -29,6 +29,7 @@ threshold, :math:`\epsilon` of the excitation frequency $\omega$. That is, failu
 # %%
 import shutil
 
+from UQpy import PythonModel
 from UQpy.reliability import SubsetSimulation
 from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.sampling import Stretch, ModifiedMetropolisHastings, MonteCarloSampling
@@ -111,7 +112,8 @@ plt.grid(True)
 plt.tight_layout()
 plt.show()
 
-model = RunModel(model_script='local_Resonance_pfn.py', model_object_name="RunPythonModel", ntasks=1)
+m = PythonModel(model_script='local_Resonance_pfn.py', model_object_name="RunPythonModel")
+model = RunModel_New(model=m)
 
 # %% md
 #
@@ -124,7 +126,6 @@ x_mcs.run(nsamples=1000000)
 
 model.run(samples=x_mcs.samples)
 
-shutil.rmtree(model.model_dir)
 A = np.asarray(model.qoi_list) < 0
 pf = np.shape(np.asarray(model.qoi_list)[np.asarray(model.qoi_list) < 0])[0] / 1000000
 print(pf)
@@ -141,7 +142,8 @@ C[0, 0] = 1
 C[1, 1] = 20 ** 2
 
 for i in range(ntrials):
-    model = RunModel(model_script='local_Resonance_pfn.py', model_object_name="RunPythonModel", ntasks=1)
+    m1 = PythonModel(model_script='local_Resonance_pfn.py', model_object_name="RunPythonModel")
+    model = RunModel_New(model=m1)
     dist = MultivariateNormal(mean=m, cov=C)
     xx = dist.rvs(nsamples=1000, random_state=123)
     xx1 = dist.rvs(nsamples=100, random_state=123)
@@ -149,7 +151,6 @@ for i in range(ntrials):
     sampling=Stretch(dimension=2, n_chains=100, log_pdf_target=dist.log_pdf)
     x_ss_stretch = SubsetSimulation(sampling=sampling, runmodel_object=model, conditional_probability=0.1,
                                     nsamples_per_subset=1000, samples_init=xx, )
-    shutil.rmtree(model.model_dir)
     pf_stretch[i] = x_ss_stretch.failure_probability
     cov1_stretch[i] = x_ss_stretch.independent_chains_CoV
     cov2_stretch[i] = x_ss_stretch.dependent_chains_CoV
@@ -185,7 +186,8 @@ C[0, 0] = 1
 C[1, 1] = 20 ** 2
 
 for i in range(ntrials):
-    model = RunModel(model_script='local_Resonance_pfn.py', model_object_name="RunPythonModel", ntasks=1)
+    m1 = PythonModel(model_script='local_Resonance_pfn.py', model_object_name="RunPythonModel")
+    model = RunModel_New(model=m1)
     dist = MultivariateNormal(mean=m, cov=C)
     xx = dist.rvs(nsamples=1000, random_state=123)
     xx1 = dist.rvs(nsamples=100, random_state=123)
@@ -194,7 +196,6 @@ for i in range(ntrials):
     x_ss_mmh = SubsetSimulation(sampling=sampling, runmodel_object=model, conditional_probability=0.1,
                                 nsamples_per_subset=1000, samples_init=xx)
 
-    shutil.rmtree(model.model_dir)
     pf_mmh[i] = x_ss_mmh.failure_probability
     cov1_mmh[i] = x_ss_mmh.independent_chains_CoV
     cov2_mmh[i] = x_ss_mmh.dependent_chains_CoV
