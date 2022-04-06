@@ -25,7 +25,7 @@ The :class:`UQpy.utilities.kernels.baseclass.Kernel` class is imported using the
 >>> from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 
 .. autoclass:: UQpy.utilities.kernels.baseclass.Kernel
-    :members: _kernel_entry
+    :members: kernel_entry, optimize_parameters
 
 
 .. toctree::
