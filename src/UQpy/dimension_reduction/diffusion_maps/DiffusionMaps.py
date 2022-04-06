@@ -31,17 +31,21 @@ class DiffusionMaps:
         n_eigenvectors: IntegerLargerThanUnityType = 2,
         is_sparse: bool = False,
         n_neighbors: IntegerLargerThanUnityType = 1,
-        random_state: Union[None, int] = None,
+        random_state: RandomStateType = None,
         t: int = 1
     ):
         """
 
-        :param alpha: Corresponds to different diffusion operators. It should be between zero and one.
-        :param n_eigenvectors: Number of eigenvectors to keep.
-        :param is_sparse: Work with sparse matrices. Increase the computational performance.
-        :param n_neighbors: If :code:`distance_matrix is True` defines the number of nearest neighbors.
+        :param alpha: A scalar that corresponds to different diffusion operators. `alpha` should be between zero and
+            one.
+        :param n_eigenvectors: Number of eigenvectors to retain.
+        :param is_sparse: Work with sparse matrices to improve computational performance.
+        :param n_neighbors: If :code:`is_sparse is True`, defines the number of nearest neighbors for sparse matrix
+            reduction.
         :param kernel_matrix: kernel matrix defining the similarity between the points.
-        :param random_state: sets :code:`np.random.default_rng(random_state)`.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
+         provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
+         object itself can be passed directly.
         :param t: Time exponent.
         """
         self.alpha = alpha
@@ -52,10 +56,22 @@ class DiffusionMaps:
         self.random_state = random_state,
         self.t = t
 
-        self.transition_matrix = None
-        self.diffusion_coordinates = None
-        self.eigenvectors = None
-        self.eigenvalues = None
+        self.transition_matrix: np.ndarray = None
+        '''
+        Markov Transition Probability Matrix.
+        '''
+        self.diffusion_coordinates: np.ndarray = None
+        '''
+        Coordinates of the data in the diffusion space.
+        '''
+        self.eigenvectors: np.ndarray = None
+        '''
+        Eigenvectors of the transition probability matrix.
+        '''
+        self.eigenvalues: np.ndarray = None
+        '''
+        Eigenvalues of the transition probability matrix.
+        '''
         self.cut_off = None
 
         if kernel_matrix is not None:
@@ -82,12 +98,15 @@ class DiffusionMaps:
 
         """
 
-        :param data: Cloud of data points.
-        :param alpha: Corresponds to different diffusion operators. It should be between zero and one.
-        :param n_eigenvectors: Number of eigenvectors to keep.
-        :param is_sparse: Work with sparse matrices. Increase the computational performance.
-        :param n_neighbors: If :code:`distance_matrix is True` defines the number of nearest neighbors.
-        :param optimize_parameters: Estimate the kernel scale from the data.
+        :param data: Array of data points.
+        :param alpha: A scalar that corresponds to different diffusion operators. `alpha` should be between zero and
+            one.
+        :param n_eigenvectors: Number of eigenvectors to retain.
+        :param is_sparse: Work with sparse matrices to improve computational performance.
+        :param n_neighbors: If :code:`is_sparse is True`, defines the number of nearest neighbors for sparse matrix
+            reduction.
+        :param optimize_parameters: If :any:`True`, estimate the kernel scale from the data. Can only be :any:`True`, if
+            :code:`kernel` is :class:`.GaussianKernel`. Otherwise, this must be :any:`False`.
         :param t: Time exponent.
         :param cut_off: Cut-off for a Gaussian kernel, below which the kernel values are considered zero.
         :param k_nn: k-th nearest neighbor distance to estimate the cut-off distance.
@@ -124,7 +143,7 @@ class DiffusionMaps:
             t=t
         )
 
-    def fit(self) -> tuple[NumpyFloatArray, NumpyFloatArray, NumpyFloatArray]:
+    def _fit(self) -> tuple[NumpyFloatArray, NumpyFloatArray, NumpyFloatArray]:
         """
         Perform diffusion map embedding.
 
@@ -183,9 +202,10 @@ class DiffusionMaps:
         eig_values_time = np.power(eigenvalues, self.t)
         diffusion_coordinates = eigenvectors @ np.diag(eig_values_time)
 
-        self.transition_matrix = transition_matrix
+        self.transition_matrix= transition_matrix
 
-        self.diffusion_coordinates = diffusion_coordinates
+
+        self.diffusion_coordinates:np.ndarray = diffusion_coordinates
         self.eigenvalues = eigenvalues
         self.eigenvectors = eigenvectors
 
