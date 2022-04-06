@@ -8,6 +8,9 @@ the data. On this graph a random walk is defined with a Markov transition probab
 data points. An eigendecomposition of the Markov transition probability matrix is used to obtain lower-dimensional
 coordinates that reveal the instrinsic structure of the data.
 
+The :class:`.DiffusionMaps` class also implements the parsimonious Diffusion Maps representation from
+:cite:t:`dsilva2018parsimonious`.
+
 DiffusionMaps Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

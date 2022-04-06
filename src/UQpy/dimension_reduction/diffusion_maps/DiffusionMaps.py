@@ -27,7 +27,7 @@ class DiffusionMaps:
     def __init__(
             self,
             kernel_matrix: Numpy2DFloatArray = None,
-            data: Union[np.ndarray, list[GrassmannPoint]] = None,
+            data: Union[Numpy2DFloatArray, list[GrassmannPoint]] = None,
             kernel: Kernel = None,
             alpha: AlphaType = 0.5,
             n_eigenvectors: IntegerLargerThanUnityType = 2,
@@ -38,20 +38,21 @@ class DiffusionMaps:
     ):
         """
 
-        :param kernel_matrix: Kernel matrix defining the similarity between the points. Either `kernel_matrix` or both
-            `data` and `kernel` parameters must be provided. In the second case the respective `kernel_matrix` computed
-            and provided as input for the evaluation of the :class:`.DiffusionMaps`. In case all three of the
-            aforementioned parameters are provided, then :class:`.DiffusionMaps` will be fitted only using the
-            `kernel_matrix`
-        :param data: Cloud of data points. Either `kernel_matrix` or both `data` and `kernel` parameters must be
+        :param kernel_matrix: Kernel matrix defining the similarity between the data points. Either `kernel_matrix` or
+            both `data` and `kernel` parameters must be provided. In the former case, `kernel_matrix` is precomputed
+            using a :class:`Kernel` class. In the second case the `kernel_matrix` is internally and used for the
+            evaluation of the :class:`.DiffusionMaps`. In case all three of the aforementioned parameters are provided,
+            then :class:`.DiffusionMaps` will be fitted only using the `kernel_matrix`
+        :param data: Set of data points. Either `kernel_matrix` or both `data` and `kernel` parameters must be
             provided.
-        :param kernel: Kernel object defining the similarity between the points. Either `kernel_matrix` or both
-            `data` and `kernel` parameters must be provided.
+        :param kernel: Kernel object used to compute the kernel matrix defining similarity between the data points.
+            Either `kernel_matrix` or both `data` and `kernel` parameters must be provided.
         :param alpha: A scalar that corresponds to different diffusion operators. `alpha` should be between zero and
             one.
         :param n_eigenvectors: Number of eigenvectors to retain.
         :param is_sparse:  Work with sparse matrices to improve computational performance.
-        :param n_neighbors: If :code:`distance_matrix is True` defines the number of nearest neighbors.
+        :param n_neighbors: If :code:`is_sparse is True`, defines the number of nearest neighbors to use when making
+            matrices sparse.
         :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is
          provided, this sets the seed for an object of :class:`numpy.random.RandomState`. Otherwise, the
          object itself can be passed directly.
