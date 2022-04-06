@@ -24,7 +24,7 @@ Methods
 ~~~~~~~~~
 
 .. autoclass:: UQpy.utilities.kernels.GaussianKernel
-    :members: optimize_epsilon
+    :members: optimize_parameters
 
 Attributes
 ~~~~~~~~~~

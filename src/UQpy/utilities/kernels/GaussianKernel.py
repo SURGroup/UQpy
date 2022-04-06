@@ -27,10 +27,10 @@ class GaussianKernel(EuclideanKernel):
     def kernel_function(self, distance_pairs):
         return np.exp(-sd.squareform(distance_pairs) / (4 * self.epsilon))
 
-    def optimize_epsilon(self, data: np.ndarray, tolerance: float,
-                         n_nearest_neighbors: int,
-                         n_cutoff_samples: int,
-                         random_state: RandomStateType):
+    def optimize_parameters(self, data: np.ndarray, tolerance: float,
+                            n_nearest_neighbors: int,
+                            n_cutoff_samples: int,
+                            random_state: RandomStateType):
         """
 
         :param data: Cloud of data points.
