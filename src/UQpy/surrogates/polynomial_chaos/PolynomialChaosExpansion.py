@@ -100,7 +100,7 @@ class PolynomialChaosExpansion(Surrogate):
         y_val = self.predict(x, )    
         polynomialbasis= self.design_matrix
         
-        H = np.dot(polynomialbasis, np.linalg.inv(np.dot(polynomialbasis.T, polynomialbasis)))
+        H = np.dot(polynomialbasis, np.linalg.pinv(np.dot(polynomialbasis.T, polynomialbasis)))
         H *= polynomialbasis
         Hdiag = np.sum(H, axis=1).reshape(-1,1)
 
