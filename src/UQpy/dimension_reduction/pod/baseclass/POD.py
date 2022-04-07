@@ -16,11 +16,17 @@ class POD(ABC):
                  reconstruction_percentage: Union[PositiveInteger, PositiveFloat] = 10 ** 10):
         """
 
-        :param solution_snapshots: Second order tensor or list containing the solution snapshots. Third dimension or
-         length of list corresponds to the number of snapshots.
-        :param modes: Number of POD modes used to approximate the input solution. Must be less than or equal to the
-         number of grid points.
-        :param reconstruction_percentage: Dataset reconstruction percentage.
+        :param solution_snapshots: Array or list containing the solution snapshots. If provided as an
+         :class:`numpy.ndarray`, it should be three-dimensional, where the third dimension of the array corresponds to
+         the number of snapshots. If provided as a list, the length of the list corresponds to the number of snapshots.
+
+         If `solution_snapshots` is provided, the :py:meth:`.run` method will be executed automatically. If it is not
+         provided, then the :py:meth:`.run` method must be executed manually and provided with `solution_snapshots`.
+        :param n_modes: Number of POD modes used to approximate the input solution. Must be less than or equal to the
+         number of dimensions in a snapshot. Either `n_modes` or `reconstruction_percentage` must be provided, but not
+         both.
+        :param reconstruction_percentage: Specified dataset reconstruction percentage. Must be between 0 and 100. Either
+            `n_modes` or `reconstruction_percentage` must be provided, but not both.
         """
         self.reduced_solution = None
         """Second order tensor containing the reconstructed solution snapshots in their initial spatial and temporal 
@@ -69,8 +75,8 @@ class POD(ABC):
 
     def run(self):
         """
-        Executes the POD method. Since :class:`.POD` is an abstract baseclass, the one of the concrete implementations
-        will be executed
+        Executes the POD method. Since :class:`.POD` is an abstract baseclass, one of the concrete implementations
+        will be executed.
 
         :return: Second order tensor containing the reconstructed solution snapshots in their initial spatial and
          temporal dimensions and an array containing the solution snapshots reduced in the spatial dimension.
