@@ -17,10 +17,6 @@ class GrassmannianDistance(Distance, ABC):
         if xi.data.shape[0] != xj.data.shape[0]:
             raise ValueError("UQpy: Incompatible dimensions. The matrices must have the same number of rows.")
 
-    @abstractmethod
-    def compute_distance(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:
-        pass
-
     @beartype
     def calculate_distance_matrix(self,
                                   points: Union[list[Numpy2DFloatArrayOrthonormal],  list[GrassmannPoint]],
