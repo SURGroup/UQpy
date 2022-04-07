@@ -12,57 +12,107 @@ It allows the user to define a set of methods that must be created within any ch
 .. autoclass:: UQpy.utilities.distances.baseclass.EuclideanDistance
     :members: calculate_distance_matrix
 
-All the distances classes below are wrappers around the :py:mod:`scipy.spatial.distance` module, written in an
-object-oriented fashion to fit the needs of :py:mod:`UQpy.dimension_reduction` module.
+List of Available Distances
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+All the distances classes below are subclasses of the :class:`.EuclideanDistance` class.
 
 
 Bray-Curtis Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The Bray-Curtis distance between two 1D arrays, `x` and `y`, is given by:
+
+.. math:: d(x,y) = \dfrac{\sum_i |x_i - y_i|}{\sum_i |x_i + y_i|}
+
 The :class:`.BrayCurtisDistance` class is imported using the following command:
 
 >>> from UQpy.utilities.distances.euclidean_distances.BrayCurtisDistance import BrayCurtisDistance
 
-One can use the following command to instantiate the class :class:`.BrayCurtisDistance`
+Methods
+~~~~~~~~~~
+
+One can use the following command to instantiate the :class:`.BrayCurtisDistance` class.
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.BrayCurtisDistance
     :members:
 
+Attributes
+~~~~~~~~~~
+
+.. autoattribute:: UQpy.utilities.distances.BrayCurtisDistance.distance_matrix
+
 Canberra Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The Canberra distance between two 1D arrays, `x` and `y`, is given by:
+
+.. math:: d(x,y) = \sum_i \dfrac{|x_i - y_i|}{|x_i| + |y_i|}
 
 The :class:`.CanberraDistance` class is imported using the following command:
 
 >>> from UQpy.utilities.distances.euclidean_distances.CanberraDistance import CanberraDistance
 
-One can use the following command to instantiate the class :class:`.CanberraDistance`
+Methods
+~~~~~~~~~~
+
+One can use the following command to instantiate the :class:`.CanberraDistance` class.
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.CanberraDistance
     :members:
 
+Attributes
+~~~~~~~~~~
+
+.. autoattribute:: UQpy.utilities.distances.CanberraDistance.distance_matrix
+
 Chebyshev Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The Chebyshev distance between two 1D arrays, `x` and `y`, is given by:
+
+.. math:: d(x,y) = \max_i |x_i-y_i|
 
 The :class:`.ChebyshevDistance` class is imported using the following command:
 
 >>> from UQpy.utilities.distances.euclidean_distances.ChebyshevDistance import ChebyshevDistance
 
-One can use the following command to instantiate the class :class:`.ChebyshevDistance`
+Methods
+~~~~~~~~~~
+
+One can use the following command to instantiate the :class:`.ChebyshevDistance` class:
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.ChebyshevDistance
     :members:
 
+Attributes
+~~~~~~~~~~
+
+.. autoattribute:: UQpy.utilities.distances.ChebyshevDistance.distance_matrix
+
 CityBlock Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The Canberra distance between two 1D arrays, `x` and `y`, is given by:
+
+.. math:: d(x,y) = \sum_i |x_i - y_i|
 
 The :class:`.CityBlockDistance` class is imported using the following command:
 
 >>> from UQpy.utilities.distances.euclidean_distances.CityBlockDistance import CityBlockDistance
 
-One can use the following command to instantiate the class :class:`.CityBlockDistance`
+Methods
+~~~~~~~~~~
+
+One can use the following command to instantiate the :class:`.CityBlockDistance` class
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.CityBlockDistance
     :members:
+
+Attributes
+~~~~~~~~~~
+
+.. autoattribute:: UQpy.utilities.distances.CityBlockDistance.distance_matrix
 
 Correlation Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

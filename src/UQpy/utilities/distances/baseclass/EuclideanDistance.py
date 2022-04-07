@@ -13,7 +13,7 @@ class EuclideanDistance(Distance, ABC):
     @beartype
     def calculate_distance_matrix(self, points: list[NumpyFloatArray]):
         """
-        Given a list of cartesian points calculates a matrix that contains the distances between them.
+        Given a list of cartesian points, calculates a matrix that contains the distances between them.
 
         :param points: A list of cartesian points.
         :return: :class:`.ndarray`
