@@ -126,6 +126,8 @@ One can use the following command to instantiate the class :class:`.CorrelationD
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.CorrelationDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.CorrelationDistance.distance_matrix
+
 Cosine Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -137,6 +139,8 @@ One can use the following command to instantiate the class :class:`.CosineDistan
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.CosineDistance
     :members:
+
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.CosineDistance.distance_matrix
 
 Dice Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -150,6 +154,8 @@ One can use the following command to instantiate the class :class:`.DiceDistance
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.DiceDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.DiceDistance.distance_matrix
+
 Euclidean Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -161,6 +167,8 @@ One can use the following command to instantiate the class :class:`UQpy.utilitie
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.EuclideanDistance
     :members:
+
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.EuclideanDistance.distance_matrix
 
 Hamming Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -174,6 +182,8 @@ One can use the following command to instantiate the class :class:`.HammingDista
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.HammingDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.HammingDistance.distance_matrix
+
 Jaccard Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -185,6 +195,8 @@ One can use the following command to instantiate the class :class:`.JaccardDista
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.JaccardDistance
     :members:
+
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.JaccardDistance.distance_matrix
 
 Jensen-Shannon Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -198,6 +210,8 @@ One can use the following command to instantiate the class :class:`.JensenShanno
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.JensenShannonDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.JensenShannonDistance.distance_matrix
+
 Kulczynski Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -209,6 +223,8 @@ One can use the following command to instantiate the class :class:`.KulczynskiDi
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.KulczynskiDistance
     :members:
+
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.KulczynskiDistance.distance_matrix
 
 Kulsinski Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -222,6 +238,8 @@ One can use the following command to instantiate the class :class:`.KulsinskiDis
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.KulsinksiDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.KulsinksiDistance.distance_matrix
+
 Mahalanobis Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -233,6 +251,8 @@ One can use the following command to instantiate the class :class:`.MahalanobisD
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.MahalanobisDistance
     :members:
+
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.MahalanobisDistance.distance_matrix
 
 Matching Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -246,6 +266,8 @@ One can use the following command to instantiate the class :class:`.MatchingDist
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.MatchingDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.MatchingDistance.distance_matrix
+
 Minkowski Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -258,6 +280,8 @@ One can use the following command to instantiate the class :class:`.MinkowskiDis
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.MinkowskiDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.MinkowskiDistance.distance_matrix
+
 Rogers-Tanimoto Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -269,6 +293,8 @@ One can use the following command to instantiate the class :class:`.RogersTanimo
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.RogersTanimotoDistance
     :members:
+
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.RogersTanimotoDistance.distance_matrix
 
 
 Russell-Rao Distance
@@ -283,6 +309,8 @@ One can use the following command to instantiate the class :class:`.RussellRaoDi
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.RussellRaoDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.RussellRaoDistance.distance_matrix
+
 Sokal-Michener Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -294,6 +322,8 @@ One can use the following command to instantiate the class :class:`.SokalMichene
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.SokalMichenerDistance
     :members:
+
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.SokalMichenerDistance.distance_matrix
 
 Sokal-Sneath Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -307,6 +337,8 @@ One can use the following command to instantiate the class :class:`.SokalSneathD
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.SokalSneathDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.SokalSneathDistance.distance_matrix
+
 Squared Euclidean Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -318,6 +350,8 @@ One can use the following command to instantiate the class :class:`.SquaredEucli
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.SquaredEuclideanDistance
     :members:
+
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.SquaredEuclideanDistance.distance_matrix
 
 Standardized Euclidean Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -331,6 +365,8 @@ One can use the following command to instantiate the class :class:`.Standardized
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.StandardizedEuclideanDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.StandardizedEuclideanDistance.distance_matrix
+
 Yule Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -342,3 +378,5 @@ One can use the following command to instantiate the class :class:`.YuleDistance
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.YuleDistance
     :members:
+
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.YuleDistance.distance_matrix
