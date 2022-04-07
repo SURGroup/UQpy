@@ -17,7 +17,7 @@ class EuclideanKernel(Kernel, ABC):
 
     def calculate_kernel_matrix(self, points: Numpy2DFloatArray):
         """
-        Using the kernel-specific :py:meth:`.kernel_entry` method, this function assembles the kernel matrix.
+        Using the kernel-specific :py:meth:`.Kernel.kernel_entry` method, this function assembles the kernel matrix.
 
         :param points: Set of data points in the Euclidean space
 
