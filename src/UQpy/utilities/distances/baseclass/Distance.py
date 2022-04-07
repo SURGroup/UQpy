@@ -4,11 +4,13 @@ from typing import Union
 import numpy as np
 
 
-
 class Distance(ABC):
     """
     This class serves as a baseclass under which the distance implementations for all spaces exist.
     """
+    def __init__(self):
+        self.distance_matrix: np.ndarray = None
+        """Distance matrix defining the pairwise distances between the points"""
 
     def calculate_distance_matrix(self, points):
         """

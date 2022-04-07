@@ -51,4 +51,4 @@ class GrassmannianDistance(Distance, ABC):
 
             distance_list.append(distance_value)
 
-        return distance_list
+        self.distance_matrix = distance_list

@@ -33,6 +33,7 @@ It allows the user to define a set of methods that must be created within any ch
 
 
 
+
 Asimov
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -46,6 +47,7 @@ One can use the following command to instantiate the class :class:`.AsimovDistan
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.AsimovDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.grassmannian_distances.AsimovDistance.distance_matrix
 
 Binet-Cauchy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -59,6 +61,8 @@ One can use the following command to instantiate the class :class:`.BinetCauchyD
 
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.BinetCauchyDistance
     :members:
+
+.. autoattribute:: UQpy.utilities.distances.grassmannian_distances.BinetCauchyDistance.distance_matrix
 
 
 Fubini-Study
@@ -74,6 +78,7 @@ One can use the following command to instantiate the class :class:`.FubiniStudyD
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.FubiniStudyDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.grassmannian_distances.FubiniStudyDistance.distance_matrix
 
 
 Geodesic
@@ -89,6 +94,7 @@ One can use the following command to instantiate the class :class:`.GeodesicDist
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.GeodesicDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.grassmannian_distances.GeodesicDistance.distance_matrix
 
 Martin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -102,6 +108,8 @@ One can use the following command to instantiate the class :class:`.MartinDistan
 
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.MartinDistance
     :members:
+
+.. autoattribute:: UQpy.utilities.distances.grassmannian_distances.MartinDistance.distance_matrix
 
 
 
@@ -117,6 +125,7 @@ One can use the following command to instantiate the class :class:`.ProcrustesDi
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.ProcrustesDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.grassmannian_distances.ProcrustesDistance.distance_matrix
 
 Projection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -130,6 +139,8 @@ One can use the following command to instantiate the class :class:`.ProjectionDi
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.ProjectionDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.grassmannian_distances.ProjectionDistance.distance_matrix
+
 
 Spectral
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -142,3 +153,5 @@ One can use the following command to instantiate the class :class:`.SpectralDist
 
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.SpectralDistance
     :members:
+
+.. autoattribute:: UQpy.utilities.distances.grassmannian_distances.SpectralDistance.distance_matrix
