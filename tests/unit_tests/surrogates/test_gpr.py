@@ -2,6 +2,7 @@ import pytest
 from beartype.roar import BeartypeCallHintPepParamException
 
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
+from UQpy.utilities.FminCobyla import FminCobyla
 from UQpy.surrogates.gaussian_process.GaussianProcessRegression import GaussianProcessRegression
 # # from UQpy.utilities.strata.Rectangular import Rectangular
 # # from UQpy.sampling.StratifiedSampling import StratifiedSampling
@@ -9,10 +10,11 @@ from UQpy.surrogates.gaussian_process.GaussianProcessRegression import GaussianP
 # # from UQpy.distributions.collection.Uniform import Uniform
 import numpy as np
 import shutil
-from UQpy.surrogates.gaussian_process.regression_models import LinearRegression, ConstantRegression
+from UQpy.surrogates.gaussian_process.constraints import NonNegative
+from UQpy.surrogates.gaussian_process.regression_models import LinearRegression, ConstantRegression, QuadraticRegression
 from UQpy.surrogates.gaussian_process.kernels import RBF, Matern
-#
-#
+
+
 samples = np.linspace(0, 5, 20).reshape(-1, 1)
 values = np.cos(samples)
 optimizer = MinimizeOptimizer(method="L-BFGS-B", bounds=[[0.1, 5], [0.1, 3]])
@@ -22,7 +24,7 @@ gpr.fit(samples=samples, values=values)
 optimizer1 = MinimizeOptimizer(method="L-BFGS-B")
 gpr2 = GaussianProcessRegression(kernel=Matern(nu=0.5), hyperparameters=[10, 4], optimizer=optimizer1,
                                  bounds=[[0.01, 100], [0.1, 10]], optimizations_number=10, random_state=2)
-gpr2.fit(samples=samples, values=values)
+gpr2.fit(samples=samples, values=values, optimizations_number=10)
 
 points11 = np.array([[0], [1], [2]])
 points12 = np.array([[-1], [0], [-1]])
@@ -38,17 +40,45 @@ matern_kernel_5_2 = Matern(nu=2.5)
 matern_kernel_inf = Matern(nu=np.inf)
 matern_kernel_2_1 = Matern(nu=2)
 
+constant_reg = ConstantRegression()
+linear_reg = LinearRegression()
+quadratic_reg = QuadraticRegression()
 
-def test_predict():
+non_negative = NonNegative(constraint_points=np.array([[1], [2], [3]]), observed_error=0.1, z_value=2)
+optimizer3 = FminCobyla()
+gpr3 = GaussianProcessRegression(regression_model=constant_reg, kernel=RBF(), hyperparameters=[2.852, 2.959],
+                                 random_state=1, optimizer=optimizer3, optimize_constraints=non_negative,
+                                 bounds=[[0.1, 5], [0.1, 3]])
+gpr3.fit(samples=samples, values=values+1.05)
+
+gpr4 = GaussianProcessRegression(regression_model=constant_reg, kernel=RBF(), hyperparameters=[2.852, 2.959, 0.001],
+                                 random_state=1, optimizer=optimizer3, bounds=[[0.1, 5], [0.1, 3], [1e-6, 1e-1]],
+                                 noise=True)
+gpr4.fit(samples=samples, values=values)
+
+
+
+def test_predict1():
     prediction = np.round(gpr.predict([[1], [np.pi/2], [np.pi]], True), 3)
     expected_prediction = np.array([[0.54, 0., -1.], [0.,  0.,  0.]])
     assert (expected_prediction == prediction).all()
 
 
-def test_predict1():
+def test_predict2():
     prediction = np.round(gpr2.predict([[1], [2*np.pi], [np.pi]], True), 3)
     expected_prediction = np.array([[0.537,  0.238, -0.998], [0.077,  0.39,  0.046]])
     assert (expected_prediction == prediction).all()
+
+
+def test_predict3():
+    prediction = np.round(gpr3.predict([[1], [2*np.pi], [np.pi]], True), 3)
+    expected_prediction = np.array([[1.59, 2.047, 0.05], [0., 0.006, 0.]])
+    assert (expected_prediction == prediction).all()
+
+
+def test_hyperparameters():
+    tmp = np.round(gpr4.hyperparameters, 3)
+    assert (tmp == np.array([2.524, 1.522, 0.])).all()
 
 
 def test_rbf():
@@ -148,6 +178,49 @@ def test_matern_2_1():
                                            [13.921, 34.25, 13.921]])
     assert np.array_equal(expected_covariance_matrix, covariance_matrix, equal_nan=True)
 
+
+def test_constant_regress():
+    """
+    Verify Constant Regression Model
+    """
+    tmp = constant_reg.r(np.array([[1, 0, -10]]))
+    expected_tmp = np.array([[1.]])
+    tmp1 = constant_reg.r(np.array([[1], [0], [-10]]))
+    expected_tmp1 = np.array([[1.], [1.], [1.]])
+    assert (tmp == expected_tmp).all() and (tmp1 == expected_tmp1).all()
+
+
+def test_linear_regress():
+    """
+    Verify Linear Regression Model
+    """
+    tmp = linear_reg.r(np.array([[1, 0, -10]]))
+    expected_tmp = np.array([[1., 1., 0., -10.]])
+    tmp1 = linear_reg.r(np.array([[1], [0], [-10]]))
+    expected_tmp1 = np.array([[1., 1.], [1., 0.], [1., -10]])
+    assert (tmp == expected_tmp).all() and (tmp1 == expected_tmp1).all()
+
+
+def test_quadratic_regress():
+    """
+    Verify Quadratic Regression Model
+    """
+    tmp = quadratic_reg.r(np.array([[1, 2, 3]]))
+    expected_tmp = np.array([[1., 1., 2., 3., 1., 2., 3., 4., 6., 9.]])
+    tmp1 = quadratic_reg.r(np.array([[1], [0], [-10]]))
+    expected_tmp1 = np.array([[1., 1., 1], [1., 0., 0.], [1., -10, 100]])
+    assert (tmp == expected_tmp).all() and (tmp1 == expected_tmp1).all()
+
+
+def test_hyperparameters_length():
+    """
+        Raises an error if shape/length of hyperparameters is not correct.
+    """
+    with pytest.raises(RuntimeError):
+        gpr5 = GaussianProcessRegression(regression_model=constant_reg, kernel=RBF(), hyperparameters=[2.852, 2.959],
+                                         random_state=1, optimizer=optimizer3, bounds=[[0.1, 5], [0.1, 3]], noise=True)
+        gpr5.fit(samples=samples, values=values)
+#
 #
 # def test_jacobian():
 #     jacobian = np.round(gpr.jacobian([[np.pi], [np.pi/2]]), 3)
