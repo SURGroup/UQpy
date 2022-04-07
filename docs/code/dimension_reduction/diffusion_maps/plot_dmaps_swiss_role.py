@@ -40,7 +40,8 @@ ax.view_init(10, 70)
 # %% md
 #
 # Case 1: Find the optimal parameter of the Gaussian kernel scale epsilon
-kernel = GaussianKernel(epsilon=0.0018332392635542376)
+kernel = GaussianKernel(epsilon=0.65)
+
 
 dmaps_object = DiffusionMaps(data=X,
                              alpha=1.0, n_eigenvectors=9,
