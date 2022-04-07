@@ -52,9 +52,8 @@ Data[:, :, 2] = [
 
 start_time = time.time()
 
-pod = DirectPOD(solution_snapshots=Data, modes=1)
-pod.run()
-Data_reconstr =pod.reconstructed_solution
+pod = DirectPOD(solution_snapshots=Data, n_modes=1)
+Data_reconstr = pod.reconstructed_solution
 
 # %% md
 #
