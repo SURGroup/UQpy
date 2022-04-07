@@ -95,6 +95,9 @@ class LeastAngleRegression(Regression):
         overfitting = False
         BestLarsError = 0
         step = 0
+        
+        if steps<3:
+            raise Exception('LAR identified constant function! Check your data.')
 
         while BestLarsError < target_error and step < steps - 2 and overfitting == False:
 
