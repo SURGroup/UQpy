@@ -8,7 +8,7 @@ from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 
 
 class GrassmannianKernel(Kernel, ABC):
-    """This is a blueprint for Euclidean kernels implemented in the :py:mod:`kernels` module ."""
+    """The parent class for Grassmannian kernels implemented in the :py:mod:`kernels` module ."""
 
     def __init__(self):
         super().__init__()
@@ -17,9 +17,9 @@ class GrassmannianKernel(Kernel, ABC):
         """
         Compute the kernel matrix given a list of points on the Grassmann manifold.
 
-        :param points: Points projected on the Grassmann manifold
+        :param points: Points on the Grassmann manifold
         :param p: Number of independent p-planes of each Grassmann point.
-        :return: :class:`ndarray`
+        :return: :class:`ndarray` The kernel matrix.
         """
         nargs = len(points)
         # Define the pairs of points to compute the entries of the kernel matrix.

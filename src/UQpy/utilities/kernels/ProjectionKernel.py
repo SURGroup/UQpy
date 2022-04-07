@@ -6,11 +6,7 @@ from UQpy.utilities.kernels import GrassmannianKernel
 
 class ProjectionKernel(GrassmannianKernel):
     """
-    A class to calculate the Projection kernel defined as:
-
-    .. math::
-
-        k_p(x_j, x_i) = (||x_j'\cdot xj||_F)^2
+    A class to calculate the Projection kernel
 
     """
     def apply_method(self, points):

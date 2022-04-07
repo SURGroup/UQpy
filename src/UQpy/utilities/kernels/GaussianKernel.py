@@ -34,7 +34,7 @@ class GaussianKernel(EuclideanKernel):
             d = pdist(np.array([xi, xj]), "sqeuclidean")
         else:
             d = np.linalg.norm(xi-xj, 'fro') ** 2
-        return np.exp(-d / (4*self.epsilon))
+        return np.exp(-d / (2*self.epsilon**2))
 
     def optimize_parameters(self, data: np.ndarray, tolerance: float,
                             n_nearest_neighbors: int,

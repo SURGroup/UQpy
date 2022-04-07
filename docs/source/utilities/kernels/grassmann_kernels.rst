@@ -2,18 +2,15 @@ Grassmannian Kernels
 -----------------------------------
 
 In several applications the use of subspaces is essential to describe the underlying geometry of data. However, it is
-well-known that subspaces do not follow the Euclidean geometry because they lie on the Grassmann manifold.Therefore,
-working with subspaces requires the definition of an embedding structure of the Grassmann manifold into a Hilbert
-space. Thus, using positive definite kernels is studied as a solution to this problem. In this regard, a real-valued
-positive definite kernel is defined as a symmetric function :math:`k:\mathcal{X}\times \mathcal{X} \rightarrow \mathbb{R}`
-if and only if :math:`\sum^n_{I,j=1}c_i c_j k(x_i,x_j) \leq 0` for :math:`n \in \mathbb{N}`, :math:`x_i \in \mathcal{X}`
-and :math:`c_i \in \mathbb{R}`. On the Grassmann manifold a kernel is defined as a well-defined and positive definite
-function :math:`k:\mathcal{G}(p,n)\times \mathcal{G}(p,n) \rightarrow \mathbb{R}` :cite:`kernels_1`, :cite:`kernels_2`. A Grassmann kernel is a
-well-defined positive definite function that embeds the Grassmannian into a Hilbert space. :py:mod:`UQpy` introduces
-two Grassmann kernels have been proposed in literature and have demonstrated the potential for subspace-based learning
-problems.
+well-known that sets of subspaces do not follow Euclidean geometry. Instead they have a Reimannian structure and lie on
+a Grassmann manifold.  Grassmannian kernels can be used to embed the structure of the Grassmann manifold into a Hilbert
+space. On the Grassmann manifold, a kernel is defined as a positive definite function
+:math:`k:\mathcal{G}(p,n)\times \mathcal{G}(p,n) \rightarrow \mathbb{R}` :cite:`kernels_1`, :cite:`kernels_2`.
 
-Grassmannian Kernel
+:py:mod:`UQpy` includes Grassmannian kernels through the :class:`.GrassmannianKernel` parent class,
+with specific kernels included as subclasses. This is described in the following.
+
+Grassmannian Kernels
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :class:`.GrassmannianKernel` class is imported using the following command:
@@ -23,14 +20,20 @@ The :class:`.GrassmannianKernel` class is imported using the following command:
 .. autoclass:: UQpy.utilities.kernels.baseclass.GrassmannianKernel
     :members: calculate_kernel_matrix
 
-Projection
+Projection Kernel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The projection kernel is defined as:
+
+.. math:: k_p(\mathbf{X}_i, \mathbf{X}_j) = ||\mathbf{X}_i^T\mathbf{X}_j||_F^2
+
+where :math:`\mathbf{X}_i, \mathbf{X}_j \in \mathcal{G}(p,n)`
 
 The :class:`.ProjectionKernel` class is imported using the following command:
 
 >>> from UQpy.utilities.kernels.ProjectionKernel import ProjectionKernel
 
-One can use the following command to instantiate the class :class:`.ProjectionKernel`
+One can use the following command to instantiate the :class:`.ProjectionKernel` class.
 
 .. autoclass:: UQpy.utilities.kernels.ProjectionKernel
     :members:
@@ -39,14 +42,20 @@ One can use the following command to instantiate the class :class:`.ProjectionKe
 
 
 
-Binet-Cauchy
+Binet-Cauchy Kernel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The Binet-Cauchy Kernel is defined as:
+
+.. math:: k_p(\mathbf{X}_i, \mathbf{X}_j) = \det(\mathbf{X}_i^T\mathbf{X}_j)^2
+
+where :math:`\mathbf{X}_i, \mathbf{X}_j \in \mathcal{G}(p,n)`
 
 The :class:`.BinetCauchyKernel` class is imported using the following command:
 
 >>> from UQpy.utilities.kernels.BinetCauchyKernel import BinetCauchyKernel
 
-One can use the following command to instantiate the class :class:`.BinetCauchyKernel`
+One can use the following command to instantiate the :class:`.BinetCauchyKernel` class.
 
 .. autoclass:: UQpy.utilities.kernels.BinetCauchyKernel
     :members:
@@ -54,28 +63,3 @@ One can use the following command to instantiate the class :class:`.BinetCauchyK
 .. autoattribute:: UQpy.utilities.kernels.BinetCauchyKernel.kernel_matrix
 
 
-Calculate Svd Projection SUM or PRODUCT kernel
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
->>> D1 = 6
->>> r0 = 2  # rank sample 0
->>> r1 = 3  # rank sample 1
->>> r2 = 4  # rank sample 2
->>> r3 = 3  # rank sample 2
->>>
->>> Sol0 = np.dot(np.random.rand(D1, r0), np.random.rand(r0, D1))
->>> Sol1 = np.dot(np.random.rand(D1, r1), np.random.rand(r1, D1))
->>> Sol2 = np.dot(np.random.rand(D1, r2), np.random.rand(r2, D1))
->>> Sol3 = np.dot(np.random.rand(D1, r3), np.random.rand(r3, D1))
->>>
->>> # Creating a list of solutions.
->>> Solutions = [Sol0, Sol1, Sol2, Sol3]
->>> from UQpy.dimension_reduction.grassmann_manifold.GrassmannOperations import Grassmann
->>> manifold_projection = SvdProjection(Solutions, p="max")
->>> kernel = ProjectionKernel()
->>>
->>> kernel_psi = kernel.calculate_kernel_matrix(manifold_projection.u)
->>> kernel_phi = kernel.calculate_kernel_matrix(manifold_projection.v)
->>>
->>> sum_kernel = kernel_psi + kernel_phi
->>> product_kernel = kernel_psi * kernel_phi

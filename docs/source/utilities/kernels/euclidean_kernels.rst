@@ -23,7 +23,7 @@ The :class:`.GaussianKernel` class is imported using the following command:
 
 >>> from UQpy.utilities.kernels.GaussianKernel import GaussianKernel
 
-One can use the following to instantiate the class :class:`.GaussianKernel`
+One can use the following to instantiate the :class:`.GaussianKernel` class.
 
 Methods
 ~~~~~~~~~
