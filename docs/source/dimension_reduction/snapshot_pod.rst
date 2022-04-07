@@ -41,3 +41,6 @@ Attributes
 ^^^^^^^^^^
 .. autoattribute:: UQpy.dimension_reduction.pod.SnapshotPOD.reconstructed_solution
 .. autoattribute:: UQpy.dimension_reduction.pod.SnapshotPOD.reduced_solution
+.. autoattribute:: UQpy.dimension_reduction.pod.SnapshotPOD.U
+.. autoattribute:: UQpy.dimension_reduction.pod.SnapshotPOD.eigenvalues
+.. autoattribute:: UQpy.dimension_reduction.pod.SnapshotPOD.phi

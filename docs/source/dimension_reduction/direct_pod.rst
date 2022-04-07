@@ -46,4 +46,7 @@ Attributes
 ^^^^^^^^^^
 .. autoattribute:: UQpy.dimension_reduction.pod.DirectPOD.reconstructed_solution
 .. autoattribute:: UQpy.dimension_reduction.pod.DirectPOD.reduced_solution
+.. autoattribute:: UQpy.dimension_reduction.pod.DirectPOD.U
+.. autoattribute:: UQpy.dimension_reduction.pod.DirectPOD.eigenvalues
+.. autoattribute:: UQpy.dimension_reduction.pod.DirectPOD.phi
 
