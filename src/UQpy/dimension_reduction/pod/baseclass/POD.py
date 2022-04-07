@@ -11,9 +11,9 @@ from UQpy.utilities.ValidationTypes import PositiveInteger, PositiveFloat
 class POD(ABC):
     @beartype
     def __init__(self,
-                 solution_snapshots: Union[np.ndarray, list],
-                 modes: PositiveInteger = 10 ** 10,
-                 reconstruction_percentage: Union[PositiveInteger, PositiveFloat] = 10 ** 10):
+                 solution_snapshots: Union[np.ndarray, list] = None,
+                 n_modes: PositiveInteger = None,
+                 reconstruction_percentage: Union[PositiveInteger, PositiveFloat] = None):
         """
 
         :param solution_snapshots: Array or list containing the solution snapshots. If provided as an
@@ -28,22 +28,32 @@ class POD(ABC):
         :param reconstruction_percentage: Specified dataset reconstruction percentage. Must be between 0 and 100. Either
             `n_modes` or `reconstruction_percentage` must be provided, but not both.
         """
+        self.U = None
+        """Two dimensional dataset constructed by :class:`.POD`"""
+        self.eigenvalues = None
+        """Eigenvalues produced by the POD decomposition of the solution snapshots."""
+        self.phi = None
+        """Eigenvectors produced by the POD decomposition of the solution snapshots."""
         self.reduced_solution = None
         """Second order tensor containing the reconstructed solution snapshots in their initial spatial and temporal 
         dimensions."""
         self.reconstructed_solution = None
         """An array containing the solution snapshots reduced in the spatial dimension."""
         self.logger = logging.getLogger(__name__)
-        if reconstruction_percentage <= 0:
-            raise ValueError("Invalid input, the reconstruction percentage is defined in the range (0,100].")
 
-        if modes != 10 ** 10 and reconstruction_percentage != 10 ** 10:
+        if n_modes is None and reconstruction_percentage is None:
             raise ValueError("Either a number of modes or a reconstruction percentage must be chosen, not both.")
+
+        if reconstruction_percentage is not None  and reconstruction_percentage <= 0:
+            raise ValueError("Invalid input, the reconstruction percentage is defined in the range (0,100].")
 
         self.solution_snapshots = solution_snapshots
         self.logger = logging.getLogger(__name__)
-        self.modes = modes
+        self.modes = n_modes
         self.reconstruction_percentage = reconstruction_percentage
+
+        if solution_snapshots is not None:
+            self.run(solution_snapshots)
 
     def check_input(self):
         if type(self.solution_snapshots) == list:
@@ -73,24 +83,29 @@ class POD(ABC):
     def _calculate_reduced_and_reconstructed_solutions(self, u, phi, rows, columns, snapshot_number):
         pass
 
-    def run(self):
+    def run(self, solution_snapshots: Union[np.ndarray, list]):
         """
         Executes the POD method. Since :class:`.POD` is an abstract baseclass, one of the concrete implementations
         will be executed.
 
-        :return: Second order tensor containing the reconstructed solution snapshots in their initial spatial and
-         temporal dimensions and an array containing the solution snapshots reduced in the spatial dimension.
+        :param solution_snapshots: Array or list containing the solution snapshots. If provided as an
+         :class:`numpy.ndarray`, it should be three-dimensional, where the third dimension of the array corresponds to
+         the number of snapshots. If provided as a list, the length of the list corresponds to the number of snapshots.
+
+         If `solution_snapshots` is provided, the :py:meth:`.run` method will be executed automatically. If it is not
+         provided, then the :py:meth:`.run` method must be executed manually and provided with `solution_snapshots`.
         """
 
-        columns, rows, snapshot_number, u = self.check_input()
+        columns, rows, snapshot_number, self.U = self.check_input()
 
-        c, n_iterations = self._calculate_c_and_iterations(u, snapshot_number, rows, columns)
+        c, n_iterations = self._calculate_c_and_iterations(self.U, snapshot_number, rows, columns)
 
-        eigenvalues, phi = np.linalg.eig(c)
-        phi = phi.real
-        real_eigenvalues = eigenvalues.real
+        complex_eigenvalues, phi = np.linalg.eig(c)
+        self.phi = phi.real
 
-        percentages = [(real_eigenvalues[: i + 1].sum() / real_eigenvalues.sum()) * 100 for i in range(n_iterations)]
+        self.eigenvalues = complex_eigenvalues.real
+
+        percentages = [(self.eigenvalues[: i + 1].sum() / self.eigenvalues.sum()) * 100 for i in range(n_iterations)]
 
         minimum_percentage = min(percentages, key=lambda x: abs(x - self.reconstruction_percentage))
 
