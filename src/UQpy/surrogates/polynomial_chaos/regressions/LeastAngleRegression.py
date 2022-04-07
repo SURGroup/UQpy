@@ -59,7 +59,7 @@ class LeastAngleRegression(Regression):
         return c_, None, np.shape(c_)[1]
 
     @staticmethod
-    def model_selection(pce_object:PolynomialChaosExpansion, target_error=1, check_overfitting=True):
+    def model_selection(pce_object: PolynomialChaosExpansion, target_error=1, check_overfitting=True):
         """
         LARS model selection algorithm for given TargetError of approximation
         measured by Cross validation: Leave-one-out error (1 is perfect approximation). Option to check overfitting by 
