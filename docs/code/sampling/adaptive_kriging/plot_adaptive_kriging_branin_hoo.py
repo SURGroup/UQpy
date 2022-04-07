@@ -40,9 +40,10 @@ import shutil
 import numpy as np
 from matplotlib import pyplot as plt
 
+from UQpy import PythonModel
 from UQpy.surrogates import GaussianProcessRegression
 from UQpy.sampling import MonteCarloSampling, AdaptiveKriging
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.distributions import Uniform
 from local_BraninHoo import function
 import time
@@ -64,7 +65,8 @@ x = MonteCarloSampling(distributions=marginals, nsamples=20)
 
 # %%
 
-rmodel = RunModel(model_script='local_BraninHoo.py', vec=False)
+model = PythonModel(model_script='local_BraninHoo.py', model_object_name='function')
+rmodel = RunModel_New(model=model)
 
 # %% md
 #
@@ -119,7 +121,6 @@ for i in range(num):
         tem = np.array([[X[i, j], Y[i, j]]])
         Z[i, j] = function(tem)
 
-shutil.rmtree(rmodel.model_dir)
 
 fig, ax = plt.subplots(1, 1)
 cp = ax.contourf(X, Y, Z, 10)

@@ -1,21 +1,20 @@
+from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.sensitivity.MorrisSensitivity import MorrisSensitivity
-from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Uniform
 import pytest
-import shutil
 
-#os.chdir('./tests/Sensitivity')
+
+# os.chdir('./tests/Sensitivity')
 
 
 @pytest.fixture
 def setup():
-    a_values = [0.001, 99.]
-    runmodel_object = RunModel(
-        model_script='pfn.py', model_object_name='gfun_sensitivity', vec=True, a_values=a_values,
-        var_names=['X{}'.format(i) for i in range(2)], delete_files=True)
+    model = PythonModel(model_script='pfn.py', model_object_name='gfun_sensitivity', delete_files=True,
+                        a_values=[0.001, 99.], var_names=['X{}'.format(i) for i in range(2)])
+    runmodel_object = RunModel_New(model=model)
     dist_object = [Uniform(), Uniform()]
     yield runmodel_object, dist_object
-    shutil.rmtree(runmodel_object.model_dir)
 
 
 def test_morris(setup):

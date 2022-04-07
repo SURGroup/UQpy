@@ -2,7 +2,7 @@ from typing import Callable
 
 from beartype import beartype
 
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.distributions.baseclass import Distribution
 from UQpy.inference.inference_models.baseclass.InferenceModel import *
 from UQpy.distributions.collection.MultivariateNormal import MultivariateNormal
@@ -16,7 +16,7 @@ warnings.filterwarnings('ignore')
 
 class ComputationalModel(InferenceModel):
     @beartype
-    def __init__(self, n_parameters: PositiveInteger, runmodel_object: RunModel,
+    def __init__(self, n_parameters: PositiveInteger, runmodel_object: RunModel_New,
                  error_covariance: Union[np.ndarray, float] = 1.0, name: str = "", prior: Distribution = None,
                  log_likelihood: Callable = None):
         """

@@ -4,7 +4,7 @@ import numpy as np
 import scipy.stats as stats
 from beartype import beartype
 
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.transformations import *
 from UQpy.distributions import *
 from UQpy.reliability.taylor_series.baseclass.TaylorSeries import TaylorSeries
@@ -21,7 +21,7 @@ class FORM(TaylorSeries):
     def __init__(
         self,
         distributions: Union[None, Distribution, list[Distribution]],
-        runmodel_object: RunModel,
+        runmodel_object: RunModel_New,
         seed_x: Union[list, np.ndarray] = None,
         seed_u: Union[list, np.ndarray] = None,
         df_step: Union[int, float] = 0.01,

@@ -5,7 +5,7 @@ from UQpy.distributions.collection import Normal
 from UQpy.inference.inference_models.DistributionModel import DistributionModel
 from UQpy.inference.inference_models.ComputationalModel import ComputationalModel
 from UQpy.inference import MLE
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 import shutil
 
 
@@ -25,9 +25,10 @@ def test_simple_probability_model():
 
 def test_regression_model():
     param_true = np.array([1.0, 2.0]).reshape((1, -1))
-
-    h_func = RunModel(model_script='pfn_models.py', model_object_name='model_quadratic', vec=False,
+    from UQpy.run_model.model_execution.PythonModel import PythonModel
+    model = PythonModel(model_script='pfn_models.py', model_object_name='model_quadratic',
                       var_names=['theta_0', 'theta_1'])
+    h_func = RunModel_New(model=model)
     h_func.run(samples=param_true)
 
     # Add noise
@@ -45,4 +46,3 @@ def test_regression_model():
     assert ml_estimator.mle[0] == 0.8689097631871134
     assert ml_estimator.mle[1] == 2.0030767805841143
 
-    shutil.rmtree(h_func.model_dir)

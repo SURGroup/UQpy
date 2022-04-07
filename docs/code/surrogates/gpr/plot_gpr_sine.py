@@ -22,9 +22,10 @@ Gaussian Process of a sinusoidal function
 
 import shutil
 
+from UQpy import PythonModel
 from UQpy.sampling.stratified_sampling.strata import RectangularStrata
 from UQpy.sampling import TrueStratifiedSampling
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.distributions import Gamma
 import numpy as np
 import matplotlib.pyplot as plt
@@ -63,8 +64,9 @@ x = TrueStratifiedSampling(distributions=marginals, strata_object=strata,
 
 # %%
 
-
-rmodel = RunModel(model_script='local_python_model_1Dfunction.py', delete_files=True)
+model = PythonModel(model_script='local_python_model_1Dfunction.py', model_object_name='y_func',
+                    delete_files=True)
+rmodel = RunModel_New(model=model)
 rmodel.run(samples=x.samples)
 
 from UQpy.surrogates.gaussian_process.regression_models import LinearRegression
@@ -99,7 +101,6 @@ y, y_sd = K.predict(x1.reshape([num, 1]), return_std=True)
 # %%
 
 rmodel.run(samples=x1, append_samples=False)
-shutil.rmtree(rmodel.model_dir)
 
 # %% md
 #
@@ -110,7 +111,7 @@ shutil.rmtree(rmodel.model_dir)
 
 fig = plt.figure()
 ax = plt.subplot(111)
-plt.plot(x1, rmodel.qoi_list, label='Sine')
+plt.plot(np.squeeze(x1), np.squeeze(rmodel.qoi_list), label='Sine')
 plt.plot(x1, y, label='Surrogate')
 # plt.plot(x1, y_grad, label='Gradient')
 plt.scatter(K.samples, K.values, label='Data')

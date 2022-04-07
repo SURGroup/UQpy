@@ -1,4 +1,5 @@
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.model_execution.PythonModel import PythonModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.distributions import *
 from UQpy.reliability import FORM
 import glob
@@ -10,14 +11,15 @@ import os
 
 @pytest.fixture
 def setup():
-    path = os.path.abspath(os.path.dirname(__file__))
-    os.chdir(path)
-    h_func = RunModel(model_script='pfn.py', model_object_name='model_i', vec=False, delete_files=True)
+    model = PythonModel(model_script='pfn1.py', model_object_name='model_i', delete_files=True)
+    h_func = RunModel_New(model=model)
     yield h_func
     # shutil.rmtree(h_func.model_dir)
 
 
 def test_seeds_xu_is_none(setup):
+    path = os.path.abspath(os.path.dirname(__file__))
+    os.chdir(path)
     dist1 = Normal(loc=200, scale=20)
     dist2 = Normal(loc=150, scale=10)
     dist = [dist1, dist2]
@@ -29,6 +31,8 @@ def test_seeds_xu_is_none(setup):
 
 
 def test_seeds_x_is_none(setup):
+    path = os.path.abspath(os.path.dirname(__file__))
+    os.chdir(path)
     dist1 = Normal(loc=200, scale=20)
     dist2 = Normal(loc=150, scale=10)
     dist = [dist1, dist2]
@@ -40,6 +44,8 @@ def test_seeds_x_is_none(setup):
 
 
 def test_tol1_is_not_none(setup):
+    path = os.path.abspath(os.path.dirname(__file__))
+    os.chdir(path)
     dist1 = Normal(loc=200, scale=20)
     dist2 = Normal(loc=150, scale=10)
     dist = [dist1, dist2]
@@ -51,6 +57,8 @@ def test_tol1_is_not_none(setup):
 
 
 def test_tol2_is_not_none(setup):
+    path = os.path.abspath(os.path.dirname(__file__))
+    os.chdir(path)
     dist1 = Normal(loc=200, scale=20)
     dist2 = Normal(loc=150, scale=10)
     dist = [dist1, dist2]
@@ -62,6 +70,8 @@ def test_tol2_is_not_none(setup):
 
 
 def test_tol3_is_not_none(setup):
+    path = os.path.abspath(os.path.dirname(__file__))
+    os.chdir(path)
     dist1 = Normal(loc=200, scale=20)
     dist2 = Normal(loc=150, scale=10)
     dist = [dist1, dist2]
@@ -73,6 +83,8 @@ def test_tol3_is_not_none(setup):
 
 
 def test_tol12_is_not_none(setup):
+    path = os.path.abspath(os.path.dirname(__file__))
+    os.chdir(path)
     dist1 = Normal(loc=200, scale=20)
     dist2 = Normal(loc=150, scale=10)
     dist = [dist1, dist2]
@@ -84,6 +96,8 @@ def test_tol12_is_not_none(setup):
 
 
 def test_tol13_is_not_none(setup):
+    path = os.path.abspath(os.path.dirname(__file__))
+    os.chdir(path)
     dist1 = Normal(loc=200, scale=20)
     dist2 = Normal(loc=150, scale=10)
     dist = [dist1, dist2]
@@ -95,6 +109,8 @@ def test_tol13_is_not_none(setup):
 
 
 def test_tol23_is_not_none(setup):
+    path = os.path.abspath(os.path.dirname(__file__))
+    os.chdir(path)
     dist1 = Normal(loc=200, scale=20)
     dist2 = Normal(loc=150, scale=10)
     dist = [dist1, dist2]
@@ -106,6 +122,8 @@ def test_tol23_is_not_none(setup):
 
 
 def test_tol123_is_not_none(setup):
+    path = os.path.abspath(os.path.dirname(__file__))
+    os.chdir(path)
     dist1 = Normal(loc=200, scale=20)
     dist2 = Normal(loc=150, scale=10)
     dist = [dist1, dist2]
@@ -117,9 +135,10 @@ def test_tol123_is_not_none(setup):
 
 
 def test_form_example():
-    RunModelObject = RunModel(model_script='pfn.py',
-                              model_object_name="example1",
-                              vec=False, ntasks=3)
+    path = os.path.abspath(os.path.dirname(__file__))
+    os.chdir(path)
+    model = PythonModel(model_script='pfn3.py', model_object_name='example1', delete_files=True)
+    RunModelObject = RunModel_New(model=model)
     dist1 = Normal(loc=200., scale=20.)
     dist2 = Normal(loc=150, scale=10.)
     Q = FORM(distributions=[dist1, dist2], runmodel_object=RunModelObject,
@@ -133,5 +152,3 @@ def test_form_example():
     assert Q.failure_probability[0] == 0.012673659338729965
     np.allclose(Q.dg_u_record, np.array([0., 0.]))
 
-    import shutil
-    shutil.rmtree(RunModelObject.model_dir)

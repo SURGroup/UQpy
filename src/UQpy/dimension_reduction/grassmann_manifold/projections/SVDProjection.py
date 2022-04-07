@@ -3,12 +3,12 @@ from typing import Union
 from beartype import beartype
 
 from UQpy.utilities.GrassmannPoint import GrassmannPoint
-from UQpy.dimension_reduction.grassmann_manifold.projections.baseclass.ManifoldProjection import ManifoldProjection
+from UQpy.dimension_reduction.grassmann_manifold.projections.baseclass.GrassmannProjection import GrassmannProjection
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 from UQpy.utilities.Utilities import *
 
 
-class SvdProjection(ManifoldProjection):
+class SVDProjection(GrassmannProjection):
     @beartype
     def __init__(
             self,
@@ -20,7 +20,14 @@ class SvdProjection(ManifoldProjection):
 
         :param data: Raw data given as a list of matrices.
         :param p: Number of independent p-planes of each Grassmann point.
-        :param tol: Tolerance on the SVD decomposition
+            Options:
+                :any:`int`: Integer specifying the number of p-planes
+
+                :any:`str`:
+                    `"max"`: Set p equal to the maximum rank of all provided data matrices
+
+                    `"min"`: Set p equal to the minimum rank of all provided data matrices
+        :param tol: Tolerance on the SVD
         """
         self.data = data
         self.tolerance = tol
@@ -38,8 +45,8 @@ class SvdProjection(ManifoldProjection):
 
         if bool_left and bool_right:
             raise TypeError("UQpy: The shape of the input matrices must be the same.")
-        n_psi = n_left[0]
-        n_phi = n_right[0]
+        n_u = n_left[0]
+        n_v = n_right[0]
 
         ranks = [np.linalg.matrix_rank(data[i], tol=self.tolerance) for i in range(points_number)]
 
@@ -60,22 +67,27 @@ class SvdProjection(ManifoldProjection):
 
         ranks = list(map(int, ranks))
 
-        psi = []  # initialize the left singular eigenvectors as a list.
+        phi = []  # initialize the left singular eigenvectors as a list.
         sigma = []  # initialize the singular values as a list.
-        phi = []  # initialize the right singular eigenvectors as a list.
+        psi = []  # initialize the right singular eigenvectors as a list.
         for i in range(points_number):
             u, s, v = svd(data[i], int(ranks[i]))
-            psi.append(GrassmannPoint(u))
+            phi.append(GrassmannPoint(u))
             sigma.append(np.diag(s))
-            phi.append(GrassmannPoint(v))
+            psi.append(GrassmannPoint(v))
 
         self.input_points = data
-        self.psi = psi
-        self.sigma = sigma
-        self.phi = phi
+        self.u:list[GrassmannPoint] = phi
+        """Left singular vectors from the SVD of each sample in `data` representing a point on the Grassmann 
+        manifold. """
+        self.sigma:np.ndarray = sigma
+        """Singular values from the SVD of each sample in `data`."""
+        self.v:list[GrassmannPoint] = psi
+        """Right singular vectors from the SVD of each sample in `data` representing a point on the Grassmann 
+        manifold."""
 
-        self.n_psi = n_psi
-        self.n_phi = n_phi
+        self.n_u = n_u
+        self.n_v = n_v
         self.p = p
         self.ranks = ranks
         self.points_number = points_number

@@ -22,9 +22,10 @@ import shutil
 import numpy as np
 import matplotlib.pyplot as plt
 
+from UQpy import PythonModel
 from UQpy.sampling.ImportanceSampling import ImportanceSampling
 from UQpy.inference import BayesParameterEstimation, ComputationalModel
-from UQpy.run_model.RunModel import RunModel  # required to run the quadratic model
+from UQpy.run_model.RunModel_New import RunModel_New  # required to run the quadratic model
 from sklearn.neighbors import KernelDensity  # for the plots
 from UQpy.distributions import JointIndependent, Normal
 
@@ -43,8 +44,9 @@ def pdf_from_kde(domain, samples1d):
 param_true = np.array([1.0, 2.0]).reshape((1, -1))
 print('Shape of true parameter vector: {}'.format(param_true.shape))
 
-h_func = RunModel(model_script='local_pfn_models.py', model_object_name='model_quadratic', vec=False,
-                  var_names=['theta_0', 'theta_1'])
+model = PythonModel(model_script='local_pfn_models.py', model_object_name='model_quadratic', delete_files=True,
+                    var_names=['theta_0', 'theta_1'])
+h_func = RunModel_New(model=model)
 h_func.run(samples=param_true)
 
 # Add noise
@@ -80,4 +82,3 @@ for i in range(2):
 
 plt.show()
 
-shutil.rmtree(h_func.model_dir)

@@ -1,6 +1,7 @@
 import copy
 import logging
 
+from UQpy.run_model import RunModel_New
 from UQpy.utilities.Utilities import process_random_state
 from UQpy.sampling import *
 
@@ -10,7 +11,7 @@ class SubsetSimulation:
     @beartype
     def __init__(
         self,
-        runmodel_object: RunModel,
+        runmodel_object: RunModel_New,
         sampling: MCMC,
         samples_init: np.ndarray = None,
         conditional_probability: Annotated[Union[float, int], Is[lambda x: 0 <= x <= 1]] = 0.1,

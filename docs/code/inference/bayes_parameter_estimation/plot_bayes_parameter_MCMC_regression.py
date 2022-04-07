@@ -22,9 +22,10 @@ import shutil
 import numpy as np
 import matplotlib.pyplot as plt
 
+from UQpy import PythonModel
 from UQpy.sampling.mcmc.MetropolisHastings import MetropolisHastings
 from UQpy.inference.inference_models.ComputationalModel import ComputationalModel
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.inference import BayesParameterEstimation
 from sklearn.neighbors import KernelDensity  # for the plots
 from UQpy.distributions import JointIndependent, Normal
@@ -45,8 +46,9 @@ def pdf_from_kde(domain, samples1d):
 param_true = np.array([1.0, 2.0]).reshape((1, -1))
 print('Shape of true parameter vector: {}'.format(param_true.shape))
 
-h_func = RunModel(model_script='local_pfn_models.py', model_object_name='model_quadratic', vec=False,
-                  var_names=['theta_0', 'theta_1'])
+model = PythonModel(model_script='local_pfn_models.py', model_object_name='model_quadratic',
+                    var_names=['theta_0', 'theta_1'])
+h_func = RunModel_New(model=model)
 h_func.run(samples=param_true)
 data_clean = np.array(h_func.qoi_list[0])
 print(data_clean.shape)
@@ -99,4 +101,3 @@ plt.show()
 
 print(bayes_estimator.sampler.samples[:4])
 
-shutil.rmtree(h_func.model_dir)

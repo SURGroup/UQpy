@@ -3,14 +3,18 @@ import pathlib
 import platform
 
 import numpy as np
+from beartype import beartype
 
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 
 
 class PythonModel:
-
-    def __init__(self, model_script, model_object_name, delete_files=False,
-                 resume=False, **model_object_name_kwargs):
+    @beartype
+    def __init__(self, model_script: str, model_object_name: str, var_names: list[str] = None,
+                 delete_files: bool = False, **model_object_name_kwargs):
+        if var_names is None:
+            var_names = []
+        self.var_names = var_names
         self._model_output = None
         self.logger = logging.getLogger(__name__)
 
@@ -43,7 +47,6 @@ class PythonModel:
 
     def finalize(self):
         pass
-
 
     def preprocess_single_sample(self, index, sample) -> Numpy2DFloatArray:
         return np.atleast_2d(sample)

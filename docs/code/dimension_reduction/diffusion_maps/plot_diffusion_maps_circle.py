@@ -58,16 +58,8 @@ plt.show()
 
 # %%
 
-dmaps = DiffusionMaps.build_from_data(data=X, alpha=1, n_eigenvectors=5,
-                                      kernel=GaussianKernel(epsilon=0.3))
-
-# %% md
-#
-# Use the method `mapping` to compute the diffusion coordinates assuming `epsilon=0.3`.
-
-# %%
-
-dmaps.fit()
+dmaps = DiffusionMaps(data=X, alpha=1, n_eigenvectors=5,
+                      kernel=GaussianKernel(epsilon=0.3))
 
 # %% md
 #
@@ -90,4 +82,3 @@ fig = plt.figure()
 ax = fig.gca(projection='3d')
 ax.scatter(x, y, z, c=color, cmap=plt.cm.Spectral, s=8)
 plt.show()
-

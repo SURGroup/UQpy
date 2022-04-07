@@ -17,8 +17,8 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from UQpy.dimension_reduction.grassmann_manifold.projections.SvdProjection import SvdProjection
-from UQpy.dimension_reduction import Grassmann
+from UQpy.dimension_reduction.grassmann_manifold.projections.SVDProjection import SVDProjection
+from UQpy.dimension_reduction import GrassmannOperations
 import sys
 
 #%% md
@@ -62,18 +62,18 @@ plt.show()
 
 #%%
 
-manifold_projection = SvdProjection(matrices, p="max")
+manifold_projection = SVDProjection(matrices, p="max")
 
 # Plot the points on the Grassmann manifold defined by the left singular eigenvectors.
 fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)
 ax1.title.set_text('Matrix 0')
-ax1.imshow(manifold_projection.psi[0].data)
+ax1.imshow(manifold_projection.u[0].data)
 ax2.title.set_text('Matrix 1')
-ax2.imshow(manifold_projection.psi[0].data)
+ax2.imshow(manifold_projection.u[0].data)
 ax3.title.set_text('Matrix 2')
-ax3.imshow(manifold_projection.psi[0].data)
+ax3.imshow(manifold_projection.u[0].data)
 ax4.title.set_text('Matrix 3')
-ax4.imshow(manifold_projection.psi[0].data)
+ax4.imshow(manifold_projection.u[0].data)
 plt.show()
 
 #%% md
@@ -82,8 +82,8 @@ plt.show()
 
 #%%
 
-points_tangent = Grassmann.log_map(grassmann_points=manifold_projection.psi,
-                                   reference_point=manifold_projection.psi[0])
+points_tangent = GrassmannOperations.log_map(grassmann_points=manifold_projection.u,
+                                             reference_point=manifold_projection.u[0])
 
 print(points_tangent[0])
 print(points_tangent[1])
@@ -108,8 +108,8 @@ plt.show()
 
 #%%
 
-points_grassmann = Grassmann.exp_map(tangent_points=points_tangent,
-                                     reference_point=manifold_projection.psi[0])
+points_grassmann = GrassmannOperations.exp_map(tangent_points=points_tangent,
+                                               reference_point=manifold_projection.u[0])
 
 # Plot the matrices
 fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)

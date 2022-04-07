@@ -11,7 +11,7 @@ Third-party - Multi-job - LS Dyna
 
 # %%
 from UQpy.distributions import Uniform
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.sampling import MonteCarloSampling
 
 # %% md

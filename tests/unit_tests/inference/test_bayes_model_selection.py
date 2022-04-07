@@ -1,20 +1,38 @@
+from UQpy.run_model import PythonModel, RunModel_New
 from UQpy.inference import *
-from UQpy.run_model.RunModel import RunModel
 from UQpy.inference.inference_models.ComputationalModel import ComputationalModel
 from UQpy.sampling.mcmc import MetropolisHastings
 from UQpy.distributions.collection.Normal import Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 import shutil
 
+import os
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+# print(dir_path)
+# print(os.getcwd())
+# os.chdir(dir_path)
+# print(os.getcwd())
+
+
+# os.chdir("~/test/unit_tests/inference")
+
 
 def test_models():
+    a = os.getcwd()
+    if "inference" not in a:
+        os.chdir("../inference")
     data_ex1 = np.loadtxt('data_ex1a.txt')
 
-    runmodel4 = RunModel(model_script='pfn.py', model_object_name='model_linear', vec=False, var_names=['theta_0'])
-    runmodel5 = RunModel(model_script='pfn1.py', model_object_name='model_quadratic', vec=False,
-                         var_names=['theta_0', 'theta_1'])
-    runmodel6 = RunModel(model_script='pfn2.py', model_object_name='model_cubic', vec=False,
+    model = PythonModel(model_script='pfn_linear.py', model_object_name='model_linear', var_names=['theta_0'])
+    runmodel4 = RunModel_New(model=model)
+
+    model1 = PythonModel(model_script='pfn_quadratic.py', model_object_name='model_quadratic', var_names=['theta_0', 'theta_1'])
+    runmodel5 = RunModel_New(model=model1)
+
+    model2 = PythonModel(model_script='pfn_cubic.py', model_object_name='model_cubic',
                          var_names=['theta_0', 'theta_1', 'theta_2'])
+    runmodel6 = RunModel_New(model=model2)
 
     prior1 = Normal()
     prior2 = JointIndependent(marginals=[Normal(), Normal()])
@@ -63,6 +81,3 @@ def test_models():
     assert selection.candidate_models[1].name == 'model_cubic'
     assert selection.candidate_models[2].name == 'model_linear'
 
-    shutil.rmtree(runmodel4.model_dir)
-    shutil.rmtree(runmodel5.model_dir)
-    shutil.rmtree(runmodel6.model_dir)

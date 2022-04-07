@@ -2,7 +2,7 @@ import shutil
 
 import numpy as np
 
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.distributions.collection.Normal import Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sampling.MonteCarloSampling import MonteCarloSampling
@@ -11,7 +11,7 @@ from UQpy.reliability.SubsetSimulation import SubsetSimulation
 
 def test_subset():  # Define the structural problem
     n_variables = 2
-    model = 'pfn.py'
+    model = 'pfn5.py'
     Example = 'Example1'
 
     omega = 6
@@ -36,7 +36,12 @@ def test_subset():  # Define the structural problem
                             random_state=1)
 
     init_sus_samples = mc.samples
-    RunModelObject_SuS = RunModel(model_script=model, model_object_name=Example)
+    from UQpy.run_model.RunModel_New import RunModel_New
+    from UQpy.run_model.model_execution.PythonModel import PythonModel
+
+    model = PythonModel(model_script=model, model_object_name=Example)
+    RunModelObject_SuS = RunModel_New(model=model)
+
 
     sampling = Stretch(pdf_target=dist_nominal.pdf, dimension=2, n_chains=1000, random_state=0)
 
@@ -45,7 +50,6 @@ def test_subset():  # Define the structural problem
 
     print(SuS_object.failure_probability)
     assert SuS_object.failure_probability == 3.1200000000000006e-05
-    shutil.rmtree(RunModelObject_SuS.model_dir)
 
 
 

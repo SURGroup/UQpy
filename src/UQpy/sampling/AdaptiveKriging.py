@@ -2,7 +2,7 @@ import logging
 from beartype import beartype
 from sklearn.gaussian_process import GaussianProcessRegressor
 
-from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.RunModel_New import RunModel_New
 from UQpy.distributions.baseclass import Distribution
 from UQpy.sampling.stratified_sampling.LatinHypercubeSampling import LatinHypercubeSampling
 from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import (
@@ -23,7 +23,7 @@ class AdaptiveKriging:
     def __init__(
             self,
             distributions: Union[Distribution, list[Distribution]],
-            runmodel_object: RunModel,
+            runmodel_object: RunModel_New,
             surrogate: SurrogateType,
             learning_function: LearningFunction,
             samples: Numpy2DFloatArray = None,

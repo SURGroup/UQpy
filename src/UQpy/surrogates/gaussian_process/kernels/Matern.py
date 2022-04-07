@@ -8,7 +8,7 @@ class Matern(Kernel):
         """
         Matern Kernel is a generalization of Radial Basis Function kernel.
 
-        :params nu: Shape parameter. For nu=0.5, 1.5, 2.5 and infinity, matern coincides with the exonential,
+        :params nu: Shape parameter. For nu=0.5, 1.5, 2.5 and infinity, matern coincides with the exponential,
          matern-3/2, matern-5/2 and RBF covariance function, respectively.
         """
         self.nu = nu
