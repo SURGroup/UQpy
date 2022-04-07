@@ -3,11 +3,13 @@ SnapshotPOD
 
 The Snapshot Proper Orthogonal Decomposition (POD) method is the second variant of the POD method which considers the
 decomposition of a dataset into deterministic temporal modes and random spatial coefficients. Essentially, this method
-interchanges the time and position. In most problems the number of solution snapshots :math:`n` is less than the number
-of dimensions :math:`m = N_x \times N_y` where :math:`N_x, N_y` are the grid dimensions. Thus, by using the
-:class:`.SnapshotPOD` class one can reconstruct solutions much faster :cite:t:`POD_2`.
+interchanges the time and position. In most problems the number of solution snapshots :math:`m` is less than the number
+of dimensions :math:`n = N_x \times N_y` where :math:`N_x, N_y` are the grid dimensions. Thus, by using the
+:class:`.SnapshotPOD` class, one can reconstruct solutions much faster (:cite:t:`POD_2`).
 
-For the Snapshot POD the covariance matrix :math:`\mathbf{C_s}`, is calculated as follows
+For the Snapshot POD, again a two-dimensional dataset :math:`\mathbf{U}\in \mathbb{R}^{n\times m}` is constructed where
+:math:`m` is the number of snapshots and :math:`n` is the number of problem dimensions. The covariance matrix
+:math:`\mathbf{C_s}`, is calculated as follows
 
 .. math:: \mathbf{C_s} = \frac{1}{m-1} \mathbf{U} \mathbf{U}^T
 
@@ -18,7 +20,7 @@ The eigenvalue problem is solved and the temporal modes (eigenvectors) are calcu
 Spatial coefficients are therefore calculated as :math:`\Phi_s = \mathbf{U}^T A_s`. Finally, a predefined number of
 :math:`k`-POD temporal modes and spatial coefficients can be considered for the reconstruction of data as follows
 
-.. math:: \mathbf{\sim{u}}(\mathtt{x},t) = \sum_{i=1}^{k} A_s(t) \Phi_s \mathtt{x}
+.. math:: \mathbf{\tilde{u}}(\mathtt{x},t) = \sum_{i=1}^{k} A_{si}(t) \Phi_{si}(\mathtt{x})
 
 
 SnapshotPOD Class
