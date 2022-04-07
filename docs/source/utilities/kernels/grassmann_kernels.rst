@@ -10,7 +10,7 @@ space. On the Grassmann manifold, a kernel is defined as a positive definite fun
 :py:mod:`UQpy` includes Grassmannian kernels through the :class:`.GrassmannianKernel` parent class,
 with specific kernels included as subclasses. This is described in the following.
 
-Grassmannian Kernels
+Grassmannian Kernel Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :class:`.GrassmannianKernel` class is imported using the following command:

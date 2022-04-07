@@ -7,5 +7,5 @@ from scipy.spatial.distance import pdist
 
 class CorrelationDistance(EuclideanDistance):
 
-    def compute_distance(self, points: NumpyFloatArray) -> Union[float, NumpyFloatArray]:
-        return pdist(points, "correlation")
+    def compute_distance(self, xi: NumpyFloatArray, xj: NumpyFloatArray) -> float:
+        return pdist([xi, xj], "correlation")[0]

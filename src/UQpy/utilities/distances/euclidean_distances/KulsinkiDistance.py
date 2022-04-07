@@ -7,5 +7,5 @@ from scipy.spatial.distance import pdist
 
 class KulsinksiDistance(EuclideanDistance):
 
-    def compute_distance(self, points: NumpyFloatArray) -> Union[float, NumpyFloatArray]:
-        return pdist(points, "kulsinski")
+    def compute_distance(self, xi: NumpyFloatArray, xj: NumpyFloatArray) -> float:
+        return pdist([xi, xj], "kulsinski")[0]
