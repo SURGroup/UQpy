@@ -12,7 +12,7 @@ Each kernel function in :py:mod:`UQpy` is defined as a subclass of the :class:`.
 two further subclasses for Euclidean kernels (:class:`.EuclideanKernel`) and Grassmannian kernels
 (:class:`.GrassmannianKernel`). Individual kernels, depending on their type, are defined as subclasses of these.
 
-Kernel
+Kernel Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :class:`UQpy.utilities.kernels.baseclass.Kernel` class is imported using the following command:
