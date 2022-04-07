@@ -51,9 +51,8 @@ gpr3 = GaussianProcessRegression(regression_model=constant_reg, kernel=RBF(), hy
                                  bounds=[[0.1, 5], [0.1, 3]])
 gpr3.fit(samples=samples, values=values+1.05)
 
-gpr4 = GaussianProcessRegression(regression_model=constant_reg, kernel=RBF(), hyperparameters=[2.852, 2.959, 0.001],
-                                 random_state=1, optimizer=optimizer3, bounds=[[0.1, 5], [0.1, 3], [1e-6, 1e-1]],
-                                 noise=True)
+gpr4 = GaussianProcessRegression(kernel=RBF(), hyperparameters=[2.852, 2.959, 0.001], random_state=1,
+                                 optimizer=optimizer3, bounds=[[0.1, 5], [0.1, 3], [1e-6, 1e-1]], noise=True)
 gpr4.fit(samples=samples, values=values)
 
 
@@ -76,9 +75,10 @@ def test_predict3():
     assert (expected_prediction == prediction).all()
 
 
-def test_hyperparameters():
-    tmp = np.round(gpr4.hyperparameters, 3)
-    assert (tmp == np.array([2.524, 1.522, 0.])).all()
+def test_predict4():
+    prediction = np.round(gpr4.predict([[1], [2 * np.pi], [np.pi]], True), 3)
+    expected_prediction = np.array([[0.54,  0.983, -1.], [0.,  0.04,  0.]])
+    assert np.isclose(prediction, expected_prediction, atol=0.05).all()
 
 
 def test_rbf():
