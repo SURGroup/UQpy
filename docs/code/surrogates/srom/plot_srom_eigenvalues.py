@@ -18,7 +18,6 @@ identified using :class:`.SROM`.
 import shutil
 
 from UQpy import PythonModel
-from UQpy.run_model.RunModel import RunModel
 from UQpy.sampling import MonteCarloSampling, TrueStratifiedSampling
 from UQpy.sampling import RectangularStrata
 from UQpy.distributions import Gamma
