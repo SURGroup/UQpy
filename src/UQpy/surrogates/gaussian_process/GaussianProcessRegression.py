@@ -91,16 +91,19 @@ class GaussianProcessRegression(Surrogate):
         self.mu = 0
 
         if bounds is None:
-            if self.optimizer._bounds is None:
-                bounds_ = [[10**-3, 10**3]] * self.hyperparameters.shape[0]
-                if self.noise:
-                    bounds_[-1] = [10**-10, 10**-1]
-                self.bounds = bounds_
+            if isinstance(self.optimizer, type(None)) or isinstance(self.optimizer._bounds, type(None)):
+                self._define_bounds()
             else:
                 self.bounds = self.optimizer._bounds
 
         self.jac = False
         self.random_state = process_random_state(random_state)
+
+    def _define_bounds(self):
+        bounds_ = [[10 ** -3, 10 ** 3]] * self.hyperparameters.shape[0]
+        if self.noise:
+            bounds_[-1] = [10 ** -10, 10 ** -1]
+        self.bounds = bounds_
 
     def fit(
             self,

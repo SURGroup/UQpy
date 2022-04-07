@@ -13,20 +13,20 @@ class Matern(Kernel):
         """
         self.nu = nu
 
-    def c(self, x, s, params, dt=False, dx=False):
+    def c(self, x, s, params):
         l, sigma = params[:-1], params[-1]
         stack = cdist(x/l, s/l, metric='euclidean')
         if self.nu == 0.5:
-            return np.exp(-stack)
+            return sigma**2 * np.exp(-np.abs(stack))
         elif self.nu == 1.5:
-            return (1+np.sqrt(3)*stack)*np.exp(-np.sqrt(3)*stack)
+            return sigma**2 * (1+np.sqrt(3)*stack)*np.exp(-np.sqrt(3)*stack)
         elif self.nu == 2.5:
-            return (1+np.sqrt(5)*stack+5*(stack**2)/3)*np.exp(-np.sqrt(5)*stack)
+            return sigma**2 * (1+np.sqrt(5)*stack+5*(stack**2)/3)*np.exp(-np.sqrt(5)*stack)
         elif self.nu == np.inf:
-            return np.exp(-(stack**2)/2)
+            return sigma**2 * np.exp(-(stack**2)/2)
         else:
             stack *= np.sqrt(2*self.nu)
             tmp = 1/(gamma(self.nu)*(2**(self.nu-1)))
             tmp1 = stack ** self.nu
-            tmp2 = kv(tmp1)
+            tmp2 = kv(self.nu, stack)
             return sigma**2 * tmp * tmp1 * tmp2

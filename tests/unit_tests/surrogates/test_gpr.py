@@ -15,48 +15,139 @@ from UQpy.surrogates.gaussian_process.kernels import RBF, Matern
 #
 samples = np.linspace(0, 5, 20).reshape(-1, 1)
 values = np.cos(samples)
-optimizer = MinimizeOptimizer(method="L-BFGS-B")
-gpr = GaussianProcessRegression(kernel=RBF(), optimizer=optimizer,
-                                hyperparameters=[0.14], optimize=False, random_state=1)
-gpr.fit(samples=samples, values=values, hyperparameters=[0.3])
+optimizer = MinimizeOptimizer(method="L-BFGS-B", bounds=[[0.1, 5], [0.1, 3]])
+gpr = GaussianProcessRegression(kernel=RBF(), hyperparameters=[2.852, 2.959], random_state=1)
+gpr.fit(samples=samples, values=values)
 
-optimizer = MinimizeOptimizer(method="L-BFGS-B")
-gpr2 = GaussianProcessRegression(kernel=Matern(nu=0.5), optimizer=optimizer,
-                                 hyperparameters=[0.3], bounds=[[0.01, 5]], optimize=False,
-                                 normalize=False, random_state=2)
+optimizer1 = MinimizeOptimizer(method="L-BFGS-B")
+gpr2 = GaussianProcessRegression(kernel=Matern(nu=0.5), hyperparameters=[10, 4], optimizer=optimizer1,
+                                 bounds=[[0.01, 100], [0.1, 10]], optimizations_number=10, random_state=2)
 gpr2.fit(samples=samples, values=values)
 
+points11 = np.array([[0], [1], [2]])
+points12 = np.array([[-1], [0], [-1]])
+hyperparameters1 = np.array([1.5, 10])
 
-# # Using the in-built linear regression model as a function
-# # linear_regression_model = Kriging(regression_model=Linear(), correlation_model=Gaussian(), optimizer=optimizer,
-# #                                   correlation_model_parameters=[1]).regression_model
-# # optimizer = MinimizeOptimizer(method="L-BFGS-B")
-# rbf_kernel = GaussianProcessRegression(correlation_model=RBF(), optimizer=optimizer,
-#                                       correlation_model_parameters=[1]).kernel
-#
-# optimizer = MinimizeOptimizer(method="L-BFGS-B")
-# gpr3 = GaussianProcessRegression(correlation_model=rbf_kernel, optimizer=optimizer,
-#                                 correlation_model_parameters=[1], optimize=False, normalize=False, random_state=0)
-# gpr3.fit(samples=samples, values=values)
-#
-#
-# def test_predict():
-#     prediction = np.round(gpr.predict([[1], [np.pi/2], [np.pi]], True), 3)
-#     expected_prediction = np.array([[0.54,  0., -1.], [0.,  0.,  0.]])
-#     assert (expected_prediction == prediction).all()
-#
-#
-# def test_predict1():
-#     prediction = np.round(gpr2.predict([[1], [2*np.pi], [np.pi]], True), 3)
-#     expected_prediction = np.array([[0.54,  1.009, -1.], [0.,  0.031,  0.]])
-#     assert (expected_prediction == prediction).all()
-#
-#
-# def test_predict2():
-#     prediction = np.round(gpr3.predict([[1], [np.pi/2], [np.pi]]), 3)
-#     expected_prediction = np.array([[0.54, -0., -1.]])
-#     assert (expected_prediction == prediction).all()
-#
+points21 = np.array([[0, 0], [1, 1], [2, 2]])
+points22 = np.array([[-1, 0], [1, 2], [0, -2]])
+hyperparameters2 = np.array([3, 1, 2])
+rbf_kernel = RBF()
+matern_kernel_1_2 = Matern(nu=0.5)
+matern_kernel_3_2 = Matern(nu=1.5)
+matern_kernel_5_2 = Matern(nu=2.5)
+matern_kernel_inf = Matern(nu=np.inf)
+matern_kernel_2_1 = Matern(nu=2)
+
+
+def test_predict():
+    prediction = np.round(gpr.predict([[1], [np.pi/2], [np.pi]], True), 3)
+    expected_prediction = np.array([[0.54, 0., -1.], [0.,  0.,  0.]])
+    assert (expected_prediction == prediction).all()
+
+
+def test_predict1():
+    prediction = np.round(gpr2.predict([[1], [2*np.pi], [np.pi]], True), 3)
+    expected_prediction = np.array([[0.537,  0.238, -0.998], [0.077,  0.39,  0.046]])
+    assert (expected_prediction == prediction).all()
+
+
+def test_rbf():
+    """
+    Test RBF kernel for 1-d input model
+    """
+    cov = rbf_kernel.c(points11, points12, hyperparameters1)
+    covariance_matrix = np.round(cov, 3)
+    expected_covariance_matrix = np.array([[80.074, 100.,  80.074], [41.111,  80.074,  41.111],
+                                           [13.534,  41.111,  13.534]])
+    assert (expected_covariance_matrix == covariance_matrix).all()
+
+
+def test_rbf2():
+    """
+    Test RBF kernel for 2-d input model
+    """
+    cov = rbf_kernel.c(points21, points22, hyperparameters2)
+    covariance_matrix2 = np.round(cov, 3)
+    expected_covariance_matrix2 = np.array([[3.784e+00, 5.120e-01, 5.410e-01], [1.943e+00, 2.426e+00, 4.200e-02],
+                                            [3.280e-01, 3.784e+00, 1.000e-03]])
+    assert (expected_covariance_matrix2 == covariance_matrix2).all()
+
+
+def test_matern_inf():
+    """
+    Test Matern kernel (nu=inf) for 1-d input model, should concide with RBF kernel
+    """
+    cov = matern_kernel_inf.c(points11, points12, hyperparameters1)
+    covariance_matrix = np.round(cov, 3)
+    expected_covariance_matrix = np.array([[80.074, 100.,  80.074], [41.111,  80.074,  41.111],
+                                           [13.534,  41.111,  13.534]])
+    assert (expected_covariance_matrix == covariance_matrix).all()
+
+
+def tets_matern_inf2():
+    """
+    Test Matern kernel (nu=inf) for 2-d input model
+    """
+    cov = matern_kernel_inf.c(points21, points22, hyperparameters2)
+    covariance_matrix2 = np.round(cov, 3)
+    expected_covariance_matrix2 = np.array([[3.784e+00, 5.120e-01, 5.410e-01], [1.943e+00, 2.426e+00, 4.200e-02],
+                                            [3.280e-01, 3.784e+00, 1.000e-03]])
+    assert (expected_covariance_matrix2 == covariance_matrix2).all()
+
+
+def test_matern_1_2():
+    """
+    Test Matern kernel (nu=0.5) for 1-d input model, should concide with absolute exponential kernel
+    """
+    cov = matern_kernel_1_2.c(points11, points12, hyperparameters1)
+    covariance_matrix = np.round(cov, 3)
+    expected_covariance_matrix = np.array([[51.342, 100.,  51.342], [26.36,  51.342,  26.36],
+                                           [13.534,  26.36,  13.534]])
+    assert (expected_covariance_matrix == covariance_matrix).all()
+
+
+def test_matern_1_2_2():
+    """
+    Test Matern kernel (nu=0.5) for 2-d input model
+    """
+    cov = matern_kernel_1_2.c(points21, points22, hyperparameters2)
+    covariance_matrix2 = np.round(cov, 3)
+    expected_covariance_matrix2 = np.array([[2.866, 0.527, 0.541], [1.203, 1.472, 0.196], [0.428, 2.866, 0.069]])
+    assert (expected_covariance_matrix2 == covariance_matrix2).all()
+
+
+def test_matern_3_2():
+    """
+    Test Matern kernel (nu=1.5) for 1-d input model
+    """
+    cov = matern_kernel_3_2.c(points11, points12, hyperparameters1)
+    covariance_matrix = np.round(cov, 3)
+    expected_covariance_matrix = np.array([[67.906, 100.,  67.906], [32.869,  67.906,  32.869],
+                                           [13.973,  32.869,  13.973]])
+    assert (expected_covariance_matrix == covariance_matrix).all()
+
+
+def test_matern_5_2():
+    """
+    Test Matern kernel (nu=2.5) for 1-d input model
+    """
+    cov = matern_kernel_5_2.c(points11, points12, hyperparameters1)
+    covariance_matrix = np.round(cov, 3)
+    expected_covariance_matrix = np.array([[72.776, 100.,  72.776], [35.222,  72.776,  35.222],
+                                           [13.866,  35.222,  13.866]])
+    assert (expected_covariance_matrix == covariance_matrix).all()
+
+
+def test_matern_2_1():
+    """
+    Test Matern kernel (nu=2) for 1-d input model
+    """
+    cov = matern_kernel_2_1.c(points11, points12, hyperparameters1)
+    covariance_matrix = np.round(cov, 3)
+    expected_covariance_matrix = np.array([[70.894, np.nan,  70.894], [34.25, 70.894, 34.25],
+                                           [13.921, 34.25, 13.921]])
+    assert np.array_equal(expected_covariance_matrix, covariance_matrix, equal_nan=True)
+
 #
 # def test_jacobian():
 #     jacobian = np.round(gpr.jacobian([[np.pi], [np.pi/2]]), 3)
