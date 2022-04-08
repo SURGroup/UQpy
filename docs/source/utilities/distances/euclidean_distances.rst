@@ -93,7 +93,7 @@ Attributes
 CityBlock Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Canberra distance between two 1D arrays, `x` and `y`, is given by:
+The City Block (Manhattan) distance between two 1D arrays, `x` and `y`, is given by:
 
 .. math:: d(x,y) = \sum_i |x_i - y_i|
 
@@ -117,266 +117,102 @@ Attributes
 Correlation Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The Correlation distance between two 1D arrays, `x` and `y`, is given by:
+
+.. math:: d(x,y) = 1 - \dfrac{(x-\bar{x})\cdot(y-\bar{y})}{||x-\bar{x}||_2||y-\bar{y}||_2}
+
+where :math:`\bar{x}` denotes the mean of the elements of :math:`x` and :math:`x\cdot y` denotes the dot product.
+
 The :class:`.CorrelationDistance` class is imported using the following command:
 
 >>> from UQpy.utilities.distances.euclidean_distances.CorrelationDistance import CorrelationDistance
+
+Methods
+~~~~~~~~~~
 
 One can use the following command to instantiate the class :class:`.CorrelationDistance`
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.CorrelationDistance
     :members:
 
+Attributes
+~~~~~~~~~~
+
 .. autoattribute:: UQpy.utilities.distances.euclidean_distances.CorrelationDistance.distance_matrix
 
 Cosine Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The Cosine distance between two 1D arrays, `x` and `y`, is given by:
+
+.. math:: d(x,y) = 1 - \dfrac{x\cdot y}{||x||_2||y||_2}
+
+where :math:`x\cdot y` denotes the dot product.
+
 The :class:`.CosineDistance` class is imported using the following command:
 
 >>> from UQpy.utilities.distances.euclidean_distances.CosineDistance import CosineDistance
+
+Methods
+~~~~~~~~~~
 
 One can use the following command to instantiate the class :class:`.CosineDistance`
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.CosineDistance
     :members:
 
+Attributes
+~~~~~~~~~~
+
 .. autoattribute:: UQpy.utilities.distances.euclidean_distances.CosineDistance.distance_matrix
 
-Dice Distance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.DiceDistance` class is imported using the following command:
-
->>> from UQpy.utilities.distances.euclidean_distances.DiceDistance import DiceDistance
-
-One can use the following command to instantiate the class :class:`.DiceDistance`
-
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.DiceDistance
-    :members:
-
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.DiceDistance.distance_matrix
 
 Euclidean Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The Euclidean distance between two 1D arrays, `x` and `y`, is given by:
+
+.. math:: d(x,y) = ||x - y||_2
+
 The :class:`UQpy.utilities.distances.euclidean_distances.EuclideanDistance` class is imported using the following command:
 
 >>> from UQpy.utilities.distances.euclidean_distances.EuclideanDistance import EuclideanDistance
+
+Methods
+~~~~~~~~~~
 
 One can use the following command to instantiate the class :class:`UQpy.utilities.distances.euclidean_distances.EuclideanDistance`
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.EuclideanDistance
     :members:
 
+Attributes
+~~~~~~~~~~
+
 .. autoattribute:: UQpy.utilities.distances.euclidean_distances.EuclideanDistance.distance_matrix
 
-Hamming Distance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.HammingDistance` class is imported using the following command:
-
->>> from UQpy.utilities.distances.euclidean_distances.HammingDistance import HammingDistance
-
-One can use the following command to instantiate the class :class:`.HammingDistance`
-
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.HammingDistance
-    :members:
-
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.HammingDistance.distance_matrix
-
-Jaccard Distance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.JaccardDistance` class is imported using the following command:
-
->>> from UQpy.utilities.distances.euclidean_distances.JaccardDistance import JaccardDistance
-
-One can use the following command to instantiate the class :class:`.JaccardDistance`
-
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.JaccardDistance
-    :members:
-
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.JaccardDistance.distance_matrix
-
-Jensen-Shannon Distance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.JensenShannonDistance` class is imported using the following command:
-
->>> from UQpy.utilities.distances.euclidean_distances.JensenShannonDistance import JensenShannonDistance
-
-One can use the following command to instantiate the class :class:`.JensenShannonDistance`
-
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.JensenShannonDistance
-    :members:
-
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.JensenShannonDistance.distance_matrix
-
-Kulczynski Distance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.KulczynskiDistance` class is imported using the following command:
-
->>> from UQpy.utilities.distances.euclidean_distances.KulczynskiDistance import KulczynskiDistance
-
-One can use the following command to instantiate the class :class:`.KulczynskiDistance`
-
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.KulczynskiDistance
-    :members:
-
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.KulczynskiDistance.distance_matrix
-
-Kulsinski Distance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.KulsinskiDistance` class is imported using the following command:
-
->>> from UQpy.utilities.distances.euclidean_distances.KulsinskiDistance import KulsinskiDistance
-
-One can use the following command to instantiate the class :class:`.KulsinskiDistance`
-
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.KulsinksiDistance
-    :members:
-
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.KulsinksiDistance.distance_matrix
-
-Mahalanobis Distance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.MahalanobisDistance` class is imported using the following command:
-
->>> from UQpy.utilities.distances.euclidean_distances.MahalanobisDistance import MahalanobisDistance
-
-One can use the following command to instantiate the class :class:`.MahalanobisDistance`
-
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.MahalanobisDistance
-    :members:
-
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.MahalanobisDistance.distance_matrix
-
-Matching Distance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.MatchingDistance` class is imported using the following command:
-
->>> from UQpy.utilities.distances.euclidean_distances.MatchingDistance import MatchingDistance
-
-One can use the following command to instantiate the class :class:`.MatchingDistance`
-
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.MatchingDistance
-    :members:
-
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.MatchingDistance.distance_matrix
 
 Minkowski Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The Euclidean distance between two 1D arrays, `x` and `y`, is given by:
+
+.. math:: d(x,y) = ||x - y||_p = \left(\sum_i |x_i-y_i|^p \right)^{1/p}.
+
 The :class:`.MinkowskiDistance` class is imported using the following command:
 
 >>> from UQpy.utilities.distances.euclidean_distances.MinkowskiDistance import MinkowskiDistance
+
+Methods
+~~~~~~~~~~
 
 One can use the following command to instantiate the class :class:`.MinkowskiDistance`
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.MinkowskiDistance
     :members:
 
+Attributes
+~~~~~~~~~~
+
 .. autoattribute:: UQpy.utilities.distances.euclidean_distances.MinkowskiDistance.distance_matrix
 
-Rogers-Tanimoto Distance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.RogersTanimotoDistance` class is imported using the following command:
-
->>> from UQpy.utilities.distances.euclidean_distances.RogersTanimotoDistance import RogersTanimotoDistance
-
-One can use the following command to instantiate the class :class:`.RogersTanimotoDistance`
-
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.RogersTanimotoDistance
-    :members:
-
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.RogersTanimotoDistance.distance_matrix
-
-
-Russell-Rao Distance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.RussellRaoDistance` class is imported using the following command:
-
->>> from UQpy.utilities.distances.euclidean_distances.RussellRaoDistance import RussellRaoDistance
-
-One can use the following command to instantiate the class :class:`.RussellRaoDistance`
-
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.RussellRaoDistance
-    :members:
-
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.RussellRaoDistance.distance_matrix
-
-Sokal-Michener Distance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.SokalMichenerDistance` class is imported using the following command:
-
->>> from UQpy.utilities.distances.euclidean_distances.SokalMichenerDistance import SokalMichenerDistance
-
-One can use the following command to instantiate the class :class:`.SokalMichenerDistance`
-
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.SokalMichenerDistance
-    :members:
-
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.SokalMichenerDistance.distance_matrix
-
-Sokal-Sneath Distance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.SokalSneathDistance` class is imported using the following command:
-
->>> from UQpy.utilities.distances.euclidean_distances.SokalSneathDistance import SokalSneathDistance
-
-One can use the following command to instantiate the class :class:`.SokalSneathDistance`
-
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.SokalSneathDistance
-    :members:
-
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.SokalSneathDistance.distance_matrix
-
-Squared Euclidean Distance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.SquaredEuclideanDistance` class is imported using the following command:
-
->>> from UQpy.utilities.distances.euclidean_distances.SquaredEuclideanDistance import SquaredEuclideanDistance
-
-One can use the following command to instantiate the class :class:`.SquaredEuclideanDistance`
-
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.SquaredEuclideanDistance
-    :members:
-
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.SquaredEuclideanDistance.distance_matrix
-
-Standardized Euclidean Distance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.StandardizedEuclideanDistance` class is imported using the following command:
-
->>> from UQpy.utilities.distances.euclidean_distances.StandardizedEuclideanDistance import StandardizedEuclideanDistance
-
-One can use the following command to instantiate the class :class:`.StandardizedEuclideanDistance`
-
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.StandardizedEuclideanDistance
-    :members:
-
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.StandardizedEuclideanDistance.distance_matrix
-
-Yule Distance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`.YuleDistance` class is imported using the following command:
-
->>> from UQpy.utilities.distances.euclidean_distances.YuleDistance import YuleDistance
-
-One can use the following command to instantiate the class :class:`.YuleDistance`
-
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.YuleDistance
-    :members:
-
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.YuleDistance.distance_matrix
