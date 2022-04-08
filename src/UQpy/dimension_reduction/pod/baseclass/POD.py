@@ -44,13 +44,18 @@ class POD(ABC):
         if n_modes is None and reconstruction_percentage is None:
             raise ValueError("Either a number of modes or a reconstruction percentage must be chosen, not both.")
 
-        if reconstruction_percentage is not None  and reconstruction_percentage <= 0:
+        if reconstruction_percentage is not None and reconstruction_percentage <= 0:
             raise ValueError("Invalid input, the reconstruction percentage is defined in the range (0,100].")
+
+
 
         self.solution_snapshots = solution_snapshots
         self.logger = logging.getLogger(__name__)
         self.modes = n_modes
         self.reconstruction_percentage = reconstruction_percentage
+
+        if reconstruction_percentage is None:
+            self.reconstruction_percentage = 10**10
 
         if solution_snapshots is not None:
             self.run(solution_snapshots)
@@ -117,7 +122,7 @@ class POD(ABC):
                 "Number of dimensions is %i", n_iterations)
 
         reconstructed_solutions, reduced_solutions = \
-            self._calculate_reduced_and_reconstructed_solutions(u, phi, rows, columns, snapshot_number)
+            self._calculate_reduced_and_reconstructed_solutions(self.U, phi, rows, columns, snapshot_number)
 
         self.logger.info(f"UQpy: Successful execution of {type(self).__name__}!")
 

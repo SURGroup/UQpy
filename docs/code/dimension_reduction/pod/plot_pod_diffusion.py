@@ -85,8 +85,7 @@ frame = 40
 Data_modes = []
 
 for n_mode in n_modes:
-    pod = DirectPOD(solution_snapshots=Data, modes=n_mode)
-    pod.run()
+    pod = DirectPOD(solution_snapshots=Data, n_modes=n_mode)
     Data_reconstr = pod.reconstructed_solution
     Data_reduced = pod.reduced_solution
     Data_modes.append(Data_reconstr[:, :, frame])
