@@ -12,7 +12,7 @@ class Kernel(ABC):
     """
     This is the baseclass for all kernels in :py:mod:`UQpy`.
 
-    This serves a blueprint to show the methods for kernels implemented in the :py:mod:`.kernels` module .
+    This serves as a blueprint to show the methods for kernels implemented in the :py:mod:`.kernels` module .
     """
     def __init__(self):
         self.kernel_matrix: np.ndarray = None

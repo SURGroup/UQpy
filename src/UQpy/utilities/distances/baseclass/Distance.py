@@ -6,7 +6,9 @@ import numpy as np
 
 class Distance(ABC):
     """
-    This class serves as a baseclass under which the distance implementations for all spaces exist.
+    This is the baseclass for all distances in :py:mod:`UQpy`.
+
+    This serves as a blueprint to show the methods for distances implemented in the :py:mod:`.distances` module .
     """
     def __init__(self):
         self.distance_matrix: np.ndarray = None
@@ -24,7 +26,7 @@ class Distance(ABC):
     @abstractmethod
     def compute_distance(self, xi, xj) -> float:
         """
-        Given a two points, this method calculates their distance. Each concrete distance implementation
+        Given two points, this method calculates their distance. Each concrete distance implementation
         must override this method and provide its own implementation.
 
         :param xi: First point.
