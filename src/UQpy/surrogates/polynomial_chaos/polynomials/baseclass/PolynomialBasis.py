@@ -104,7 +104,47 @@ class PolynomialBasis(ABC):
                     row_start = row_end + 1
 
         return subset
+    
+    @staticmethod
+    def calculate_hyperbolic_set(inputs_number, degree,q):
 
+        xmono=np.zeros(inputs_number)
+        X=[]
+        X.append(xmono)
+        
+        while np.sum(xmono)<=degree:
+            # generate multi-indices one by one
+            x=np.array(xmono)
+            i = 0
+            for j in range ( inputs_number, 0, -1 ):
+                if ( 0 < x[j-1] ):
+                    i = j
+                    break
+
+            if ( i == 0 ):
+                x[inputs_number-1] = 1
+                xmono=x
+            else:
+                if ( i == 1 ):
+                    t = x[0] + 1
+                    im1 = inputs_number
+                if ( 1 < i ):
+                    t = x[i-1]
+                    im1 = i - 1
+
+                x[i-1] = 0
+                x[im1-1] = x[im1-1] + 1
+                x[inputs_number-1] = x[inputs_number-1] + t - 1
+
+                xmono=x
+                
+            # check the hyperbolic criterion          
+            if (np.round(np.sum(xmono**q)**(1/q), 4) <= degree):
+                X.append(xmono)
+
+
+        return(np.array(X).astype(int))
+    
     @staticmethod
     def calculate_tensor_product_set(inputs_number, degree):
         orders = np.arange(0, degree + 1, 1).tolist()
