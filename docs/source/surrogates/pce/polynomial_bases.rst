@@ -28,6 +28,15 @@ The :class:`.TensorProductBasis` class is imported using the following command:
 .. autoclass:: UQpy.surrogates.polynomial_chaos.polynomials.TensorProductBasis
     :members:
 
+HyperbolicBasis Class
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :class:`.HyperbolicBasis` class is imported using the following command:
+
+>>> from UQpy.surrogates.polynomial_chaos.polynomials.HyperbolicBasis import HyperbolicBasis
+
+.. autoclass:: UQpy.surrogates.polynomial_chaos.polynomials.HyperbolicBasis
+    :members:
 
 
 
