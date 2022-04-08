@@ -8,7 +8,7 @@ The :class:`.PolynomialChaosExpansion` class is imported using the following com
 Methods
 """""""
 .. autoclass:: UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion
-    :members: fit, predict, validation_error, get_moments
+    :members: fit, predict, validation_error, leaveoneout_error, get_moments
 
 Attributes
 """"""""""
