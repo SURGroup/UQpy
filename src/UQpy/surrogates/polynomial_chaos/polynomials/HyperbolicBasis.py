@@ -11,7 +11,8 @@ class HyperbolicBasis(PolynomialBasis):
 
     def __init__(self, distributions: Union[Distribution, list[Distribution]], max_degree: int, hyperbolic: float = 1):
         """
-        Create hyperbolic from total-degree polynomial basis.
+        Create hyperbolic set from total-degree polynomial basis set.
+        
         :param distributions: List of univariate distributions.
         :param max_degree: Maximum polynomial degree of the 1D chaos polynomials.
         :param hyperbolic: Parameter of hyperbolic truncation reducing interaction terms <0,1>
