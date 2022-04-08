@@ -5,5 +5,6 @@ from UQpy.surrogates.polynomial_chaos.polynomials.PolynomialsND import Polynomia
 
 from UQpy.surrogates.polynomial_chaos.polynomials.TotalDegreeBasis import TotalDegreeBasis
 from UQpy.surrogates.polynomial_chaos.polynomials.TensorProductBasis import TensorProductBasis
+from UQpy.surrogates.polynomial_chaos.polynomials.HyperbolicBasis import HyperbolicBasis
 
 from UQpy.surrogates.polynomial_chaos.polynomials.baseclass import *
