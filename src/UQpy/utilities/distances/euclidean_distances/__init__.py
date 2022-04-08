@@ -5,7 +5,7 @@ from UQpy.utilities.distances.euclidean_distances.CityBlockDistance import CityB
 from UQpy.utilities.distances.euclidean_distances.CorrelationDistance import CorrelationDistance
 from UQpy.utilities.distances.euclidean_distances.CosineDistance import CosineDistance
 from UQpy.utilities.distances.euclidean_distances.DiceDistance import DiceDistance
-from UQpy.utilities.distances.euclidean_distances.EuclideanDistance import EuclideanDistance
+from UQpy.utilities.distances.euclidean_distances.L2Distance import EuclideanDistance
 from UQpy.utilities.distances.euclidean_distances.HammingDistance import HammingDistance
 from UQpy.utilities.distances.euclidean_distances.JaccardDistance import JaccardDistance
 from UQpy.utilities.distances.euclidean_distances.JensenShannonDistance import JensenShannonDistance

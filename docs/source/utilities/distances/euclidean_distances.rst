@@ -114,19 +114,19 @@ One can use the following command to instantiate the class :class:`.DiceDistance
 
 .. autoattribute:: UQpy.utilities.distances.euclidean_distances.DiceDistance.distance_matrix
 
-Euclidean Distance
+L2 Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :class:`UQpy.utilities.distances.euclidean_distances.EuclideanDistance` class is imported using the following command:
+The :class:`UQpy.utilities.distances.euclidean_distances.L2Distance` class is imported using the following command:
 
->>> from UQpy.utilities.distances.euclidean_distances.EuclideanDistance import EuclideanDistance
+>>> from UQpy.utilities.distances.euclidean_distances.L2Distance import L2Distance
 
-One can use the following command to instantiate the class :class:`UQpy.utilities.distances.euclidean_distances.EuclideanDistance`
+One can use the following command to instantiate the class :class:`UQpy.utilities.distances.euclidean_distances.L2Distance`
 
-.. autoclass:: UQpy.utilities.distances.euclidean_distances.EuclideanDistance
+.. autoclass:: UQpy.utilities.distances.euclidean_distances.L2Distance
     :members:
 
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.EuclideanDistance.distance_matrix
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.L2Distance.distance_matrix
 
 Hamming Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
