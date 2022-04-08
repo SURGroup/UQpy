@@ -171,34 +171,33 @@ L2 Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :class:`UQpy.utilities.distances.euclidean_distances.L2Distance` class is imported using the following command:
-The Euclidean distance between two 1D arrays, `x` and `y`, is given by:
+The L2 distance between two 1D arrays, `x` and `y`, is given by:
 
 .. math:: d(x,y) = ||x - y||_2
 
-The :class:`UQpy.utilities.distances.euclidean_distances.EuclideanDistance` class is imported using the following command:
+The :class:`UQpy.utilities.distances.euclidean_distances.L2Distance` class is imported using the following command:
 
 >>> from UQpy.utilities.distances.euclidean_distances.L2Distance import L2Distance
 
-One can use the following command to instantiate the class :class:`UQpy.utilities.distances.euclidean_distances.L2Distance`
+
 Methods
 ~~~~~~~~~~
 
-One can use the following command to instantiate the class :class:`UQpy.utilities.distances.euclidean_distances.EuclideanDistance`
+One can use the following command to instantiate the class :class:`UQpy.utilities.distances.euclidean_distances.L2Distance`
 
 .. autoclass:: UQpy.utilities.distances.euclidean_distances.L2Distance
     :members:
 
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.L2Distance.distance_matrix
 Attributes
 ~~~~~~~~~~
 
-.. autoattribute:: UQpy.utilities.distances.euclidean_distances.EuclideanDistance.distance_matrix
+.. autoattribute:: UQpy.utilities.distances.euclidean_distances.L2Distance.distance_matrix
 
 
 Minkowski Distance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Euclidean distance between two 1D arrays, `x` and `y`, is given by:
+The Minkowski distance between two 1D arrays, `x` and `y`, is given by:
 
 .. math:: d(x,y) = ||x - y||_p = \left(\sum_i |x_i-y_i|^p \right)^{1/p}.
 
