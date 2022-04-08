@@ -93,6 +93,11 @@ The :class:`.PceSensitivity` class is imported using the following command:
 LAR Regression
 """""""""""""""""""""
 
+Least Angle Regression (known as LAR or LARS) is related to a forward stepwise model-selection algorithm and it represents an efficient algorithm for fitting a penalized model similarly to LASSO. However, LAR does not need any hyper parameter :math:`\lambda` and thus it can be used for an automatic detection of the best linear regression model for given experimental design. The most correlated predictor with the quantity of interest is identified in the first step of the algorithm. Further it takes the largest possible step until some other predictor is equally correlated with the residual, and LAR continues in the direction equiangular between the two predictors. 
+
+Number of LAR steps is equal to  number of unknowns, since it adds one predictor to the active set in each step. This characteristic can be utilized for the iterative algorithm selecting the most accurate surrogate model from large number of candidates obtained by Least Squares using function from the :class:`LeastAngleRegression` class.
+
+
 
 LeastAngleRegression Class
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
