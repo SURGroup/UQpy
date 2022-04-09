@@ -26,8 +26,8 @@ def test_dmaps_swiss_roll():
 
     evals = dmaps.eigenvalues
     assert round(evals[0], 9) == 1.0
-    assert round(evals[1], 9) == 0.999489295
-    assert round(evals[2], 9) == 0.999116766
+    assert round(evals[1], 9) == 0.999174326
+    assert round(evals[2], 9) == 0.998335336
 
 
 def test_dmaps_circular():
@@ -58,5 +58,5 @@ def test_dmaps_circular():
 
     evals = dmaps.eigenvalues
     assert np.round(evals[0], 5) == 1.0
-    assert np.round(evals[1], 5) == 0.99648
-    assert np.round(evals[2], 5) == 0.99645
+    assert np.round(evals[1], 5) == 0.99826
+    assert np.round(evals[2], 5) == 0.99824

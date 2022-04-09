@@ -4,7 +4,8 @@ from typing import Union
 import scipy.spatial.distance as sd
 import numpy as np
 
-from UQpy.utilities.ValidationTypes import NumpyFloatArray
+from UQpy.utilities import GrassmannPoint
+from UQpy.utilities.ValidationTypes import NumpyFloatArray, Numpy2DFloatArray
 from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 
 
@@ -14,33 +15,25 @@ class EuclideanKernel(Kernel, ABC):
     def __init__(self):
         super().__init__()
 
-    def calculate_kernel_matrix(self, points: Union[list, NumpyFloatArray]):
+    def calculate_kernel_matrix(self, points: Numpy2DFloatArray):
         """
-        Compute the Gaussian kernel matrix given a list of points on the Euclidean space.
+        Using the kernel-specific :py:meth:`.Kernel.kernel_entry` method, this function assembles the kernel matrix.
 
-        :param points: Coordinates of the points in the Euclidean space
+        :param points: Set of data points in the Euclidean space
 
         """
-        distance_pairs = None
-        if len(np.shape(points)) == 2:
-            distance_pairs = sd.pdist(points, "sqeuclidean")
+        nargs = len(points)
+        indices = range(nargs)
+        pairs = list(itertools.combinations_with_replacement(indices, 2))
+        kernel = np.zeros((nargs, nargs))
+        for id_pair in range(np.shape(pairs)[0]):
+            i = pairs[id_pair][0]
+            j = pairs[id_pair][1]
 
-        elif len(np.shape(points)) == 3:
-            nargs = len(points)
-            indices = range(nargs)
-            pairs = list(itertools.combinations(indices, 2))
-            distance_pairs = []
-            for id_pair in range(np.shape(pairs)[0]):
-                i = pairs[id_pair][0]
-                j = pairs[id_pair][1]
+            xi = points[i]
+            xj = points[j]
 
-                xi = points[i]
-                xj = points[j]
+            kernel[i, j] = self.kernel_entry(xi, xj)
+            kernel[j, i] = kernel[i, j]
 
-                distance_pairs.append(self._kernel_entry(xi, xj))
-
-        self.kernel_matrix = self.kernel_function(distance_pairs)
-
-    @abstractmethod
-    def kernel_function(self, distance_pairs):
-        pass
+        self.kernel_matrix = kernel

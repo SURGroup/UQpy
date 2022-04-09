@@ -10,20 +10,10 @@ from UQpy.utilities.distances.baseclass.Distance import Distance
 
 class EuclideanDistance(Distance, ABC):
 
-    @abstractmethod
-    def compute_distance(self, points) -> float:
-        """
-        This is an abstract method that needs to be implemented in case of specific distances.
-
-        :param points: Point used to compute the distance.
-        :return: A float representing the distance between the points.
-        """
-        pass
-
     @beartype
     def calculate_distance_matrix(self, points: list[NumpyFloatArray]):
         """
-        Given a list of cartesian points calculates a matrix that contains the distances between them.
+        Given a list of cartesian points, calculates a matrix that contains the distances between them.
 
         :param points: A list of cartesian points.
         :return: :class:`.ndarray`
@@ -44,8 +34,8 @@ class EuclideanDistance(Distance, ABC):
             x1 = points[jj]
 
             # Call the functions where the distance metric is implemented.
-            distance_value = self.compute_distance([x0, x1])
+            distance_value = self.compute_distance(x0, x1)
 
             distance_list.append(distance_value)
 
-        return distance_list
+        self.distance_matrix = distance_list

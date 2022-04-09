@@ -2,8 +2,9 @@ import numpy as np
 import scipy
 import scipy.spatial.distance as sd
 
-from UQpy.utilities.ValidationTypes import RandomStateType
+from UQpy.utilities.ValidationTypes import RandomStateType, Numpy2DFloatArray
 from UQpy.utilities.kernels import EuclideanKernel
+from scipy.spatial.distance import pdist
 
 
 class GaussianKernel(EuclideanKernel):
@@ -21,20 +22,28 @@ class GaussianKernel(EuclideanKernel):
         super().__init__()
         self.epsilon = epsilon
 
-    def _kernel_entry(self, xi, xj):
-        return np.linalg.norm(xi - xj, "fro") ** 2
+    def kernel_entry(self, xi: Numpy2DFloatArray, xj: Numpy2DFloatArray):
+        """
+        Given two points, this method computes the Gaussian kernel value between those two points
 
-    def kernel_function(self, distance_pairs):
-        return np.exp(-sd.squareform(distance_pairs) / (4 * self.epsilon))
+        :param xi: First point.
+        :param xj: Second point.
+        :return: Float representing the kernel entry.
+        """
+        if len(xi.shape) == 1:
+            d = pdist(np.array([xi, xj]), "sqeuclidean")
+        else:
+            d = np.linalg.norm(xi-xj, 'fro') ** 2
+        return np.exp(-d / (2*self.epsilon**2))
 
-    def optimize_epsilon(self, data: np.ndarray, tolerance: float,
-                         n_nearest_neighbors: int,
-                         n_cutoff_samples: int,
-                         random_state: RandomStateType):
+    def optimize_parameters(self, data: np.ndarray, tolerance: float,
+                            n_nearest_neighbors: int,
+                            n_cutoff_samples: int,
+                            random_state: RandomStateType = None):
         """
 
-        :param data: Cloud of data points.
-        :param tolerance: Tolerance below which the Gaussian kernels is assumed to be zero.
+        :param data: Set of data points.
+        :param tolerance: Tolerance below which the Gaussian kernel is assumed to be zero.
         :param n_nearest_neighbors: Number of neighbors to use for cut-off estimation.
         :param n_cutoff_samples: Number of samples to use for cut-off estimation.
         :param random_state: Random seed used to initialize the pseudo-random number generator. If an :any:`int` is

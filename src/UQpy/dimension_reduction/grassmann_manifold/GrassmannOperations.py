@@ -130,7 +130,8 @@ class GrassmannOperations:
 
         variance_nominator = 0
         for i in range(points_number):
-            distances = distance.calculate_distance_matrix([reference_point, grassmann_points[i]], p_dim)
+            distance.calculate_distance_matrix([reference_point, grassmann_points[i]], p_dim)
+            distances = distance.distance_matrix
             variance_nominator += distances[0] ** 2
 
         return variance_nominator / points_number

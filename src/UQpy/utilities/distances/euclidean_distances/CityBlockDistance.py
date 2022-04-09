@@ -7,5 +7,13 @@ from scipy.spatial.distance import pdist
 
 class CityBlockDistance(EuclideanDistance):
 
-    def compute_distance(self, points: NumpyFloatArray) -> Union[float, NumpyFloatArray]:
-        return pdist(points, "cityblock")
+    def compute_distance(self, xi: NumpyFloatArray, xj: NumpyFloatArray) -> float:
+        """
+        Given two points, this method calculates the City Block (Manhattan) distance.
+
+        :param xi: First point.
+        :param xj: Second point.
+        :return: A float representing the distance between the points.
+        """
+
+        return pdist([xi, xj], "cityblock")[0]

@@ -111,7 +111,7 @@ from UQpy.utilities.kernels.baseclass.GrassmannianKernel import GrassmannianKern
 
 class UserKernel(GrassmannianKernel):
 
-    def _kernel_entry(self, xi: GrassmannPoint, xj: GrassmannPoint):
+    def kernel_entry(self, xi: GrassmannPoint, xj: GrassmannPoint):
         r = np.dot(xi.data.T, xj.data)
         det = np.linalg.det(r)
         return det * det

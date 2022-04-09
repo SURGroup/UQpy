@@ -42,7 +42,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
     "sphinx.ext.autosummary",
-    "sphinx.ext.autosectionlabel",
+    # "sphinx.ext.autosectionlabel",
     "sphinx_autodoc_typehints",
     "sphinxcontrib.bibtex",
     "sphinx_gallery.gen_gallery",

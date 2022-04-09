@@ -4,11 +4,11 @@ from UQpy.dimension_reduction.pod.baseclass.POD import POD
 
 class SnapshotPOD(POD):
 
-    def run(self):
+    def run(self, solution_snapshots):
         """
         Executes proper orthogonal decomposition using the :class:`.SnapshotPOD` algorithm.
         """
-        return super().run()
+        return super().run(solution_snapshots)
 
     def _calculate_reduced_and_reconstructed_solutions(self, u, phi, rows, columns, snapshot_number):
         phi_s = np.dot(u.T, phi)

@@ -1,23 +1,18 @@
 Kernels
 -----------------------------------
 
-A collection of kernel functions in the Euclidean space and the Grassmann manifold that are compatible with a valid metric.
+A collection of symmetric positive-definite kernel functions in the Euclidean space and on the Grassmann manifold.
 
+A real-valued positive definite kernel is defined as a symmetric function
+:math:`k:\mathcal{X}\times \mathcal{X} \rightarrow \mathbb{R}`
+where :math:`\sum^n_{i,j=1}c_i c_j k(x_i,x_j) \leq 0` for :math:`n \in \mathbb{N}`, :math:`x_i \in \mathcal{X}`
+and :math:`c_i \in \mathbb{R}`.
 
-In several applications the use of subspaces is essential to describe the underlying geometry of data. However, it is
-well-known that subspaces do not follow the Euclidean geometry because they lie on the Grassmann manifold.Therefore,
-working with subspaces requires the definition of an embedding structure of the Grassmann manifold into a Hilbert
-space. Thus, using positive definite kernels is studied as a solution to this problem. In this regard, a real-valued
-positive definite kernel is defined as a symmetric function :math:`k:\mathcal{X}\times \mathcal{X} \rightarrow \mathbb{R}`
-if and only if :math:`\sum^n_{I,j=1}c_i c_j k(x_i,x_j) \leq 0` for :math:`n \in \mathbb{N}`, :math:`x_i \in \mathcal{X}`
-and :math:`c_i \in \mathbb{R}`. On the Grassmann manifold a kernel is defined as a well-defined and positive definite
-function :math:`k:\mathcal{G}(p,n)\times \mathcal{G}(p,n) \rightarrow \mathbb{R}` :cite:`kernels_1`, :cite:`kernels_2`. A Grassmann kernel is a
-well-defined positive definite function that embeds the Grassmannian into a Hilbert space. :py:mod:`UQpy` introduces
-two Grassmann kernels have been proposed in literature and have demonstrated the potential for subspace-based learning
-problems.
+Each kernel function in :py:mod:`UQpy` is defined as a subclass of the :class:`UQpy.utilities.kernels.baseclass.Kernel`
+class. The :class:`UQpy.utilities.kernels.baseclass.Kernel` has two further subclasses for Euclidean kernels (:class:`.EuclideanKernel`) and Grassmannian kernels
+(:class:`.GrassmannianKernel`). Individual kernels, depending on their type, are defined as subclasses of these.
 
-
-Kernel
+Kernel Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :class:`UQpy.utilities.kernels.baseclass.Kernel` class is imported using the following command:
@@ -25,11 +20,16 @@ The :class:`UQpy.utilities.kernels.baseclass.Kernel` class is imported using the
 >>> from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 
 .. autoclass:: UQpy.utilities.kernels.baseclass.Kernel
-    :members: _kernel_entry
+    :members: kernel_entry, optimize_parameters, calculate_kernel_matrix
 
+Types of Kernels
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :class:`UQpy.utilities.kernels.baseclass.Kernel` class has subclasses for the following types of kernels:
 
 .. toctree::
    :maxdepth: 1
 
-    Grassmannian Kernels <grassmann_kernels>
     Euclidean Kernels <euclidean_kernels>
+    Grassmannian Kernels <grassmann_kernels>
+    Sum and Product Kernels <sum_product_kernels>

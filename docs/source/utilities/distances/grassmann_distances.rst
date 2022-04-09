@@ -1,6 +1,23 @@
 Grassmann Distances
 --------------------------------------
 
+The Grassmannian (or Riemannian) distance is a metric that assigns nonnegative values to each pair of subspaces
+:math:`Y_1, Y_2 \in \mathbb{R}^{n \times p}` on the Grassmann manifold :math:`\mathcal{G}(p, n)`. Formally,
+is defined as the length of the shortest geodesic connecting the two points on :math:`\mathcal{G}(p, n)`.
+:py:mod:`UQpy` introduces various Grassmann distances derived from the principal angles :cite:`Distances_1`.
+
+.. math:: 0 \leq \theta_1 \leq \theta_2 \leq \ldots \leq \theta_p \leq \pi/2,
+
+where the first principal angle :math:`\theta_1` is the smallest angle between all pairs of unit vectors in the
+first and the second subspaces. Practically, the principal angles can be calculated from the singular value
+decomposition (SVD) of :math:`\mathbf{Y}_1'\mathbf{Y}_2`,
+
+.. math:: \mathbf{Y}_1'\mathbf{Y}_2 = \mathbf{U}\cos(\Theta)\mathbf{V}'
+
+where :math:`\cos(\Theta)=\text{diag}(\cos\theta_1, \ldots,\cos\theta_p)`. This definition of distance can be extended
+to cases where :math:`\mathbf{Y}_1` and :math:`\mathbf{Y}_2` have different number of columns :math:`p`. More
+information can be found in :cite:`Distances_2`.
+
 GrassmannianDistance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -13,6 +30,7 @@ It allows the user to define a set of methods that must be created within any ch
 
 .. autoclass:: UQpy.utilities.distances.baseclass.GrassmannianDistance
     :members: calculate_distance_matrix
+
 
 
 
@@ -29,6 +47,7 @@ One can use the following command to instantiate the class :class:`.AsimovDistan
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.AsimovDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.grassmannian_distances.AsimovDistance.distance_matrix
 
 Binet-Cauchy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -42,6 +61,8 @@ One can use the following command to instantiate the class :class:`.BinetCauchyD
 
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.BinetCauchyDistance
     :members:
+
+.. autoattribute:: UQpy.utilities.distances.grassmannian_distances.BinetCauchyDistance.distance_matrix
 
 
 Fubini-Study
@@ -57,6 +78,7 @@ One can use the following command to instantiate the class :class:`.FubiniStudyD
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.FubiniStudyDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.grassmannian_distances.FubiniStudyDistance.distance_matrix
 
 
 Geodesic
@@ -72,6 +94,7 @@ One can use the following command to instantiate the class :class:`.GeodesicDist
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.GeodesicDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.grassmannian_distances.GeodesicDistance.distance_matrix
 
 Martin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -85,6 +108,8 @@ One can use the following command to instantiate the class :class:`.MartinDistan
 
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.MartinDistance
     :members:
+
+.. autoattribute:: UQpy.utilities.distances.grassmannian_distances.MartinDistance.distance_matrix
 
 
 
@@ -100,6 +125,7 @@ One can use the following command to instantiate the class :class:`.ProcrustesDi
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.ProcrustesDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.grassmannian_distances.ProcrustesDistance.distance_matrix
 
 Projection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -113,6 +139,8 @@ One can use the following command to instantiate the class :class:`.ProjectionDi
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.ProjectionDistance
     :members:
 
+.. autoattribute:: UQpy.utilities.distances.grassmannian_distances.ProjectionDistance.distance_matrix
+
 
 Spectral
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -125,3 +153,5 @@ One can use the following command to instantiate the class :class:`.SpectralDist
 
 .. autoclass:: UQpy.utilities.distances.grassmannian_distances.SpectralDistance
     :members:
+
+.. autoattribute:: UQpy.utilities.distances.grassmannian_distances.SpectralDistance.distance_matrix

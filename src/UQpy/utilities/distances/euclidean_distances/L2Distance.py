@@ -1,19 +1,18 @@
 from typing import Union
-
-from UQpy.utilities.ValidationTypes import NumpyFloatArray
-from UQpy.utilities.distances.baseclass.EuclideanDistance import EuclideanDistance
 from scipy.spatial.distance import pdist
+from UQpy.utilities import NumpyFloatArray
+from UQpy.utilities.distances.baseclass.EuclideanDistance import EuclideanDistance
 
 
-class CosineDistance(EuclideanDistance):
+class L2Distance(EuclideanDistance):
 
     def compute_distance(self, xi: NumpyFloatArray, xj: NumpyFloatArray) -> float:
         """
-        Given two points, this method calculates the Cosine distance.
+        Given two points, this method calculates the Euclidean distance.
 
         :param xi: First point.
         :param xj: Second point.
         :return: A float representing the distance between the points.
         """
 
-        return pdist([xi, xj], "cosine")[0]
+        return pdist([xi, xj], "euclidean")[0]

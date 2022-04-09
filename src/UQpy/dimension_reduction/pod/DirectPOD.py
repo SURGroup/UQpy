@@ -4,11 +4,11 @@ from UQpy.dimension_reduction.pod.baseclass.POD import POD
 
 class DirectPOD(POD):
 
-    def run(self):
+    def run(self, solution_snapshots):
         """
         Executes proper orthogonal decomposition using the :class:`.DirectPOD` algorithm.
         """
-        return super().run()
+        return super().run(solution_snapshots)
 
     def _calculate_c_and_iterations(self, u, snapshot_number, rows, columns):
         if snapshot_number < rows * columns and rows * columns > 1000:

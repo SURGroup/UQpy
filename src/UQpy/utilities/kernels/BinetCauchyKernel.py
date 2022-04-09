@@ -6,17 +6,13 @@ from UQpy.utilities.kernels import GrassmannianKernel
 
 class BinetCauchyKernel(GrassmannianKernel):
     """
-    A class to calculate the Binet-Cauchy kernel defined as:
-
-    .. math::
-
-        k_p(x_j, x_i) = det(x_j'\cdot xj)^2
+    A class to calculate the Binet-Cauchy kernel.
 
     """
     def apply_method(self, points):
         points.evaluate_matrix(self, self.calculate_kernel_matrix)
 
-    def _kernel_entry(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:
+    def kernel_entry(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:
         """
         Compute the Binet-Cauchy kernel entry for two points on the Grassmann manifold.
 
