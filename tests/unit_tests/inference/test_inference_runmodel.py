@@ -13,7 +13,7 @@ data = [0., 1., -1.5, -0.2]
 def setup():
     model = PythonModel(model_script='pfn_models.py', model_object_name='model_quadratic',
                       var_names=['theta_0', 'theta_1'], delete_files=True)
-    h_func = RunModel_New(model=model)
+    h_func = RunModel(model=model)
     yield h_func
 
 

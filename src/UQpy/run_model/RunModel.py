@@ -26,7 +26,7 @@ from beartype import beartype
 from UQpy.utilities.ValidationTypes import NumpyFloatArray
 
 
-class RunModel_New:
+class RunModel:
     # Authors:
     # B.S. Aakash, Lohit Vandanapu, Michael D.Shields
     #

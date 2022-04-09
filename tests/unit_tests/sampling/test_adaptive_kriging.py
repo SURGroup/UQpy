@@ -5,7 +5,7 @@ from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 
 from UQpy.surrogates.kriging.Kriging import Kriging
 from UQpy.sampling import MonteCarloSampling, AdaptiveKriging
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions.collection import Normal
 from UQpy.sampling.adaptive_kriging_functions import *
 import shutil
@@ -18,7 +18,7 @@ def test_akmcs_weighted_u():
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=0)
     model = PythonModel(model_script='series.py', model_object_name="series")
-    rmodel = RunModel_New(model=model)
+    rmodel = RunModel(model=model)
     regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
@@ -43,7 +43,7 @@ def test_akmcs_u():
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
     model = PythonModel(model_script='series.py', model_object_name="series")
-    rmodel = RunModel_New(model=model)
+    rmodel = RunModel(model=model)
     regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
@@ -68,7 +68,7 @@ def test_akmcs_expected_feasibility():
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
     model = PythonModel(model_script='series.py', model_object_name="series")
-    rmodel = RunModel_New(model=model)
+    rmodel = RunModel(model=model)
     regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
@@ -93,7 +93,7 @@ def test_akmcs_expected_improvement():
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
     model = PythonModel(model_script='series.py', model_object_name="series")
-    rmodel = RunModel_New(model=model)
+    rmodel = RunModel(model=model)
     regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
@@ -118,7 +118,7 @@ def test_akmcs_expected_improvement_global_fit():
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
     model = PythonModel(model_script='series.py', model_object_name="series")
-    rmodel = RunModel_New(model=model)
+    rmodel = RunModel(model=model)
     regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
@@ -142,7 +142,7 @@ def test_akmcs_samples_error():
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=0)
     model = PythonModel(model_script='series.py', model_object_name="series")
-    rmodel = RunModel_New(model=model)
+    rmodel = RunModel(model=model)
     regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,
@@ -163,7 +163,7 @@ def test_akmcs_u_run_from_init():
     marginals = [Normal(loc=0., scale=4.), Normal(loc=0., scale=4.)]
     x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
     model = PythonModel(model_script='series.py', model_object_name="series")
-    rmodel = RunModel_New(model=model)
+    rmodel = RunModel(model=model)
     regression_model = LinearRegression()
     correlation_model = ExponentialCorrelation()
     K = Kriging(regression_model=regression_model, correlation_model=correlation_model,

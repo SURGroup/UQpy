@@ -31,7 +31,7 @@ import shutil
 
 from UQpy import PythonModel
 from UQpy.reliability import SubsetSimulation
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 from UQpy.sampling import Stretch, ModifiedMetropolisHastings, MonteCarloSampling
 import numpy as np
 import scipy.stats as stats
@@ -113,7 +113,7 @@ plt.tight_layout()
 plt.show()
 
 m = PythonModel(model_script='local_Resonance_pfn.py', model_object_name="RunPythonModel")
-model = RunModel_New(model=m)
+model = RunModel(model=m)
 
 # %% md
 #
@@ -143,7 +143,7 @@ C[1, 1] = 20 ** 2
 
 for i in range(ntrials):
     m1 = PythonModel(model_script='local_Resonance_pfn.py', model_object_name="RunPythonModel")
-    model = RunModel_New(model=m1)
+    model = RunModel(model=m1)
     dist = MultivariateNormal(mean=m, cov=C)
     xx = dist.rvs(nsamples=1000, random_state=123)
     xx1 = dist.rvs(nsamples=100, random_state=123)
@@ -187,7 +187,7 @@ C[1, 1] = 20 ** 2
 
 for i in range(ntrials):
     m1 = PythonModel(model_script='local_Resonance_pfn.py', model_object_name="RunPythonModel")
-    model = RunModel_New(model=m1)
+    model = RunModel(model=m1)
     dist = MultivariateNormal(mean=m, cov=C)
     xx = dist.rvs(nsamples=1000, random_state=123)
     xx1 = dist.rvs(nsamples=100, random_state=123)

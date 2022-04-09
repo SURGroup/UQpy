@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 from UQpy import PythonModel
 from UQpy.sampling.ImportanceSampling import ImportanceSampling
 from UQpy.inference import BayesParameterEstimation, ComputationalModel
-from UQpy.run_model.RunModel_New import RunModel_New  # required to run the quadratic model
+from UQpy.run_model.RunModel import RunModel  # required to run the quadratic model
 from sklearn.neighbors import KernelDensity  # for the plots
 from UQpy.distributions import JointIndependent, Normal
 
@@ -46,7 +46,7 @@ print('Shape of true parameter vector: {}'.format(param_true.shape))
 
 model = PythonModel(model_script='local_pfn_models.py', model_object_name='model_quadratic', delete_files=True,
                     var_names=['theta_0', 'theta_1'])
-h_func = RunModel_New(model=model)
+h_func = RunModel(model=model)
 h_func.run(samples=param_true)
 
 # Add noise

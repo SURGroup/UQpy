@@ -1,4 +1,4 @@
-from UQpy.run_model import PythonModel, RunModel_New
+from UQpy.run_model import PythonModel, RunModel
 from UQpy.distributions import Normal
 from UQpy.reliability import TaylorSeries
 from UQpy.transformations import Nataf
@@ -45,7 +45,7 @@ def test_derivatives_3_no_nataf():
 @pytest.fixture
 def setup():
     model = PythonModel(model_script='pfn1.py', model_object_name='model_i', delete_files=True)
-    h_func = RunModel_New(model=model)
+    h_func = RunModel(model=model)
     yield h_func
     # shutil.rmtree(h_func.model_dir)
 
@@ -81,7 +81,7 @@ def test_derivatives_5_run_model(setup):
 
 def test_derivatives_6_second():
     model = PythonModel(model_script='pfn2.py', model_object_name='model_j', delete_files=True)
-    h_func = RunModel_New(model=model)
+    h_func = RunModel(model=model)
     dist1 = Normal(loc=500, scale=100)
     dist2 = Normal(loc=1000, scale=100)
     point_u = np.array([1.73673009, 0.16383283])

@@ -28,14 +28,14 @@ import shutil
 
 import numpy as np
 import matplotlib.pyplot as plt
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Normal
 from UQpy.reliability import FORM
 
 
 model = PythonModel(model_script='pfn.py', model_object_name="example1")
-RunModelObject = RunModel_New(model=model)
+RunModelObject = RunModel(model=model)
 
 dist1 = Normal(loc=200., scale=20.)
 dist2 = Normal(loc=150, scale=10.)

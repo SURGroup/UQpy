@@ -25,7 +25,7 @@ import shutil
 from UQpy import PythonModel
 from UQpy.sampling.stratified_sampling.strata import RectangularStrata
 from UQpy.sampling import TrueStratifiedSampling
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Gamma
 import numpy as np
 import matplotlib.pyplot as plt
@@ -66,7 +66,7 @@ x = TrueStratifiedSampling(distributions=marginals, strata_object=strata,
 
 model = PythonModel(model_script='local_python_model_1Dfunction.py', model_object_name='y_func',
                     delete_files=True)
-rmodel = RunModel_New(model=model)
+rmodel = RunModel(model=model)
 rmodel.run(samples=x.samples)
 
 from UQpy.surrogates.gaussian_process.regression_models import LinearRegression

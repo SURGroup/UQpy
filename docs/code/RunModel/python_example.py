@@ -69,7 +69,7 @@ Python
 # %%
 
 from UQpy.sampling import MonteCarloSampling
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Normal
 import time
 import numpy as np

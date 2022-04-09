@@ -13,7 +13,7 @@
 import shutil
 
 from UQpy.run_model.model_execution.PythonModel import PythonModel
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Uniform
 from UQpy.sensitivity import MorrisSensitivity
 import numpy as np
@@ -30,7 +30,7 @@ na = len(a_values)
 
 model = PythonModel(model_script='local_pfn.py', model_object_name='gfun_sensitivity', delete_files=True,
                     a_values=a_values, var_names=['X{}'.format(i) for i in range(na)])
-runmodel_object = RunModel_New(model=model)
+runmodel_object = RunModel(model=model)
 
 dist_object = [Uniform(), ] * na
 

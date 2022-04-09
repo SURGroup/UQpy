@@ -8,7 +8,7 @@ from UQpy.distributions.collection.Uniform import Uniform
 from UQpy.sampling.stratified_sampling.RefinedStratifiedSampling import *
 from UQpy.sampling.stratified_sampling.refinement.RandomRefinement import *
 from UQpy.sampling.stratified_sampling.strata.VoronoiStrata import *
-from UQpy.run_model.RunModel_New import *
+from UQpy.run_model.RunModel import *
 from UQpy.surrogates.kriging.Kriging import Kriging
 
 
@@ -71,7 +71,7 @@ def test_rect_gerss():
     strata = RectangularStrata(strata_number=[2, 2], random_state=1)
     x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1)
     model = PythonModel(model_script='python_model_function.py', model_object_name="y_func")
-    rmodel = RunModel_New(model=model)
+    rmodel = RunModel(model=model)
     from UQpy.surrogates.kriging.regression_models import LinearRegression
     from UQpy.surrogates.kriging.correlation_models import ExponentialCorrelation
 
@@ -127,7 +127,7 @@ def test_vor_gerss():
     from UQpy.surrogates.kriging.regression_models.LinearRegression import LinearRegression
     from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import ExponentialCorrelation
     model = PythonModel(model_script='python_model_function.py', model_object_name="y_func")
-    rmodel = RunModel_New(model=model)
+    rmodel = RunModel(model=model)
     K_ = Kriging(regression_model=LinearRegression(), correlation_model=ExponentialCorrelation(), optimizations_number=20,
                  optimizer=MinimizeOptimizer('l-bfgs-b'), random_state=0,
                  correlation_model_parameters=[1, 1])
@@ -171,7 +171,7 @@ def test_rss_runmodel_object():
     K = Kriging(regression_model=LinearRegression(), correlation_model=ExponentialCorrelation(), optimizations_number=20,
                 correlation_model_parameters=[1, 1], optimizer=MinimizeOptimizer('l-bfgs-b'), )
     model = PythonModel(model_script='python_model_function.py', model_object_name="y_func")
-    rmodel = RunModel_New(model=model)
+    rmodel = RunModel(model=model)
     K.fit(samples=x.samples, values=rmodel.qoi_list)
     with pytest.raises(BeartypeCallHintPepParamException):
         refinement = GradientEnhancedRefinement(strata=x.strata_object, runmodel_object='abc',
@@ -188,7 +188,7 @@ def test_rss_kriging_object():
     strata = RectangularStrata(strata_number=[2, 2])
     x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1, random_state=1)
     model = PythonModel(model_script='python_model_function.py', model_object_name="y_func")
-    rmodel = RunModel_New(model=model)
+    rmodel = RunModel(model=model)
     with pytest.raises(NotImplementedError):
         refinement = GradientEnhancedRefinement(strata=x.strata_object, runmodel_object=rmodel,
                                                 surrogate="abc")

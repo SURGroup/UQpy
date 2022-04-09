@@ -20,7 +20,7 @@ from UQpy import PythonModel
 # Import this newly defined Rosenbrock distribution into the Distributions module
 from UQpy.distributions import Normal
 from UQpy.reliability import SubsetSimulation
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 from UQpy.sampling import ModifiedMetropolisHastings, Stretch
 # First import the file that contains the newly defined Rosenbrock distribution
 from local_Rosenbrock import Rosenbrock
@@ -32,7 +32,7 @@ from local_Rosenbrock import Rosenbrock
 # %%
 
 m = PythonModel(model_script='local_Rosenbrock_pfn.py', model_object_name="RunPythonModel")
-model = RunModel_New(model=m)
+model = RunModel(model=m)
 dist = Rosenbrock(p=100.)
 dist_prop1 = Normal(loc=0, scale=1)
 dist_prop2 = Normal(loc=0, scale=10)
@@ -69,7 +69,7 @@ print(x_ss_MMH.failure_probability)
 # %%
 
 m = PythonModel(model_script='local_Rosenbrock_pfn.py', model_object_name="RunPythonModel")
-model = RunModel_New(model=m)
+model = RunModel(model=m)
 dist = Rosenbrock(p=100.)
 
 x = stats.norm.rvs(loc=0, scale=1, size=(100, 2), random_state=83276)

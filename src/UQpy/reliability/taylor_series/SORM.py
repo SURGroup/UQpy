@@ -5,7 +5,7 @@ import numpy as np
 import scipy.stats as stats
 from beartype import beartype
 
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions.baseclass import Distribution
 from UQpy.utilities.ValidationTypes import PositiveInteger
 from UQpy.reliability.taylor_series.FORM import FORM
@@ -46,7 +46,7 @@ class SORM(TaylorSeries):
     def build_from_first_order(
             cls,
             distributions: Union[None, Distribution, list[Distribution]],
-            runmodel_object: RunModel_New,
+            runmodel_object: RunModel,
             seed_x: Union[list, np.ndarray] = None,
             seed_u: Union[list, np.ndarray] = None,
             df_step: Union[int, float] = 0.01,

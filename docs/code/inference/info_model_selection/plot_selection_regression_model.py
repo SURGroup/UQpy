@@ -27,7 +27,7 @@ import shutil
 
 from UQpy import PythonModel
 from UQpy.inference import InformationModelSelection, MLE
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 import numpy as np
 from UQpy.inference import BIC
 import matplotlib.pyplot as plt
@@ -45,7 +45,7 @@ param_true = np.array([1.0, 2.0]).reshape((1, -1))
 print('Shape of true parameter vector: {}'.format(param_true.shape))
 
 model = PythonModel(model_script='pfn_models.py', model_object_name='model_quadratic', var_names=['theta_0', 'theta_1'])
-h_func = RunModel_New(model=model)
+h_func = RunModel(model=model)
 h_func.run(samples=param_true)
 
 # Add noise
@@ -68,7 +68,7 @@ estimators = []
 for i in range(3):
     model = PythonModel(model_script='pfn_models.py', model_object_name=names[i],
                         var_names=['theta_{}'.format(j) for j in range(i + 1)])
-    h_func = RunModel_New(model=model)
+    h_func = RunModel(model=model)
     M = ComputationalModel(runmodel_object=h_func, n_parameters=i + 1,
                            name=names[i], error_covariance=error_covariance)
     estimators.append(MLE(inference_model=M, data=data_1))

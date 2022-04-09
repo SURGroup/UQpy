@@ -5,7 +5,7 @@ from UQpy.distributions.collection import Normal
 from UQpy.inference.inference_models.DistributionModel import DistributionModel
 from UQpy.inference.inference_models.ComputationalModel import ComputationalModel
 from UQpy.inference import MLE
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 import shutil
 
 
@@ -28,7 +28,7 @@ def test_regression_model():
     from UQpy.run_model.model_execution.PythonModel import PythonModel
     model = PythonModel(model_script='pfn_models.py', model_object_name='model_quadratic',
                       var_names=['theta_0', 'theta_1'])
-    h_func = RunModel_New(model=model)
+    h_func = RunModel(model=model)
     h_func.run(samples=param_true)
 
     # Add noise

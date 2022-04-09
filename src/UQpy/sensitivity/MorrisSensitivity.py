@@ -12,7 +12,7 @@ from beartype.vale import Is
 from UQpy.utilities.Utilities import process_random_state
 from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger, NumpyFloatArray
 from UQpy.distributions import *
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 import numpy as np
 from scipy.stats import randint
 
@@ -21,7 +21,7 @@ class MorrisSensitivity:
     @beartype
     def __init__(
             self,
-            runmodel_object: RunModel_New,
+            runmodel_object: RunModel,
             distributions: Union[JointIndependent, Union[list, tuple]],
             n_levels: Annotated[int, Is[lambda x: x >= 3]],
             delta: Union[float, int] = None,

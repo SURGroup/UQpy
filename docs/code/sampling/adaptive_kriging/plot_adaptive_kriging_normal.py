@@ -19,7 +19,7 @@ import shutil
 from UQpy import PythonModel
 from UQpy.surrogates.gaussian_process import GaussianProcessRegression
 from UQpy.sampling import MonteCarloSampling, AdaptiveKriging
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Normal
 from local_series import series
 import matplotlib.pyplot as plt
@@ -44,7 +44,7 @@ x = MonteCarloSampling(distributions=marginals, nsamples=20, random_state=1)
 # %%
 
 model = PythonModel(model_script='local_series.py', model_object_name='series')
-rmodel = RunModel_New(model=model)
+rmodel = RunModel(model=model)
 
 
 # %% md
@@ -156,7 +156,7 @@ optimizer = MinimizeOptimizer(method="L-BFGS-B", bounds=bounds)
 K1 = GaussianProcessRegression(regression_model=LinearRegression(), kernel=RBF(), optimizer=optimizer,
                                hyperparameters=[1, 1, 0.1], optimizations_number=1)
 model = PythonModel(model_script='local_series.py', model_object_name='series')
-rmodel1 = RunModel_New(model=model)
+rmodel1 = RunModel(model=model)
 
 # %% md
 #
@@ -209,7 +209,7 @@ start_time = time.time()
 # Code
 b = MonteCarloSampling(distributions=marginals, nsamples=10 ** 4, random_state=4)
 model = PythonModel(model_script='local_series.py', model_object_name='series')
-r1model = RunModel_New(model=model)
+r1model = RunModel(model=model)
 r1model.run(samples=b.samples)
 
 

@@ -26,7 +26,7 @@ from UQpy import PythonModel
 from UQpy.surrogates.gaussian_process.regression_models import ConstantRegression
 from UQpy.sampling import RectangularStrata
 from UQpy.sampling import TrueStratifiedSampling
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Uniform
 import numpy as np
 import matplotlib.pyplot as plt
@@ -68,7 +68,7 @@ x = TrueStratifiedSampling(distributions=marginals, strata_object=strata,
 # %%
 
 model = PythonModel(model_script='local_python_model_function.py', model_object_name="y_func")
-rmodel = RunModel_New(model=model)
+rmodel = RunModel(model=model)
 
 rmodel.run(samples=x.samples)
 
@@ -107,7 +107,7 @@ x1gv, x2gv = x1g.reshape(x1g.size, 1), x2g.reshape(x2g.size, 1)
 
 y2 = K.predict(np.concatenate([x1gv, x2gv], 1)).reshape(x1g.shape[0], x1g.shape[1])
 model = PythonModel(model_script='local_python_model_function.py', model_object_name="y_func")
-r2model = RunModel_New(model=model)
+r2model = RunModel(model=model)
 r2model.run(samples=np.concatenate([x1gv, x2gv], 1))
 y_act = np.array(r2model.qoi_list).reshape(x1g.shape[0], x1g.shape[1])
 

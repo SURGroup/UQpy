@@ -27,7 +27,7 @@ from UQpy import PythonModel
 from UQpy.inference import ComputationalModel, MLE
 from UQpy.distributions import Normal
 from UQpy.inference import MinimizeOptimizer
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 
 #%% md
 #
@@ -42,7 +42,7 @@ print('Shape of true parameter vector: {}'.format(param_true.shape))
 
 model = PythonModel(model_script='local_pfn_models.py', model_object_name='model_quadratic', delete_files=True,
                     var_names=['theta_0', 'theta_1'])
-h_func = RunModel_New(model=model)
+h_func = RunModel(model=model)
 h_func.run(samples=param_true)
 
 # Add noise

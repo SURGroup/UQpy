@@ -18,7 +18,7 @@ import shutil
 
 from UQpy.sampling import TrueStratifiedSampling, RefinedStratifiedSampling
 from UQpy.surrogates import GaussianProcessRegression
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Uniform
 import matplotlib.pyplot as plt
 from matplotlib import cm

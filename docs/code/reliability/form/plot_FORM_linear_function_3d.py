@@ -25,7 +25,7 @@
 
 # %%
 
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Normal
 from UQpy.reliability import FORM
@@ -35,7 +35,7 @@ dist2 = Normal(loc=5., scale=0.8)
 dist3 = Normal(loc=4., scale=0.4)
 
 model = PythonModel(model_script='pfn.py', model_object_name="example3",)
-RunModelObject3 = RunModel_New(model=model)
+RunModelObject3 = RunModel(model=model)
 
 Z0 = FORM(distributions=[dist1, dist2, dist3], runmodel_object=RunModelObject3)
 Z0.run()

@@ -22,7 +22,7 @@ from UQpy.sampling import MonteCarloSampling, TrueStratifiedSampling
 from UQpy.sampling import RectangularStrata
 from UQpy.distributions import Gamma
 from UQpy.surrogates import SROM
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 from scipy.stats import gamma
 import numpy as np
 import matplotlib.pyplot as plt
@@ -92,7 +92,7 @@ plt.show()
 # %%
 
 m = PythonModel(model_script='local_eigenvalue_model.py',model_object_name="RunPythonModel" )
-model = RunModel_New(model=m)
+model = RunModel(model=m)
 # model = RunModel(model_script='local_eigenvalue_model.py')
 model.run(samples=y.samples)
 r_srom = model.qoi_list

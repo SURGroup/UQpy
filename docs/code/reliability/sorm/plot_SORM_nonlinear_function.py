@@ -21,7 +21,7 @@ standard deviation :math:`\sigma_{X_2}=1.4`.
 import shutil
 
 import numpy as np
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Normal
 from UQpy.reliability import FORM
@@ -38,7 +38,7 @@ loc_ = 0.0
 dist1 = Normal(loc=20., scale=2)
 dist2 = Lognormal(s=s, loc=0.0, scale=scale)
 model = PythonModel(model_script='pfn.py', model_object_name="example4",)
-RunModelObject4 = RunModel_New(model=model)
+RunModelObject4 = RunModel(model=model)
 form = FORM(distributions=[dist1, dist2], runmodel_object=RunModelObject4)
 form.run()
 Q0 = SORM(form_object=form)

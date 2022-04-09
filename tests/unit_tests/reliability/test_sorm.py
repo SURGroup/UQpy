@@ -1,6 +1,6 @@
 from UQpy.distributions import Normal
 from UQpy.reliability import FORM, SORM
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 import glob
 import shutil
@@ -14,7 +14,7 @@ def setup():
     path = os.path.abspath(os.path.dirname(__file__))
     os.chdir(path)
     model = PythonModel(model_script='pfn4.py', model_object_name='model_k', delete_files=True)
-    h_func = RunModel_New(model=model)
+    h_func = RunModel(model=model)
     yield h_func
 
 

@@ -3,7 +3,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 
 from UQpy.surrogates.baseclass import Surrogate
 from UQpy.utilities.ValidationTypes import *
-from UQpy.run_model.RunModel_New import RunModel_New
+from UQpy.run_model.RunModel import RunModel
 from UQpy.sampling.stratified_sampling.refinement.baseclass.Refinement import *
 from UQpy.utilities.Utilities import gradient
 from UQpy.sampling.stratified_sampling.strata.VoronoiStrata import VoronoiStrata
@@ -17,7 +17,7 @@ class GradientEnhancedRefinement(Refinement):
     def __init__(
         self,
         strata: Strata,
-        runmodel_object: RunModel_New,
+        runmodel_object: RunModel,
         surrogate: Union[Surrogate, GaussianProcessRegressor, CompatibleSurrogate],
         nearest_points_number: int = None,
         qoi_name: str = None,
