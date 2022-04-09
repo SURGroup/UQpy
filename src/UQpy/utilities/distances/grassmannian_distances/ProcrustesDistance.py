@@ -8,16 +8,12 @@ from UQpy.utilities.GrassmannPoint import GrassmannPoint
 
 class ProcrustesDistance(GrassmannianDistance):
     """
-    A class to calculate the Procrustes (chordal) distance between two  Grassmann points defined as:
-
-    .. math::
-
-        d_{C}(x_i, x_j) = 2[\sum_{l}\sin^2(\Theta_l/2)]^{1/2}
+    A class to calculate the Procrustes distance between two Grassmann points.
 
     """
     def compute_distance(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:
         """
-        Compute the Procrustes (chordal) distance between two points on the Grassmann manifold.
+        Compute the Procrustes distance between two points on the Grassmann manifold.
 
         :param xi: Orthonormal matrix representing the first point.
         :param xj: Orthonormal matrix representing the second point.

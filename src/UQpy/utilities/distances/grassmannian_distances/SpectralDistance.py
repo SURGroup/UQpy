@@ -8,11 +8,7 @@ from UQpy.utilities.GrassmannPoint import GrassmannPoint
 
 class SpectralDistance(GrassmannianDistance):
     """
-    A class to calculate the Spectral distance between two Grassmann points defined as:
-
-    .. math::
-
-        d_{C}(x_i, x_j) =  2\sin( \max(\Theta_l)/2)
+    A class to calculate the Spectral distance between two Grassmann points.
 
     """
     def compute_distance(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:

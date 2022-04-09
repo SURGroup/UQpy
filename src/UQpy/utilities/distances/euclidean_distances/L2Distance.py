@@ -8,7 +8,7 @@ class L2Distance(EuclideanDistance):
 
     def compute_distance(self, xi: NumpyFloatArray, xj: NumpyFloatArray) -> float:
         """
-        Given two points, this method calculates the Euclidean distance.
+        Given two points, this method calculates the L2 distance.
 
         :param xi: First point.
         :param xj: Second point.

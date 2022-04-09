@@ -12,7 +12,6 @@ class MinkowskiDistance(EuclideanDistance):
         """
         self.p = p
 
-
     def compute_distance(self, xi: NumpyFloatArray, xj: NumpyFloatArray) -> float:
         """
         Given two points, this method calculates the Minkowski distance.

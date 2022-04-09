@@ -1,16 +1,22 @@
 Euclidean Distances
 --------------------------------------
 
+Euclidean distances are measures of proximity between points in standard Euclidean spaces.
 
-EuclideanDistance
+EuclideanDistance Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-The abstract :class:`UQpy.utilities.distances.baseclass.EuclideanDistance` class is a blueprint for classes in :mod:`.euclidean_distances` module.
-It allows the user to define a set of methods that must be created within any child classes built from this abstract class.
+The abstract :class:`UQpy.utilities.distances.baseclass.EuclideanDistance` class is the base class for all Euclidean
+distances in :py:mod:`UQpy`. It provides a blueprint for classes in the :mod:`.euclidean_distances` module and allows
+the user to define a set of methods that must be created within any child classes built from this abstract class.
 
 .. autoclass:: UQpy.utilities.distances.baseclass.EuclideanDistance
     :members: calculate_distance_matrix
+
+The :class:`.EuclideanDistance` class is imported using the following command:
+
+>>> from UQpy.utilities.distances.baseclass.EuclideanDistance import EuclideanDistance
 
 List of Available Distances
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

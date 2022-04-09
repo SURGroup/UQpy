@@ -8,11 +8,7 @@ from UQpy.utilities.GrassmannPoint import GrassmannPoint
 
 class ProjectionDistance(GrassmannianDistance):
     """
-    A class to calculate the Projection distance between two Grassmann points defined as:
-
-    .. math::
-
-        d_{C}(x_i, x_j) =  (\sum_{l} \sin^2(\Theta_l))^{1/2}
+    A class to calculate the Projection distance between two Grassmann points.
 
     """
     def compute_distance(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:
