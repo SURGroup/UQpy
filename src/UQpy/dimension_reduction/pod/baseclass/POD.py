@@ -41,7 +41,7 @@ class POD(ABC):
         """An array containing the solution snapshots reduced in the spatial dimension."""
         self.logger = logging.getLogger(__name__)
 
-        if n_modes is None and reconstruction_percentage is None:
+        if n_modes is not None and reconstruction_percentage is not None:
             raise ValueError("Either a number of modes or a reconstruction percentage must be chosen, not both.")
 
         if reconstruction_percentage is not None and reconstruction_percentage <= 0:
