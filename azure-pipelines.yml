@@ -165,49 +165,49 @@ jobs:
       displayName: Upload conda packages
       condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
-#- job: "Create_Docker_images"
-#  dependsOn: Build_UQpy_and_run_tests
-#  pool:
-#     vmImage: "ubuntu-latest"
-#  steps:
-#    - task: gitversion/setup@0
-#      displayName: Setup GitVersion
-#      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-#      inputs:
-#        versionSpec: '5.x'
-#
-#    - task: gitversion/execute@0
-#      displayName: Calculate GitVersion
-#      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-#      inputs:
-#        useConfigFile: true
-#        configFilePath: 'GitVersion.yml'
-#
-#    - task: Docker@2
-#      displayName: Login to Dockerhub
-#      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-#      inputs:
-#        containerRegistry: 'docker_registry_uqpy'
-#        command: 'login'
-#
-#    - powershell: |
-#          echo "Current version: $(GitVersion.SemVer)"
-#      displayName: Shows currently compiling version
-#      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-#
-#    - task: Docker@2
-#      displayName: Build and push packages to Dockerhub
-#      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-#      inputs:
-#        containerRegistry: 'docker_registry_uqpy'
-#        command: 'buildAndPush'
-#        repository: 'surgroup/uqpy'
-#        Dockerfile: 'Dockerfile'
-#        tags: '$(GitVersion.SemVer)'
-#
-#    - task: Docker@2
-#      displayName: Logout from Dockerhub
-#      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-#      inputs:
-#        containerRegistry: 'docker_registry_uqpy'
-#        command: 'logout'
+- job: "Create_Docker_images"
+  dependsOn: Build_UQpy_and_run_tests
+  pool:
+     vmImage: "ubuntu-latest"
+  steps:
+    - task: gitversion/setup@0
+      displayName: Setup GitVersion
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+      inputs:
+        versionSpec: '5.x'
+
+    - task: gitversion/execute@0
+      displayName: Calculate GitVersion
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+      inputs:
+        useConfigFile: true
+        configFilePath: 'GitVersion.yml'
+
+    - task: Docker@2
+      displayName: Login to Dockerhub
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+      inputs:
+        containerRegistry: 'docker_registry_surg'
+        command: 'login'
+
+    - powershell: |
+          echo "Current version: $(GitVersion.SemVer)"
+      displayName: Shows currently compiling version
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+    - task: Docker@2
+      displayName: Build and push packages to Dockerhub
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+      inputs:
+        containerRegistry: 'docker_registry_surg'
+        command: 'buildAndPush'
+        repository: 'surgroup/uqpy'
+        Dockerfile: 'Dockerfile'
+        tags: '$(GitVersion.SemVer)'
+
+    - task: Docker@2
+      displayName: Logout from Dockerhub
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+      inputs:
+        containerRegistry: 'docker_registry_surg'
+        command: 'logout'
