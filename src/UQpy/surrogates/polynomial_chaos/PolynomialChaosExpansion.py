@@ -87,8 +87,17 @@ class PolynomialChaosExpansion(Surrogate):
         """
         Returns the cross validation error (leave-one-out) based on experimental design.
 
+        The :meth:`.PolynomialChaosExpansion.leaveoneout_error` method can be used to estimate the accuracy of the PCE
+        predictor without additional simulations. Leave-one-out error :math:`Q^2` is calculated from differences between the original mathematical model and approximation :math:`\Delta_i= \mathcal{M} (x^{(i)}) - \mathcal{M}^{PCE}(x^{(i)})` as follows:
+        
+        .. math:: Q^2 = \mathbb{E}[(\Delta_i/(1-h_i))^2]/\sigma_Y^2
+        
+
+        where :math:`\sigma_Y^2` is a variance of model response and :math:`h_i` represents the :math:`i` th diagonal term of matrix :math:`\mathbf{H}= \Psi ( \Psi^T \Psi )^{-1} \Psi^T` obtained from design matrix :math:`\Psi` without additional simulations  :cite:`BLATMANLARS`.
+
         :return: Cross validation error of experimental design.
         """
+        
         x=self.experimental_design_input
         y=self.experimental_design_output
         
@@ -165,6 +174,8 @@ class PolynomialChaosExpansion(Surrogate):
         .. math:: \sigma^{2}_{PCE} = \mathbb{E} [( \mathcal{M}^{PCE}(x) - \mu_{PCE} )^{2} ] = \sum_{i=1}^{p} y_{i}
 
         where :math:`p` is the number of polynomials (first PCE coefficient is excluded).
+        
+        The third moment (skewness) and the fourth moment (kurtosis) are generally obtained from third and fourth order products obtained by integration, which are extremely computationally demanding. Therefore here we use analytical solution of standard linearization problem for Hermite (based on normalized Feldheim's formula ) and Legendre polynomials (based on normalized Neumann-Adams formula), though it might be still computationally demanding for high number of input random variables.
         
         :param higher: True corresponds to calculation of skewness and kurtosis (computationaly expensive for large basis set).
         :return: Returns the mean and variance.
