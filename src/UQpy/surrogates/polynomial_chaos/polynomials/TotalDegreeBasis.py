@@ -11,8 +11,8 @@ class TotalDegreeBasis(PolynomialBasis):
 
     def __init__(self, distributions: Union[Distribution, list[Distribution]], max_degree: int, hyperbolic: float = 1):
         """
-        Create tensor-product polynomial basis.
-        The size is equal to :code:`(max_degree+1)**n_inputs` (exponential complexity).
+        Create total-degree polynomial basis.
+        The size is equal to :code:`(total_degree+n_inputs)!/(total_degree!*n_inputs!)` (polynomial complexity).
 
         :param distributions: List of univariate distributions.
         :param max_degree: Maximum polynomial degree of the 1D chaos polynomials.
