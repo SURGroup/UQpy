@@ -1,6 +1,6 @@
 from UQpy.utilities.GrassmannPoint import GrassmannPoint
 from UQpy.dimension_reduction.grassmann_manifold.projections.SVDProjection import SVDProjection
-from UQpy.utilities.distances.euclidean_distances import EuclideanDistance
+from UQpy.utilities.distances.euclidean_distances import L2Distance
 from UQpy.utilities.distances.grassmannian_distances import AsimovDistance, BinetCauchyDistance, FubiniStudyDistance, \
     GeodesicDistance, ProcrustesDistance, ProjectionDistance, SpectralDistance
 from UQpy.utilities.distances import MartinDistance
@@ -11,18 +11,10 @@ import sys
 
 def test_euclidean_distance_2points():
     x = np.array([[2.0, 3.1], [4.0, 1.25]])
-    d = EuclideanDistance(metric=DistanceMetric.EUCLIDEAN)
-    distance = np.matrix.round(d.compute_distance(x), 3)
+    d = L2Distance()
+    distance = np.round(d.compute_distance(xi=np.array([2.0, 3.1]), xj=np.array([4.0, 1.25])), 3)
 
     assert distance == 2.724
-
-
-def test_euclidean_distance_3points():
-    x = np.array([[2.0, 3.1], [2.0, 2.1], [4.0, 1.25]])
-    d = EuclideanDistance(metric=DistanceMetric.EUCLIDEAN)
-    distance = np.matrix.round(d.compute_distance(x), 3)
-
-    assert np.allclose(distance, np.array([1, 2.724, 2.173]))
 
 
 def test_grassmann_distance():
