@@ -21,13 +21,13 @@ def test_dmaps_swiss_roll():
     Y0 = 1. / 6 * (phi + sigma * xi) * np.cos(phi)
 
     swiss_roll = np.array([X0, Y0, Z0]).transpose()
-    dmaps = DiffusionMaps(data=swiss_roll, kernel=GaussianKernel(epsilon=0.03),
+    dmaps = DiffusionMaps(data=swiss_roll, kernel=GaussianKernel(epsilon=0.5),
                           alpha=0.5, n_eigenvectors=3, is_sparse=True, n_neighbors=100)
 
     evals = dmaps.eigenvalues
     assert round(evals[0], 9) == 1.0
-    assert round(evals[1], 9) == 0.999174326
-    assert round(evals[2], 9) == 0.998335336
+    assert round(evals[1], 9) == 0.997460971
+    assert round(evals[2], 9) == 0.987499519
 
 
 def test_dmaps_circular():
@@ -58,5 +58,5 @@ def test_dmaps_circular():
 
     evals = dmaps.eigenvalues
     assert np.round(evals[0], 5) == 1.0
-    assert np.round(evals[1], 5) == 0.99826
-    assert np.round(evals[2], 5) == 0.99824
+    assert np.round(evals[1], 5) == 0.99962
+    assert np.round(evals[2], 5) == 0.99961

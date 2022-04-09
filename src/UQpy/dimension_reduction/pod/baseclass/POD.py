@@ -114,7 +114,7 @@ class POD(ABC):
 
         minimum_percentage = min(percentages, key=lambda x: abs(x - self.reconstruction_percentage))
 
-        if self.modes == 10 ** 10:
+        if self.modes is None:
             self.modes = percentages.index(minimum_percentage) + 1
         elif self.modes > n_iterations:
             self.logger.warning(

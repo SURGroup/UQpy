@@ -25,31 +25,26 @@ Data[:, :, 2] = [
 
 def test_DirectPOD_listData():
     list_data = list(Data)
-    pod_dir = DirectPOD(solution_snapshots=list_data)
-    pod_dir.run()
-    reconstructed_solutions = pod_dir.reconstructed_solution
-    actual_result = reconstructed_solutions[0][1][1]
+    pod_dir = DirectPOD(solution_snapshots=list_data, reconstruction_percentage=100)
+    actual_result = pod_dir.reconstructed_solution[0][1][1]
     expected_result = 0.3054
     assert expected_result == round(actual_result, 6)
 
 def test_DirectPOD():
-    pod_dir = DirectPOD(solution_snapshots=Data, modes=1)
-    pod_dir.run()
+    pod_dir = DirectPOD(solution_snapshots=Data, n_modes=1)
     reconstructed_solutions = pod_dir.reconstructed_solution
     assert round(reconstructed_solutions[0][1][1], 6) == 0.761704
 
 
 def test_SnapshotPOD():
-    pod_snap = SnapshotPOD(solution_snapshots=Data, modes=1)
-    pod_snap.run()
+    pod_snap = SnapshotPOD(solution_snapshots=Data, n_modes=1)
     reconstructed_solutions = pod_snap.reconstructed_solution
     assert round(reconstructed_solutions[0][1][1], 6) == -0.181528
 
 
 def test_SnapshotPOD_listData():
     list_data = list(Data)
-    pod_dir = SnapshotPOD(solution_snapshots=list_data)
-    pod_dir.run()
+    pod_dir = SnapshotPOD(solution_snapshots=list_data, reconstruction_percentage=100)
     actual_result = pod_dir.reconstructed_solution[0][1][1]
     expected_result = 0.3054
     assert expected_result == round(actual_result, 6)
@@ -71,12 +66,12 @@ def test_HOSVD():
 
 def test_DirectPOD_modes_less_than_zero():
     with pytest.raises(BeartypeCallHintPepParamException):
-        pod_dir = DirectPOD(solution_snapshots=Data, modes=-1)
+        pod_dir = DirectPOD(solution_snapshots=Data, n_modes=-1)
 
 
 def test_DirectPOD_mode_non_integer():
     with pytest.raises(BeartypeCallHintPepParamException):
-        pod_dir = DirectPOD(solution_snapshots=Data, modes=1.5)
+        pod_dir = DirectPOD(solution_snapshots=Data, n_modes=1.5)
 
 
 def test_DirectPOD_reconstr_perc_less_than_zero():
@@ -86,7 +81,7 @@ def test_DirectPOD_reconstr_perc_less_than_zero():
 
 def test_DirectPOD_both_modes_and_reconstr_error():
     with pytest.raises(ValueError):
-        pod_dir = DirectPOD(solution_snapshots=Data, modes=1, reconstruction_percentage=50)
+        pod_dir = DirectPOD(solution_snapshots=Data, n_modes=1, reconstruction_percentage=50)
 
 
 def test_HOSVD_modes_less_than_zero():
@@ -111,12 +106,12 @@ def test_HOSVD_both_modes_and_reconstr_error():
 
 def test_SnapshotPOD_modes_less_than_zero():
     with pytest.raises(BeartypeCallHintPepParamException):
-        snap = SnapshotPOD(solution_snapshots=Data, modes=-1)
+        snap = SnapshotPOD(solution_snapshots=Data, n_modes=-1)
 
 
 def test_SnapshotPOD_mode_non_integer():
     with pytest.raises(BeartypeCallHintPepParamException):
-        snap = SnapshotPOD(solution_snapshots=Data, modes=1.5)
+        snap = SnapshotPOD(solution_snapshots=Data, n_modes=1.5)
 
 
 def test_SnapshotPOD_reconstr_perc_less_than_zero():
@@ -126,4 +121,4 @@ def test_SnapshotPOD_reconstr_perc_less_than_zero():
 
 def test_SnapshotPOD_both_modes_and_reconstr_error():
     with pytest.raises(ValueError):
-        snap = SnapshotPOD(solution_snapshots=Data, modes=1, reconstruction_percentage=50)
+        snap = SnapshotPOD(solution_snapshots=Data, n_modes=1, reconstruction_percentage=50)
