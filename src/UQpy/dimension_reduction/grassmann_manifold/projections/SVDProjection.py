@@ -21,12 +21,13 @@ class SVDProjection(GrassmannProjection):
         :param data: Raw data given as a list of matrices.
         :param p: Number of independent p-planes of each Grassmann point.
             Options:
-                :any:`int`: Integer specifying the number of p-planes
 
-                :any:`str`:
-                    `"max"`: Set p equal to the maximum rank of all provided data matrices
+            :any:`int`: Integer specifying the number of p-planes
 
-                    `"min"`: Set p equal to the minimum rank of all provided data matrices
+            :any:`str`:
+             `"max"`: Set p equal to the maximum rank of all provided data matrices
+
+             `"min"`: Set p equal to the minimum rank of all provided data matrices
         :param tol: Tolerance on the SVD
         """
         self.data = data
