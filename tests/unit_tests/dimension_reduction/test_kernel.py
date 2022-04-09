@@ -45,7 +45,7 @@ def test_kernel_gaussian_1d():
     gaussian.calculate_kernel_matrix(points)
 
     assert np.allclose(np.matrix.round(gaussian.kernel_matrix, 4),
-                       np.array([[1., 7.14845072e-07, 1.], [7.14845072e-07, 1., 7.14845072e-07], [1, 7.14845072e-07, 1]]),
+                       np.array([[1., 0.26447726, 1.], [0.26447726, 1., 0.26447726], [1, 0.26447726, 1]]),
                        atol=1e-04)
     assert np.round(gaussian.epsilon, 4) == 2
 
@@ -58,9 +58,9 @@ def test_kernel_gaussian_2d():
     gaussian = GaussianKernel()
     gaussian.calculate_kernel_matrix(points)
 
-    assert np.allclose(np.matrix.round(gaussian.kernel_matrix, 4), np.array([[1., 0.628, 0.3912],
-                                                                             [0.628, 1., 0.2534],
-                                                                             [0.3912, 0.2534, 1.]]))
+    assert np.allclose(np.matrix.round(gaussian.kernel_matrix, 4), np.array([[1., 0.39434829, 0.15306655],
+                                                                             [0.39434829, 1., 0.06422136],
+                                                                             [0.15306655, 0.06422136, 1.]]), atol=1e-4)
     assert np.round(gaussian.epsilon, 4) == 1.0
 
 
