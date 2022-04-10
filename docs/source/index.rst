@@ -20,7 +20,7 @@ as a set of modules centered around core capabilities in Uncertainty Quantificat
 +                       +                                                                  +
 |                       | Promit Chakroborty, Lukáš Novák, Andrew Solanto                  |
 +-----------------------+------------------------------------------------------------------+
-| **Contributors:**     | Michael Gardner, Ulrich Römer, Julius Schultz                    |
+| **Contributors:**     | Michael Gardner                                                  |
 +-----------------------+------------------------------------------------------------------+
 
 Introduction

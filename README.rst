@@ -35,7 +35,7 @@ Uncertainty Quantification with python (UQpy)
 +                       +                                                                  +
 |                       | Promit Chakroborty, Lukáš Novák, Andrew Solanto                  |
 +-----------------------+------------------------------------------------------------------+
-| **Contributors:**     | Michael Gardner, Ulrich Römer, Julius Schultz                    |
+| **Contributors:**     | Michael Gardner                                                  |
 +-----------------------+------------------------------------------------------------------+
 
 Contact
