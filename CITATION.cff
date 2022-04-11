@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "UQpy"
+version: 3.0.0
+date-released: 2021-10-23
+url: "https://github.com/SURGroup/UQpy"
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Olivier"
+    given-names: "Audrey"
+  - family-names: "Giovanis"
+    given-names: "Dimitris"
+  - family-names: "B.S."
+    given-names: "Aakash"
+  - family-names: "Chauhan"
+    given-names: "Mohit"
+  - family-names: "Vandanapu"
+    given-names: "Lohit"
+  - family-names: "Shields"
+    given-names: "Michael"
+  doi: "https://doi.org/10.1016/j.jocs.2020.101204"
+  journal: "Journal of Computational Science"
+  month: 9
+  start: 101204 
+  title: "UQpy: A general purpose Python package and development environment for uncertainty quantification"
+  volume: 47
+  year: 2020

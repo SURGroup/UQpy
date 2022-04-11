@@ -5,31 +5,49 @@ Uncertainty Quantification with Python
 
 import pkg_resources
 
-import UQpy.Distributions
-import UQpy.SampleMethods
-import UQpy.DimensionReduction
-import UQpy.Inference
-import UQpy.Reliability
-import UQpy.RunModel
-import UQpy.SampleMethods
-import UQpy.StochasticProcess
-import UQpy.Surrogates
-import UQpy.Sensitivity
-import UQpy.Transformations
-import UQpy.Utilities
+import UQpy.distributions
+import UQpy.sampling
+import UQpy.dimension_reduction
+import UQpy.inference
+import UQpy.reliability
+import UQpy.run_model.RunModel
+import UQpy.sampling
+import UQpy.stochastic_process
+import UQpy.surrogates
+import UQpy.sensitivity
+import UQpy.transformations
+import UQpy.utilities.Utilities
 
 
-from UQpy.DimensionReduction import *
-from UQpy.Distributions import *
-from UQpy.Inference import *
-from UQpy.Reliability import *
-from UQpy.RunModel import *
-from UQpy.SampleMethods import *
-from UQpy.StochasticProcess import *
-from UQpy.Surrogates import *
-from UQpy.Transformations import *
-from UQpy.Utilities import *
-from UQpy.Sensitivity import *
+from UQpy.dimension_reduction import *
+from UQpy.distributions import *
+from UQpy.inference import *
+from UQpy.reliability import *
+from UQpy.run_model import *
+from UQpy.sampling import *
+from UQpy.stochastic_process import *
+from UQpy.surrogates import *
+from UQpy.transformations import *
+from UQpy.utilities.Utilities import *
+from UQpy.sensitivity import *
+from UQpy.utilities.UQpyLoggingFormatter import *
+import logging
+from beartype.roar import BeartypeDecorHintPep585DeprecationWarning
+from warnings import filterwarnings
+filterwarnings("ignore", category=BeartypeDecorHintPep585DeprecationWarning)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+
+formatter = UQpyLoggingFormatter()
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+
+logger.addHandler(console_handler)
+
+logging.logThreads = 0
+logging.logProcesses = 0
 
 try:
     __version__ = pkg_resources.get_distribution("UQpy").version
