@@ -8,11 +8,7 @@ from UQpy.utilities.GrassmannPoint import GrassmannPoint
 
 class MartinDistance(GrassmannianDistance):
     """
-    A class to calculate the Martin distance between two  Grassmann points defined as:
-
-    .. math::
-
-        d_{M}(x_i, x_j) = [\log\prod_{l}1/\cos^2(\Theta_l)]^{1/2}
+    A class to calculate the Martin distance between two Grassmann points.
 
     """
     def compute_distance(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:

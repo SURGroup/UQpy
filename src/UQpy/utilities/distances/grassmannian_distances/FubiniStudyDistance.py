@@ -8,11 +8,7 @@ from UQpy.utilities.GrassmannPoint import GrassmannPoint
 
 class FubiniStudyDistance(GrassmannianDistance):
     """
-    A class to calculate the Fubini-Study distance between two  Grassmann points defined as:
-
-    .. math::
-
-        d_{C}(x_i, x_j) = cos^{-1}(\prod_{l}\cos(\Theta_l))
+    A class to calculate the Fubini-Study distance between two Grassmann points.
 
     """
     def compute_distance(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:

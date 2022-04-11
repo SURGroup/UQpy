@@ -9,11 +9,7 @@ from UQpy.utilities.GrassmannPoint import GrassmannPoint
 
 class AsimovDistance(GrassmannianDistance):
     """
-    A class to calculate the Asimov distance between two  Grassmann points defined as:
-
-    .. math::
-
-        d_{A}(x_i, x_j) = \max(\Theta)
+    A class to calculate the Asimov distance between two Grassmann points.
 
     """
     @beartype

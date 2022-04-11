@@ -8,12 +8,7 @@ from UQpy.utilities.GrassmannPoint import GrassmannPoint
 
 class BinetCauchyDistance(GrassmannianDistance):
     """
-    A class to calculate the Binet-Cauchy distance between two  Grassmann points defined as:
-
-    .. math::
-
-        d_{BC}(x_i, x_j) = [1-\prod_{l}\cos^2(\Theta_l)]^{1/2}
-
+    A class to calculate the Binet-Cauchy distance between two Grassmann points.
     """
 
     def compute_distance(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:

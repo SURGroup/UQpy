@@ -22,7 +22,7 @@ class GrassmannianDistance(Distance, ABC):
                                   points: Union[list[Numpy2DFloatArrayOrthonormal],  list[GrassmannPoint]],
                                   p_dim: Union[list, np.ndarray]):
         """
-        Given a list of points that belong on a Grassmann Manifold
+        Given a list of points that belong on a Grassmann Manifold, assemble the distance matrix between all points.
 
         :param points: List of points belonging on the Grassmann Manifold. Either a list of :class:`.GrassmannPoint` or
          a list of orthonormal :class:`.ndarray`.

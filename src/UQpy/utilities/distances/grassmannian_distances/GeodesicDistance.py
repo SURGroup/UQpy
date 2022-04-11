@@ -9,11 +9,7 @@ from UQpy.utilities.GrassmannPoint import GrassmannPoint
 
 class GeodesicDistance(GrassmannianDistance):
     """
-    A class to calculate the Geodesic distance between two Grassmann points defined as:
-
-    .. math::
-
-        d_{C}(x_i, x_j) = (\sum \Theta^2_l)^{1/2}
+    A class to calculate the Geodesic distance between two Grassmann points.
 
     """
     @beartype
