@@ -64,59 +64,6 @@ class RunModel:
 
          Used in both python and third-party model execution.
 
-        :param model_script: The filename (with .py extension) of the Python script which contains commands to
-         execute the model.
-
-         The named file must be present in the current working directory from which :class:`.RunModel` is called.
-        :param model_object_name: In the Python workflow, `model_object_name` specifies the name of the function or
-         class within `model_script' that executes the model. If there is only one function or class in the
-         `model_script`, then it is not necessary to specify the model_object_name. If there are multiple objects within
-         the `model_script`, then `model_object_name` must be specified.
-
-         `model_object_name` is not used in the third-party software model workflow.
-
-        :param input_template: The name of the template input file that will be used to generate input files for
-         each run of the model. When operating :class:`.RunModel` with a third-party software model, ``input_template`` must
-         be specified.
-
-         The named file must be present in the current working directory from which :class:`.RunModel` is called.
-
-         `input_template` is not used in the Python model workflow.
-
-        :param var_names: A list containing the names of the variables present in `input_template`.
-
-         If `input template` is provided and  `var_names` is not passed, i.e. if ``var_names=None``, then the default
-         variable names `x0`, `x1`, `x2`,..., `xn` are created and used by :class:`.RunModel`, where `n` is the number of
-         variables (`n_vars`).
-
-         The number of variables is equal to the second dimension of `samples` (i.e. ``n_vars=len(samples[0])``).
-
-         `var_names` is not used in the Python model workflow.
-
-        :param output_script: The filename of the Python script that contains the commands to process the output from
-         third-party software model evaluation. `output_script` is used to extract quantities of interest from model
-         output files and return the quantities of interest to :class:`.RunModel` for subsequent :py:mod:`UQpy` processing (e.g. for
-         adaptive methods that utilize the results of previous simulations to initialize new simulations).
-
-         If, in the third-party software model workflow, ``output_script = None`` (the default), then the
-         :py:attr:`qoi_list` attribute is empty and postprocessing must be handled outside of :py:mod:`UQpy`.
-
-         If used, the named file must be present in the current working directory from which :class:`.RunModel` is called.
-
-         `output_script` is not used in the Python model workflow. In the Python model workflow, all model postprocessing
-         is handled directly within `model_script`.
-
-        :param output_object_name: The name of the function or class within `output_script` that is used to collect
-         and process the output values from third-party software model output files. If the object is a class, the
-         output must be saved as an attribute called :py:attr:`qoi`. If it is a function, it should return the output
-         quantity of interest.
-
-         If there is only one function or only one class in `output_script`, then it is not necessary to specify
-         `output_object_name`. If there are multiple objects in `output_script`, then output_object_name must be
-         specified.
-
-         `output_object_name` is not used in the Python model workflow.
-
         :param ntasks: Number of tasks to be run in parallel. By default, ``ntasks = 1`` and the models are executed
          serially.
 
@@ -133,67 +80,6 @@ class RunModel:
         :param nodes: Number of nodes across which to distribute individual tasks on an HPC cluster in the third-party
          model workflow. If more than one compute node is necessary to execute individual runs in parallel, `nodes` must
          be specified.
-
-         `nodes` is not used in the Python model workflow.
-
-        :param cluster: Set ``cluster = True`` to run on an HPC cluster.
-
-         :class:`.RunModel` currently supports computations on HPC clusters using the SLURM scheduler
-         (https://slurm.schedmd.com). The set of model evaulations is submitted using the GNU `parallel` command with
-         option `-j ntasks`. Individual model evaluations are submitted using the `srun` command with options `-N nodes`
-         and `-c cores_per_node`.
-
-         When ``cluster = False``, the `srun` command is not used, but the `parallel` command still is.
-
-         `cluster` is not used for the Python model workflow.
-
-        :param resume: If ``resume = True``, `GNU parallel` enables :py:mod:`UQpy` to resume execution of any model
-         evaluations that failed to execute in the third-party software model workflow.
-
-         To use this feature, execute the same call to :class:`.RunModel` that failed to complete but with ``resume = True``.
-         The same set of samples must be passed to resume processing from the last successful execution of the model.
-
-         `resume` is not used in the Python model workflow.
-
-        :param model_dir: Specifies the name of the sub-directory from which the model will be executed and to which
-         output files will be saved.  A new directory is created by :class:`.RunModel` within the current directory whose name
-         is `model_dir` appended with a timestamp.
-
-        :param fmt: If the `template_input` requires variables to be written in specific format, this format can be
-         specified here.
-
-         Format specification follows standard Python conventions for the str.format() command described at:
-         https://docs.python.org/3/library/stdtypes.html#str.format. For additional details, see the Format String Syntax
-         description at: https://docs.python.org/3/library/string.html#formatstrings.
-
-         For example, ls-dyna .k files require each card is to be exactly 10 characters. The following format string
-         syntax can be used, "{:>10.4f}".
-
-         `fmt` is not used in the Python model workflow.
-
-        :param separator: A string used to delimit values when printing arrays to the `template_input`.
-
-         `separator` is not used in the Python model workflow.
-
-        :param vec: Specifies vectorized (``vec = True``) or looped (``vec = False``) model evaluation in the
-         serial Python model workflow.
-
-         In the Python model workflow, `model_script` may be written to accept a single sample or multiple samples at a
-         time. If it is written to accept a single sample, set ``vec = False`` and :class:`.RunModel` will run the model in a
-         loop over the number of samples. If `model_script` is written to accept multiple samples, set ``vec = True``
-         and :class:`.RunModel` will pass all of the samples to the model for vectorized computation.
-
-         `vec` is not used in the third-party model workflow.
-
-        :param delete_files: Specifies whether or not to delete individual run output files after model execution
-         and output processing.
-
-         If `delete_files = True`, :class:`.RunModel` will remove all `run_i...` directories in the `model_dir`.
-
-        :param kwargs: Additional inputs to the Python object specified by `model_object_name` in the Python model workflow.
-
-         `**kwargs` is not used in the third-party model workflow.
-
         """
         self.logger = logging.getLogger(__name__)
         self.model = model

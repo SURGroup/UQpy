@@ -13,9 +13,72 @@ import numpy as np
 
 class ThirdPartyModel:
 
-    def __init__(self, var_names, input_template, model_script, model_object_name,
-                 output_script, output_object_name, fmt=None, separator=', ', delete_files=False,
-                 model_dir: str = "Model_Runs"):
+    def __init__(self, var_names: list[str], input_template: str, model_script: str, model_object_name: str,
+                 output_script: str, output_object_name: str, fmt: str = None, separator: str = ', ',
+                 delete_files: bool = False, model_dir: str = "Model_Runs"):
+        """
+
+        :param var_names: A list containing the names of the variables present in `input_template`.
+
+         If `input template` is provided and  `var_names` is not passed, i.e. if ``var_names=None``, then the default
+         variable names `x0`, `x1`, `x2`,..., `xn` are created and used by :class:`.RunModel`, where `n` is the number of
+         variables (`n_vars`).
+
+         The number of variables is equal to the second dimension of `samples` (i.e. ``n_vars=len(samples[0])``).
+
+         `var_names` is not used in the Python model workflow.
+        :param input_template: The name of the template input file that will be used to generate input files for
+         each run of the model. When operating :class:`.RunModel` with a third-party software model, ``input_template`` must
+         be specified.
+
+         The named file must be present in the current working directory from which :class:`.RunModel` is called.
+        :param model_script: The filename (with .py extension) of the Python script which contains commands to
+         execute the model.
+
+         The named file must be present in the current working directory from which :class:`.RunModel` is called.
+        :param model_object_name: In the Python workflow, `model_object_name` specifies the name of the function or
+         class within `model_script' that executes the model. If there is only one function or class in the
+         `model_script`, then it is not necessary to specify the model_object_name. If there are multiple objects within
+         the `model_script`, then `model_object_name` must be specified.
+        :param output_script: The filename of the Python script that contains the commands to process the output from
+         third-party software model evaluation. `output_script` is used to extract quantities of interest from model
+         output files and return the quantities of interest to :class:`.RunModel` for subsequent :py:mod:`UQpy` processing (e.g. for
+         adaptive methods that utilize the results of previous simulations to initialize new simulations).
+
+         If, in the third-party software model workflow, ``output_script = None`` (the default), then the
+         :py:attr:`qoi_list` attribute is empty and postprocessing must be handled outside of :py:mod:`UQpy`.
+
+         If used, the named file must be present in the current working directory from which :class:`.RunModel` is called.
+
+         `output_script` is not used in the Python model workflow. In the Python model workflow, all model postprocessing
+         is handled directly within `model_script`.
+        :param output_object_name: The name of the function or class within `output_script` that is used to collect
+         and process the output values from third-party software model output files. If the object is a class, the
+         output must be saved as an attribute called :py:attr:`qoi`. If it is a function, it should return the output
+         quantity of interest.
+
+         If there is only one function or only one class in `output_script`, then it is not necessary to specify
+         `output_object_name`. If there are multiple objects in `output_script`, then output_object_name must be
+         specified.
+        :param fmt: If the `template_input` requires variables to be written in specific format, this format can be
+         specified here.
+
+         Format specification follows standard Python conventions for the str.format() command described at:
+         https://docs.python.org/3/library/stdtypes.html#str.format. For additional details, see the Format String Syntax
+         description at: https://docs.python.org/3/library/string.html#formatstrings.
+
+         For example, ls-dyna .k files require each card is to be exactly 10 characters. The following format string
+         syntax can be used, "{:>10.4f}".
+
+        :param separator: A string used to delimit values when printing arrays to the `template_input`.
+        :param delete_files: Specifies whether or not to delete individual run output files after model execution
+         and output processing.
+
+         If `delete_files = True`, :class:`.RunModel` will remove all `run_i...` directories in the `model_dir`.
+        :param model_dir: Specifies the name of the sub-directory from which the model will be executed and to which
+         output files will be saved.  A new directory is created by :class:`.RunModel` within the current directory whose name
+         is `model_dir` appended with a timestamp.
+        """
         self.template_text = None
         self.logger = logging.getLogger(__name__)
 
@@ -142,7 +205,6 @@ class ThirdPartyModel:
         parent_dir = os.path.dirname(self.model_dir)
         os.chdir(parent_dir)
 
-
     def preprocess_single_sample(self, i, sample):
         work_dir = os.path.join(self.model_dir, "run_" + str(i))
         self._copy_files(work_dir=work_dir)
@@ -174,8 +236,6 @@ class ThirdPartyModel:
         self.logger.info("\nUQpy: Returning to the model directory:\n" + self.model_dir)
         return output
 
-
-
     def _input_serial(self, index, sample):
         """
         Create one input file using the template and attach the index to the filename
@@ -187,7 +247,8 @@ class ThirdPartyModel:
         """
         self.new_text = self._find_and_replace_var_names_with_values(sample=sample)
         # Write the new text to the input file
-        self._create_input_files(file_name=self.input_template, num=index, text=self.new_text, new_folder="InputFiles",)
+        self._create_input_files(file_name=self.input_template, num=index, text=self.new_text,
+                                 new_folder="InputFiles", )
 
     def _create_input_files(self, file_name, num, text, new_folder="InputFiles"):
         """

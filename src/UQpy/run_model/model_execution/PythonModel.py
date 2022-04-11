@@ -12,6 +12,34 @@ class PythonModel:
     @beartype
     def __init__(self, model_script: str, model_object_name: str, var_names: list[str] = None,
                  delete_files: bool = False, **model_object_name_kwargs):
+        """
+
+        :param model_script: The filename (with .py extension) of the Python script which contains commands to
+         execute the model.
+
+         The named file must be present in the current working directory from which :class:`.RunModel` is called.
+        :param model_object_name: In the Python workflow, `model_object_name` specifies the name of the function or
+         class within `model_script' that executes the model. If there is only one function or class in the
+         `model_script`, then it is not necessary to specify the model_object_name. If there are multiple objects within
+         the `model_script`, then `model_object_name` must be specified.
+
+         `model_object_name` is not used in the third-party software model workflow.
+        :param var_names: A list containing the names of the variables present in `input_template`.
+
+         If `input template` is provided and  `var_names` is not passed, i.e. if ``var_names=None``, then the default
+         variable names `x0`, `x1`, `x2`,..., `xn` are created and used by :class:`.RunModel`, where `n` is the number of
+         variables (`n_vars`).
+
+         The number of variables is equal to the second dimension of `samples` (i.e. ``n_vars=len(samples[0])``).
+
+         `var_names` is not used in the Python model workflow.
+        :param delete_files: Specifies whether or not to delete individual run output files after model execution
+         and output processing.
+
+         If `delete_files = True`, :class:`.RunModel` will remove all `run_i...` directories in the `model_dir`.
+        :param model_object_name_kwargs: Additional inputs to the Python object specified by `model_object_name` in the
+         Python model workflow.
+        """
         if var_names is None:
             var_names = []
         self.var_names = var_names

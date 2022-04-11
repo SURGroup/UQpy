@@ -399,12 +399,25 @@ The other necessary files are the following:
 Note that this example is not intended to represent the accurate pushover analysis a real structure. It is for
 :py:mod:`UQpy` illustration purposes only.
 
+PythonModel Class
+-------------------
+
+.. autoclass:: UQpy.run_model.model_execution.PythonModel
+	:members:
+
+ThirdPartyModel Class
+-----------------------
+
+.. autoclass:: UQpy.run_model.model_execution.ThirdPartyModel
+	:members:
 
 RunModel Class
 --------------
 
 .. autoclass:: UQpy.run_model.RunModel
 	:members:
+
+
 
 Examples
 ---------
