@@ -6,7 +6,7 @@ sphinx:
 build:
   os: ubuntu-20.04
   tools:
-    python: mambaforge-4.12
+    python: "3.9"
 python:
   install:
     - requirements: docs/requirements.txt
