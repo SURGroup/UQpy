@@ -34,14 +34,14 @@ release = "v4.0.0"
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.napoleon",
-    "sphinx.ext.doctest",
+    # "sphinx.ext.napoleon",
+    # "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
-    "sphinx.ext.coverage",
+    # "sphinx.ext.coverage",
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
-    "sphinx.ext.githubpages",
-    "sphinx.ext.autosummary",
+    # "sphinx.ext.githubpages",
+    # "sphinx.ext.autosummary",
     # "sphinx.ext.autosectionlabel",
     "sphinx_autodoc_typehints",
     "sphinxcontrib.bibtex",
@@ -212,37 +212,37 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
-latex_documents = [
-    (master_doc, "uqpy.tex", "UQpy Documentation", "Michael D. Shields", "manual"),
-]
+# latex_documents = [
+#     (master_doc, "uqpy.tex", "UQpy Documentation", "Michael D. Shields", "manual"),
+# ]
 
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "uqpy", "UQpy Documentation", [author], 1)]
+# man_pages = [(master_doc, "uqpy", "UQpy Documentation", [author], 1)]
 
 # -- Options for Texinfo output ----------------------------------------------
 
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
-texinfo_documents = [
-    (
-        master_doc,
-        "uqpy",
-        "UQpy Documentation",
-        author,
-        "uqpy",
-        "One line description of project.",
-        "Miscellaneous",
-    ),
-]
+# texinfo_documents = [
+#     (
+#         master_doc,
+#         "uqpy",
+#         "UQpy Documentation",
+#         author,
+#         "uqpy",
+#         "One line description of project.",
+#         "Miscellaneous",
+#     ),
+# ]
 
 # -- Options for Epub output -------------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = project
+# epub_title = project
 
 # The unique identifier of the text. This can be a ISBN number
 # or the project homepage.
