@@ -1,0 +1,24 @@
+from enum import Enum
+
+
+class DistanceMetric(Enum):
+    BRAYCURTIS = 1
+    CANBERRA = 2
+    CHEBYSHEV = 3
+    CITYBLOCK = 4
+    CORRELATION = 5
+    COSINE = 6
+    DICE = 7
+    EUCLIDEAN = 8
+    HAMMING = 9
+    JACCARD = 10
+    KULSINKSI = 11
+    MAHALANOBIS = 12
+    MATCHING = 13
+    MINKOWSKI = 14
+    ROGERSTANIMOTO = 15
+    RUSSELLRAO = 16
+    SEUCLIDEAN = 17
+    SOKALMICHENER = 18
+    SOKALSNEATH = 19
+    SQEUCLIDEAN = 20

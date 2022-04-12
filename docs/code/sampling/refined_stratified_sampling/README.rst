@@ -1,0 +1,2 @@
+Refined Stratified Sampling Examples
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
