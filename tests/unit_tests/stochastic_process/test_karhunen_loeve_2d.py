@@ -18,7 +18,8 @@ samples = KLE_Object.samples
 
 
 def test_samples_shape():
-    assert samples.shape == (n_samples, 1, len(t), len(x))
+    assert samples.shape == (n_samples, 1, len(x), len(t))
 
-# def test_samples_values():
-#     assert np.isclose(samples[27, 0, 246], 0.22392952712490516, rtol=0.01)
+def test_samples_values():
+    print(samples[13, 0, 13, 6])
+    assert np.isclose(samples[13, 0, 13, 6], 0.22392952712490516, rtol=0.01)
