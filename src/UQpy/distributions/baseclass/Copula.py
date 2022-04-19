@@ -2,7 +2,7 @@ from UQpy.distributions.baseclass.DistributionContinuous1D import (
     DistributionContinuous1D,
 )
 from abc import ABC
-
+from typing import Union
 
 class Copula(ABC):
 
@@ -44,7 +44,7 @@ class Copula(ABC):
             self.parameters[key] = kwargs[key]
 
     @staticmethod
-    def check_marginals(marginals: list[DistributionContinuous1D]):
+    def check_marginals(marginals: Union[list, DistributionContinuous1D]):
         """
         Perform some checks on the marginals, raise errors if necessary.
 
