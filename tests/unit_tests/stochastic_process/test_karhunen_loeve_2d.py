@@ -1,7 +1,7 @@
 from UQpy.stochastic_process import KarhunenLoeveExpansionTwoDimension
 import numpy as np
 
-n_samples = 10000  # Num of samples
+n_samples = 100  # Num of samples
 nx, nt = 20, 10
 dx, dt = 0.05, 0.1
 
