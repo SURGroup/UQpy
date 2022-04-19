@@ -191,6 +191,8 @@ class KarhunenLoeveExpansionTwoDimension:
             assert (random_variables.shape == (self.thresholds[1], self.thresholds[0], nsamples))
         for i in range(self.one_dimensional_correlation_function.shape[0]):
             if self.thresholds is not None:
+                print(self.w.shape)
+                print(self.v.shape)
                 samples += np.einsum('x, xt, nx -> nxt', np.sqrt(self.w[:, i]), self.v[:, :, i],
                                      KarhunenLoeveExpansion(n_samples=nsamples,
                                                             correlation_function=
