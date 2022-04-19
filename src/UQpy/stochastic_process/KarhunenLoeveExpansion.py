@@ -184,7 +184,7 @@ class KarhunenLoeveExpansionTwoDimension:
         The :meth:`run` method has no returns, although it creates and/or appends the :py:attr:`samples` attribute of
         the :class:`KarhunenLoeveExpansion` class.
         """
-        samples = np.zeros((nsamples, self.correlation_function.shape[0], self.correlation_function.shape[1]))
+        samples = np.zeros((nsamples, self.correlation_function.shape[0], self.correlation_function.shape[2]))
         if random_variables is None:
             random_variables = np.random.normal(size=[self.thresholds[1], self.thresholds[0], nsamples])
         else:
