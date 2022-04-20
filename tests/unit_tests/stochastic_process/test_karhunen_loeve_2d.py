@@ -22,5 +22,4 @@ def test_samples_shape():
 
 
 def test_samples_values():
-    print(samples[13, 0, 13, 6])
     assert np.isclose(samples[13, 0, 13, 6], -1.4385717324103362, rtol=0.01)

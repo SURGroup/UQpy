@@ -1,5 +1,4 @@
 from scipy.linalg import sqrtm
-import numpy as np
 from UQpy.utilities import *
 
 
@@ -24,10 +23,10 @@ class KarhunenLoeveExpansion:
          provided, then the :class:`.KarhunenLoeveExpansion` object is created but samples are not generated.
         :param correlation_function: The correlation function of the stochastic process of size
          :code:`(n_time_intervals, n_time_intervals)`
-        :param time_interval: The length of time discretization.
+        :param time_interval: The length of time interval.
         :param threshold: The threshold number of eigenvalues to be used in the expansion.
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.
-
+        :param random_variables: The random variables used to generate the stochastic process. Default is :any:`None`.
         """
         self.correlation_function = correlation_function
         self.time_interval = time_interval
@@ -112,7 +111,7 @@ class KarhunenLoeveExpansionTwoDimension:
             self,
             n_samples: int,
             correlation_function: np.ndarray,
-            time_interval: Union[np.ndarray, float],
+            time_intervals: Union[np.ndarray, float],
             thresholds: Union[list, int] = None,
             random_state: RandomStateType = None,
             random_variables=None
@@ -126,7 +125,7 @@ class KarhunenLoeveExpansionTwoDimension:
          provided, then the :class:`.KarhunenLoeveExpansionTwoDimension` object is created but samples are not generated.
         :param correlation_function: The correlation function of the stochastic process of size
          :code:`(n_time_intervals_dim1, n_time_intervals_dim1, n_time_intervals_dim2, n_time_intervals_dim2)`
-        :param time_interval: The length of time discretizations.
+        :param time_intervals: The length of time discretizations.
         :param thresholds: The threshold number of eigenvalues to be used in the expansion for two dimensions.
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.
         :param random_variables: The random variables used to generate the stochastic field.
@@ -135,7 +134,7 @@ class KarhunenLoeveExpansionTwoDimension:
         self.n_samples = n_samples
         self.correlation_function = correlation_function
         assert (len(self.correlation_function.shape) == 4)
-        self.time_interval = time_interval
+        self.time_intervals = time_intervals
         self.thresholds = thresholds
         self.random_state = random_state
 
@@ -150,7 +149,7 @@ class KarhunenLoeveExpansionTwoDimension:
         self._precompute_one_dimensional_correlation_function()
 
         if self.n_samples is not None:
-            self.run(nsamples=self.n_samples, random_variables=random_variables)
+            self.run(n_samples=self.n_samples, random_variables=random_variables)
 
     def _precompute_one_dimensional_correlation_function(self):
         self.quasi_correlation_function = np.diagonal(self.correlation_function, axis1=0, axis2=1)
@@ -167,51 +166,52 @@ class KarhunenLoeveExpansionTwoDimension:
                                                               self.correlation_function, self.v, self.v,
                                                               1 / np.sqrt(self.w), 1 / np.sqrt(self.w))
 
-    def run(self, nsamples, random_variables=None):
+    def run(self, n_samples, random_variables=None):
         """
         Execute the random sampling in the :class:`.KarhunenLoeveExpansion` class.
 
-        The :meth:`run` method is the function that performs random sampling in the :class:`.KarhunenLoeveExpansion`
-        class. If `n_samples` is provided when the :class:`.KarhunenLoeveExpansion` object is defined, the
-        :meth:`run` method is automatically called. The user may also call the :meth:`run` method directly to generate
-        samples. The :meth:`run`` method of the :class:`.KarhunenLoeveExpansion` class can be invoked many times and
-        each time the generated samples are appended to the existing samples.
+        The :meth:`run` method is the function that performs random sampling in the :class:
+        `.KarhunenLoeveExpansionTwoDimension` class. If `n_samples` is provided when the :class:
+        `.KarhunenLoeveExpansionTwoDimension` object is defined, the :meth:`run` method is automatically called. The
+        user may also call the :meth:`run` method directly to generate samples. The :meth:`run`` method of the :class:
+        `.KarhunenLoeveExpansionTwoDimension` class can be invoked many times and each time the generated samples are
+        appended to the existing samples.
 
         :param n_samples: Number of samples of the stochastic process to be simulated.
          If the :meth:`run` method is invoked multiple times, the newly generated samples will be appended to the
          existing samples.
 
         The :meth:`run` method has no returns, although it creates and/or appends the :py:attr:`samples` attribute of
-        the :class:`KarhunenLoeveExpansion` class.
+        the :class:`KarhunenLoeveExpansionTwoDimension` class.
         """
-        samples = np.zeros((nsamples, self.correlation_function.shape[0], self.correlation_function.shape[2]))
+        samples = np.zeros((n_samples, self.correlation_function.shape[0], self.correlation_function.shape[2]))
         if random_variables is None:
-            random_variables = np.random.normal(size=[self.thresholds[1], self.thresholds[0], nsamples])
+            random_variables = np.random.normal(size=[self.thresholds[1], self.thresholds[0], n_samples])
         else:
-            assert (random_variables.shape == (self.thresholds[1], self.thresholds[0], nsamples))
+            assert (random_variables.shape == (self.thresholds[1], self.thresholds[0], n_samples))
         for i in range(self.one_dimensional_correlation_function.shape[0]):
             if self.thresholds is not None:
                 print(self.w.shape)
                 print(self.v.shape)
                 samples += np.einsum('x, xt, nx -> nxt', np.sqrt(self.w[:, i]), self.v[:, :, i],
-                                     KarhunenLoeveExpansion(n_samples=nsamples,
+                                     KarhunenLoeveExpansion(n_samples=n_samples,
                                                             correlation_function=
                                                             self.one_dimensional_correlation_function[i],
-                                                            time_interval=self.time_interval,
+                                                            time_interval=self.time_intervals,
                                                             threshold=self.thresholds[0],
                                                             random_variables=random_variables[i]).samples[:, 0, :])
             else:
                 samples += np.einsum('x, xt, nx -> nxt', np.sqrt(self.w[:, i]), self.v[:, :, i],
-                                     KarhunenLoeveExpansion(n_samples=nsamples,
+                                     KarhunenLoeveExpansion(n_samples=n_samples,
                                                             correlation_function=
                                                             self.one_dimensional_correlation_function[i],
-                                                            time_interval=self.time_interval,
+                                                            time_interval=self.time_intervals,
                                                             random_variables=random_variables[i]).samples[:, 0, :])
         samples = np.reshape(samples, [samples.shape[0], 1, samples.shape[1], samples.shape[2]])
 
         if self.samples is None:
             self.samples = samples
-            self.xi = random_variables
+            self.random_variables = random_variables
         else:
             self.samples = np.concatenate((self.samples, samples), axis=0)
-            self.xi = np.concatenate((self.xi, random_variables), axis=2)
+            self.random_variables = np.concatenate((self.random_variables, random_variables), axis=2)
