@@ -13,7 +13,7 @@ R = np.exp(-(xt_list[0] - xt_list[1]) ** 2 - (xt_list[2] - xt_list[3]) ** 2)
 # R(x_1, x_2, t_1, t_2) = exp(-(x_1 - x_2) ** 2 -(t_1 - t_2) ** 2)
 
 KLE_Object = KarhunenLoeveExpansionTwoDimension(n_samples=n_samples, correlation_function=R,
-                                                time_interval=np.array([dt, dx]), thresholds=[4, 5], random_state=128)
+                                                time_intervals=np.array([dt, dx]), thresholds=[4, 5], random_state=128)
 samples = KLE_Object.samples
 
 
