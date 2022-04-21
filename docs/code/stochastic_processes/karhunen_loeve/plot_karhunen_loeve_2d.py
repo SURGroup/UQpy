@@ -63,9 +63,9 @@ samples = KLE_Object.samples
 
 fig = plt.figure()
 plt.title('Realisation of the Karhunen Loeve Expansion for a 2D stochastic field')
-plt.plot(samples[0, 0])
-plt.xlabel('t (Time)')
-plt.ylabel('x (Space)')
+plt.imshow(samples[0, 0])
+plt.ylabel('t (Time)')
+plt.xlabel('x (Space)')
 plt.show()
 
 print('The mean of the samples is ', np.mean(samples), 'whereas the expected mean is 0.000')
