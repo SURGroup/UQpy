@@ -28,4 +28,5 @@ def test_samples_values():
 def test_run_method():
     nsamples_second_run = 100
     KLE_Object.run(n_samples=nsamples_second_run)
+    samples = KLE_Object.samples
     assert samples.shape == (n_samples + nsamples_second_run, 1, len(x), len(t))
