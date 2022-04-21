@@ -23,7 +23,7 @@ class KarhunenLoeveExpansion2D:
 
         :param n_samples: Number of samples of the stochastic field to be simulated.
          The :meth:`run` method is automatically called if `n_samples` is provided. If `n_samples` is not
-         provided, then the :class:`.KarhunenLoeveExpansionTwoDimension` object is created but samples are not generated.
+         provided, then the :class:`.KarhunenLoeveExpansion2D` object is created but samples are not generated.
         :param correlation_function: The correlation function of the stochastic process of size
          :code:`(n_time_intervals_dim1, n_time_intervals_dim1, n_time_intervals_dim2, n_time_intervals_dim2)`
         :param time_intervals: The length of time discretizations.
@@ -45,6 +45,7 @@ class KarhunenLoeveExpansion2D:
             raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
 
         self.samples = None
+        """Array of generated samples."""
         self.random_variables = random_variables
 
         self._precompute_one_dimensional_correlation_function()
@@ -71,19 +72,18 @@ class KarhunenLoeveExpansion2D:
         """
         Execute the random sampling in the :class:`.KarhunenLoeveExpansion` class.
 
-        The :meth:`run` method is the function that performs random sampling in the :class:
-        `.KarhunenLoeveExpansionTwoDimension` class. If `n_samples` is provided when the :class:
-        `.KarhunenLoeveExpansionTwoDimension` object is defined, the :meth:`run` method is automatically called. The
-        user may also call the :meth:`run` method directly to generate samples. The :meth:`run`` method of the :class:
-        `.KarhunenLoeveExpansionTwoDimension` class can be invoked many times and each time the generated samples are
-        appended to the existing samples.
+        The :meth:`run` method is the function that performs random sampling in the :class:`.KarhunenLoeveExpansion2D`
+        class. If `n_samples` is provided when the :class:`.KarhunenLoeveExpansion2D` object is defined, the :meth:`run`
+        method is automatically called. The user may also call the :meth:`run` method directly to generate samples.
+        The :meth:`run`` method of the :class:`.KarhunenLoeveExpansion2D` class can be invoked many times and each time
+        the generated samples areappended to the existing samples.
 
         :param n_samples: Number of samples of the stochastic process to be simulated.
          If the :meth:`run` method is invoked multiple times, the newly generated samples will be appended to the
          existing samples.
 
         The :meth:`run` method has no returns, although it creates and/or appends the :py:attr:`samples` attribute of
-        the :class:`KarhunenLoeveExpansionTwoDimension` class.
+        the :class:`KarhunenLoeveExpansion2D` class.
         """
         samples = np.zeros((n_samples, self.correlation_function.shape[0], self.correlation_function.shape[2]))
         if random_variables is None:
