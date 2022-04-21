@@ -23,3 +23,9 @@ def test_samples_shape():
 
 def test_samples_values():
     assert np.isclose(samples[13, 0, 13, 6], -1.4385717324103362, rtol=0.01)
+
+
+def test_run_method():
+    nsamples_second_run = 100
+    KLE_Object.run(n_samples=nsamples_second_run)
+    assert samples.shape == (n_samples + nsamples_second_run, 1, len(x), len(t))

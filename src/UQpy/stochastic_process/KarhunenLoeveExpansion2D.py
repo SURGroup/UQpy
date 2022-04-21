@@ -112,7 +112,7 @@ class KarhunenLoeveExpansion2D:
 
         if self.samples is None:
             self.samples = samples
-            self.random_variables = random_variables
+            self.xi = random_variables
         else:
             self.samples = np.concatenate((self.samples, samples), axis=0)
-            self.random_variables = np.concatenate((self.random_variables, random_variables), axis=2)
+            self.xi = np.concatenate((self.xi, random_variables), axis=2)
