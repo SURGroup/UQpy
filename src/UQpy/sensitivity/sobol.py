@@ -69,65 +69,16 @@ class Sobol(Sensitivity):
     For time-series models, the sensitivity indices are computed for each
     time instant separately. (Pointwise-in-time Sobol indices)
 
-    **Inputs:**
+    :param runmodel_object: The computational model. It should be of type :class:`.RunModel`. \
+        The output QoI can be a scalar or vector of length :code:`ny`, then the sensitivity \
+        indices of all :code:`ny` outputs are computed independently.
 
-    * **runmodel_object** (``RunModel`` object):
-        The computational model. It should be of type
-        ``RunModel`` (see ``RunModel`` class).
-        The output QoI can be a scalar or vector of
-        length `ny`, then the sensitivity indices of
-        all `ny` outputs are computed independently.
-
-    * **dist_object** ((list of) ``Distribution`` object(s)):
-        List of ``Distribution`` objects corresponding
-        to each random variable, or ``JointInd`` object
+    :param distributions: List of :class:`.Distribution` objects corresponding to each \
+        random variable, or :class:`.JointIndependent` object \
         (multivariate RV with independent marginals).
 
-    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the
-        pseudo-random number generator.
-        Default is None.
-
-    **Attributes:**
-
-    * **sobol_i** (`ndarray`):
-        First order sensitivity indices.
-        Shape: `(num_vars, n_outputs)`
-
-    * **sobol_total_i** (`ndarray`):
-        Total order sensitivity indices.
-        Shape: `(num_vars, n_outputs)`
-
-    * **sobol_ij** (`ndarray`):
-        Second order sensitivity indices.
-        Shape: `(num_second_order_terms, n_outputs)`
-
-    * **CI_sobol_i** (`ndarray`):
-        Confidence intervals for the first order sensitivity indices.
-        Shape: `(num_vars, 2)`
-
-        if multioutput: Shape: `(n_outputs, num_vars, 2)`
-
-    * **CI_sobol_total_i** (`ndarray`):
-        Confidence intervals for the total order sensitivity indices.
-        Shape: `(num_vars, 2)`
-
-        if multioutput: Shape: `(n_outputs, num_vars, 2)`
-
-    * **CI_sobol_ij** (`ndarray`):
-        Confidence intervals for the second order Sobol indices.
-        Shape: `(num_second_order_terms, 2)`
-
-        if multioutput: Shape: `(n_outputs, num_second_order_terms, 2)`
-
-    * **n_samples** (`int`):
-        Number of samples used to compute the sensitivity indices.
-
-    * **num_vars** (`int`):
-        Number of model input variables.
-
-    * **multioutput** (`bool`):
-        True if the model has multiple outputs.
+    :param random_state: Random seed used to initialize the pseudo-random number \
+        generator. Default is :any:`None`.
 
     **Methods:**
     """
@@ -150,6 +101,33 @@ class Sobol(Sensitivity):
         # add the handler to the logger
         self.logger.addHandler(ch)
 
+        self.sobol_i = None
+        "First order Sobol indices, :class:`numpy.ndarray` of shape `(num_vars, n_outputs)`"
+
+        self.sobol_total_i = None
+        "Total order Sobol indices, :class:`numpy.ndarray` of shape `(num_vars, n_outputs)`"
+
+        self.sobol_ij = None
+        "Second order Sobol indices, :class:`numpy.ndarray` of shape `(num_second_order_terms, n_outputs)`"
+
+        self.CI_sobol_i = None
+        "Confidence intervals for the first order Sobol indices, :class:`numpy.ndarray` of shape `(num_vars, 2)`"
+
+        self.CI_sobol_total_i = None
+        "Confidence intervals for the total order Sobol indices, :class:`numpy.ndarray` of shape `(num_vars, 2)`"
+
+        self.CI_sobol_ij = None
+        "Confidence intervals for the second order Sobol indices, :class:`numpy.ndarray` of shape `(num_second_order_terms, 2)`"
+
+        self.n_samples = None
+        "Number of samples used to compute the sensitivity indices, :class:`int`"
+
+        self.num_vars = None
+        "Number of model input variables, :class:`int`"
+
+        self.multioutput = None
+        "True if the model has multiple outputs, :class:`bool`"
+
     def run(
         self,
         n_samples=1_000,
@@ -164,71 +142,37 @@ class Sobol(Sensitivity):
         """
         Compute the sensitivity indices and confidence intervals.
 
-        **Inputs:**
-
-        * **n_samples** (`int`):
-            Number of samples used to compute the sensitivity indices.
+        :param n_samples: Number of samples used to compute the sensitivity indices. \
             Default is 1,000.
 
-        * **num_boostrap_samples** (`int`):
-            Number of bootstrap samples used to compute
-            the confidence intervals.
-            Default is None.
+        :param num_bootstrap_samples: Number of bootstrap samples used to compute the \
+            confidence intervals. Default is :any:`None`.
 
-        * **confidence_interval** (`float`):
-            Confidence interval used to compute the confidence intervals.
-            Default is 0.95.
+        :param confidence_interval: Confidence level used to compute the confidence \
+            intervals. Default is 0.95.
 
-        * **estimate_second_order** (`bool`):
-            If True, compute the second order sensitivity indices.
-            Default is False.
+        :param estimate_second_order: If True, the second order Sobol indices are \
+            estimated. Default is False.
 
-        * **first_order_scheme** (`str`):
-            Scheme used to compute the first order Sobol indices.
-            Default is "Sobol1993".
+        :param first_order_scheme: Scheme used to compute the first order Sobol \
+            indices. Default is "Janon2014".
 
-        * **total_order_scheme** (`str`):
-            Scheme used to compute the total order Sobol indices.
-            Default is "Homma1996".
+        :param total_order_scheme: Scheme used to compute the total order Sobol \
+            indices. Default is "Homma1996".
 
-        * **second_order_scheme** (`str`):
-            Scheme used to compute the second order Sobol indices.
-            Default is "Saltelli2002".
+        :param second_order_scheme: Scheme used to compute the second order \
+            Sobol indices. Default is "Saltelli2002".
 
-        **Outputs:**
-
-        * **computed_indices** (`dict`):
-        Dictionary containing the computed sensitivity indices.
-
-        * **sobol_i** (`ndarray`):
-            First order Sobol indices.
-            Shape: `(num_vars, n_outputs)`
-
-        * **sobol_total_i** (`ndarray`):
-            Total order Sobol indices.
-            Shape: `(num_vars, n_outputs)`
-
-        * **sobol_ij** (`ndarray`):
-            Second order Sobol indices.
-            Shape: `(num_second_order_terms, n_outputs)`
-
-        * **CI_sobol_i** (`ndarray`):
-            Confidence intervals for the first order Sobol indices.
-            Shape: `(num_vars, 2)`
-
-            if multioutput: Shape: `(n_outputs, num_vars, 2)`
-
-        * **CI_sobol_total_i** (`ndarray`):
-            Confidence intervals for the total order Sobol indices.
-            Shape: `(num_vars, 2)`
-
-            if multioutput: Shape: `(n_outputs, num_vars, 2)`
-
-        * **CI_sobol_ij** (`ndarray`):
-            Confidence intervals for the second order Sobol indices.
-            Shape: `(num_second_order_terms, 2)`
-
-            if multioutput: Shape: `(n_outputs, num_second_order_terms, 2)`
+        :return: A :class:`dict` with the following keys: \
+            :code:`sobol_i` of shape :code:`(num_vars, 1)`, \
+            :code:`sobol_total_i` of shape :code:`(num_vars, 1)`, \
+            :code:`sobol_ij` of shape :code:`(num_second_order_terms, 1)`, \
+            :code:`CI_sobol_i` of shape :code:`(num_vars, 2)`, \
+            if multioutput: Shape: `(n_outputs, num_vars, 2)`, \
+            :code:`CI_sobol_total_i` of shape :code:`(num_vars, 2)`, \
+            if multioutput: Shape: `(n_outputs, num_vars, 2)`, \
+            :code:`CI_sobol_ij` of shape :code:`(num_second_order_terms, 2)`
+            if multioutput: Shape: `(n_outputs, num_second_order_terms, 2)`, \
 
         """
         # Check n_samples data type
