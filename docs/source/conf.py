@@ -51,14 +51,14 @@ extensions = [
 # nbsphinx_custom_formats={
 #     ".md": ["jupytext.reads", {"fmt": "mystnb"}]
 # }
-autoclass_content = 'init'
+autoclass_content = "init"
 add_module_names = False
-autodoc_member_order = 'bysource'
+autodoc_member_order = "bysource"
 napoleon_use_param = True
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
-bibtex_bibfiles = ['bibliography.bib']
-bibtex_default_style = 'unsrt'
+bibtex_bibfiles = ["bibliography.bib"]
+bibtex_default_style = "unsrt"
 
 # Try to remove duplicate labels
 autosectionlabel_prefix_document = True
@@ -69,83 +69,89 @@ autosectionlabel_prefix_document = True
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "Model_Runs**"]
 
 sphinx_gallery_conf = {
-    'examples_dirs': ['../code/dimension_reduction/diffusion_maps',
-                      '../code/dimension_reduction/pod',
-                      '../code/dimension_reduction/grassmann',
-                      '../code/distributions/continuous_1d',
-                      '../code/distributions/discrete_1d',
-                      '../code/distributions/multivariate',
-                      '../code/distributions/user_defined',
-                      '../code/sampling/adaptive_kriging',
-                      '../code/sampling/importance_sampling',
-                      '../code/sampling/monte_carlo',
-                      '../code/sampling/latin_hypercube',
-                      '../code/sampling/mcmc',
-                      '../code/sampling/simplex',
-                      '../code/sampling/true_stratified_sampling',
-                      '../code/sampling/refined_stratified_sampling',
-                      '../code/inference/mle',
-                      '../code/inference/info_model_selection',
-                      '../code/inference/bayes_parameter_estimation',
-                      '../code/inference/bayes_model_selection',
-                      '../code/transformations/nataf',
-                      '../code/sensitivity/morris',
-                      '../code/stochastic_processes/bispectral',
-                      '../code/stochastic_processes/karhunen_loeve',
-                      '../code/stochastic_processes/spectral',
-                      '../code/stochastic_processes/translation',
-                      '../code/reliability/form',
-                      '../code/reliability/sorm',
-                      '../code/reliability/subset_simulation',
-                      '../code/surrogates/srom',
-                      '../code/surrogates/gpr',
-                      '../code/surrogates/pce',
-                      '../code/RunModel',],  # path to your example scripts,
-    'gallery_dirs': ['auto_examples/dimension_reduction/diffusion_maps',
-                     'auto_examples/dimension_reduction/pod',
-                     'auto_examples/dimension_reduction/grassmann',
-                     'auto_examples/distributions/continuous_1d',
-                     'auto_examples/distributions/discrete_1d',
-                     'auto_examples/distributions/multivariate',
-                     'auto_examples/distributions/user_defined',
-                     'auto_examples/sampling/adaptive_kriging',
-                     'auto_examples/sampling/importance_sampling',
-                     'auto_examples/sampling/monte_carlo',
-                     'auto_examples/sampling/latin_hypercube',
-                     'auto_examples/sampling/mcmc',
-                     'auto_examples/sampling/simplex',
-                     'auto_examples/sampling/true_stratified_sampling',
-                     'auto_examples/sampling/refined_stratified_sampling',
-                     'auto_examples/inference/mle',
-                     'auto_examples/inference/info_model_selection',
-                     'auto_examples/inference/bayes_parameter_estimation',
-                     'auto_examples/inference/bayes_model_selection',
-                     'auto_examples/transformations/nataf',
-                     'auto_examples/sensitivity/morris',
-                     'auto_examples/stochastic_processes/bispectral',
-                     'auto_examples/stochastic_processes/karhunen_loeve',
-                     'auto_examples/stochastic_processes/spectral',
-                     'auto_examples/stochastic_processes/translation',
-                     'auto_examples/reliability/form',
-                     'auto_examples/reliability/sorm',
-                     'auto_examples/reliability/subset_simulation',
-                     'auto_examples/surrogates/srom',
-                     'auto_examples/surrogates/gpr',
-                     'auto_examples/surrogates/pce',
-                     'auto_examples/RunModel',],  # path to where to save gallery generated output
-    'binder': {
+    "examples_dirs": [
+        "../code/dimension_reduction/diffusion_maps",
+        "../code/dimension_reduction/pod",
+        "../code/dimension_reduction/grassmann",
+        "../code/distributions/continuous_1d",
+        "../code/distributions/discrete_1d",
+        "../code/distributions/multivariate",
+        "../code/distributions/user_defined",
+        "../code/sampling/adaptive_kriging",
+        "../code/sampling/importance_sampling",
+        "../code/sampling/monte_carlo",
+        "../code/sampling/latin_hypercube",
+        "../code/sampling/mcmc",
+        "../code/sampling/simplex",
+        "../code/sampling/true_stratified_sampling",
+        "../code/sampling/refined_stratified_sampling",
+        "../code/inference/mle",
+        "../code/inference/info_model_selection",
+        "../code/inference/bayes_parameter_estimation",
+        "../code/inference/bayes_model_selection",
+        "../code/transformations/nataf",
+        "../code/sensitivity/morris",
+        "../code/sensitivity/sobol",
+        "../code/stochastic_processes/bispectral",
+        "../code/stochastic_processes/karhunen_loeve",
+        "../code/stochastic_processes/spectral",
+        "../code/stochastic_processes/translation",
+        "../code/reliability/form",
+        "../code/reliability/sorm",
+        "../code/reliability/subset_simulation",
+        "../code/surrogates/srom",
+        "../code/surrogates/gpr",
+        "../code/surrogates/pce",
+        "../code/RunModel",
+    ],  # path to your example scripts,
+    "gallery_dirs": [
+        "auto_examples/dimension_reduction/diffusion_maps",
+        "auto_examples/dimension_reduction/pod",
+        "auto_examples/dimension_reduction/grassmann",
+        "auto_examples/distributions/continuous_1d",
+        "auto_examples/distributions/discrete_1d",
+        "auto_examples/distributions/multivariate",
+        "auto_examples/distributions/user_defined",
+        "auto_examples/sampling/adaptive_kriging",
+        "auto_examples/sampling/importance_sampling",
+        "auto_examples/sampling/monte_carlo",
+        "auto_examples/sampling/latin_hypercube",
+        "auto_examples/sampling/mcmc",
+        "auto_examples/sampling/simplex",
+        "auto_examples/sampling/true_stratified_sampling",
+        "auto_examples/sampling/refined_stratified_sampling",
+        "auto_examples/inference/mle",
+        "auto_examples/inference/info_model_selection",
+        "auto_examples/inference/bayes_parameter_estimation",
+        "auto_examples/inference/bayes_model_selection",
+        "auto_examples/transformations/nataf",
+        "auto_examples/sensitivity/morris",
+        "auto_examples/sensitivity/sobol",
+        "auto_examples/stochastic_processes/bispectral",
+        "auto_examples/stochastic_processes/karhunen_loeve",
+        "auto_examples/stochastic_processes/spectral",
+        "auto_examples/stochastic_processes/translation",
+        "auto_examples/reliability/form",
+        "auto_examples/reliability/sorm",
+        "auto_examples/reliability/subset_simulation",
+        "auto_examples/surrogates/srom",
+        "auto_examples/surrogates/gpr",
+        "auto_examples/surrogates/pce",
+        "auto_examples/RunModel",
+    ],  # path to where to save gallery generated output
+    "binder": {
         # Required keys
-        'org': 'SURGroup',
-        'repo': 'UQpy',
-        'branch': 'master',  # Can be any branch, tag, or commit hash. Use a branch that hosts your docs.
-        'binderhub_url': 'https://mybinder.org',
+        "org": "SURGroup",
+        "repo": "UQpy",
+        "branch": "master",  # Can be any branch, tag, or commit hash. Use a branch that hosts your docs.
+        "binderhub_url": "https://mybinder.org",
         # Any URL of a binderhub deployment. Must be full URL (e.g. https://mybinder.org).
-        'dependencies': './binder/requirements.txt',
-        'notebooks_dir': 'notebooks',
-        'use_jupyter_lab': True
+        "dependencies": "./binder/requirements.txt",
+        "notebooks_dir": "notebooks",
+        "use_jupyter_lab": True
         # Jupyter notebooks for Binder will be copied to this directory (relative to built documentation root).
     },
-    'ignore_pattern': '/local_',
+    "ignore_pattern": "/local_",
 }
 
 # -- Options for HTML output -------------------------------------------------
@@ -159,9 +165,9 @@ pygments_style = None
 html_theme = "sphinx_rtd_theme"
 
 html_theme_options = {
-    'logo_only': True,
-    'style_nav_header_background': '#F0F0F0',
-    'vcs_pageview_mode': 'view'
+    "logo_only": True,
+    "style_nav_header_background": "#F0F0F0",
+    "vcs_pageview_mode": "view",
 }
 
 github_url = "https://github.com/SURGroup/UQpy"
@@ -173,13 +179,18 @@ html_logo = "_static/logo.png"
 html_static_path = ["_static"]
 
 html_sidebars = {
-    "**": ["about.html", "navigation.html", "relations.html", "searchbox.html", ]
+    "**": [
+        "about.html",
+        "navigation.html",
+        "relations.html",
+        "searchbox.html",
+    ]
 }
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-source_suffix = ['.rst', '.md']
+source_suffix = [".rst", ".md"]
 # source_suffix = ".rst"
 
 # The master toctree document.
