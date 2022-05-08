@@ -47,7 +47,6 @@ diff <= atol + rtol * abs(b)
 
 """
 
-import ntpath
 import numpy as np
 import pytest
 import scipy
