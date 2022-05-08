@@ -31,7 +31,7 @@ The Sobol indices are computed using the Pick-and-Freeze approach for single out
 
 Compared to "Sobol1993", the "Janon2014" estimator makes more efficient use of model evaluations and produces better smaller confidence intervals.
 
-- Sobol1993: Requires :math:`N(m + 1)` model evaluations [2]_.
+- Sobol1993: Requires :math:`N(m + 1)` model evaluations [1]_.
 
 .. math::
    S_{i} = \frac{\mathbb{V}\left[E\left(Y \mid X_{i}\right)\right]}{\mathbb{V}(Y)} = \frac{ (1/N) Y_{A} \cdot Y_{C_{i}}-f_{0}^{2}}{(1 / N) Y_{A} \cdot Y_{A}-f_{0}^{2}}
@@ -39,15 +39,15 @@ Compared to "Sobol1993", the "Janon2014" estimator makes more efficient use of m
 .. math:: 
    y_{A}=f(A), \quad y_{C_{i}}=f(C_{i}), \quad f_{0}^{2}=\left(\frac{1}{N} \sum_{j=1}^{N} y_{A}^{(j)} \right)^{2}
 
-- Saltelli2002: Requires :math:`N(2m + 2)` model evaluations [4]_.
+- Saltelli2002: Requires :math:`N(2m + 2)` model evaluations [2]_.
 
 2. **Second order indices** (:math:`S_{ij}`)
 
-- Saltelli2002: Requires :math:`N(2m + 2)` model evaluations [4]_.
+- Saltelli2002: Requires :math:`N(2m + 2)` model evaluations [2]_.
 
 3. **Total order indices** (:math:`S_{T_{i}}`)
 
-- Homma1996: Requires :math:`N(m + 1)` model evaluations [2]_.
+- Homma1996: Requires :math:`N(m + 1)` model evaluations [1]_.
 
 .. math:: 
    S_{T_{i}} = 1 - \frac{\mathbb{V}\left[E\left(Y \mid \mathbf{X}_{\sim_{i}}\right)\right]}{\mathbb{V}(Y)} = 1 - \frac{ (1 / N) Y_{B} \cdot Y_{C_{i}}-f_{0}^{2}}{(1 / N) Y_{A} \cdot Y_{A}-f_{0}^{2}}
@@ -55,8 +55,13 @@ Compared to "Sobol1993", the "Janon2014" estimator makes more efficient use of m
 .. math:: 
    y_{A}=f(A), \quad y_{B}=f(B), \quad y_{C_{i}}=f(C_{i}), \quad f_{0}^{2}=\left(\frac{1}{2N} \sum_{j=1}^{N} y_{A}^{(j)} + y_{B}^{(j)} \right)^{2}
 
-- Saltelli2002: Requires :math:`N(2m + 2)` model evaluations [4]_.
+- Saltelli2002: Requires :math:`N(2m + 2)` model evaluations [2]_.
 
+
+.. [1] Saltelli, A. (2008). Global sensitivity analysis: the primer. 
+        John Wiley. ISBN: 9780470059975
+
+.. [2] Saltelli, A. (2002). Making best use of model evaluations to compute sensitivity indices. (`Link <http://www.andreasaltelli.eu/file/repository/Making_best_use.pdf>`_)
 
 Sobol Class
 ^^^^^^^^^^^^^^^^^^

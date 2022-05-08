@@ -1,7 +1,7 @@
 Cramér-von Mises indices
 ----------------------------------------
 
-A sensitivity index based on the Cramér-von Mises distance. In contrast to variance based Sobol indices it takes into account the whole distribution of the model output and is therefore considered as a moment-free method [5]_. Furthermore the index can be naturally extended to multivariate model outputs (not implemented yet in UQPy). 
+A sensitivity index based on the Cramér-von Mises distance. In contrast to variance based Sobol indices it takes into account the whole distribution of the model output and is therefore considered as a moment-free method [1]_. Furthermore the index can be naturally extended to multivariate model outputs (not implemented yet in UQPy). 
 
 Consider a model :math:`Y=f(X): \mathbb{R}^d \rightarrow \mathbb{R}^k` with :math:`d` inputs :math:`X_{(1)}, X_{(2)}, \ldots, X_{(d)}` and :math:`k` outputs :math:`Y_{(1)}, Y_{(2)}, \ldots, Y_{(k)}`. We define the cumulative distribution function :math:`F(t)` of :math:`Y` as:
 
@@ -29,7 +29,11 @@ and the total Cramér-von Mises index :math:`S_{2, C V M}^{T o t, i}` (for input
 
    S_{2, C V M}^{T o t, i}:=1-S_{2, C V M}^{\sim i}=1-\frac{\int_{\mathbb{R}^{k}} \mathbb{E}\left[\left(F(t)-F^{\sim i}(t)\right)^{2}\right] d F(t)}{\int_{\mathbb{R}^{k}} F(t)(1-F(t)) d F(t)}
 
-The above first and total order indices are estimated using the Pick-and-Freeze approach. This requires :math:`N(d+2)` model evaluations, where :math:`N` is the number of samples. (For implementation details, see also [6]_.)
+The above first and total order indices are estimated using the Pick-and-Freeze approach. This requires :math:`N(d+2)` model evaluations, where :math:`N` is the number of samples. (For implementation details, see also [2]_.)
+
+.. [1] Gamboa, F., Klein, T., & Lagnoux, A. (2018). Sensitivity Analysis Based on Cramér-von Mises Distance. SIAM/ASA Journal on Uncertainty Quantification, 6(2), 522-548. doi:10.1137/15M1025621. (`Link <https://doi.org/10.1137/15M1025621>`_)
+
+.. [2] Gamboa, F., Gremaud, P., Klein, T., & Lagnoux, A. (2020). Global Sensitivity Analysis: a new generation of mighty estimators based on rank statistics. arXiv [math.ST]. (`Link <http://arxiv.org/abs/2003.01772>`_)
 
 Cramér-von Mises Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
