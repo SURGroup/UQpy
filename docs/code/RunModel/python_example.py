@@ -70,6 +70,7 @@ Python
 
 from UQpy.sampling import MonteCarloSampling
 from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Normal
 import time
 import numpy as np
@@ -139,7 +140,8 @@ if pick_model in {'scalar', 'vector', 'all'}:
 if pick_model in {'scalar', 'all'}:
     # Call to RunModel - Here we run the model while instantiating the RunModel object.
     t = time.time()
-    m11 = RunModel(ntasks=1, model_script='python_model.py', model_object_name='SumRVs', model_dir='Python_Runs', verbose=True)
+    m = PythonModel(model_script='python_model.py', model_object_name='SumRVs')
+    m11 = RunModel(model=m, ntasks=1 )
     m11.run(samples=x_mcs.samples,)
     t_ser_python = time.time() - t
     print("\nTime for serial execution:")
@@ -160,8 +162,8 @@ if pick_model in {'scalar', 'all'}:
 if pick_model in {'scalar', 'all'}:
     # Call to RunModel - Here we run the model while instantiating the RunModel object.
     t = time.time()
-    m12 = RunModel(samples=x_mcs_list, ntasks=2, model_script='python_model.py',
-                 model_object_name='sum_rvs', model_dir='Python_Runs')
+    m = PythonModel(model_script='python_model.py', model_object_name='sum_rvs')
+    m12 = RunModel(model=m, samples=x_mcs_list, ntasks=2)
     t_par_python = time.time() - t
     print("\nTime for parallel execution:")
     print(t_par_python)
@@ -222,8 +224,8 @@ if pick_model in {'vector', 'all'}:
 if pick_model in {'vector', 'all'}:
     # Call to RunModel - Here we run the model while instantiating the RunModel object.
     t = time.time()
-    m21 = RunModel(samples=x_mcs_tri, ntasks=1, model_script='python_model.py',
-                 model_object_name='sum_rvs_vec', model_dir='Python_Runs')
+    m=PythonModel(model_script='python_model.py', model_object_name='sum_rvs_vec')
+    m21 = RunModel(samples=x_mcs_tri, ntasks=1,  model=m)
     t_ser_python = time.time() - t
     print("\nTime for serial execution:")
     print(t_ser_python)
@@ -243,8 +245,8 @@ if pick_model in {'vector', 'all'}:
 if pick_model == 'vector' or pick_model == 'all':
     # Call to RunModel - Here we run the model while instantiating the RunModel object.
     t = time.time()
-    m22 = RunModel(samples=x_mcs_tri_list, ntasks=2, model_script='python_model.py',
-                 model_object_name='SumRVs', model_dir='Python_Runs')
+    m=PythonModel(model_script='python_model.py', model_object_name='SumRVs')
+    m22 = RunModel(samples=x_mcs_tri_list, ntasks=2, model=m)
     t_par_python = time.time() - t
     print("\nTime for parallel execution:")
     print(t_par_python)
@@ -337,8 +339,8 @@ if pick_model == 'mixed' or pick_model == 'vector' or pick_model == 'all':
 if pick_model == 'mixed' or pick_model == 'all':
     # Call to RunModel - Here we run the model while instantiating the RunModel object.
     t = time.time()
-    m31 = RunModel(samples=x_mixed_array, ntasks=1, model_script='python_model.py',
-                 model_object_name='DetRVs', model_dir='Python_Runs', vec=False)
+    m=PythonModel(model_script='python_model.py', model_object_name='DetRVs')
+    m31 = RunModel(samples=x_mixed_array, ntasks=1, model=m)
     t_ser_python = time.time() - t
     print("\nTime for serial execution:")
     print(t_ser_python)
@@ -359,8 +361,8 @@ if pick_model == 'mixed' or pick_model == 'all':
     # Call to RunModel - Here we run the model while instantiating the RunModel object.
     # Note that the parallel model_object handles only one sample at a time.
     t = time.time()
-    m32 = RunModel(samples=x_mixed, ntasks=1, model_script='python_model.py',
-                 model_object_name='det_rvs_par', model_dir='Python_Runs', vec=False)
+    m=PythonModel(model_script='python_model.py', model_object_name='det_rvs_par')
+    m32 = RunModel(samples=x_mixed, ntasks=1, model=m)
     t_par_python = time.time() - t
     print("\nTime for parallel execution:")
     print(t_par_python)
@@ -419,8 +421,8 @@ if pick_model == 'mixed' or pick_model == 'all':
 if pick_model == 'mixed' or pick_model == 'all':
     # Call to RunModel - Here we run the model while instantiating the RunModel object.
     t = time.time()
-    m41 = RunModel(samples=x_mcs_array, ntasks=1, model_script='python_model.py',
-                 model_object_name='det_rvs_fixed', model_dir='Python_Runs', vec=False, coeff=x)
+    m=PythonModel(model_script='python_model.py', model_object_name='det_rvs_fixed')
+    m41 = RunModel(samples=x_mcs_array, ntasks=1, model=m, coeff=x)
     t_ser_python = time.time() - t
     print("\nTime for serial execution:")
     print(t_ser_python)
@@ -438,8 +440,8 @@ if pick_model == 'mixed' or pick_model == 'all':
 if pick_model == 'mixed' or pick_model == 'all':
     # Call to RunModel - Here we run the model while instantiating the RunModel object.
     t = time.time()
-    m42 = RunModel(samples=x_mcs_list, ntasks=1, model_script='python_model.py',
-                 model_object_name='det_rvs_fixed', model_dir='Python_Runs', vec=False, coeff=x)
+    m=PythonModel(model_script='python_model.py', model_object_name='det_rvs_fixed')
+    m42 = RunModel(samples=x_mcs_list, ntasks=1, model=m, coeff=x)
     t_ser_python = time.time() - t
     print("\nTime for serial execution:")
     print(t_ser_python)

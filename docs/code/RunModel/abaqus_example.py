@@ -4,18 +4,18 @@ Third-party - Abaqus
 ==================================
 """
 
-
 # %% md
 #
 # Import the necessary libraries.
 
 # %%
-
+import glob
 import pickle
 import time
-
+import os
 from UQpy.distributions import Normal, Uniform
-from UQpy.run_model.RunModel import *
+from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.model_execution.ThirdPartyModel import ThirdPartyModel
 from UQpy.sampling import MonteCarloSampling
 
 calling_directory = os.getcwd()
@@ -36,11 +36,11 @@ var_names = ['qtd', 'fy']
 
 # %%
 
-abaqus_sfe_model = RunModel(model_script='abaqus_fire_analysis.py', input_template='abaqus_input.py',
-                            output_script='extract_abaqus_output.py', var_names=var_names, ntasks=24,
-                            model_dir='SFE_MCS', verbose=True, cores_per_task=1)
+m = ThirdPartyModel(model_script='abaqus_fire_analysis.py', input_template='abaqus_input.py',
+                    output_script='extract_abaqus_output.py', var_names=var_names,
+                    model_dir='SFE_MCS', )
+abaqus_sfe_model = RunModel(cores_per_task=1, ntasks=24, model=m)
 print('Example: Created the model object.')
-
 
 # %% md
 #

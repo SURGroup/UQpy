@@ -13,8 +13,8 @@ import numpy as np
 
 class ThirdPartyModel:
 
-    def __init__(self, var_names: list[str], input_template: str, model_script: str, model_object_name: str,
-                 output_script: str, output_object_name: str, fmt: str = None, separator: str = ', ',
+    def __init__(self, var_names: list[str], input_template: str, model_script: str, output_script: str = None,
+                 model_object_name: str = None, output_object_name: str = None, fmt: str = None, separator: str = ', ',
                  delete_files: bool = False, model_dir: str = "Model_Runs"):
         """
 

@@ -4,7 +4,7 @@ import logging
 
 class MinimizeOptimizer:
 
-    def __init__(self, method: str = 'bfgs', bounds=None):
+    def __init__(self, method: str = 'l-bfgs-b', bounds=None):
         # super().__init__(bounds)
         self._bounds = None
         self.logger = logging.getLogger(__name__)
