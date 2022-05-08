@@ -83,7 +83,7 @@ class CramervonMises(Sensitivity):
         "Number of samples used to compute the Cramér-von Mises indices, :class:`int`"
 
         self.num_vars = None
-        "Number of random variables, :class:`int`"
+        "Number of input random variables, :class:`int`"
 
     def run(
         self,
