@@ -38,7 +38,7 @@ class GaussianProcessRegression(Surrogate):
          input attribute defines the dimension of input training point, thus its length/shape should be equal to the
          input dimension plus one (d+1), this list/array includes 'd' length scale and process standard deviation. In
          case of noisy observations/output, its length/shape should be equal to the input dimension plus two (d+2), this
-         list/array includes 'd' lengthscales, process standar deviation and noise variance.
+         list/array includes 'd' lengthscales, process standard deviation and noise variance.
         :param regression_model: A class object, which computes the basis function at a sample point. If
          regression_model is None, this class will train GP with regression.
          Default: None
