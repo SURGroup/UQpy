@@ -41,6 +41,9 @@ class CramervonMises(Sensitivity):
         random variable, or :class:`.JointIndependent` object \
         (multivariate RV with independent marginals).
 
+    :param random_state: Random seed used to initialize the pseudo-random number \
+        generator. Default is :any:`None`.
+
     **Methods:**
     """
 
@@ -95,15 +98,13 @@ class CramervonMises(Sensitivity):
         Compute the Cramér-von Mises indices.
 
         :param n_samples: Number of samples used to compute the Cramér-von Mises indices. \
-            If :code:`None`, the number of samples is set to the number of samples \
-            in the model.
+            Default is 1,000.
 
         :param estimate_sobol_indices: If :code:`True`, the Sobol indices are estimated \
             using the pick-and-freeze samples.
 
         :param num_bootstrap_samples: Number of bootstrap samples used to estimate the \
-            Sobol indices. If :code:`None`, the number of bootstrap samples is set \
-            to the number of samples in the model.
+            Sobol indices. Default is :any:`None`.
 
         :param confidence_level: Confidence level used to compute the confidence \
             intervals of the Cramér-von Mises indices.
