@@ -5,8 +5,9 @@ This module contains functionality for all the sampling methods supported in :py
 
 The module currently contains the following classes:
 
-- :py:class:`.CramervonMises`: Class to compute Chatterjee sensitivity indices.
+- :py:class:`.Chatterjee`: Class to compute Chatterjee sensitivity indices.
 - :py:class:`.CramervonMises`: Class to compute Cramér-von Mises sensitivity indices.
+- :py:class:`.GeneralisedSobol`: Class to compute Generalised Sobol sensitivity indices.
 - :py:class:`.MorrisSensitivity`: Class to perform Morris.
 - :py:class:`.PceSensitivity`: Class to compute the sensitivity indices using the :class:`.PolynomialChaosExpansion` method.
 - :py:class:`.Sobol`: Class to compute Sobol sensitivity indices.
@@ -21,6 +22,7 @@ Sensitivity analysis comprises techniques focused on determining how the variati
 
     Chatterjee <chatterjee>
     Cramér-von Mises Sensitivity <cramer_von_mises>
+    Generalised Sobol Sensitivity <generalised_sobol>
     Morris Sensitivity <morris>
     Polynomial Chaos Sensitivity <pce>
     Sobol Sensitivity <sobol>
