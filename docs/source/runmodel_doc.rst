@@ -25,8 +25,7 @@ for execution of either a Python computational model, in which case the model is
 execution of a third-party software model. When running with a third-party software model, :class:`RunModel` interfaces with
 the model through text-based input files and serves as the "driver" to initiate the necessary calculations. At the
 second level, the jobs that are run by :class:`.RunModel` can either be executed
-in series or in parallel. Within the third-party model parallel execution workflow, there are two cases, which are
-triggered by the ``cluster`` variable. In the following sections the workflow is discussed in detail.
+in series or in parallel. In the following sections the workflow is discussed in detail.
 
 .. image:: _static/Runmodel_workflow.png
    :width: 600
@@ -36,7 +35,7 @@ Python Model Workflow: Serial Execution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A common workflow in :py:mod:`UQpy` is when the computational model being evaluated is written in Python. This workflow is
-invoked by calling :class:`.RunModel` without specifying an ``input_template`` (i.e. ``input_template = None``) and setting
+invoked by calling :class:`.RunModel` using a :class:`.PythonModel` without specifying an ``input_template`` (i.e. ``input_template = None``) and setting
 ``model_script`` to the user-defined Python script containing the model. This python model is run serially by setting
 ``ntasks = 1``.
 
@@ -53,8 +52,10 @@ Python Model Workflow: Parallel Execution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The python model is executed in parallel by setting ``ntasks`` equal to the desired number of tasks (greater than 1) to be executed concurrently. In this
-case, the ``model_script`` and corresponding ``model_object`` should be defined to accept a single sample. :class:`.RunModel` uses the ``multiprocessing`` library for
-parallel execution of python models, which restricts parallelization to the cores available within a single computer. A workaround to this, to run in parallel across multiple compute nodes, is to treat the python model as a third-party model and run with the third-party parallel execution workflow discussed below.
+case, the ``model_script`` and corresponding ``model_object`` should be defined to accept a single sample. :class:`.RunModel` uses the ``mpi4py`` library for
+parallel execution of python models. OpenMPI library is essential for ``mpi4py``
+and must be installed on the computer running the model. Information regarding how to install ``OpenMPI`` is provided
+at `https://www.open-mpi.org/faq/?category=building <https://www.open-mpi.org/faq/?category=building>`_.
 
 Details for ``model_script`` can be found in the Section entitled `Files & Scripts Used by RunModel`_.
 
@@ -88,23 +89,22 @@ This workflow operates in three steps as explained in the following:
 Third-Party Model Workflow: Parallel Execution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Parallel execution in :class:`.RunModel` is carried out by the `GNU parallel` library :cite:`GNU_parallel`. GNU parallel is essential
-and must be installed on the computer running the model. Information regarding how to install GNU parallel is provided
-at `https://www.gnu.org/software/parallel <https://www.gnu.org/software/parallel>`_. Parallel execution is activated in
+Parallel execution in :class:`.RunModel` is carried out by the ``mpi4py`` library. OpenMPI library is essential for ``mpi4py``
+and must be installed on the computer running the model. Information regarding how to install ``OpenMPI`` is provided
+at `https://www.open-mpi.org/faq/?category=building <https://www.open-mpi.org/faq/?category=building>`_. Parallel execution is activated in
 :class:`.RunModel` by setting the parameter ``ntasks>1``. The key differences in terms of the workflow are listed below.
 
-1. During parallel execution, all required input files are generated prior to model execution as opposed to serial execution where input files are generated
+1. During parallel execution, the execution of different samples is distributed among the different tasks and required input files are generated individually prior to each run.
    individually prior to each run.
 
-2. `GNU parallel` divides the total number of jobs into a number of chunks specified by the variable ``ntasks``.
+2. `OpenMPI` divides the total number of jobs into a number of chunks specified by the variable ``ntasks``.
    ``ntasks`` number of jobs are executed in parallel and
-   this continues until all the jobs finish executing. Note that the jobs can be executed across multiple compute nodes when ``cluster = True`` using the SLURM 
-   workload manager. This is specified by setting ``cores_per_task`` and ``nodes`` appropriately. Details can be found in the description of the :class:`.RunModel`.
+   this continues until all the jobs finish executing. This is specified by setting ``cores_per_task`` and ``nodes`` appropriately. Details can be found in the description of the :class:`.RunModel`.
    Whether in serial or parallel, the sample index is used by :class:`.RunModel` to keep track of model execution and to link the samples to their corresponding outputs.
    :class:`.RunModel` achieves this by consistently naming all the input files using the sample index (see Step 1) and passing the sample index into ``model_script``. More
    details on the precise structure of ``model_script`` are discussed in the Section entitled `Files & Scripts Used by RunModel`_.
 
-3. Output processing in the parallel case is performed after all the runs are completed, whereas in the serial case it is done after every individual run.
+3. Output processing in the parallel case is performed after every individual run.
 
 Directory Structure During Third-Party Model Evaluation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -165,18 +165,18 @@ Python model may be structured are provided below.
 .. code-block:: python
 
    class ModelClass:
-	 def __init__(self,  input=one_sample, **kwargs):
-	 	# Execute the model using the input and get the output
-	 	self.qoi = output
+     def __init__(self,  input=one_sample, **kwargs):
+        # Execute the model using the input and get the output
+        self.qoi = output
 
 **Example:** Model object as a function:
 
 .. code-block:: python
 
    def model_function(input=one_sample, **kwargs):
-	 # Execute the model using the input and get the output
-	 return output
-	 
+     # Execute the model using the input and get the output
+     return output
+
 * *Third-Party Software Model:* When running a third-party model, :class:`.RunModel` does not import ``model_script``.
 
 Instead, :class:`.RunModel` calls the model script through
@@ -202,7 +202,7 @@ Instead, :class:`.RunModel` calls the model script through
 ``matlab_model_script.py``  
 
 .. code-block:: python
-	
+
    import os
    import fire
    
@@ -212,13 +212,13 @@ Instead, :class:`.RunModel` calls the model script through
    def model(sample_index):
       # Copy the input file into the cwd
       command1 = "cp ./InputFiles/matlab_model_" + str(index+1) + 
-	             ".m ."
+                 ".m ."
       command2 = "matlab -nosplash -nojvm -nodisplay -nodesktop -r 
-	             'run matlab_model_" + str(sample_index + 1) + ".m; 
-				 exit'"
+                 'run matlab_model_" + str(sample_index + 1) + ".m;
+                 exit'"
       # Rename the output file
       command3 = "mv y.txt y_" + str(sample_index+1) + ".txt"
-	  
+
       os.system(command1)
       os.system(command2)
       os.system(command3)
@@ -276,19 +276,19 @@ the quantity of interest after execution. Examples for how the output object may
 .. code-block:: python
 
    class OutputClass:
-	 def __init__(self,  input=sample_index):
-	 	# Postprocess the output files corresponding to the 
-		# sample number and extract the quantity of interest
-	 	self.qoi = output
+     def __init__(self,  input=sample_index):
+        # Postprocess the output files corresponding to the
+        # sample number and extract the quantity of interest
+        self.qoi = output
 
 **Example:** Output object as a function:
 
 .. code-block:: python
 
    def output_function(input=sample_index):
-	 # Postprocess the output files corresponding to the sample 
-	 # number and extract the quantity of interest
-	 return output
+     # Postprocess the output files corresponding to the sample
+     # number and extract the quantity of interest
+     return output
 
 **Executable Software**
 
@@ -313,10 +313,22 @@ Several simple mathematical python models are provided in a Jupyter script entit
 models in python using :class:`.RunModel`.  The notebook executes models in serial and in parallel. The models themselves are
 provided in the python file `python_model.py`.
 
+PythonModel Class
+-------------------
+
+.. autoclass:: UQpy.run_model.model_execution.PythonModel
+    :members:
+
 **Third-Party Models**
 
 :class:`.RunModel` can be used to execute nearly any third-party model. In the `example` folder, we provide files for
 the execution of several commonly-used engineering software packages.
+
+ThirdPartyModel Class
+-----------------------
+
+.. autoclass:: UQpy.run_model.model_execution.ThirdPartyModel
+    :members:
 
 *Abaqus Model*
 
@@ -399,23 +411,11 @@ The other necessary files are the following:
 Note that this example is not intended to represent the accurate pushover analysis a real structure. It is for
 :py:mod:`UQpy` illustration purposes only.
 
-PythonModel Class
--------------------
-
-.. autoclass:: UQpy.run_model.model_execution.PythonModel
-	:members:
-
-ThirdPartyModel Class
------------------------
-
-.. autoclass:: UQpy.run_model.model_execution.ThirdPartyModel
-	:members:
-
 RunModel Class
 --------------
 
 .. autoclass:: UQpy.run_model.RunModel
-	:members:
+    :members:
 
 
 

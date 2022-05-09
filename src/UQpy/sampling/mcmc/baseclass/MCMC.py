@@ -1,5 +1,7 @@
 import logging
 from typing import Callable, Tuple, List
+import warnings
+warnings.filterwarnings('ignore')
 
 import numpy as np
 from beartype import beartype
