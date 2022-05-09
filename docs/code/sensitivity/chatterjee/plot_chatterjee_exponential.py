@@ -3,8 +3,16 @@
 Exponential function
 ==============================================
 
+The exponential function was used in [1]_ to demonstrate the 
+Cramér-von Mises indices. Chattererjee indices approach the Cramér-von Mises 
+indices in the sample limit and will be demonstrated via this example.
+
 .. math::
     f(x) := \exp(x_1 + 2x_2), \quad x_1, x_2 \sim \mathcal{N}(0, 1)
+
+.. [1] Gamboa, F., Klein, T., & Lagnoux, A. (2018). Sensitivity Analysis Based on \
+Cramér-von Mises Distance. SIAM/ASA Journal on Uncertainty Quantification, 6(2), \
+522-548. doi:10.1137/15M1025621. (`Link <https://doi.org/10.1137/15M1025621>`_)
 
 """
 
@@ -15,7 +23,9 @@ from UQpy.distributions import Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sensitivity.chatterjee import Chatterjee
 
-# %%
+# %% [markdown]
+# **Define the model and input distributions**
+
 # Create Model object
 model = PythonModel(
     model_script="local_exponential.py",
@@ -33,22 +43,24 @@ runmodel_obj = RunModel(model=model)
 dist_object = JointIndependent([Normal(0, 1)] * 2)
 
 # %% [markdown]
-# Compute Chatterjee indices
+# **Compute Chatterjee indices**
 
-# %%
+# %% [markdown]
 SA = Chatterjee(runmodel_obj, dist_object)
 
-# Compute Sobol indices using the pick and freeze algorithm
+# Compute Chatterjee indices using the pick and freeze algorithm
 computed_indices = SA.run(n_samples=1_000_000)
 
 # %% [markdown]
-# Cramer-von Mises sensitivity analysis
+# **Chattererjee indices**
+#
+# Chattererjee indices approach the Cramér-von Mises indices in the sample limit.
 #
 # Expected value of the sensitivity indices:
 #
-# $S^1_{CVM} = \frac{6}{\pi} \operatorname{arctan}(2) - 2 \approx 0.1145$
+# :math:`S^1_{CVM} = \frac{6}{\pi} \operatorname{arctan}(2) - 2 \approx 0.1145`
 #
-# $S^2_{CVM} = \frac{6}{\pi} \operatorname{arctan}(\sqrt{19}) - 2 \approx 0.5693$
+# :math:`S^2_{CVM} = \frac{6}{\pi} \operatorname{arctan}(\sqrt{19}) - 2 \approx 0.5693`
 
 # %%
 computed_indices["chatterjee_i"]

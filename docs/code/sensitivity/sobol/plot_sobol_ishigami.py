@@ -3,6 +3,9 @@ r"""
 Ishigami function
 ==============================================
 
+The ishigami function is a non-linear, non-monotonic function that is commonly used in 
+uncertainty and senstivity analysis methods.
+
 .. math::
     f(x_1, x_2, x_3) = sin(x_1) + a \cdot sin^2(x_2) + b \cdot x_3^4 sin(x_1)
 
@@ -44,6 +47,9 @@ from UQpy.distributions import Uniform
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sensitivity.sobol import Sobol
 
+# %% [markdown]
+# **Define the model and input distributions**
+
 # %%
 # Create Model object
 model = PythonModel(
@@ -59,12 +65,17 @@ runmodel_obj = RunModel(model=model)
 # Define distribution object
 dist_object = JointIndependent([Uniform(-np.pi, 2 * np.pi)] * 3)
 
+# %% [markdown]
+# **Compute Sobol indices**
+
 # %%
 SA = Sobol(runmodel_obj, dist_object)
 
 computed_indices = SA.run(n_samples=100_000, num_bootstrap_samples=100)
 
 # %% [markdown]
+# **Sobol indices**
+#
 # Expected first order Sobol indices:
 #
 #     X1: 0.3139
@@ -72,12 +83,13 @@ computed_indices = SA.run(n_samples=100_000, num_bootstrap_samples=100)
 #     X2: 0.4424
 #
 #     X3: 0.0
-#
 
 # %%
 computed_indices["sobol_i"]
 
 # %% [markdown]
+# **Total order Sobol indices**
+#
 # Expected total order Sobol indices:
 #
 #     X1: 0.55758886

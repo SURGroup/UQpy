@@ -3,6 +3,9 @@ r"""
 Ishigami function
 ==============================================
 
+The ishigami function is a non-linear, non-monotonic function that is commonly used to 
+benchmark uncertainty and senstivity analysis methods.
+
 .. math::
     f(x_1, x_2, x_3) = sin(x_1) + a \cdot sin^2(x_2) + b \cdot x_3^4 sin(x_1)
 
@@ -20,7 +23,9 @@ from UQpy.distributions import Uniform
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sensitivity.chatterjee import Chatterjee
 
-# %%
+# %% [markdown]
+# **Define the model and input distributions**
+
 # Create Model object
 model = PythonModel(
     model_script="local_ishigami.py",
@@ -36,9 +41,9 @@ runmodel_obj = RunModel(model=model)
 dist_object = JointIndependent([Uniform(-np.pi, 2 * np.pi)] * 3)
 
 # %% [markdown]
-# Compute Chatterjee indices
+# **Compute Chatterjee indices**
 
-# %%
+# %% [markdown]
 SA = Chatterjee(runmodel_obj, dist_object)
 
 computed_indices = SA.run(
@@ -48,11 +53,28 @@ computed_indices = SA.run(
     confidence_level=0.95,
 )
 
+# %% [markdown]
+# **Chattererjee indices**
+
 # %%
 computed_indices["chatterjee_i"]
 
+# %% [markdown]
+# **Confidence intervals for the Chatterjee indices**
+
 # %%
 computed_indices["CI_chatterjee_i"]
+
+# %% [markdown]
+# **Estimated Sobol indices**
+#
+# Expected first order Sobol indices:
+#
+# :math:`S_1`: 0.3139
+#
+# :math:`S_2`: 0.4424
+#
+# :math:`S_3`: 0.0
 
 # %%
 computed_indices["sobol_i"]
