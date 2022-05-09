@@ -16,6 +16,10 @@ The parameteres of the oscillator are modeled as follows:
 .. math::
     m \sim \mathcal{U}(10, 12), c \sim \mathcal{U}(0.4, 0.8), k \sim \mathcal{U}(70, 90), \ell \sim \mathcal{U}(-1, -0.25).
 
+Here, we compute the Sobol indices for each point in time and are called 
+pointwise-in-time Sobol indices. These indices describe the sensitivity of the model 
+parameters at each point in time.
+
 """
 
 # %%
@@ -28,7 +32,9 @@ from UQpy.distributions import Uniform
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sensitivity.sobol import Sobol
 
-# %%
+# %% [markdown]
+# **Define the model and input distributions**
+
 # Create Model object
 model = PythonModel(
     model_script="local_mechanical_oscillator_ODE.py",
@@ -46,13 +52,17 @@ K = Uniform(70, (90 - 70))
 L = Uniform(-1, (-0.25 - -1))
 dist_object = JointIndependent([M, C, K, L])
 
-# %%
+# %% [markdown]
+# **Compute Sobol indices**
+
+# %% [markdown]
 SA = Sobol(runmodel_obj, dist_object)
 
 computed_indices = SA.run(n_samples=500)
 
 # %%
-# Plot the Sobol indices
+# **Plot the Sobol indices**
+
 t_0 = 0
 t_f = 40
 dt = 0.05

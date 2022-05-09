@@ -2,22 +2,22 @@
 Sobol indices
 ----------------------------------------
 
-Sobol indices are the standard approach to calculate a global variance based sensitivity analysis. 
+Sobol indices are the standard approach for performing a global sensitivity analysis. 
 The indices are based on a variance decomposition of the model output. Using this decomposition allows us to assign the contribution of uncertain inputs to the variance of the model output.
 
 There are three main groups of indices:
 
-- First order indices (:math:`S_{i}`): Describe the fraction of the output variance due to a single uncertain input parameter. This amount of variance can be reduced if the uncertainty in the corresponding input is eliminated.
+- First order indices (:math:`S_{i}`): Describe the fraction of the output variance due to a single uncertain input parameter :math:`i`. This amount of variance can be reduced if the uncertainty in the corresponding input is eliminated.
 
 - Higher order indices: Describe the fraction of the output variance due to interactions between uncertain input parameters. For example, the second order indices (:math:`S_{ij}`) describe the fraction of the output variance due to interactions between two uncertain input parameters :math:`i` and :math:`j`.
 
-- Total order indices (:math:`S_{T_{i}}`): Describe the fraction of the output variance due to a single input parameter and all higher order effects the input parameter is involved.
+- Total order indices (:math:`S_{T_{i}}`): Describe the fraction of the output variance due to a single input parameter :math:`i` and all higher order effects of the input parameter.
 
-If the first order index of an input parameter is equal to the total order index it implies that the parameter is not involved in any interaction effects. 
+If the first order index of an input parameter is equal to the total order index it implies that the parameter does not have any interaction effects.
 
-The Sobol indices are computed using the Pick-and-Freeze approach for single output and multi-output models. Since there are several variants of the Pick-and-Freeze approach, the schemes implemented to compute Sobol indices are listed below:
+The Sobol indices are typically computed using the Pick-and-Freeze approach for single output and multi-output models. Since there are several variants of the Pick-and-Freeze approach, the schemes implemented to compute Sobol indices are listed below:
 
-(where, :math:`N` is the number of Monte Carlo samples and :math:`m` being the number of input parameters in the model)
+Here, :math:`N` is the number of Monte Carlo samples and :math:`m` being the number of input parameters in the model.
 
 1. **First order indices** (:math:`S_{i}`)
 
@@ -29,7 +29,7 @@ The Sobol indices are computed using the Pick-and-Freeze approach for single out
 .. math:: 
    y_{A}=f(A), \quad y_{C_{i}}=f(C_{i}), \quad f_{0}^{2}=\left(\frac{1}{2N} \sum_{j=1}^{N} y_{A}^{(j)} + y_{C_{i}}^{(j)} \right)^{2}
 
-Compared to "Sobol1993", the "Janon2014" estimator makes more efficient use of model evaluations and produces better smaller confidence intervals.
+Compared to "Sobol1993", the "Janon2014" estimator makes more efficient use of model evaluations and produces smaller (better) confidence intervals.
 
 - Sobol1993: Requires :math:`N(m + 1)` model evaluations [1]_.
 

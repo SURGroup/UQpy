@@ -3,8 +3,8 @@ r"""
 Ishigami function
 ==============================================
 
-The ishigami function is a non-linear, non-monotonic function that is commonly used in 
-uncertainty and senstivity analysis methods.
+The ishigami function is a non-linear, non-monotonic function that is commonly used to 
+benchmark uncertainty and senstivity analysis methods.
 
 .. math::
     f(x_1, x_2, x_3) = sin(x_1) + a \cdot sin^2(x_2) + b \cdot x_3^4 sin(x_1)
@@ -31,7 +31,7 @@ Total order Sobol indices
     S_{T_1} = \frac{V_{T1}}{\mathbb{V}[Y]}, \quad S_{T_2} = \frac{V_{T2}}{\mathbb{V}[Y]}, \quad S_{T_3} = \frac{V_{T3}}{\mathbb{V}[Y]}
 
 .. math::
-    V_{T1} = 0.5 (1 + \frac{b\pi^4}{5})^2 + \frac{8b^2\pi^8}{225}, \quad V_{T2}= \frac{a^2}{8}, \quad V_{T3} = \frac{8b^2\pi^8}{225}
+    V_{T_1} = 0.5 (1 + \frac{b\pi^4}{5})^2 + \frac{8b^2\pi^8}{225}, \quad V_{T_2}= \frac{a^2}{8}, \quad V_{T_3} = \frac{8b^2\pi^8}{225}
 
 .. math::
     \mathbb{V}[Y] = \frac{a^2}{8} + \frac{b\pi^4}{5} + \frac{b^2\pi^8}{18} + \frac{1}{2}
@@ -74,15 +74,15 @@ SA = Sobol(runmodel_obj, dist_object)
 computed_indices = SA.run(n_samples=100_000, num_bootstrap_samples=100)
 
 # %% [markdown]
-# **Sobol indices**
+# **First order Sobol indices**
 #
 # Expected first order Sobol indices:
 #
-#     X1: 0.3139
+# :math:`S_1` = 0.3139
 #
-#     X2: 0.4424
+# :math:`S_2` = 0.4424
 #
-#     X3: 0.0
+# :math:`S_3` = 0.0
 
 # %%
 computed_indices["sobol_i"]
@@ -92,23 +92,23 @@ computed_indices["sobol_i"]
 #
 # Expected total order Sobol indices:
 #
-#     X1: 0.55758886
+# :math:`S_{T_1}` = 0.55758886
 #
-#     X2: 0.44241114
+# :math:`S_{T_2}` = 0.44241114
 #
-#     X3: 0.24368366
+# :math:`S_{T_3}` =  0.24368366
 
 # %%
 computed_indices["sobol_total_i"]
 
 # %% [markdown]
-# Confidence intervals for first order Sobol indices
+# **Confidence intervals for first order Sobol indices**
 
 # %%
 computed_indices["CI_sobol_i"]
 
 # %% [markdown]
-# Confidence intervals for total order Sobol indices
+# **Confidence intervals for total order Sobol indices**
 
 # %%
 computed_indices["CI_sobol_total_i"]
