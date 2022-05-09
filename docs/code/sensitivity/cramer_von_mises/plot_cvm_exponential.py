@@ -3,8 +3,15 @@
 Exponential function
 ==============================================
 
+The exponential function was used in [1]_ to demonstrate the 
+Cramér-von Mises indices.
+
 .. math::
     f(x) := \exp(x_1 + 2x_2), \quad x_1, x_2 \sim \mathcal{N}(0, 1)
+
+.. [1] Gamboa, F., Klein, T., & Lagnoux, A. (2018). Sensitivity Analysis Based on \
+Cramér-von Mises Distance. SIAM/ASA Journal on Uncertainty Quantification, 6(2), \
+522-548. doi:10.1137/15M1025621. (`Link <https://doi.org/10.1137/15M1025621>`_)
 
 """
 
@@ -15,7 +22,9 @@ from UQpy.distributions import Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sensitivity.cramer_von_mises import CramervonMises as cvm
 
-# %%
+# %% [markdown]
+# **Define the model and input distributions**
+
 # Create Model object
 model = PythonModel(
     model_script="local_exponential.py",
@@ -30,29 +39,40 @@ runmodel_obj = RunModel(model=model)
 dist_object = JointIndependent([Normal(0, 1)] * 2)
 
 # %% [markdown]
-# Compute Cramer-von Mises indices
+# **Compute Cramér-von Mises indices**
 
 # %%
-# create cvm object
 SA = cvm(runmodel_obj, dist_object)
 
 # Compute Sobol indices using the pick and freeze algorithm
 computed_indices = SA.run(n_samples=20_000, estimate_sobol_indices=True)
 
 # %% [markdown]
-# Cramer-von Mises sensitivity analysis
+# **Cramér-von Mises indices**
 #
 # Expected value of the sensitivity indices:
 #
-# $S^1_{CVM} = \frac{6}{\pi} \operatorname{arctan}(2) - 2 \approx 0.1145$
+# :math:`S^1_{CVM} = \frac{6}{\pi} \operatorname{arctan}(2) - 2 \approx 0.1145`
 #
-# $S^2_{CVM} = \frac{6}{\pi} \operatorname{arctan}(\sqrt{19}) - 2 \approx 0.5693$
+# :math:`S^2_{CVM} = \frac{6}{\pi} \operatorname{arctan}(\sqrt{19}) - 2 \approx 0.5693`
 
 # %%
 computed_indices["CVM_i"]
 
+# %% [markdown]
+# **Estimated first order Sobol indices**
+#
+# Expected first order Sobol indices:
+#
+# :math:`S_1` = 0.0118
+#
+# :math:`S_2` = 0.3738
+
 # %%
 computed_indices["sobol_i"]
+
+# %% [markdown]
+# **Estimated total order Sobol indices**
 
 # %%
 computed_indices["sobol_total_i"]

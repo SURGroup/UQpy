@@ -1,7 +1,7 @@
 Cramér-von Mises indices
 ----------------------------------------
 
-A sensitivity index based on the Cramér-von Mises distance. In contrast to variance based Sobol indices it takes into account the whole distribution of the model output and is therefore considered as a moment-free method [1]_. Furthermore the index can be naturally extended to multivariate model outputs (not implemented yet in UQPy). 
+A sensitivity index based on the Cramér-von Mises distance. In contrast to the variance based Sobol indices, it takes into account the whole distribution of the model output and is therefore considered as a moment-free method [1]_. Furthermore the index can be naturally extended to multivariate model outputs (not implemented yet in UQPy). 
 
 Consider a model :math:`Y=f(X): \mathbb{R}^d \rightarrow \mathbb{R}^k` with :math:`d` inputs :math:`X_{(1)}, X_{(2)}, \ldots, X_{(d)}` and :math:`k` outputs :math:`Y_{(1)}, Y_{(2)}, \ldots, Y_{(k)}`. We define the cumulative distribution function :math:`F(t)` of :math:`Y` as:
 
