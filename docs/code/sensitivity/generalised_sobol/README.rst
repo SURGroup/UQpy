@@ -1,12 +1,14 @@
 Generalised Sobol Sensitivity indices
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We demonstrate the computation of GSI for 2 examples with multiple outputs:
+These examples serve as a guide for using the GSI sensitivity module. They have been taken from various papers to enable validation of the implementation and have been referenced accordingly.
 
-1. Mechanical oscillator (analytical solution): Example from [1] page 2
-2. Mechanical oscillator ODE (numerical solution): Example from [2] page 19
-3. Toy example (analytical solution): Example from [2] 
+1. **Mechanical oscillator ODE**
 
-.. [1] Alexanderian, Alen, Gremaud, Pierre A and Smith, Ralph C. Variance-based sensitivity analysis for time-dependent processes.
+    The GSI sensitivity indices are computed for a mechanical oscillator governed by a second-order differential equation [1]_. The model outputs the displacement of the oscillator for a given time period. Unlike the pointwise-in-time Sobol indices, which provide the sensitivity of the model parameters at each point in time, the GSI indices summarise the sensitivities of the model parameters over the entire time period.
 
-.. [2] Gamboa F, Janon A, Klein T, Lagnoux A, others.  Sensitivity analysis for multidimensional and functional outputs. Electronic journal of statistics 2014; 8(1): 575-603.
+2. **Toy example**
+    
+    The GSI sensitivity indices are computed for a toy model whose analytical solution is given in [1]_.
+
+.. [1] Gamboa F, Janon A, Klein T, Lagnoux A, others.  Sensitivity analysis for multidimensional and functional outputs. Electronic journal of statistics 2014; 8(1): 575-603.

@@ -10,10 +10,10 @@ Toy multioutput function
                                 \end{array}\right)
 
 .. math::
-    \text{case 1: } X_1, X_2 \sim \mathcal{U}(0, 1)
+    \text{case 1: } X_1, X_2 \sim \mathcal{N}(0, 1)
 
 .. math::
-    \text{case 2: } X_1, X_2 \sim \mathcal{N}(0, 1)
+    \text{case 2: } X_1, X_2 \sim \mathcal{U}(0, 1)
 
 """
 
@@ -24,7 +24,9 @@ from UQpy.distributions import Uniform, Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sensitivity.generalised_sobol import GeneralisedSobol
 
-# %%
+# %% [markdown]
+# **Define the model and input distributions**
+
 # Create Model object
 model = PythonModel(
     model_script="local_multioutput.py",
@@ -37,9 +39,11 @@ runmodel_obj = RunModel(model=model)
 
 # Define distribution object
 dist_object_1 = JointIndependent([Normal(0, 1)] * 2)
-dist_object_2 = JointIndependent([Uniform(0, 1)] * 2)
 
-# %%
+# %% [markdown]
+# **Compute generalised Sobol indices**
+
+# %% [markdown]
 SA = GeneralisedSobol(runmodel_obj, dist_object_1)
 
 computed_indices = SA.run(
@@ -47,11 +51,15 @@ computed_indices = SA.run(
 )
 
 # %% [markdown]
+# **First order Generalised Sobol indices**
+#
+# Expected generalised Sobol indices:
+#
 # Gaussian case
 #
-# $S_1$ = 0.2941
+# :math:`GS_1` = 0.2941
 #
-# $S_2$ = 0.1179
+# :math:`GS_2` = 0.1179
 
 # %%
 computed_indices["gen_sobol_i"]
@@ -59,17 +67,26 @@ computed_indices["gen_sobol_i"]
 # %%
 computed_indices["gen_sobol_total_i"]
 
-# %%
+# %% [markdown]
+# **Compute generalised Sobol indices**
+
+# %% [markdown]
+dist_object_2 = JointIndependent([Uniform(0, 1)] * 2)
+
 SA = GeneralisedSobol(runmodel_obj, dist_object_2)
 
 computed_indices = SA.run(n_samples=100_000)
 
 # %% [markdown]
-# Gaussian case
+# **First order Generalised Sobol indices**
 #
-# $S_1$ = 0.6084
+# Expected generalised Sobol indices:
 #
-# $S_2$ = 0.3566
+# Uniform case
+#
+# :math:`GS_1` = 0.6084
+#
+# :math:`GS_2` = 0.3566
 
 # %%
 computed_indices["gen_sobol_i"]

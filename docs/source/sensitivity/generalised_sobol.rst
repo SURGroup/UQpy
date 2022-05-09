@@ -11,16 +11,27 @@ As the inputs :math:`X_{1}, \ldots, X_{d}` are independent, :math:`f` may be dec
          f(X) = c + f_{\mathbf{u}}\left(X_{\mathbf{u}}\right)+f_{\sim \mathbf{u}}\left(X_{\sim \mathbf{u}}\right) + f_{\mathbf{u}, \sim \mathbf{u}}\left(X_{\mathbf{u}}, X_{\sim \mathbf{u}}\right)
 
 where :math:`c \in \mathbb{R}^{k}, f_{\mathbf{u}}: E_{\mathbf{u}} \rightarrow \mathbb{R}^{k}, f_{\sim \mathbf{u}}: E_{\sim \mathbf{u}} \rightarrow \mathbb{R}^{k}` and :math:`f_{\mathbf{u}, \sim \mathbf{u}}: E \rightarrow \mathbb{R}^{k}` are given by
-:math:`c=\mathbb{E}(Y), f_{\mathbf{u}}=\mathbb{E}\left(Y \mid X_{\mathbf{u}}\right)-c, f_{\sim \mathbf{u}}=\mathbb{E}\left(Y \mid X_{\sim \mathbf{u}}\right)-c, f_{u, \sim \mathbf{u}}=Y-f_{\mathbf{u}}-f_{\sim \mathbf{u}}-c`
+
+.. math::
+   c = \mathbb{E}(Y), 
+   
+.. math::
+   f_{\mathbf{u}}=\mathbb{E}\left(Y \mid X_{\mathbf{u}}\right)-c, 
+   
+.. math::   
+   f_{\sim \mathbf{u}}=\mathbb{E}\left(Y \mid X_{\sim \mathbf{u}}\right)-c, 
+   
+.. math::
+   f_{u, \sim \mathbf{u}}=Y-f_{\mathbf{u}}-f_{\sim \mathbf{u}}-c.
 
 Thanks to :math:`L^{2}`-orthogonality, computing the covariance matrix of both sides of the above equation leads to
 
 .. math::
    \Sigma = C_{\mathbf{u}}+C_{\sim \mathbf{u}}+C_{\mathbf{u}, \sim \mathbf{u}}.
 
-Here, :math:`\Sigma, C_{\mathbf{u}}, C_{\sim \mathbf{u}}` and :math:`C_{\mathbf{u}, \sim \mathbf{u}}` are denoting respectively the covariance matrices of :math:`Y, f_{\mathbf{u}}\left(X_{\mathbf{u}}\right), f_{\sim \mathbf{u}}\left(X_{\sim \mathbf{u}}\right)` and :math:`f_{\mathbf{u}, \sim \mathbf{u}}\left(X_{\mathbf{u}}, X_{\sim \mathbf{u}}\right)`.
+Here, :math:`\Sigma, C_{\mathbf{u}}, C_{\sim \mathbf{u}}` and :math:`C_{\mathbf{u}, \sim \mathbf{u}}` are denoting the covariance matrices of :math:`Y, f_{\mathbf{u}}\left(X_{\mathbf{u}}\right), f_{\sim \mathbf{u}}\left(X_{\sim \mathbf{u}}\right)` and :math:`f_{\mathbf{u}, \sim \mathbf{u}}\left(X_{\mathbf{u}}, X_{\sim \mathbf{u}}\right)` respectively.
 
-The First order generalised Sobol indices can be computed using the Pick-and-Freeze approach as follows, where :math:`\mathbf{u}` is a variable :math:`i` of the independent random variables.
+The first order generalised Sobol indices can be computed using the Pick-and-Freeze approach as follows, where :math:`\mathbf{u}` is a variable :math:`i` of the independent random variables.
 
 .. math::
    S_{i, N}=\frac{\operatorname{Tr}\left(C_{i, N}\right)}{\operatorname{Tr}\left(\Sigma_{N}\right)}
