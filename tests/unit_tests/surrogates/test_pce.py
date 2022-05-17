@@ -222,6 +222,100 @@ def test_17():
     assert round(generalized_first_sobol[0], 4) == 0.0137
 
 
+def test_lotka_volterra_generalized_sobol():
+    import numpy as np
+    import math
+    from scipy import integrate
+    from UQpy.distributions import Uniform, JointIndependent
+    from UQpy.surrogates.polynomial_chaos import TotalDegreeBasis, \
+        LeastSquareRegression, \
+        PolynomialChaosExpansion
+    from UQpy.sensitivity.PceSensitivity import PceSensitivity
+
+    ### function to be approximated
+    def LV(a, b, c, d, t):
+
+        # X_f0 = np.array([     0. ,  0.])
+        X_f1 = np.array([c / (d * b), a / b])
+
+        def dX_dt(X, t=0):
+            """ Return the growth rate of fox and rabbit populations. """
+            return np.array([a * X[0] - b * X[0] * X[1],
+                             -c * X[1] + d * b * X[0] * X[1]])
+
+        X0 = np.array([10, 5])  # initials conditions: 10 rabbits and 5 foxes
+
+        X, infodict = integrate.odeint(dX_dt, X0, t, full_output=True)
+
+        return X, X_f1
+
+    # set random seed for reproducibility
+    np.random.seed(1)
+
+    ### simulation parameters
+    n = 512
+    t = np.linspace(0, 25, n)
+
+    ### Probability distributions of input parameters
+    pdf1 = Uniform(loc=0.9, scale=0.1)  # a
+    pdf2 = Uniform(loc=0.1, scale=0.05)  # b
+    # pdf2 = Uniform(loc=8, scale=10)  # c
+    # pdf2 = Uniform(loc=8, scale=10)  # d
+    c = 1.5
+    d = 0.75
+    margs = [pdf1, pdf2]
+    joint = JointIndependent(marginals=margs)
+
+    print('Total degree: ', max_degree)
+    polynomial_basis = TotalDegreeBasis(joint, max_degree)
+
+    print('Size of basis:', polynomial_basis.polynomials_number)
+    # training data
+    sampling_coeff = 5
+    print('Sampling coefficient: ', sampling_coeff)
+    np.random.seed(42)
+    n_samples = math.ceil(sampling_coeff * polynomial_basis.polynomials_number)
+    print('Training data: ', n_samples)
+    x_train = joint.rvs(n_samples)
+    y_train = []
+    for i in range(x_train.shape[0]):
+        out, X_f1 = LV(x_train[i, 0], x_train[i, 1], c, d, t)
+        y_train.append(out.flatten())
+    print('Training sample size:', n_samples)
+
+    # fit model
+    least_squares = LeastSquareRegression()
+    pce_metamodel = PolynomialChaosExpansion(polynomial_basis=polynomial_basis,
+                                             regression_method=least_squares)
+    pce_metamodel.fit(x_train, y_train)
+
+    # approximation errors
+    np.random.seed(43)
+    n_samples_test = 5000
+    x_test = joint.rvs(n_samples_test)
+    y_test = []
+    for i in range(x_test.shape[0]):
+        out, X_f1 = LV(x_test[i, 0], x_test[i, 1], c, d, t)
+        y_test.append(out.flatten())
+    print('Test sample size:', n_samples_test)
+
+    y_test_pce = pce_metamodel.predict(x_test)
+    errors = np.abs(y_test_pce - y_test)
+    l2_rel_err = np.linalg.norm(errors, axis=1) / np.linalg.norm(y_test, axis=1)
+
+    l2_rel_err_mean = np.mean(l2_rel_err)
+    print('Mean L2 relative error:', l2_rel_err_mean)
+
+    # Sobol sensitivity analysis
+    pce_sa = PceSensitivity(pce_metamodel)
+    GS1 = pce_sa.calculate_generalized_first_order_indices()
+    assert round(GS1[0], 4) == 0.2148
+    assert round(GS1[1], 4) == 0.7426
+    GST = pce_sa.calculate_generalized_total_order_indices()
+    assert round(GST[0], 4) == 0.2574
+    assert round(GST[1], 4) == 0.7852
+
+
 def test_18():
     """
     Test Sobol indices for vector-valued quantity of interest on the random inputs
