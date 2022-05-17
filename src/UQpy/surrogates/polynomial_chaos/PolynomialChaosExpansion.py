@@ -8,7 +8,8 @@ from UQpy.surrogates.baseclass.Surrogate import Surrogate
 from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
 from UQpy.surrogates.polynomial_chaos.polynomials.TotalDegreeBasis import PolynomialBasis
 from UQpy.distributions import Uniform, Normal
-from UQpy.surrogates.polynomial_chaos.polynomials import Legendre,Hermite
+from UQpy.surrogates.polynomial_chaos.polynomials import Legendre, Hermite
+
 
 class PolynomialChaosExpansion(Surrogate):
 
@@ -97,29 +98,29 @@ class PolynomialChaosExpansion(Surrogate):
 
         :return: Cross validation error of experimental design.
         """
-        
-        x=self.experimental_design_input
-        y=self.experimental_design_output
-        
+
+        x = self.experimental_design_input
+        y = self.experimental_design_output
+
         if y.ndim == 1 or y.shape[1] == 1:
             y = y.reshape(-1, 1)
-            
+
         n_samples = x.shape[0]
         mu_yval = (1 / n_samples) * np.sum(y, axis=0)
-        y_val = self.predict(x, )    
-        polynomialbasis= self.design_matrix
-        
+        y_val = self.predict(x, )
+        polynomialbasis = self.design_matrix
+
         H = np.dot(polynomialbasis, np.linalg.pinv(np.dot(polynomialbasis.T, polynomialbasis)))
         H *= polynomialbasis
-        Hdiag = np.sum(H, axis=1).reshape(-1,1)
+        Hdiag = np.sum(H, axis=1).reshape(-1, 1)
 
-
-        eps_val=((n_samples - 1) / n_samples *np.sum(((y - y_val)/(1 - Hdiag))**2,axis=0)) / (np.sum((y - mu_yval) ** 2, axis=0))
+        eps_val = ((n_samples - 1) / n_samples * np.sum(((y - y_val) / (1 - Hdiag)) ** 2, axis=0)) / (
+            np.sum((y - mu_yval) ** 2, axis=0))
         if y.ndim == 1 or y.shape[1] == 1:
             eps_val = float(eps_val)
 
         return np.round(eps_val, 7)
-    
+
     def validation_error(self, x: np.ndarray, y: np.ndarray):
         """
         Returns the validation error.
@@ -180,7 +181,7 @@ class PolynomialChaosExpansion(Surrogate):
         :param higher: True corresponds to calculation of skewness and kurtosis (computationaly expensive for large basis set).
         :return: Returns the mean and variance.
         """
-        
+
         if self.bias is not None:
             mean = self.coefficients[0, :] + np.squeeze(self.bias)
         else:
@@ -192,77 +193,83 @@ class PolynomialChaosExpansion(Surrogate):
             variance = float(variance)
             mean = float(mean)
 
-        if higher==False:
-            return np.round(mean, 4), np.round(variance, 4)
-        
+        if not higher:
+            return mean, variance
+
         else:
-            multindex=self.multi_index_set
-            P,inputs_number=multindex.shape
-            
-            if inputs_number==1:
-                marginals=[self.polynomial_basis.distributions]
-                
+            multindex = self.multi_index_set
+            P, inputs_number = multindex.shape
+
+            if inputs_number == 1:
+                marginals = [self.polynomial_basis.distributions]
+
             else:
-                marginals=self.polynomial_basis.distributions.marginals
-            
-            
-            skewness=np.zeros(self.outputs_number)
-            kurtosis=np.zeros(self.outputs_number)
-            
-            for ii in range (0,self.outputs_number):
-                
-                Beta=self.coefficients[:, ii]
-                third_moment=0
-                fourth_moment=0
-                
-                indices=np.array(np.meshgrid(range(1,P),range(1,P),range(1,P),range(1,P))).T.reshape(-1,4)
-                i=0
+                marginals = self.polynomial_basis.distributions.marginals
+
+            skewness = np.zeros(self.outputs_number)
+            kurtosis = np.zeros(self.outputs_number)
+
+            for ii in range(0, self.outputs_number):
+
+                Beta = self.coefficients[:, ii]
+                third_moment = 0
+                fourth_moment = 0
+
+                indices = np.array(np.meshgrid(range(1, P), range(1, P), range(1, P), range(1, P))).T.reshape(-1, 4)
+                i = 0
                 for index in indices:
-                    tripleproduct_ND=1
-                    quadproduct_ND=1
-                    
-                    
-                    for m in range (0,inputs_number):
-   
-                        if i<(P-1)**3:
-        
-                            if type(marginals[m])==Normal:
-                                tripleproduct_1D=Hermite.hermite_triple_product(multindex[index[0],m],multindex[index[1],m],multindex[index[2],m])
-                            
-                            if type(marginals[m])==Uniform:   
-                                tripleproduct_1D=Legendre.legendre_triple_product(multindex[index[0],m],multindex[index[1],m],multindex[index[2],m])
-                            
-                            tripleproduct_ND=tripleproduct_ND*tripleproduct_1D
-                        
+                    tripleproduct_ND = 1
+                    quadproduct_ND = 1
+
+                    for m in range(0, inputs_number):
+
+                        if i < (P - 1) ** 3:
+
+                            if type(marginals[m]) == Normal:
+                                tripleproduct_1D = Hermite.hermite_triple_product(multindex[index[0], m],
+                                                                                  multindex[index[1], m],
+                                                                                  multindex[index[2], m])
+
+                            if type(marginals[m]) == Uniform:
+                                tripleproduct_1D = Legendre.legendre_triple_product(multindex[index[0], m],
+                                                                                    multindex[index[1], m],
+                                                                                    multindex[index[2], m])
+
+                            tripleproduct_ND = tripleproduct_ND * tripleproduct_1D
+
                         else:
-                            tripleproduct_ND=0
-                        
-                        quadproduct_1D=0
-                        
-                        for n in range (0,multindex[index[0],m]+multindex[index[1],m]+1):
-                            
-                            if type(marginals[m])==Normal:
-                                tripproduct1=Hermite.hermite_triple_product(multindex[index[0],m],multindex[index[1],m],n)
-                                tripproduct2=Hermite.hermite_triple_product(multindex[index[2],m],multindex[index[3],m],n)
-                           
-                            if type(marginals[m])==Uniform: 
-                                tripproduct1=Legendre.legendre_triple_product(multindex[index[0],m],multindex[index[1],m],n)
-                                tripproduct2=Legendre.legendre_triple_product(multindex[index[2],m],multindex[index[3],m],n)
+                            tripleproduct_ND = 0
 
-                            quadproduct_1D=quadproduct_1D+tripproduct1*tripproduct2
+                        quadproduct_1D = 0
 
-                        quadproduct_ND=quadproduct_ND*quadproduct_1D
-                    
-                    third_moment+=tripleproduct_ND*Beta[index[0]]*Beta[index[1]]*Beta[index[2]]
-                    fourth_moment+=quadproduct_ND*Beta[index[0]]*Beta[index[1]]*Beta[index[2]]*Beta[index[3]]
+                        for n in range(0, multindex[index[0], m] + multindex[index[1], m] + 1):
 
-                    i+=1
+                            if type(marginals[m]) == Normal:
+                                tripproduct1 = Hermite.hermite_triple_product(multindex[index[0], m],
+                                                                              multindex[index[1], m], n)
+                                tripproduct2 = Hermite.hermite_triple_product(multindex[index[2], m],
+                                                                              multindex[index[3], m], n)
 
-                skewness[ii]=1/(np.sqrt(variance)**3)*third_moment
-                kurtosis[ii]=1/(variance**2)*fourth_moment
-                
+                            if type(marginals[m]) == Uniform:
+                                tripproduct1 = Legendre.legendre_triple_product(multindex[index[0], m],
+                                                                                multindex[index[1], m], n)
+                                tripproduct2 = Legendre.legendre_triple_product(multindex[index[2], m],
+                                                                                multindex[index[3], m], n)
+
+                            quadproduct_1D = quadproduct_1D + tripproduct1 * tripproduct2
+
+                        quadproduct_ND = quadproduct_ND * quadproduct_1D
+
+                    third_moment += tripleproduct_ND * Beta[index[0]] * Beta[index[1]] * Beta[index[2]]
+                    fourth_moment += quadproduct_ND * Beta[index[0]] * Beta[index[1]] * Beta[index[2]] * Beta[index[3]]
+
+                    i += 1
+
+                skewness[ii] = 1 / (np.sqrt(variance) ** 3) * third_moment
+                kurtosis[ii] = 1 / (variance ** 2) * fourth_moment
+
                 if self.coefficients.ndim == 1 or self.coefficients.shape[1] == 1:
                     skewness = float(skewness[0])
                     kurtosis = float(kurtosis[0])
 
-            return mean,variance,skewness,kurtosis
+            return mean, variance, skewness, kurtosis
