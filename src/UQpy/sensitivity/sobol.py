@@ -50,12 +50,20 @@ References
 import math
 import logging
 import itertools
+from typing import Union
 
 import numpy as np
+from beartype import beartype
 
 from UQpy.sensitivity.baseclass.sensitivity import Sensitivity
 from UQpy.sensitivity.baseclass.pickfreeze import generate_pick_freeze_samples
 from UQpy.utilities.UQpyLoggingFormatter import UQpyLoggingFormatter
+from UQpy.utilities.ValidationTypes import (
+    PositiveInteger,
+    PositiveFloat,
+    NumpyFloatArray,
+    NumpyIntArray,
+)
 
 # TODO: Sampling strategies
 
@@ -128,15 +136,16 @@ class Sobol(Sensitivity):
         self.multioutput = None
         "True if the model has multiple outputs, :class:`bool`"
 
+    @beartype
     def run(
         self,
-        n_samples=1_000,
-        num_bootstrap_samples=None,
-        confidence_level=0.95,
-        estimate_second_order=False,
-        first_order_scheme="Janon2014",
-        total_order_scheme="Homma1996",
-        second_order_scheme="Saltelli2002",
+        n_samples: PositiveInteger = 1_000,
+        num_bootstrap_samples: PositiveInteger = None,
+        confidence_level: PositiveFloat = 0.95,
+        estimate_second_order: bool = False,
+        first_order_scheme: str = "Janon2014",
+        total_order_scheme: str = "Homma1996",
+        second_order_scheme: str = "Saltelli2002",
     ):
 
         """
@@ -500,12 +509,13 @@ Total order indices: 2 estimates
 """
 
 
+@beartype
 def compute_first_order(
-    A_model_evals,
-    B_model_evals,
-    C_i_model_evals,
-    D_i_model_evals=None,
-    scheme="Janon2014",
+    A_model_evals: Union[NumpyFloatArray, NumpyIntArray],
+    B_model_evals: Union[NumpyFloatArray, NumpyIntArray, None],
+    C_i_model_evals: NumpyFloatArray,
+    D_i_model_evals: Union[NumpyFloatArray, NumpyIntArray, None] = None,
+    scheme: str = "Janon2014",
 ):
 
     """
@@ -655,12 +665,13 @@ def compute_first_order(
     return first_order_sobol
 
 
+@beartype
 def compute_total_order(
-    A_model_evals,
-    B_model_evals,
-    C_i_model_evals,
-    D_i_model_evals=None,
-    scheme="Homma1996",
+    A_model_evals: Union[NumpyFloatArray, NumpyIntArray],
+    B_model_evals: Union[NumpyFloatArray, NumpyIntArray, None],
+    C_i_model_evals: Union[NumpyFloatArray, NumpyIntArray],
+    D_i_model_evals: Union[NumpyFloatArray, NumpyIntArray, None] = None,
+    scheme: str = "Homma1996",
 ):
 
     """
@@ -759,13 +770,14 @@ def compute_total_order(
     return total_order_sobol
 
 
+@beartype
 def compute_second_order(
-    A_model_evals,
-    B_model_evals,
-    C_i_model_evals,
-    D_i_model_evals,
+    A_model_evals: Union[NumpyFloatArray, NumpyIntArray],
+    B_model_evals: Union[NumpyFloatArray, NumpyIntArray],
+    C_i_model_evals: Union[NumpyFloatArray, NumpyIntArray],
+    D_i_model_evals: Union[NumpyFloatArray, NumpyIntArray],
     first_order_sobol=None,  # None to make it a make keyword argument
-    scheme="Saltelli2002",
+    scheme: str = "Saltelli2002",
 ):
     """
     Compute the second order Sobol indices using the Pick-and-Freeze scheme.
