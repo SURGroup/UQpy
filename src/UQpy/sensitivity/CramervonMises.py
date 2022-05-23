@@ -20,8 +20,8 @@ from typing import Union
 import numpy as np
 from beartype import beartype
 
-from UQpy.sensitivity.baseclass.sensitivity import Sensitivity
-from UQpy.sensitivity.baseclass.pickfreeze import generate_pick_freeze_samples
+from UQpy.sensitivity.baseclass.Sensitivity import Sensitivity
+from UQpy.sensitivity.baseclass.PickFreeze import generate_pick_freeze_samples
 from UQpy.sensitivity.Sobol import compute_first_order as compute_first_order_sobol
 from UQpy.sensitivity.Sobol import compute_total_order as compute_total_order_sobol
 from UQpy.utilities.UQpyLoggingFormatter import UQpyLoggingFormatter

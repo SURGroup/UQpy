@@ -18,7 +18,7 @@ from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Uniform
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sensitivity.Sobol import Sobol
-from UQpy.sensitivity.baseclass.pickfreeze import generate_pick_freeze_samples
+from UQpy.sensitivity.baseclass.PickFreeze import generate_pick_freeze_samples
 
 # Prepare
 ###############################################################################

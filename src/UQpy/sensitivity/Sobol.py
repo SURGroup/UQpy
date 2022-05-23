@@ -55,8 +55,8 @@ from typing import Union
 import numpy as np
 from beartype import beartype
 
-from UQpy.sensitivity.baseclass.sensitivity import Sensitivity
-from UQpy.sensitivity.baseclass.pickfreeze import generate_pick_freeze_samples
+from UQpy.sensitivity.baseclass.Sensitivity import Sensitivity
+from UQpy.sensitivity.baseclass.PickFreeze import generate_pick_freeze_samples
 from UQpy.utilities.UQpyLoggingFormatter import UQpyLoggingFormatter
 from UQpy.utilities.ValidationTypes import (
     PositiveInteger,

@@ -1,2 +1,2 @@
-from UQpy.sensitivity.baseclass.sensitivity import *
-from UQpy.sensitivity.baseclass.pickfreeze import *
+from UQpy.sensitivity.baseclass.Sensitivity import *
+from UQpy.sensitivity.baseclass.PickFreeze import *
