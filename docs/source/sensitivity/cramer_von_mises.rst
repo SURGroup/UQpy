@@ -50,7 +50,7 @@ Methods
 Attributes
 """"""""""
 .. autoattribute:: UQpy.sensitivity.CramervonMises.CVM_i
-.. autoattribute:: UQpy.sensitivity.CramervonMises.CI_CVM_i
+.. autoattribute:: UQpy.sensitivity.CramervonMises.confidence_interval_CVM_i
 .. autoattribute:: UQpy.sensitivity.CramervonMises.sobol_i
 .. autoattribute:: UQpy.sensitivity.CramervonMises.sobol_total_i
 .. autoattribute:: UQpy.sensitivity.CramervonMises.n_samples

@@ -80,9 +80,9 @@ Attributes
 """"""""""
 .. autoattribute:: UQpy.sensitivity.Sobol.sobol_i
 .. autoattribute:: UQpy.sensitivity.Sobol.sobol_total_i
-.. autoattribute:: UQpy.sensitivity.Sobol.CI_sobol_i
-.. autoattribute:: UQpy.sensitivity.Sobol.CI_sobol_total_i
-.. autoattribute:: UQpy.sensitivity.Sobol.CI_sobol_ij
+.. autoattribute:: UQpy.sensitivity.Sobol.confidence_interval_sobol_i
+.. autoattribute:: UQpy.sensitivity.Sobol.confidence_interval_sobol_total_i
+.. autoattribute:: UQpy.sensitivity.Sobol.confidence_interval_sobol_ij
 .. autoattribute:: UQpy.sensitivity.Sobol.n_samples
 .. autoattribute:: UQpy.sensitivity.Sobol.num_vars
 .. autoattribute:: UQpy.sensitivity.Sobol.multioutput

@@ -105,10 +105,10 @@ computed_indices["sobol_total_i"]
 # **Confidence intervals for first order Sobol indices**
 
 # %%
-computed_indices["CI_sobol_i"]
+computed_indices["confidence_interval_sobol_i"]
 
 # %% [markdown]
 # **Confidence intervals for total order Sobol indices**
 
 # %%
-computed_indices["CI_sobol_total_i"]
+computed_indices["confidence_interval_sobol_total_i"]

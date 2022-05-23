@@ -63,7 +63,7 @@ computed_indices["chatterjee_i"]
 # **Confidence intervals for the Chatterjee indices**
 
 # %%
-computed_indices["CI_chatterjee_i"]
+computed_indices["confidence_interval_chatterjee_i"]
 
 # %% [markdown]
 # **Estimated Sobol indices**
