@@ -118,13 +118,13 @@ class Sobol(Sensitivity):
         self.sobol_ij = None
         "Second order Sobol indices, :class:`numpy.ndarray` of shape `(num_second_order_terms, n_outputs)`"
 
-        self.CI_sobol_i = None
+        self.confidence_interval_sobol_i = None
         "Confidence intervals for the first order Sobol indices, :class:`numpy.ndarray` of shape `(num_vars, 2)`"
 
-        self.CI_sobol_total_i = None
+        self.confidence_interval_sobol_total_i = None
         "Confidence intervals for the total order Sobol indices, :class:`numpy.ndarray` of shape `(num_vars, 2)`"
 
-        self.CI_sobol_ij = None
+        self.confidence_interval_sobol_ij = None
         "Confidence intervals for the second order Sobol indices, :class:`numpy.ndarray` of shape `(num_second_order_terms, 2)`"
 
         self.n_samples = None
@@ -176,11 +176,11 @@ class Sobol(Sensitivity):
             :code:`sobol_i` of shape :code:`(num_vars, 1)`, \
             :code:`sobol_total_i` of shape :code:`(num_vars, 1)`, \
             :code:`sobol_ij` of shape :code:`(num_second_order_terms, 1)`, \
-            :code:`CI_sobol_i` of shape :code:`(num_vars, 2)`, \
+            :code:`confidence_interval_sobol_i` of shape :code:`(num_vars, 2)`, \
             if multioutput: Shape: `(n_outputs, num_vars, 2)`, \
-            :code:`CI_sobol_total_i` of shape :code:`(num_vars, 2)`, \
+            :code:`confidence_interval_sobol_total_i` of shape :code:`(num_vars, 2)`, \
             if multioutput: Shape: `(n_outputs, num_vars, 2)`, \
-            :code:`CI_sobol_ij` of shape :code:`(num_second_order_terms, 2)`
+            :code:`confidence_interval_sobol_ij` of shape :code:`(num_second_order_terms, 2)`
             if multioutput: Shape: `(n_outputs, num_second_order_terms, 2)`, \
 
         """
@@ -321,7 +321,7 @@ class Sobol(Sensitivity):
             ]
 
             # First order Sobol indices
-            self.CI_sobol_i = self.bootstrapping(
+            self.confidence_interval_sobol_i = self.bootstrapping(
                 compute_first_order,
                 estimator_inputs,
                 computed_indices["sobol_i"],
@@ -334,10 +334,12 @@ class Sobol(Sensitivity):
                 "UQpy: Confidence intervals for First order Sobol indices computed successfully."
             )
 
-            computed_indices["CI_sobol_i"] = self.CI_sobol_i
+            computed_indices[
+                "confidence_interval_sobol_i"
+            ] = self.confidence_interval_sobol_i
 
             # Total order Sobol indices
-            self.CI_sobol_total_i = self.bootstrapping(
+            self.confidence_interval_sobol_total_i = self.bootstrapping(
                 compute_total_order,
                 estimator_inputs,
                 computed_indices["sobol_total_i"],
@@ -350,11 +352,13 @@ class Sobol(Sensitivity):
                 "UQpy: Confidence intervals for Total order Sobol indices computed successfully."
             )
 
-            computed_indices["CI_sobol_total_i"] = self.CI_sobol_total_i
+            computed_indices[
+                "confidence_interval_sobol_total_i"
+            ] = self.confidence_interval_sobol_total_i
 
             # Second order Sobol indices
             if estimate_second_order:
-                self.CI_sobol_ij = self.bootstrapping(
+                self.confidence_interval_sobol_ij = self.bootstrapping(
                     compute_second_order,
                     estimator_inputs,
                     computed_indices["sobol_ij"],
@@ -368,7 +372,9 @@ class Sobol(Sensitivity):
                     "UQpy: Confidence intervals for Second order Sobol indices computed successfully."
                 )
 
-                computed_indices["CI_sobol_ij"] = self.CI_sobol_ij
+                computed_indices[
+                    "confidence_interval_sobol_ij"
+                ] = self.confidence_interval_sobol_ij
 
         return computed_indices
 

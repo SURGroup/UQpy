@@ -113,8 +113,8 @@ class GeneralisedSobol(Sensitivity):
         :return: A :class:`dict` with the following keys: \
             :code:`gen_sobol_i` of shape :code:`(num_vars, 1)`, \
             :code:`gen_sobol_total_i` of shape :code:`(num_vars, 1)`, \
-            :code:`CI_gen_sobol_i` of shape :code:`(num_vars, 2)`, \
-            :code:`CI_gen_sobol_total_i` of shape :code:`(num_vars, 2)`.
+            :code:`confidence_interval_gen_sobol_i` of shape :code:`(num_vars, 2)`, \
+            :code:`confidence_interval_gen_sobol_total_i` of shape :code:`(num_vars, 2)`.
 
         """
 
@@ -225,7 +225,7 @@ class GeneralisedSobol(Sensitivity):
             ]
 
             # First order generalised Sobol indices
-            self.CI_gen_sobol_i = self.bootstrapping(
+            self.confidence_interval_gen_sobol_i = self.bootstrapping(
                 self.compute_first_order_generalised_sobol_indices,
                 estimator_inputs,
                 computed_indices["gen_sobol_i"],
@@ -238,7 +238,7 @@ class GeneralisedSobol(Sensitivity):
             )
 
             # Total order generalised Sobol indices
-            self.CI_gen_sobol_total_i = self.bootstrapping(
+            self.confidence_interval_gen_sobol_total_i = self.bootstrapping(
                 self.compute_total_order_generalised_sobol_indices,
                 estimator_inputs,
                 computed_indices["gen_sobol_total_i"],
@@ -251,8 +251,12 @@ class GeneralisedSobol(Sensitivity):
             )
 
             # Store the indices in the dictionary
-            computed_indices["CI_gen_sobol_i"] = self.CI_gen_sobol_i
-            computed_indices["CI_gen_sobol_total_i"] = self.CI_gen_sobol_total_i
+            computed_indices[
+                "confidence_interval_gen_sobol_i"
+            ] = self.confidence_interval_gen_sobol_i
+            computed_indices[
+                "confidence_interval_gen_sobol_total_i"
+            ] = self.confidence_interval_gen_sobol_total_i
 
         return computed_indices
 

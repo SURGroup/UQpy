@@ -81,7 +81,7 @@ class Chatterjee(Sensitivity):
         self.sobol_i = None
         "Sobol indices computed using the rank statistics, :class:`numpy.ndarray` of shape :code:`(num_vars, 1)`"
 
-        self.CI_chatterjee_i = None
+        self.confidence_interval_chatterjee_i = None
         "Confidence intervals for the Chatterjee sensitivity indices, :class:`numpy.ndarray` of shape :code:`(num_vars, 2)`"
 
         self.num_vars = None
@@ -115,7 +115,7 @@ class Chatterjee(Sensitivity):
 
         :return: A :class:`dict` with the following keys: \
             :code:`'chatterjee_i'` of shape :code:`(num_vars, 1)`, \
-            :code:`'CI_chatterjee_i'` of shape :code:`(num_vars, 2)`, \
+            :code:`'confidence_interval_chatterjee_i'` of shape :code:`(num_vars, 2)`, \
             :code:`'sobol_i'` of shape :code:`(num_vars, 1)`.
 
         """
@@ -185,7 +185,7 @@ class Chatterjee(Sensitivity):
 
             estimator_inputs = [A_samples, A_model_evals]
 
-            self.CI_chatterjee_i = self.bootstrapping(
+            self.confidence_interval_chatterjee_i = self.bootstrapping(
                 self.compute_chatterjee_indices,
                 estimator_inputs,
                 computed_indices["chatterjee_i"],
@@ -197,7 +197,9 @@ class Chatterjee(Sensitivity):
                 "UQpy: Confidence intervals for Chatterjee indices computed successfully.\n"
             )
 
-            computed_indices["CI_chatterjee_i"] = self.CI_chatterjee_i
+            computed_indices[
+                "confidence_interval_chatterjee_i"
+            ] = self.confidence_interval_chatterjee_i
 
         return computed_indices
 

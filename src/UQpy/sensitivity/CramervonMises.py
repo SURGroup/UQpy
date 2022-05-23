@@ -79,7 +79,7 @@ class CramervonMises(Sensitivity):
         self.CVM_i = None
         "First order Cramér-von Mises indices, :class:`numpy.ndarray` of shape :code:`(num_vars, 1)`"
 
-        self.CI_CVM_i = None
+        self.confidence_interval_CVM_i = None
         "Confidence intervals of the first order Cramér-von Mises indices, :class:`numpy.ndarray` of shape :code:`(num_vars, 2)`"
 
         self.sobol_i = None
@@ -124,7 +124,7 @@ class CramervonMises(Sensitivity):
 
         :return: A :class:`dict` with the following keys: \
             :code:`CVM_i` of shape :code:`(num_vars, 1)`, \
-            :code:`CI_CVM_i` of shape :code:`(num_vars, 2)`, \
+            :code:`confidence_interval_CVM_i` of shape :code:`(num_vars, 2)`, \
             :code:`sobol_i` of shape :code:`(num_vars, 1)`, \
             :code:`sobol_total_i` of shape :code:`(num_vars, 1)`.
 
@@ -205,7 +205,7 @@ class CramervonMises(Sensitivity):
                 C_i_model_evals,
             ]
 
-            self.CI_CVM_i = self.bootstrapping(
+            self.confidence_interval_CVM_i = self.bootstrapping(
                 self.pick_and_freeze_estimator,
                 estimator_inputs,
                 computed_indices["CVM_i"],
@@ -218,7 +218,9 @@ class CramervonMises(Sensitivity):
             )
 
             # Store the indices in the dictionary
-            computed_indices["CI_CVM_i"] = self.CI_CVM_i
+            computed_indices[
+                "confidence_interval_CVM_i"
+            ] = self.confidence_interval_CVM_i
 
         ################## COMPUTE SOBOL INDICES ##################
 

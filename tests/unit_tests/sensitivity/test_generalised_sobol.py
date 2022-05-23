@@ -209,8 +209,10 @@ def bootstrap_generalised_sobol_index_variance(
 
     gen_sobol_i = computed_indices["gen_sobol_i"].ravel()
     gen_sobol_total_i = computed_indices["gen_sobol_total_i"].ravel()
-    upper_bound_first_order = computed_indices["CI_gen_sobol_i"][:, 1]
-    upper_bound_total_order = computed_indices["CI_gen_sobol_total_i"][:, 1]
+    upper_bound_first_order = computed_indices["confidence_interval_gen_sobol_i"][:, 1]
+    upper_bound_total_order = computed_indices["confidence_interval_gen_sobol_total_i"][
+        :, 1
+    ]
 
     std_bootstrap_first_order = (upper_bound_first_order - gen_sobol_i) / delta
     std_bootstrap_total_order = (upper_bound_total_order - gen_sobol_total_i) / delta

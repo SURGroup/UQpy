@@ -152,7 +152,7 @@ def bootstrap_CVM_index_variance(CVM_object, NUM_SAMPLES):
     )
 
     First_order = computed_indices["CVM_i"].ravel()
-    upper_bound_first_order = computed_indices["CI_CVM_i"][:, 1]
+    upper_bound_first_order = computed_indices["confidence_interval_CVM_i"][:, 1]
 
     #### Compute variance ####
     std_bootstrap_first_order = (upper_bound_first_order - First_order) / delta

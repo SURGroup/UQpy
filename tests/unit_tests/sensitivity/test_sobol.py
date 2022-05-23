@@ -183,12 +183,14 @@ def bootstrap_sobol_index_variance(sobol_object, NUM_SAMPLES):
 
     First_order = computed_indices["sobol_i"].ravel()
     Total_order = computed_indices["sobol_total_i"].ravel()
-    CI_first_order = computed_indices["CI_sobol_i"]
-    CI_total_order = computed_indices["CI_sobol_total_i"]
+    confidence_interval_first_order = computed_indices["confidence_interval_sobol_i"]
+    confidence_interval_total_order = computed_indices[
+        "confidence_interval_sobol_total_i"
+    ]
 
     #### Compute variance ####
-    upper_bound_first_order = CI_first_order[:, 1]
-    upper_bound_total_order = CI_total_order[:, 1]
+    upper_bound_first_order = confidence_interval_first_order[:, 1]
+    upper_bound_total_order = confidence_interval_total_order[:, 1]
 
     std_bootstrap_first_order = (upper_bound_first_order - First_order) / delta
     std_bootstrap_total_order = (upper_bound_total_order - Total_order) / delta
