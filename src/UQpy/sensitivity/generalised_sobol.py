@@ -26,9 +26,18 @@ import logging
 
 import numpy as np
 
+from typing import Union
+from beartype import beartype
+
 from UQpy.sensitivity.baseclass.sensitivity import Sensitivity
 from UQpy.sensitivity.baseclass.pickfreeze import generate_pick_freeze_samples
 from UQpy.utilities.UQpyLoggingFormatter import UQpyLoggingFormatter
+from UQpy.utilities.ValidationTypes import (
+    PositiveFloat,
+    PositiveInteger,
+    NumpyFloatArray,
+    NumpyIntArray,
+)
 
 
 class GeneralisedSobol(Sensitivity):
@@ -80,11 +89,12 @@ class GeneralisedSobol(Sensitivity):
         self.num_vars = None
         "Number of model input variables, :class:`int`"
 
+    @beartype
     def run(
         self,
-        n_samples=1_000,
-        num_bootstrap_samples=None,
-        confidence_level=0.95,
+        n_samples: PositiveInteger = 1_000,
+        num_bootstrap_samples: PositiveInteger = None,
+        confidence_level: PositiveFloat = 0.95,
     ):
 
         """
@@ -247,8 +257,11 @@ class GeneralisedSobol(Sensitivity):
         return computed_indices
 
     @staticmethod
+    @beartype
     def compute_first_order_generalised_sobol_indices(
-        A_model_evals, B_model_evals, C_i_model_evals
+        A_model_evals: Union[NumpyFloatArray, NumpyIntArray],
+        B_model_evals: Union[NumpyFloatArray, NumpyIntArray],
+        C_i_model_evals: Union[NumpyFloatArray, NumpyIntArray],
     ):
 
         """
@@ -313,8 +326,11 @@ class GeneralisedSobol(Sensitivity):
         return gen_sobol_i
 
     @staticmethod
+    @beartype
     def compute_total_order_generalised_sobol_indices(
-        A_model_evals, B_model_evals, C_i_model_evals
+        A_model_evals: Union[NumpyFloatArray, NumpyIntArray],
+        B_model_evals: Union[NumpyFloatArray, NumpyIntArray],
+        C_i_model_evals: Union[NumpyFloatArray, NumpyIntArray],
     ):
 
         """
