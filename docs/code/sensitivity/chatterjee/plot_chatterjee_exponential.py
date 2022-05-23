@@ -21,7 +21,7 @@ from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
-from UQpy.sensitivity.chatterjee import Chatterjee
+from UQpy.sensitivity.Chatterjee import Chatterjee
 
 # %% [markdown]
 # **Define the model and input distributions**
