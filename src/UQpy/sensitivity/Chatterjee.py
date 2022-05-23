@@ -27,7 +27,7 @@ from typing import Union
 from numbers import Integral
 
 from UQpy.sensitivity.baseclass.sensitivity import Sensitivity
-from UQpy.sensitivity.sobol import compute_first_order as compute_first_order_sobol
+from UQpy.sensitivity.Sobol import compute_first_order as compute_first_order_sobol
 from UQpy.utilities.ValidationTypes import (
     RandomStateType,
     PositiveInteger,
