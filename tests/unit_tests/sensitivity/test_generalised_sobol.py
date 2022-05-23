@@ -50,7 +50,7 @@ from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Uniform, Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
-from UQpy.sensitivity.generalised_sobol import GeneralisedSobol
+from UQpy.sensitivity.GeneralisedSobol import GeneralisedSobol
 
 # Prepare
 ###############################################################################
