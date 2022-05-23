@@ -283,7 +283,7 @@ class Chatterjee(Sensitivity):
     ):
         r"""
         Computing the :math:`N(j)` for each :math:`j \in \{1, \ldots, n\}`
-        as in eq.(8) in [6]_, where :math:`n` is the size of :math:`X`.
+        as in eq.(8) in :cite:`gamboa2020global`, where :math:`n` is the size of :math:`X`.
 
         .. math::
             :nowrap:

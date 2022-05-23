@@ -465,22 +465,6 @@ abstract = {Bayesian inference has found widespread application and use in scien
    pages={306–312}
 }
 
-@article{Morris1,
-title = {An effective screening design for sensitivity analysis of large models},
-journal = {Environmental Modelling & Software},
-volume = {22},
-number = {10},
-pages = {1509-1518},
-year = {2007},
-note = {Modelling, computer-assisted simulations, and mapping of dangerous phenomena for hazard assessment},
-issn = {1364-8152},
-doi = {https://doi.org/10.1016/j.envsoft.2006.10.004},
-url = {https://www.sciencedirect.com/science/article/pii/S1364815206002805},
-author = {Francesca Campolongo and Jessica Cariboni and Andrea Saltelli},
-keywords = {Sensitivity analysis, Screening problem, Model-free methods, Effective sampling strategy, Dimethylsulphide (DMS)},
-abstract = {In 1991 Morris proposed an effective screening sensitivity measure to identify the few important factors in models with many factors. The method is based on computing for each input a number of incremental ratios, namely elementary effects, which are then averaged to assess the overall importance of the input. Despite its value, the method is still rarely used and instead local analyses varying one factor at a time around a baseline point are usually employed. In this piece of work we propose a revised version of the elementary effects method, improved in terms of both the definition of the measure and the sampling strategy. In the present form the method shares many of the positive qualities of the variance-based techniques, having the advantage of a lower computational cost, as demonstrated by the analytical examples. The method is employed to assess the sensitivity of a chemical reaction model for dimethylsulphide (DMS), a gas involved in climate change. Results of the sensitivity analysis open up the ground for model reconsideration: some model components may need a more thorough modelling effort while some others may need to be simplified.}
-}
-
 @article{StochasticProcess1,
 title = {Digital simulation of random processes and its applications},
 journal = {Journal of Sound and Vibration},
@@ -743,4 +727,61 @@ abstract = {The nearest symmetric positive semidefinite matrix in the Frobenius 
   pages={759--773},
   year={2018},
   publisher={Elsevier}
+}
+
+################ Sensitivity Analysis ########################
+
+# Morris
+@article{Morris1,
+title = {An effective screening design for sensitivity analysis of large models},
+journal = {Environmental Modelling & Software},
+volume = {22},
+number = {10},
+pages = {1509-1518},
+year = {2007},
+note = {Modelling, computer-assisted simulations, and mapping of dangerous phenomena for hazard assessment},
+issn = {1364-8152},
+doi = {https://doi.org/10.1016/j.envsoft.2006.10.004},
+url = {https://www.sciencedirect.com/science/article/pii/S1364815206002805},
+author = {Francesca Campolongo and Jessica Cariboni and Andrea Saltelli},
+keywords = {Sensitivity analysis, Screening problem, Model-free methods, Effective sampling strategy, Dimethylsulphide (DMS)},
+abstract = {In 1991 Morris proposed an effective screening sensitivity measure to identify the few important factors in models with many factors. The method is based on computing for each input a number of incremental ratios, namely elementary effects, which are then averaged to assess the overall importance of the input. Despite its value, the method is still rarely used and instead local analyses varying one factor at a time around a baseline point are usually employed. In this piece of work we propose a revised version of the elementary effects method, improved in terms of both the definition of the measure and the sampling strategy. In the present form the method shares many of the positive qualities of the variance-based techniques, having the advantage of a lower computational cost, as demonstrated by the analytical examples. The method is employed to assess the sensitivity of a chemical reaction model for dimethylsulphide (DMS), a gas involved in climate change. Results of the sensitivity analysis open up the ground for model reconsideration: some model components may need a more thorough modelling effort while some others may need to be simplified.}
+}
+
+# Chatterjee
+@article{Chatterjee,
+author = {Sourav Chatterjee},
+title = {A New Coefficient of Correlation},
+journal = {Journal of the American Statistical Association},
+volume = {116},
+number = {536},
+pages = {2009-2022},
+year  = {2021},
+publisher = {Taylor & Francis},
+doi = {10.1080/01621459.2020.1758115},
+URL = {https://doi.org/10.1080/01621459.2020.1758115},
+eprint = {https://doi.org/10.1080/01621459.2020.1758115}
+}
+
+@misc{gamboa2020global,
+      title={Global Sensitivity Analysis: a new generation of mighty estimators based on rank statistics}, 
+      author={Fabrice Gamboa and Pierre Gremaud and Thierry Klein and Agnès Lagnoux},
+      year={2020},
+      eprint={2003.01772},
+      archivePrefix={arXiv},
+      primaryClass={math.ST}
+}
+
+# Cramér-von Mises index
+@article{CVM,
+author = {Gamboa, Fabrice and Klein, Thierry and Lagnoux, Agnès},
+title = {Sensitivity Analysis Based on Cramér--von Mises Distance},
+journal = {SIAM/ASA Journal on Uncertainty Quantification},
+volume = {6},
+number = {2},
+pages = {522-548},
+year = {2018},
+doi = {10.1137/15M1025621},
+URL = {https://doi.org/10.1137/15M1025621},
+eprint = {https://doi.org/10.1137/15M1025621},
 }
