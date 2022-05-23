@@ -1,10 +1,35 @@
 import copy
+from typing import Union
+
+from beartype import beartype
+
+from UQpy.distributions.collection import JointIndependent
+from UQpy.utilities.ValidationTypes import (
+    RandomStateType,
+    PositiveInteger,
+)
 
 
-def generate_pick_freeze_samples(dist_obj, n_samples, random_state=None):
+@beartype
+def generate_pick_freeze_samples(
+    dist_obj: Union[JointIndependent, Union[list, tuple]],
+    n_samples: PositiveInteger,
+    random_state: RandomStateType = None,
+):
 
     """
     Generate samples to be used in the Pick-and-Freeze algorithm.
+
+    **Inputs**:
+
+    * **dist_obj** (`JointIndependent` or `list` or `tuple`):
+        A distribution object or a list or tuple of distribution objects.
+
+    * **n_samples** (`int`):
+        The number of samples to be generated.
+
+    * **random_state** (`None` or `int` or `numpy.random.RandomState`):
+        A random seed or a `numpy.random.RandomState` object.
 
     **Outputs:**
 
