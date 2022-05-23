@@ -22,9 +22,19 @@ import logging
 
 import numpy as np
 import scipy.stats
+from beartype import beartype
+from typing import Union
+from numbers import Integral
 
 from UQpy.sensitivity.baseclass.sensitivity import Sensitivity
 from UQpy.sensitivity.sobol import compute_first_order as compute_first_order_sobol
+from UQpy.utilities.ValidationTypes import (
+    RandomStateType,
+    PositiveInteger,
+    PositiveFloat,
+    NumpyFloatArray,
+    NumpyIntArray,
+)
 from UQpy.utilities.UQpyLoggingFormatter import UQpyLoggingFormatter
 
 
@@ -80,12 +90,13 @@ class Chatterjee(Sensitivity):
         self.n_samples = None
         "Number of samples used to estimate the sensitivity indices, :class:`int`"
 
+    @beartype
     def run(
         self,
-        n_samples=1_000,
-        estimate_sobol_indices=False,
-        num_bootstrap_samples=None,
-        confidence_level=0.95,
+        n_samples: PositiveInteger = 1_000,
+        estimate_sobol_indices: bool = False,
+        num_bootstrap_samples: PositiveInteger = None,
+        confidence_level: PositiveFloat = 0.95,
     ):
         """
         Compute the sensitivity indices using the Chatterjee method.
@@ -191,7 +202,12 @@ class Chatterjee(Sensitivity):
         return computed_indices
 
     @staticmethod
-    def compute_chatterjee_indices(X, Y, seed=None):
+    @beartype
+    def compute_chatterjee_indices(
+        X: Union[NumpyFloatArray, NumpyIntArray],
+        Y: Union[NumpyFloatArray, NumpyIntArray],
+        seed: RandomStateType = None,
+    ):
         r"""
 
         Compute the Chatterjee sensitivity indices
@@ -259,7 +275,10 @@ class Chatterjee(Sensitivity):
         return chatterjee_indices
 
     @staticmethod
-    def rank_analog_to_pickfreeze(X, j):
+    @beartype
+    def rank_analog_to_pickfreeze(
+        X: Union[NumpyFloatArray, NumpyIntArray], j: Integral
+    ):
         r"""
         Computing the :math:`N(j)` for each :math:`j \in \{1, \ldots, n\}`
         as in eq.(8) in [6]_, where :math:`n` is the size of :math:`X`.
@@ -304,7 +323,8 @@ class Chatterjee(Sensitivity):
             return np.where(rank_X == 0)[0][0]
 
     @staticmethod
-    def rank_analog_to_pickfreeze_vec(X):
+    @beartype
+    def rank_analog_to_pickfreeze_vec(X: Union[NumpyFloatArray, NumpyIntArray]):
         r"""
         Computing the :math:`N(j)` for each :math:`j \in \{1, \ldots, n\}`
         in a vectorized manner., where :math:`n` is the size of :math:`X`.
@@ -372,7 +392,11 @@ class Chatterjee(Sensitivity):
         return N_func.astype(int)
 
     @staticmethod
-    def compute_Sobol_indices(A_model_evals, C_i_model_evals):
+    @beartype
+    def compute_Sobol_indices(
+        A_model_evals: Union[NumpyFloatArray, NumpyIntArray],
+        C_i_model_evals: Union[NumpyFloatArray, NumpyIntArray],
+    ):
         r"""
         A method to estimate the first order Sobol indices using
         the Chatterjee method.
@@ -410,7 +434,12 @@ class Chatterjee(Sensitivity):
 
         return first_order_sobol
 
-    def compute_rank_analog_of_f_C_i(self, A_samples, A_model_evals):
+    @beartype
+    def compute_rank_analog_of_f_C_i(
+        self,
+        A_samples: Union[NumpyFloatArray, NumpyIntArray],
+        A_model_evals: Union[NumpyFloatArray, NumpyIntArray],
+    ):
         r"""
         In the Pick and Freeze method, we use model evaluations
         :math:`f_A`, :math:`f_B`, :math:`f_{C_{i}}`
