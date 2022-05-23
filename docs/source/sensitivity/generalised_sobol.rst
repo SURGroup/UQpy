@@ -1,7 +1,7 @@
 Generalised Sobol indices
 ----------------------------------------
 
-A natural generalization of the Sobol indices (that are classically defined for single-output models) for multi-output models. The generalised Sobol indices are computed using the Pick-and-Freeze approach. (For implementation details, see also [1]_.)
+A natural generalization of the Sobol indices (that are classically defined for single-output models) for multi-output models. The generalised Sobol indices are computed using the Pick-and-Freeze approach. (For implementation details, see also :cite:`GSI`.)
 
 Consider a model :math:`Y=f(X): \mathbb{R}^d \rightarrow \mathbb{R}^k` with :math:`d` inputs :math:`X=\left[ X_{1}, X_{2},…,X_{d} \right]` and :math:`k` outputs :math:`Y=\left[ Y_{1}, Y_{2},…,Y_{k} \right]`.
 
@@ -45,9 +45,6 @@ and
 
 .. math::
    \Sigma_{N}=\frac{1}{N} \sum_{j=1}^{N} \frac{Y_{j} Y_{j}^{t}+Y_{j}^{\mathbf{i}}\left(Y_{j}^{\mathbf{i}}\right)^{t}}{2}-\left(\frac{1}{N} \sum_{j=1}^{N} \frac{Y_{j}+Y_{j}^{\mathbf{i}}}{2}\right)\left(\frac{1}{N} \sum_{j=1}^{N} \frac{Y_{j}+Y_{j}^{\mathbf{i}}}{2}\right)^{t}
-
-
-.. [1] Gamboa F, Janon A, Klein T, Lagnoux A, others. Sensitivity analysis for multidimensional and functional outputs. Electronic journal of statistics 2014; 8(1): 575-603.(`Link <https://hal.inria.fr/hal-00881112/document>`_)
 
 
 Generalised Sobol Class
