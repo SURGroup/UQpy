@@ -8,18 +8,23 @@ supports plotting the sensitivity results and comparing the sensitivity results
 
 """
 
-import math
 import itertools
 
 import numpy as np
 import matplotlib.pyplot as plt
+from beartype import beartype
+
+from UQpy.utilities.ValidationTypes import (
+    NumpyFloatArray,
+)
 
 
+@beartype
 def plot_sensitivity_index(
-    indices,
-    confidence_interval=None,
-    plot_title=None,
-    variable_names=None,
+    indices: NumpyFloatArray,
+    confidence_interval: NumpyFloatArray = None,
+    plot_title: str = None,
+    variable_names: list = None,
     **kwargs,
 ):
 
@@ -95,15 +100,16 @@ def plot_sensitivity_index(
     return fig, ax
 
 
+@beartype
 def plot_index_comparison(
-    indices_1,
-    indices_2,
-    confidence_interval_1=None,
-    confidence_interval_2=None,
-    label_1=None,
-    label_2=None,
-    plot_title="Sensitivity index",
-    variable_names=None,
+    indices_1: NumpyFloatArray,
+    indices_2: NumpyFloatArray,
+    confidence_interval_1: NumpyFloatArray = None,
+    confidence_interval_2: NumpyFloatArray = None,
+    label_1: str = None,
+    label_2: str = None,
+    plot_title: str = "Sensitivity index",
+    variable_names: list = None,
     **kwargs,
 ):
 
@@ -196,6 +202,7 @@ def plot_index_comparison(
         yerr=error_1 if conf_int_flag_1 else None,
         ecolor="k",  # error bar color
         capsize=5,  # error bar cap size in pt
+        **kwargs,
     )
 
     bar_indices_2 = ax.bar(
@@ -208,6 +215,7 @@ def plot_index_comparison(
         yerr=error_2 if conf_int_flag_2 else None,
         ecolor="k",  # error bar color
         capsize=5,  # error bar cap size in pt
+        **kwargs,
     )
 
     ax.bar_label(bar_indices_1, label_type="edge", fontsize=10)
@@ -223,12 +231,13 @@ def plot_index_comparison(
     return fig, ax
 
 
+@beartype
 def plot_second_order_indices(
-    indices,
-    num_vars,
-    confidence_interval=None,
-    plot_title="Second order indices",
-    variable_names=None,
+    indices: NumpyFloatArray,
+    num_vars: int,
+    confidence_interval: NumpyFloatArray = None,
+    plot_title: str = "Second order indices",
+    variable_names: list = None,
     **kwargs,
 ):
 
