@@ -33,6 +33,9 @@ from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Uniform
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sensitivity.Chatterjee import Chatterjee
+from UQpy.sensitivity.PostProcess import *
+
+np.random.seed(123)
 
 # %% [markdown]
 # **Define the model and input distributions**
@@ -69,6 +72,13 @@ computed_indices = SA.run(n_samples=500_000, estimate_sobol_indices=True)
 # %%
 computed_indices["chatterjee_i"]
 
+# **Plot the Chatterjee indices**
+fig1, ax1 = plot_sensitivity_index(
+    computed_indices["chatterjee_i"][:, 0],
+    plot_title="Chatterjee indices",
+    color="C2",
+)
+
 # %% [markdown]
 # **Estimated Sobol indices**
 #
@@ -88,3 +98,10 @@ computed_indices["chatterjee_i"]
 
 # %%
 computed_indices["sobol_i"]
+
+# **Plot the first order Sobol indices**
+fig2, ax2 = plot_sensitivity_index(
+    computed_indices["sobol_i"][:, 0],
+    plot_title="First order Sobol indices",
+    color="C0",
+)

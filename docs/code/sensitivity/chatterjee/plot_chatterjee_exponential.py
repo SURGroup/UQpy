@@ -22,6 +22,9 @@ from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sensitivity.Chatterjee import Chatterjee
+from UQpy.sensitivity.PostProcess import *
+
+np.random.seed(123)
 
 # %% [markdown]
 # **Define the model and input distributions**
@@ -64,3 +67,10 @@ computed_indices = SA.run(n_samples=1_000_000)
 
 # %%
 computed_indices["chatterjee_i"]
+
+# **Plot the Chatterjee indices**
+fig1, ax1 = plot_sensitivity_index(
+    computed_indices["chatterjee_i"][:, 0],
+    plot_title="Chatterjee indices",
+    color="C2",
+)
