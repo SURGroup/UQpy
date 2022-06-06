@@ -26,3 +26,10 @@ Sensitivity analysis comprises techniques focused on determining how the variati
     Morris Sensitivity <morris>
     Polynomial Chaos Sensitivity <pce>
     Sobol Sensitivity <sobol>
+
+Examples
+""""""""""
+
+.. toctree::
+
+   Comparison of indices <../auto_examples/sensitivity/comparison/index>
