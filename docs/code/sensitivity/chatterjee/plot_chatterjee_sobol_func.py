@@ -63,7 +63,7 @@ dist_object = JointIndependent([Uniform(0, 1)] * num_vars)
 # %% [markdown]
 SA = Chatterjee(runmodel_obj, dist_object)
 
-# Compute Sobol indices using the pick and freeze algorithm
+# Compute Chatterjee indices using the pick and freeze algorithm
 computed_indices = SA.run(n_samples=500_000, estimate_sobol_indices=True)
 
 # %% [markdown]

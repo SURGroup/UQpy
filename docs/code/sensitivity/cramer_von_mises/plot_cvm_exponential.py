@@ -47,7 +47,7 @@ dist_object = JointIndependent([Normal(0, 1)] * 2)
 # %%
 SA = cvm(runmodel_obj, dist_object)
 
-# Compute Sobol indices using the pick and freeze algorithm
+# Compute CVM indices using the pick and freeze algorithm
 computed_indices = SA.run(n_samples=20_000, estimate_sobol_indices=True)
 
 # %% [markdown]
