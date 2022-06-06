@@ -46,6 +46,9 @@ from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Uniform
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sensitivity.Sobol import Sobol
+from UQpy.sensitivity.PostProcess import *
+
+np.random.seed(123)
 
 # %% [markdown]
 # **Define the model and input distributions**
@@ -112,3 +115,26 @@ computed_indices["confidence_interval_sobol_i"]
 
 # %%
 computed_indices["confidence_interval_sobol_total_i"]
+
+# %%
+# **Plot the first order sensitivity indices**
+fig1, ax1 = plot_sensitivity_index(
+    computed_indices["sobol_i"][:, 0],
+    confidence_interval=computed_indices["confidence_interval_sobol_i"],
+    plot_title="First order Sobol indices",
+    variable_names=["$X_1$", "$X_2$", "$X_3$"],
+    color="C0",
+)
+
+# %%
+# **Plot the first and total order sensitivity indices**
+fig2, ax2 = plot_index_comparison(
+    computed_indices["sobol_i"][:, 0],
+    computed_indices["sobol_total_i"][:, 0],
+    confidence_interval_1=computed_indices["confidence_interval_sobol_i"],
+    confidence_interval_2=computed_indices["confidence_interval_sobol_total_i"],
+    label_1="First order Sobol indices",
+    label_2="Total order Sobol indices",
+    plot_title="First and Total order Sobol indices",
+    variable_names=["$X_1$", "$X_2$", "$X_3$"],
+)

@@ -9,11 +9,16 @@ Additive function
 """
 
 # %%
+import numpy as np
+
 from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sensitivity.Sobol import Sobol
+from UQpy.sensitivity.PostProcess import *
+
+np.random.seed(123)
 
 # %% [markdown]
 # **Define the model and input distributions**
@@ -56,3 +61,13 @@ computed_indices = SA.run(n_samples=50_000)
 
 # %%
 computed_indices["sobol_i"]
+
+# %%
+# **Plot the first and total order sensitivity indices**
+fig1, ax1 = plot_index_comparison(
+    computed_indices["sobol_i"][:, 0],
+    computed_indices["sobol_total_i"][:, 0],
+    label_1="First order Sobol indices",
+    label_2="Total order Sobol indices",
+    plot_title="First and Total order Sobol indices",
+)
