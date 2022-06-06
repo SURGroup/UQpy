@@ -21,6 +21,9 @@ from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sensitivity.CramervonMises import CramervonMises as cvm
+from UQpy.sensitivity.PostProcess import *
+
+np.random.seed(123)
 
 # %% [markdown]
 # **Define the model and input distributions**
@@ -59,6 +62,13 @@ computed_indices = SA.run(n_samples=20_000, estimate_sobol_indices=True)
 # %%
 computed_indices["CVM_i"]
 
+# **Plot the CVM indices**
+fig1, ax1 = plot_sensitivity_index(
+    computed_indices["CVM_i"][:, 0],
+    plot_title="Cramér-von Mises indices",
+    color="C4",
+)
+
 # %% [markdown]
 # **Estimated first order Sobol indices**
 #
@@ -71,8 +81,24 @@ computed_indices["CVM_i"]
 # %%
 computed_indices["sobol_i"]
 
+# **Plot the first order Sobol indices**
+fig2, ax2 = plot_sensitivity_index(
+    computed_indices["sobol_i"][:, 0],
+    plot_title="First order Sobol indices",
+    color="C0",
+)
+
 # %% [markdown]
 # **Estimated total order Sobol indices**
 
 # %%
 computed_indices["sobol_total_i"]
+
+# **Plot the first and total order sensitivity indices**
+fig3, ax3 = plot_index_comparison(
+    computed_indices["sobol_i"][:, 0],
+    computed_indices["sobol_total_i"][:, 0],
+    label_1="First order Sobol indices",
+    label_2="Total order Sobol indices",
+    plot_title="First and Total order Sobol indices",
+)
