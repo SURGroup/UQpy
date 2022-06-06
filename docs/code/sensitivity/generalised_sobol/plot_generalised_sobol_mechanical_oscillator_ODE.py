@@ -30,6 +30,9 @@ from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Uniform, Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sensitivity.GeneralisedSobol import GeneralisedSobol
+from UQpy.sensitivity.PostProcess import *
+
+np.random.seed(123)
 
 # %% [markdown]
 # **Define the model and input distributions**
@@ -75,8 +78,26 @@ computed_indices = SA.run(n_samples=500)
 # %%
 computed_indices["gen_sobol_i"]
 
+# **Plot the first order sensitivity indices**
+fig1, ax1 = plot_sensitivity_index(
+    computed_indices["gen_sobol_i"][:, 0],
+    plot_title="First order Generalised Sobol indices",
+    variable_names=[r"$m$", "$c$", "$k$", "$\ell$"],
+    color="C0",
+)
+
 # %% [markdown]
 # **Total order Generalised Sobol indices**
 
 # %%
 computed_indices["gen_sobol_total_i"]
+
+# **Plot the first and total order sensitivity indices**
+fig2, ax2 = plot_index_comparison(
+    computed_indices["gen_sobol_i"][:, 0],
+    computed_indices["gen_sobol_total_i"][:, 0],
+    label_1="First order",
+    label_2="Total order",
+    plot_title="First and Total order Generalised Sobol indices",
+    variable_names=[r"$m$", "$c$", "$k$", "$\ell$"],
+)
