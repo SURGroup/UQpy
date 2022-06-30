@@ -135,7 +135,7 @@ class ThirdPartyModel:
 
         os.chdir(self.model_dir)
 
-        # self.logger.info("\nUQpy: The following directory has been created for model evaluations: \n" + self.model_dir)
+        self.logger.info("\nUQpy: The following directory has been created for model evaluations: \n" + self.model_dir)
         # Copy files from the model list to model run directory
         for file_name in model_files:
             full_file_name = os.path.join(self.parent_dir, file_name)
@@ -144,8 +144,10 @@ class ThirdPartyModel:
             else:
                 new_dir_name = os.path.join(self.model_dir, os.path.basename(full_file_name))
                 shutil.copytree(full_file_name, new_dir_name)
-        # self.logger.info("\nUQpy: The model files have been copied to the following directory for evaluation: \n"
-        #                  + self.model_dir)
+        self.logger.info("\nUQpy: The model files have been copied to the following directory for evaluation: \n"
+                         + self.model_dir)
+        parent_dir = os.path.dirname(self.model_dir)
+        os.chdir(parent_dir)
 
     def create_model_files_list(self, model_dir):
         model_files = []
