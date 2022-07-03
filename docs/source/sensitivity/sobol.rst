@@ -17,7 +17,7 @@ If the first order index of an input parameter is equal to the total order index
 
 The Sobol indices are typically computed using the Pick-and-Freeze approach for single output and multi-output models. Since there are several variants of the Pick-and-Freeze approach, the schemes implemented to compute Sobol indices are listed below:
 
-Here, :math:`N` is the number of Monte Carlo samples and :math:`m` being the number of input parameters in the model.
+Here, :math:`N` is the Monte Carlo sample size and :math:`m` is the number of input parameters in the model.
 
 1. **First order indices** (:math:`S_{i}`)
 

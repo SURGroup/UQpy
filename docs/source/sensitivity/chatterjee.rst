@@ -9,8 +9,9 @@ Consider :math:`n` samples of random variables :math:`X` and :math:`Y`, with :ma
 
    \xi_{n}(X, Y):=1-\frac{3 \sum_{i=1}^{n-1}\left|r_{i+1}-r_{i}\right|}{n^{2}-1}
 
-The Chatterjee index converges for :math:`n \rightarrow \infty` to the Cramér-von Mises index and is faster to estimate than using the Pick and Freeze approach in the Cramér-von Mises index.
+The Chatterjee index converges for :math:`n \rightarrow \infty` to the Cramér-von Mises index and is faster to estimate than using the Pick and Freeze approach to compute the the Cramér-von Mises index.
 
+Furthermore, the Sobol indices can be efficiently estimated by leveraging the same rank statistics, which has the advantage that any sample can be used and no specific pick and freeze scheme is required. 
 
 Chatterjee Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
