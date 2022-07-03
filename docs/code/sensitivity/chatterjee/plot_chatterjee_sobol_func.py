@@ -21,7 +21,10 @@ where,
 .. math::
     x_i \sim \mathcal{U}(0, 1), \quad a_i \in \mathbb{R}.
 
-.. [1] Fabrice Gamboa, Pierre Gremaud, Thierry Klein, and Agnès Lagnoux. (2020). Global Sensitivity Analysis: a new generation of mighty estimators based on rank statistics.
+Finally, we also compare the convergence rate of the Pick and Freeze approach with the
+rank statistics approach as in [1]_.
+
+.. [1] Fabrice Gamboa, Pierre Gremaud, Thierry Klein, and Agnès Lagnoux. (2020). Global Sensitivity Analysis: a new generation of mighty estimators based on rank statistics. (`Link <https://arxiv.org/abs/2003.01772>`_)
 
 """
 
@@ -33,6 +36,7 @@ from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Uniform
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sensitivity.Chatterjee import Chatterjee
+from UQpy.sensitivity.Sobol import Sobol
 from UQpy.sensitivity.PostProcess import *
 
 np.random.seed(123)
@@ -42,7 +46,7 @@ np.random.seed(123)
 
 # Create Model object
 num_vars = 6
-a_vals = np.array([0.0, 0.5, 3.0, 9.0, 99.0, 99.0])
+a_vals = np.arange(1, num_vars+1, 1)
 
 model = PythonModel(
     model_script="local_sobol_func.py",
@@ -63,7 +67,7 @@ dist_object = JointIndependent([Uniform(0, 1)] * num_vars)
 # %% [markdown]
 SA = Chatterjee(runmodel_obj, dist_object)
 
-# Compute Chatterjee indices using the pick and freeze algorithm
+# Compute Chatterjee indices using rank statistics
 computed_indices = SA.run(n_samples=500_000, estimate_sobol_indices=True)
 
 # %% [markdown]
@@ -84,17 +88,17 @@ fig1, ax1 = plot_sensitivity_index(
 #
 # Expected first order Sobol indices:
 #
-# :math:`S_1` = 5.86781190e-01
+# :math:`S_1` = 0.46067666
 #
-# :math:`S_2` = 2.60791640e-01
+# :math:`S_2` = 0.20474518
 #
-# :math:`S_3` = 3.66738244e-02
+# :math:`S_3` = 0.11516917
 #
-# :math:`S_4` = 5.86781190e-03
+# :math:`S_4` = 0.07370827
 #
-# :math:`S_5` = 5.86781190e-05
+# :math:`S_5` = 0.0511863
 #
-# :math:`S_6` = 5.86781190e-05
+# :math:`S_6` = 0.03760626
 
 # %%
 computed_indices["sobol_i"]
@@ -105,3 +109,62 @@ fig2, ax2 = plot_sensitivity_index(
     plot_title="First order Sobol indices",
     color="C0",
 )
+
+# %% [markdown]
+# **Comparing convergence rate of rank statistics and the Pick and Freeze approach**
+#
+# In the Pick-Freeze estimations, several sizes of sample N have been considered: 
+# N = 100, 500, 1000, 5000, 10000, 50000, and 100000. 
+# The Pick-Freeze procedure requires (p + 1) samples of size N. 
+# To have a fair comparison, the sample sizes considered in the estimation using 
+# rank statistics are n = (p+1)N = 7N. 
+# We observe that both methods converge and give precise results for large sample sizes.
+
+# %%
+
+# Compute indices values for equal number of model evaluations
+
+true_values = np.array([0.46067666, 
+                        0.20474518, 
+                        0.11516917, 
+                        0.07370827, 
+                        0.0511863 ,
+                        0.03760626])
+
+sample_sizes = [100, 500, 1_000, 5_000, 10_000, 50_000, 100_000]
+num_studies = len(sample_sizes)
+
+store_pick_freeze = np.zeros((num_vars, num_studies))
+store_rank_stats = np.zeros((num_vars, num_studies))
+
+SA_chatterjee = Chatterjee(runmodel_obj, dist_object)
+SA_sobol = Sobol(runmodel_obj, dist_object)
+
+for i, sample_size in enumerate(sample_sizes):
+
+    # Estimate using rank statistics
+    _indices = SA_chatterjee.run(n_samples=sample_size*7, estimate_sobol_indices=True)
+    store_rank_stats[:, i] = _indices["sobol_i"].ravel()
+
+    # Estimate using Pick and Freeze approach
+    _indices = SA_sobol.run(n_samples=sample_size)
+    store_pick_freeze[:, i] = _indices["sobol_i"].ravel()
+
+# %%
+
+## Convergence plot
+
+fix, ax = plt.subplots(2, 3, figsize=(30, 15))
+
+for k in range(num_vars):
+
+    i, j = divmod(k, 3) # (built-in) divmod(a, b) returns a tuple (a // b, a % b)
+
+    ax[i][j].semilogx(sample_sizes, store_rank_stats[k, :], 'ro-', label='Chatterjee estimate')
+    ax[i][j].semilogx(sample_sizes, store_pick_freeze[k, :], 'bx-', label='Pick and Freeze estimate')
+    ax[i][j].hlines(true_values[k], 0, sample_sizes[-1], 'k', label='True indices')
+    ax[i][j].set_title(r'$S^' + str(k+1) + '$ = ' + str(np.round(true_values[k], 4)))
+
+plt.suptitle('Comparing convergence of the Chatterjee estimate and the Pick and Freeze approach')
+plt.legend()
+plt.show()
