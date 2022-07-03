@@ -27,7 +27,7 @@ def sensitivities(a_values):
 
     Total_order = np.zeros((dims, 1))
 
-    V_i = (3 * (1 + a_values) ** 2) ** (-1)
+    V_i = 1 / (3 * (1 + a_values) ** 2)
 
     total_variance = np.prod(1 + V_i) - 1
 
