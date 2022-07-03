@@ -3,7 +3,8 @@ r"""
 Mechanical oscillator model (multioutput)
 ==============================================
 
-The mechanical oscillator is governed by the following second-order ODE:
+In this example, we consider the mechanical oscillator is governed by the following 
+second-order ODE as demonstrated in [1]_:
 
 .. math::
     m \ddot{x} + c \dot{x} + k x = 0
@@ -19,6 +20,8 @@ The parameteres of the oscillator are modeled as follows:
 Here, we compute the Sobol indices for each point in time and are called 
 pointwise-in-time Sobol indices. These indices describe the sensitivity of the model 
 parameters at each point in time.
+
+.. [1] Gamboa, F., Janon, A., Klein, T., & Lagnoux, A. (2014). Sensitivity analysis for multidimensional and functional outputs. Electronic Journal of Statistics, 8(1), 575-603.
 
 """
 

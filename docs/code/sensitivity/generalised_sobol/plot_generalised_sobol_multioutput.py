@@ -3,6 +3,9 @@ r"""
 Toy multioutput function
 ==============================================
 
+In this example, we demonstrate the computation of the Generalised Sobol indices using 
+the toy example in [1]_.
+
 .. math::
     Y = f (X_{1}, X_{2}) := \left(\begin{array}{c}
                                 X_{1}+X_{2}+X_{1} X_{2} \\
@@ -14,6 +17,8 @@ Toy multioutput function
 
 .. math::
     \text{case 2: } X_1, X_2 \sim \mathcal{U}(0, 1)
+
+.. [1] Gamboa, F., Janon, A., Klein, T., & Lagnoux, A. (2014). Sensitivity analysis for multidimensional and functional outputs. Electronic Journal of Statistics, 8(1), 575-603.
 
 """
 

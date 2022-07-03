@@ -101,8 +101,8 @@ class Chatterjee(Sensitivity):
         """
         Compute the sensitivity indices using the Chatterjee method.
 
-        :param n_samples: Number of samples used to compute the Cramér-von Mises indices. \
-            Default is 1,000.
+        :param n_samples: Number of samples used to compute the Chatterjee indices. \
+            Default is 1,000.   
 
         :param estimate_sobol_indices: If :code:`True`, the Sobol indices are estimated \
             using the pick-and-freeze samples.

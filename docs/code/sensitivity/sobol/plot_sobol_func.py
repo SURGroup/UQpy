@@ -16,6 +16,11 @@ where,
 .. math::
     x_i \sim \mathcal{U}(0, 1), \quad a_i \in \mathbb{R}.
 
+This is an example from [1]_, where first order, total order and additionally the second
+order indices are computed.
+
+.. [1] Glen, G., & Isaacs, K. (2012). Estimating Sobol sensitivity indices using correlations. Environmental Modelling and Software, 37, 157–166.
+
 """
 
 # %%

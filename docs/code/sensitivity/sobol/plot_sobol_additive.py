@@ -3,8 +3,13 @@
 Additive function
 ==============================================
 
+We introduce the variance-based Sobol indices using an elementary example. 
+For more details, refer [1]_.
+
 .. math::
     f(x) = a \cdot X_1 + b \cdot X_2, \quad X_1, X_2 \sim \mathcal{N}(0, 1), \quad a,b \in \mathbb{R}
+
+.. [1] Saltelli A, T. (2008). Global sensitivity analysis: The primer. John Wiley.
 
 """
 
