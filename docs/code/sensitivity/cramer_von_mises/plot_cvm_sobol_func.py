@@ -16,6 +16,11 @@ where,
 .. math::
     x_i \sim \mathcal{U}(0, 1), \quad a_i \in \mathbb{R}.
 
+
+The function was also used in the Chatterjee indices section to demonstrate the 
+computation of the Chatterjee indices. We can see clearly that the estimates are 
+equivalent.
+
 """
 
 # %%
@@ -35,7 +40,7 @@ np.random.seed(123)
 
 # Create Model object
 num_vars = 6
-a_vals = np.array([0.0, 0.5, 3.0, 9.0, 99.0, 99.0])
+a_vals = np.arange(1, num_vars+1, 1)
 
 model = PythonModel(
     model_script="local_sobol_func.py",
@@ -56,7 +61,7 @@ dist_object = JointIndependent([Uniform(0, 1)] * num_vars)
 # %%
 SA = cvm(runmodel_obj, dist_object)
 
-# Compute Sobol indices using the pick and freeze algorithm
+# Compute Sobol indices using rank statistics
 computed_indices = SA.run(n_samples=50_000, estimate_sobol_indices=True)
 
 # %% [markdown]
@@ -77,17 +82,17 @@ fig1, ax1 = plot_sensitivity_index(
 #
 # Expected first order Sobol indices:
 #
-# :math:`S_1` = 5.86781190e-01
+# :math:`S_1` = 0.46067666
 #
-# :math:`S_2` = 2.60791640e-01
+# :math:`S_2` = 0.20474518
 #
-# :math:`S_3` = 3.66738244e-02
+# :math:`S_3` = 0.11516917
 #
-# :math:`S_4` = 5.86781190e-03
+# :math:`S_4` = 0.07370827
 #
-# :math:`S_5` = 5.86781190e-05
+# :math:`S_5` = 0.0511863
 #
-# :math:`S_6` = 5.86781190e-05
+# :math:`S_6` = 0.03760626
 
 # %%
 computed_indices["sobol_i"]
