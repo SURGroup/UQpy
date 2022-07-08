@@ -12,6 +12,7 @@ requirements:
     - pip
   run:
     - python
+    - beartype 0.9.1
 
 about:
   home: https://github.com/SURGroup/UQpy
