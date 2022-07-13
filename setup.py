@@ -18,7 +18,8 @@ setup(
     package_dir={"": "src"},
     package_data={"": ["*.pdf"]},
     install_requires=[
-        "numpy", "scipy", "matplotlib", "scikit-learn", 'fire'
+        "numpy", "scipy", "matplotlib", "scikit-learn", 'fire',
+        "beartype==0.9.1",
     ],
     classifiers=[
         'Programming Language :: Python :: 3',

@@ -1,4 +1,4 @@
-|AzureDevops| |PyPIdownloads| |PyPI| |CondaSURG| |CondaPlatforms| |GithubRelease| |Binder| |Docs|
+|AzureDevops| |PyPIdownloads| |PyPI| |CondaSURG| |CondaPlatforms| |GithubRelease| |Binder| |Docs| |bear-ified|
 
 .. |Docs| image:: https://img.shields.io/readthedocs/uqpy?style=plastic  :alt: Read the Docs
 .. |CondaSURG| image:: https://img.shields.io/conda/vn/SURG_JHU/uqpy?style=plastic   :alt: Conda (channel only)
@@ -10,6 +10,11 @@
 .. |Binder| image:: https://mybinder.org/badge_logo.svg
  :target: https://mybinder.org/v2/gh/SURGroup/UQpy/master
 
+.. |bear-ified| image:: https://raw.githubusercontent.com/beartype/beartype-assets/main/badge/bear-ified.svg
+   :align: top
+   :target: https://beartype.rtfd.io
+   :alt: bear-ified
+
 
 *******************************************
 Uncertainty Quantification with python (UQpy)
@@ -19,9 +24,26 @@ Uncertainty Quantification with python (UQpy)
 
 ====
 
-:Authors: Michael D. Shields, Dimitris G. Giovanis, Audrey Olivier, Aakash Bangalore Satish, Mohit Singh Chauhan, Lohit Vandanapu, Ketson RM dos Santos, Katiana Kontolati
-:Contact: UQpy.info@gmail.com
++-----------------------+------------------------------------------------------------------+
+| **Product Owner:**    | Michael D. Shields                                               |
++-----------------------+------------------------------------------------------------------+
+| **Lead Developers:**  | Dimitris Giovanis, Audrey Olivier, Dimitris Tsapetis             |
++-----------------------+------------------------------------------------------------------+
+| **Development Team:** | Aakash Bangalore Satish, Mohit Singh Chauhan, Lohit Vandanapu,   |
++                       +                                                                  +
+|                       | Ketson RM dos Santos, Katiana Kontolati, Dimitris Loukrezis,     |
++                       +                                                                  +
+|                       | Promit Chakroborty, Lukáš Novák, Andrew Solanto                  |
++-----------------------+------------------------------------------------------------------+
+| **Contributors:**     | Michael Gardner                                                  |
++-----------------------+------------------------------------------------------------------+
 
+Contact
+===========
+
+To engage in conversations about uncertainty quantification, or ask question about UQpy usage and functionality refer to the UQpy's discussions tab:
+
+`Discussions <https://github.com/SURGroup/UQpy/discussions>`_
 
 Description
 ===========
@@ -39,7 +61,7 @@ Dependencies
 
             * ::
             
-                Python >= 3.6
+                Python >= 3.9
                 Git >= 2.13.1
 
 License

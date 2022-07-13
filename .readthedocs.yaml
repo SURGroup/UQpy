@@ -4,9 +4,9 @@ sphinx:
   configuration: docs/source/conf.py
   fail_on_warning: False
 build:
-  image: latest
+  os: ubuntu-20.04
+  tools:
+    python: "3.9"
 python:
-  version: 3.7
   install:
     - requirements: docs/requirements.txt
-  system_packages: true

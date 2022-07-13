@@ -27,6 +27,63 @@ Alternatively, in case of anaconda distributions
 >
 > black {uqpy_src_path}
 
+### Logging
+___
+
+Since version 4.0.0 UQpy, has transitioned from the legacy verbose flag, to using the logging module of Python. Logging allows the developer to track in several levels of detail the events during code execution. Each one of the levels implies a different level of event severity, ranging from debug message, up to errors that disrupt the execution of the code. Specifically the severity levels are the following:
+
+- Debug
+- Info
+- Warning
+- Critical
+- Error
+
+A simple example of using the logging module is by invoking a logger object and calling the function named after the desired level of message severity. 
+
+> self.logger = logging.getLogger(__name__)
+> 
+> self.logger.info("UQpy: Log an informational message.")
+
+The current logging level of UQpy is set to **ERROR**, meaning that all data logged in lower severity levels are not displayed. A change of the logging level is performed using the following python code:
+
+> logger.setLevel(logging.INFO)
+
+The input of the set level function is an enumeration, with values the logging severities. The default output of the predefined logger  configuration is the console, but python supports using multiple logging output sinks such as files or databases. In order to append a new output type to the existing logging configuration, to log messages and warnings to files the following code can be used:
+
+> formatter = UQpyLoggingFormatter() 
+> 
+> file_handler = logging.FileHandler('UQpy.log')
+> 
+> file_handler.setFormatter(formatter)
+> 
+> logger.addHandler(file_handler)
+
+The latter summarize the basic usage of logging framework utilized in UQpy. For a detailed breakdown of the logging module can be found [here](https://docs.python.org/3/howto/logging-cookbook.html "Logging documentation").
+
+### Type hints
+___
+
+In [PEP484](https://www.python.org/dev/peps/pep-0484/), Python introduced type hints. Type hints are a way to loosely suggest the type of variables as well as input and output parameters to method. The intention of this syntactic annotation is to suggest the type of variables in order to aid the user/ developer, rather than strictly impose their type.
+In case of UQpy, type hints are utilized mainly in the initializers of objects. In versions before 4.0.0, UQpy allowed the user to provide any values and the raised an error is the input value did not had the expected format. This type checking is not replaced with beartype. With the aid of type hinted variables, beartype enforced type safety to functions  and method.
+The only code addition required for perforing run type checking with beartype is adding the decorator @beartype before method signatures, as illustrated below:
+
+> @beartype
+> 
+> def method(a: float, b: bool, c: int)
+>   
+>    pass
+> 
+
+As can be observed in the function above, variable types are defined by using semicolon, followed by the variable type. The type can be any of the built-in primitive or object data types of Python, or user defined class. In addition, multiple data type can be allowed at the same time by using the Union construct as follows  
+
+
+> def method(a: float, b: bool, c: Union[int, float, None])
+>   
+>    pass
+> 
+
+Even more refined combination of data types are allowed in python type hints. For more information, please refer to [Python Type Hints](https://docs.python.org/3/library/typing.html).
+
 ### Docstrings
 ___
 Before uploading a code make sure all new classes and methods added are accompanied by the required docstrings. The [PEP 257](https://www.python.org/dev/peps/pep-0257/ "Docstring conventions") guideline contains the specifications for creating and maintaining the respective code documentation.
@@ -56,3 +113,4 @@ Sonarcloud is a static code analysis tool that ensures code quality and security
 
 For all contributors, **master** and **Development** branches are protected. As a result no-one can commit directly to these branches. For contributors that belong to the organization, the recommented procedure is to start the branches from **Development** branch. In order for the CI procedure to run automatically, two different naming strategies are followed. Either **feature/{name_of_feature}** in case this branch is used for the development of a non-existing feature, or **bugfix/{name_of_bugfix}** in case the respective branch is used to fix a bug on the existing code. Note that ALL pull requests must point to the Development branch. Any pull requests to the master branch will be closed and should be resubmitted to the Development branch. For external contributors, the suggested procedure is to create a fork of the existing repository. After the contribution is completed, a pull request should be issued to the Development branch of the main repository. In all cases, make sure that all the above CI requirements are satisfied for your pull request to acceptable.
 
+## Type hints
