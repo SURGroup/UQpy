@@ -14,9 +14,15 @@ NumpyFloatArray = Annotated[
     np.ndarray,
     Is[lambda array: np.issubdtype(array.dtype, float)],
 ]
+NumpyIntArray = Annotated[
+    np.ndarray,
+    Is[lambda array: np.issubdtype(array.dtype, int)],
+]
 Numpy2DFloatArrayOrthonormal = Annotated[
     np.ndarray,
-    Is[lambda array: array.ndim == 2 and np.issubdtype(array.dtype, float) and
-                     np.allclose(array.T @ array, np.eye(array.shape[1]))],
+    Is[
+        lambda array: array.ndim == 2
+        and np.issubdtype(array.dtype, float)
+        and np.allclose(array.T @ array, np.eye(array.shape[1]))
+    ],
 ]
-
