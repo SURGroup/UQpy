@@ -27,7 +27,7 @@ from typing import Union
 from numbers import Integral
 
 from UQpy.sensitivity.baseclass.Sensitivity import Sensitivity
-from UQpy.sensitivity.Sobol import compute_first_order as compute_first_order_sobol
+from UQpy.sensitivity.SobolSensitivity import compute_first_order as compute_first_order_sobol
 from UQpy.utilities.ValidationTypes import (
     RandomStateType,
     PositiveInteger,
@@ -38,7 +38,7 @@ from UQpy.utilities.ValidationTypes import (
 from UQpy.utilities.UQpyLoggingFormatter import UQpyLoggingFormatter
 
 
-class Chatterjee(Sensitivity):
+class ChatterjeeSensitivity(Sensitivity):
     """
     Compute sensitivity indices using the Chatterjee correlation coefficient.
 
@@ -58,33 +58,23 @@ class Chatterjee(Sensitivity):
     **Methods:**
     """
 
-    def __init__(self, runmodel_object, dist_object, random_state=None, **kwargs):
-        super().__init__(
-            runmodel_object, dist_object, random_state=random_state, **kwargs
-        )
+    def __init__(self, runmodel_object, dist_object, random_state=None):
+        super().__init__(runmodel_object, dist_object, random_state=random_state)
 
         # Create logger with the same name as the class
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.ERROR)
-        frmt = UQpyLoggingFormatter()
 
-        # create console handler with a higher log level
-        ch = logging.StreamHandler()
-        ch.setFormatter(frmt)
+        self.first_order_chatterjee_indices = None
+        "Chatterjee sensitivity indices (First order), :class:`numpy.ndarray` of shape :code:`(n_variables, 1)`"
 
-        # add the handler to the logger
-        self.logger.addHandler(ch)
+        self.first_order_sobol_indices = None
+        "Sobol indices computed using the rank statistics, :class:`numpy.ndarray` of shape :code:`(n_variables, 1)`"
 
-        self.chatterjee_i = None
-        "Chatterjee sensitivity indices (First order), :class:`numpy.ndarray` of shape :code:`(num_vars, 1)`"
+        self.confidence_interval_chatterjee = None
+        "Confidence intervals for the Chatterjee sensitivity indices, :class:`numpy.ndarray` of " \
+        "shape :code:`(n_variables, 2)`"
 
-        self.sobol_i = None
-        "Sobol indices computed using the rank statistics, :class:`numpy.ndarray` of shape :code:`(num_vars, 1)`"
-
-        self.confidence_interval_chatterjee_i = None
-        "Confidence intervals for the Chatterjee sensitivity indices, :class:`numpy.ndarray` of shape :code:`(num_vars, 2)`"
-
-        self.num_vars = None
+        self.n_variables = None
         "Number of input random variables, :class:`int`"
 
         self.n_samples = None
@@ -95,7 +85,7 @@ class Chatterjee(Sensitivity):
         self,
         n_samples: PositiveInteger = 1_000,
         estimate_sobol_indices: bool = False,
-        num_bootstrap_samples: PositiveInteger = None,
+        n_bootstrap_samples: PositiveInteger = None,
         confidence_level: PositiveFloat = 0.95,
     ):
         """
@@ -107,7 +97,7 @@ class Chatterjee(Sensitivity):
         :param estimate_sobol_indices: If :code:`True`, the Sobol indices are estimated \
             using the pick-and-freeze samples.
 
-        :param num_bootstrap_samples: Number of bootstrap samples used to estimate the \
+        :param n_bootstrap_samples: Number of bootstrap samples used to estimate the \
             Sobol indices. Default is :any:`None`.
 
         :param confidence_level: Confidence level used to compute the confidence \
@@ -126,13 +116,11 @@ class Chatterjee(Sensitivity):
             raise TypeError("UQpy: nsamples should be an integer")
 
         # Check num_bootstrap_samples data type
-        if num_bootstrap_samples is not None:
-            if not isinstance(num_bootstrap_samples, int):
-                raise TypeError("UQpy: num_bootstrap_samples should be an integer.\n")
-        elif num_bootstrap_samples is None:
+        if n_bootstrap_samples is None:
             self.logger.info(
-                "UQpy: num_bootstrap_samples is set to None, confidence intervals will not be computed.\n"
-            )
+                "UQpy: num_bootstrap_samples is set to None, confidence intervals will not be computed.\n")
+        elif not isinstance(n_bootstrap_samples, int):
+            raise TypeError("UQpy: num_bootstrap_samples should be an integer.\n")
 
         ################## GENERATE SAMPLES ##################
 
@@ -140,7 +128,7 @@ class Chatterjee(Sensitivity):
 
         self.logger.info("UQpy: Generated samples successfully.\n")
 
-        self.num_vars = A_samples.shape[1]  # number of variables
+        self.n_variables = A_samples.shape[1]  # number of variables
 
         ################# MODEL EVALUATIONS ####################
 
@@ -148,60 +136,44 @@ class Chatterjee(Sensitivity):
 
         self.logger.info("UQpy: Model evaluations completed.\n")
 
-        ######################### STORAGE ########################
-        # Create dictionary to store the sensitivity indices
-        computed_indices = {}
 
         ################## COMPUTE CHATTERJEE INDICES ##################
 
-        self.chatterjee_i = self.compute_chatterjee_indices(A_samples, A_model_evals)
+        self.first_order_chatterjee_indices = self.compute_chatterjee_indices(A_samples, A_model_evals)
 
         self.logger.info("UQpy: Chatterjee indices computed successfully.\n")
 
-        # Store the indices in the dictionary
-        computed_indices["chatterjee_i"] = self.chatterjee_i
 
         ################## COMPUTE SOBOL INDICES ##################
 
         self.logger.info("UQpy: Computing First order Sobol indices ...\n")
 
         if estimate_sobol_indices:
-            f_C_i_model_evals = self.compute_rank_analog_of_f_C_i(
-                A_samples, A_model_evals
-            )
+            f_C_i_model_evals = self.compute_rank_analog_of_f_C_i(A_samples, A_model_evals)
 
-            self.sobol_i = self.compute_Sobol_indices(A_model_evals, f_C_i_model_evals)
+            self.first_order_sobol_indices = self.compute_Sobol_indices(A_model_evals, f_C_i_model_evals)
 
             self.logger.info("UQpy: First order Sobol indices computed successfully.\n")
 
-            # Store the indices in the dictionary
-            computed_indices["sobol_i"] = self.sobol_i
 
         ################## CONFIDENCE INTERVALS ####################
 
-        if num_bootstrap_samples is not None:
+        if n_bootstrap_samples is not None:
 
             self.logger.info("UQpy: Computing confidence intervals ...\n")
 
             estimator_inputs = [A_samples, A_model_evals]
 
-            self.confidence_interval_chatterjee_i = self.bootstrapping(
+            self.confidence_interval_chatterjee = self.bootstrapping(
                 self.compute_chatterjee_indices,
                 estimator_inputs,
-                computed_indices["chatterjee_i"],
-                num_bootstrap_samples,
+                self.first_order_chatterjee_indices,
+                n_bootstrap_samples,
                 confidence_level,
             )
 
-            self.logger.info(
-                "UQpy: Confidence intervals for Chatterjee indices computed successfully.\n"
-            )
+            self.logger.info("UQpy: Confidence intervals for Chatterjee indices computed successfully.\n")
 
-            computed_indices[
-                "confidence_interval_chatterjee_i"
-            ] = self.confidence_interval_chatterjee_i
-
-        return computed_indices
 
     @staticmethod
     @beartype
@@ -430,9 +402,7 @@ class Chatterjee(Sensitivity):
         n_outputs = 1
         C_i_model_evals = C_i_model_evals.reshape((n_outputs, *_shape))
 
-        first_order_sobol = compute_first_order_sobol(
-            A_model_evals, None, C_i_model_evals, scheme="Sobol1993"
-        )
+        first_order_sobol = compute_first_order_sobol(A_model_evals, None, C_i_model_evals, scheme="Sobol1993")
 
         return first_order_sobol
 
@@ -466,7 +436,7 @@ class Chatterjee(Sensitivity):
 
         f_A = A_model_evals
         N = f_A.shape[0]
-        m = self.num_vars
+        m = self.n_variables
 
         A_i_model_evals = np.zeros((N, m))
 

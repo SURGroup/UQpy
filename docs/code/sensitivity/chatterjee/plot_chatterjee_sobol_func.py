@@ -35,8 +35,8 @@ from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Uniform
 from UQpy.distributions.collection.JointIndependent import JointIndependent
-from UQpy.sensitivity.Chatterjee import Chatterjee
-from UQpy.sensitivity.Sobol import Sobol
+from UQpy.sensitivity.ChatterjeeSensitivity import ChatterjeeSensitivity
+from UQpy.sensitivity.SobolSensitivity import SobolSensitivity
 from UQpy.sensitivity.PostProcess import *
 
 np.random.seed(123)
@@ -65,7 +65,7 @@ dist_object = JointIndependent([Uniform(0, 1)] * num_vars)
 # **Compute Chatterjee indices**
 
 # %% [markdown]
-SA = Chatterjee(runmodel_obj, dist_object)
+SA = ChatterjeeSensitivity(runmodel_obj, dist_object)
 
 # Compute Chatterjee indices using rank statistics
 computed_indices = SA.run(n_samples=500_000, estimate_sobol_indices=True)
@@ -137,8 +137,8 @@ num_studies = len(sample_sizes)
 store_pick_freeze = np.zeros((num_vars, num_studies))
 store_rank_stats = np.zeros((num_vars, num_studies))
 
-SA_chatterjee = Chatterjee(runmodel_obj, dist_object)
-SA_sobol = Sobol(runmodel_obj, dist_object)
+SA_chatterjee = ChatterjeeSensitivity(runmodel_obj, dist_object)
+SA_sobol = SobolSensitivity(runmodel_obj, dist_object)
 
 for i, sample_size in enumerate(sample_sizes):
 

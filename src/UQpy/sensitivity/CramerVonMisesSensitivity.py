@@ -22,8 +22,8 @@ from beartype import beartype
 
 from UQpy.sensitivity.baseclass.Sensitivity import Sensitivity
 from UQpy.sensitivity.baseclass.PickFreeze import generate_pick_freeze_samples
-from UQpy.sensitivity.Sobol import compute_first_order as compute_first_order_sobol
-from UQpy.sensitivity.Sobol import compute_total_order as compute_total_order_sobol
+from UQpy.sensitivity.SobolSensitivity import compute_first_order as compute_first_order_sobol
+from UQpy.sensitivity.SobolSensitivity import compute_total_order as compute_total_order_sobol
 from UQpy.utilities.UQpyLoggingFormatter import UQpyLoggingFormatter
 from UQpy.utilities.ValidationTypes import (
     PositiveInteger,
@@ -36,7 +36,7 @@ from UQpy.utilities.ValidationTypes import (
 # TODO: Sampling strategies
 
 
-class CramervonMises(Sensitivity):
+class CramerVonMisesSensitivity(Sensitivity):
     """
     Compute the Cramér-von Mises indices.
 
@@ -57,41 +57,33 @@ class CramervonMises(Sensitivity):
     """
 
     def __init__(
-        self, runmodel_object, dist_object, random_state=None, **kwargs
+        self, runmodel_object, dist_object, random_state=None
     ) -> None:
 
-        super().__init__(
-            runmodel_object, dist_object, random_state=random_state, **kwargs
-        )
+        super().__init__(runmodel_object, dist_object, random_state=random_state)
 
         # Create logger with the same name as the class
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.ERROR)
-        frmt = UQpyLoggingFormatter()
 
-        # create console handler with a higher log level
-        ch = logging.StreamHandler()
-        ch.setFormatter(frmt)
+        self.first_order_CramerVonMises_indices = None
+        "First order Cramér-von Mises indices, :class:`numpy.ndarray` of shape :code:`(n_variables, 1)`"
 
-        # add the handler to the logger
-        self.logger.addHandler(ch)
+        self.confidence_interval_CramerVonMises = None
+        "Confidence intervals of the first order Cramér-von Mises indices, :class:`numpy.ndarray` " \
+        "of shape :code:`(n_variables, 2)`"
 
-        self.CVM_i = None
-        "First order Cramér-von Mises indices, :class:`numpy.ndarray` of shape :code:`(num_vars, 1)`"
+        self.first_order_sobol_indices = None
+        "First order Sobol indices computed using the pick-and-freeze samples, :class:`numpy.ndarray` " \
+        "of shape :code:`(n_variables, 1)`"
 
-        self.confidence_interval_CVM_i = None
-        "Confidence intervals of the first order Cramér-von Mises indices, :class:`numpy.ndarray` of shape :code:`(num_vars, 2)`"
-
-        self.sobol_i = None
-        "First order Sobol indices computed using the pick-and-freeze samples, :class:`numpy.ndarray` of shape :code:`(num_vars, 1)`"
-
-        self.sobol_total_i = None
-        "Total order Sobol indices computed using the pick-and-freeze samples, :class:`numpy.ndarray` of shape :code:`(num_vars, 1)`"
+        self.total_order_sobol_indices = None
+        "Total order Sobol indices computed using the pick-and-freeze samples, :class:`numpy.ndarray` " \
+        "of shape :code:`(n_variables, 1)`"
 
         self.n_samples = None
         "Number of samples used to compute the Cramér-von Mises indices, :class:`int`"
 
-        self.num_vars = None
+        self.n_variables = None
         "Number of input random variables, :class:`int`"
 
     @beartype
@@ -136,19 +128,15 @@ class CramervonMises(Sensitivity):
             raise TypeError("UQpy: nsamples should be an integer")
 
         # Check num_bootstrap_samples data type
-        if num_bootstrap_samples is not None:
-            if not isinstance(num_bootstrap_samples, int):
-                raise TypeError("UQpy: num_bootstrap_samples should be an integer.\n")
-        elif num_bootstrap_samples is None:
-            self.logger.info(
-                "UQpy: num_bootstrap_samples is set to None, confidence intervals will not be computed.\n"
-            )
+        if num_bootstrap_samples is None:
+            self.logger.info("UQpy: num_bootstrap_samples is set to None, confidence intervals will not be computed.\n")
 
+        elif not isinstance(num_bootstrap_samples, int):
+            raise TypeError("UQpy: num_bootstrap_samples should be an integer.\n")
         ################## GENERATE SAMPLES ##################
 
         A_samples, W_samples, C_i_generator, _ = generate_pick_freeze_samples(
-            self.dist_object, self.n_samples, self.random_state
-        )
+            self.dist_object, self.n_samples, self.random_state)
 
         self.logger.info("UQpy: Generated samples using the pick-freeze scheme.\n")
 
@@ -162,9 +150,9 @@ class CramervonMises(Sensitivity):
 
         self.logger.info("UQpy: Model evaluations W completed.\n")
 
-        self.num_vars = A_samples.shape[1]
+        self.n_variables = A_samples.shape[1]
 
-        C_i_model_evals = np.zeros((self.n_samples, self.num_vars))
+        C_i_model_evals = np.zeros((self.n_samples, self.n_variables))
 
         for i, C_i in enumerate(C_i_generator):
             C_i_model_evals[:, i] = self._run_model(C_i).ravel()
@@ -173,25 +161,17 @@ class CramervonMises(Sensitivity):
 
         self.logger.info("UQpy: All model evaluations computed successfully.\n")
 
-        ######################### STORAGE ########################
-
-        # Create dictionary to store the sensitivity indices
-        computed_indices = {}
-
         ################## COMPUTE CVM INDICES ##################
 
         # flag is used to disable computation of
         # CVM indices during testing
         if not disable_CVM_indices:
             # Compute the Cramér-von Mises indices
-            self.CVM_i = self.pick_and_freeze_estimator(
-                A_model_evals, W_model_evals, C_i_model_evals
-            )
+            self.first_order_CramerVonMises_indices = self.pick_and_freeze_estimator(
+                A_model_evals, W_model_evals, C_i_model_evals)
 
             self.logger.info("UQpy: Cramér-von Mises indices computed successfully.\n")
 
-            # Store the indices in the dictionary
-            computed_indices["CVM_i"] = self.CVM_i
 
         ################# COMPUTE CONFIDENCE INTERVALS ##################
 
@@ -205,22 +185,16 @@ class CramervonMises(Sensitivity):
                 C_i_model_evals,
             ]
 
-            self.confidence_interval_CVM_i = self.bootstrapping(
+            self.confidence_interval_CramerVonMises = self.bootstrapping(
                 self.pick_and_freeze_estimator,
                 estimator_inputs,
-                computed_indices["CVM_i"],
+                self.first_order_CramerVonMises_indices,
                 num_bootstrap_samples,
                 confidence_level,
             )
 
-            self.logger.info(
-                "UQpy: Confidence intervals for Cramér-von Mises indices computed successfully.\n"
-            )
+            self.logger.info("UQpy: Confidence intervals for Cramér-von Mises indices computed successfully.\n")
 
-            # Store the indices in the dictionary
-            computed_indices[
-                "confidence_interval_CVM_i"
-            ] = self.confidence_interval_CVM_i
 
         ################## COMPUTE SOBOL INDICES ##################
 
@@ -236,23 +210,16 @@ class CramervonMises(Sensitivity):
             n_outputs = 1
             C_i_model_evals = C_i_model_evals.reshape((n_outputs, *_shape))
 
-            self.sobol_i = compute_first_order_sobol(
-                A_model_evals, W_model_evals, C_i_model_evals
-            )
+            self.first_order_sobol_indices = compute_first_order_sobol(
+                A_model_evals, W_model_evals, C_i_model_evals)
 
             self.logger.info("UQpy: First order Sobol indices computed successfully.\n")
 
-            self.sobol_total_i = compute_total_order_sobol(
-                A_model_evals, W_model_evals, C_i_model_evals
-            )
+            self.total_order_sobol_indices = compute_total_order_sobol(
+                A_model_evals, W_model_evals, C_i_model_evals)
 
             self.logger.info("UQpy: Total order Sobol indices computed successfully.\n")
 
-            # Store the indices in the dictionary
-            computed_indices["sobol_i"] = self.sobol_i
-            computed_indices["sobol_total_i"] = self.sobol_total_i
-
-        return computed_indices
 
     @staticmethod
     @beartype
@@ -329,7 +296,7 @@ class CramervonMises(Sensitivity):
         # (This should however be faster for small `N`, e.g. N=10_000)
 
         N = self.n_samples
-        m = self.num_vars
+        m = self.n_variables
 
         # Model evaluations
         f_A = A_model_evals.ravel()
@@ -337,7 +304,7 @@ class CramervonMises(Sensitivity):
         f_C_i = C_i_model_evals
 
         # Store CramérvonMises indices
-        First_order_indices = np.zeros((m, 1))
+        first_order_indices = np.zeros((m, 1))
 
         # Compute Cramér-von Mises indices
         for i in range(m):
@@ -355,6 +322,6 @@ class CramervonMises(Sensitivity):
                 sum_numerator += mean_product - mean_sum**2
                 sum_denominator += mean_sum - mean_sum**2
 
-            First_order_indices[i] = sum_numerator / sum_denominator
+            first_order_indices[i] = sum_numerator / sum_denominator
 
-        return First_order_indices
+        return first_order_indices

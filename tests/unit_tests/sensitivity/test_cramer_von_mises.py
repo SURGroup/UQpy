@@ -47,7 +47,7 @@ from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Normal, Uniform
 from UQpy.distributions.collection.JointIndependent import JointIndependent
-from UQpy.sensitivity.CramervonMises import CramervonMises
+from UQpy.sensitivity.CramerVonMisesSensitivity import CramerVonMisesSensitivity
 
 # Prepare
 ###############################################################################
@@ -84,7 +84,7 @@ def exponential_model_object():
 def CVM_object(exponential_model_object, exponential_input_dist_object):
     """This function returns the CVM object."""
 
-    return CramervonMises(exponential_model_object, exponential_input_dist_object)
+    return CramerVonMisesSensitivity(exponential_model_object, exponential_input_dist_object)
 
 
 @pytest.fixture()
@@ -230,7 +230,7 @@ def ishigami_model_object():
 def CVM_object_ishigami(ishigami_model_object, ishigami_input_dist_object):
     """This function returns the CVM object."""
 
-    return CramervonMises(ishigami_model_object, ishigami_input_dist_object)
+    return CramerVonMisesSensitivity(ishigami_model_object, ishigami_input_dist_object)
 
 
 @pytest.fixture()

@@ -34,8 +34,7 @@ class Sensitivity:
         self,
         runmodel_object: RunModel,
         dist_object: Union[JointIndependent, Union[list, tuple]],
-        random_state: RandomStateType = None,
-        **kwargs,
+        random_state: RandomStateType = None
     ) -> None:
 
         self.runmodel_object = runmodel_object
@@ -238,8 +237,51 @@ class Sensitivity:
         # store the confidence interval for each qoi
         confidence_interval_qoi = np.zeros((n_outputs, n_qois, 2))
 
-        ##################### CREATE GENERATORS #####################
+        self._create_generators(estimator_inputs, input_generators)
 
+        self._evaluate_boostrap_sample_qoi(bootstrapped_qoi, estimator, input_generators, kwargs, num_bootstrap_samples)
+
+        confidence_interval_qoi = self._calculate_confidence_intervals(bootstrapped_qoi, confidence_interval_qoi,
+                                                                       confidence_level, n_outputs, qoi_mean)
+
+        return confidence_interval_qoi
+
+    def _evaluate_boostrap_sample_qoi(self, bootstrapped_qoi, estimator, input_generators, kwargs,
+                                      num_bootstrap_samples):
+        # Compute the qoi for each bootstrap sample
+        for j in range(num_bootstrap_samples):
+
+            # inputs to the estimator
+            args = []
+
+            # generate samples
+            for gen_input in input_generators:
+                if gen_input is None:
+                    args.append(gen_input)
+                else:
+                    args.append(gen_input.__next__())
+
+            bootstrapped_qoi[:, :, j] = estimator(*args, **kwargs).T
+
+    def _calculate_confidence_intervals(self, bootstrapped_qoi, confidence_interval_qoi, confidence_level, n_outputs,
+                                        qoi_mean):
+        # Calculate confidence intervals
+        delta = -scipy.stats.norm.ppf((1 - confidence_level) / 2)
+        for output_j in range(n_outputs):
+            # estimate the standard deviation using the bootstrap indices
+            std_qoi = np.std(bootstrapped_qoi[output_j, :, :], axis=1, ddof=1)
+
+            lower_bound = qoi_mean[:, output_j] - delta * std_qoi
+            upper_bound = qoi_mean[:, output_j] + delta * std_qoi
+
+            confidence_interval_qoi[output_j, :, 0] = lower_bound
+            confidence_interval_qoi[output_j, :, 1] = upper_bound
+        # For models with single output, return 2D array.
+        if n_outputs == 1:
+            confidence_interval_qoi = confidence_interval_qoi[0, :, :]
+        return confidence_interval_qoi
+
+    def _create_generators(self, estimator_inputs, input_generators):
         for i, input in enumerate(estimator_inputs):
 
             if isinstance(input, np.ndarray):
@@ -259,50 +301,9 @@ class Sensitivity:
                 elif input.ndim == 3:
                     input_generators.append(self.bootstrap_sample_generator_3D(input))
 
-            # Example: if models evals is None.
-            elif input == None:
+            elif input is None:
                 input_generators.append(input)
 
             else:
-                raise ValueError(
-                    f"UQpy: estimator_inputs[{i}] should be either None or `ndarray` of dimension 1, 2 or 3"
-                )
-
-        ################### BOOTSTRAPPING ##################
-
-        # Compute the qoi for each bootstrap sample
-        for j in range(num_bootstrap_samples):
-
-            # inputs to the estimator
-            args = []
-
-            # generate samples
-            for gen_input in input_generators:
-                if gen_input == None:
-                    args.append(gen_input)
-                else:
-                    args.append(gen_input.__next__())
-
-            bootstrapped_qoi[:, :, j] = estimator(*args, **kwargs).T
-
-        ################# CONFIDENCE INTERVAL ################
-
-        # Calculate confidence intervals
-        delta = -scipy.stats.norm.ppf((1 - confidence_level) / 2)
-
-        for output_j in range(n_outputs):
-
-            # estimate the standard deviation using the bootstrap indices
-            std_qoi = np.std(bootstrapped_qoi[output_j, :, :], axis=1, ddof=1)
-
-            lower_bound = qoi_mean[:, output_j] - delta * std_qoi
-            upper_bound = qoi_mean[:, output_j] + delta * std_qoi
-
-            confidence_interval_qoi[output_j, :, 0] = lower_bound
-            confidence_interval_qoi[output_j, :, 1] = upper_bound
-
-        # For models with single output, return 2D array.
-        if n_outputs == 1:
-            confidence_interval_qoi = confidence_interval_qoi[0, :, :]
-
-        return confidence_interval_qoi
+                raise ValueError(f"UQpy: estimator_inputs[{i}] should be either "
+                                 f"None or `ndarray` of dimension 1, 2 or 3")

@@ -49,7 +49,7 @@ from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Uniform, Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
-from UQpy.sensitivity.Chatterjee import Chatterjee
+from UQpy.sensitivity.ChatterjeeSensitivity import ChatterjeeSensitivity
 
 
 # Prepare
@@ -89,7 +89,7 @@ def exponential_model_object():
 @pytest.fixture()
 def Chatterjee_object(exponential_model_object, exponential_input_dist_object):
     """This function creates the Chatterjee object"""
-    return Chatterjee(exponential_model_object, exponential_input_dist_object)
+    return ChatterjeeSensitivity(exponential_model_object, exponential_input_dist_object)
 
 
 @pytest.fixture()
@@ -152,7 +152,7 @@ def ishigami_model_object():
 @pytest.fixture()
 def Chatterjee_object_ishigami(ishigami_model_object, ishigami_input_dist_object):
     """This function creates the Chatterjee object"""
-    return Chatterjee(ishigami_model_object, ishigami_input_dist_object)
+    return ChatterjeeSensitivity(ishigami_model_object, ishigami_input_dist_object)
 
 
 @pytest.fixture()

@@ -33,7 +33,7 @@ from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Uniform
 from UQpy.distributions.collection.JointIndependent import JointIndependent
-from UQpy.sensitivity.Sobol import Sobol
+from UQpy.sensitivity.SobolSensitivity import SobolSensitivity
 
 # %% [markdown]
 # **Define the model and input distributions**
@@ -59,7 +59,7 @@ dist_object = JointIndependent([M, C, K, L])
 # **Compute Sobol indices**
 
 # %% [markdown]
-SA = Sobol(runmodel_obj, dist_object)
+SA = SobolSensitivity(runmodel_obj, dist_object)
 
 computed_indices = SA.run(n_samples=500)
 

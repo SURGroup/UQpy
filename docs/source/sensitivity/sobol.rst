@@ -63,6 +63,10 @@ Sobol Class
 
 The :class:`Sobol` class is imported using the following command:
 
+>>> from UQpy.sensitivity.SobolSensitivity import Sobol
+
+>>> from UQpy.sensitivity.SobolSensitivity import Sobol
+
 >>> from UQpy.sensitivity.Sobol import Sobol
 
 Methods

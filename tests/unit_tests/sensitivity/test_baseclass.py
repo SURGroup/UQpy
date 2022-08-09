@@ -17,7 +17,7 @@ from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Uniform
 from UQpy.distributions.collection.JointIndependent import JointIndependent
-from UQpy.sensitivity.Sobol import Sobol
+from UQpy.sensitivity.SobolSensitivity import SobolSensitivity
 from UQpy.sensitivity.baseclass.PickFreeze import generate_pick_freeze_samples
 
 # Prepare
@@ -57,7 +57,7 @@ def ishigami_model_object():
 def sobol_object(ishigami_model_object, ishigami_input_dist_object):
     """This function returns the Sobol object."""
 
-    return Sobol(ishigami_model_object, ishigami_input_dist_object)
+    return SobolSensitivity(ishigami_model_object, ishigami_input_dist_object)
 
 
 @pytest.fixture()
@@ -211,7 +211,7 @@ def test_bootstrap_for_vector(random_f_A, manual_bootstrap_samples_f_A):
     # Prepare
     np.random.seed(12345)  #! set seed for reproducibility
 
-    gen_f_A = Sobol.bootstrap_sample_generator_1D(random_f_A)
+    gen_f_A = SobolSensitivity.bootstrap_sample_generator_1D(random_f_A)
 
     bootstrap_samples_f_A = next(gen_f_A)
 
@@ -226,7 +226,7 @@ def test_bootstrap_for_matrix(random_f_C_i, manual_bootstrap_samples_f_C_i):
     # Prepare
     np.random.seed(12345)  #! set seed for reproducibility
 
-    gen_f_C_i = Sobol.bootstrap_sample_generator_2D(random_f_C_i)
+    gen_f_C_i = SobolSensitivity.bootstrap_sample_generator_2D(random_f_C_i)
 
     bootstrap_samples_C_i = next(gen_f_C_i)
 

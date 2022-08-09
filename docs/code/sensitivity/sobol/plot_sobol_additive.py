@@ -20,7 +20,7 @@ from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
-from UQpy.sensitivity.Sobol import Sobol
+from UQpy.sensitivity.SobolSensitivity import SobolSensitivity
 from UQpy.sensitivity.PostProcess import *
 
 np.random.seed(123)
@@ -51,7 +51,7 @@ dist_object = JointIndependent([Normal(0, 1)] * 2)
 # **Compute Sobol indices**
 
 # %% [markdown]
-SA = Sobol(runmodel_obj, dist_object)
+SA = SobolSensitivity(runmodel_obj, dist_object)
 
 computed_indices = SA.run(n_samples=50_000)
 

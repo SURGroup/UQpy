@@ -21,7 +21,7 @@ from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Uniform
 from UQpy.distributions.collection.JointIndependent import JointIndependent
-from UQpy.sensitivity.Chatterjee import Chatterjee
+from UQpy.sensitivity.ChatterjeeSensitivity import ChatterjeeSensitivity
 from UQpy.sensitivity.PostProcess import *
 
 np.random.seed(123)
@@ -47,12 +47,12 @@ dist_object = JointIndependent([Uniform(-np.pi, 2 * np.pi)] * 3)
 # **Compute Chatterjee indices**
 
 # %% [markdown]
-SA = Chatterjee(runmodel_obj, dist_object)
+SA = ChatterjeeSensitivity(runmodel_obj, dist_object)
 
 computed_indices = SA.run(
     n_samples=100_000,
     estimate_sobol_indices=True,
-    num_bootstrap_samples=100,
+    n_bootstrap_samples=100,
     confidence_level=0.95,
 )
 

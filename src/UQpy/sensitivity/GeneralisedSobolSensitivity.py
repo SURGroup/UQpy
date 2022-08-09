@@ -40,7 +40,7 @@ from UQpy.utilities.ValidationTypes import (
 )
 
 
-class GeneralisedSobol(Sensitivity):
+class GeneralisedSobolSensitivity(Sensitivity):
     """
     Compute the generalised Sobol indices for models with multiple outputs
     (vector-valued response) using the Pick-and-Freeze method.
@@ -67,26 +67,17 @@ class GeneralisedSobol(Sensitivity):
 
         # Create logger with the same name as the class
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.ERROR)
-        frmt = UQpyLoggingFormatter()
 
-        # create console handler with a higher log level
-        ch = logging.StreamHandler()
-        ch.setFormatter(frmt)
+        self.generalized_first_order_indices = None
+        "Generalised first order Sobol indices, :class:`ndarray` of shape (n_variables, 1)"
 
-        # add the handler to the logger
-        self.logger.addHandler(ch)
-
-        self.gen_sobol_i = None
-        "Generalised first order Sobol indices, :class:`ndarray` of shape (num_vars, 1)"
-
-        self.gen_sobol_total_i = None
-        "Generalised total order Sobol indices, :class:`ndarray` of shape (num_vars, 1)"
+        self.generalized_total_order_indices = None
+        "Generalised total order Sobol indices, :class:`ndarray` of shape (n_variables, 1)"
 
         self.n_samples = None
         "Number of samples used to compute the sensitivity indices, :class:`int`"
 
-        self.num_vars = None
+        self.n_variables = None
         "Number of model input variables, :class:`int`"
 
     @beartype
@@ -124,23 +115,19 @@ class GeneralisedSobol(Sensitivity):
             raise TypeError("UQpy: n_samples should be an integer")
 
         # Check num_bootstrap_samples data type
-        if num_bootstrap_samples is not None:
-            if not isinstance(num_bootstrap_samples, int):
-                raise TypeError("UQpy: num_bootstrap_samples should be an integer.\n")
-        elif num_bootstrap_samples is None:
-            self.logger.info(
-                "UQpy: num_bootstrap_samples is set to None, confidence intervals will not be computed.\n"
-            )
+        if num_bootstrap_samples is None:
+            self.logger.info("UQpy: num_bootstrap_samples is set to None, confidence intervals will not be computed.\n")
 
+        elif not isinstance(num_bootstrap_samples, int):
+            raise TypeError("UQpy: num_bootstrap_samples should be an integer.\n")
         ################## GENERATE SAMPLES ##################
 
         (A_samples, B_samples, C_i_generator, _,) = generate_pick_freeze_samples(
-            self.dist_object, self.n_samples, self.random_state
-        )
+            self.dist_object, self.n_samples, self.random_state)
 
         self.logger.info("UQpy: Generated samples using the pick-freeze scheme.\n")
 
-        self.num_vars = A_samples.shape[1]  # Number of variables
+        self.n_variables = A_samples.shape[1]  # Number of variables
 
         ################# MODEL EVALUATIONS ####################
 
@@ -167,7 +154,7 @@ class GeneralisedSobol(Sensitivity):
         self.n_outputs = A_model_evals.shape[1]
 
         # shape: (n_outputs, n_samples, num_vars)
-        C_i_model_evals = np.zeros((self.n_outputs, self.n_samples, self.num_vars))
+        C_i_model_evals = np.zeros((self.n_outputs, self.n_samples, self.n_variables))
 
         for i, C_i in enumerate(C_i_generator):
 
@@ -185,32 +172,18 @@ class GeneralisedSobol(Sensitivity):
 
         self.logger.info("UQpy: All model evaluations computed successfully.\n")
 
-        ######################### STORAGE ########################
-
-        # Create dictionary to store the sensitivity indices
-        computed_indices = {}
-
         ################## COMPUTE GENERALISED SOBOL INDICES ##################
 
-        self.gen_sobol_i = self.compute_first_order_generalised_sobol_indices(
-            A_model_evals, B_model_evals, C_i_model_evals
-        )
+        self.generalized_first_order_indices = self.compute_first_order_generalised_sobol_indices(
+            A_model_evals, B_model_evals, C_i_model_evals)
 
-        self.logger.info(
-            "UQpy: First order Generalised Sobol indices computed successfully.\n"
-        )
+        self.logger.info("UQpy: First order Generalised Sobol indices computed successfully.\n")
 
-        self.gen_sobol_total_i = self.compute_total_order_generalised_sobol_indices(
-            A_model_evals, B_model_evals, C_i_model_evals
-        )
+        self.generalized_total_order_indices = self.compute_total_order_generalised_sobol_indices(
+            A_model_evals, B_model_evals, C_i_model_evals)
 
-        self.logger.info(
-            "UQpy: Total order Generalised Sobol indices computed successfully.\n"
-        )
+        self.logger.info("UQpy: Total order Generalised Sobol indices computed successfully.\n")
 
-        # Store the indices in the dictionary
-        computed_indices["gen_sobol_i"] = self.gen_sobol_i
-        computed_indices["gen_sobol_total_i"] = self.gen_sobol_total_i
 
         ################## CONFIDENCE INTERVALS ####################
 
@@ -228,37 +201,26 @@ class GeneralisedSobol(Sensitivity):
             self.confidence_interval_gen_sobol_i = self.bootstrapping(
                 self.compute_first_order_generalised_sobol_indices,
                 estimator_inputs,
-                computed_indices["gen_sobol_i"],
+                self.generalized_first_order_indices,
                 num_bootstrap_samples,
                 confidence_level,
             )
 
             self.logger.info(
-                "UQpy: Confidence intervals for First order Generalised Sobol indices computed successfully.\n"
-            )
+                "UQpy: Confidence intervals for First order Generalised Sobol indices computed successfully.\n")
 
             # Total order generalised Sobol indices
             self.confidence_interval_gen_sobol_total_i = self.bootstrapping(
                 self.compute_total_order_generalised_sobol_indices,
                 estimator_inputs,
-                computed_indices["gen_sobol_total_i"],
+                self.generalized_total_order_indices,
                 num_bootstrap_samples,
                 confidence_level,
             )
 
             self.logger.info(
-                "UQpy: Confidence intervals for Total order Sobol Generalised indices computed successfully.\n"
-            )
+                "UQpy: Confidence intervals for Total order Sobol Generalised indices computed successfully.\n")
 
-            # Store the indices in the dictionary
-            computed_indices[
-                "confidence_interval_gen_sobol_i"
-            ] = self.confidence_interval_gen_sobol_i
-            computed_indices[
-                "confidence_interval_gen_sobol_total_i"
-            ] = self.confidence_interval_gen_sobol_total_i
-
-        return computed_indices
 
     @staticmethod
     @beartype

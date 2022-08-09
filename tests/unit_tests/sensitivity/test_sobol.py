@@ -55,7 +55,7 @@ from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Uniform
 from UQpy.distributions.collection.JointIndependent import JointIndependent
-from UQpy.sensitivity.Sobol import Sobol
+from UQpy.sensitivity.SobolSensitivity import SobolSensitivity
 
 # Prepare
 ###############################################################################
@@ -94,7 +94,7 @@ def ishigami_model_object():
 def sobol_object(ishigami_model_object, ishigami_input_dist_object):
     """This function returns the Sobol object."""
 
-    return Sobol(ishigami_model_object, ishigami_input_dist_object)
+    return SobolSensitivity(ishigami_model_object, ishigami_input_dist_object)
 
 
 @pytest.fixture()
@@ -177,7 +177,7 @@ def bootstrap_sobol_index_variance(sobol_object, NUM_SAMPLES):
     #### Compute indices ####
     computed_indices = SA.run(
         n_samples=n_samples,
-        num_bootstrap_samples=num_bootstrap_samples,
+        n_bootstrap_samples=num_bootstrap_samples,
         confidence_level=confidence_level,
     )
 
@@ -291,7 +291,7 @@ def sobol_object_g_func(
 ):
     """This function creates the Sobol object for the g-function"""
 
-    sobol_object = Sobol(
+    sobol_object = SobolSensitivity(
         sobol_g_function_model_object, sobol_g_function_input_dist_object
     )
 

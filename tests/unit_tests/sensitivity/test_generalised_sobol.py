@@ -50,7 +50,7 @@ from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Uniform, Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
-from UQpy.sensitivity.GeneralisedSobol import GeneralisedSobol
+from UQpy.sensitivity.GeneralisedSobolSensitivity import GeneralisedSobolSensitivity
 
 # Prepare
 ###############################################################################
@@ -109,7 +109,7 @@ def generalised_sobol_object_normal(normal_input_dist_object, toy_model_object):
 
     """
 
-    return GeneralisedSobol(toy_model_object, normal_input_dist_object)
+    return GeneralisedSobolSensitivity(toy_model_object, normal_input_dist_object)
 
 
 @pytest.fixture()
@@ -120,7 +120,7 @@ def generalised_sobol_object_uniform(uniform_input_dist_object, toy_model_object
 
     """
 
-    return GeneralisedSobol(toy_model_object, uniform_input_dist_object)
+    return GeneralisedSobolSensitivity(toy_model_object, uniform_input_dist_object)
 
 
 @pytest.fixture()
