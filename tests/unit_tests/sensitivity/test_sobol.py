@@ -175,18 +175,16 @@ def bootstrap_sobol_index_variance(sobol_object, NUM_SAMPLES):
     num_bootstrap_samples, n_samples = NUM_SAMPLES
 
     #### Compute indices ####
-    computed_indices = SA.run(
+    SA.run(
         n_samples=n_samples,
         n_bootstrap_samples=num_bootstrap_samples,
         confidence_level=confidence_level,
     )
 
-    First_order = computed_indices["sobol_i"].ravel()
-    Total_order = computed_indices["sobol_total_i"].ravel()
-    confidence_interval_first_order = computed_indices["confidence_interval_sobol_i"]
-    confidence_interval_total_order = computed_indices[
-        "confidence_interval_sobol_total_i"
-    ]
+    First_order = SA.first_order_indices.ravel()
+    Total_order = SA.total_order_indices.ravel()
+    confidence_interval_first_order = SA.first_order_confidence_interval
+    confidence_interval_total_order = SA.total_order_confidence_interval
 
     #### Compute variance ####
     upper_bound_first_order = confidence_interval_first_order[:, 1]

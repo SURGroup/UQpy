@@ -154,9 +154,9 @@ def pick_and_freeze_toy_GSI_normal(generalised_sobol_object_normal):
 
     np.random.seed(12345)  #! set seed for reproducibility
 
-    computed_indices = SA.run(n_samples=100_000)
+    SA.run(n_samples=100_000)
 
-    return computed_indices["gen_sobol_i"]
+    return SA.generalized_first_order_indices
 
 
 @pytest.fixture()
@@ -170,9 +170,9 @@ def pick_and_freeze_toy_GSI_uniform(generalised_sobol_object_uniform):
 
     np.random.seed(12345)  #! set seed for reproducibility
 
-    computed_indices = SA.run(n_samples=100_000)
+    SA.run(n_samples=100_000)
 
-    return computed_indices["gen_sobol_i"]
+    return SA.generalized_first_order_indices
 
 
 @pytest.fixture()
@@ -201,18 +201,16 @@ def bootstrap_generalised_sobol_index_variance(
 
     # Compute the confidence intervals
 
-    computed_indices = SA.run(
+    SA.run(
         n_samples=n_samples,
-        num_bootstrap_samples=num_bootstrap_samples,
+        n_bootstrap_samples=num_bootstrap_samples,
         confidence_level=confidence_level,
     )
 
-    gen_sobol_i = computed_indices["gen_sobol_i"].ravel()
-    gen_sobol_total_i = computed_indices["gen_sobol_total_i"].ravel()
-    upper_bound_first_order = computed_indices["confidence_interval_gen_sobol_i"][:, 1]
-    upper_bound_total_order = computed_indices["confidence_interval_gen_sobol_total_i"][
-        :, 1
-    ]
+    gen_sobol_i = SA.generalized_first_order_indices.ravel()
+    gen_sobol_total_i = SA.generalized_total_order_indices.ravel()
+    upper_bound_first_order = SA.first_order_confidence_interval[:, 1]
+    upper_bound_total_order = SA.total_order_confidence_interval[:, 1]
 
     std_bootstrap_first_order = (upper_bound_first_order - gen_sobol_i) / delta
     std_bootstrap_total_order = (upper_bound_total_order - gen_sobol_total_i) / delta

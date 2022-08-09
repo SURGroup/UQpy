@@ -74,7 +74,7 @@ dist_object = JointIndependent([Uniform(-np.pi, 2 * np.pi)] * 3)
 # %%
 SA = SobolSensitivity(runmodel_obj, dist_object)
 
-computed_indices = SA.run(n_samples=100_000, num_bootstrap_samples=100)
+computed_indices = SA.run(n_samples=100_000, n_bootstrap_samples=100)
 
 # %% [markdown]
 # **First order Sobol indices**

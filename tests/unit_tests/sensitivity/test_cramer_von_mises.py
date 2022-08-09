@@ -114,9 +114,9 @@ def numerical_exponential_CVM_indices(CVM_object):
 
     np.random.seed(12345)  #! set seed for reproducibility
 
-    computed_indices = SA.run(n_samples=50_000)
+    SA.run(n_samples=50_000)
 
-    return computed_indices["CVM_i"]
+    return SA.first_order_CramerVonMises_indices
 
 
 @pytest.fixture()
@@ -145,14 +145,14 @@ def bootstrap_CVM_index_variance(CVM_object, NUM_SAMPLES):
     num_bootstrap_samples, n_samples = NUM_SAMPLES
 
     #### Compute indices ####
-    computed_indices = SA.run(
+    SA.run(
         n_samples=n_samples,
         num_bootstrap_samples=num_bootstrap_samples,
         confidence_level=confidence_level,
     )
 
-    First_order = computed_indices["CVM_i"].ravel()
-    upper_bound_first_order = computed_indices["confidence_interval_CVM_i"][:, 1]
+    First_order = SA.first_order_CramerVonMises_indices.ravel()
+    upper_bound_first_order = SA.confidence_interval_CramerVonMises[:, 1]
 
     #### Compute variance ####
     std_bootstrap_first_order = (upper_bound_first_order - First_order) / delta
@@ -244,11 +244,11 @@ def numerical_Sobol_indices(CVM_object_ishigami):
 
     np.random.seed(12345)
 
-    computed_indices = SA.run(
+    SA.run(
         n_samples=500_000, estimate_sobol_indices=True, disable_CVM_indices=True
     )
 
-    return computed_indices["sobol_i"], computed_indices["sobol_total_i"]
+    return SA.first_order_sobol_indices, SA.total_order_sobol_indices
 
 
 @pytest.fixture()

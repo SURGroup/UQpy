@@ -131,7 +131,7 @@ class SobolSensitivity(Sensitivity):
     def run(
         self,
         n_samples: PositiveInteger = 1_000,
-        num_bootstrap_samples: PositiveInteger = None,
+        n_bootstrap_samples: PositiveInteger = None,
         confidence_level: PositiveFloat = 0.95,
         estimate_second_order: bool = False,
         first_order_scheme: str = "Janon2014",
@@ -145,7 +145,7 @@ class SobolSensitivity(Sensitivity):
         :param n_samples: Number of samples used to compute the sensitivity indices. \
             Default is 1,000.
 
-        :param num_bootstrap_samples: Number of bootstrap samples used to compute the \
+        :param n_bootstrap_samples: Number of bootstrap samples used to compute the \
             confidence intervals. Default is :any:`None`.
 
         :param confidence_interval: Confidence level used to compute the confidence \
@@ -181,10 +181,10 @@ class SobolSensitivity(Sensitivity):
             raise TypeError("UQpy: n_samples should be an integer.")
 
         # Check num_bootstrap_samples data type
-        if num_bootstrap_samples is not None:
-            if not isinstance(num_bootstrap_samples, int):
+        if n_bootstrap_samples is not None:
+            if not isinstance(n_bootstrap_samples, int):
                 raise TypeError("UQpy: num_bootstrap_samples should be an integer.")
-        elif num_bootstrap_samples is None:
+        elif n_bootstrap_samples is None:
             self.logger.info(
                 "UQpy: num_bootstrap_samples is set to None, confidence intervals will not be computed."
             )
@@ -300,7 +300,7 @@ class SobolSensitivity(Sensitivity):
 
         ################## CONFIDENCE INTERVALS ####################
 
-        if num_bootstrap_samples is not None:
+        if n_bootstrap_samples is not None:
 
             self.logger.info("UQpy: Computing confidence intervals ...")
 
@@ -316,7 +316,7 @@ class SobolSensitivity(Sensitivity):
                 compute_first_order,
                 estimator_inputs,
                 computed_indices["sobol_i"],
-                num_bootstrap_samples,
+                n_bootstrap_samples,
                 confidence_level,
                 scheme=first_order_scheme,
             )
@@ -334,7 +334,7 @@ class SobolSensitivity(Sensitivity):
                 compute_total_order,
                 estimator_inputs,
                 computed_indices["sobol_total_i"],
-                num_bootstrap_samples,
+                n_bootstrap_samples,
                 confidence_level,
                 scheme=total_order_scheme,
             )
@@ -353,7 +353,7 @@ class SobolSensitivity(Sensitivity):
                     compute_second_order,
                     estimator_inputs,
                     computed_indices["sobol_ij"],
-                    num_bootstrap_samples,
+                    n_bootstrap_samples,
                     confidence_level,
                     first_order_sobol=computed_indices["sobol_i"],
                     scheme=second_order_scheme,

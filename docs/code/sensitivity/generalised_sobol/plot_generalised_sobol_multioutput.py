@@ -55,7 +55,7 @@ dist_object_1 = JointIndependent([Normal(0, 1)] * 2)
 SA = GeneralisedSobolSensitivity(runmodel_obj, dist_object_1)
 
 computed_indices = SA.run(
-    n_samples=20_000, confidence_level=0.95, num_bootstrap_samples=5_00
+    n_samples=20_000, confidence_level=0.95, n_bootstrap_samples=5_00
 )
 
 # %% [markdown]
@@ -103,7 +103,7 @@ dist_object_2 = JointIndependent([Uniform(0, 1)] * 2)
 SA = GeneralisedSobolSensitivity(runmodel_obj, dist_object_2)
 
 computed_indices = SA.run(
-    n_samples=20_000, confidence_level=0.95, num_bootstrap_samples=5_00
+    n_samples=20_000, confidence_level=0.95, n_bootstrap_samples=5_00
 )
 
 # %% [markdown]

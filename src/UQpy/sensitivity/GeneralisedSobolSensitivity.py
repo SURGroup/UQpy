@@ -84,7 +84,7 @@ class GeneralisedSobolSensitivity(Sensitivity):
     def run(
         self,
         n_samples: PositiveInteger = 1_000,
-        num_bootstrap_samples: PositiveInteger = None,
+        n_bootstrap_samples: PositiveInteger = None,
         confidence_level: PositiveFloat = 0.95,
     ):
 
@@ -95,7 +95,7 @@ class GeneralisedSobolSensitivity(Sensitivity):
         :param n_samples: Number of samples used to compute the sensitivity indices. \
             Default is 1,000.
 
-        :param num_bootstrap_samples: Number of bootstrap samples used to compute the \
+        :param n_bootstrap_samples: Number of bootstrap samples used to compute the \
             confidence intervals. Default is :any:`None`.
 
         :param confidence_level: Confidence level used to compute the confidence \
@@ -115,10 +115,10 @@ class GeneralisedSobolSensitivity(Sensitivity):
             raise TypeError("UQpy: n_samples should be an integer")
 
         # Check num_bootstrap_samples data type
-        if num_bootstrap_samples is None:
+        if n_bootstrap_samples is None:
             self.logger.info("UQpy: num_bootstrap_samples is set to None, confidence intervals will not be computed.\n")
 
-        elif not isinstance(num_bootstrap_samples, int):
+        elif not isinstance(n_bootstrap_samples, int):
             raise TypeError("UQpy: num_bootstrap_samples should be an integer.\n")
         ################## GENERATE SAMPLES ##################
 
@@ -187,7 +187,7 @@ class GeneralisedSobolSensitivity(Sensitivity):
 
         ################## CONFIDENCE INTERVALS ####################
 
-        if num_bootstrap_samples is not None:
+        if n_bootstrap_samples is not None:
 
             self.logger.info("UQpy: Computing confidence intervals ...\n")
 
@@ -198,11 +198,11 @@ class GeneralisedSobolSensitivity(Sensitivity):
             ]
 
             # First order generalised Sobol indices
-            self.confidence_interval_gen_sobol_i = self.bootstrapping(
+            self.first_order_confidence_interval = self.bootstrapping(
                 self.compute_first_order_generalised_sobol_indices,
                 estimator_inputs,
                 self.generalized_first_order_indices,
-                num_bootstrap_samples,
+                n_bootstrap_samples,
                 confidence_level,
             )
 
@@ -210,11 +210,11 @@ class GeneralisedSobolSensitivity(Sensitivity):
                 "UQpy: Confidence intervals for First order Generalised Sobol indices computed successfully.\n")
 
             # Total order generalised Sobol indices
-            self.confidence_interval_gen_sobol_total_i = self.bootstrapping(
+            self.total_order_confidence_interval = self.bootstrapping(
                 self.compute_total_order_generalised_sobol_indices,
                 estimator_inputs,
                 self.generalized_total_order_indices,
-                num_bootstrap_samples,
+                n_bootstrap_samples,
                 confidence_level,
             )
 

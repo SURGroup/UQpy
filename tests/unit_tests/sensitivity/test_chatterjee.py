@@ -115,9 +115,9 @@ def numerical_Chatterjee_indices(Chatterjee_object):
 
     np.random.seed(12345)  #! set seed for reproducibility
 
-    computed_indices = SA.run(n_samples=10_000)
+    SA.run(n_samples=10_000)
 
-    return computed_indices["chatterjee_i"]
+    return SA.first_order_chatterjee_indices
 
 
 @pytest.fixture()
@@ -163,9 +163,9 @@ def numerical_Sobol_indices(Chatterjee_object_ishigami):
 
     np.random.seed(12345)
 
-    computed_indices = SA.run(n_samples=10_000, estimate_sobol_indices=True)
+    SA.run(n_samples=10_000, estimate_sobol_indices=True)
 
-    return computed_indices["sobol_i"]
+    return SA.first_order_sobol_indices
 
 
 @pytest.fixture()
