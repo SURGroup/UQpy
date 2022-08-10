@@ -4,7 +4,7 @@ Ishigami function
 ==============================================
 
 The ishigami function is a non-linear, non-monotonic function that is commonly used to 
-benchmark uncertainty and senstivity analysis methods.
+benchmark uncertainty and sensitivity analysis methods.
 
 .. math::
     f(x_1, x_2, x_3) = sin(x_1) + a \cdot sin^2(x_2) + b \cdot x_3^4 sin(x_1)
@@ -49,7 +49,7 @@ dist_object = JointIndependent([Uniform(-np.pi, 2 * np.pi)] * 3)
 # %% [markdown]
 SA = ChatterjeeSensitivity(runmodel_obj, dist_object)
 
-computed_indices = SA.run(
+SA.run(
     n_samples=100_000,
     estimate_sobol_indices=True,
     n_bootstrap_samples=100,
@@ -60,18 +60,18 @@ computed_indices = SA.run(
 # **Chattererjee indices**
 
 # %%
-computed_indices["chatterjee_i"]
+SA.first_order_chatterjee_indices
 
 # %% [markdown]
 # **Confidence intervals for the Chatterjee indices**
 
 # %%
-computed_indices["confidence_interval_chatterjee_i"]
+SA.confidence_interval_chatterjee
 
 # **Plot the Chatterjee indices**
 fig1, ax1 = plot_sensitivity_index(
-    computed_indices["chatterjee_i"][:, 0],
-    computed_indices["confidence_interval_chatterjee_i"],
+    SA.first_order_chatterjee_indices[:, 0],
+    SA.confidence_interval_chatterjee,
     plot_title="Chatterjee indices",
     color="C2",
 )
@@ -88,11 +88,11 @@ fig1, ax1 = plot_sensitivity_index(
 # :math:`S_3`: 0.0
 
 # %%
-computed_indices["sobol_i"]
+SA.first_order_sobol_indices
 
 # **Plot the first order Sobol indices**
 fig2, ax2 = plot_sensitivity_index(
-    computed_indices["sobol_i"][:, 0],
+    SA.first_order_sobol_indices[:, 0],
     plot_title="First order Sobol indices",
     color="C0",
 )

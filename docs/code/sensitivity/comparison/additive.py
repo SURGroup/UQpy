@@ -64,7 +64,7 @@ dist_object = JointIndependent([Normal(0, 1)] * 2)
 # %% [markdown]
 SA_sobol = SobolSensitivity(runmodel_obj, dist_object)
 
-computed_indices_sobol = SA_sobol.run(n_samples=50_000)
+SA_sobol.run(n_samples=50_000)
 
 # %% [markdown]
 # **First order Sobol indices**
@@ -76,7 +76,7 @@ computed_indices_sobol = SA_sobol.run(n_samples=50_000)
 # :math:`\mathrm{S}_2 = \frac{b^2 \cdot \mathbb{V}[X_2]}{a^2 \cdot \mathbb{V}[X_1] + b^2 \cdot \mathbb{V}[X_2]} = \frac{2^2 \cdot 1}{1^2 \cdot 1 + 2^2 \cdot 1} = 0.8`
 
 # %%
-computed_indices_sobol["sobol_i"]
+SA_sobol.first_order_indices
 
 # %% [markdown]
 # **Compute Chatterjee indices**
@@ -84,19 +84,19 @@ computed_indices_sobol["sobol_i"]
 # %% [markdown]
 SA_chatterjee = ChatterjeeSensitivity(runmodel_obj, dist_object)
 
-computed_indices_chatterjee = SA_chatterjee.run(n_samples=50_000)
+SA_chatterjee.run(n_samples=50_000)
 
 # %%
-computed_indices_chatterjee["chatterjee_i"]
+SA_chatterjee.first_order_chatterjee_indices
 
 # %%
 SA_cvm = cvm(runmodel_obj, dist_object)
 
 # Compute CVM indices using the pick and freeze algorithm
-computed_indices_cvm = SA_cvm.run(n_samples=20_000, estimate_sobol_indices=True)
+SA_cvm.run(n_samples=20_000, estimate_sobol_indices=True)
 
 # %%
-computed_indices_cvm["CVM_i"]
+SA_cvm.first_order_CramerVonMises_indices
 
 # %%
 # **Plot all indices**
@@ -106,9 +106,9 @@ _idx = np.arange(num_vars)
 variable_names = [r"$X_{}$".format(i + 1) for i in range(num_vars)]
 
 # round to 2 decimal places
-indices_1 = np.around(computed_indices_sobol["sobol_i"][:, 0], decimals=2)
-indices_2 = np.around(computed_indices_chatterjee["chatterjee_i"][:, 0], decimals=2)
-indices_3 = np.around(computed_indices_cvm["CVM_i"][:, 0], decimals=2)
+indices_1 = np.around(SA_sobol.first_order_indices[:, 0], decimals=2)
+indices_2 = np.around(SA_chatterjee.first_order_chatterjee_indices[:, 0], decimals=2)
+indices_3 = np.around(SA_cvm.first_order_CramerVonMises_indices[:, 0], decimals=2)
 
 fig, ax = plt.subplots()
 width = 0.3

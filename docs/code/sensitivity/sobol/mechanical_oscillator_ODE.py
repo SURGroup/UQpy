@@ -61,7 +61,7 @@ dist_object = JointIndependent([M, C, K, L])
 # %% [markdown]
 SA = SobolSensitivity(runmodel_obj, dist_object)
 
-computed_indices = SA.run(n_samples=500)
+SA.run(n_samples=500)
 
 # %%
 # **Plot the Sobol indices**
@@ -74,12 +74,10 @@ T = np.linspace(t_0, t_f, n_t)
 
 fig, ax = plt.subplots(1, 2, figsize=(16, 8))
 
-ax[0].plot(T, computed_indices["sobol_total_i"][0, :], "r", label=r"$m$")
-ax[0].plot(T, computed_indices["sobol_total_i"][1, :], "g", label=r"$c$")
-ax[0].plot(T, computed_indices["sobol_total_i"][2, :], label=r"$k$", color="royalblue")
-ax[0].plot(
-    T, computed_indices["sobol_total_i"][3, :], label=r"$\ell$", color="aquamarine"
-)
+ax[0].plot(T, SA.total_order_indices[0, :], "r", label=r"$m$")
+ax[0].plot(T, SA.total_order_indices[1, :], "g", label=r"$c$")
+ax[0].plot(T, SA.total_order_indices[2, :], label=r"$k$", color="royalblue")
+ax[0].plot(T, SA.total_order_indices[3, :], label=r"$\ell$", color="aquamarine")
 
 ax[0].set_title("Total order Sobol indices", fontsize=16)
 ax[0].set_xlabel("time (s)", fontsize=16)
@@ -88,10 +86,10 @@ ax[0].set_xbound(0, t_f)
 ax[0].set_ybound(-0.2, 1.2)
 ax[0].legend()
 
-ax[1].plot(T, computed_indices["sobol_i"][0, :], "r", label=r"$m$")
-ax[1].plot(T, computed_indices["sobol_i"][1, :], "g", label=r"$c$")
-ax[1].plot(T, computed_indices["sobol_i"][2, :], label=r"$k$", color="royalblue")
-ax[1].plot(T, computed_indices["sobol_i"][3, :], label=r"$\ell$", color="aquamarine")
+ax[1].plot(T, SA.first_order_indices[0, :], "r", label=r"$m$")
+ax[1].plot(T, SA.first_order_indices[1, :], "g", label=r"$c$")
+ax[1].plot(T, SA.first_order_indices[2, :], label=r"$k$", color="royalblue")
+ax[1].plot(T, SA.first_order_indices[3, :], label=r"$\ell$", color="aquamarine")
 
 ax[1].set_title("First order Sobol indices", fontsize=16)
 ax[1].set_xlabel("time (s)", fontsize=16)

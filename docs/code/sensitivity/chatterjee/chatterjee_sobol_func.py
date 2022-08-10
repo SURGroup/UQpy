@@ -68,17 +68,17 @@ dist_object = JointIndependent([Uniform(0, 1)] * num_vars)
 SA = ChatterjeeSensitivity(runmodel_obj, dist_object)
 
 # Compute Chatterjee indices using rank statistics
-computed_indices = SA.run(n_samples=500_000, estimate_sobol_indices=True)
+SA.run(n_samples=500_000, estimate_sobol_indices=True)
 
 # %% [markdown]
 # **Chatterjee indices**
 
 # %%
-computed_indices["chatterjee_i"]
+SA.first_order_chatterjee_indices
 
 # **Plot the Chatterjee indices**
 fig1, ax1 = plot_sensitivity_index(
-    computed_indices["chatterjee_i"][:, 0],
+    SA.first_order_chatterjee_indices[:, 0],
     plot_title="Chatterjee indices",
     color="C2",
 )
@@ -101,11 +101,11 @@ fig1, ax1 = plot_sensitivity_index(
 # :math:`S_6` = 0.03760626
 
 # %%
-computed_indices["sobol_i"]
+SA.first_order_sobol_indices
 
 # **Plot the first order Sobol indices**
 fig2, ax2 = plot_sensitivity_index(
-    computed_indices["sobol_i"][:, 0],
+    SA.first_order_sobol_indices[:, 0],
     plot_title="First order Sobol indices",
     color="C0",
 )
@@ -143,12 +143,12 @@ SA_sobol = SobolSensitivity(runmodel_obj, dist_object)
 for i, sample_size in enumerate(sample_sizes):
 
     # Estimate using rank statistics
-    _indices = SA_chatterjee.run(n_samples=sample_size*7, estimate_sobol_indices=True)
-    store_rank_stats[:, i] = _indices["sobol_i"].ravel()
+    SA_chatterjee.run(n_samples=sample_size*7, estimate_sobol_indices=True)
+    store_rank_stats[:, i] = SA_chatterjee.first_order_sobol_indices.ravel()
 
     # Estimate using Pick and Freeze approach
-    _indices = SA_sobol.run(n_samples=sample_size)
-    store_pick_freeze[:, i] = _indices["sobol_i"].ravel()
+    SA_sobol.run(n_samples=sample_size)
+    store_pick_freeze[:, i] = SA_sobol.first_order_indices.ravel()
 
 # %%
 

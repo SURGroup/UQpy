@@ -53,7 +53,7 @@ dist_object = JointIndependent([Normal(0, 1)] * 2)
 # %% [markdown]
 SA = SobolSensitivity(runmodel_obj, dist_object)
 
-computed_indices = SA.run(n_samples=50_000)
+SA.run(n_samples=50_000)
 
 # %% [markdown]
 # **First order Sobol indices**
@@ -65,13 +65,13 @@ computed_indices = SA.run(n_samples=50_000)
 # :math:`\mathrm{S}_2 = \frac{b^2 \cdot \mathbb{V}[X_2]}{a^2 \cdot \mathbb{V}[X_1] + b^2 \cdot \mathbb{V}[X_2]} = \frac{2^2 \cdot 1}{1^2 \cdot 1 + 2^2 \cdot 1} = 0.8`
 
 # %%
-computed_indices["sobol_i"]
+SA.first_order_indices
 
 # %%
 # **Plot the first and total order sensitivity indices**
 fig1, ax1 = plot_index_comparison(
-    computed_indices["sobol_i"][:, 0],
-    computed_indices["sobol_total_i"][:, 0],
+    SA.first_order_indices[:, 0],
+    SA.total_order_indices[:, 0],
     label_1="First order Sobol indices",
     label_2="Total order Sobol indices",
     plot_title="First and Total order Sobol indices",

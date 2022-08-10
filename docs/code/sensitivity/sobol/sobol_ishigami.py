@@ -74,7 +74,7 @@ dist_object = JointIndependent([Uniform(-np.pi, 2 * np.pi)] * 3)
 # %%
 SA = SobolSensitivity(runmodel_obj, dist_object)
 
-computed_indices = SA.run(n_samples=100_000, n_bootstrap_samples=100)
+SA.run(n_samples=100_000, n_bootstrap_samples=100)
 
 # %% [markdown]
 # **First order Sobol indices**
@@ -88,7 +88,7 @@ computed_indices = SA.run(n_samples=100_000, n_bootstrap_samples=100)
 # :math:`S_3` = 0.0
 
 # %%
-computed_indices["sobol_i"]
+SA.first_order_indices
 
 # %% [markdown]
 # **Total order Sobol indices**
@@ -102,25 +102,25 @@ computed_indices["sobol_i"]
 # :math:`S_{T_3}` =  0.24368366
 
 # %%
-computed_indices["sobol_total_i"]
+SA.total_order_indices
 
 # %% [markdown]
 # **Confidence intervals for first order Sobol indices**
 
 # %%
-computed_indices["confidence_interval_sobol_i"]
+SA.first_order_confidence_interval
 
 # %% [markdown]
 # **Confidence intervals for total order Sobol indices**
 
 # %%
-computed_indices["confidence_interval_sobol_total_i"]
+SA.total_order_confidence_interval
 
 # %%
 # **Plot the first order sensitivity indices**
 fig1, ax1 = plot_sensitivity_index(
-    computed_indices["sobol_i"][:, 0],
-    confidence_interval=computed_indices["confidence_interval_sobol_i"],
+    SA.first_order_indices[:, 0],
+    confidence_interval=SA.first_order_confidence_interval,
     plot_title="First order Sobol indices",
     variable_names=["$X_1$", "$X_2$", "$X_3$"],
     color="C0",
@@ -129,10 +129,10 @@ fig1, ax1 = plot_sensitivity_index(
 # %%
 # **Plot the first and total order sensitivity indices**
 fig2, ax2 = plot_index_comparison(
-    computed_indices["sobol_i"][:, 0],
-    computed_indices["sobol_total_i"][:, 0],
-    confidence_interval_1=computed_indices["confidence_interval_sobol_i"],
-    confidence_interval_2=computed_indices["confidence_interval_sobol_total_i"],
+    SA.first_order_indices[:, 0],
+    SA.total_order_indices[:, 0],
+    confidence_interval_1=SA.first_order_confidence_interval,
+    confidence_interval_2=SA.total_order_confidence_interval,
     label_1="First order Sobol indices",
     label_2="Total order Sobol indices",
     plot_title="First and Total order Sobol indices",

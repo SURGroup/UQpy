@@ -249,10 +249,6 @@ class SobolSensitivity(Sensitivity):
 
         self.logger.info("UQpy: All model evaluations computed successfully.")
 
-        ######################### STORAGE ########################
-
-        # Create dictionary to store the sensitivity indices
-        computed_indices = {}
 
         ################## COMPUTE SOBOL INDICES ##################
 
@@ -267,8 +263,6 @@ class SobolSensitivity(Sensitivity):
 
         self.logger.info("UQpy: First order Sobol indices computed successfully.")
 
-        computed_indices["sobol_i"] = self.first_order_indices
-
         # Total order Sobol indices
         self.total_order_indices = compute_total_order(
             A_model_evals,
@@ -280,8 +274,6 @@ class SobolSensitivity(Sensitivity):
 
         self.logger.info("UQpy: Total order Sobol indices computed successfully.")
 
-        computed_indices["sobol_total_i"] = self.total_order_indices
-
         if estimate_second_order:
 
             # Second order Sobol indices
@@ -290,13 +282,12 @@ class SobolSensitivity(Sensitivity):
                 B_model_evals,
                 C_i_model_evals,
                 D_i_model_evals,
-                computed_indices["sobol_i"],
+                self.first_order_indices,
                 scheme=second_order_scheme,
             )
 
             self.logger.info("UQpy: Second order Sobol indices computed successfully.")
 
-            computed_indices["sobol_ij"] = self.second_order_indices
 
         ################## CONFIDENCE INTERVALS ####################
 
@@ -315,7 +306,7 @@ class SobolSensitivity(Sensitivity):
             self.first_order_confidence_interval = self.bootstrapping(
                 compute_first_order,
                 estimator_inputs,
-                computed_indices["sobol_i"],
+                self.first_order_indices,
                 n_bootstrap_samples,
                 confidence_level,
                 scheme=first_order_scheme,
@@ -325,15 +316,11 @@ class SobolSensitivity(Sensitivity):
                 "UQpy: Confidence intervals for First order Sobol indices computed successfully."
             )
 
-            computed_indices[
-                "confidence_interval_sobol_i"
-            ] = self.first_order_confidence_interval
-
             # Total order Sobol indices
             self.total_order_confidence_interval = self.bootstrapping(
                 compute_total_order,
                 estimator_inputs,
-                computed_indices["sobol_total_i"],
+                self.total_order_indices,
                 n_bootstrap_samples,
                 confidence_level,
                 scheme=total_order_scheme,
@@ -343,31 +330,22 @@ class SobolSensitivity(Sensitivity):
                 "UQpy: Confidence intervals for Total order Sobol indices computed successfully."
             )
 
-            computed_indices[
-                "confidence_interval_sobol_total_i"
-            ] = self.total_order_confidence_interval
 
             # Second order Sobol indices
             if estimate_second_order:
                 self.second_order_confidence_interval = self.bootstrapping(
                     compute_second_order,
                     estimator_inputs,
-                    computed_indices["sobol_ij"],
+                    self.second_order_indices,
                     n_bootstrap_samples,
                     confidence_level,
-                    first_order_sobol=computed_indices["sobol_i"],
+                    first_order_sobol=self.first_order_indices,
                     scheme=second_order_scheme,
                 )
 
                 self.logger.info(
                     "UQpy: Confidence intervals for Second order Sobol indices computed successfully."
                 )
-
-                computed_indices[
-                    "confidence_interval_sobol_ij"
-                ] = self.second_order_confidence_interval
-
-        return computed_indices
 
 
 ###################### Pick and Freeze Methods #####################

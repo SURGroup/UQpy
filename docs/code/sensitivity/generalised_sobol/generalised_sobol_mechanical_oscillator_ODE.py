@@ -63,7 +63,7 @@ dist_object = JointIndependent([M, C, K, L])
 # %% [markdown]
 SA = GeneralisedSobolSensitivity(runmodel_obj, dist_object)
 
-computed_indices = SA.run(n_samples=500)
+SA.run(n_samples=500)
 
 # %% [markdown]
 # **First order Generalised Sobol indices**
@@ -79,11 +79,11 @@ computed_indices = SA.run(n_samples=500)
 # :math:`GS_{\ell}` = 0.0561
 
 # %%
-computed_indices["gen_sobol_i"]
+SA.generalized_first_order_indices
 
 # **Plot the first order sensitivity indices**
 fig1, ax1 = plot_sensitivity_index(
-    computed_indices["gen_sobol_i"][:, 0],
+    SA.generalized_first_order_indices[:, 0],
     plot_title="First order Generalised Sobol indices",
     variable_names=[r"$m$", "$c$", "$k$", "$\ell$"],
     color="C0",
@@ -93,12 +93,12 @@ fig1, ax1 = plot_sensitivity_index(
 # **Total order Generalised Sobol indices**
 
 # %%
-computed_indices["gen_sobol_total_i"]
+SA.generalized_total_order_indices
 
 # **Plot the first and total order sensitivity indices**
 fig2, ax2 = plot_index_comparison(
-    computed_indices["gen_sobol_i"][:, 0],
-    computed_indices["gen_sobol_total_i"][:, 0],
+    SA.generalized_first_order_indices[:, 0],
+    SA.generalized_total_order_indices[:, 0],
     label_1="First order",
     label_2="Total order",
     plot_title="First and Total order Generalised Sobol indices",

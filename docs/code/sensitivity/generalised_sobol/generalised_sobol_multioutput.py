@@ -54,7 +54,7 @@ dist_object_1 = JointIndependent([Normal(0, 1)] * 2)
 # %% [markdown]
 SA = GeneralisedSobolSensitivity(runmodel_obj, dist_object_1)
 
-computed_indices = SA.run(
+SA.run(
     n_samples=20_000, confidence_level=0.95, n_bootstrap_samples=5_00
 )
 
@@ -70,25 +70,25 @@ computed_indices = SA.run(
 # :math:`GS_2` = 0.1179
 
 # %%
-computed_indices["gen_sobol_i"]
+SA.generalized_first_order_indices
 
 # **Plot the first order sensitivity indices**
 fig1, ax1 = plot_sensitivity_index(
-    computed_indices["gen_sobol_i"][:, 0],
-    confidence_interval=computed_indices["confidence_interval_gen_sobol_i"],
+    SA.generalized_first_order_indices[:, 0],
+    confidence_interval=SA.first_order_confidence_interval,
     plot_title="First order Generalised Sobol indices",
     color="C0",
 )
 
 # %%
-computed_indices["gen_sobol_total_i"]
+SA.generalized_total_order_indices
 
 # **Plot the first and total order sensitivity indices**
 fig2, ax2 = plot_index_comparison(
-    computed_indices["gen_sobol_i"][:, 0],
-    computed_indices["gen_sobol_total_i"][:, 0],
-    confidence_interval_1=computed_indices["confidence_interval_gen_sobol_i"],
-    confidence_interval_2=computed_indices["confidence_interval_gen_sobol_total_i"],
+    SA.generalized_first_order_indices[:, 0],
+    SA.generalized_total_order_indices[:, 0],
+    confidence_interval_1=SA.first_order_confidence_interval,
+    confidence_interval_2=SA.total_order_confidence_interval,
     label_1="First order",
     label_2="Total order",
     plot_title="First and Total order Generalised Sobol indices",
@@ -102,7 +102,7 @@ dist_object_2 = JointIndependent([Uniform(0, 1)] * 2)
 
 SA = GeneralisedSobolSensitivity(runmodel_obj, dist_object_2)
 
-computed_indices = SA.run(
+SA.run(
     n_samples=20_000, confidence_level=0.95, n_bootstrap_samples=5_00
 )
 
@@ -118,25 +118,25 @@ computed_indices = SA.run(
 # :math:`GS_2` = 0.3566
 
 # %%
-computed_indices["gen_sobol_i"]
+SA.generalized_first_order_indices
 
 # **Plot the first order sensitivity indices**
 fig3, ax3 = plot_sensitivity_index(
-    computed_indices["gen_sobol_i"][:, 0],
-    confidence_interval=computed_indices["confidence_interval_gen_sobol_i"],
+    SA.generalized_first_order_indices[:, 0],
+    confidence_interval=SA.first_order_confidence_interval,
     plot_title="First order Generalised Sobol indices",
     color="C0",
 )
 
 # %%
-computed_indices["gen_sobol_total_i"]
+SA.total_order_confidence_interval
 
 # **Plot the first and total order sensitivity indices**
 fig4, ax4 = plot_index_comparison(
-    computed_indices["gen_sobol_i"][:, 0],
-    computed_indices["gen_sobol_total_i"][:, 0],
-    confidence_interval_1=computed_indices["confidence_interval_gen_sobol_i"],
-    confidence_interval_2=computed_indices["confidence_interval_gen_sobol_total_i"],
+    SA.generalized_first_order_indices[:, 0],
+    SA.total_order_confidence_interval[:, 0],
+    confidence_interval_1=SA.first_order_confidence_interval,
+    confidence_interval_2=SA.total_order_confidence_interval,
     label_1="First order",
     label_2="Total order",
     plot_title="First and Total order Generalised Sobol indices",

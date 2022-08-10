@@ -62,7 +62,7 @@ dist_object = JointIndependent([Uniform(0, 1)] * num_vars)
 SA = SobolSensitivity(runmodel_obj, dist_object)
 
 # Compute Sobol indices using the pick and freeze algorithm
-computed_indices = SA.run(n_samples=50_000, estimate_second_order=True)
+SA.run(n_samples=50_000, estimate_second_order=True)
 
 # %% [markdown]
 # **First order Sobol indices**
@@ -82,12 +82,12 @@ computed_indices = SA.run(n_samples=50_000, estimate_second_order=True)
 # :math:`S_6` = 5.86781190e-05
 
 # %%
-computed_indices["sobol_i"]
+SA.first_order_indices
 
 # %%
 # **Plot the first order sensitivity indices**
 fig1, ax1 = plot_sensitivity_index(
-    computed_indices["sobol_i"][:, 0],
+    SA.first_order_indices[:, 0],
     plot_title="First order Sobol indices",
     color="C0",
 )
@@ -111,13 +111,13 @@ fig1, ax1 = plot_sensitivity_index(
 #
 
 # %%
-computed_indices["sobol_total_i"]
+SA.total_order_indices
 
 # %%
 # **Plot the first and total order sensitivity indices**
 fig2, ax2 = plot_index_comparison(
-    computed_indices["sobol_i"][:, 0],
-    computed_indices["sobol_total_i"][:, 0],
+    SA.first_order_indices[:, 0],
+    SA.total_order_indices[:, 0],
     label_1="First order Sobol indices",
     label_2="Total order Sobol indices",
     plot_title="First and Total order Sobol indices",
@@ -159,11 +159,11 @@ fig2, ax2 = plot_index_comparison(
 # :math:`S_{T_{56}}` = 2.0e-9
 
 # %%
-computed_indices["sobol_ij"]
+SA.second_order_indices
 
 # %%
 # **Plot the second order sensitivity indices**
 fig3, ax3 = plot_second_order_indices(
-    computed_indices["sobol_ij"][:, 0],
+    SA.second_order_indices[:, 0],
     num_vars=num_vars,
 )
