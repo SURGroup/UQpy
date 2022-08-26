@@ -146,9 +146,9 @@ def saltelli_ishigami_Sobol_indices(sobol_object):
 
     np.random.seed(12345)  #! set seed for reproducibility
 
-    computed_indices = SA.run(n_samples=1_000_000)
+    SA.run(n_samples=1_000_000)
 
-    return computed_indices["sobol_i"], computed_indices["sobol_total_i"]
+    return SA.first_order_indices, SA.total_order_indices
 
 
 @pytest.fixture()
@@ -335,9 +335,9 @@ def saltelli_sobol_g_function(sobol_object_g_func):
 
     # Compute Sobol indices using the pick and freeze algorithm
     # Save only second order indices
-    computed_indices = SA.run(n_samples=100_000, estimate_second_order=True)
+    SA.run(n_samples=100_000, estimate_second_order=True)
 
-    return computed_indices["sobol_ij"]
+    return SA.second_order_indices
 
 
 # Unit tests
