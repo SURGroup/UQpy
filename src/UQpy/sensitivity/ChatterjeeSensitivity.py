@@ -102,12 +102,6 @@ class ChatterjeeSensitivity(Sensitivity):
 
         :param confidence_level: Confidence level used to compute the confidence \
             intervals of the Cramér-von Mises indices.
-
-        :return: A :class:`dict` with the following keys: \
-            :code:`'chatterjee_i'` of shape :code:`(num_vars, 1)`, \
-            :code:`'confidence_interval_chatterjee_i'` of shape :code:`(num_vars, 2)`, \
-            :code:`'sobol_i'` of shape :code:`(num_vars, 1)`.
-
         """
 
         # Check nsamples
@@ -188,13 +182,13 @@ class ChatterjeeSensitivity(Sensitivity):
         between the input random vectors :math:`X=\left[ X_{1}, X_{2},…,X_{d} \right]`
         and output random vector Y.
 
-        :param X: Input random vectors, :class:`numpy.ndarray` of shape :code:`(n_samples, num_vars)`
+        :param X: Input random vectors, :class:`numpy.ndarray` of shape :code:`(n_samples, n_variables)`
 
         :param Y: Output random vector, :class:`numpy.ndarray` of shape :code:`(n_samples, 1)`
 
         :param seed: Seed for the random number generator.
 
-        :return: Chatterjee sensitivity indices, :class:`numpy.ndarray` of shape :code:`(num_vars, 1)`
+        :return: Chatterjee sensitivity indices, :class:`numpy.ndarray` of shape :code:`(n_variables, 1)`
 
         """
 
@@ -388,9 +382,9 @@ class ChatterjeeSensitivity(Sensitivity):
 
         :param A_model_evals: Model evaluations, :class:`numpy.ndarray` of shape :code:`(n_samples, 1)`
 
-        :param C_i_model_evals: Model evaluations, :class:`numpy.ndarray` of shape :code:`(n_samples, num_vars)`
+        :param C_i_model_evals: Model evaluations, :class:`numpy.ndarray` of shape :code:`(n_samples, n_variables)`
 
-        :return: First order Sobol indices, :class:`numpy.ndarray` of shape :code:`(num_vars, 1)`
+        :return: First order Sobol indices, :class:`numpy.ndarray` of shape :code:`(n_variables, 1)`
 
         """
 
@@ -422,7 +416,7 @@ class ChatterjeeSensitivity(Sensitivity):
         **Inputs:**
 
         * **A_samples** (`ndarray`):
-            Shape: `(n_samples, num_vars)`.
+            Shape: `(n_samples, n_variables)`.
 
         * **A_model_evals** (`ndarray`):
             Shape: `(n_samples, 1)`.
@@ -430,7 +424,7 @@ class ChatterjeeSensitivity(Sensitivity):
         **Outputs:**
 
         * **A_i_model_evals** (`ndarray`):
-            Shape: `(n_samples, num_vars)`.
+            Shape: `(n_samples, n_variables)`.
 
         """
 

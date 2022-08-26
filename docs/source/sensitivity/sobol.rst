@@ -61,30 +61,28 @@ Compared to "Sobol1993", the "Janon2014" estimator makes more efficient use of m
 Sobol Class
 ^^^^^^^^^^^^^^^^^^
 
-The :class:`Sobol` class is imported using the following command:
+The :class:`.SobolSensitivity` class is imported using the following command:
 
->>> from UQpy.sensitivity.SobolSensitivity import Sobol
+>>> from UQpy.sensitivity.SobolSensitivity import SobolSensitivity
 
->>> from UQpy.sensitivity.SobolSensitivity import Sobol
-
->>> from UQpy.sensitivity.Sobol import Sobol
 
 Methods
 """""""
 
-.. autoclass:: UQpy.sensitivity.Sobol
+.. autoclass:: UQpy.sensitivity.SobolSensitivity
      :members: run
 
 Attributes
 """"""""""
-.. autoattribute:: UQpy.sensitivity.Sobol.sobol_i
-.. autoattribute:: UQpy.sensitivity.Sobol.sobol_total_i
-.. autoattribute:: UQpy.sensitivity.Sobol.confidence_interval_sobol_i
-.. autoattribute:: UQpy.sensitivity.Sobol.confidence_interval_sobol_total_i
-.. autoattribute:: UQpy.sensitivity.Sobol.confidence_interval_sobol_ij
-.. autoattribute:: UQpy.sensitivity.Sobol.n_samples
-.. autoattribute:: UQpy.sensitivity.Sobol.num_vars
-.. autoattribute:: UQpy.sensitivity.Sobol.multioutput
+.. autoattribute:: UQpy.sensitivity.SobolSensitivity.first_order_indices
+.. autoattribute:: UQpy.sensitivity.SobolSensitivity.second_order_indices
+.. autoattribute:: UQpy.sensitivity.SobolSensitivity.total_order_indices
+.. autoattribute:: UQpy.sensitivity.SobolSensitivity.first_order_confidence_interval
+.. autoattribute:: UQpy.sensitivity.SobolSensitivity.second_order_confidence_interval
+.. autoattribute:: UQpy.sensitivity.SobolSensitivity.total_order_confidence_interval
+.. autoattribute:: UQpy.sensitivity.SobolSensitivity.n_samples
+.. autoattribute:: UQpy.sensitivity.Sobol.n_variables
+.. autoattribute:: UQpy.sensitivity.Sobol.is_multi_output
 
 
 Examples

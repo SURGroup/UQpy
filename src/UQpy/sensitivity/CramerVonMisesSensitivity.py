@@ -113,13 +113,6 @@ class CramerVonMisesSensitivity(Sensitivity):
 
         :param disable_CVM_indices: If :code:`True`, the Cramér-von Mises indices \
             are not computed.
-
-        :return: A :class:`dict` with the following keys: \
-            :code:`CVM_i` of shape :code:`(num_vars, 1)`, \
-            :code:`confidence_interval_CVM_i` of shape :code:`(num_vars, 2)`, \
-            :code:`sobol_i` of shape :code:`(num_vars, 1)`, \
-            :code:`sobol_total_i` of shape :code:`(num_vars, 1)`.
-
         """
 
         # Check nsamples
@@ -269,12 +262,12 @@ class CramerVonMisesSensitivity(Sensitivity):
             Shape: `(n_samples, 1)`
 
         * **C_i_model_evals** (`np.array`):
-            Shape: `(n_samples, num_vars)`
+            Shape: `(n_samples, n_variables)`
 
         **Outputs**
 
         * **First_order_CVM** (`np.array`):
-            Shape: `(num_vars)`
+            Shape: `(n_variables)`
 
         """
 

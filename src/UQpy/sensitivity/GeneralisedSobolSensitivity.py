@@ -69,10 +69,10 @@ class GeneralisedSobolSensitivity(Sensitivity):
         self.logger = logging.getLogger(__name__)
 
         self.generalized_first_order_indices = None
-        "Generalised first order Sobol indices, :class:`ndarray` of shape (n_variables, 1)"
+        "Generalised first order Sobol indices, :any:`numpy.ndarray` of shape (n_variables, 1)"
 
         self.generalized_total_order_indices = None
-        "Generalised total order Sobol indices, :class:`ndarray` of shape (n_variables, 1)"
+        "Generalised total order Sobol indices, :any:`numpy.ndarray` of shape (n_variables, 1)"
 
         self.n_samples = None
         "Number of samples used to compute the sensitivity indices, :class:`int`"
@@ -100,13 +100,6 @@ class GeneralisedSobolSensitivity(Sensitivity):
 
         :param confidence_level: Confidence level used to compute the confidence \
             intervals. Default is 0.95.
-
-        :return: A :class:`dict` with the following keys: \
-            :code:`gen_sobol_i` of shape :code:`(num_vars, 1)`, \
-            :code:`gen_sobol_total_i` of shape :code:`(num_vars, 1)`, \
-            :code:`confidence_interval_gen_sobol_i` of shape :code:`(num_vars, 2)`, \
-            :code:`confidence_interval_gen_sobol_total_i` of shape :code:`(num_vars, 2)`.
-
         """
 
         # Check n_samples data type
@@ -153,7 +146,7 @@ class GeneralisedSobolSensitivity(Sensitivity):
 
         self.n_outputs = A_model_evals.shape[1]
 
-        # shape: (n_outputs, n_samples, num_vars)
+        # shape: (n_outputs, n_samples, n_variables)
         C_i_model_evals = np.zeros((self.n_outputs, self.n_samples, self.n_variables))
 
         for i, C_i in enumerate(C_i_generator):
@@ -235,9 +228,11 @@ class GeneralisedSobolSensitivity(Sensitivity):
 
         :param A_model_evals: Model evaluations, :class:`numpy.ndarray` of shape :code:`(n_samples, n_outputs)`.
         :param B_model_evals: Model evaluations, :class:`numpy.ndarray` of shape :code:`(n_samples, n_outputs)`.
-        :param C_i_model_evals: Model evaluations, :class:`numpy.ndarray` of shape :code:`(n_outputs, n_samples, num_vars)`.
+        :param C_i_model_evals: Model evaluations, :class:`numpy.ndarray` of shape
+        :code:`(n_outputs, n_samples, n_variables)`.
 
-        :return: First order generalised Sobol indices, :class:`numpy.ndarray` of shape :code:`(n_outputs, num_vars)`.
+        :return: First order generalised Sobol indices, :class:`numpy.ndarray` of shape
+        :code:`(n_outputs, n_variables)`.
 
         """
 
@@ -304,9 +299,11 @@ class GeneralisedSobolSensitivity(Sensitivity):
 
         :param A_model_evals: Model evaluations, :class:`numpy.ndarray` of shape :code:`(n_samples, n_outputs)`.
         :param B_model_evals: Model evaluations, :class:`numpy.ndarray` of shape :code:`(n_samples, n_outputs)`.
-        :param C_i_model_evals: Model evaluations, :class:`numpy.ndarray` of shape :code:`(n_outputs, n_samples, num_vars)`.
+        :param C_i_model_evals: Model evaluations, :class:`numpy.ndarray` of shape
+        :code:`(n_outputs, n_samples, n_variables)`.
 
-        :return: Total order generalised Sobol indices, :class:`numpy.ndarray` of shape :code:`(n_outputs, num_vars)`.
+        :return: Total order generalised Sobol indices, :class:`numpy.ndarray` of shape
+        :code:`(n_outputs, n_variables)`.
 
         """
 

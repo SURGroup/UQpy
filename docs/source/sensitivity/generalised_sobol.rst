@@ -50,22 +50,22 @@ and
 Generalised Sobol Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :class:`Generalised Sobol` class is imported using the following command:
+The :class:`GeneralisedSobolSensitivity` class is imported using the following command:
 
->>> from UQpy.sensitivity.generalised_sobol import GeneralisedSobol
+>>> from UQpy.sensitivity.GeneralisedSobolSensitivity import GeneralisedSobolSensitivity
 
 Methods
 """""""
 
-.. autoclass:: UQpy.sensitivity.GeneralisedSobol
+.. autoclass:: UQpy.sensitivity.GeneralisedSobolSensitivity
      :members: run
 
 Attributes
 """"""""""
-.. autoattribute:: UQpy.sensitivity.GeneralisedSobol.gen_sobol_i
-.. autoattribute:: UQpy.sensitivity.GeneralisedSobol.gen_sobol_total_i
-.. autoattribute:: UQpy.sensitivity.GeneralisedSobol.n_samples
-.. autoattribute:: UQpy.sensitivity.GeneralisedSobol.num_vars
+.. autoattribute:: UQpy.sensitivity.GeneralisedSobolSensitivity.generalized_first_order_indices
+.. autoattribute:: UQpy.sensitivity.GeneralisedSobolSensitivity.generalized_total_order_indices
+.. autoattribute:: UQpy.sensitivity.GeneralisedSobolSensitivity.n_samples
+.. autoattribute:: UQpy.sensitivity.GeneralisedSobolSensitivity.n_variables
 
 Examples
 """"""""""

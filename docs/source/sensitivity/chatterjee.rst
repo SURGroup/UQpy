@@ -16,22 +16,22 @@ Furthermore, the Sobol indices can be efficiently estimated by leveraging the sa
 Chatterjee Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :class:`Chatterjee` class is imported using the following command:
+The :class:`.ChatterjeeSensitivity` class is imported using the following command:
 
->>> from UQpy.sensitivity.chatterjee import Chatterjee
+>>> from UQpy.sensitivity.ChatterjeeSensitivity import ChatterjeeSensitivity
 
 Methods
 """""""
-.. autoclass:: UQpy.sensitivity.Chatterjee
+.. autoclass:: UQpy.sensitivity.ChatterjeeSensitivity
    :members: run, compute_chatterjee_indices, rank_analog_to_pickfreeze, compute_Sobol_indices
 
 Attributes
 """"""""""
-.. autoattribute:: UQpy.sensitivity.Chatterjee.chatterjee_i
-.. autoattribute:: UQpy.sensitivity.Chatterjee.sobol_i
-.. autoattribute:: UQpy.sensitivity.Chatterjee.confidence_interval_chatterjee_i
-.. autoattribute:: UQpy.sensitivity.Chatterjee.num_vars
-.. autoattribute:: UQpy.sensitivity.Chatterjee.n_samples
+.. autoattribute:: UQpy.sensitivity.ChatterjeeSensitivity.first_order_chatterjee_indices
+.. autoattribute:: UQpy.sensitivity.ChatterjeeSensitivity.first_order_sobol_indices
+.. autoattribute:: UQpy.sensitivity.ChatterjeeSensitivity.confidence_interval_chatterjee
+.. autoattribute:: UQpy.sensitivity.ChatterjeeSensitivity.n_variables
+.. autoattribute:: UQpy.sensitivity.ChatterjeeSensitivity.n_samples
 
 Examples
 """"""""""

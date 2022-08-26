@@ -20,7 +20,7 @@ Sensitivity analysis comprises techniques focused on determining how the variati
    :hidden:
    :caption: Sensitivity
 
-    Chatterjee <chatterjee>
+    Chatterjee Sensitivity <chatterjee>
     Cramér-von Mises Sensitivity <cramer_von_mises>
     Generalised Sobol Sensitivity <generalised_sobol>
     Morris Sensitivity <morris>

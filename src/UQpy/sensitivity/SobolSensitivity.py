@@ -162,18 +162,6 @@ class SobolSensitivity(Sensitivity):
 
         :param second_order_scheme: Scheme used to compute the second order \
             Sobol indices. Default is "Saltelli2002".
-
-        :return: A :class:`dict` with the following keys: \
-            :code:`sobol_i` of shape :code:`(num_vars, 1)`, \
-            :code:`sobol_total_i` of shape :code:`(num_vars, 1)`, \
-            :code:`sobol_ij` of shape :code:`(num_second_order_terms, 1)`, \
-            :code:`confidence_interval_sobol_i` of shape :code:`(num_vars, 2)`, \
-            if multioutput: Shape: `(n_outputs, num_vars, 2)`, \
-            :code:`confidence_interval_sobol_total_i` of shape :code:`(num_vars, 2)`, \
-            if multioutput: Shape: `(n_outputs, num_vars, 2)`, \
-            :code:`confidence_interval_sobol_ij` of shape :code:`(num_second_order_terms, 2)`
-            if multioutput: Shape: `(n_outputs, num_second_order_terms, 2)`, \
-
         """
         # Check n_samples data type
         self.n_samples = n_samples

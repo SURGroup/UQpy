@@ -34,23 +34,23 @@ The above first and total order indices are estimated using the Pick-and-Freeze 
 Cramér-von Mises Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :class:`Cramér-von Mises` class is imported using the following command:
+The :class:`.CramerVonMisesSensitivity` class is imported using the following command:
 
->>> from UQpy.sensitivity.cramer_von_mises import CramerVonMises
+>>> from UQpy.sensitivity.CramerVonMisesSensitivity import CramerVonMisesSensitivity
 
 Methods
 """""""
-.. autoclass:: UQpy.sensitivity.CramervonMises
+.. autoclass:: UQpy.sensitivity.CramerVonMisesSensitivity
    :members: run
 
 Attributes
 """"""""""
-.. autoattribute:: UQpy.sensitivity.CramervonMises.CVM_i
-.. autoattribute:: UQpy.sensitivity.CramervonMises.confidence_interval_CVM_i
-.. autoattribute:: UQpy.sensitivity.CramervonMises.sobol_i
-.. autoattribute:: UQpy.sensitivity.CramervonMises.sobol_total_i
-.. autoattribute:: UQpy.sensitivity.CramervonMises.n_samples
-.. autoattribute:: UQpy.sensitivity.CramervonMises.num_vars
+.. autoattribute:: UQpy.sensitivity.CramerVonMisesSensitivity.first_order_CramerVonMises_indices
+.. autoattribute:: UQpy.sensitivity.CramerVonMisesSensitivity.confidence_interval_CramerVonMises
+.. autoattribute:: UQpy.sensitivity.CramerVonMisesSensitivity.first_order_sobol_indices
+.. autoattribute:: UQpy.sensitivity.CramerVonMisesSensitivity.total_order_sobol_indices
+.. autoattribute:: UQpy.sensitivity.CramerVonMisesSensitivity.n_samples
+.. autoattribute:: UQpy.sensitivity.CramerVonMisesSensitivity.n_variables
 
 
 Examples
