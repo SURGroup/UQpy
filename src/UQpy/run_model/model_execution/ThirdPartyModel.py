@@ -310,7 +310,7 @@ class ThirdPartyModel:
                         print("\nUQpy: Index Error: {0}\n".format(err))
                         raise IndexError("{0}".format(err))
 
-                    if isinstance(temp, collections.Iterable):
+                    if isinstance(temp, collections.abc.Iterable):
                         # If it is iterable, flatten and write as text file with designated separator
                         temp = np.array(temp).flatten()
                         to_add = ""
