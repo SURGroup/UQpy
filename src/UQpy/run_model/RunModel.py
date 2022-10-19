@@ -206,17 +206,13 @@ class RunModel:
                       f"{self.n_new_simulations}")
 
         elif self.run_type is RunType.CLUSTER:
-            print("YEEEEEHAAAAA!!!!!")
             if self.cluster_script is None:
                 raise ValueError("\nUQpy: User-provided slurm script not input, please provide this input\n")
             os.system(f"python -m UQpy.run_model.model_execution.ClusterExecution {self.cores_per_task} "
                       f"{self.n_new_simulations} {self.n_existing_simulations} {self.cluster_script}")
-
-            print("DONE WITH CLUSTER")
-
         else:
             raise ValueError("\nUQpy: RunType is not in currently supported list of cluster types\n")            
-            
+        
         with open('qoi.pkl', 'rb') as filehandle:
             results = pickle.load(filehandle)
 

@@ -9,7 +9,6 @@ import os
 import pickle
 
 try:
-    print("Oh boy....")
     model = None
     samples = None
     samples_per_process = 0
@@ -30,9 +29,6 @@ try:
     with open('samples.pkl', 'rb') as filehandle:
         samples = pickle.load(filehandle)
 
-    print(len(samples))
-    print(samples[0].shape)
-
     # Loop over the number of samples and create input files in a folder in current directory
     for i in range(len(samples)):
         new_text = model._find_and_replace_var_names_with_values(samples[i])
@@ -48,7 +44,6 @@ try:
         
     # Run user-provided cluster script--for now, it is assumed the user knows how to
     # tile jobs in the script
-    print("This is the cluster script:", cluster_script)
     os.system(f"{cluster_script} {cores_per_task} {n_new_simulations} {n_existing_simulations}")
 
     results = []
@@ -63,20 +58,12 @@ try:
         output = model._output_serial(i)
         results.append(output)
 
+    # Change back to model directory
+    os.chdir(model.model_dir)
+    
     with open('qoi.pkl', 'wb') as filehandle:
         pickle.dump(results, filehandle)
         
-
-
-    # CONTINUE HERE TO SEE        
-        
-
-    # if comm.rank == 0:
-    #     result = []
-    #     [result.extend(el) for el in qoi]
-    #     with open('qoi.pkl', 'wb') as filehandle:
-    #         pickle.dump(result, filehandle)
-
 except Exception as e:
     print(e)
 
