@@ -89,7 +89,9 @@ class ChatterjeeSensitivity(Sensitivity):
         confidence_level: PositiveFloat = 0.95,
     ):
         """
-        Compute the sensitivity indices using the Chatterjee method.
+        Compute the sensitivity indices using the Chatterjee method. Employing the :code:`run` method will initialize
+        :code:`n_samples` simulations using :class:`.RunModel`. To compute sensitivity indices using pre-computed inputs
+        and outputs, use the static methods described below.
 
         :param n_samples: Number of samples used to compute the Chatterjee indices. \
             Default is 1,000.   

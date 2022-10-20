@@ -23,7 +23,7 @@ The :class:`.ChatterjeeSensitivity` class is imported using the following comman
 Methods
 """""""
 .. autoclass:: UQpy.sensitivity.ChatterjeeSensitivity
-   :members: run, compute_chatterjee_indices, rank_analog_to_pickfreeze, compute_Sobol_indices
+   :members: run, compute_chatterjee_indices, rank_analog_to_pickfreeze, rank_analog_to_pickfreeze_vec, compute_Sobol_indices
 
 Attributes
 """"""""""
