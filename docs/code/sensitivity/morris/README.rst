@@ -3,7 +3,7 @@ Morris Screening
 
 Consider a model of the sort :math:`Y=h(X)`, :math:`Y` is assumed to be scalar, :math:`X=[X_{1}, ..., X_{d}]`.
 
-For each input ;math:`X_{k}`, the elementary effect is computed as:
+For each input :math:`X_{k}`, the elementary effect is computed as:
 
 .. math:: EE_{k} = \frac{Y(X_{1}, ..., X_{k}+\Delta, ..., X_{d})-Y(X_{1}, ..., X_{k}, ..., X_{d})}{\Delta}
 
