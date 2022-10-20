@@ -1,4 +1,4 @@
-|AzureDevops| |PyPIdownloads| |PyPI| |CondaSURG| |CondaPlatforms| |GithubRelease| |Binder| |Docs| |bear-ified|
+|AzureDevops| |PyPIdownloads| |PyPI| |CondaPlatforms| |GithubRelease| |Binder| |Docs| |bear-ified|
 
 .. |Docs| image:: https://img.shields.io/readthedocs/uqpy?style=plastic  :alt: Read the Docs
 .. |CondaPlatforms| image:: https://img.shields.io/conda/pn/SURG_JHU/uqpy?style=plastic   :alt: Conda
@@ -90,7 +90,6 @@ Using Conda
             * ::
 
                         conda install -c conda-forge uqpy
-                        conda install -c surg_jhu uqpy (latest version)
 
 Clone your fork of the UQpy repo from your GitHub account to your local disk (to get the latest version): 
 
