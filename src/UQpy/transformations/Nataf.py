@@ -21,17 +21,17 @@ class Nataf:
 
     @beartype
     def __init__(
-        self,
-        distributions: Union[Distribution, DistributionList],
-        samples_x: Union[None, np.ndarray] = None,
-        samples_z: Union[None, np.ndarray] = None,
-        jacobian: bool = False,
-        corr_z: Union[None, np.ndarray] = None,
-        corr_x: Union[None, np.ndarray] = None,
-        itam_beta: Union[float, int] = 1.0,
-        itam_threshold1: Union[float, int] = 0.001,
-        itam_threshold2: Union[float, int] = 0.1,
-        itam_max_iter: int = 100,
+            self,
+            distributions: Union[Distribution, DistributionList],
+            samples_x: Union[None, np.ndarray] = None,
+            samples_z: Union[None, np.ndarray] = None,
+            jacobian: bool = False,
+            corr_z: Union[None, np.ndarray] = None,
+            corr_x: Union[None, np.ndarray] = None,
+            itam_beta: Union[float, int] = 1.0,
+            itam_threshold1: Union[float, int] = 0.001,
+            itam_threshold2: Union[float, int] = 0.1,
+            itam_max_iter: int = 100,
     ):
         """
         Transform random variables using the Nataf or Inverse Nataf transformation
@@ -73,7 +73,7 @@ class Nataf:
         self.dist_object = distributions
         self.samples_x: NumpyFloatArray = samples_x
         """Random vector of shape ``(nsamples, n_dimensions)`` with prescribed probability distributions."""
-        self.samples_z:NumpyFloatArray = samples_z
+        self.samples_z: NumpyFloatArray = samples_z
         """Standard normal random vector of shape ``(nsamples, n_dimensions)``"""
         self.jacobian = jacobian
         self.jzx: NumpyFloatArray = None
@@ -98,9 +98,9 @@ class Nataf:
             elif all(isinstance(x, Normal) for x in distributions):
                 self.corr_z = self.corr_x
             else:
-                self.corr_z, self.itam_error1, self.itam_error2 =\
+                self.corr_z, self.itam_error1, self.itam_error2 = \
                     self.itam(self.dist_object, self.corr_x, self.itam_max_iter, self.itam_beta,
-                              self.itam_threshold1, self.itam_threshold2,)
+                              self.itam_threshold1, self.itam_threshold2, )
         elif corr_z is not None:
             self.corr_z = corr_z
             if np.all(np.equal(self.corr_z, np.eye(self.n_dimensions))):
@@ -108,7 +108,7 @@ class Nataf:
             elif all(isinstance(x, Normal) for x in distributions):
                 self.corr_x = self.corr_z
             else:
-                self.corr_x = self.distortion_z2x(self.dist_object, self.corr_z)
+                self.corr_x = self.distortion_z2x(self.dist_object, self.corr_z, n_gauss_points=128)
 
         self.H: NumpyFloatArray = cholesky(self.corr_z, lower=True)
         """The lower triangular matrix resulting from the Cholesky decomposition of the correlation matrix
@@ -119,10 +119,10 @@ class Nataf:
 
     @beartype
     def run(
-        self,
-        samples_x: Union[None, np.ndarray] = None,
-        samples_z: Union[None, np.ndarray] = None,
-        jacobian: bool = False,
+            self,
+            samples_x: Union[None, np.ndarray] = None,
+            samples_z: Union[None, np.ndarray] = None,
+            jacobian: bool = False,
     ):
         """
         Execute the Nataf transformation or its inverse.
@@ -160,15 +160,15 @@ class Nataf:
 
     @staticmethod
     def itam(
-        distributions: Union[
-            DistributionContinuous1D,
-            JointIndependent,
-            list[Union[DistributionContinuous1D, JointIndependent]]],
-        corr_x,
-        itam_max_iter: int = 100,
-        itam_beta: Union[float, int] = 1.0,
-        itam_threshold1: Union[float, int] = 0.001,
-        itam_threshold2: Union[float, int] = 0.01,
+            distributions: Union[
+                DistributionContinuous1D,
+                JointIndependent,
+                list[Union[DistributionContinuous1D, JointIndependent]]],
+            corr_x,
+            itam_max_iter: int = 100,
+            itam_beta: Union[float, int] = 1.0,
+            itam_threshold1: Union[float, int] = 0.001,
+            itam_threshold2: Union[float, int] = 0.01,
     ):
         """
         Calculate the correlation matrix :math:`\mathbf{C_Z}` of the standard normal random vector
@@ -236,7 +236,8 @@ class Nataf:
         return corr_z, itam_error1, itam_error2
 
     @staticmethod
-    def distortion_z2x(distributions:  Union[Distribution, list[Distribution]], corr_z: np.ndarray):
+    def distortion_z2x(distributions: Union[Distribution, list[Distribution]], corr_z: np.ndarray,
+                       n_gauss_points: int = 1024):
         """
         This is a method to calculate the correlation matrix :math:`\mathbf{C_x}` of the random vector
         :math:`\mathbf{x}`  given the correlation matrix :math:`\mathbf{C_z}` of the standard normal random vector
@@ -248,12 +249,14 @@ class Nataf:
          This method is part of the :class:`.Nataf` class.
         :param corr_z: The correlation  matrix (:math:`\mathbf{C_z}`) of the standard normal vector **Z** .
          Default: The ``identity`` matrix.
+        :param n_gauss_points: The number of integration points used for the numerical integration of the
+         correlation  matrix (:math:`\mathbf{C_Z}`) of the standard normal random vector **Z**
         :return: Distorted correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X**.
         """
         logger = logging.getLogger(__name__)
         z_max = 8
         z_min = -z_max
-        ng = 128
+        ng = n_gauss_points
 
         eta, w2d, xi = calculate_gauss_quadrature_2d(ng, z_max, z_min)
 
@@ -268,7 +271,7 @@ class Nataf:
     @staticmethod
     def calculate_corr_x(corr_x, corr_z, marginals, eta, w2d, xi, is_joint):
         if all(hasattr(m, "moments") for m in marginals) and all(
-            hasattr(m, "icdf") for m in marginals
+                hasattr(m, "icdf") for m in marginals
         ):
             for i in range(len(marginals)):
                 i_cdf_i = marginals[i].icdf
