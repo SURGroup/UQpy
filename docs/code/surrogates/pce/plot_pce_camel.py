@@ -95,7 +95,7 @@ plt.show()
 # %%
 
 fig = plt.figure(figsize=(10, 6))
-ax = fig.gca(projection='3d')
+ax = fig.add_subplot(projection='3d')
 ax.scatter(x[:, 0], x[:, 1], y, s=20, c='r')
 
 ax.set_title('Training data')
@@ -168,7 +168,7 @@ y_test = pce.predict(x_test)
 # %%
 
 fig = plt.figure(figsize=(10,6))
-ax = fig.gca(projection='3d')
+ax = fig.add_subplot(projection='3d')
 ax.scatter(x_test[:,0], x_test[:,1], y_test, s=1)
 
 ax.set_title('PCE predictor')
