@@ -108,7 +108,7 @@ class Nataf:
             elif all(isinstance(x, Normal) for x in distributions):
                 self.corr_x = self.corr_z
             else:
-                self.corr_x = self.distortion_z2x(self.dist_object, self.corr_z)
+                self.corr_x = self.distortion_z2x(self.dist_object, self.corr_z, n_gauss_points=128)
 
         self.H: NumpyFloatArray = cholesky(self.corr_z, lower=True)
         """The lower triangular matrix resulting from the Cholesky decomposition of the correlation matrix
