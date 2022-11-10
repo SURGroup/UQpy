@@ -76,7 +76,7 @@ X1_, X2_ = np.meshgrid(X1, X2)  # grid of points
 f = function(X1_, X2_)
 
 fig = plt.figure(figsize=(10, 6))
-ax = fig.gca(projection='3d')
+ax = fig.add_subplot(projection='3d')
 surf = ax.plot_surface(X1_, X2_, f, rstride=1, cstride=1, cmap='gnuplot2', linewidth=0, antialiased=False)
 ax.set_title('True function')
 ax.set_xlabel('$x_1$', fontsize=15)
