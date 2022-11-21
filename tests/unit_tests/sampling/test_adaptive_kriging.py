@@ -43,7 +43,7 @@ def test_akmcs_u():
     bounds_1 = [[10 ** (-4), 10 ** 3], [10 ** (-3), 10 ** 2], [10 ** (-3), 10 ** 2]]
     optimizer1 = MinimizeOptimizer(method='L-BFGS-B', bounds=bounds_1)
     gpr = GaussianProcessRegression(kernel=kernel1, hyperparameters=[1, 10 ** (-3), 10 ** (-2)], optimizer=optimizer1,
-                                    optimizations_number=10, noise=False, regression_model=LinearRegression(),
+                                    optimizations_number=100, noise=False, regression_model=LinearRegression(),
                                     random_state=0)
     # OPTIONS: 'U', 'EFF', 'Weighted-U'
     learning_function = UFunction(u_stop=2)
@@ -52,7 +52,7 @@ def test_akmcs_u():
                         random_state=2)
     a.run(nsamples=25, samples=x.samples)
 
-    assert a.samples[23, 0] == 4.027342825480197
+    assert a.samples[23, 0] == -3.781937137406927
     assert a.samples[20, 1] == 0.17610325620498946
 
 
@@ -66,7 +66,7 @@ def test_akmcs_expected_feasibility():
     bounds_1 = [[10 ** (-4), 10 ** 3], [10 ** (-3), 10 ** 2], [10 ** (-3), 10 ** 2]]
     optimizer1 = MinimizeOptimizer(method='L-BFGS-B', bounds=bounds_1)
     gpr = GaussianProcessRegression(kernel=kernel1, hyperparameters=[1, 10 ** (-3), 10 ** (-2)], optimizer=optimizer1,
-                                    optimizations_number=20, noise=False, regression_model=LinearRegression(),
+                                    optimizations_number=100, noise=False, regression_model=LinearRegression(),
                                     random_state=0)
     # OPTIONS: 'U', 'EFF', 'Weighted-U'
     learning_function = ExpectedFeasibility(eff_a=0, eff_epsilon=2, eff_stop=0.001)
@@ -75,7 +75,7 @@ def test_akmcs_expected_feasibility():
                         random_state=2)
     a.run(nsamples=25, samples=x.samples)
 
-    assert a.samples[23, 0] == 4.553078100499578
+    assert a.samples[23, 0] == 5.423754197908594
     assert a.samples[20, 1] == 2.0355505295053384
 
 

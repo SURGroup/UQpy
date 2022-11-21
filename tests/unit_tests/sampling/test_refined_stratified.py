@@ -23,10 +23,10 @@ def test_rss_simple_rectangular():
                                   samples_per_iteration=2,
                                   refinement_algorithm=algorithm,
                                   random_state=2)
-    assert y.samples[16, 0] == 0.06614276178462988
-    assert y.samples[16, 1] == 0.7836449863362334
-    assert y.samples[17, 0] == 0.1891972651582183
-    assert y.samples[17, 1] == 0.2961099664117288
+    assert y.samples[16, 0] == 0.22677821757428504
+    assert y.samples[16, 1] == 0.2729789855337742
+    assert y.samples[17, 0] == 0.07501256574570675
+    assert y.samples[17, 1] == 0.9321401317029486
 
 
 def test_rss_simple_voronoi():
@@ -40,10 +40,10 @@ def test_rss_simple_voronoi():
                                   samples_per_iteration=2,
                                   refinement_algorithm=algorithm,
                                   random_state=2)
-    assert np.round(y.samples[16, 0], 6) == 0.363793
-    assert np.round(y.samples[16, 1], 6) == 0.467625
-    assert np.round(y.samples[17, 0], 6) == 0.424586
-    assert np.round(y.samples[17, 1], 6) == 0.217301
+    assert np.round(y.samples[16, 0], 6) == 0.324738
+    assert np.round(y.samples[16, 1], 6) == 0.488029
+    assert np.round(y.samples[17, 0], 6) == 0.349367
+    assert np.round(y.samples[17, 1], 6) == 0.132426
 
 
 def test_rect_rss():
@@ -57,10 +57,10 @@ def test_rect_rss():
                                   refinement_algorithm=RandomRefinement(strata=strata))
     assert np.allclose(y.samples, np.array([[0.417022, 0.36016225], [1.00011437, 0.15116629],
                                             [0.14675589, 0.5461693], [1.18626021, 0.67278036],
-                                            [0.77483124, 0.7176612], [1.7101839, 0.66516741]]))
+                                            [1.90711287, 0.04595797], [0.80005026, 0.86428026]]))
     assert np.allclose(np.array(y.samplesU01), np.array([[0.208511, 0.36016225], [0.50005719, 0.15116629],
                                                          [0.07337795, 0.5461693], [0.59313011, 0.67278036],
-                                                         [0.38741562, 0.7176612], [0.85509195, 0.66516741]]))
+                                                         [0.95355644, 0.04595797], [0.40002513, 0.86428026]]))
 
 
 def test_rect_gerss():
@@ -123,17 +123,17 @@ def test_vor_gerss():
     gpr = GaussianProcessRegression(kernel=kernel1, hyperparameters=[1, 10 ** (-3), 10 ** (-2)], optimizer=optimizer1,
                                     optimizations_number=100, noise=False, regression_model=LinearRegression(),
                                     random_state=0)
-    z_vor = RefinedStratifiedSampling(stratified_sampling=x_vor, nsamples=6, random_state=x_vor.random_state,
+    z_vor = RefinedStratifiedSampling(stratified_sampling=x_vor, nsamples=6, random_state=0,
                                       refinement_algorithm=GradientEnhancedRefinement(strata=x_vor.strata_object,
                                                                                       runmodel_object=rmodel,
                                                                                       surrogate=gpr,
                                                                                       nearest_points_number=4))
     assert np.allclose(z_vor.samples, np.array([[1.78345908, 0.01640854], [1.46201137, 0.70862104],
                                                 [0.4021338, 0.05290083], [0.1062376, 0.88958226],
-                                                [0.61246269, 0.47160095], [1.16609055, 0.30832536]]))
+                                                [0.66730342, 0.46988084], [1.37411577, 0.39064685]]))
     assert np.allclose(z_vor.samplesU01, np.array([[0.89172954, 0.01640854], [0.73100569, 0.70862104],
                                                    [0.2010669, 0.05290083], [0.0531188, 0.88958226],
-                                                   [0.30623134, 0.47160095], [0.58304527, 0.30832536]]))
+                                                   [0.33365171, 0.46988084], [0.68705789, 0.39064685]]))
 
 
 def test_rss_random_state():
@@ -155,17 +155,17 @@ def test_rss_runmodel_object():
     marginals = [Uniform(loc=0., scale=2.), Uniform(loc=0., scale=1.)]
     strata = RectangularStrata(strata_number=[2, 2])
     x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1, random_state=1)
-    from UQpy.surrogates.kriging.regression_models import LinearRegression
-    from UQpy.surrogates.kriging.correlation_models import ExponentialCorrelation
-
-    K = Kriging(regression_model=LinearRegression(), correlation_model=ExponentialCorrelation(), optimizations_number=20,
-                correlation_model_parameters=[1, 1], optimizer=MinimizeOptimizer('l-bfgs-b'), )
+    kernel1 = RBF()
+    bounds_1 = [[10 ** (-4), 10 ** 3], [10 ** (-3), 10 ** 2], [10 ** (-3), 10 ** 2]]
+    optimizer1 = MinimizeOptimizer(method='L-BFGS-B', bounds=bounds_1)
+    gpr = GaussianProcessRegression(kernel=kernel1, hyperparameters=[1, 10 ** (-3), 10 ** (-2)], optimizer=optimizer1,
+                                    optimizations_number=100, noise=False, regression_model=LinearRegression(),
+                                    random_state=0)
     model = PythonModel(model_script='python_model_function.py', model_object_name="y_func")
     rmodel = RunModel(model=model)
-    K.fit(samples=x.samples, values=rmodel.qoi_list)
     with pytest.raises(BeartypeCallHintPepParamException):
         refinement = GradientEnhancedRefinement(strata=x.strata_object, runmodel_object='abc',
-                                                surrogate=K)
+                                                surrogate=gpr)
         RefinedStratifiedSampling(stratified_sampling=x, samples_number=6, samples_per_iteration=2,
                                   refinement_algorithm=refinement)
 
