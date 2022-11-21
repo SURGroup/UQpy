@@ -9,7 +9,6 @@ from UQpy.sampling.stratified_sampling.RefinedStratifiedSampling import *
 from UQpy.sampling.stratified_sampling.refinement.RandomRefinement import *
 from UQpy.sampling.stratified_sampling.strata.VoronoiStrata import *
 from UQpy.run_model.RunModel import *
-from UQpy.surrogates.kriging.Kriging import Kriging
 
 
 def test_rss_simple_rectangular():

@@ -3,7 +3,6 @@ import pytest
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 
-from UQpy.surrogates.kriging.Kriging import Kriging
 from UQpy.sampling import MonteCarloSampling, AdaptiveKriging
 from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions.collection import Normal
