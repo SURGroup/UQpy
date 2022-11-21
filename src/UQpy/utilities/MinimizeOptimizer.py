@@ -24,11 +24,11 @@ class MinimizeOptimizer:
             return minimize(function, initial_guess, args=args,
                             method=self.method, bounds=self._bounds,
                             constraints=self.constraints, jac=jac,
-                            options={'disp': True, 'maxiter': 10000, 'catol': 0.002})
+                            options={'disp': False, 'maxiter': 10000, 'catol': 0.002})
         else:
             return minimize(function, initial_guess, args=args,
                             method=self.method, bounds=self._bounds, jac=jac,
-                            options={'disp': True, 'maxiter': 10000, 'catol': 0.002})
+                            options={'disp': False, 'maxiter': 10000, 'catol': 0.002})
 
     def apply_constraints(self, constraints):
         if self.method.lower() in ['cobyla', 'slsqp', 'trust-constr']:
