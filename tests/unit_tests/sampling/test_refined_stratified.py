@@ -1,6 +1,7 @@
 import pytest
 from beartype.roar import BeartypeCallHintPepParamException
 
+from UQpy import GaussianProcessRegression, RBF, LinearRegression
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 from UQpy.sampling.stratified_sampling.refinement.GradientEnhancedRefinement import GradientEnhancedRefinement
@@ -71,31 +72,22 @@ def test_rect_gerss():
     x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1)
     model = PythonModel(model_script='python_model_function.py', model_object_name="y_func")
     rmodel = RunModel(model=model)
-    from UQpy.surrogates.kriging.regression_models import LinearRegression
-    from UQpy.surrogates.kriging.correlation_models import ExponentialCorrelation
 
-    K = Kriging(regression_model=LinearRegression(), correlation_model=ExponentialCorrelation(), optimizations_number=20, random_state=0,
-                correlation_model_parameters=[1, 1], optimizer=MinimizeOptimizer('l-bfgs-b'), )
-    K.fit(samples=x.samples, values=rmodel.qoi_list)
+    kernel1 = RBF()
+    bounds_1 = [[10 ** (-4), 10 ** 3], [10 ** (-3), 10 ** 2], [10 ** (-3), 10 ** 2]]
+    optimizer1 = MinimizeOptimizer(method='L-BFGS-B', bounds=bounds_1)
+    gpr = GaussianProcessRegression(kernel=kernel1, hyperparameters=[1, 10 ** (-3), 10 ** (-2)], optimizer=optimizer1,
+                                    optimizations_number=100, noise=False, regression_model=LinearRegression(),
+                                    random_state=0)
+    # gpr.fit(samples=x.samples, values=rmodel.qoi_list)
     refinement = GradientEnhancedRefinement(strata=x.strata_object, runmodel_object=rmodel,
-                                            surrogate=K, nearest_points_number=4)
+                                            surrogate=gpr, nearest_points_number=4)
     z = RefinedStratifiedSampling(stratified_sampling=x, random_state=2, refinement_algorithm=refinement)
     z.run(nsamples=6)
     assert np.allclose(z.samples, np.array([[0.417022, 0.36016225], [1.00011437, 0.15116629],
                                             [0.14675589, 0.5461693], [1.18626021, 0.67278036],
-                                            [1.51296312, 0.77483124], [0.74237455, 0.66026822]]))
-    # assert np.allclose(z.samples, np.array([[0.417022, 0.36016225], [1.00011437, 0.15116629],
-    #                                         [0.14675589, 0.5461693], [1.18626021, 0.67278036],
-    #                                         [1.59254104, 0.96577043], [1.97386531, 0.24237455]]))
-    # assert np.allclose(z.samples, np.array([[0.417022, 0.36016225], [1.00011437, 0.15116629],
-    #                                         [0.14675589, 0.5461693], [1.18626021, 0.67278036],
-    #                                         [1.59254104, 0.96577043], [1.7176612, 0.2101839]]))
-    # assert np.allclose(z.samplesU01, np.array([[0.208511, 0.36016225], [0.50005719, 0.15116629],
-    #                                            [0.07337795, 0.5461693], [0.59313011, 0.67278036],
-    #                                            [0.79627052, 0.96577043], [0.98693265, 0.24237455]]))
-    # assert np.allclose(z.samplesU01, np.array([[0.208511, 0.36016225], [0.50005719, 0.15116629],
-    #                                            [0.07337795, 0.5461693], [0.59313011, 0.67278036],
-    #                                            [0.79627052, 0.96577043], [0.8588306 , 0.2101839]]))
+                                            [1.64924557, 0.90711287],
+                                            [0.54595797, 0.30005026]]))
 
 
 def test_vor_rss():
@@ -123,19 +115,18 @@ def test_vor_gerss():
     marginals = [Uniform(loc=0., scale=2.), Uniform(loc=0., scale=1.)]
     strata_vor = VoronoiStrata(seeds_number=4, dimension=2, random_state=10)
     x_vor = TrueStratifiedSampling(distributions=marginals, strata_object=strata_vor, nsamples_per_stratum=1, )
-    from UQpy.surrogates.kriging.regression_models.LinearRegression import LinearRegression
-    from UQpy.surrogates.kriging.correlation_models.ExponentialCorrelation import ExponentialCorrelation
     model = PythonModel(model_script='python_model_function.py', model_object_name="y_func")
     rmodel = RunModel(model=model)
-    K_ = Kriging(regression_model=LinearRegression(), correlation_model=ExponentialCorrelation(), optimizations_number=20,
-                 optimizer=MinimizeOptimizer('l-bfgs-b'), random_state=0,
-                 correlation_model_parameters=[1, 1])
-
-    K_.fit(samples=x_vor.samples, values=rmodel.qoi_list)
+    kernel1 = RBF()
+    bounds_1 = [[10 ** (-4), 10 ** 3], [10 ** (-3), 10 ** 2], [10 ** (-3), 10 ** 2]]
+    optimizer1 = MinimizeOptimizer(method='L-BFGS-B', bounds=bounds_1)
+    gpr = GaussianProcessRegression(kernel=kernel1, hyperparameters=[1, 10 ** (-3), 10 ** (-2)], optimizer=optimizer1,
+                                    optimizations_number=100, noise=False, regression_model=LinearRegression(),
+                                    random_state=0)
     z_vor = RefinedStratifiedSampling(stratified_sampling=x_vor, nsamples=6, random_state=x_vor.random_state,
                                       refinement_algorithm=GradientEnhancedRefinement(strata=x_vor.strata_object,
                                                                                       runmodel_object=rmodel,
-                                                                                      surrogate=K_,
+                                                                                      surrogate=gpr,
                                                                                       nearest_points_number=4))
     assert np.allclose(z_vor.samples, np.array([[1.78345908, 0.01640854], [1.46201137, 0.70862104],
                                                 [0.4021338, 0.05290083], [0.1062376, 0.88958226],
