@@ -10,7 +10,7 @@ class ParallelTemperingMCMC(TemperingMCMC):
     """
     Parallel-Tempering MCMC
 
-    This algorithms runs the chains sampling from various tempered distributions in parallel. Periodically during the
+    This algorithm runs the chains sampling from various tempered distributions in parallel. Periodically during the
     run, the different temperatures swap members of their ensemble in a way that
     preserves detailed balance.The chains closer to the reference chain (hot chains) can sample from regions that have
     low probability under the target and thus allow a better exploration of the parameter space, while the cold chains
@@ -35,13 +35,18 @@ class ParallelTemperingMCMC(TemperingMCMC):
     """
 
     def __init__(self, niter_between_sweeps, pdf_intermediate=None, log_pdf_intermediate=None, args_pdf_intermediate=(),
-                 distribution_reference=None, nburn=0, jump=1, dimension=None, seed=None,
-                 save_log_pdf=False, nsamples=None, nsamples_per_chain=None, nchains=None, verbose=False,
-                 random_state=None, temper_param_list=None, n_temper_params=None, mcmc_class=MetropolisHastings, **kwargs_mcmc):
+                 distribution_reference=None,
+                 save_log_pdf=False, nsamples=None, nsamples_per_chain=None,
+                 random_state=None,
+                 temper_param_list=None, n_temper_params=None,
+                 sampler: Union[MCMC, list[MCMC]] = None):
 
         super().__init__(pdf_intermediate=pdf_intermediate, log_pdf_intermediate=log_pdf_intermediate,
-                         args_pdf_intermediate=args_pdf_intermediate, distribution_reference=None, dimension=dimension,
+                         args_pdf_intermediate=args_pdf_intermediate, distribution_reference=None,
                          save_log_pdf=save_log_pdf, random_state=random_state)
+        self.logger = logging.getLogger(__name__)
+        self.sampler = sampler
+
         self.distribution_reference = distribution_reference
         self.evaluate_log_reference = self._preprocess_reference(self.distribution_reference)
 
@@ -68,18 +73,18 @@ class ParallelTemperingMCMC(TemperingMCMC):
             self.n_temper_params = len(self.temper_param_list)
 
         # Initialize mcmc objects, need as many as number of temperatures
-        if not issubclass(mcmc_class, MCMC):
-            raise ValueError('UQpy: mcmc_class should be a subclass of MCMC.')
-        if not all((isinstance(val, (list, tuple)) and len(val) == self.n_temper_params)
-                   for val in kwargs_mcmc.values()):
-            raise ValueError(
-                'UQpy: additional kwargs arguments should be mcmc algorithm specific inputs, given as lists of length '
-                'the number of temperatures.')
+        # if not all((isinstance(val, (list, tuple)) and len(val) == self.n_temper_params)
+        #            for val in kwargs_mcmc.values()):
+        #     raise ValueError(
+        #         'UQpy: additional kwargs arguments should be mcmc algorithm specific inputs, given as lists of length '
+        #         'the number of temperatures.')
         # default value
-        if isinstance(mcmc_class, MetropolisHastings) and len(kwargs_mcmc) == 0:
+        kwargs_mcmc = {}
+        if isinstance(self.sampler, MetropolisHastings) and not kwargs_mcmc:
             from UQpy.distributions import JointIndependent, Normal
             kwargs_mcmc = {'proposal_is_symmetric': [True, ] * self.n_temper_params,
-                           'proposal': [JointIndependent([Normal(scale=1. / np.sqrt(temper_param))] * dimension)
+                           'proposal': [JointIndependent([Normal(scale=1. / np.sqrt(temper_param))] *
+                                                         self.sampler.dimension)
                                         for temper_param in self.temper_param_list]}
 
         # Initialize algorithm specific inputs: target pdfs
@@ -87,23 +92,12 @@ class ParallelTemperingMCMC(TemperingMCMC):
 
         self.mcmc_samplers = []
         for i, temper_param in enumerate(self.temper_param_list):
-            # log_pdf_target = self._target_generator(
-            #    self.evaluate_log_intermediate, self.evaluate_log_reference, temper_param)
             log_pdf_target = (lambda x, temper_param=temper_param: self.evaluate_log_reference(
                 x) + self.evaluate_log_intermediate(x, temper_param))
-            self.mcmc_samplers.append(
-                mcmc_class(log_pdf_target=log_pdf_target,
-                           dimension=dimension, seed=seed, nburn=nburn, jump=jump, save_log_pdf=save_log_pdf,
-                           concat_chains=True, verbose=verbose, random_state=self.random_state, nchains=nchains,
-                           **dict([(key, val[i]) for key, val in kwargs_mcmc.items()])))
+            self.mcmc_samplers.append(sampler.__copy__(log_pdf_target=log_pdf_target, concatenate_chains=True,
+                                                       **kwargs_mcmc))
 
-        # Samples connect to posterior samples, i.e. the chain with temperature 1.
-        # self.samples = self.mcmc_samplers[0].samples
-        # if self.save_log_pdf:
-        #    self.log_pdf_values = self.mcmc_samplers[0].samples
-
-        if self.verbose:
-            print('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
+        self.logger.info('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
 
         # If nsamples is provided, run the algorithm
         if (nsamples is not None) or (nsamples_per_chain is not None):
@@ -138,8 +132,7 @@ class ParallelTemperingMCMC(TemperingMCMC):
             current_state.append(current_state_t.copy())
             current_log_pdf.append(current_log_pdf_t.copy())
 
-        if self.verbose:
-            print('UQpy: Running MCMC...')
+        self.logger.info('UQpy: Running MCMC...')
 
         # Run nsims iterations of the MCMC algorithm, starting at current_state
         while self.mcmc_samplers[0].nsamples_per_chain < final_ns_per_chain:
@@ -181,8 +174,7 @@ class ParallelTemperingMCMC(TemperingMCMC):
                 # self.nsamples_per_chain += 1
                 # self.nsamples += self.nchains
 
-        if self.verbose:
-            print('UQpy: MCMC run successfully !')
+        self.logger.info('UQpy: MCMC run successfully !')
 
         # Concatenate chains maybe
         if self.mcmc_samplers[-1].concat_chains:
@@ -234,13 +226,6 @@ class ParallelTemperingMCMC(TemperingMCMC):
         # use quadrature to integrate between 0 and 1
         temper_param_list_for_integration = np.copy(np.array(self.temper_param_list))
         log_pdf_averages = np.array(log_pdf_averages)
-        # if self.temper_param_list[-1] != 1.:
-        # log_pdf_averages = np.append(log_pdf_averages, log_pdf_averages[-1])
-        # slope_linear = (log_pdf_averages[-1]-log_pdf_averages[-2]) / (
-        #        betas_for_integration[-1] - betas_for_integration[-2])
-        # log_pdf_averages = np.append(
-        #    log_pdf_averages, log_pdf_averages[-1] + (1. - betas_for_integration[-1]) * slope_linear)
-        # betas_for_integration = np.append(betas_for_integration, 1.)
         int_value = trapz(x=temper_param_list_for_integration, y=log_pdf_averages)
         if log_Z0 is None:
             samples_p0 = self.distribution_reference.rvs(nsamples=nsamples_from_p0)

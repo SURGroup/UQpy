@@ -18,10 +18,9 @@ class TemperingMCMC(ABC):
     """
 
     def __init__(self, pdf_intermediate=None, log_pdf_intermediate=None, args_pdf_intermediate=(),
-                 distribution_reference=None, dimension=None, save_log_pdf=True, random_state=None):
+                 distribution_reference=None, save_log_pdf=True, random_state=None):
         self.logger = logging.getLogger(__name__)
         # Check a few inputs
-        self.dimension = dimension
         self.save_log_pdf = save_log_pdf
         self.random_state = process_random_state(random_state)
 
