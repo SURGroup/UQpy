@@ -185,7 +185,7 @@ class FORM(TaylorSeries):
         g_record.append(0.0)
         dg_u_record = np.zeros([self.n_iterations + 1, self.dimension])
 
-        while not converged:
+        while not converged and k <= self.n_iterations:
             self.logger.info("Number of iteration: %i", k)
             # FORM always starts from the standard normal space
             if k == 0:
