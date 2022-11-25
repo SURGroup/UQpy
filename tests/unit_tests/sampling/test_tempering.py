@@ -70,7 +70,12 @@ def likelihood(x, b):
 
 def test_sequential():
     prior = JointIndependent(marginals=[Uniform(loc=-2.0, scale=4.0), Uniform(loc=-2.0, scale=4.0)])
-    test = SequentialTemperingMCMC(dimension=2, nsamples=100, pdf_intermediate=likelihood,
-                                   distribution_reference=prior, nchains=20, save_intermediate_samples=True,
-                                   percentage_resampling=10, mcmc_class=MH, verbose=False, random_state=960242069)
+    sampler = MetropolisHastings(dimension=2, n_chains=20)
+    test = SequentialTemperingMCMC(pdf_intermediate=likelihood,
+                                   distribution_reference=prior,
+                                   save_intermediate_samples=True,
+                                   percentage_resampling=10,
+                                   random_state=960242069,
+                                   sampler=sampler,
+                                   nsamples=100)
     assert np.round(test.evidence, 4) == 0.0656

@@ -83,7 +83,8 @@ class SequentialTemperingMCMC(TemperingMCMC):
         # Initialize input distributions
         self.evaluate_log_reference, self.seed = self._preprocess_reference(dist_=distribution_reference,
                                                                             seed_=seed, nsamples=nsamples,
-                                                                            dimension=self.__dimension)
+                                                                            dimension=self.__dimension,
+                                                                            random_state=self.random_state)
 
         # Initialize flag that indicates whether default proposal is to be used (default proposal defined adaptively
         # during run)
@@ -95,12 +96,12 @@ class SequentialTemperingMCMC(TemperingMCMC):
 
         # Call the run function
         if nsamples is not None:
-            self._run(nsamples=nsamples)
+            self.run(nsamples=nsamples)
         else:
             raise ValueError('UQpy: a value for "nsamples" must be specified ')
 
     @beartype
-    def _run(self, nsamples: PositiveInteger = None):
+    def run(self, nsamples: PositiveInteger = None):
 
         self.logger.info('TMCMC Start')
 
@@ -175,7 +176,7 @@ class SequentialTemperingMCMC(TemperingMCMC):
             for i in range(self.n_resamples):
 
                 # Resampling from previous tempering level
-                lead_index = int(np.random.choice(pts_index, p=weight_probabilities))
+                lead_index = int(self.random_state.choice(pts_index, p=weight_probabilities))
                 lead = points[lead_index]
 
                 # Defining the default proposal
@@ -183,8 +184,9 @@ class SequentialTemperingMCMC(TemperingMCMC):
                     self.proposal = MultivariateNormal(lead, cov=sigma_matrix)
 
                 # Single MH-MCMC step
-                x = MetropolisHastings(dimension=self.__dimension, log_pdf_target=mcmc_log_pdf_target, seed=lead,
-                                       nsamples=1, nchains=1, nburn=self.resampling_burn_length, proposal=self.proposal,
+                x = MetropolisHastings(dimension=self.__dimension, log_pdf_target=mcmc_log_pdf_target, seed=list(lead),
+                                       nsamples=1, n_chains=1, burn_length=self.resampling_burn_length,
+                                       proposal=self.proposal, random_state=self.random_state,
                                        proposal_is_symmetric=self.proposal_is_symmetric)
 
                 # Setting the generated sample in the array
@@ -199,12 +201,14 @@ class SequentialTemperingMCMC(TemperingMCMC):
             self.logger.info('Begin MCMC')
             mcmc_seed = self._mcmc_seed_generator(resampled_pts=points[0:self.n_resamples, :],
                                                   arr_length=self.n_resamples,
-                                                  seed_length=self.__n_chains)
+                                                  seed_length=self.__n_chains,
+                                                  random_state=self.random_state)
 
             y = copy.deepcopy(self.sampler)
             self.update_target_and_seed(y, mcmc_seed, mcmc_log_pdf_target)
             y = self.sampler.__copy__(log_pdf_target=mcmc_log_pdf_target, seed=mcmc_seed,
-                                      nsamples_per_chain=self.n_samples_per_chain, concat_chains=True)
+                                      nsamples_per_chain=self.n_samples_per_chain,
+                                      concatenate_chains=True, random_state=self.random_state)
             points[self.n_resamples:, :] = y.samples
 
             if self.save_intermediate_samples is True:
@@ -288,7 +292,7 @@ class SequentialTemperingMCMC(TemperingMCMC):
                 raise RuntimeError('UQpy: unable to find tempering exponent due to nonconvergence')
         return temper_param_trial
 
-    def _preprocess_reference(self, dist_, seed_=None, nsamples=None, dimension=None):
+    def _preprocess_reference(self, dist_, seed_=None, nsamples=None, dimension=None, random_state=None):
         """
         Preprocess the target pdf inputs.
 
@@ -316,7 +320,7 @@ class SequentialTemperingMCMC(TemperingMCMC):
             if not (isinstance(dist_, Distribution)):
                 raise TypeError('UQpy: A UQpy.Distribution object must be provided.')
             evaluate_log_pdf = (lambda x: dist_.log_pdf(x))
-            seed_values = dist_.rvs(nsamples=nsamples)
+            seed_values = dist_.rvs(nsamples=nsamples, random_state=random_state)
         elif seed_ is not None:
             if seed_.shape[0] != nsamples or seed_.shape[1] != dimension:
                 raise TypeError('UQpy: the seed values should be a numpy array of size (nsamples, dimension)')
@@ -328,7 +332,7 @@ class SequentialTemperingMCMC(TemperingMCMC):
         return evaluate_log_pdf, seed_values
 
     @staticmethod
-    def _mcmc_seed_generator(resampled_pts, arr_length, seed_length):
+    def _mcmc_seed_generator(resampled_pts, arr_length, seed_length, random_state):
         """
         Generates the seed from the resampled samples for the mcmc step
 
@@ -346,6 +350,6 @@ class SequentialTemperingMCMC(TemperingMCMC):
         * evaluate_log_pdf (callable): Callable that computes the log of the target density function (the prior)
         """
         index_arr = np.arange(arr_length)
-        seed_indices = np.random.choice(index_arr, size=seed_length, replace=False)
+        seed_indices = random_state.choice(index_arr, size=seed_length, replace=False)
         mcmc_seed = resampled_pts[seed_indices, :]
         return mcmc_seed
