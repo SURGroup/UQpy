@@ -159,32 +159,3 @@ class MetropolisHastings(MCMC):
         self._update_acceptance_rate(accept_vec)
 
         return current_state, current_log_pdf
-
-    def __copy__(self, **kwargs):
-        pdf_target = self.pdf_target if kwargs['pdf_target'] is None else kwargs['pdf_target']
-        log_pdf_target = self.log_pdf_target if kwargs['log_pdf_target'] is None else kwargs['log_pdf_target']
-        args_target = self.args_target if kwargs['args_target'] is None else kwargs['args_target']
-        burn_length = self.burn_length if kwargs['burn_length'] is None else kwargs['burn_length']
-        jump = self.jump if kwargs['jump'] is None else kwargs['jump']
-        dimension = self.dimension if kwargs['dimension'] is None else kwargs['dimension']
-        seed = self.seed if kwargs['seed'] is None else kwargs['seed']
-        save_log_pdf = self.save_log_pdf if kwargs['save_log_pdf'] is None else kwargs['save_log_pdf']
-        concatenate_chains = self.concatenate_chains if kwargs['concatenate_chains'] is None\
-            else kwargs['concatenate_chains']
-        n_chains = self.n_chains if kwargs['n_chains'] is None else kwargs['n_chains']
-        proposal = self.proposal if kwargs['proposal'] is None else kwargs['proposal']
-        proposal_is_symmetric = self.proposal_is_symmetric if kwargs['proposal_is_symmetric'] is None \
-            else kwargs['proposal_is_symmetric']
-        random_state = self.random_state if kwargs['random_state'] is None else kwargs['random_state']
-        nsamples = self.nsamples if kwargs['nsamples'] is None else kwargs['nsamples']
-        nsamples_per_chain = self.nsamples_per_chain if kwargs['nsamples_per_chain'] is None \
-            else kwargs['nsamples_per_chain']
-
-        new = self.__class__(pdf_target=pdf_target, log_pdf_target=log_pdf_target, args_target=args_target,
-                             burn_length=burn_length, jump=jump, dimension=dimension, seed=seed,
-                             save_log_pdf=save_log_pdf, concatenate_chains=concatenate_chains,
-                             proposal=proposal, proposal_is_symmetric=proposal_is_symmetric, n_chains=n_chains,
-                             random_state=random_state, nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
-
-        return new
-

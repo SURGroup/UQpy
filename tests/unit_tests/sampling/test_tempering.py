@@ -1,9 +1,7 @@
 import numpy as np
 from scipy.stats import multivariate_normal
-
 from UQpy.distributions import Uniform, JointIndependent
-from UQpy.sampling.tempering_mcmc import ParallelTemperingMCMC, SequentialTemperingMCMC
-from UQpy.sampling.mcmc import MetropolisHastings
+from UQpy.sampling import MetropolisHastings, ParallelTemperingMCMC, SequentialTemperingMCMC
 
 
 def log_rosenbrock(x):
@@ -19,30 +17,41 @@ def log_prior(x):
     return Uniform(loc=loc, scale=scale).log_pdf(x[:, 0]) + Uniform(loc=loc, scale=scale).log_pdf(x[:, 1])
 
 
-def compute_potential(x, beta, log_intermediate_values):
-    return log_intermediate_values / beta
+def compute_potential(x, temper_param, log_intermediate_values):
+    return log_intermediate_values / temper_param
 
 
 random_state = np.random.RandomState(1234)
 seed = -2. + 4. * random_state.rand(5, 2)
 betas = [1. / np.sqrt(2.) ** i for i in range(10 - 1, -1, -1)]
 
+prior_distribution = JointIndependent(marginals=[Uniform(loc=-2, scale=4), Uniform(loc=-2, scale=4)])
+
 
 def test_parallel():
-    mcmc = ParallelTemperingMCMC(log_pdf_intermediate=log_intermediate, log_pdf_reference=log_prior,
-                                 niter_between_sweeps=4, betas=betas, save_log_pdf=True,
-                                 mcmc_class=MH, nburn=10, jump=2, seed=seed, dimension=2, random_state=3456)
+    sampler = MetropolisHastings(burn_length=10, jump=2, seed=list(seed), dimension=2)
+    mcmc = ParallelTemperingMCMC(log_pdf_intermediate=log_intermediate,
+                                 distribution_reference=prior_distribution,
+                                 n_iterations_between_sweeps=4,
+                                 tempering_parameters=betas,
+                                 random_state=3456,
+                                 save_log_pdf=False, sampler=sampler)
     mcmc.run(nsamples_per_chain=100)
     assert mcmc.samples.shape == (500, 2)
 
 
 def test_thermodynamic_integration():
-    mcmc = ParallelTemperingMCMC(log_pdf_intermediate=log_intermediate, log_pdf_reference=log_prior,
-                                 niter_between_sweeps=4, betas=betas, save_log_pdf=True,
-                                 mcmc_class=MH, nburn=10, jump=2, seed=seed, dimension=2, random_state=3456)
+    sampler = MetropolisHastings(burn_length=10, jump=2, seed=list(seed), dimension=2)
+    mcmc = ParallelTemperingMCMC(log_pdf_intermediate=log_intermediate,
+                                 distribution_reference=prior_distribution,
+                                 n_iterations_between_sweeps=4,
+                                 tempering_parameters=betas,
+                                 save_log_pdf=True,
+                                 random_state=3456,
+                                 sampler=sampler)
     mcmc.run(nsamples_per_chain=100)
-    log_ev = mcmc.evaluate_normalization_constant(compute_potential=compute_potential, log_p0=0.)
-    assert np.round(np.exp(log_ev), 4) == 0.1885
+    log_ev = mcmc.evaluate_normalization_constant(compute_potential=compute_potential, log_Z0=0.)
+    assert np.round(log_ev, 4) == 0.203
 
 
 def likelihood(x, b):
@@ -55,8 +64,8 @@ def likelihood(x, b):
 
     # Posterior is a mixture of two gaussians
     like = np.exp(np.logaddexp(np.log(w1) + multivariate_normal.logpdf(x=x, mean=mu1, cov=sigma1),
-                               np.log(1.-w1) + multivariate_normal.logpdf(x=x, mean=mu2, cov=sigma2)))
-    return like**b
+                               np.log(1. - w1) + multivariate_normal.logpdf(x=x, mean=mu2, cov=sigma2)))
+    return like ** b
 
 
 def test_sequential():
@@ -65,4 +74,3 @@ def test_sequential():
                                    distribution_reference=prior, nchains=20, save_intermediate_samples=True,
                                    percentage_resampling=10, mcmc_class=MH, verbose=False, random_state=960242069)
     assert np.round(test.evidence, 4) == 0.0656
-

@@ -310,6 +310,22 @@ class MCMC(ABC):
             proposal_distribution.log_pdf = lambda x: np.log(
                 np.maximum(proposal_distribution.pdf(x), 10 ** (-320) * np.ones((x.shape[0],))))
 
-    @abstractmethod
     def __copy__(self, **kwargs):
-        pass
+        keys = kwargs.keys()
+        attributes = self.__dict__
+        import inspect
+        initializer_parameters = inspect.signature(self.__class__.__init__).parameters.keys()
+
+        for key in attributes.keys():
+            if key not in initializer_parameters:
+                continue
+            new_value = attributes[key] if key not in keys else kwargs[key]
+            if new_value is not None:
+                kwargs[key] = new_value
+
+        if 'seed' in kwargs.keys():
+            kwargs['seed'] = list(kwargs['seed'])
+        if 'nsamples_per_chain' in kwargs.keys() and kwargs['nsamples_per_chain'] == 0:
+            del kwargs['nsamples_per_chain']
+
+        return self.__class__(**kwargs)

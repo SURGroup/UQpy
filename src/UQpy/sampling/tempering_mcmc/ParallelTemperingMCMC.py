@@ -34,11 +34,13 @@ class ParallelTemperingMCMC(TemperingMCMC):
 
     """
 
-    def __init__(self, niter_between_sweeps, pdf_intermediate=None, log_pdf_intermediate=None, args_pdf_intermediate=(),
+    def __init__(self, n_iterations_between_sweeps: PositiveInteger,
+                 pdf_intermediate=None, log_pdf_intermediate=None, args_pdf_intermediate=(),
                  distribution_reference=None,
                  save_log_pdf=False, nsamples=None, nsamples_per_chain=None,
                  random_state=None,
-                 temper_param_list=None, n_temper_params=None,
+                 tempering_parameters=None,
+                 n_tempering_parameters=None,
                  sampler: Union[MCMC, list[MCMC]] = None):
 
         super().__init__(pdf_intermediate=pdf_intermediate, log_pdf_intermediate=log_pdf_intermediate,
@@ -51,59 +53,53 @@ class ParallelTemperingMCMC(TemperingMCMC):
         self.evaluate_log_reference = self._preprocess_reference(self.distribution_reference)
 
         # Initialize PT specific inputs: niter_between_sweeps and temperatures
-        self.niter_between_sweeps = niter_between_sweeps
-        if not (isinstance(self.niter_between_sweeps, int) and self.niter_between_sweeps >= 1):
-            raise ValueError('UQpy: input niter_between_sweeps should be a strictly positive integer.')
-        self.temper_param_list = temper_param_list
-        self.n_temper_params = n_temper_params
-        if self.temper_param_list is None:
-            if self.n_temper_params is None:
+        self.n_iterations_between_sweeps = n_iterations_between_sweeps
+        self.tempering_parameters = tempering_parameters
+        self.n_tempering_parameters = n_tempering_parameters
+        if self.tempering_parameters is None:
+            if self.n_tempering_parameters is None:
                 raise ValueError('UQpy: either input temper_param_list or n_temper_params should be provided.')
-            elif not (isinstance(self.n_temper_params, int) and self.n_temper_params >= 2):
+            elif not (isinstance(self.n_tempering_parameters, int) and self.n_tempering_parameters >= 2):
                 raise ValueError('UQpy: input n_temper_params should be a integer >= 2.')
             else:
-                self.temper_param_list = [1. / np.sqrt(2) ** i for i in range(self.n_temper_params - 1, -1, -1)]
-        elif (not isinstance(self.temper_param_list, (list, tuple))
-              or not (all(isinstance(t, (int, float)) and (0 < t <= 1.) for t in self.temper_param_list))
+                self.tempering_parameters = [1. / np.sqrt(2) ** i for i in
+                                             range(self.n_tempering_parameters - 1, -1, -1)]
+        elif (not isinstance(self.tempering_parameters, (list, tuple))
+              or not (all(isinstance(t, (int, float)) and (0 < t <= 1.) for t in self.tempering_parameters))
                 # or float(self.temperatures[0]) != 1.
         ):
             raise ValueError(
                 'UQpy: temper_param_list should be a list of floats in [0, 1], starting at 0. and increasing to 1.')
         else:
-            self.n_temper_params = len(self.temper_param_list)
+            self.n_tempering_parameters = len(self.tempering_parameters)
 
-        # Initialize mcmc objects, need as many as number of temperatures
-        # if not all((isinstance(val, (list, tuple)) and len(val) == self.n_temper_params)
-        #            for val in kwargs_mcmc.values()):
-        #     raise ValueError(
-        #         'UQpy: additional kwargs arguments should be mcmc algorithm specific inputs, given as lists of length '
-        #         'the number of temperatures.')
         # default value
         kwargs_mcmc = {}
-        if isinstance(self.sampler, MetropolisHastings) and not kwargs_mcmc:
+        if isinstance(self.sampler, MetropolisHastings) and self.sampler.proposal is None:
             from UQpy.distributions import JointIndependent, Normal
-            kwargs_mcmc = {'proposal_is_symmetric': [True, ] * self.n_temper_params,
+            kwargs_mcmc = {'proposal_is_symmetric': [True, ] * self.n_tempering_parameters,
                            'proposal': [JointIndependent([Normal(scale=1. / np.sqrt(temper_param))] *
                                                          self.sampler.dimension)
-                                        for temper_param in self.temper_param_list]}
+                                        for temper_param in self.tempering_parameters]}
 
         # Initialize algorithm specific inputs: target pdfs
         self.thermodynamic_integration_results = None
 
         self.mcmc_samplers = []
-        for i, temper_param in enumerate(self.temper_param_list):
+        for i, temper_param in enumerate(self.tempering_parameters):
             log_pdf_target = (lambda x, temper_param=temper_param: self.evaluate_log_reference(
                 x) + self.evaluate_log_intermediate(x, temper_param))
             self.mcmc_samplers.append(sampler.__copy__(log_pdf_target=log_pdf_target, concatenate_chains=True,
-                                                       **kwargs_mcmc))
+                                                       save_log_pdf=save_log_pdf, random_state=self.random_state,
+                                                       **dict([(key, val[i]) for key, val in kwargs_mcmc.items()])))
 
         self.logger.info('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
 
         # If nsamples is provided, run the algorithm
         if (nsamples is not None) or (nsamples_per_chain is not None):
-            self._run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
+            self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
-    def _run(self, nsamples=None, nsamples_per_chain=None):
+    def run(self, nsamples=None, nsamples_per_chain=None):
         """
         Run the MCMC algorithm.
 
@@ -122,35 +118,39 @@ class ParallelTemperingMCMC(TemperingMCMC):
         of `nchains`, `nsamples` is set to the next largest integer that is a multiple of `nchains`.
 
         """
-        # Initialize the runs: allocate space for the new samples and log pdf values
-        final_ns, final_ns_per_chain, current_state_t, current_log_pdf_t = self.mcmc_samplers[0]._initialize_samples(
-            nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
-        current_state, current_log_pdf = [current_state_t.copy(), ], [current_log_pdf_t.copy(), ]
-        for mcmc_sampler in self.mcmc_samplers[1:]:
-            _, _, current_state_t, current_log_pdf_t = mcmc_sampler._initialize_samples(
+        current_state, current_log_pdf = [], []
+        final_ns_per_chain = 0
+        for i, mcmc_sampler in enumerate(self.mcmc_samplers):
+            if mcmc_sampler.evaluate_log_target is None and mcmc_sampler.evaluate_log_target_marginals is None:
+                (mcmc_sampler.evaluate_log_target, mcmc_sampler.evaluate_log_target_marginals,) = \
+                    mcmc_sampler._preprocess_target(pdf_=mcmc_sampler.pdf_target,
+                                                    log_pdf_=mcmc_sampler.log_pdf_target,
+                                                    args=mcmc_sampler.args_target)
+            ns, ns_per_chain, current_state_t, current_log_pdf_t = mcmc_sampler._initialize_samples(
                 nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
             current_state.append(current_state_t.copy())
             current_log_pdf.append(current_log_pdf_t.copy())
+            if i == 0:
+                final_ns_per_chain = ns_per_chain
 
         self.logger.info('UQpy: Running MCMC...')
 
         # Run nsims iterations of the MCMC algorithm, starting at current_state
         while self.mcmc_samplers[0].nsamples_per_chain < final_ns_per_chain:
             # update the total number of iterations
-            # self.mcmc_samplers[0].niterations += 1
 
             # run one iteration of MCMC algorithms at various temperatures
             new_state, new_log_pdf = [], []
             for t, sampler in enumerate(self.mcmc_samplers):
-                sampler.niterations += 1
+                sampler.iterations_number += 1
                 new_state_t, new_log_pdf_t = sampler.run_one_iteration(
                     current_state[t], current_log_pdf[t])
                 new_state.append(new_state_t.copy())
                 new_log_pdf.append(new_log_pdf_t.copy())
 
             # Do sweeps if necessary
-            if self.mcmc_samplers[-1].niterations % self.niter_between_sweeps == 0:
-                for i in range(self.n_temper_params - 1):
+            if self.mcmc_samplers[-1].iterations_number % self.n_iterations_between_sweeps == 0:
+                for i in range(self.n_tempering_parameters - 1):
                     log_accept = (self.mcmc_samplers[i].evaluate_log_target(new_state[i + 1]) +
                                   self.mcmc_samplers[i + 1].evaluate_log_target(new_state[i]) -
                                   self.mcmc_samplers[i].evaluate_log_target(new_state[i]) -
@@ -162,22 +162,20 @@ class ParallelTemperingMCMC(TemperingMCMC):
 
             # Update the chain, only if burn-in is over and the sample is not being jumped over
             # also increase the current number of samples and samples_per_chain
-            if self.mcmc_samplers[-1].niterations > self.mcmc_samplers[-1].nburn and \
-                    (self.mcmc_samplers[-1].niterations - self.mcmc_samplers[-1].nburn) % self.mcmc_samplers[
-                -1].jump == 0:
+            if self.mcmc_samplers[-1].iterations_number > self.mcmc_samplers[-1].burn_length and \
+                    (self.mcmc_samplers[-1].iterations_number -
+                     self.mcmc_samplers[-1].burn_length) % self.mcmc_samplers[-1].jump == 0:
                 for t, sampler in enumerate(self.mcmc_samplers):
                     sampler.samples[sampler.nsamples_per_chain, :, :] = new_state[t].copy()
                     if self.save_log_pdf:
                         sampler.log_pdf_values[sampler.nsamples_per_chain, :] = new_log_pdf[t].copy()
                     sampler.nsamples_per_chain += 1
-                    sampler.nsamples += sampler.nchains
-                # self.nsamples_per_chain += 1
-                # self.nsamples += self.nchains
+                    sampler.samples_counter += sampler.n_chains
 
         self.logger.info('UQpy: MCMC run successfully !')
 
         # Concatenate chains maybe
-        if self.mcmc_samplers[-1].concat_chains:
+        if self.mcmc_samplers[-1].concatenate_chains:
             for t, mcmc_sampler in enumerate(self.mcmc_samplers):
                 mcmc_sampler._concatenate_chains()
 
@@ -217,20 +215,20 @@ class ParallelTemperingMCMC(TemperingMCMC):
             raise ValueError('UQpy: input log_Z0 or nsamples_from_p0 should be provided.')
         # compute average of log_target for the target at various temperatures
         log_pdf_averages = []
-        for i, (temper_param, sampler) in enumerate(zip(self.temper_param_list, self.mcmc_samplers)):
+        for i, (temper_param, sampler) in enumerate(zip(self.tempering_parameters, self.mcmc_samplers)):
             log_factor_values = sampler.log_pdf_values - self.evaluate_log_reference(sampler.samples)
             potential_values = compute_potential(
                 x=sampler.samples, temper_param=temper_param, log_intermediate_values=log_factor_values)
             log_pdf_averages.append(np.mean(potential_values))
 
         # use quadrature to integrate between 0 and 1
-        temper_param_list_for_integration = np.copy(np.array(self.temper_param_list))
+        temper_param_list_for_integration = np.copy(np.array(self.tempering_parameters))
         log_pdf_averages = np.array(log_pdf_averages)
         int_value = trapz(x=temper_param_list_for_integration, y=log_pdf_averages)
         if log_Z0 is None:
             samples_p0 = self.distribution_reference.rvs(nsamples=nsamples_from_p0)
             log_Z0 = np.log(1. / nsamples_from_p0) + logsumexp(
-                self.evaluate_log_intermediate(x=samples_p0, temper_param=self.temper_param_list[0]))
+                self.evaluate_log_intermediate(x=samples_p0, temper_param=self.tempering_parameters[0]))
 
         self.thermodynamic_integration_results = {
             'log_Z0': log_Z0, 'temper_param_list': temper_param_list_for_integration,

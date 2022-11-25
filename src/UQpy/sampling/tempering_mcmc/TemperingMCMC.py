@@ -37,7 +37,7 @@ class TemperingMCMC(ABC):
         if self.save_log_pdf:
             self.log_pdf_values = None
 
-    def _run(self, nsamples):
+    def run(self, nsamples):
         """ Run the tempering MCMC algorithms to generate nsamples from the target posterior """
         pass
 
