@@ -41,13 +41,13 @@ class ParallelTemperingMCMC(TemperingMCMC):
                  random_state=None,
                  tempering_parameters=None,
                  n_tempering_parameters=None,
-                 sampler: Union[MCMC, list[MCMC]] = None):
+                 samplers: list[MCMC] = None):
 
         super().__init__(pdf_intermediate=pdf_intermediate, log_pdf_intermediate=log_pdf_intermediate,
                          args_pdf_intermediate=args_pdf_intermediate, distribution_reference=None,
                          save_log_pdf=save_log_pdf, random_state=random_state)
         self.logger = logging.getLogger(__name__)
-        self.sampler = sampler
+        self.samplers = samplers
 
         self.distribution_reference = distribution_reference
         self.evaluate_log_reference = self._preprocess_reference(self.distribution_reference)
@@ -74,13 +74,13 @@ class ParallelTemperingMCMC(TemperingMCMC):
             self.n_tempering_parameters = len(self.tempering_parameters)
 
         # default value
-        kwargs_mcmc = {}
-        if isinstance(self.sampler, MetropolisHastings) and self.sampler.proposal is None:
-            from UQpy.distributions import JointIndependent, Normal
-            kwargs_mcmc = {'proposal_is_symmetric': [True, ] * self.n_tempering_parameters,
-                           'proposal': [JointIndependent([Normal(scale=1. / np.sqrt(temper_param))] *
-                                                         self.sampler.dimension)
-                                        for temper_param in self.tempering_parameters]}
+        for i, sampler in enumerate(self.samplers):
+            if isinstance(sampler, MetropolisHastings) and sampler.proposal is None:
+                from UQpy.distributions import JointIndependent, Normal
+                self.samplers[i] = sampler.__copy__(proposal_is_symmetric=True,
+                                                    proposal=JointIndependent(
+                                                        [Normal(scale=1. / np.sqrt(self.tempering_parameters[i]))] *
+                                                        sampler.dimension))
 
         # Initialize algorithm specific inputs: target pdfs
         self.thermodynamic_integration_results = None
@@ -89,9 +89,9 @@ class ParallelTemperingMCMC(TemperingMCMC):
         for i, temper_param in enumerate(self.tempering_parameters):
             log_pdf_target = (lambda x, temper_param=temper_param: self.evaluate_log_reference(
                 x) + self.evaluate_log_intermediate(x, temper_param))
-            self.mcmc_samplers.append(sampler.__copy__(log_pdf_target=log_pdf_target, concatenate_chains=True,
-                                                       save_log_pdf=save_log_pdf, random_state=self.random_state,
-                                                       **dict([(key, val[i]) for key, val in kwargs_mcmc.items()])))
+            self.mcmc_samplers.append(self.samplers[i].__copy__(log_pdf_target=log_pdf_target, concatenate_chains=True,
+                                                                save_log_pdf=save_log_pdf,
+                                                                random_state=self.random_state))
 
         self.logger.info('\nUQpy: Initialization of ' + self.__class__.__name__ + ' algorithm complete.')
 

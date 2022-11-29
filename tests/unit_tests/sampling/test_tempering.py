@@ -29,26 +29,26 @@ prior_distribution = JointIndependent(marginals=[Uniform(loc=-2, scale=4), Unifo
 
 
 def test_parallel():
-    sampler = MetropolisHastings(burn_length=10, jump=2, seed=list(seed), dimension=2)
+    samplers = [MetropolisHastings(burn_length=10, jump=2, seed=list(seed), dimension=2) for _ in range(len(betas))]
     mcmc = ParallelTemperingMCMC(log_pdf_intermediate=log_intermediate,
                                  distribution_reference=prior_distribution,
                                  n_iterations_between_sweeps=4,
                                  tempering_parameters=betas,
                                  random_state=3456,
-                                 save_log_pdf=False, sampler=sampler)
+                                 save_log_pdf=False, samplers=samplers)
     mcmc.run(nsamples_per_chain=100)
     assert mcmc.samples.shape == (500, 2)
 
 
 def test_thermodynamic_integration():
-    sampler = MetropolisHastings(burn_length=10, jump=2, seed=list(seed), dimension=2)
+    samplers = [MetropolisHastings(burn_length=10, jump=2, seed=list(seed), dimension=2) for _ in range(len(betas))]
     mcmc = ParallelTemperingMCMC(log_pdf_intermediate=log_intermediate,
                                  distribution_reference=prior_distribution,
                                  n_iterations_between_sweeps=4,
                                  tempering_parameters=betas,
                                  save_log_pdf=True,
                                  random_state=3456,
-                                 sampler=sampler)
+                                 samplers=samplers)
     mcmc.run(nsamples_per_chain=100)
     log_ev = mcmc.evaluate_normalization_constant(compute_potential=compute_potential, log_Z0=0.)
     assert np.round(log_ev, 4) == 0.203
