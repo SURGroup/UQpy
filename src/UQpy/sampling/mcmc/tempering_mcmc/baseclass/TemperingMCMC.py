@@ -37,10 +37,12 @@ class TemperingMCMC(ABC):
         if self.save_log_pdf:
             self.log_pdf_values = None
 
+    @abstractmethod
     def run(self, nsamples):
         """ Run the tempering MCMC algorithms to generate nsamples from the target posterior """
         pass
 
+    @abstractmethod
     def evaluate_normalization_constant(self, **kwargs):
         """ Computes the normalization constant :math:`Z_{1}=\int{q_{1}(x) p_{0}(x)dx}` where p0 is the reference pdf
          and q1 is the intermediate density with :math:`\beta=1`, thus q1 p0 is the target pdf."""

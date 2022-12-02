@@ -3,7 +3,7 @@ from scipy.integrate import trapz
 
 from UQpy.sampling.mcmc import MetropolisHastings
 from UQpy.sampling.mcmc.baseclass.MCMC import *
-from UQpy.sampling.tempering_mcmc.TemperingMCMC import TemperingMCMC
+from UQpy.sampling.mcmc.tempering_mcmc.baseclass.TemperingMCMC import TemperingMCMC
 
 
 class ParallelTemperingMCMC(TemperingMCMC):
@@ -33,14 +33,15 @@ class ParallelTemperingMCMC(TemperingMCMC):
     **Methods:**
 
     """
-
+    @beartype
     def __init__(self, n_iterations_between_sweeps: PositiveInteger,
                  pdf_intermediate=None, log_pdf_intermediate=None, args_pdf_intermediate=(),
-                 distribution_reference=None,
-                 save_log_pdf=False, nsamples=None, nsamples_per_chain=None,
-                 random_state=None,
-                 tempering_parameters=None,
-                 n_tempering_parameters=None,
+                 distribution_reference: Distribution = None,
+                 save_log_pdf: bool = False, nsamples: PositiveInteger = None,
+                 nsamples_per_chain: PositiveInteger = None,
+                 random_state: RandomStateType = None,
+                 tempering_parameters: list = None,
+                 n_tempering_parameters: int = None,
                  samplers: list[MCMC] = None):
 
         super().__init__(pdf_intermediate=pdf_intermediate, log_pdf_intermediate=log_pdf_intermediate,
@@ -99,7 +100,8 @@ class ParallelTemperingMCMC(TemperingMCMC):
         if (nsamples is not None) or (nsamples_per_chain is not None):
             self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain)
 
-    def run(self, nsamples=None, nsamples_per_chain=None):
+    @beartype
+    def run(self, nsamples: PositiveInteger = None, nsamples_per_chain: PositiveInteger = None):
         """
         Run the MCMC algorithm.
 
@@ -185,7 +187,8 @@ class ParallelTemperingMCMC(TemperingMCMC):
         if self.save_log_pdf:
             self.log_pdf_values = self.mcmc_samplers[-1].log_pdf_values
 
-    def evaluate_normalization_constant(self, compute_potential, log_Z0=None, nsamples_from_p0=None):
+    @beartype
+    def evaluate_normalization_constant(self, compute_potential, log_Z0: float=None, nsamples_from_p0: int=None):
         """
         Evaluate new log free energy as
 

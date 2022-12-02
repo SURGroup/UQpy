@@ -1,7 +1,7 @@
 from UQpy.sampling.mcmc import *
 from UQpy.sampling.adaptive_kriging_functions import *
 from UQpy.sampling.stratified_sampling import *
-from UQpy.sampling.tempering_mcmc import *
+from UQpy.sampling.mcmc.tempering_mcmc import *
 
 from UQpy.sampling.AdaptiveKriging import AdaptiveKriging
 from UQpy.sampling.ImportanceSampling import ImportanceSampling

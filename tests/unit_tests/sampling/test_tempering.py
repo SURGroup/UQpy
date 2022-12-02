@@ -79,3 +79,4 @@ def test_sequential():
                                    sampler=sampler,
                                    nsamples=100)
     assert np.round(test.evidence, 4) == 0.0656
+

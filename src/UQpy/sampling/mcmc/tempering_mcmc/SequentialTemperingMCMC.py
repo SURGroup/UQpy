@@ -5,7 +5,7 @@ import scipy.stats as stats
 from UQpy.sampling.mcmc.MetropolisHastings import MetropolisHastings
 from UQpy.distributions.collection.MultivariateNormal import MultivariateNormal
 from UQpy.sampling.mcmc.baseclass.MCMC import *
-from UQpy.sampling.tempering_mcmc.TemperingMCMC import TemperingMCMC
+from UQpy.sampling.mcmc.tempering_mcmc.baseclass.TemperingMCMC import TemperingMCMC
 
 
 class SequentialTemperingMCMC(TemperingMCMC):
@@ -36,27 +36,18 @@ class SequentialTemperingMCMC(TemperingMCMC):
     """
 
     @beartype
-    # def __init__(self, pdf_intermediate=None, log_pdf_intermediate=None, args_pdf_intermediate=(),
-    #              distribution_reference=None,
-    #              mcmc_class: MCMC = None,
-    #              dimension=None, seed=None,
-    #              nsamples: PositiveInteger = None,
-    #              recalc_w=False,
-    #              nburn_resample=0, save_intermediate_samples=False, nchains=1,
-    #              percentage_resampling=100, random_state=None,
-    #              proposal_is_symmetric=True):
     def __init__(self, pdf_intermediate=None, log_pdf_intermediate=None, args_pdf_intermediate=(),
-                 distribution_reference=None,
+                 distribution_reference: Distribution = None,
                  sampler: MCMC = None,
-                 seed=None,
+                 seed: list = None,
                  nsamples: PositiveInteger = None,
-                 recalculate_weights=False,
+                 recalculate_weights: bool = False,
                  save_intermediate_samples=False,
-                 percentage_resampling=100,
-                 random_state=None,
-                 resampling_burn_length=0,
-                 resampling_proposal=None,
-                 resampling_proposal_is_symmetric=True):
+                 percentage_resampling: int = 100,
+                 random_state: RandomStateType = None,
+                 resampling_burn_length: int = 0,
+                 resampling_proposal: Distribution = None,
+                 resampling_proposal_is_symmetric: bool = True):
         self.proposal = resampling_proposal
         self.proposal_is_symmetric = resampling_proposal_is_symmetric
         self.resampling_burn_length = resampling_burn_length
@@ -119,7 +110,7 @@ class SequentialTemperingMCMC(TemperingMCMC):
         weight_probabilities = np.zeros(nsamples)  # Array storing plausibility weight probabilities
         expected_q0 = sum(
             np.exp(self.evaluate_log_intermediate(points[i, :].reshape((1, -1)), 0.0))
-            for i in range(nsamples))/nsamples
+            for i in range(nsamples)) / nsamples
 
         evidence_estimator = expected_q0
 
@@ -165,7 +156,7 @@ class SequentialTemperingMCMC(TemperingMCMC):
                 for j in range(self.__dimension):
                     points_deviation[j, 0] = points[i, j] - (w_theta_sum[j] / w_sum)
                 sigma_matrix += (weights[i] / w_sum) * np.dot(points_deviation,
-                                                         points_deviation.T)  # Normalized by w_sum as per Betz et al
+                                                              points_deviation.T)  # Normalized by w_sum as per Betz et al
             sigma_matrix = cov_scale ** 2 * sigma_matrix
 
             mcmc_log_pdf_target = self._target_generator(self.evaluate_log_intermediate,
