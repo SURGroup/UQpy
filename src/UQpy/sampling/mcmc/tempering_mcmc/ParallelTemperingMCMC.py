@@ -33,6 +33,7 @@ class ParallelTemperingMCMC(TemperingMCMC):
     **Methods:**
 
     """
+
     @beartype
     def __init__(self, n_iterations_between_sweeps: PositiveInteger,
                  pdf_intermediate=None, log_pdf_intermediate=None, args_pdf_intermediate=(),
@@ -42,13 +43,16 @@ class ParallelTemperingMCMC(TemperingMCMC):
                  random_state: RandomStateType = None,
                  tempering_parameters: list = None,
                  n_tempering_parameters: int = None,
-                 samplers: list[MCMC] = None):
+                 samplers: Union[MCMC, list[MCMC]] = None):
 
         super().__init__(pdf_intermediate=pdf_intermediate, log_pdf_intermediate=log_pdf_intermediate,
                          args_pdf_intermediate=args_pdf_intermediate, distribution_reference=None,
                          save_log_pdf=save_log_pdf, random_state=random_state)
         self.logger = logging.getLogger(__name__)
-        self.samplers = samplers
+        if not isinstance(samplers, list):
+            self.samplers = [samplers.__copy__() for _ in range(len(tempering_parameters))]
+        else:
+            self.samplers = samplers
 
         self.distribution_reference = distribution_reference
         self.evaluate_log_reference = self._preprocess_reference(self.distribution_reference)
@@ -188,7 +192,7 @@ class ParallelTemperingMCMC(TemperingMCMC):
             self.log_pdf_values = self.mcmc_samplers[-1].log_pdf_values
 
     @beartype
-    def evaluate_normalization_constant(self, compute_potential, log_Z0: float=None, nsamples_from_p0: int=None):
+    def evaluate_normalization_constant(self, compute_potential, log_Z0: float = None, nsamples_from_p0: int = None):
         """
         Evaluate new log free energy as
 
