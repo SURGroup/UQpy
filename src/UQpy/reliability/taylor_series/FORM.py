@@ -312,7 +312,7 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
-            self.logger.error("Error: %s", error_record[-1])
+            self.logger.info("Error: %s", error_record[-1])
 
             if converged is True or k > self.n_iterations:
                 break
