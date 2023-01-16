@@ -185,7 +185,7 @@ class FORM(TaylorSeries):
         g_record.append(0.0)
         dg_u_record = np.zeros([self.n_iterations + 1, self.dimension])
 
-        while not converged:
+        while not converged and k < self.n_iterations:
             self.logger.info("Number of iteration: %i", k)
             # FORM always starts from the standard normal space
             if k == 0:
@@ -303,6 +303,7 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
+
             elif (self.tol1 is None) and (self.tol2 is not None) and (self.tol3 is not None):
                 error2 = np.linalg.norm(beta[k + 1] - beta[k])
                 error3 = np.linalg.norm(dg_u_record[k + 1, :] - dg_u_record[k, :])
@@ -312,10 +313,8 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
-            self.logger.error("Error: %s", error_record[-1])
+            self.logger.info("Error: %s", error_record[-1])
 
-            if converged is True or k > self.n_iterations:
-                break
 
         if k > self.n_iterations:
             self.logger.info("UQpy: Maximum number of iterations {0} was reached before convergence."
