@@ -32,7 +32,7 @@ class Nataf:
             itam_threshold1: Union[float, int] = 0.001,
             itam_threshold2: Union[float, int] = 0.1,
             itam_max_iter: int = 100,
-            n_gauss_points: int = 1024
+            n_gauss_points: int = 128
     ):
         """
         Transform random variables using the Nataf or Inverse Nataf transformation
