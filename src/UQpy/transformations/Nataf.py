@@ -32,6 +32,7 @@ class Nataf:
             itam_threshold1: Union[float, int] = 0.001,
             itam_threshold2: Union[float, int] = 0.1,
             itam_max_iter: int = 100,
+            n_gauss_points: int = 1024
     ):
         """
         Transform random variables using the Nataf or Inverse Nataf transformation
@@ -63,6 +64,8 @@ class Nataf:
          for iteration :math:`i`.
          Default: :math:`0.01`
         :param itam_max_iter: Maximum number of iterations for the ITAM method. Default: :math:`100`
+        :param n_gauss_points: The number of integration points used for the numerical integration of the
+         correlation  matrix (:math:`\mathbf{C_Z}`) of the standard normal random vector **Z**
         """
         self.n_dimensions = 0
         if isinstance(distributions, list):
@@ -108,7 +111,7 @@ class Nataf:
             elif all(isinstance(x, Normal) for x in distributions):
                 self.corr_x = self.corr_z
             else:
-                self.corr_x = self.distortion_z2x(self.dist_object, self.corr_z, n_gauss_points=128)
+                self.corr_x = self.distortion_z2x(self.dist_object, self.corr_z, n_gauss_points=n_gauss_points)
 
         self.H: NumpyFloatArray = cholesky(self.corr_z, lower=True)
         """The lower triangular matrix resulting from the Cholesky decomposition of the correlation matrix
