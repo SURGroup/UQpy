@@ -58,7 +58,7 @@ plt.plot(x.samples[:, 0], x.samples[:, 1], 'o', alpha=0.5)
 plt.show()
 
 plt.figure()
-x = MetropolisHastings(dimension=2, pdf_target=log_rosenbrock_with_param, burn_length=500,
+x = MetropolisHastings(dimension=2, log_pdf_target=log_rosenbrock_with_param, burn_length=500,
                        jump=50, n_chains=1, args_target=(20,),
                        nsamples=500)
 plt.plot(x.samples[:, 0], x.samples[:, 1], 'o')

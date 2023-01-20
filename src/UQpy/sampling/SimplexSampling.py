@@ -10,7 +10,7 @@ class SimplexSampling:
         self,
         nodes: Union[list, Numpy2DFloatArray] = None,
         nsamples: PositiveInteger = None,
-        random_state: RandomStateType = None,
+        random_state: Union[RandomStateType, np.random.Generator] = None,
     ):
         """
         Generate uniform random samples inside an n-dimensional simplex.
