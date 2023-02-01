@@ -46,8 +46,9 @@ var_n = 1
 error_covariance = var_n * np.eye(50)
 print(param_true.shape)
 
-z = RunModel(samples=param_true, model_script='local_pfn_models.py', model_object_name='model_quadratic', vec=False,
-             var_names=['theta_1', 'theta_2'])
+from UQpy.run_model.model_execution.PythonModel import PythonModel
+m=PythonModel(model_script='local_pfn_models.py', model_object_name='model_quadratic', var_names=['theta_1', 'theta_2'])
+z = RunModel(samples=param_true, model=m)
 data_clean = z.qoi_list[0].reshape((-1,))
 data = data_clean + Normal(scale=np.sqrt(var_n)).rvs(nsamples=data_clean.size, random_state=456).reshape((-1,))
 
@@ -66,55 +67,10 @@ model_prior_means = [[0.], [0., 0.], [0., 0., 0.]]
 model_prior_stds = [[10.], [1., 1.], [1., 2., 0.25]]
 
 
-evidences = []
-model_posterior_means = []
-model_posterior_stds = []
-for n, model in enumerate(model_names):
-    # compute matrix X
-    X = np.linspace(0, 10, 50).reshape((-1, 1))
-    if n == 1:  # quadratic model
-        X = np.concatenate([X, X ** 2], axis=1)
-    if n == 2:  # cubic model
-        X = np.concatenate([X, X ** 2, X ** 3], axis=1)
-
-    # compute posterior pdf
-    m_prior = np.array(model_prior_means[n]).reshape((-1, 1))
-    S_prior = np.diag(np.array(model_prior_stds[n]) ** 2)
-    S_posterior = np.linalg.inv(1 / var_n * np.matmul(X.T, X) + np.linalg.inv(S_prior))
-    m_posterior = np.matmul(S_posterior,
-                            1 / var_n * np.matmul(X.T, data.reshape((-1, 1))) + np.matmul(np.linalg.inv(S_prior),
-                                                                                          m_prior))
-    m_prior = m_prior.reshape((-1,))
-    m_posterior = m_posterior.reshape((-1,))
-    model_posterior_means.append(list(m_posterior))
-    model_posterior_stds.append(list(np.sqrt(np.diag(S_posterior))))
-    print('posterior mean and covariance for ' + model)
-    print(m_posterior, S_posterior)
-
-    # compute evidence, evaluate the formula at the posterior mean
-    like_theta = multivariate_normal.pdf(data, mean=np.matmul(X, m_posterior).reshape((-1,)), cov=error_covariance)
-    prior_theta = multivariate_normal.pdf(m_posterior, mean=m_prior, cov=S_prior)
-    posterior_theta = multivariate_normal.pdf(m_posterior, mean=m_posterior, cov=S_posterior)
-    evidence = like_theta * prior_theta / posterior_theta
-    evidences.append(evidence)
-    print('evidence for ' + model + '= {}\n'.format(evidence))
-
-# compute the posterior probability of each model
-tmp = [1 / 3 * evidence for evidence in evidences]
-model_posterior_probas = [p / sum(tmp) for p in tmp]
-
-print('posterior probabilities of all three models')
-print(model_posterior_probas)
-
-#%% md
-#
-# Define the models for use in UQpy
-
-#%%
-
 candidate_models = []
 for n, model_name in enumerate(model_names):
-    run_model = RunModel(model_script='local_pfn_models.py', model_object_name=model_name, vec=False)
+    m=PythonModel(model_script='local_pfn_models.py', model_object_name=model_name,)
+    run_model = RunModel(model=m)
     prior = JointIndependent([Normal(loc=m, scale=std) for m, std in
                               zip(model_prior_means[n], model_prior_stds[n])])
     model = ComputationalModel(n_parameters=model_n_params[n],
@@ -123,60 +79,18 @@ for n, model_name in enumerate(model_names):
                                name=model_name)
     candidate_models.append(model)
 
-
-#%% md
-#
-# Run MCMC for one model
-
-#%%
-
-# Quadratic model
-sampling = MetropolisHastings(args_target=(data, ),
-                              log_pdf_target=candidate_models[1].evaluate_log_posterior,
-                              jump=10, burn_length=100,
-                              proposal=JointIndependent([Normal(scale=0.1), ] * 2),
-                              seed=[0., 0.], random_state=123)
-
-bayesMCMC = BayesParameterEstimation(sampling_class=sampling,
-                                     inference_model=candidate_models[1],
-                                     data=data,
-                                     nsamples=3500)
-
-# plot prior, true posterior and estimated posterior
-fig, ax = plt.subplots(1, 2, figsize=(16, 5))
-for n_p in range(2):
-    domain_plot = np.linspace(-0.5, 3, 200)
-    ax[n_p].plot(domain_plot, norm.pdf(domain_plot, loc=model_prior_means[1][n_p], scale=model_prior_stds[1][n_p]),
-                 label='prior', color='green', linestyle='--')
-    ax[n_p].plot(domain_plot, norm.pdf(domain_plot, loc=model_posterior_means[1][n_p],
-                                       scale=model_posterior_stds[1][n_p]),
-                 label='true posterior', color='red', linestyle='-')
-    ax[n_p].hist(bayesMCMC.sampler.samples[:, n_p], density=True, bins=30, label='estimated posterior MCMC')
-    ax[n_p].legend()
-    ax[n_p].set_title('MCMC for quadratic model')
-plt.show()
-
-
-#%% md
-#
-# Run Bayesian Model Selection for all three models
-
-#%%
-
 proposals = [Normal(scale=0.1),
              JointIndependent([Normal(scale=0.1), Normal(scale=0.1)]),
              JointIndependent([Normal(scale=0.15), Normal(scale=0.1), Normal(scale=0.05)])]
-nsamples = [2000, 6000, 14000]
-nburn = [500, 2000, 4000]
-jump = [5, 10, 25]
+nsamples = [2000, 2000, 2000]
+nburn = [1000, 1000, 1000]
+jump = [2, 2, 2]
 
 
 sampling_inputs=list()
 estimators = []
 for i in range(3):
-    sampling = MetropolisHastings(args_target=(data, ),
-                                  log_pdf_target=candidate_models[i].evaluate_log_posterior,
-                                  jump=jump[i],
+    sampling = MetropolisHastings(jump=jump[i],
                                   burn_length=nburn[i],
                                   proposal=proposals[i],
                                   seed=model_prior_means[i],
@@ -185,7 +99,6 @@ for i in range(3):
                                                   sampling_class=sampling))
 
 selection = BayesModelSelection(parameter_estimators=estimators,
-                                data=data,
                                 prior_probabilities=[1. / 3., 1. / 3., 1. / 3.],
                                 nsamples=nsamples)
 

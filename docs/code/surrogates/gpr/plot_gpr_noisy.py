@@ -25,8 +25,7 @@ import warnings
 warnings.filterwarnings('ignore')
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 from UQpy.surrogates.gaussian_process.regression_models.LinearRegression import LinearRegression
-from UQpy.utilities.FminCobyla import FminCobyla
-from UQpy.surrogates import GaussianProcessRegression, NonNegative, RBF
+from UQpy.surrogates import GaussianProcessRegression, RBF
 
 
 # %% md
@@ -83,7 +82,7 @@ kernel2 = RBF()
 # %%
 
 bounds_2 = [[10**(-3), 10**3], [10**(-3), 10**2], [10**(-3), 10**(2)]]
-optimizer2 = MinimizeOptimizer(method='L-BFGS-B', bounds=bounds_2)
+optimizer2 = MinimizeOptimizer(bounds=bounds_2)
 
 
 # %% md
@@ -150,3 +149,4 @@ ax.set_ylim([-0.3,1.8])
 plt.title('GP Surrogate (Noise, No Constraints)')
 ax.legend(loc="upper right",prop={'size': 12});
 plt.grid()
+plt.show()

@@ -4,7 +4,6 @@ Third-party - Matlab
 ==================================
 """
 
-
 # %% md
 #
 # The RunModel class is capable of passing input in different formats into a single computational model. This means that
@@ -64,6 +63,7 @@ Third-party - Matlab
 
 from UQpy.sampling import MonteCarloSampling
 from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.model_execution.ThirdPartyModel import ThirdPartyModel
 from UQpy.distributions import Normal
 import time
 import numpy as np
@@ -133,10 +133,11 @@ if pick_model == 'scalar' or pick_model == 'vector' or pick_model == 'all':
 if pick_model == 'scalar' or pick_model == 'all':
     # Call to RunModel - Here we run the model while instantiating the RunModel object.
     t = time.time()
-    m = RunModel(ntasks=1, model_script='matlab_model_sum_scalar.py',
-                 input_template='sum_scalar.m', var_names=names, model_object_name="matlab",
-                 output_script='process_matlab_output.py', output_object_name='read_output',
-                 resume=False, model_dir='Matlab_Model', fmt="{:>10.4f}", verbose=True)
+    model = ThirdPartyModel(model_script='matlab_model_sum_scalar.py',
+                            input_template='sum_scalar.m', var_names=names, model_object_name="matlab",
+                            output_script='process_matlab_output.py', output_object_name='read_output',
+                            model_dir='Matlab_Model', fmt="{:>10.4f}")
+    m = RunModel(ntasks=1, model=model)
     m.run(x_mcs.samples)
     t_ser_matlab = time.time() - t
     print("\nTime for serial execution:")
@@ -144,7 +145,6 @@ if pick_model == 'scalar' or pick_model == 'all':
     print()
     print("The values returned from the Matlab simulation:")
     print(m.qoi_list)
-
 
 # %% md
 #
@@ -161,17 +161,17 @@ if pick_model == 'scalar' or pick_model == 'all':
 if pick_model == 'scalar' or pick_model == 'all':
     # Call to RunModel with samples as a list - Again we run the model while instantiating the RunModel object.
     t = time.time()
-    m = RunModel(samples=x_mcs_list, ntasks=2, model_script='matlab_model_sum_scalar.py',
-                 input_template='sum_scalar.m', var_names=names, model_object_name="matlab",
-                 output_script='process_matlab_output.py', output_object_name='read_output', resume=False,
-                 model_dir='Matlab_Model', verbose=True)
+    model = ThirdPartyModel(model_script='matlab_model_sum_scalar.py',
+                            input_template='sum_scalar.m', var_names=names, model_object_name="matlab",
+                            output_script='process_matlab_output.py', output_object_name='read_output',
+                            model_dir='Matlab_Model')
+    m = RunModel(samples=x_mcs_list, ntasks=2, model=model)
     t_par_matlab = time.time() - t
     print("\nTime for parallel execution:")
     print(t_par_matlab)
     print()
     print("The values retured from the Matlab simulation:")
     print(m.qoi_list)
-
 
 # %% md
 #
@@ -228,13 +228,12 @@ if pick_model == 'vector' or pick_model == 'all':
 
 if pick_model == 'vector' or pick_model == 'all':
     # Call to RunModel - Here we run the model while instantiating the RunModel object.
-    # Notice that we do not specify var_names. This will default to a single variable with name x0. In this case,
-    # we will read them in by indexing in the input_template.
     t = time.time()
-    m = RunModel(samples=x_mcs_tri, ntasks=1, model_script='matlab_model_sum_vector_indexed.py',
-                 input_template='sum_vector_indexed.m', model_object_name="matlab",
-                 output_script='process_matlab_output.py', output_object_name='read_output',
-                 resume=False, model_dir='Matlab_Model', fmt="{:>10.4f}")
+    model = ThirdPartyModel(model_script='matlab_model_sum_vector_indexed.py',
+                            input_template='sum_vector_indexed.m', model_object_name="matlab",
+                            output_script='process_matlab_output.py', output_object_name='read_output',
+                            model_dir='Matlab_Model', fmt="{:>10.4f}", var_names=['x0'])
+    m = RunModel(samples=x_mcs_tri, ntasks=1, model=model)
     t_ser_matlab = time.time() - t
     print("\nTime for serial execution:")
     print(t_ser_matlab)
@@ -255,13 +254,12 @@ if pick_model == 'vector' or pick_model == 'all':
 
 if pick_model == 'vector' or pick_model == 'all':
     # Call to RunModel - Here we run the model while instantiating the RunModel object.
-    # Notice that we do not specify var_names. This will default to a single variable with name x0. In this case,
-    # we will read them in by indexing in the input_template.
     t = time.time()
-    m = RunModel(samples=x_mcs_tri_list, ntasks=2, model_script='matlab_model_sum_vector_indexed.py',
-                 input_template='sum_vector_indexed.m', model_object_name="matlab",
-                 output_script='process_matlab_output.py', output_object_name='read_output',
-                 resume=False, model_dir='Matlab_Model')
+    model = ThirdPartyModel(model_script='matlab_model_sum_vector_indexed.py',
+                            input_template='sum_vector_indexed.m', model_object_name="matlab",
+                            output_script='process_matlab_output.py', output_object_name='read_output',
+                            model_dir='Matlab_Model', var_names=['x0'])
+    m = RunModel(samples=x_mcs_tri_list, ntasks=2, model=model)
     t_ser_matlab = time.time() - t
     print("\nTime for parallel execution:")
     print(t_ser_matlab)
@@ -285,17 +283,17 @@ if pick_model == 'vector' or pick_model == 'all':
     # Notice that we do not specify var_names. This will default to a single variable with name x0. In this case,
     # we will read them in by indexing in the input_template.
     t = time.time()
-    m = RunModel(samples=x_mcs_tri, ntasks=1, model_script='matlab_model_sum_vector.py',
-                 input_template='sum_vector.m', model_object_name="matlab",
-                 output_script='process_matlab_output.py', output_object_name='read_output',
-                 resume=False, model_dir='Matlab_Model', fmt="{:>10.4f}")
+    model = ThirdPartyModel(model_script='matlab_model_sum_vector.py',
+                            input_template='sum_vector.m', model_object_name="matlab",
+                            output_script='process_matlab_output.py', output_object_name='read_output',
+                            model_dir='Matlab_Model', fmt="{:>10.4f}", var_names=['x0'])
+    m = RunModel(samples=x_mcs_tri, ntasks=1, model=model)
     t_ser_matlab = time.time() - t
     print("\nTime for serial execution:")
     print(t_ser_matlab)
     print()
     print("The values returned from the Matlab simulation:")
     print(m.qoi_list)
-
 
 # %% md
 #
@@ -388,10 +386,11 @@ if pick_model == 'mixed' or pick_model == 'all':
     # case, x0 is a scalar and x1 is a 3x3 matrix. We will read the matrix in without indexing in the
     # input_template.
     t = time.time()
-    m = RunModel(samples=x_mixed_array, ntasks=1, model_script='matlab_model_det.py',
-                 input_template='prod_determinant.m', model_object_name="matlab",
-                 output_script='process_matlab_output.py', output_object_name='read_output',
-                 resume=False, model_dir='Matlab_Model', fmt="{:>10.4f}")
+    model = ThirdPartyModel(model_script='matlab_model_det.py',
+                            input_template='prod_determinant.m', model_object_name="matlab", var_names=['x0', 'x1'],
+                            output_script='process_matlab_output.py', output_object_name='read_output',
+                            model_dir='Matlab_Model', fmt="{:>10.4f}")
+    m = RunModel(samples=x_mixed_array, ntasks=1, model=model)
     t_ser_matlab = time.time() - t
     print("\nTime for serial execution:")
     print(t_ser_matlab)
@@ -412,14 +411,13 @@ if pick_model == 'mixed' or pick_model == 'all':
 
 if pick_model == 'mixed' or pick_model == 'all':
     # Call to RunModel - Here we run the model while instantiating the RunModel object.
-    # Notice that we do not specify var_names. This will default to two variables with names x0 and x1. In this
-    # case, x0 is a scalar and x1 is a 3x3 matrix. We will read the matrix in with indexing in the
-    # input_template.
+    # We will read the matrix in with indexing in the input_template.
     t = time.time()
-    m = RunModel(samples=x_mixed_array, ntasks=1, model_script='matlab_model_det_index.py',
+    model = ThirdPartyModel(model_script='matlab_model_det_index.py',
                  input_template='prod_determinant_index.m', model_object_name="matlab",
                  output_script='process_matlab_output.py', output_object_name='read_output',
-                 resume=False, model_dir='Matlab_Model', fmt="{:>10.4f}")
+                 model_dir='Matlab_Model', fmt="{:>10.4f}", var_names=['x0', 'x1'])
+    m = RunModel(samples=x_mixed_array, ntasks=1, model=model)
     t_ser_matlab = time.time() - t
     print("\nTime for serial execution:")
     print(t_ser_matlab)
@@ -442,14 +440,12 @@ if pick_model == 'mixed' or pick_model == 'all':
 
 if pick_model == 'mixed' or pick_model == 'all':
     # Call to RunModel - Here we run the model while instantiating the RunModel object.
-    # Notice that we do not specify var_names. This will default to two variables with names x0 and x1. In this
-    # case, x0 is a scalar and x1 is a 3x3 matrix. We will read the matrix in without indexing in the
-    # input_template.
     t = time.time()
-    m = RunModel(samples=x_mixed, ntasks=2, model_script='matlab_model_det.py',
+    model = ThirdPartyModel(model_script='matlab_model_det.py',
                  input_template='prod_determinant.m', model_object_name="matlab",
                  output_script='process_matlab_output.py', output_object_name='read_output',
-                 resume=False, model_dir='Matlab_Model')
+                model_dir='Matlab_Model', var_names=['x0', 'x1'])
+    m = RunModel(samples=x_mixed, ntasks=2, model=model)
     t_ser_matlab = time.time() - t
     print("\nTime for serial execution:")
     print(t_ser_matlab)
@@ -477,10 +473,11 @@ if pick_model == 'mixed' or pick_model == 'all':
     # case, x0 is a scalar and x1 is a 3x3 matrix. We will read the matrix in with indexing in the
     # input_template.
     t = time.time()
-    m = RunModel(samples=x_mixed, ntasks=2, model_script='matlab_model_det_index.py',
+    model = ThirdPartyModel(model_script='matlab_model_det_index.py',
                  input_template='prod_determinant_index.m', model_object_name="matlab",
                  output_script='process_matlab_output.py', output_object_name='read_output',
-                 resume=False, model_dir='Matlab_Model')
+                 model_dir='Matlab_Model', var_names=['x0', 'x1'])
+    m = RunModel(samples=x_mixed, ntasks=2, model=model)
     t_ser_matlab = time.time() - t
     print("\nTime for serial execution:")
     print(t_ser_matlab)
@@ -508,10 +505,11 @@ if pick_model == 'mixed' or pick_model == 'all':
     # case, x0 is a scalar and x1 is a 3x3 matrix. We will read the matrix in with indexing in the
     # input_template.
     t = time.time()
-    m = RunModel(samples=x_mixed_array, ntasks=1, model_script='matlab_model_det_partial.py',
+    model = ThirdPartyModel(model_script='matlab_model_det_partial.py',
                  input_template='prod_determinant_partial.m', model_object_name="matlab",
                  output_script='process_matlab_output.py', output_object_name='read_output',
-                 resume=False, model_dir='Matlab_Model', fmt="{:>10.4f}")
+                model_dir='Matlab_Model', fmt="{:>10.4f}", var_names=['x0', 'x1'])
+    m = RunModel(samples=x_mixed_array, ntasks=1, model=model)
     t_ser_matlab = time.time() - t
     print("\nTime for serial execution:")
     print(t_ser_matlab)

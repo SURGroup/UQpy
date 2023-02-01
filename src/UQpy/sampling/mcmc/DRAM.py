@@ -1,10 +1,8 @@
 import logging
 from typing import Callable
 import warnings
-
-import numpy as np
-
 warnings.filterwarnings('ignore')
+import numpy as np
 
 from beartype import beartype
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC

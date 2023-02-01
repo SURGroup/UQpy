@@ -112,7 +112,7 @@ r2model.run(samples=np.concatenate([x1gv, x2gv], 1))
 y_act = np.array(r2model.qoi_list).reshape(x1g.shape[0], x1g.shape[1])
 
 fig1 = plt.figure()
-ax = fig1.gca(projection='3d')
+ax = fig1.add_subplot(projection='3d')
 surf = ax.plot_surface(x1g, x2g, y_act, cmap=cm.coolwarm, linewidth=0, antialiased=False)
 ax.set_zlim(-1, 15)
 ax.zaxis.set_major_locator(LinearLocator(10))

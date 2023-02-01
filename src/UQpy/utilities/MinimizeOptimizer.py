@@ -4,7 +4,7 @@ import logging
 
 class MinimizeOptimizer:
 
-    def __init__(self, method: str = 'bfgs', bounds=None):
+    def __init__(self, method: str = 'l-bfgs-b', bounds=None):
         # super().__init__(bounds)
         self._bounds = None
         self.logger = logging.getLogger(__name__)
@@ -24,11 +24,11 @@ class MinimizeOptimizer:
             return minimize(function, initial_guess, args=args,
                             method=self.method, bounds=self._bounds,
                             constraints=self.constraints, jac=jac,
-                            options={'disp': True, 'maxiter': 10000, 'catol': 0.002})
+                            options={'disp': False, 'maxiter': 10000, 'catol': 0.002})
         else:
             return minimize(function, initial_guess, args=args,
                             method=self.method, bounds=self._bounds, jac=jac,
-                            options={'disp': True, 'maxiter': 10000, 'catol': 0.002})
+                            options={'disp': False, 'maxiter': 10000, 'catol': 0.002})
 
     def apply_constraints(self, constraints):
         if self.method.lower() in ['cobyla', 'slsqp', 'trust-constr']:

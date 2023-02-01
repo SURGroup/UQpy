@@ -1,7 +1,6 @@
-|AzureDevops| |PyPIdownloads| |PyPI| |CondaSURG| |CondaPlatforms| |GithubRelease| |Binder| |Docs| |bear-ified|
+|AzureDevops| |PyPIdownloads| |PyPI| |CondaPlatforms| |GithubRelease| |Binder| |Docs| |bear-ified|
 
 .. |Docs| image:: https://img.shields.io/readthedocs/uqpy?style=plastic  :alt: Read the Docs
-.. |CondaSURG| image:: https://img.shields.io/conda/vn/SURG_JHU/uqpy?style=plastic   :alt: Conda (channel only)
 .. |CondaPlatforms| image:: https://img.shields.io/conda/pn/SURG_JHU/uqpy?style=plastic   :alt: Conda
 .. |GithubRelease| image:: https://img.shields.io/github/v/release/SURGroup/UQpy?style=plastic   :alt: GitHub release (latest by date)
 .. |AzureDevops| image:: https://img.shields.io/azure-devops/build/UQpy/5ce1851f-e51f-4e18-9eca-91c3ad9f9900/1?style=plastic   :alt: Azure DevOps builds
@@ -35,7 +34,7 @@ Uncertainty Quantification with python (UQpy)
 +                       +                                                                  +
 |                       | Promit Chakroborty, Lukáš Novák, Andrew Solanto                  |
 +-----------------------+------------------------------------------------------------------+
-| **Contributors:**     | Michael Gardner                                                  |
+| **Contributors:**     | Michael Gardner, Prateek Bhustali, Julius Schultz, Ulrich Römer  |
 +-----------------------+------------------------------------------------------------------+
 
 Contact
@@ -61,7 +60,7 @@ Dependencies
 
             * ::
             
-                Python >= 3.6
+                Python >= 3.9
                 Git >= 2.13.1
 
 License
@@ -91,7 +90,6 @@ Using Conda
             * ::
 
                         conda install -c conda-forge uqpy
-                        conda install -c surg_jhu uqpy (latest version)
 
 Clone your fork of the UQpy repo from your GitHub account to your local disk (to get the latest version): 
 

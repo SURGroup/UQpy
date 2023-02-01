@@ -71,7 +71,7 @@ X1_, X2_ = np.meshgrid(X1, X2) # grid of points
 f = function(X1_, X2_)
 
 fig = plt.figure(figsize=(10,6))
-ax = fig.gca(projection='3d')
+ax = fig.add_subplot(projection='3d')
 surf = ax.plot_surface(X1_, X2_, f, rstride=1, cstride=1, cmap='gnuplot2', linewidth=0, antialiased=False)
 ax.set_title('True function')
 ax.set_xlabel('$x_1$', fontsize=15)
@@ -90,7 +90,7 @@ plt.show()
 # %%
 
 fig = plt.figure(figsize=(10,6))
-ax = fig.gca(projection='3d')
+ax = fig.add_subplot(projection='3d')
 ax.scatter(x[:,0], x[:,1], y, s=20, c='r')
 
 ax.set_title('Training data')
@@ -156,7 +156,7 @@ y_test = pce.predict(x_test)
 # %%
 
 fig = plt.figure(figsize=(10,6))
-ax = fig.gca(projection='3d')
+ax = fig.add_subplot(projection='3d')
 ax.scatter(x_test[:,0], x_test[:,1], y_test, s=1)
 
 ax.set_title('PCE predictor')
