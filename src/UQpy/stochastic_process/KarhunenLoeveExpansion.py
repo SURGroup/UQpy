@@ -1,5 +1,4 @@
 from scipy.linalg import sqrtm
-import numpy as np
 from UQpy.utilities import *
 
 
@@ -7,12 +6,13 @@ class KarhunenLoeveExpansion:
     # TODO: Test this for non-stationary processes.
 
     def __init__(
-        self,
-        n_samples: int,
-        correlation_function: np.ndarray,
-        time_interval: Union[np.ndarray, float],
-        threshold: int = None,
-        random_state: RandomStateType = None,
+            self,
+            n_samples: int,
+            correlation_function: np.ndarray,
+            time_interval: Union[np.ndarray, float],
+            threshold: int = None,
+            random_state: RandomStateType = None,
+            random_variables: np.ndarray = None,
     ):
         """
         A class to simulate stochastic processes from a given auto-correlation function based on the Karhunen-Loeve
@@ -23,10 +23,10 @@ class KarhunenLoeveExpansion:
          provided, then the :class:`.KarhunenLoeveExpansion` object is created but samples are not generated.
         :param correlation_function: The correlation function of the stochastic process of size
          :code:`(n_time_intervals, n_time_intervals)`
-        :param time_interval: The length of time discretization.
+        :param time_interval: The length of time interval.
         :param threshold: The threshold number of eigenvalues to be used in the expansion.
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :any:`None`.
-
+        :param random_variables: The random variables used to generate the stochastic process. Default is :any:`None`.
         """
         self.correlation_function = correlation_function
         self.time_interval = time_interval
@@ -46,7 +46,7 @@ class KarhunenLoeveExpansion:
         """The independent gaussian random variables used in the expansion."""
 
         if self.n_samples is not None:
-            self.run(n_samples=self.n_samples)
+            self.run(n_samples=self.n_samples, random_variables=random_variables)
 
     def _simulate(self, xi):
         lam, phi = np.linalg.eig(self.correlation_function)
@@ -60,7 +60,7 @@ class KarhunenLoeveExpansion:
         samples = samples[:, np.newaxis]
         return samples
 
-    def run(self, n_samples: int):
+    def run(self, n_samples: int, random_variables: np.ndarray = None):
         """
         Execute the random sampling in the :class:`.KarhunenLoeveExpansion` class.
 
@@ -85,14 +85,23 @@ class KarhunenLoeveExpansion:
         self.logger.info("UQpy: Stochastic Process: Running Karhunen Loeve Expansion.")
 
         self.logger.info("UQpy: Stochastic Process: Starting simulation of Stochastic Processes.")
-        xi = np.random.normal(size=(self.n_eigenvalues, self.n_samples))
-        samples = self._simulate(xi)
+
+        if random_variables is not None and random_variables.shape == (self.n_eigenvalues, self.n_samples):
+            self.logger.info('UQpy: Stochastic Process: Using user defined random variables')
+        else:
+            self.logger.info('UQpy: Stochastic Process; Using computer generated random variables')
+            random_variables = np.random.normal(size=(self.n_eigenvalues, self.n_samples))
+
+        # xi = np.random.normal(size=(self.n_eigenvalues, self.n_samples))
+        samples = self._simulate(random_variables)
 
         if self.samples is None:
             self.samples = samples
-            self.xi = xi
+            self.random_variables = random_variables
         else:
             self.samples = np.concatenate((self.samples, samples), axis=0)
-            self.xi = np.concatenate((self.xi, xi), axis=0)
+            self.random_variables = np.concatenate((self.random_variables, random_variables), axis=0)
 
         self.logger.info("UQpy: Stochastic Process: Karhunen-Loeve Expansion Complete.")
+
+
