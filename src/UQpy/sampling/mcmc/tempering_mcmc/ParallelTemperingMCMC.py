@@ -82,9 +82,15 @@ class ParallelTemperingMCMC(TemperingMCMC):
                                                         [Normal(scale=1. / np.sqrt(self.tempering_parameters[i]))] *
                                                         sampler.dimension))
 
-        # Initialize algorithm specific inputs: target pdfs
+        # Initialize algorithm outputs
+        self.intermediate_samples = None
+        """List of samples from the intermediate tempering levels. """
+        self.samples = None
+        """ Samples from the target distribution (tempering parameter = 1). """
+        self.log_pdf_values = None
+        """ Log pdf values of saved samples from the target. """
         self.thermodynamic_integration_results = None
-        """Results of the thermodynamic integration (normalization constant). """
+        """ Results of the thermodynamic integration (see method `evaluate_normalization_constant`). """
 
         self.mcmc_samplers = []
         """List of MCMC samplers, one per tempering level. """
@@ -179,12 +185,9 @@ class ParallelTemperingMCMC(TemperingMCMC):
 
         # Samples connect to posterior samples, i.e. the chain with beta=1.
         self.intermediate_samples = [sampler.samples for sampler in self.mcmc_samplers]
-        """List of samples for the intermediate tempering levels. """
         self.samples = self.mcmc_samplers[-1].samples
-        """Samples from the target distribution. """
         if self.save_log_pdf:
             self.log_pdf_values = self.mcmc_samplers[-1].log_pdf_values
-            """Log pdf values for samples from the target. """
 
     @beartype
     def evaluate_normalization_constant(self, compute_potential, log_Z0: float = None, nsamples_from_p0: int = None):
