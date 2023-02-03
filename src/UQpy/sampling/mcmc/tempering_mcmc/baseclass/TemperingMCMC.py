@@ -3,44 +3,29 @@ from abc import ABC
 
 
 class TemperingMCMC(ABC):
-    """
-    Parent class to parallel and sequential tempering MCMC algorithms.
-
-    These algorithms aim at sampling from a target distribution :math:`p_1(x)` of the form
-    :math:`p_1(x)=\frac{q_1(x)p_0(x)}{Z_1}` where the intermediate factor :math:`q_1(x)` and reference distribution
-    :math:`p_0(x)` can be evaluated. Additionally, these algorithms return an estimate of the normalization
-    constant :math:`Z_1=\int{q_{1}(x) p_{0}(x)dx}`.
-
-    The algorithms sample from a sequence of intermediate densities
-    :math:`p_{\beta}(x) \propto q_{\beta}(x) p_{0}(x)` for values of the parameter :math:`\beta` between 0 and 1
-    (:math:`\beta=\frac{1}{T}` where :math:`T` is sometimes called the temperature).
-    Setting :math:`\beta = 1` equates sampling from the target, while :math:`\beta \rightarrow 0` samples from the
-    reference distribution.
-
-    Parallel tempering samples from all distributions simultaneously, and the tempering parameters :math:`\beta` must be
-    chosen in advance by the user. Sequential tempering samples from the various distributions sequentially, starting
-    from the reference distribution, and the tempering parameters are selected adaptively by the algorithm.
-
-    Inputs that are common to both parallel and sequential tempering algorithms are:
-    :param pdf_intermediate: callable that computes the intermediate factor :math:`q_{\beta}(x)`. It should take at
-    least two inputs :code:`x` (ndarray, point(s) at which to evaluate the function), and :code:`temper_param` (float,
-    tempering parameter :math:`\beta`). Either `pdf_intermediate` or `log_pdf_intermediate` must be provided
-    (`log_pdf_intermediate` is preferred). Within the code, the `log_pdf_intermediate` is evaluated as:
-         :code:`log q_{\beta}(x) = log_pdf_intermediate(x, \beta, *args_pdf_intermediate)`
-    where `args_pdf_intermediate` are additional positional arguments that are provided to the class via its
-    `args_pdf_intermediate` input.
-
-    :param log_pdf_intermediate: see `pdf_intermediate`
-    :param args_pdf_intermediate: see `pdf_intermediate`
-
-    :param distribution_reference: reference pdf :math:`p_0` as a :class:`.Distribution` object
-
-    :param save_log_pdf: see same input in :class:`MCMC`
-    :param random_state
-    """
 
     def __init__(self, pdf_intermediate=None, log_pdf_intermediate=None, args_pdf_intermediate=(),
                  distribution_reference=None, save_log_pdf=True, random_state=None):
+        """
+        Parent class to parallel and sequential tempering MCMC algorithms.
+
+        :param pdf_intermediate: callable that computes the intermediate factor. It should take at
+        least two inputs :code:`x` (ndarray, point(s) at which to evaluate the function), and :code:`temper_param` (float,
+        tempering parameter). Either `pdf_intermediate` or `log_pdf_intermediate` must be provided
+        (`log_pdf_intermediate` is preferred). Within the code, the `log_pdf_intermediate` is evaluated as:
+
+             :code:`log_pdf_intermediate(x, temper_param, *args_pdf_intermediate)`
+
+        where `args_pdf_intermediate` are additional positional arguments that are provided to the class via its
+        `args_pdf_intermediate` input
+
+        :param log_pdf_intermediate: see `pdf_intermediate`
+        :param args_pdf_intermediate: see `pdf_intermediate`
+
+        :param distribution_reference: reference pdf :math:`p_0` as a :class:`.Distribution` object
+
+        :param save_log_pdf: see same input in :class:`MCMC`
+        """
         self.logger = logging.getLogger(__name__)
         # Check a few inputs
         self.save_log_pdf = save_log_pdf
