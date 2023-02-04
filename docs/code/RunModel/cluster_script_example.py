@@ -39,7 +39,7 @@ distributions = [Uniform(250.0, 40.0), Uniform(66.0, 24.0)]
 
 # %%
 
-x_lhs = LatinHypercubeSampling(distributions, nsamples=4)
+x_lhs = LatinHypercubeSampling(distributions, nsamples=64)
 
 # %% md
 #
