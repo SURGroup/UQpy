@@ -7,32 +7,6 @@ from UQpy.sampling.mcmc.tempering_mcmc.baseclass.TemperingMCMC import TemperingM
 
 
 class ParallelTemperingMCMC(TemperingMCMC):
-    """
-    Parallel-Tempering MCMC
-
-    This algorithm runs the chains sampling from various tempered distributions in parallel. Periodically during the
-    run, the different temperatures swap members of their ensemble in a way that
-    preserves detailed balance.The chains closer to the reference chain (hot chains) can sample from regions that have
-    low probability under the target and thus allow a better exploration of the parameter space, while the cold chains
-    can better explore the regions of high likelihood.
-
-    **References**
-
-    1. Parallel Tempering: Theory, Applications, and New Perspectives, Earl and Deem
-    2. Adaptive Parallel Tempering MCMC
-    3. emcee the MCMC Hammer python package
-
-    **Inputs:**
-
-    Many inputs are similar to MCMC algorithms. Additional inputs are:
-
-    * **niter_between_sweeps**
-
-    * **mcmc_class**
-
-    **Methods:**
-
-    """
 
     @beartype
     def __init__(self, n_iterations_between_sweeps: PositiveInteger,
@@ -44,6 +18,27 @@ class ParallelTemperingMCMC(TemperingMCMC):
                  tempering_parameters: list = None,
                  n_tempering_parameters: int = None,
                  samplers: Union[MCMC, list[MCMC]] = None):
+
+        """
+        Class for Parallel-Tempering MCMC.
+
+        :param save_log_pdf: boolean, see :class:`MCMC` documentation. Importantly, this needs to be set to True if
+        one wants to evaluate the normalization constant via thermodynamic integration.
+
+        :param n_iterations_between_sweeps: number of iterations (sampling steps) between sweeps between chains.
+
+        :param tempering_parameters: tempering parameters, as a list of N floats increasing from 0. to 1. Either
+        `tempering_parameters` or `n_tempering_parameters` should be provided
+
+        :param n_tempering_parameters: number of tempering levels N, the tempering parameters are selected to follow
+        a geometric suite by default
+
+        :param samplers: :class:`MCMC` object or list of such objects: MCMC samplers used to sample the parallel
+        chains. If only one object is provided, the same MCMC sampler is used for all chains. Default to running a
+        simple MH algorithm, where the proposal covariance for a given chain is inversely proportional to the
+        tempering parameter.
+
+        """
 
         super().__init__(pdf_intermediate=pdf_intermediate, log_pdf_intermediate=log_pdf_intermediate,
                          args_pdf_intermediate=args_pdf_intermediate, distribution_reference=None,
@@ -63,9 +58,9 @@ class ParallelTemperingMCMC(TemperingMCMC):
         self.n_tempering_parameters = n_tempering_parameters
         if self.tempering_parameters is None:
             if self.n_tempering_parameters is None:
-                raise ValueError('UQpy: either input temper_param_list or n_temper_params should be provided.')
+                raise ValueError('UQpy: either input tempering_parameters or n_tempering_parameters should be provided.')
             elif not (isinstance(self.n_tempering_parameters, int) and self.n_tempering_parameters >= 2):
-                raise ValueError('UQpy: input n_temper_params should be a integer >= 2.')
+                raise ValueError('UQpy: input n_tempering_parameters should be a integer >= 2.')
             else:
                 self.tempering_parameters = [1. / np.sqrt(2) ** i for i in
                                              range(self.n_tempering_parameters - 1, -1, -1)]
@@ -74,7 +69,7 @@ class ParallelTemperingMCMC(TemperingMCMC):
                 # or float(self.temperatures[0]) != 1.
         ):
             raise ValueError(
-                'UQpy: temper_param_list should be a list of floats in [0, 1], starting at 0. and increasing to 1.')
+                'UQpy: tempering_parameters should be a list of floats in [0, 1], starting at 0. and increasing to 1.')
         else:
             self.n_tempering_parameters = len(self.tempering_parameters)
 
@@ -87,10 +82,18 @@ class ParallelTemperingMCMC(TemperingMCMC):
                                                         [Normal(scale=1. / np.sqrt(self.tempering_parameters[i]))] *
                                                         sampler.dimension))
 
-        # Initialize algorithm specific inputs: target pdfs
+        # Initialize algorithm outputs
+        self.intermediate_samples = None
+        """List of samples from the intermediate tempering levels. """
+        self.samples = None
+        """ Samples from the target distribution (tempering parameter = 1). """
+        self.log_pdf_values = None
+        """ Log pdf values of saved samples from the target. """
         self.thermodynamic_integration_results = None
+        """ Results of the thermodynamic integration (see method `evaluate_normalization_constant`). """
 
         self.mcmc_samplers = []
+        """List of MCMC samplers, one per tempering level. """
         for i, temper_param in enumerate(self.tempering_parameters):
             log_pdf_target = (lambda x, temper_param=temper_param: self.evaluate_log_reference(
                 x) + self.evaluate_log_intermediate(x, temper_param))
@@ -109,19 +112,14 @@ class ParallelTemperingMCMC(TemperingMCMC):
         """
         Run the MCMC algorithm.
 
-        This function samples from the MCMC chains and appends samples to existing ones (if any). This method leverages
-        the ``run_iterations`` method that is specific to each algorithm.
+        This function samples from the MCMC chains and appends samples to existing ones (if any). This method
+        leverages the `run_iterations` method specific to each of the samplers.
 
-        **Inputs:**
+        :param nsamples: Number of samples to generate from the target (the same number of samples will be generated
+        for all intermediate distributions).
 
-        * **nsamples** (`int`):
-            Number of samples to generate.
-
-        * **nsamples_per_chain** (`int`)
-            Number of samples to generate per chain.
-
-        Either `nsamples` or `nsamples_per_chain` must be provided (not both). Not that if `nsamples` is not a multiple
-        of `nchains`, `nsamples` is set to the next largest integer that is a multiple of `nchains`.
+        :param nsamples_per_chain: Number of samples per chain to generate from the target. Either
+        `nsamples` or `nsamples_per_chain` must be provided (not both)
 
         """
         current_state, current_log_pdf = [], []
@@ -194,26 +192,19 @@ class ParallelTemperingMCMC(TemperingMCMC):
     @beartype
     def evaluate_normalization_constant(self, compute_potential, log_Z0: float = None, nsamples_from_p0: int = None):
         """
-        Evaluate new log free energy as
+        Evaluate normalization constant :math:`Z_1`.
 
-        :math:`\log{Z_{1}} = \log{Z_{0}} + \int_{0}^{1} E_{x~p_{beta}} \left[ U_{\beta}(x) \right] d\beta`
+        The function returns an approximation of :math:`Z_1`, and saves intermediate results
+        (value of :math:`\ln{Z_0}`, list of tempering parameters used in integration, and values of the associated
+        expected potentials.
 
-        References (for the Bayesian case):
-        * https://emcee.readthedocs.io/en/v2.2.1/user/pt/
+        :param compute_potential: Function that takes three inputs: :code:`x` (sample points where to evaluate the
+        potential), :code:`log_factor_tempered_values` (values of the log intermediate factors evaluated at points
+        :code:`x`), :code:`temper_param`(tempering parameter) and evaluates the potential:
 
-        **Inputs:**
+        :param log_Z0: Value of :math:`\ln{Z_{0}}` (float), if unknwon, see `nsamples_from_p0`.
 
-        * **compute_potential** (callable):
-            Function that takes three inputs (`x`, `log_factor_tempered_values`, `beta`) and computes the potential
-            :math:`U_{\beta}(x)`. `log_factor_tempered_values` are the values saved during sampling of
-            :math:`\log{p_{\beta}(x)}` at saved samples x.
-
-        * **log_Z0** (`float`):
-            Value of :math:`\log{Z_{0}}`
-
-        * **nsamples_from_p0** (`int`):
-            N samples from the reference distribution p0. Then :math:`\log{Z_{0}}` is evaluate via MC sampling
-            as :math:`\frac{1}{N} \sum{p_{\beta=0}(x)}`. Used only if input *log_Z0* is not provided.
+        :param nsamples_from_p0: number of samples from the reference distribution to sample to evaluate :math:`\ln{Z_{0}}`. Used only if input `log_Z0` is not provided.
 
         """
         if not self.save_log_pdf:

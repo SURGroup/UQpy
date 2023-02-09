@@ -3,22 +3,29 @@ from abc import ABC
 
 
 class TemperingMCMC(ABC):
-    """
-    Parent class to parallel and sequential tempering MCMC algorithms.
-
-    To sample from the target distribution :math:`p(x)`, a sequence of intermediate densities
-    :math:`p(x, \beta) \propto q(x, \beta) p_{0}(x)` for values of the parameter :math:`\beta` between 0 and 1,
-    where :math:`p_{0}` is a reference distribution (often set as the prior in a Bayesian setting).
-    Setting :math:`\beta = 1` equates sampling from the target, while
-    :math:`\beta \rightarrow 0` samples from the reference distribution.
-
-    **Inputs:**
-
-    **Methods:**
-    """
 
     def __init__(self, pdf_intermediate=None, log_pdf_intermediate=None, args_pdf_intermediate=(),
                  distribution_reference=None, save_log_pdf=True, random_state=None):
+        """
+        Parent class to parallel and sequential tempering MCMC algorithms.
+
+        :param pdf_intermediate: callable that computes the intermediate factor. It should take at
+        least two inputs :code:`x` (ndarray, point(s) at which to evaluate the function), and :code:`temper_param` (float,
+        tempering parameter). Either `pdf_intermediate` or `log_pdf_intermediate` must be provided
+        (`log_pdf_intermediate` is preferred). Within the code, the `log_pdf_intermediate` is evaluated as:
+
+             :code:`log_pdf_intermediate(x, temper_param, *args_pdf_intermediate)`
+
+        where `args_pdf_intermediate` are additional positional arguments that are provided to the class via its
+        `args_pdf_intermediate` input
+
+        :param log_pdf_intermediate: see `pdf_intermediate`
+        :param args_pdf_intermediate: see `pdf_intermediate`
+
+        :param distribution_reference: reference pdf :math:`p_0` as a :class:`.Distribution` object
+
+        :param save_log_pdf: see same input in :class:`MCMC`
+        """
         self.logger = logging.getLogger(__name__)
         # Check a few inputs
         self.save_log_pdf = save_log_pdf
@@ -44,8 +51,8 @@ class TemperingMCMC(ABC):
 
     @abstractmethod
     def evaluate_normalization_constant(self, **kwargs):
-        """ Computes the normalization constant :math:`Z_{1}=\int{q_{1}(x) p_{0}(x)dx}` where p0 is the reference pdf
-         and q1 is the intermediate density with :math:`\beta=1`, thus q1 p0 is the target pdf."""
+        """ Computes the normalization constant :math:`Z_{1}=\int{q_{1}(x) p_{0}(x)dx}` where :math:`p_0` is the
+        reference pdf and :math:`q_1` is the target factor."""
         pass
 
     def _preprocess_reference(self, dist_, **kwargs):
