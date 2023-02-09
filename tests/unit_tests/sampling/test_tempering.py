@@ -1,7 +1,8 @@
 import numpy as np
-from scipy.stats import multivariate_normal
-from UQpy.distributions import Uniform, JointIndependent
-from UQpy.sampling import MetropolisHastings, ParallelTemperingMCMC, SequentialTemperingMCMC
+from scipy.stats import multivariate_normal, uniform
+from UQpy.distributions import Uniform, JointIndependent, MultivariateNormal
+from UQpy.sampling import MetropolisHastings, ParallelTemperingMCMC
+from UQpy.sampling.mcmc.tempering_mcmc.SequentialTemperingMCMC import SequentialTemperingMCMC
 
 
 def log_rosenbrock(x):
@@ -79,4 +80,58 @@ def test_sequential():
                                    sampler=sampler,
                                    nsamples=100)
     assert np.round(test.evidence, 4) == 0.0656
+
+
+def test_sequential_recalculated_weights():
+    prior = JointIndependent(marginals=[Uniform(loc=-2.0, scale=4.0), Uniform(loc=-2.0, scale=4.0)])
+    sampler = MetropolisHastings(dimension=2, n_chains=20)
+    test = SequentialTemperingMCMC(recalculate_weights=True,
+                                   pdf_intermediate=likelihood,
+                                   distribution_reference=prior,
+                                   percentage_resampling=10,
+                                   sampler=sampler,
+                                   nsamples=100,
+                                   random_state=960242069)
+    assert np.round(test.evidence, 4) == 0.0396
+
+
+def test_sequential_evaluate_normalization_constant_method_check():
+    prior = JointIndependent(marginals=[Uniform(loc=-2.0, scale=4.0), Uniform(loc=-2.0, scale=4.0)])
+    sampler = MetropolisHastings(dimension=2, n_chains=20)
+    test = SequentialTemperingMCMC(pdf_intermediate=likelihood,
+                                   distribution_reference=prior,
+                                   percentage_resampling=10,
+                                   sampler=sampler,
+                                   nsamples=100,
+                                   random_state=960242069)
+    assert np.round(test.evaluate_normalization_constant(), 4) == 0.0656
+
+
+def test_sequential_proposal_given():
+    prior = JointIndependent(marginals=[Uniform(loc=-2.0, scale=4.0), Uniform(loc=-2.0, scale=4.0)])
+    sampler = MetropolisHastings(dimension=2, n_chains=20)
+    test = SequentialTemperingMCMC(pdf_intermediate=likelihood,
+                                   resampling_proposal=MultivariateNormal(mean=np.zeros(2), cov=1.0),
+                                   distribution_reference=prior,
+                                   percentage_resampling=10,
+                                   sampler=sampler,
+                                   nsamples=100,
+                                   random_state=960242069)
+    assert np.round(test.evaluate_normalization_constant(), 4) == 0.0656
+
+
+def test_sequential_seed_given():
+    prior = JointIndependent(marginals=[Uniform(loc=-2.0, scale=4.0), Uniform(loc=-2.0, scale=4.0)])
+    sampler = MetropolisHastings(dimension=2, n_chains=20)
+    samps = (np.array([uniform.rvs(loc=-2.0, scale=4.0, size=100, random_state=960242069),
+                      uniform.rvs(loc=-2.0, scale=4.0, size=100, random_state=24969420)]).T)
+    test = SequentialTemperingMCMC(pdf_intermediate=likelihood,
+                                   seed=samps,
+                                   distribution_reference=prior,
+                                   save_intermediate_samples=True,
+                                   percentage_resampling=10,
+                                   sampler=sampler,
+                                   nsamples=100,
+                                   random_state=960242069)
+    assert np.round(test.evaluate_normalization_constant(), 4) == 0.0579
 

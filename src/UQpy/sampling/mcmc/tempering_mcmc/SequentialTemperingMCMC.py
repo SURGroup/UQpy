@@ -36,10 +36,9 @@ class SequentialTemperingMCMC(TemperingMCMC):
     """
 
     @beartype
-    def __init__(self, pdf_intermediate=None, log_pdf_intermediate=None, args_pdf_intermediate=(),
+    def __init__(self, pdf_intermediate=None, log_pdf_intermediate=None, args_pdf_intermediate=(), seed=None,
                  distribution_reference: Distribution = None,
                  sampler: MCMC = None,
-                 seed: list = None,
                  nsamples: PositiveInteger = None,
                  recalculate_weights: bool = False,
                  save_intermediate_samples=False,
@@ -187,7 +186,9 @@ class SequentialTemperingMCMC(TemperingMCMC):
                     weights[i] = np.exp(
                         self.evaluate_log_intermediate(points[i, :].reshape((1, -1)), current_tempering_parameter)
                         - self.evaluate_log_intermediate(points[i, :].reshape((1, -1)), previous_tempering_parameter))
-                    weight_probabilities[i] = weights[i] / w_sum
+                    w_sum = np.sum(weights)
+                    for j in range(nsamples):
+                        weight_probabilities[j] = weights[j] / w_sum
 
             self.logger.info('Begin MCMC')
             mcmc_seed = self._mcmc_seed_generator(resampled_pts=points[0:self.n_resamples, :],
@@ -305,21 +306,20 @@ class SequentialTemperingMCMC(TemperingMCMC):
         * evaluate_log_pdf (callable): Callable that computes the log of the target density function (the prior)
         """
 
-        if dist_ is not None and seed_ is not None:
-            raise ValueError('UQpy: both prior and seed values cannot be provided')
-        elif dist_ is not None:
+        if dist_ is not None:
             if not (isinstance(dist_, Distribution)):
                 raise TypeError('UQpy: A UQpy.Distribution object must be provided.')
-            evaluate_log_pdf = (lambda x: dist_.log_pdf(x))
-            seed_values = dist_.rvs(nsamples=nsamples, random_state=random_state)
-        elif seed_ is not None:
-            if seed_.shape[0] != nsamples or seed_.shape[1] != dimension:
-                raise TypeError('UQpy: the seed values should be a numpy array of size (nsamples, dimension)')
-            seed_values = seed_
-            kernel = stats.gaussian_kde(seed_)
-            evaluate_log_pdf = (lambda x: kernel.logpdf(x))
+            else:
+                evaluate_log_pdf = (lambda x: dist_.log_pdf(x))
+                if seed_ is not None:
+                    if seed_.shape[0] == nsamples and seed_.shape[1] == dimension:
+                        seed_values = seed_
+                    else:
+                        raise TypeError('UQpy: the seed values should be a numpy array of size (nsamples, dimension)')
+                else:
+                    seed_values = dist_.rvs(nsamples=nsamples, random_state=random_state)
         else:
-            raise ValueError('UQpy: either prior distribution or seed values must be provided')
+            raise ValueError('UQpy: prior distribution must be provided')
         return evaluate_log_pdf, seed_values
 
     @staticmethod
