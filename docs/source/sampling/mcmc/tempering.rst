@@ -42,8 +42,8 @@ The :class:`.ParallelTemperingMCMC` class is imported using the following comman
 
 >>> from UQpy.sampling.mcmc.tempering_mcmc.ParallelTemperingMCMC import ParallelTemperingMCMC
 
-.. autoclass:: UQpy.sampling.mcmc.tempering_mcmc.ParallelTemperingMCMC
-    :members:
+.. autoclass:: UQpy.sampling.mcmc.ParallelTemperingMCMC
+    :members: run, evaluate_normalization_constant
 
 Sequential Tempering
 ^^^^^^^^^^^^^^^^^^^^
@@ -58,7 +58,7 @@ and the samples following this distribution are the required samples.
 The normalization constant :math:`Z_1` is estimated as the product of the normalized sums of the resampling weights for
 each intermediate distribution, i.e. if :math:`w_{\beta_j}(x_{j_i})` is the resampling weight corresponding to tempering
 parameter :math:`\beta_j`, calculated for the i-th sample for the intermediate distribution associated with :math:`\beta_j`,
-then :math:`Z_1 = \prod_{j=1}^{N} \left\[ \sum_{i=i}^{\text{nsamples}} \right\]`. The Coefficient of Variance (COV) for this
+then :math:`Z_1 = \prod_{j=1}^{N} \ [ \sum_{i=i}^{\text{nsamples}} \ ]`. The Coefficient of Variance (COV) for this
 estimator is also given in :cite:`STMCMC_ChingChen`.
 
 The :class:`.SequentialTemperingMCMC` class is imported using the following command:
@@ -67,3 +67,10 @@ The :class:`.SequentialTemperingMCMC` class is imported using the following comm
 
 .. autoclass:: UQpy.sampling.mcmc.tempering_mcmc.SequentialTemperingMCMC
     :members:
+
+Examples
+~~~~~~~~~~~~~~~~~~
+
+.. toctree::
+
+   Tempering Examples <../../auto_examples/sampling/tempering/index>

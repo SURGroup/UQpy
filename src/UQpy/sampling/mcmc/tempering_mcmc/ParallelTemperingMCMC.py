@@ -23,20 +23,16 @@ class ParallelTemperingMCMC(TemperingMCMC):
         Class for Parallel-Tempering MCMC.
 
         :param save_log_pdf: boolean, see :class:`MCMC` documentation. Importantly, this needs to be set to True if
-        one wants to evaluate the normalization constant via thermodynamic integration.
-
+         one wants to evaluate the normalization constant via thermodynamic integration.
         :param n_iterations_between_sweeps: number of iterations (sampling steps) between sweeps between chains.
-
         :param tempering_parameters: tempering parameters, as a list of N floats increasing from 0. to 1. Either
-        `tempering_parameters` or `n_tempering_parameters` should be provided
-
+         `tempering_parameters` or `n_tempering_parameters` should be provided
         :param n_tempering_parameters: number of tempering levels N, the tempering parameters are selected to follow
-        a geometric suite by default
-
+         a geometric suite by default
         :param samplers: :class:`MCMC` object or list of such objects: MCMC samplers used to sample the parallel
-        chains. If only one object is provided, the same MCMC sampler is used for all chains. Default to running a
-        simple MH algorithm, where the proposal covariance for a given chain is inversely proportional to the
-        tempering parameter.
+         chains. If only one object is provided, the same MCMC sampler is used for all chains. Default to running a
+         simple MH algorithm, where the proposal covariance for a given chain is inversely proportional to the
+         tempering parameter.
 
         """
 
@@ -116,10 +112,9 @@ class ParallelTemperingMCMC(TemperingMCMC):
         leverages the `run_iterations` method specific to each of the samplers.
 
         :param nsamples: Number of samples to generate from the target (the same number of samples will be generated
-        for all intermediate distributions).
-
+         for all intermediate distributions).
         :param nsamples_per_chain: Number of samples per chain to generate from the target. Either
-        `nsamples` or `nsamples_per_chain` must be provided (not both)
+         `nsamples` or `nsamples_per_chain` must be provided (not both)
 
         """
         current_state, current_log_pdf = [], []
@@ -199,12 +194,11 @@ class ParallelTemperingMCMC(TemperingMCMC):
         expected potentials.
 
         :param compute_potential: Function that takes three inputs: :code:`x` (sample points where to evaluate the
-        potential), :code:`log_factor_tempered_values` (values of the log intermediate factors evaluated at points
-        :code:`x`), :code:`temper_param`(tempering parameter) and evaluates the potential:
-
+         potential), :code:`log_factor_tempered_values` (values of the log intermediate factors evaluated at points
+         :code:`x`), :code:`temper_param` (tempering parameter) and evaluates the potential:
         :param log_Z0: Value of :math:`\ln{Z_{0}}` (float), if unknwon, see `nsamples_from_p0`.
-
-        :param nsamples_from_p0: number of samples from the reference distribution to sample to evaluate :math:`\ln{Z_{0}}`. Used only if input `log_Z0` is not provided.
+        :param nsamples_from_p0: number of samples from the reference distribution to sample to evaluate
+         :math:`\ln{Z_{0}}`. Used only if input `log_Z0` is not provided.
 
         """
         if not self.save_log_pdf:

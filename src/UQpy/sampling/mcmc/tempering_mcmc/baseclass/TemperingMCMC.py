@@ -10,20 +10,15 @@ class TemperingMCMC(ABC):
         Parent class to parallel and sequential tempering MCMC algorithms.
 
         :param pdf_intermediate: callable that computes the intermediate factor. It should take at
-        least two inputs :code:`x` (ndarray, point(s) at which to evaluate the function), and :code:`temper_param` (float,
-        tempering parameter). Either `pdf_intermediate` or `log_pdf_intermediate` must be provided
-        (`log_pdf_intermediate` is preferred). Within the code, the `log_pdf_intermediate` is evaluated as:
-
+         least two inputs :code:`x` (ndarray, point(s) at which to evaluate the function), and :code:`temper_param` (float,
+         tempering parameter). Eit  her `pdf_intermediate` or `log_pdf_intermediate` must be provided
+         (`log_pdf_intermediate` is preferred). Within the code, the `log_pdf_intermediate` is evaluated as:
              :code:`log_pdf_intermediate(x, temper_param, *args_pdf_intermediate)`
-
-        where `args_pdf_intermediate` are additional positional arguments that are provided to the class via its
-        `args_pdf_intermediate` input
-
+         where `args_pdf_intermediate` are additional positional arguments that are provided to the class via its
+         `args_pdf_intermediate` input
         :param log_pdf_intermediate: see `pdf_intermediate`
         :param args_pdf_intermediate: see `pdf_intermediate`
-
         :param distribution_reference: reference pdf :math:`p_0` as a :class:`.Distribution` object
-
         :param save_log_pdf: see same input in :class:`MCMC`
         """
         self.logger = logging.getLogger(__name__)

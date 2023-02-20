@@ -27,25 +27,23 @@ class SequentialTemperingMCMC(TemperingMCMC):
         Class for Sequential-Tempering MCMC
 
         :param sampler: :class:`MCMC` object: MCMC samplers used to draw the remaining samples for the intermediate
-        distribution after the resampling step. Default to running a simple MH algorithm, where the proposal covariance
-        is calculated as per the procedure given in Ching and Chen (2007) and Betz et. al. (2016).
-
+         distribution after the resampling step. Default to running a simple MH algorithm, where the proposal covariance
+         is calculated as per the procedure given in Ching and Chen (2007) and Betz et. al. (2016).
         :param recalculate_weights: boolean: To be set to true if the resampling weights are to be recalculated after
-        each point is generated during the resampling step. This is done so that the resampling weights are in accordance
-        with the new sample generated after Metropolis Hastings is used for dispersion to ensure uniqueness of the samples.
-
+         each point is generated during the resampling step. This is done so that the resampling weights are in
+         accordance with the new sample generated after Metropolis Hastings is used for dispersion to ensure uniqueness
+         of the samples.
         :param save_intermediate_samples: boolean: To be set to true to save the samples that are generated according to
-        the intermediate distributions.
-
+         the intermediate distributions.
         :param percentage_resampling: float: Indicates what percentage of samples for a given intermediate distribution
-        are to be generated through resampling from the set of samples generated for the previous intermediate distribution.
-
-        :param resampling_burn_length: int: Burn-in length for the Metropolis Hastings dispersion step to ensure uniqueness.
-
+         are to be generated through resampling from the set of samples generated for the previous intermediate
+         distribution.
+        :param resampling_burn_length: int: Burn-in length for the Metropolis Hastings dispersion step to ensure
+         uniqueness.
         :param resampling_proposal: :class:`.Distribution` object. The proposal distribution for the Metropolis Hastings
-        dispersion step.
-
-        :param resampling_proposal_is_symmetric: boolean: Indicates whether the provided resampling proposal is symmetric.
+         dispersion step.
+        :param resampling_proposal_is_symmetric: boolean: Indicates whether the provided resampling proposal is
+         symmetric.
         """
 
         self.proposal = resampling_proposal
@@ -97,10 +95,11 @@ class SequentialTemperingMCMC(TemperingMCMC):
         Run the MCMC algorithm.
 
         This function samples from each intermediate distribution until samples from the target are generated. Samples
-        cannot be appended to existing samples in this method. It leverages the `run_iterations` method specific to the sampler.
+        cannot be appended to existing samples in this method. It leverages the `run_iterations` method specific to the
+        sampler.
 
         :param nsamples: Number of samples to generate from the target (the same number of samples will be generated
-        for all intermediate distributions).
+         for all intermediate distributions).
 
         """
         self.logger.info('TMCMC Start')
