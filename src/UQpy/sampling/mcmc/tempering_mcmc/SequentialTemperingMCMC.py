@@ -9,37 +9,11 @@ from UQpy.sampling.mcmc.tempering_mcmc.baseclass.TemperingMCMC import TemperingM
 
 
 class SequentialTemperingMCMC(TemperingMCMC):
-    """
-    Sequential-Tempering MCMC
-
-    This algorithm samples from a series of intermediate targets that are each tempered versions of the final/true
-    target. In going from one intermediate distribution to the next, the existing samples are resampled according to
-    some weights (similar to importance sampling). To ensure that there aren't a large number of duplicates, the
-    resampling step is followed by a short (or even single-step) MCMC run that disperses the samples while remaining
-    within the correct intermediate distribution. The final intermediate target is the required target distribution.
-
-    **References**
-
-    1. Ching and Chen, "Transitional Markov Chain Monte Carlo Method for Bayesian Model Updating,
-       Model Class Selection, and Model Averaging", Journal of Engineering Mechanics/ASCE, 2007
-
-    **Inputs:**
-
-    Many inputs are similar to MCMC algorithms. Additional inputs are:
-
-    * **mcmc_class**
-    * **recalc_w**
-    * **nburn_resample**
-    * **nburn_mcmc**
-
-    **Methods:**
-    """
 
     @beartype
-    def __init__(self, pdf_intermediate=None, log_pdf_intermediate=None, args_pdf_intermediate=(),
+    def __init__(self, pdf_intermediate=None, log_pdf_intermediate=None, args_pdf_intermediate=(), seed=None,
                  distribution_reference: Distribution = None,
                  sampler: MCMC = None,
-                 seed: list = None,
                  nsamples: PositiveInteger = None,
                  recalculate_weights: bool = False,
                  save_intermediate_samples=False,
@@ -48,6 +22,32 @@ class SequentialTemperingMCMC(TemperingMCMC):
                  resampling_burn_length: int = 0,
                  resampling_proposal: Distribution = None,
                  resampling_proposal_is_symmetric: bool = True):
+
+        """
+        Class for Sequential-Tempering MCMC
+
+        :param sampler: :class:`MCMC` object: MCMC samplers used to draw the remaining samples for the intermediate
+        distribution after the resampling step. Default to running a simple MH algorithm, where the proposal covariance
+        is calculated as per the procedure given in Ching and Chen (2007) and Betz et. al. (2016).
+
+        :param recalculate_weights: boolean: To be set to true if the resampling weights are to be recalculated after
+        each point is generated during the resampling step. This is done so that the resampling weights are in accordance
+        with the new sample generated after Metropolis Hastings is used for dispersion to ensure uniqueness of the samples.
+
+        :param save_intermediate_samples: boolean: To be set to true to save the samples that are generated according to
+        the intermediate distributions.
+
+        :param percentage_resampling: float: Indicates what percentage of samples for a given intermediate distribution
+        are to be generated through resampling from the set of samples generated for the previous intermediate distribution.
+
+        :param resampling_burn_length: int: Burn-in length for the Metropolis Hastings dispersion step to ensure uniqueness.
+
+        :param resampling_proposal: :class:`.Distribution` object. The proposal distribution for the Metropolis Hastings
+        dispersion step.
+
+        :param resampling_proposal_is_symmetric: boolean: Indicates whether the provided resampling proposal is symmetric.
+        """
+
         self.proposal = resampling_proposal
         self.proposal_is_symmetric = resampling_proposal_is_symmetric
         self.resampling_burn_length = resampling_burn_length
@@ -93,7 +93,16 @@ class SequentialTemperingMCMC(TemperingMCMC):
 
     @beartype
     def run(self, nsamples: PositiveInteger = None):
+        """
+        Run the MCMC algorithm.
 
+        This function samples from each intermediate distribution until samples from the target are generated. Samples
+        cannot be appended to existing samples in this method. It leverages the `run_iterations` method specific to the sampler.
+
+        :param nsamples: Number of samples to generate from the target (the same number of samples will be generated
+        for all intermediate distributions).
+
+        """
         self.logger.info('TMCMC Start')
 
         if self.samples is not None:
@@ -187,7 +196,9 @@ class SequentialTemperingMCMC(TemperingMCMC):
                     weights[i] = np.exp(
                         self.evaluate_log_intermediate(points[i, :].reshape((1, -1)), current_tempering_parameter)
                         - self.evaluate_log_intermediate(points[i, :].reshape((1, -1)), previous_tempering_parameter))
-                    weight_probabilities[i] = weights[i] / w_sum
+                    w_sum = np.sum(weights)
+                    for j in range(nsamples):
+                        weight_probabilities[j] = weights[j] / w_sum
 
             self.logger.info('Begin MCMC')
             mcmc_seed = self._mcmc_seed_generator(resampled_pts=points[0:self.n_resamples, :],
@@ -305,21 +316,20 @@ class SequentialTemperingMCMC(TemperingMCMC):
         * evaluate_log_pdf (callable): Callable that computes the log of the target density function (the prior)
         """
 
-        if dist_ is not None and seed_ is not None:
-            raise ValueError('UQpy: both prior and seed values cannot be provided')
-        elif dist_ is not None:
+        if dist_ is not None:
             if not (isinstance(dist_, Distribution)):
                 raise TypeError('UQpy: A UQpy.Distribution object must be provided.')
-            evaluate_log_pdf = (lambda x: dist_.log_pdf(x))
-            seed_values = dist_.rvs(nsamples=nsamples, random_state=random_state)
-        elif seed_ is not None:
-            if seed_.shape[0] != nsamples or seed_.shape[1] != dimension:
-                raise TypeError('UQpy: the seed values should be a numpy array of size (nsamples, dimension)')
-            seed_values = seed_
-            kernel = stats.gaussian_kde(seed_)
-            evaluate_log_pdf = (lambda x: kernel.logpdf(x))
+            else:
+                evaluate_log_pdf = (lambda x: dist_.log_pdf(x))
+                if seed_ is not None:
+                    if seed_.shape[0] == nsamples and seed_.shape[1] == dimension:
+                        seed_values = seed_
+                    else:
+                        raise TypeError('UQpy: the seed values should be a numpy array of size (nsamples, dimension)')
+                else:
+                    seed_values = dist_.rvs(nsamples=nsamples, random_state=random_state)
         else:
-            raise ValueError('UQpy: either prior distribution or seed values must be provided')
+            raise ValueError('UQpy: prior distribution must be provided')
         return evaluate_log_pdf, seed_values
 
     @staticmethod

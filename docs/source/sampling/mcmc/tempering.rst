@@ -48,6 +48,19 @@ The :class:`.ParallelTemperingMCMC` class is imported using the following comman
 Sequential Tempering
 ^^^^^^^^^^^^^^^^^^^^
 
+This algorithm (first introduced in :cite:`STMCMC_ChingChen`) samples from a series of intermediate targets that are each tempered versions of the final/true
+target. In going from one intermediate distribution to the next, the existing samples are resampled according to
+some weights (similar to importance sampling). To ensure that there aren't a large number of duplicates, the
+resampling step is followed by a short (or even single-step) Metropolis Hastings run that disperses the samples while
+remaining within the correct intermediate distribution. The final intermediate target is the required target distribution,
+and the samples following this distribution are the required samples.
+
+The normalization constant :math:`Z_1` is estimated as the product of the normalized sums of the resampling weights for
+each intermediate distribution, i.e. if :math:`w_{\beta_j}(x_{j_i})` is the resampling weight corresponding to tempering
+parameter :math:`\beta_j`, calculated for the i-th sample for the intermediate distribution associated with :math:`\beta_j`,
+then :math:`Z_1 = \prod_{j=1}^{N} \left\[ \sum_{i=i}^{\text{nsamples}} \right\]`. The Coefficient of Variance (COV) for this
+estimator is also given in :cite:`STMCMC_ChingChen`.
+
 The :class:`.SequentialTemperingMCMC` class is imported using the following command:
 
 >>> from UQpy.sampling.mcmc.tempering_mcmc.SequentialTemperingMCMC import SequentialTemperingMCMC
