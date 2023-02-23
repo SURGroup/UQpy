@@ -106,6 +106,7 @@ The default logging level is set to **ERROR**. The user can change the logging s
    /surrogates/index
    /transformations/index
    /utilities/index
+   architecture.rst
    paper.rst
    bibliography.rst
    news_doc
