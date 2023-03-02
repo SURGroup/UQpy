@@ -10,7 +10,7 @@ Cluster Script Example for Third-party
 # the process is exactly the same for more complicated workflows. The pre-
 # and post-processing is done through `model_script` and `output_script`
 # respectively, while the computationally intensive portion of the workflow
-# is launched in `cluster_script. The example below provides a minimal framework
+# is launched in `cluster_script`. The example below provides a minimal framework
 # from which more complex cases can be constructed.
 #
 # Import the necessary libraries

@@ -3,6 +3,7 @@ import os
 import json
 import numpy as np
 
+
 def addNumbers():
     inputPath = sys.argv[1]
     outputPath = sys.argv[2]
@@ -16,10 +17,11 @@ def addNumbers():
     number2 = data["number2"]
 
     randomAddition = number1 + number2
-    
+
     # Write addition to file
     with open(outputPath, 'w') as outputFile:
-        outputFile.write('{}\n'.format(randomAddition))                
+        outputFile.write('{}\n'.format(randomAddition))
+
 
 if __name__ == '__main__':
     addNumbers()
