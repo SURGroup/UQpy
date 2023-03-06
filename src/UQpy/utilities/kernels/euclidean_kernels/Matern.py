@@ -1,5 +1,5 @@
-from UQpy.surrogates.gaussian_process.kernels.baseclass.Kernel import *
-from scipy.spatial.distance import pdist, cdist, squareform
+from UQpy.utilities.kernels.baseclass.Kernel import *
+from scipy.spatial.distance import cdist
 from scipy.special import gamma, kv
 
 

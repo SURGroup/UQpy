@@ -7,9 +7,8 @@ from beartype import beartype
 from UQpy.utilities.Utilities import process_random_state
 from UQpy.surrogates.baseclass.Surrogate import Surrogate
 from UQpy.utilities.ValidationTypes import RandomStateType
-from UQpy.surrogates.gaussian_process.kernels.baseclass.Kernel import Kernel
+from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 from UQpy.surrogates.gaussian_process.constraints.baseclass.Constraints import ConstraintsGPR
-from UQpy.surrogates.gaussian_process.regression_models.baseclass.Regression import Regression
 
 
 class GaussianProcessRegression(Surrogate):

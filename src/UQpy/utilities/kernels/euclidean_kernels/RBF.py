@@ -1,6 +1,4 @@
-from typing import Union
-
-from UQpy.surrogates.gaussian_process.kernels.baseclass.Kernel import *
+from UQpy.utilities.kernels.baseclass.Kernel import *
 
 
 class RBF(Kernel):
