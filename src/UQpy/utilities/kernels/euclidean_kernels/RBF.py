@@ -1,7 +1,12 @@
-from UQpy.utilities.kernels.baseclass.Kernel import *
+from typing import Union
+
+import numpy as np
+
+from UQpy.utilities.kernels.baseclass.EuclideanKernel import EuclideanKernel
+from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 
 
-class RBF(Kernel):
+class RBF(EuclideanKernel):
     def __init__(self, kernel_parameter: Union[int, float] = 1.0):
         super().__init__(kernel_parameter)
 
@@ -13,4 +18,5 @@ class RBF(Kernel):
         :params s: An array containing input points.
         """
         stack = Kernel.check_samples_and_return_stack(x / self.kernel_parameter, s / self.kernel_parameter)
-        return np.exp(np.sum(-0.5 * (stack ** 2), axis=2))
+        self.kernel_matrix = np.exp(np.sum(-0.5 * (stack ** 2), axis=2))
+        return self.kernel_matrix

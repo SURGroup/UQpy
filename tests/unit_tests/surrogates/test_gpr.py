@@ -1,18 +1,15 @@
 import pytest
 from beartype.roar import BeartypeCallHintPepParamException
 
+from UQpy.utilities.kernels.euclidean_kernels import RBF, Matern
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 from UQpy.utilities.FminCobyla import FminCobyla
 from UQpy.surrogates.gaussian_process.GaussianProcessRegression import GaussianProcessRegression
-# # from UQpy.utilities.strata.Rectangular import Rectangular
-# # from UQpy.sampling.StratifiedSampling import StratifiedSampling
-# # from UQpy.RunModel import RunModel
-# # from UQpy.distributions.collection.Uniform import Uniform
 import numpy as np
 import shutil
 from UQpy.surrogates.gaussian_process.constraints import NonNegative
 from UQpy.surrogates.gaussian_process.regression_models import LinearRegression, ConstantRegression, QuadraticRegression
-from UQpy.surrogates.gaussian_process.kernels import RBF, Matern
+
 
 samples = np.linspace(0, 5, 20).reshape(-1, 1)
 values = np.cos(samples)

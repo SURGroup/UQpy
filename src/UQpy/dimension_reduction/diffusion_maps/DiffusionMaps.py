@@ -16,7 +16,7 @@ from beartype import beartype
 from typing import Annotated, Union
 from beartype.vale import Is
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray, NumpyFloatArray
-from UQpy.utilities.kernels.baseclass import Kernel
+from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 
 
 class DiffusionMaps:

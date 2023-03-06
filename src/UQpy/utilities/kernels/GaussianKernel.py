@@ -1,10 +1,14 @@
+import itertools
+from typing import Tuple
+
 import numpy as np
 import scipy
-import scipy.spatial.distance as sd
+from scipy.spatial.distance import cdist
 
 from UQpy.utilities.ValidationTypes import RandomStateType, Numpy2DFloatArray
 from UQpy.utilities.kernels import EuclideanKernel
 from scipy.spatial.distance import pdist
+import scipy.spatial.distance as sd
 
 
 class GaussianKernel(EuclideanKernel):
@@ -15,26 +19,26 @@ class GaussianKernel(EuclideanKernel):
         k(x_j, x_i) = \exp[-(x_j - xj)^2/4\epsilon]
 
     """
-    def __init__(self, epsilon: float = 1.0):
+    def __init__(self, kernel_parameter: float = 1.0):
         """
         :param epsilon: Scale parameter of the Gaussian kernel
         """
-        super().__init__()
-        self.epsilon = epsilon
+        super().__init__(kernel_parameter=kernel_parameter)
 
-    def kernel_entry(self, xi: Numpy2DFloatArray, xj: Numpy2DFloatArray):
-        """
-        Given two points, this method computes the Gaussian kernel value between those two points
+    def calculate_kernel_matrix(self, x, s):
+        product = [self.element_wise_operation(point_pair)
+                   for point_pair in list(itertools.product(x, s))]
+        self.kernel_matrix = np.array(product).reshape(len(x), len(s))
+        return self.kernel_matrix
 
-        :param xi: First point.
-        :param xj: Second point.
-        :return: Float representing the kernel entry.
-        """
+    def element_wise_operation(self, xi_j: Tuple) -> float:
+        xi, xj = xi_j
+
         if len(xi.shape) == 1:
             d = pdist(np.array([xi, xj]), "sqeuclidean")
         else:
-            d = np.linalg.norm(xi-xj, 'fro') ** 2
-        return np.exp(-d / (2*self.epsilon**2))
+            d = np.linalg.norm(xi - xj, 'fro') ** 2
+        return np.exp(-d / (2 * self.kernel_parameter ** 2))
 
     def optimize_parameters(self, data: np.ndarray, tolerance: float,
                             n_nearest_neighbors: int,

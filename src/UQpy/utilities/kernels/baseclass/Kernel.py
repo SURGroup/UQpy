@@ -12,6 +12,7 @@ class Kernel(ABC):
 
     def __init__(self, kernel_parameter: Union[int, float]):
         self.__kernel_parameter = kernel_parameter
+        self.kernel_matrix=None
 
     @property
     def kernel_parameter(self):
