@@ -68,7 +68,7 @@ class DiffusionMaps:
         if kernel_matrix is not None:
             self.kernel_matrix = kernel_matrix
         elif data is not None and kernel is not None:
-            kernel.calculate_kernel_matrix(points=data)
+            kernel.calculate_kernel_matrix(x=data, s=data)
             self.kernel_matrix = kernel.kernel_matrix
         else:
             raise ValueError("Either `kernel_matrix` or both `data` and `kernel` must be provided")
