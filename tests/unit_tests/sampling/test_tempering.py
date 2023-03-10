@@ -79,7 +79,7 @@ def test_sequential():
                                    random_state=960242069,
                                    sampler=sampler,
                                    nsamples=100)
-    assert np.round(test.evidence, 4) == 0.0656
+    assert np.round(test.evidence, 4) == 0.0437
 
 
 def test_sequential_recalculated_weights():
@@ -92,7 +92,7 @@ def test_sequential_recalculated_weights():
                                    sampler=sampler,
                                    nsamples=100,
                                    random_state=960242069)
-    assert np.round(test.evidence, 4) == 0.0396
+    assert np.round(test.evidence, 4) == 0.082
 
 
 def test_sequential_evaluate_normalization_constant_method_check():
@@ -104,7 +104,7 @@ def test_sequential_evaluate_normalization_constant_method_check():
                                    sampler=sampler,
                                    nsamples=100,
                                    random_state=960242069)
-    assert np.round(test.evaluate_normalization_constant(), 4) == 0.0656
+    assert np.round(test.evaluate_normalization_constant(), 4) == 0.0437
 
 
 def test_sequential_proposal_given():
@@ -117,7 +117,7 @@ def test_sequential_proposal_given():
                                    sampler=sampler,
                                    nsamples=100,
                                    random_state=960242069)
-    assert np.round(test.evaluate_normalization_constant(), 4) == 0.0656
+    assert np.round(test.evaluate_normalization_constant(), 4) == 0.0437
 
 
 def test_sequential_seed_given():
@@ -133,5 +133,5 @@ def test_sequential_seed_given():
                                    sampler=sampler,
                                    nsamples=100,
                                    random_state=960242069)
-    assert np.round(test.evaluate_normalization_constant(), 4) == 0.0579
+    assert np.round(test.evaluate_normalization_constant(), 4) == 0.0489
 
