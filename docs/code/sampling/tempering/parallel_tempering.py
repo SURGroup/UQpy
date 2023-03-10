@@ -2,41 +2,58 @@
 
 Parallel Tempering for Bayesian Inference and Reliability analyses
 ====================================================================
+
 """
 
 # %% md
+#
 # The general framework: one wants to sample from a distribution of the form
 #
-# $$ p_{1}(x) = \frac{q_{1}(x) p_{0}(x)}{Z_{1}} $$
+# .. math:: p_{1}(x)=\dfrac{q_1(x)p_{0}(x)}{Z_{1}}
 #
-# where $q_{1}(x)$ and $p_{0}(x)$ can be evaluated; and potentially estimate the constant $Z_{1}=\int{q_{1}(x) p_{0}(x)dx}$. Parallel tempering introduces a sequence of intermediate distributions:
+# where :math:`q_{1}(x)` and :math:`p_{0}(x)` can be evaluated; and potentially estimate the constant
+# :math:`Z_{1}=\int{q_{1}(x) p_{0}(x)dx}`. Parallel tempering introduces a sequence of intermediate distributions:
 #
-# $$ p_{\beta}(x) \propto q(x, \beta) p_{0}(x) $$
+# .. math:: p_{\beta}(x) \propto q(x, \beta) p_{0}(x)
 #
-# for values of $\beta$ in [0, 1] (note: $\beta$ is $1/T$ where $T$ is often referred as the temperature). Setting $\beta=1$ equates sampling from the target, while $\beta \rightarrow 0$ samples from the reference distribution $p_{0}$. Periodically during the run, the different temperatures swap members of their ensemble in a way that preserves detailed balance. The chains closer to the reference chain (hot chains) can sample from regions that have low probability under the target and thus allow a better exploration of the parameter space, while the cold chains can better explore the regions of high likelihood.
+# for values of :math:`\beta` in [0, 1] (note: :math:`\beta` is :math:`1/T` where :math:`T` is often referred as the
+# temperature). Setting :math:`\beta=1` equates sampling from the target, while :math:`\beta \rightarrow 0` samples from
+# the reference distribution :math:`p_{0}`. Periodically during the run, the different temperatures swap members of
+# their ensemble in a way that preserves detailed balance. The chains closer to the reference chain (hot chains) can
+# sample from regions that have low probability under the target and thus allow a better exploration of the parameter
+# space, while the cold chains can better explore the regions of high likelihood.
 #
-# The normalizing constant $Z_{1}$ is estimated via thermodynamic integration:
+# The normalizing constant :math:`Z_{1}` is estimated via thermodynamic integration:
 #
-# $$ \ln{Z_{\beta=1}} = \ln{Z_{\beta=0}} + \int_{0}^{1} E_{p_{\beta}} \left[ \frac{\partial \ln{q_{\beta}(x)}}{\partial \beta} \right] d\beta = \ln{Z_{\beta=0}} + \int_{0}^{1} E_{p_{\beta}} \left[ U_{\beta}(x) \right] d\beta$$
+# .. math:: \ln{Z_{\beta=1}} = \ln{Z_{\beta=0}} + \int_{0}^{1} E_{p_{\beta}} \left[ \frac{\partial \ln{q_{\beta}(x)}}{\partial \beta} \right] d\beta = \ln{Z_{\beta=0}} + \int_{0}^{1} E_{p_{\beta}} \left[ U_{\beta}(x) \right] d\beta
 #
-# where $\ln{Z_{\beta=0}}=\int{q_{\beta=0}(x) p_{0}(x)dx}$ can be determined by simple MC sampling since $q_{\beta=0}(x)$ is close to the reference distribution $p_{0}$. The function $U_{\beta}(x)=\frac{\partial \ln{q_{\beta}(x)}}{\partial \beta}$ is called the potential, and can be evaluated using posterior samples from $p_{\beta}(x)$.
+# where :math:`\ln{Z_{\beta=0}}=\int{q_{\beta=0}(x) p_{0}(x)dx}` can be determined by simple MC sampling since
+# :math:`q_{\beta=0}(x)` is close to the reference distribution :math:`p_{0}`. The function
+# :math:`U_{\beta}(x)=\frac{\partial \ln{q_{\beta}(x)}}{\partial \beta}` is called the potential, and can be evaluated
+# using posterior samples from :math:`p_{\beta}(x)`.
 #
 # In the code, the user must define:
-# - a function to evaluate the reference distribution $p_{0}(x)$,
-# - a function to evaluate the intermediate factor $q(x, \beta)$ (function that takes in two inputs: x and $\beta$),
-# - if evaluation of $Z_{1}$ is of interest, a function that evaluates the potential $U_{\beta}(x)$, from evaluations of $\ln{(x, \beta)}$ which are saved during the MCMC run for the various chains (different $\beta$ values).
+# - a function to evaluate the reference distribution :math:`p_{0}(x)`,
+# - a function to evaluate the intermediate factor :math:`q(x, \beta)` (function that takes in two inputs: x and
+# :math:`\beta`),
+# - if evaluation of :math:`Z_{1}` is of interest, a function that evaluates the potential :math:`U_{\beta}(x)`, from
+# evaluations of :math:`\ln{(x, \beta)}` which are saved during the MCMC run for the various chains (different
+# :math:`\beta` values).
 #
 # Bayesian inference
 #
-# In the Bayesian setting, $p_{0}$ is the prior and, given a likelihood $L(data; x)$:
+# In the Bayesian setting, :math:`p_{0}` is the prior and, given a likelihood :math:`L(data; x)`:
 #
-# $$ q_{T}(x) = L(data; x) ^{\beta} $$
+# .. math:: q_{T}(x) = L(data; x) ^{\beta}
 #
 # Then for the model evidence:
 #
-# $$ U_{\beta}(x) = \ln{L(data; x)} $$
-#
+# .. math:: U_{\beta}(x) = \ln{L(data; x)}
+
+
 # %%
+
+
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -72,7 +89,7 @@ def log_target(x):
 
 
 # %% md
-# %%
+#
 
 # estimate evidence
 def estimate_evidence_from_prior_samples(size):
@@ -103,7 +120,7 @@ plt.show()
 print('Evidence computed analytically = {}'.format(estimate_evidence_from_quadrature()[0]))
 
 # %% md
-# %%
+#
 
 from UQpy.sampling.mcmc import MetropolisHastings
 
@@ -208,15 +225,16 @@ ev = mcmc.evaluate_normalization_constant(compute_potential=compute_potential, n
 print('Estimate of evidence by thermodynamic integration = {:.4f}'.format(ev))
 
 # %% md
-# ## Reliability
+# Reliability
+# ------------
+# In a reliability context, :math:`p_{0}` is the pdf of the parameters and we have:
 #
-# In a reliability context, $p_{0}$ is the pdf of the parameters and we have:
+# .. math:: q_{\beta}(x) = I_{\beta}(x) = \frac{1}{1 + \exp{ \left( \frac{G(x)}{1/\beta-1}\right)}}
 #
-# $$ q_{\beta}(x) = I_{\beta}(x) = \frac{1}{1 + \exp{ \left( \frac{G(x)}{1/\beta-1}\right)}} $$
+# where :math:`G(x)` is the performance function, negative if the system fails, and :math:`I_{\beta}(x)` are smoothed
+# versions of the indicator function. Then to compute the probability of failure, the potential can be computed as:
 #
-# where $G(x)$ is the performance function, negative if the system fails, and $I_{\beta}(x)$ are smoothed versions of the indicator function. Then to compute the probability of failure, the potential can be computed as:
-#
-# $$ U_{\beta}(x) = \frac{- \frac{G(x)}{(1-\beta)^2}}{1 + \exp{ \left( -\frac{G(x)}{1/\beta-1} \right) }} = - \frac{1 - I_{\beta}(x)}{\beta (1 - \beta)} \ln{ \left[ \frac{1 - I_{\beta}(x)}{I_{\beta}(x)} \right] }$$
+# .. math:: U_{\beta}(x) = \frac{- \frac{G(x)}{(1-\beta)^2}}{1 + \exp{ \left( -\frac{G(x)}{1/\beta-1} \right) }} = - \frac{1 - I_{\beta}(x)}{\beta (1 - \beta)} \ln{ \left[ \frac{1 - I_{\beta}(x)}{I_{\beta}(x)} \right] }
 
 # %%
 

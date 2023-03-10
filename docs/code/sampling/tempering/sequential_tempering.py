@@ -7,39 +7,42 @@ Sequential Tempering for Bayesian Inference and Reliability analyses
 # %% md
 # The general framework: one wants to sample from a distribution of the form
 #
-# \begin{equation}
-#     p_1 \left( x \right) = \frac{q_1 \left( x \right)p_0 \left( x \right)}{Z_1}
-# \end{equation}
+# .. math:: p_1 \left( x \right) = \frac{q_1 \left( x \right)p_0 \left( x \right)}{Z_1}
 #
-# where $ q_1 \left( x \right) $ and $ p_0 \left( x \right) $ can be evaluated; and potentially estimate the constant $ Z_1 = \int q_1 \left( x \right)p_0 \left( x \right) dx $.
+#
+# where :math:`q_1 \left( x \right)` and :math:`p_0 \left( x \right)` can be evaluated; and potentially estimate the
+# constant :math:`Z_1 = \int q_1 \left( x \right)p_0 \left( x \right) dx`.
 #
 # Sequential tempering introduces a sequence of intermediate distributions:
 #
-# \begin{equation}
-#     p_{\beta_j} \left( x \right) \propto q \left( x, \beta_j \right)p_0 \left( x \right)
-# \end{equation}
+# .. math:: p_{\beta_j} \left( x \right) \propto q \left( x, \beta_j \right)p_0 \left( x \right)
 #
-# for values of $ \beta_j $ in $ [0, 1] $. The algorithm starts with $ \beta_0 = 0 $, which samples from the reference distribution $ p_0 $, and ends for some $ j = m $ such that $ \beta_m = 1 $, sampling from the target. First, a set of sample points is generated from $ p_0 = p_{\beta_0} $, and then these are resampled according to some weights $ w_0 $ such that after resampling the points follow $ p_{\beta_1} $. This procedure of resampling is carried out at each intermediate level $ j $ - resampling the points distributed as $ p_{\beta_{j}} $ according to weights $ w_{j} $ such that after resampling, the points are distributed according to $ p_{\beta_{j+1}} $. As the points are sequentially resampled to follow each intermediate distribution, eventually they are resampled from $ p_{\beta_{m-1}} $ to follow $ p_{\beta_{m}} = p_1 $.
+# for values of :math:`\beta_j` in :math:`[0, 1]`. The algorithm starts with :math:`\beta_0 = 0`, which samples
+# from the reference distribution :math:`p_0`, and ends for some :math:`j = m` such that :math:`\beta_m = 1`, sampling
+# from the target. First, a set of sample points is generated from :math:`p_0 = p_{\beta_0}`, and then these are
+# resampled according to some weights :math:`w_0` such that after resampling the points follow :math:`p_{\beta_1}`.
+# This procedure of resampling is carried out at each intermediate level :math:`j` - resampling the points distributed
+# as :math:`p_{\beta_{j}}` according to weights :math:`w_{j}` such that after resampling, the points are distributed
+# according to :math:`p_{\beta_{j+1}}`. As the points are sequentially resampled to follow each intermediate
+# distribution, eventually they are resampled from :math:`p_{\beta_{m-1}}` to follow :math:`p_{\beta_{m}} = p_1`.
 #
 # The weights are calculated as
 #
-# \begin{equation}
-#     w_j = \frac{q \left( x, \beta_{j+1} \right)}{q \left( x, \beta_j \right)}
-# \end{equation}
+# .. math:: w_j = \frac{q \left( x, \beta_{j+1} \right)}{q \left( x, \beta_j \right)}
 #
 # The normalizing constant is calculated during the generation of samples, as
 #
-# \begin{equation}
-#     Z_1 = \prod_{j = 0}^{m-1} \left\{ \frac{\sum_{i = 1}^{N_j} w_j}{N_j} \right\}
-# \end{equation}
+# .. math:: Z_1 = \prod_{j = 0}^{m-1} \left\{ \frac{\sum_{i = 1}^{N_j} w_j}{N_j} \right\}
 #
-# where $ N_j $ is the number of sample points generated from the intermediate distribution $ p_{\beta_j} $.
+# where :math:`N_j` is the number of sample points generated from the intermediate distribution :math:`p_{\beta_j}`.
+
 # %%
 
 # %% md
 # Bayesian Inference
+# -------------------
 #
-# In the Bayesian setting, $ p_0 $ is the prior, and $ q \left( x, \beta_j \right) = \mathcal{L}\left( data, x \right) ^{\beta_j} $
+# In the Bayesian setting, :math:`p_0` is the prior, and :math:`q \left( x, \beta_j \right) = \mathcal{L}\left( data, x \right) ^{\beta_j}`
 
 # %%
 
@@ -145,15 +148,14 @@ plt.title(r'$\beta = $' + str(test.tempering_parameters[-1]))
 plt.show()
 
 # %% md
-#  # Reliability
+#  Reliability
+# -------------------
 #
-# In the reliability context, $ p_0 $ is the pdf of the parameters, and
+# In the reliability context, :math:`p_0` is the pdf of the parameters, and
 #
-# \begin{equation}
-#     q \left( x, \beta_j \right) = I_{\beta_j} \left( x \right) = \frac{1}{1 + \exp{\left( \frac{G \left( x \right)}{\frac{1}{\beta_j} - 1} \right)}}
-# \end{equation}
+# .. math::    q \left( x, \beta_j \right) = I_{\beta_j} \left( x \right) = \frac{1}{1 + \exp{\left( \frac{G \left( x \right)}{\frac{1}{\beta_j} - 1} \right)}}
 #
-# where $ G \left( x \right) $ is the performance function, negative if the system fails, and $ I_{\beta_j} \left( x \right) $ are smoothed versions of the indicator function.
+# where :math:`G \left( x \right)` is the performance function, negative if the system fails, and :math:`I_{\beta_j} \left( x \right)` are smoothed versions of the indicator function.
 
 # %%
 
@@ -211,8 +213,6 @@ def estimate_Pf_0(samples, model_values):
 
 model = RunModel(model=PythonModel(model_script='local_reliability_funcs.py', model_object_name="correlated_gaussian",
                                    b_eff=beff, d=dim))
-# model = RunModel(model_script='TMCMC_test_reliability_fn.py', model_object_name="correlated_gaussian", ntasks=1,
-#                 b_eff=beff, d=dim)
 samples = MultivariateNormal(mean=np.zeros((2,)), cov=np.array([[1, 0.7], [0.7, 1]])).rvs(nsamples=20000)
 model.run(samples=samples, append_samples=False)
 model_values = np.array(model.qoi_list)

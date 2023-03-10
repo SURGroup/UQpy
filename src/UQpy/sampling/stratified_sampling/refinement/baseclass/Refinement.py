@@ -46,7 +46,7 @@ class Refinement(ABC):
     def identify_bins(strata_metrics, points_to_add, random_state):
         bins2break = np.array([])
         points_left = points_to_add
-        while (np.where(strata_metrics == strata_metrics.max())[0].shape[0] < points_left):
+        while np.where(strata_metrics == strata_metrics.max())[0].shape[0] < points_left:
             bin = np.where(strata_metrics == strata_metrics.max())[0]
             bins2break = np.hstack([bins2break, bin])
             strata_metrics[bin] = 0

@@ -47,5 +47,6 @@ the desired functionality. It does not require modification of any existing clas
 
     Spectral Representation Method <spectral_representation>
     Bispectral Representation Method <bispectral_representation>
-    Karhunen Loeve Expansion <karhunen_loeve>
+    Karhunen Loeve Expansion <karhunen_loeve_1d>
+    Karhunen Loeve Expansion 2D <karhunen_loeve_2d>
     Translation Processes <translation>
