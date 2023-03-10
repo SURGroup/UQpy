@@ -131,6 +131,9 @@ class SequentialTemperingMCMC(TemperingMCMC):
         # Looping over all adaptively decided tempering levels
         while current_tempering_parameter < 1:
 
+            # Copy the state of the points array
+            points_copy = np.copy(points)
+
             # Adaptively set the tempering exponent for the current level
             previous_tempering_parameter = current_tempering_parameter
             current_tempering_parameter = self._find_temper_param(previous_tempering_parameter, points,
@@ -176,7 +179,7 @@ class SequentialTemperingMCMC(TemperingMCMC):
 
                 # Resampling from previous tempering level
                 lead_index = int(self.random_state.choice(pts_index, p=weight_probabilities))
-                lead = points[lead_index]
+                lead = points_copy[lead_index]
 
                 # Defining the default proposal
                 if self.proposal_given_flag is False:
@@ -189,7 +192,8 @@ class SequentialTemperingMCMC(TemperingMCMC):
                                        proposal_is_symmetric=self.proposal_is_symmetric)
 
                 # Setting the generated sample in the array
-                points[lead_index] = x.samples
+                points[i] = x.samples
+                points_copy[lead_index] = x.samples
 
                 if self.recalculate_weights:
                     weights[lead_index] = np.exp(
