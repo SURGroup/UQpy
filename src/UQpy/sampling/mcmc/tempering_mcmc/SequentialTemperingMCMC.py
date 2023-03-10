@@ -190,12 +190,12 @@ class SequentialTemperingMCMC(TemperingMCMC):
                                        proposal_is_symmetric=self.proposal_is_symmetric)
 
                 # Setting the generated sample in the array
-                points[i] = x.samples
+                points[lead_index] = x.samples
 
                 if self.recalculate_weights:
-                    weights[i] = np.exp(
-                        self.evaluate_log_intermediate(points[i, :].reshape((1, -1)), current_tempering_parameter)
-                        - self.evaluate_log_intermediate(points[i, :].reshape((1, -1)), previous_tempering_parameter))
+                    weights[lead_index] = np.exp(
+                        self.evaluate_log_intermediate(points[lead_index, :].reshape((1, -1)), current_tempering_parameter)
+                        - self.evaluate_log_intermediate(points[lead_index, :].reshape((1, -1)), previous_tempering_parameter))
                     w_sum = np.sum(weights)
                     for j in range(nsamples):
                         weight_probabilities[j] = weights[j] / w_sum
