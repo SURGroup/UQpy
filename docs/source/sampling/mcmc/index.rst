@@ -75,6 +75,7 @@ List of MCMC algorithms
     DRAM <dram>
     DREAM <dream>
     Stretch <stretch>
+    Tempering MCMC <tempering>
 
 
 Adding New MCMC Algorithms
