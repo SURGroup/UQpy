@@ -31,6 +31,8 @@ try:
 
     # Loop over the number of samples and create input files in a folder in current directory
     for i in range(len(samples)):
+        work_dir = os.path.join(model.model_dir, "run_" + str(i))
+        model._copy_files(work_dir=work_dir)
         new_text = model._find_and_replace_var_names_with_values(samples[i])
         folder_to_write = 'run_' + str(i+n_existing_simulations) + '/InputFiles'
         # Write the new text to the input file
