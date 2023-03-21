@@ -54,8 +54,11 @@ class KarhunenLoeveExpansion2D:
             self.run(n_samples=self.n_samples, random_variables=random_variables)
 
     def _precompute_one_dimensional_correlation_function(self):
-        self.quasi_correlation_function = np.diagonal(self.correlation_function, axis1=0, axis2=1)
-        self.quasi_correlation_function = np.einsum('ij... -> ...ij', self.quasi_correlation_function)
+        self.quasi_correlation_function = np.zeros(
+            [self.correlation_function.shape[1], self.correlation_function.shape[2],
+             self.correlation_function.shape[3]])
+        for i in range(self.correlation_function.shape[0]):
+            self.quasi_correlation_function[i] = self.correlation_function[i, i]
         self.w, self.v = np.linalg.eig(self.quasi_correlation_function)
         if np.linalg.norm(np.imag(self.w)) > 0:
             print('Complex in the eigenvalues, check the positive definiteness')
@@ -76,7 +79,7 @@ class KarhunenLoeveExpansion2D:
         class. If `n_samples` is provided when the :class:`.KarhunenLoeveExpansion2D` object is defined, the :meth:`run`
         method is automatically called. The user may also call the :meth:`run` method directly to generate samples.
         The :meth:`run`` method of the :class:`.KarhunenLoeveExpansion2D` class can be invoked many times and each time
-        the generated samples areappended to the existing samples.
+        the generated samples are appended to the existing samples.
 
         :param n_samples: Number of samples of the stochastic process to be simulated.
          If the :meth:`run` method is invoked multiple times, the newly generated samples will be appended to the
@@ -92,8 +95,6 @@ class KarhunenLoeveExpansion2D:
             assert (random_variables.shape == (self.thresholds[1], self.thresholds[0], n_samples))
         for i in range(self.one_dimensional_correlation_function.shape[0]):
             if self.thresholds is not None:
-                print(self.w.shape)
-                print(self.v.shape)
                 samples += np.einsum('x, xt, nx -> nxt', np.sqrt(self.w[:, i]), self.v[:, :, i],
                                      KarhunenLoeveExpansion(n_samples=n_samples,
                                                             correlation_function=

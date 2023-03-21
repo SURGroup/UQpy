@@ -8,7 +8,7 @@ from beartype import beartype
 from UQpy.distributions import Distribution
 from UQpy.utilities.ValidationTypes import *
 from UQpy.utilities.Utilities import process_random_state
-from abc import ABC
+from abc import ABC, abstractmethod
 
 
 class MCMC(ABC):
@@ -177,29 +177,22 @@ class MCMC(ABC):
         return None
 
     def _unconcatenate_chains(self):
-        self.samples = self.samples.reshape(
-            (-1, self.n_chains, self.dimension), order="C"
-        )
+        self.samples = self.samples.reshape((-1, self.n_chains, self.dimension), order="C")
         if self.save_log_pdf:
-            self.log_pdf_values = self.log_pdf_values.reshape(
-                (-1, self.n_chains), order="C"
-            )
+            self.log_pdf_values = self.log_pdf_values.reshape((-1, self.n_chains), order="C")
         return None
 
     def _initialize_samples(self, nsamples, nsamples_per_chain):
         if ((nsamples is not None) and (nsamples_per_chain is not None)) \
                 or (nsamples is None and nsamples_per_chain is None):
             raise ValueError("UQpy: Either nsamples or nsamples_per_chain must be provided (not both)")
-        if nsamples_per_chain is not None:
-            if not (isinstance(nsamples_per_chain, int) and nsamples_per_chain >= 0):
-                raise TypeError("UQpy: nsamples_per_chain must be an integer >= 0.")
-            nsamples = int(nsamples_per_chain * self.n_chains)
-        else:
+        if nsamples_per_chain is None:
             if not (isinstance(nsamples, int) and nsamples >= 0):
                 raise TypeError("UQpy: nsamples must be an integer >= 0.")
             nsamples_per_chain = int(np.ceil(nsamples / self.n_chains))
-            nsamples = int(nsamples_per_chain * self.n_chains)
-
+        elif not (isinstance(nsamples_per_chain, int) and nsamples_per_chain >= 0):
+            raise TypeError("UQpy: nsamples_per_chain must be an integer >= 0.")
+        nsamples = int(nsamples_per_chain * self.n_chains)
         if self.samples is None:  # very first call of run, set current_state as the seed and initialize self.samples
             self.samples = np.zeros((nsamples_per_chain, self.n_chains, self.dimension))
             if self.save_log_pdf:
@@ -316,3 +309,23 @@ class MCMC(ABC):
                 raise AttributeError("UQpy: The proposal should have a log_pdf or pdf method")
             proposal_distribution.log_pdf = lambda x: np.log(
                 np.maximum(proposal_distribution.pdf(x), 10 ** (-320) * np.ones((x.shape[0],))))
+
+    def __copy__(self, **kwargs):
+        keys = kwargs.keys()
+        attributes = self.__dict__
+        import inspect
+        initializer_parameters = inspect.signature(self.__class__.__init__).parameters.keys()
+
+        for key in attributes.keys():
+            if key not in initializer_parameters:
+                continue
+            new_value = attributes[key] if key not in keys else kwargs[key]
+            if new_value is not None:
+                kwargs[key] = new_value
+
+        if 'seed' in kwargs.keys():
+            kwargs['seed'] = list(kwargs['seed'])
+        if 'nsamples_per_chain' in kwargs.keys() and kwargs['nsamples_per_chain'] == 0:
+            del kwargs['nsamples_per_chain']
+
+        return self.__class__(**kwargs)

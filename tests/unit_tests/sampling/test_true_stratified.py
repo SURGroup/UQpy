@@ -18,6 +18,7 @@ def test_rectangular_sts():
     assert x.samples[9, 1] == 0.5495253722712197
 
 
+
 def test_delaunay_sts():
     marginals = [Exponential(loc=1., scale=1.), Exponential(loc=1., scale=1.)]
     seeds = np.array([[0, 0], [0.4, 0.8], [1, 0], [1, 1]])
