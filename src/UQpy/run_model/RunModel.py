@@ -22,16 +22,21 @@ from typing import Union
 
 import numpy as np
 from beartype import beartype
+from enum import Enum, auto
 
 from UQpy.utilities.ValidationTypes import NumpyFloatArray
+
+class RunType(Enum):
+    LOCAL = auto()
+    CLUSTER = auto()
 
 
 class RunModel:
     # Authors:
-    # B.S. Aakash, Lohit Vandanapu, Michael D.Shields
+    # B.S. Aakash, Lohit Vandanapu, Michael D.Shields, Michael H. Gardner
     #
     # Last
-    # modified: 5 / 8 / 2020 by Michael D.Shields
+    # modified: 8 / 31 / 2022 by Michael H. Gardner
     @beartype
     def __init__(
             self,
@@ -41,6 +46,8 @@ class RunModel:
             cores_per_task: int = 1,
             nodes: int = 1,
             resume: bool = False,
+            run_type: str = 'LOCAL',
+            cluster_script: str = None
     ):
         """
         Run a computational model at specified sample points.
@@ -85,6 +92,9 @@ class RunModel:
         self.model = model
         # Save option for resuming parallel execution
         self.resume = resume
+        # Set location for model runs
+        self.run_type = RunType[run_type]
+        self.cluster_script = cluster_script
 
         self.nodes = nodes
         self.ntasks = ntasks
@@ -189,9 +199,20 @@ class RunModel:
             pickle.dump(self.model, filehandle)
         with open('samples.pkl', 'wb') as filehandle:
             pickle.dump(self.samples, filehandle)
-        os.system(f"mpirun python -m "
-                  f"UQpy.run_model.model_execution.ParallelExecution {self.n_existing_simulations} "
-                  f"{self.n_new_simulations}")
+            
+        if self.run_type is RunType.LOCAL:        
+            os.system(f"mpirun python -m "
+                      f"UQpy.run_model.model_execution.ParallelExecution {self.n_existing_simulations} "
+                      f"{self.n_new_simulations}")
+
+        elif self.run_type is RunType.CLUSTER:
+            if self.cluster_script is None:
+                raise ValueError("\nUQpy: User-provided slurm script not input, please provide this input\n")
+            os.system(f"python -m UQpy.run_model.model_execution.ClusterExecution {self.cores_per_task} "
+                      f"{self.n_new_simulations} {self.n_existing_simulations} {self.cluster_script}")
+        else:
+            raise ValueError("\nUQpy: RunType is not in currently supported list of cluster types\n")            
+        
         with open('qoi.pkl', 'rb') as filehandle:
             results = pickle.load(filehandle)
 
