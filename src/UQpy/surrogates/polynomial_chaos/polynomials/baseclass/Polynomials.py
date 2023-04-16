@@ -26,7 +26,7 @@ class Polynomials:
         self.distributions = distributions
         self.degree = degree + 1
         
-        @staticmethod
+    @staticmethod
     def standardize_sample(x,joint_distribution):
         """
         Static method: Standardize data based on the joint probability distribution.
