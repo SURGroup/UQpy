@@ -1,111 +1,110 @@
 import numpy as np
 import UQpy
-from UQpy.distributions import Uniform, JointIndependent
 from UQpy.surrogates import polynomial_chaos
 from scipy.spatial.distance import cdist
 from beartype import beartype
 
+
 class ThetaCriterionPCE:
     @beartype
-    def __init__(self,surrogates: list):
+    def __init__(self, surrogates: list[UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion]):
         """
-        Active learning for polynomial chaos expansion using Theta criterion balancing between exploration and exploitation.
+        Active learning for polynomial chaos expansion using Theta criterion balancing between exploration and
+         exploitation.
         
         :param surrogates: list of objects of the :py:meth:`UQpy` :class:`PolynomialChaosExpansion` class 
         """
-        
-        self.surrogates=surrogates
-        
-    
-    def run(self, X: np.ndarray, Xcandidate: np.ndarray, nadd=1, WeightsS=None, WeightsSCandidate=None, WeightsPCE=None, Criterium=False):
+
+        self.surrogates = surrogates
+
+    def run(self, existing_samples: np.ndarray, candidate_samples: np.ndarray, nsamples=1, samples_weights=None,
+            candidate_weights=None, pce_weights=None, enable_criterium: bool=False):
 
         """
         Execute the :class:`.ThetaCriterionPCE` active learning.
-        :param X: Samples in existing ED used for construction of pces.
-        :param Xcandidate: Candidate samples for selectiong by Theta criterion.
-        :param WeightsS: Weights associated to X samples (e.g. from Coherence Sampling).
-        :param WeightsSCandidate: Weights associated to candidate samples (e.g. from Coherence Sampling).
-        :param nadd: Number of samples selected from candidate set in a single run of this algorithm
-        :param WeightsPCE: Weights associated to each PCE (e.g. Eigen values from dimension-reduction techniques)
-        
-        The :meth:`run` method is the function that performs iterations in the :class:`.ThetaCriterionPCE` class.
-        The :meth:`run` method of the :class:`.ThetaCriterionPCE` class can be invoked many times for sequential sampling.
-        
-        :return: Position of the best candidate in candidate set. If ``Criterium = True``, values of Theta criterion (variance density, average variance density, geometrical part, total Theta criterion) for all candidates are returned instead of a position. 
-
+        :param existing_samples: Samples in existing ED used for construction of PCEs.
+        :param candidate_samples: Candidate samples for selecting by Theta criterion.
+        :param samples_weights: Weights associated to X samples (e.g. from Coherence Sampling).
+        :param candidate_weights: Weights associated to candidate samples (e.g. from Coherence Sampling).
+        :param nsamples: Number of samples selected from candidate set in a single run of this algorithm
+        :param pce_weights: Weights associated to each PCE (e.g. Eigen values from dimension-reduction techniques)
+         The :meth:`run` method is the function that performs iterations in the :class:`.ThetaCriterionPCE` class.
+         The :meth:`run` method of the :class:`.ThetaCriterionPCE` class can be invoked many times for sequential
+         sampling.
+        :return: Position of the best candidate in candidate set. If ``enable_criterium = True``, values of Theta
+         criterion (variance density, average variance density, geometrical part, total Theta criterion) for all
+         candidates are returned instead of a position.
         """
 
-        pces=self.surrogates
+        pces = self.surrogates
 
-        npce=len(pces)
-        nsimexisting, nvar = X.shape
-        nsimcandidate, nvar = Xcandidate.shape
+        npce = len(pces)
+        nsimexisting, nvar = existing_samples.shape
+        nsimcandidate, nvar = candidate_samples.shape
         l = np.zeros(nsimcandidate)
         criterium = np.zeros(nsimcandidate)
-        if WeightsS is None:
-            WeightsS = np.ones(nsimexisting)
+        if samples_weights is None:
+            samples_weights = np.ones(nsimexisting)
 
-        if WeightsSCandidate is None:
-            WeightsSCandidate = np.ones(nsimcandidate)
-            
-        if WeightsPCE is None:
-            WeightsPCE = np.ones(npce)
+        if candidate_weights is None:
+            candidate_weights = np.ones(nsimcandidate)
 
-        pos=[]
-        
-        for n in range (nadd):
+        if pce_weights is None:
+            pce_weights = np.ones(npce)
 
-            
-            S=polynomial_chaos.Polynomials.standardize_sample(X,pces[0].polynomial_basis.distributions)   
-            Scandidate=polynomial_chaos.Polynomials.standardize_sample(Xcandidate,pces[0].polynomial_basis.distributions)   
+        pos = []
+
+        for n in range(nsamples):
+            S = polynomial_chaos.Polynomials.standardize_sample(existing_samples, pces[0].polynomial_basis.distributions)
+            Scandidate = polynomial_chaos.Polynomials.standardize_sample(candidate_samples,
+                                                                         pces[0].polynomial_basis.distributions)
 
             lengths = cdist(Scandidate, S)
             closestS_pos = np.argmin(lengths, axis=1)
-            closest_valueX = X[closestS_pos]
+            closest_valueX = existing_samples[closestS_pos]
             l = np.nanmin(lengths, axis=1)
-            variance_candidate=0
-            variance_closest=0
+            variance_candidate = 0
+            variance_closest = 0
 
             for i in range(npce):
-                variance_candidatei=0
-                variance_closesti=0
-                pce=pces[i]
-                variance_candidatei = self.LocalVariance(Xcandidate, pce, WeightsSCandidate) 
-                variance_closesti = self.LocalVariance(closest_valueX, pce, WeightsS[closestS_pos]) 
+                variance_candidatei = 0
+                variance_closesti = 0
+                pce = pces[i]
+                variance_candidatei = self._local_variance(candidate_samples, pce, candidate_weights)
+                variance_closesti = self._local_variance(closest_valueX, pce, samples_weights[closestS_pos])
 
-                variance_candidate=variance_candidate+variance_candidatei*WeightsPCE[i]
-                variance_closest=variance_closest+variance_closesti*WeightsPCE[i]
+                variance_candidate = variance_candidate + variance_candidatei * pce_weights[i]
+                variance_closest = variance_closest + variance_closesti * pce_weights[i]
 
             criteriumV = np.sqrt(variance_candidate * variance_closest)
-            criteriumL = l**nvar
+            criteriumL = l ** nvar
             criterium = criteriumV * criteriumL
             pos.append(np.argmax(criterium))
-            X=np.append(X,Xcandidate[pos,:],axis=0)
-            WeightsS=np.append(WeightsS,WeightsSCandidate[pos])
-            
-        if Criterium == False:
-            if nadd==1:
-                pos=pos[0]
+            existing_samples = np.append(existing_samples, candidate_samples[pos, :], axis=0)
+            samples_weights = np.append(samples_weights, candidate_weights[pos])
+
+        if not enable_criterium:
+            if nsamples == 1:
+                pos = pos[0]
             return pos
         else:
             return variance_candidate, criteriumV, criteriumL, criterium
-    
-    
+
     # calculate variance density of PCE for Theta Criterion
-    def LocalVariance(self,coord,pce,Weight=1):
-        Beta=pce.coefficients
-        Beta[0] = 0
+    @staticmethod
+    def _local_variance(coordinates, pce, weight=1):
+        beta = pce.coefficients
+        beta[0] = 0
 
-        # product = PolynomialBasis(LARmultindex, [polynomial], coord)
-        product=pce.polynomial_basis.evaluate_basis(coord)
+        product = pce.polynomial_basis.evaluate_basis(coordinates)
 
-    #         product *= Weight
-        product = np.transpose(np.transpose(product)*Weight)
-        product = product.dot(Beta)
+        product = np.transpose(np.transpose(product) * weight)
+        product = product.dot(beta)
 
-        product = np.sum(product,axis=1)
+        product = np.sum(product, axis=1)
 
-        product= product**2
-        product = product *polynomial_chaos.Polynomials.standardize_pdf(coord,pce.polynomial_basis.distributions)
+        product = product ** 2
+        product = product * polynomial_chaos.Polynomials.standardize_pdf(coordinates,
+                                                                         pce.polynomial_basis.distributions)
 
         return product
