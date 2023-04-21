@@ -382,3 +382,24 @@ def test_21():
 
     assert all((np.argwhere(np.round(pce2_lar_sens.calculate_generalized_total_order_indices(), 3) > 0)
                 == [[0], [2], [3]]))
+    
+def test_22():
+    """
+    Test Active Learning based on Theta Criterion
+    """
+    polynomial_basis = TotalDegreeBasis(dist, max_degree)
+    least_squares = LeastSquareRegression()
+    pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
+    uniform_x=np.zeros((3,1))
+    uniform_x[:,0]=np.array([0,5,10])
+    pce.fit(uniform_x, uniform_x)
+    
+    adapted_x=uniform_x
+    candidates_x=np.zeros((5,1))
+    candidates_x[:,0]=np.array([1.1,4,5.1,6,9])
+    
+    
+    ThetaSampling_complete=ThetaCriterionPCE([pce])
+    pos=ThetaSampling_complete.run(adapted_x,candidates_x,nadd=2)
+    best_candidates=candidates_x[pos,:]
+    assert best_candidates[0,0]==1.1 and best_candidates[1,0]==9
