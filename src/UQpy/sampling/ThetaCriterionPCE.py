@@ -28,6 +28,8 @@ class ThetaCriterionPCE:
         :param candidate_weights: Weights associated to candidate samples (e.g. from Coherence Sampling).
         :param nsamples: Number of samples selected from candidate set in a single run of this algorithm
         :param pce_weights: Weights associated to each PCE (e.g. Eigen values from dimension-reduction techniques)
+        :param enable_criterium: If True, values of Theta criterion (variance density, average variance density, geometrical part, total Theta criterion) for all
+         candidates are returned instead of a positions of best candidates
          The :meth:`run` method is the function that performs iterations in the :class:`.ThetaCriterionPCE` class.
          The :meth:`run` method of the :class:`.ThetaCriterionPCE` class can be invoked many times for sequential
          sampling.
