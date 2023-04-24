@@ -10,7 +10,7 @@ class ThetaCriterionPCE:
     def __init__(self, surrogates: list[UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion]):
         """
         Active learning for polynomial chaos expansion using Theta criterion balancing between exploration and
-         exploitation.
+        exploitation.
         
         :param surrogates: list of objects of the :py:meth:`UQpy` :class:`PolynomialChaosExpansion` class 
         """
@@ -22,6 +22,7 @@ class ThetaCriterionPCE:
 
         """
         Execute the :class:`.ThetaCriterionPCE` active learning.
+
         :param existing_samples: Samples in existing ED used for construction of PCEs.
         :param candidate_samples: Candidate samples for selecting by Theta criterion.
         :param samples_weights: Weights associated to X samples (e.g. from Coherence Sampling).
@@ -43,7 +44,6 @@ class ThetaCriterionPCE:
         npce = len(pces)
         nsimexisting, nvar = existing_samples.shape
         nsimcandidate, nvar = candidate_samples.shape
-        l = np.zeros(nsimcandidate)
         criterium = np.zeros(nsimcandidate)
         if samples_weights is None:
             samples_weights = np.ones(nsimexisting)
@@ -56,31 +56,29 @@ class ThetaCriterionPCE:
 
         pos = []
 
-        for n in range(nsamples):
+        for _ in range(nsamples):
             S = polynomial_chaos.Polynomials.standardize_sample(existing_samples, pces[0].polynomial_basis.distributions)
-            Scandidate = polynomial_chaos.Polynomials.standardize_sample(candidate_samples,
+            s_candidate = polynomial_chaos.Polynomials.standardize_sample(candidate_samples,
                                                                          pces[0].polynomial_basis.distributions)
 
-            lengths = cdist(Scandidate, S)
-            closestS_pos = np.argmin(lengths, axis=1)
-            closest_valueX = existing_samples[closestS_pos]
+            lengths = cdist(s_candidate, S)
+            closest_s_position = np.argmin(lengths, axis=1)
+            closest_value_x = existing_samples[closest_s_position]
             l = np.nanmin(lengths, axis=1)
             variance_candidate = 0
             variance_closest = 0
 
             for i in range(npce):
-                variance_candidatei = 0
-                variance_closesti = 0
                 pce = pces[i]
                 variance_candidatei = self._local_variance(candidate_samples, pce, candidate_weights)
-                variance_closesti = self._local_variance(closest_valueX, pce, samples_weights[closestS_pos])
+                variance_closesti = self._local_variance(closest_value_x, pce, samples_weights[closest_s_position])
 
                 variance_candidate = variance_candidate + variance_candidatei * pce_weights[i]
                 variance_closest = variance_closest + variance_closesti * pce_weights[i]
 
-            criteriumV = np.sqrt(variance_candidate * variance_closest)
-            criteriumL = l ** nvar
-            criterium = criteriumV * criteriumL
+            criterium_v = np.sqrt(variance_candidate * variance_closest)
+            criterium_l = l ** nvar
+            criterium = criterium_v * criterium_l
             pos.append(np.argmax(criterium))
             existing_samples = np.append(existing_samples, candidate_samples[pos, :], axis=0)
             samples_weights = np.append(samples_weights, candidate_weights[pos])
@@ -90,7 +88,7 @@ class ThetaCriterionPCE:
                 pos = pos[0]
             return pos
         else:
-            return variance_candidate, criteriumV, criteriumL, criterium
+            return variance_candidate, criterium_v, criterium_l, criterium
 
     # calculate variance density of PCE for Theta Criterion
     @staticmethod
