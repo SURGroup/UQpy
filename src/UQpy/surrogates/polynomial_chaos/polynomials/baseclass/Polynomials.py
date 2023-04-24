@@ -47,10 +47,8 @@ class Polynomials:
             if type(marginals[i]) == Normal:
                 s[:, i] = Polynomials.standardize_normal(x[:, i], mean=marginals[i].parameters['loc'],
                                                          std=marginals[i].parameters['scale'])
-
-            if type(marginals[i]) == Uniform:
+            elif type(marginals[i]) == Uniform:
                 s[:, i] = Polynomials.standardize_uniform(x[:, i], marginals[i])
-
             else:
                 raise TypeError("standarize_sample is defined only for Uniform and Gaussian marginal distributions")
         return s
@@ -77,7 +75,7 @@ class Polynomials:
         for i in range(inputs_number):
             if type(marginals[i]) == Normal:
                 pdf_val *= (stats.norm.pdf(s[:, i]))
-            if type(marginals[i]) == Uniform:
+            elif type(marginals[i]) == Uniform:
                 pdf_val *= (stats.uniform.pdf(s[:, i], loc=-1, scale=2))
             else:
                 raise TypeError("standardize_pdf is defined only for Uniform and Gaussian marginal distributions")

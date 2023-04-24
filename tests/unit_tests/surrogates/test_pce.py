@@ -405,12 +405,13 @@ def test_22():
     pos = ThetaSampling_complete.run(adapted_x, candidates_x, nsamples=2)
     best_candidates = candidates_x[pos, :]
     assert best_candidates[0, 0] == 1.1 and best_candidates[1, 0] == 9
-    
+
+
 def test_23():
     """
     Test Standardization of sample and associated PDF 
     """
-    dist1 = Uniform(loc=0, scale=10)  
+    dist1 = Uniform(loc=0, scale=10)
     dist2 = Normal(loc=6, scale=2)
     marg = [dist1, dist2]
     joint = JointIndependent(marginals=marg)
@@ -418,22 +419,22 @@ def test_23():
     polynomial_basis = TotalDegreeBasis(joint, max_degree)
     least_squares = LeastSquareRegression()
     pce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
-    X=np.zeros((3, 2))
+    X = np.zeros((3, 2))
     X[:, 1] = np.array([0, 6, 10])
     X[:, 0] = np.array([0, 5, 10])
-    
+
     pce.fit(X, X)
-    
-    standardized_samples=polynomial_chaos.Polynomials.standardize_sample(X,pce.polynomial_basis.distributions)   
-    standardized_pdf=polynomial_chaos.Polynomials.standardize_pdf(X,pce.polynomial_basis.distributions)
-    
+
+    standardized_samples = polynomial_chaos.Polynomials.standardize_sample(X, pce.polynomial_basis.distributions)
+    standardized_pdf = polynomial_chaos.Polynomials.standardize_pdf(X, pce.polynomial_basis.distributions)
+
     ref_sample1 = np.array([-1, 0, 1])
     ref_pdf1 = np.array([0.5, 0.5, 0.5])
     ref_sample2 = np.array([-3, 0, 2])
     ref_pdf2 = stats.norm.pdf(ref_sample2)
-    
+
     ref_sample = np.zeros((3, 2))
     ref_sample[:, 0] = ref_sample1
     ref_sample[:, 1] = ref_sample2
     ref_pdf = ref_pdf1 * ref_pdf2
-    assert (standardized_samples==ref_sample).all() and (standardized_pdf==ref_pdf).all()
+    assert (standardized_samples == ref_sample).all() and (standardized_pdf == ref_pdf).all()
