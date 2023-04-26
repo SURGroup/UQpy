@@ -8,3 +8,4 @@ from UQpy.sampling.ImportanceSampling import ImportanceSampling
 
 from UQpy.sampling.MonteCarloSampling import MonteCarloSampling
 from UQpy.sampling.SimplexSampling import SimplexSampling
+from UQpy.sampling.ThetaCriterionPCE import ThetaCriterionPCE

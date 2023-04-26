@@ -4,7 +4,7 @@ from typing import Union, Callable
 import numpy as np
 import scipy.integrate as integrate
 from beartype import beartype
-
+from scipy import stats as stats
 from UQpy.distributions.baseclass import Distribution
 import warnings
 
@@ -27,6 +27,61 @@ class Polynomials:
         self.degree = degree + 1
 
     @staticmethod
+    def standardize_sample(x, joint_distribution):
+        """
+        Static method: Standardize data based on the joint probability distribution.
+
+        :param x: Input data generated from a joint probability distribution.
+        :param joint_distribution: joint probability distribution from :py:mod:`UQpy` distribution object
+        :return: Standardized data.
+        """
+
+        s = np.zeros(x.shape)
+        inputs_number = len(x[0, :])
+        if inputs_number == 1:
+            marginals = [joint_distribution]
+        else:
+            marginals = joint_distribution.marginals
+
+        for i in range(inputs_number):
+            if type(marginals[i]) == Normal:
+                s[:, i] = Polynomials.standardize_normal(x[:, i], mean=marginals[i].parameters['loc'],
+                                                         std=marginals[i].parameters['scale'])
+            elif type(marginals[i]) == Uniform:
+                s[:, i] = Polynomials.standardize_uniform(x[:, i], marginals[i])
+            else:
+                raise TypeError("standarize_sample is defined only for Uniform and Gaussian marginal distributions")
+        return s
+
+    @staticmethod
+    def standardize_pdf(x, joint_distribution):
+        """
+        Static method: PDF of standardized distributions associated to Hermite or Legendre polynomials.
+
+        :param x: Input data generated from a joint probability distribution
+        :param joint_distribution: joint probability distribution from :py:mod:`UQpy` distribution object
+        :return: Value of standardized PDF calculated for x
+        """
+
+        inputs_number = len(x[0, :])
+        pdf_val = 1
+        s = Polynomials.standardize_sample(x, joint_distribution)
+
+        if inputs_number == 1:
+            marginals = [joint_distribution]
+        else:
+            marginals = joint_distribution.marginals
+
+        for i in range(inputs_number):
+            if type(marginals[i]) == Normal:
+                pdf_val *= (stats.norm.pdf(s[:, i]))
+            elif type(marginals[i]) == Uniform:
+                pdf_val *= (stats.uniform.pdf(s[:, i], loc=-1, scale=2))
+            else:
+                raise TypeError("standardize_pdf is defined only for Uniform and Gaussian marginal distributions")
+        return pdf_val
+
+    @staticmethod
     def standardize_normal(tensor: np.ndarray, mean: float, std: float):
         """
         Static method: Standardize data based on the standard normal distribution :math:`\mathcal{N}(0,1)`.
@@ -46,7 +101,7 @@ class Polynomials:
         return (2 * x - loc - upper) / (upper - loc)
 
     @staticmethod
-    def normalized(degree: int, samples: np.ndarray, a: float, b: float, pdf_st: Callable, p:list):
+    def normalized(degree: int, samples: np.ndarray, a: float, b: float, pdf_st: Callable, p: list):
         """
         Calculates design matrix and normalized polynomials.
 
@@ -111,4 +166,4 @@ class Polynomials:
     def evaluate(self, x: np.ndarray):
         pass
 
-    distribution_to_polynomial = { }
+    distribution_to_polynomial = {}
