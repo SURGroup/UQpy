@@ -106,6 +106,21 @@ at `https://www.open-mpi.org/faq/?category=building <https://www.open-mpi.org/fa
 
 3. Output processing in the parallel case is performed after every individual run.
 
+Parallel Cluster Execution
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+The :class:`.RunModel` class also supports launching jobs in parallel on HPC clusters. The setup for this execution model is the same for both the Python and
+third-party model workflows; however, the user is also able to provide a cluster-specific script that launches the most computationally intensive portions
+of the simulation using cluster and scheduler specific commands. The pre- and post-processing can be done outside of this cluster-specific portion of the workflow. In order to enable cluster execution, :class:`.RunModel` must be configured as follows:
+
+1. The execution mode most be configured to parallel by setting any or all of ``ntasks``, ``cores_per_task``, or ``nodes`` to a value greater than 1.
+   
+2. The ``RunType`` must be input as ``CLUSTER``
+
+3. The user must provide the ``cluster_script`` input
+
+With this configuration, :class:`RunModel` will launch the computationally intensive portion of the workflow as specified in the ``cluster_script``. The ``cores_per_task``, ``n_new_simulations``, and ``n_existing_simulations`` are passed as command line arguments to
+the ``cluster_script`` when it is launched, so it is the user's responsibility to use these inputs in the provided cluster script to configure the simulations for the specific HPC cluster and scheduler setup.
+
 Directory Structure During Third-Party Model Evaluation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
