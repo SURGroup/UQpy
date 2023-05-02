@@ -129,7 +129,7 @@ Surrogates
 Another module that has extensively restructured in v4 is the surrogates. Apart from the :class:`.SROM` method which
 was retained as an independent algorithm, the previous Kriging functionality was removed. It is now replaced with
 :class:`.GaussianProcessRegression`. The functionality of the Gaussian is constructed using object composition,
-and the specific implementation of :class:`.Regression` and :class:`.Kernel` abstract base classes. An additional
+and the specific implementation of :class:`.Regression` and :class:`Kernel` abstract base classes. An additional
 functionality of constrained surrogates is added by implementing the :class:`.ConstraintsGPR` abstract class. The
 functionality of :class:`.PolynomialChaosExpansion` was rewritten from scratch to address some performance issues of v3.
 The Strategy Design pattern was used here as well, with three abstract base classes :class:`.Polynomials`,
