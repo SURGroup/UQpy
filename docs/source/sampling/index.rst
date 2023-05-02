@@ -17,6 +17,8 @@ The module currently contains the following classes:
 
 - :class:`.AdaptiveKriging`: Class generating samples adaptively using a specified Kriging-based learning function in a general Adaptive Kriging-Monte Carlo Sampling (AKMCS) framework
 
+- :class:`.ThetaCriterionPCE`: Active learning for polynomial chaos expansion using Theta criterion balancing between exploration and exploitation.
+
 - :class:`.MCMC`: The goal of Markov Chain Monte Carlo is to draw samples from some probability distribution which is hard to compute
 
 - :class:`.ImportanceSampling`: Importance sampling (IS) is based on the idea of sampling from an alternate distribution and reweighing the samples to be representative of the target distribution
@@ -31,6 +33,7 @@ The module currently contains the following classes:
     Refined Stratified Sampling <refined_stratified_sampling>
     Simplex Sampling <simplex>
     Adaptive Kriging <akmcs>
+    Theta Criterion <theta_criterion>
     Markov Chain Monte Carlo <mcmc/index>
     Importance Sampling <importance_sampling>
 

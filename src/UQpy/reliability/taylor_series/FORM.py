@@ -303,6 +303,7 @@ class FORM(TaylorSeries):
                 else:
                     k = k + 1
 
+
             elif (self.tol1 is None) and (self.tol2 is not None) and (self.tol3 is not None):
                 error2 = np.linalg.norm(beta[k + 1] - beta[k])
                 error3 = np.linalg.norm(dg_u_record[k + 1, :] - dg_u_record[k, :])
