@@ -25,7 +25,7 @@ author = (
 )
 
 # The full version, including alpha/beta/rc tags
-release = "v4.0.0"
+release = "v4.1.0"
 
 # -- General configuration ---------------------------------------------------
 
@@ -181,7 +181,7 @@ html_theme = "sphinx_rtd_theme"
 html_theme_options = {
     "logo_only": True,
     "style_nav_header_background": "#F0F0F0",
-    "vcs_pageview_mode": "view",
+    # "vcs_pageview_mode": "view",
 }
 
 github_url = "https://github.com/SURGroup/UQpy"
