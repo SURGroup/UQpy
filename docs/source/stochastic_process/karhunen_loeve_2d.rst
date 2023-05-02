@@ -23,7 +23,6 @@ Methods
 Attributes
 """"""""""
 .. autoattribute:: UQpy.stochastic_process.KarhunenLoeveExpansion2D.samples
-.. autoattribute:: UQpy.stochastic_process.KarhunenLoeveExpansion2D.xi
 
 Examples
 """"""""""
