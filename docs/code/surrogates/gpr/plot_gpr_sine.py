@@ -29,13 +29,14 @@ from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Gamma
 import numpy as np
 import matplotlib.pyplot as plt
-from UQpy.surrogates import GaussianProcessRegression, RBF
+from UQpy.surrogates import GaussianProcessRegression
 
 # %% md
 #
 # Create a distribution object.
 
 # %%
+from UQpy.utilities import RBF
 
 marginals = [Gamma(a=2., loc=1., scale=3.)]
 

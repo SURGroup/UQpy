@@ -1,5 +1,5 @@
 Karhunen Loève Expansion for Multi-Dimensional Fields
-----------------------------
+-----------------------------------------------------
 
 The Karhunen Loève Expansion expands the stochastic field as follows:
 
@@ -9,7 +9,7 @@ where :math:`\eta_{nk}(\theta)` are uncorrelated standardized normal random vari
 at :cite:`Kle2D`
 
 KarhunenLoeve2D Class
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 
 The :class:`.KarhunenLoeve2D` class is imported using the following command:
 

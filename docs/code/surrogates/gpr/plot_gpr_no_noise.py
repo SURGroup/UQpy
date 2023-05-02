@@ -19,16 +19,17 @@ Gaussian Process without noise
 
 # %%
 
-import numpy as np
-import matplotlib.pyplot as plt
 import warnings
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 from UQpy.surrogates.gaussian_process.regression_models.LinearRegression import LinearRegression
+from UQpy.utilities import RBF
 
 warnings.filterwarnings('ignore')
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
-from UQpy.utilities.FminCobyla import FminCobyla
-from UQpy.surrogates import GaussianProcessRegression, NonNegative, RBF
+from UQpy.surrogates import GaussianProcessRegression
 
 
 # %% md
