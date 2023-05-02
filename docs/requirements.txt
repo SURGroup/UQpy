@@ -3,3 +3,4 @@
     sphinx_rtd_theme
     sphinx_gallery
     sphinxcontrib_bibtex
+    Sphinx==6.1.3

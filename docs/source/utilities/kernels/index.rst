@@ -20,7 +20,7 @@ The :class:`UQpy.utilities.kernels.baseclass.Kernel` class is imported using the
 >>> from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 
 .. autoclass:: UQpy.utilities.kernels.baseclass.Kernel
-    :members: kernel_entry, optimize_parameters, calculate_kernel_matrix
+    :members: calculate_kernel_matrix
 
 Types of Kernels
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

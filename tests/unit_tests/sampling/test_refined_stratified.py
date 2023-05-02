@@ -1,7 +1,8 @@
 import pytest
 from beartype.roar import BeartypeCallHintPepParamException
 
-from UQpy import GaussianProcessRegression, RBF, LinearRegression
+from UQpy import GaussianProcessRegression, LinearRegression
+from UQpy.utilities.kernels.euclidean_kernels.RBF import RBF
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 from UQpy.sampling.stratified_sampling.refinement.GradientEnhancedRefinement import GradientEnhancedRefinement

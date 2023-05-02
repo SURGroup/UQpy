@@ -9,14 +9,15 @@ Six-hump camel function
 
 .. math:: f(x) = \Big(4-2.1x_1^2 + \frac{x_1^4}{3} \Big)x_1^2 + x_1x_2 + (-4 + 4x_2^2)x_2^2
 
+
 **Description:**  Dimensions: 2
 
 **Input Domain:**  This function is evaluated on the hypercube :math:`x_1 \in [-3, 3], x_2 \in [-2, 2]`.
 
-**Global minimum:** :math:`f(x^*)=-1.0316,` at :math:`x^* = (0.0898, -0.7126)` and
-:math:`(-0.0898, 0.7126)`.
+**Global minimum:** :math:`f(x^*)=-1.0316,` at :math:`x^* = (0.0898, -0.7126)` and :math:`(-0.0898, 0.7126)`.
 
 **Reference:**  Molga, M., & Smutnicki, C. Test functions for optimization needs (2005). Retrieved June 2013, from http://www.zsd.ict.pwr.wroc.pl/files/docs/functions.pdf.
+
 """
 
 # %% md

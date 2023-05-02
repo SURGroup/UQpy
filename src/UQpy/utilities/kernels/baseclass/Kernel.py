@@ -1,52 +1,40 @@
-import itertools
 from abc import ABC, abstractmethod
 from typing import Union
 
 import numpy as np
 
-from UQpy.utilities import GrassmannPoint
-from UQpy.utilities.ValidationTypes import NumpyFloatArray, Numpy2DFloatArray
-
 
 class Kernel(ABC):
     """
-    This is the baseclass for all kernels in :py:mod:`UQpy`.
-
-    This serves as a blueprint to show the methods for kernels implemented in the :py:mod:`.kernels` module .
+    Abstract base class of all Kernels. Serves as a template for creating new Gaussian Process covariance
+    functions.
     """
-    def __init__(self):
-        self.kernel_matrix: np.ndarray = None
-        """Kernel matrix defining the similarity between the points"""
 
-    def calculate_kernel_matrix(self, points: Union[Numpy2DFloatArray, list[GrassmannPoint]]):
-        """
-        Using the kernel-specific :py:meth:`.kernel_entry` method, this function assembles the kernel matrix.
+    def __init__(self, kernel_parameter: Union[int, float]):
+        self.__kernel_parameter = kernel_parameter
+        self.kernel_matrix=None
 
-        :param points: Set of data points. Depending on the type of kernel these should be either :class:`numpy.ndarray`
-            or of type :class:`.GrassmannPoint`.
-        """
-        pass
+    @property
+    def kernel_parameter(self):
+        return self.__kernel_parameter
 
-    def optimize_parameters(self, data: Union[Numpy2DFloatArray, list[GrassmannPoint]], **kwargs_optimization):
-        """
-        This serves as a blueprint function in case a kernel provides the ability to optimize its parameters. In that
-        case, the kernel will override this method, and store the optimized parameters in the kernel's attributes.
+    @kernel_parameter.setter
+    def kernel_parameter(self, value):
+        self.__kernel_parameter = value
 
-        :param data: Set of data points.
-        :param kwargs_optimization: Keyword arguments containing any extra parameters needed to perform the
-            optimization. These will be unique to the specific kernel.
-        """
-        pass
 
     @abstractmethod
-    def kernel_entry(self, xi: Union[Numpy2DFloatArray, GrassmannPoint],
-                     xj: Union[Numpy2DFloatArray, GrassmannPoint]):
+    def calculate_kernel_matrix(self, x, s):
         """
-        Given two points, this method calculates the respective kernel entry. Each concrete kernel implementation must
-        override this method and provide its own implementation.
-
-        :param xi: First point.
-        :param xj: Second point.
-        :return: Float representing the kernel entry.
+        Abstract method that needs to be implemented by the user when creating a new Covariance function.
         """
         pass
+
+    @staticmethod
+    def check_samples_and_return_stack(x, s):
+        x_, s_ = np.atleast_2d(x), np.atleast_2d(s)
+        # Create stack matrix, where each block is x_i with all s
+        stack = np.tile(
+            np.swapaxes(np.atleast_3d(x_), 1, 2), (1, np.size(s_, 0), 1)
+        ) - np.tile(s_, (np.size(x_, 0), 1, 1))
+        return stack
