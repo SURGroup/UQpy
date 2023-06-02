@@ -1,5 +1,8 @@
 from UQpy.distributions import *
 import numpy as np
+import pytest
+import scipy
+
 
 # Test all functions for one type of continuous distribution: uniform
 dist_continuous = Uniform(loc=1., scale=2.)
@@ -81,3 +84,66 @@ def test_update_params_copula():
     copula = Gumbel(theta=2.)
     copula.update_parameters(theta=1.)
     assert copula.get_parameters()['theta'] == 1.
+
+
+# Test function for custom implementation of Uniform PDF and CDF
+@pytest.mark.parametrize("value,expected_probability", [
+    (-4, 0),
+    (0, 1),
+    (0.5, 1),
+    (1, 1),
+    (12, 0),
+    ([-1, 0, 0.5, 1, 2], [0, 1, 1, 1, 0]),
+    ((-1, 0, 0.5, 1, 2), (0, 1, 1, 1, 0)),
+    (np.array([-1, 0, 0.5, 1, 2]), np.array([0, 1, 1, 1, 0]))
+])
+def test_uniform_pdf(value, expected_probability):
+    uniform = Uniform()
+    assert all(uniform.pdf(value) == expected_probability)
+
+
+@pytest.mark.parametrize("value,expected_probability", [
+    (-0.1245, 0),
+    (0.4, 0.4),
+    (3.14159, 1),
+    ([-4, 0.2, 0.75, 1, 6], [0, 0.2, 0.75, 1, 1]),
+    ((-4, 0.2, 0.75, 1, 6), (0, 0.2, 0.75, 1, 1)),
+    (np.array([-4, 0.2, 0.75, 1, 6]), np.array([0, 0.2, 0.75, 1, 1])),
+])
+def test_uniform_cdf(value, expected_probability):
+    uniform = Uniform()
+    assert all(uniform.cdf(value) == expected_probability)
+
+
+@pytest.mark.parametrize("probability,expected_value", [
+    (-1, np.nan),
+    (0, 0),
+    (0.123, 0.123),
+    (1, 1),
+    (1.2, np.nan),
+    ((-0.5, 0, 0.5, 1, 1.5), (np.nan, 0, 0.5, 1, np.nan)),
+    ([-0.5, 0, 0.5, 1, 1.5], [np.nan, 0, 0.5, 1, np.nan]),
+    (np.array([-0.5, 0, 0.5, 1, 1.5]), np.array([np.nan, 0, 0.5, 1, np.nan]))
+])
+def test_uniform_icdf(probability, expected_value):
+    uniform = Uniform()
+    assert np.array_equal(uniform.icdf(probability), np.atleast_1d(expected_value), equal_nan=True)
+
+
+@pytest.mark.parametrize("value", [-3, -2.5, -1, 0, 1, 2.415, 6.168, np.array([-8, -4.13, -1, 0, 2])])
+def test_normal_pdf(value):
+    normal = Normal()
+    assert (np.isclose(normal.pdf(value), scipy.stats.norm.pdf(value))).all()
+
+
+@pytest.mark.parametrize("value", [-4, -2.7, -0.4, 0, 0.4321, 2, 8, np.array([-3, -2, 0, 1, 4])])
+def test_normal_cdf(value):
+    normal = Normal()
+    assert (np.isclose(normal.cdf(value), scipy.stats.norm.cdf(value))).all()
+
+
+@pytest.mark.parametrize("probability", [-1, 0, 1e-9, 0.15, 0.6626, 1-1e-9, 1, 2, np.array([-1, 0, 0.321123, 1, 5])])
+def test_normal_icdf(probability):
+    normal = Normal()
+    expected_value = np.atleast_1d(scipy.stats.norm.ppf(probability))
+    assert np.allclose(normal.icdf(probability), expected_value, equal_nan=True)
