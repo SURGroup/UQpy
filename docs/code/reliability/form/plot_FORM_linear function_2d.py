@@ -17,25 +17,23 @@ variables
 
 #%%
 
-import shutil
-
-from UQpy.run_model.RunModel import RunModel
-from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.distributions import Normal
 from UQpy.reliability import FORM
+from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.model_execution.PythonModel import PythonModel
 
 dist1 = Normal(loc=0., scale=1.)
 dist2 = Normal(loc=0., scale=1.)
 
-model = PythonModel(model_script='pfn.py', model_object_name="example2")
+model = PythonModel(model_script='local_pfn.py', model_object_name="example2")
 RunModelObject2 = RunModel(model=model)
 
 Z = FORM(distributions=[dist1, dist2], runmodel_object=RunModelObject2)
 Z.run()
 
 # print results
-print('Design point in standard normal space: %s' % Z.DesignPoint_U)
-print('Design point in original space: %s' % Z.DesignPoint_X)
+print('Design point in standard normal space: %s' % Z.design_point_u)
+print('Design point in original space: %s' % Z.design_point_x)
 print('Hasofer-Lind reliability index: %s' % Z.beta)
 print('FORM probability of failure: %s' % Z.failure_probability)
 

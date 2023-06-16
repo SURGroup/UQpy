@@ -24,41 +24,40 @@ according to:
 # Initially we have to import the necessary modules.
 
 #%%
-import shutil
 
-import numpy as np
 import matplotlib.pyplot as plt
-from UQpy.run_model.RunModel import RunModel
-from UQpy.run_model.model_execution.PythonModel import PythonModel
+import numpy as np
+
 from UQpy.distributions import Normal
 from UQpy.reliability import FORM
+from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.model_execution.PythonModel import PythonModel
 
-
-model = PythonModel(model_script='pfn.py', model_object_name="example1")
+model = PythonModel(model_script='local_pfn.py', model_object_name="example1")
 RunModelObject = RunModel(model=model)
 
 dist1 = Normal(loc=200., scale=20.)
-dist2 = Normal(loc=150, scale=10.)
-Q = FORM(distributions=[dist1, dist2], runmodel_object=RunModelObject, tol1=1e-5, tol2=1e-5)
+dist2 = Normal(loc=150., scale=10.)
+Q = FORM(distributions=[dist1, dist2], runmodel_object=RunModelObject, tolerance_u=1e-5, tolerance_beta=1e-5)
 Q.run()
 
-
 # print results
-print('Design point in standard normal space: %s' % Q.DesignPoint_U)
-print('Design point in original space: %s' % Q.DesignPoint_X)
+print('Design point in standard normal space: %s' % Q.design_point_u)
+print('Design point in original space: %s' % Q.design_point_x)
 print('Hasofer-Lind reliability index: %s' % Q.beta)
 print('FORM probability of failure: %s' % Q.failure_probability)
-print(Q.dg_u_record)
+print(Q.state_function_gradient_record)
 
 
 # Supporting function
-def multivariate_gaussian(pos, mu, Sigma):
+def multivariate_gaussian(pos, mu, sigma):
     n = mu.shape[0]
-    Sigma_det = np.linalg.det(Sigma)
-    Sigma_inv = np.linalg.inv(Sigma)
-    N = np.sqrt((2 * np.pi) ** n * Sigma_det)
-    fac = np.einsum('...k,kl,...l->...', pos - mu, Sigma_inv, pos - mu)
+    sigma_det = np.linalg.det(sigma)
+    sigma_inv = np.linalg.inv(sigma)
+    N = np.sqrt((2 * np.pi) ** n * sigma_det)
+    fac = np.einsum('...k,kl,...l->...', pos - mu, sigma_inv, pos - mu)
     return np.exp(-fac / 2) / N
+
 
 N = 60
 XX = np.linspace(150, 250, N)
@@ -96,7 +95,7 @@ plt.rcParams["figure.figsize"] = (12, 12)
 plt.rcParams.update({'font.size': 22})
 plt.plot(parameters[0][0], parameters[1][0], 'r.')
 plt.plot([0, 200], [0, 200], 'k', linewidth=5)
-plt.plot(Q.DesignPoint_X[0][0], Q.DesignPoint_X[0][1], 'bo', markersize=12)
+plt.plot(Q.design_point_x[0][0], Q.design_point_x[0][1], 'bo', markersize=12)
 plt.contour(XX, YX, ZX, levels=20)
 plt.xlabel(r'$X_1$')
 plt.ylabel(r'$X_2$')
@@ -116,9 +115,9 @@ plt.show()
 plt.figure()
 plt.rcParams["figure.figsize"] = (12, 12)
 plt.rcParams.update({'font.size': 22})
-plt.plot([0, Q.DesignPoint_U[0][0]], [0, Q.DesignPoint_U[0][1]], 'b', linewidth=2)
+plt.plot([0, Q.design_point_u[0][0]], [0, Q.design_point_u[0][1]], 'b', linewidth=2)
 plt.plot([0, -3], [5, -1], 'k', linewidth=5)
-plt.plot(Q.DesignPoint_U[0][0], Q.DesignPoint_U[0][1], 'bo', markersize=12)
+plt.plot(Q.design_point_u[0][0], Q.design_point_u[0][1], 'bo', markersize=12)
 plt.contour(XU, YU, ZU, levels=20)
 plt.axhline(0, color='black')
 plt.axvline(0, color='black')
