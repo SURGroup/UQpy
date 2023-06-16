@@ -17,9 +17,9 @@ is the norm of the design point known as the Hasofer-Lind reliability index calc
 Hasofer-Lind-Rackwitz-Fiessler (HLRF) algorithm.  The convergence criteria used for HLRF algorithm are:
 
 
-.. math:: e1: ||\textbf{U}^{k} - \textbf{U}^{k-1}||_2 \leq 10^{-3}
-.. math:: e2: ||\beta_{HL}^{k} - \beta_{HL}^{k-1}||_2 \leq 10^{-3}
-.. math:: e3: ||\nabla G(\textbf{U}^{k})- \nabla G(\textbf{U}^{k-1})||_2 \leq 10^{-3}
+.. math:: \text{tolerance}_U:\ ||\textbf{U}^{k} - \textbf{U}^{k-1}||_2 \leq 10^{-3}
+.. math:: \text{tolerance}_\beta:\ ||\beta_{HL}^{k} - \beta_{HL}^{k-1}||_2 \leq 10^{-3}
+.. math:: \text{tolerance}_{\nabla G(U)}:\ ||\nabla G(\textbf{U}^{k})- \nabla G(\textbf{U}^{k-1})||_2 \leq 10^{-3}
 
 
 
@@ -35,29 +35,31 @@ Methods
 Attributes
 """"""""""
 
-.. autoattribute:: UQpy.reliability.taylor_series.FORM.beta
-
-.. autoattribute:: UQpy.reliability.taylor_series.FORM.DesignPoint_U
-
-.. autoattribute:: UQpy.reliability.taylor_series.FORM.DesignPoint_X
-
 .. autoattribute:: UQpy.reliability.taylor_series.FORM.alpha
 
+.. autoattribute:: UQpy.reliability.taylor_series.FORM.alpha_record
+
+.. autoattribute:: UQpy.reliability.taylor_series.FORM.beta
+
+.. autoattribute:: UQpy.reliability.taylor_series.FORM.beta_record
+
+.. autoattribute:: UQpy.reliability.taylor_series.FORM.design_point_u
+
+.. autoattribute:: UQpy.reliability.taylor_series.FORM.design_point_x
+
+.. autoattribute:: UQpy.reliability.taylor_series.FORM.error_record
+
+.. autoattribute:: UQpy.reliability.taylor_series.FORM.failure_probability
+
 .. autoattribute:: UQpy.reliability.taylor_series.FORM.iterations
+
+.. autoattribute:: UQpy.reliability.taylor_series.FORM.state_function_record
+
+.. autoattribute:: UQpy.reliability.taylor_series.FORM.state_function_gradient_record
 
 .. autoattribute:: UQpy.reliability.taylor_series.FORM.u_record
 
 .. autoattribute:: UQpy.reliability.taylor_series.FORM.x_record
-
-.. autoattribute:: UQpy.reliability.taylor_series.FORM.beta_record
-
-.. autoattribute:: UQpy.reliability.taylor_series.FORM.dg_u_record
-
-.. autoattribute:: UQpy.reliability.taylor_series.FORM.alpha_record
-
-.. autoattribute:: UQpy.reliability.taylor_series.FORM.g_record
-
-.. autoattribute:: UQpy.reliability.taylor_series.FORM.error_record
 
 
 Examples
