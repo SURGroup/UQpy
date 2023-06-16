@@ -13,15 +13,12 @@ This example shows how to use the UQpy Grassmann class to compute kernels
 
 # %%
 
-import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+import numpy as np
+
 from UQpy.dimension_reduction.grassmann_manifold.projections.SVDProjection import SVDProjection
-from UQpy.dimension_reduction import GrassmannOperations
 from UQpy.utilities import GrassmannPoint
-from UQpy.utilities.kernels import Kernel, ProjectionKernel
-import sys
+from UQpy.utilities.kernels import ProjectionKernel
 
 # %% md
 #
