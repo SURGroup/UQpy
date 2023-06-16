@@ -113,6 +113,7 @@ class FORM(TaylorSeries):
         self.alpha: float = None
         """Direction cosine."""
         self.failure_probability = None
+        """FORM probability of failure (:math:`\Phi(-\beta)`)"""
         self.x = None
         self.g0 = None
         self.iterations: int = None
