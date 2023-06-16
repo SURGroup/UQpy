@@ -1,5 +1,5 @@
-    UQpy
-    sphinx_autodoc_typehints
-    sphinx_rtd_theme
-    sphinx_gallery
-    sphinxcontrib_bibtex
+UQpy
+sphinx_autodoc_typehints
+sphinx_rtd_theme
+sphinx_gallery
+sphinxcontrib_bibtex
