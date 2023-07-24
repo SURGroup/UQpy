@@ -7,9 +7,9 @@ The benchmark problem is a simple structural reliability problem
 defined in a two-dimensional parameter space consisting of a resistance :math:`R` and a stress :math:`S`. The failure
 happens when the stress is higher than the resistance, leading to the following limit-state function:
 
-.. math:: \textbf{X}=\{R, S\}
+.. math:: \\textbf{X}=\{R, S\}
 
-.. math:: g(\textbf{X}) = R - S
+.. math:: g(\\textbf{X}) = R - S
 
 The two random variables are independent  and  distributed
 according to:

@@ -117,7 +117,7 @@ class FORM(TaylorSeries):
         """Record of the error defined by 
          criteria :math:`\\text{tolerance}_U, \\text{tolerance}_\\beta, \\text{tolerance}_{\\nabla G(U)}`."""
         self.failure_probability: list = []
-        """FORM probability of failure :math:`\Phi(-\\beta)`."""
+        """FORM probability of failure :math:`\\Phi(-\\beta)`."""
         self.g0 = None
         self.iterations: list = []
         """Number of model evaluations."""
