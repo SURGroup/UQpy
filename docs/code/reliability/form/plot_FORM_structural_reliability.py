@@ -90,7 +90,7 @@ posU[:, :, 1] = YU
 ZU = multivariate_gaussian(posU, mu_U, Sigma_U)
 
 # Figure 4a
-plt.figure()
+fig, ax = plt.subplots()
 plt.rcParams["figure.figsize"] = (12, 12)
 plt.rcParams.update({'font.size': 22})
 plt.plot(parameters[0][0], parameters[1][0], 'r.')
@@ -107,12 +107,12 @@ plt.text(170, 182, '$X_1 - X_2=0$',
 plt.ylim([120, 200])
 plt.xlim([130, 240])
 plt.grid()
+ax.set_aspect('equal')
 plt.title('Original space')
-plt.axes().set_aspect('equal', 'box')
 plt.show()
 
 # Figure 4b
-plt.figure()
+fig, ax = plt.subplots()
 plt.rcParams["figure.figsize"] = (12, 12)
 plt.rcParams.update({'font.size': 22})
 plt.plot([0, Q.design_point_u[0][0]], [0, Q.design_point_u[0][1]], 'b', linewidth=2)
@@ -122,7 +122,6 @@ plt.contour(XU, YU, ZU, levels=20)
 plt.axhline(0, color='black')
 plt.axvline(0, color='black')
 plt.plot(0, 0, 'r.')
-
 plt.xlabel(r'$U_1$')
 plt.ylabel(r'$U_2$')
 plt.text(-1.0, 1.1, '$U^\star$=({:1.2f}, {:1.2f})'.format(-2.0, 1.0),
@@ -147,6 +146,6 @@ plt.text(0.02, -0.2, '({:1.1f}, {:1.1f})'.format(0.0, 0.0))
 plt.ylim([-1, 3])
 plt.xlim([-3.5, 2])
 plt.grid()
+ax.set_aspect('equal')
 plt.title('Standard Normal space')
-plt.axes().set_aspect('equal', 'box')
 plt.show()
