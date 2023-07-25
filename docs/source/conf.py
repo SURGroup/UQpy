@@ -25,7 +25,7 @@ author = (
 )
 
 # The full version, including alpha/beta/rc tags
-release = "v4.0.0"
+release = "v4.1.0"
 
 # -- General configuration ---------------------------------------------------
 
@@ -84,6 +84,7 @@ sphinx_gallery_conf = {
         "../code/sampling/mcmc",
         "../code/sampling/tempering",
         "../code/sampling/simplex",
+        "../code/sampling/theta_criterion",
         "../code/sampling/true_stratified_sampling",
         "../code/sampling/refined_stratified_sampling",
         "../code/inference/mle",
@@ -125,6 +126,7 @@ sphinx_gallery_conf = {
         "auto_examples/sampling/mcmc",
         "auto_examples/sampling/tempering",
         "auto_examples/sampling/simplex",
+        "auto_examples/sampling/theta_criterion",
         "auto_examples/sampling/true_stratified_sampling",
         "auto_examples/sampling/refined_stratified_sampling",
         "auto_examples/inference/mle",
@@ -171,7 +173,7 @@ sphinx_gallery_conf = {
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-language = None
+language = "en"
 pygments_style = None
 
 html_theme = "sphinx_rtd_theme"
@@ -179,7 +181,7 @@ html_theme = "sphinx_rtd_theme"
 html_theme_options = {
     "logo_only": True,
     "style_nav_header_background": "#F0F0F0",
-    "vcs_pageview_mode": "view",
+    # "vcs_pageview_mode": "view",
 }
 
 github_url = "https://github.com/SURGroup/UQpy"

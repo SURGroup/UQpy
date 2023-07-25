@@ -13,7 +13,7 @@ class TemperingMCMC(ABC):
          least two inputs :code:`x` (ndarray, point(s) at which to evaluate the function), and :code:`temper_param` (float,
          tempering parameter). Eit  her `pdf_intermediate` or `log_pdf_intermediate` must be provided
          (`log_pdf_intermediate` is preferred). Within the code, the `log_pdf_intermediate` is evaluated as:
-             :code:`log_pdf_intermediate(x, temper_param, *args_pdf_intermediate)`
+         :code:`log_pdf_intermediate(x, temper_param, *args_pdf_intermediate)`
          where `args_pdf_intermediate` are additional positional arguments that are provided to the class via its
          `args_pdf_intermediate` input
         :param log_pdf_intermediate: see `pdf_intermediate`

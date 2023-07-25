@@ -32,13 +32,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
-from UQpy.surrogates import GaussianProcessRegression, Matern
+from UQpy.surrogates import GaussianProcessRegression
 
 # %% md
 #
 # Create a distribution object.
 
 # %%
+from UQpy.utilities import Matern
 
 marginals = [Uniform(loc=0., scale=1.), Uniform(loc=0., scale=1.)]
 
