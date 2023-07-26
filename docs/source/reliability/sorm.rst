@@ -1,7 +1,7 @@
 SORM
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In SORM the performance function is approximated by a second-order Taylor series around the design point according to
+In SORM :cite:`FORM_XDu` the performance function is approximated by a second-order Taylor series around the design point according to
 
 
 .. math:: G(\textbf{U}) = G(\textbf{U}^\star) +  \nabla G(\textbf{U}^\star)(\textbf{U}-\textbf{U}^\star)^\intercal + \frac{1}{2}(\textbf{U}-\textbf{U}^\star)\textbf{H}(\textbf{U}-\textbf{U}^\star)(\textbf{U}-\textbf{U}^\star)^T
