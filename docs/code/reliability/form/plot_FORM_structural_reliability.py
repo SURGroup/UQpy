@@ -19,38 +19,69 @@ according to:
 .. math:: S \sim N(150, 10)
 """
 
-#%% md
+# %% md
 #
 # Initially we have to import the necessary modules.
 
-#%%
+# %%
 
-import matplotlib.pyplot as plt
 import numpy as np
-
+import matplotlib.pyplot as plt
+plt.style.use('ggplot')
 from UQpy.distributions import Normal
 from UQpy.reliability import FORM
 from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 
+
+# %% md
+#
+# Next, we initialize the :code:`RunModel` object.
+# The `local_pfn.py <https://github.com/SURGroup/UQpy/tree/master/docs/code/reliability/sorm>`_ file can be found on
+# the UQpy GitHub. It contains a simple function :code:`example1` to compute the difference between the resistence and the
+# stress.
+
+# %%
+
 model = PythonModel(model_script='local_pfn.py', model_object_name="example1")
-RunModelObject = RunModel(model=model)
+runmodel_object = RunModel(model=model)
 
-dist1 = Normal(loc=200., scale=20.)
-dist2 = Normal(loc=150., scale=10.)
-Q = FORM(distributions=[dist1, dist2], runmodel_object=RunModelObject, tolerance_u=1e-5, tolerance_beta=1e-5)
-Q.run()
+# %% md
+#
+# Now we can define the resistence and stress distributions that will be passed into :code:`FORM`.
+# Along with the distributions, :code:`FORM` takes in the previously defined :code:`runmodel_object` and tolerances
+# for convergences. Since :code:`tolerance_gradient` is not specified in this example, it is not considered.
 
-# print results
-print('Design point in standard normal space: %s' % Q.design_point_u)
-print('Design point in original space: %s' % Q.design_point_x)
-print('Hasofer-Lind reliability index: %s' % Q.beta)
-print('FORM probability of failure: %s' % Q.failure_probability)
-print(Q.state_function_gradient_record)
+# %%
 
+distribution_resistance = Normal(loc=200., scale=20.)
+distribution_stress = Normal(loc=150., scale=10.)
+form = FORM(distributions=[distribution_resistance, distribution_stress], runmodel_object=runmodel_object,
+            tolerance_u=1e-5, tolerance_beta=1e-5)
+# %% md
+#
+# With everything defined we are ready to run the first-order reliability method and print the results.
+# The analytic solution to this problem is :math:`\bm{u}^*=(-2, 1)` with a reliability index of
+# :math:`\beta_{HL}=2.2361` and a probability of failure :math:`P_{f, \text{form}} = \Phi(-\beta_{HL}) = 0.0127`
 
-# Supporting function
+# %%
+
+form.run()
+print('Design point in standard normal space:', form.design_point_u)
+print('Design point in original space:', form.design_point_x)
+print('Hasofer-Lind reliability index:', form.beta)
+print('FORM probability of failure:', form.failure_probability)
+print('FORM record of the function gradient:', form.state_function_gradient_record)
+
+# %% md
+#
+# This problem can be visualized in the following plots that show the FORM results in both :math:`\bm{X}` and
+# :math:`\bm{U}` space.
+
+# %%
+
 def multivariate_gaussian(pos, mu, sigma):
+    """Supporting function"""
     n = mu.shape[0]
     sigma_det = np.linalg.det(sigma)
     sigma_inv = np.linalg.inv(sigma)
@@ -68,84 +99,65 @@ XU = np.linspace(-3, 3, N)
 YU = np.linspace(-3, 3, N)
 XU, YU = np.meshgrid(XU, YU)
 
-# Mean vector and covariance matrix in the original space
-parameters = [[200, 20], [150, 10]]
-mu_X = np.array([parameters[0][0], parameters[1][0]])
-Sigma_X = np.array([[parameters[0][1] ** 2, 0.0], [0.0, parameters[1][1] ** 2]])
 
-# Mean vector and covariance matrix in the standard normal space
-mu_U = np.array([0., 0.])
-Sigma_U = np.array([[1., 0.0], [0.0, 1]])
+# %% md
+#
+# Define the mean vector and covariance matrix in the original :math:`\textbf{X}` space and the standard normal
+# :math:`\textbf{U}` space.
+
+# %%
+mu_X = np.array([distribution_resistance.parameters['loc'], distribution_stress.parameters['loc']])
+sigma_X = np.array([[distribution_resistance.parameters['scale']**2, 0],
+                    [0, distribution_stress.parameters['scale']**2]])
+
+mu_U = np.array([0, 0])
+sigma_U = np.array([[1, 0],
+                    [0, 1]])
 
 # Pack X and Y into a single 3-dimensional array for the original space
 posX = np.empty(XX.shape + (2,))
 posX[:, :, 0] = XX
 posX[:, :, 1] = YX
-ZX = multivariate_gaussian(posX, mu_X, Sigma_X)
+ZX = multivariate_gaussian(posX, mu_X, sigma_X)
 
 # Pack X and Y into a single 3-dimensional array for the standard normal space
 posU = np.empty(XU.shape + (2,))
 posU[:, :, 0] = XU
 posU[:, :, 1] = YU
-ZU = multivariate_gaussian(posU, mu_U, Sigma_U)
+ZU = multivariate_gaussian(posU, mu_U, sigma_U)
 
-# Figure 4a
+# %% md
+#
+# Plot the :code:`FORM` solution in the original :math:`\textbf{X}` space and the standard normal :math:`\text{U}`
+# space.
+
+# %%
 fig, ax = plt.subplots()
-plt.rcParams["figure.figsize"] = (12, 12)
-plt.rcParams.update({'font.size': 22})
-plt.plot(parameters[0][0], parameters[1][0], 'r.')
-plt.plot([0, 200], [0, 200], 'k', linewidth=5)
-plt.plot(Q.design_point_x[0][0], Q.design_point_x[0][1], 'bo', markersize=12)
-plt.contour(XX, YX, ZX, levels=20)
-plt.xlabel(r'$X_1$')
-plt.ylabel(r'$X_2$')
-plt.text(170, 182, '$X_1 - X_2=0$',
-         rotation=45,
-         horizontalalignment='center',
-         verticalalignment='top',
-         multialignment='center')
-plt.ylim([120, 200])
-plt.xlim([130, 240])
-plt.grid()
+ax.contour(XX, YX, ZX,
+           levels=20)
+ax.plot([0, 200], [0, 200],
+        color='black', linewidth=2, label='$G(R,S)=R-S=0$', zorder=1)
+ax.scatter(mu_X[0], mu_X[1],
+           color='black', s=64, label='Mean $(\mu_R, \mu_S)$')
+ax.scatter(form.design_point_x[0][0], form.design_point_x[0][1],
+           color='tab:orange', marker='*', s=100, label='Design Point', zorder=2)
+ax.set(xlabel='Resistence $R$', ylabel='Stress $S$', xlim=(145, 255), ylim=(115, 185))
+ax.set_title('Original $X$ Space ')
 ax.set_aspect('equal')
-plt.title('Original space')
-plt.show()
+ax.legend(loc='lower right')
 
-# Figure 4b
 fig, ax = plt.subplots()
-plt.rcParams["figure.figsize"] = (12, 12)
-plt.rcParams.update({'font.size': 22})
-plt.plot([0, Q.design_point_u[0][0]], [0, Q.design_point_u[0][1]], 'b', linewidth=2)
-plt.plot([0, -3], [5, -1], 'k', linewidth=5)
-plt.plot(Q.design_point_u[0][0], Q.design_point_u[0][1], 'bo', markersize=12)
-plt.contour(XU, YU, ZU, levels=20)
-plt.axhline(0, color='black')
-plt.axvline(0, color='black')
-plt.plot(0, 0, 'r.')
-plt.xlabel(r'$U_1$')
-plt.ylabel(r'$U_2$')
-plt.text(-1.0, 1.1, '$U^\star$=({:1.2f}, {:1.2f})'.format(-2.0, 1.0),
-         rotation=0,
-         horizontalalignment='center',
-         verticalalignment='top',
-         multialignment='center')
-
-plt.text(-2.1, 2.05, '$20U_1 - 10U_2 + 50=0$',
-         rotation=63,
-         horizontalalignment='center',
-         verticalalignment='top',
-         multialignment='center')
-
-plt.text(-1.5, 0.7, r'$\overrightarrow{\beta}$',
-         rotation=0,
-         horizontalalignment='center',
-         verticalalignment='top',
-         multialignment='center')
-
-plt.text(0.02, -0.2, '({:1.1f}, {:1.1f})'.format(0.0, 0.0))
-plt.ylim([-1, 3])
-plt.xlim([-3.5, 2])
-plt.grid()
+ax.contour(XU, YU, ZU,
+           levels=20, zorder=1)
+ax.plot([0, -3], [5, -1],
+        color='black', linewidth=2, label='$G(U_1, U_2)=0$', zorder=2)
+ax.arrow(0, 0, form.design_point_u[0][0], form.design_point_u[0][1],
+         color='tab:blue', length_includes_head=True, width=0.05, label='$\\beta=||u^*||$', zorder=2)
+ax.scatter(form.design_point_u[0][0], form.design_point_u[0][1],
+           color='tab:orange', marker='*', s=100, label='Design Point $u^*$', zorder=2)
+ax.set(xlabel='$U_1$', ylabel='$U_2$', xlim=(-3, 3), ylim=(-3, 3))
 ax.set_aspect('equal')
-plt.title('Standard Normal space')
+ax.set_title('Standard Normal $U$ Space')
+ax.legend(loc='lower right')
+
 plt.show()
