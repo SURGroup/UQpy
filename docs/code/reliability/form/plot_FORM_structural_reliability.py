@@ -3,7 +3,7 @@
 3. FORM - Structural Reliability
 ==============================================
 
-The benchmark problem is a simple structural reliability problem
+The benchmark problem is a simple structural reliability problem (example 7.1 in :cite:`FORM_XDu`)
 defined in a two-dimensional parameter space consisting of a resistance :math:`R` and a stress :math:`S`. The failure
 happens when the stress is higher than the resistance, leading to the following limit-state function:
 
@@ -61,7 +61,7 @@ form = FORM(distributions=[distribution_resistance, distribution_stress], runmod
 # %% md
 #
 # With everything defined we are ready to run the first-order reliability method and print the results.
-# The analytic solution to this problem is :math:`\bm{u}^*=(-2, 1)` with a reliability index of
+# The analytic solution to this problem is :math:`\textbf{u}^*=(-2, 1)` with a reliability index of
 # :math:`\beta_{HL}=2.2361` and a probability of failure :math:`P_{f, \text{form}} = \Phi(-\beta_{HL}) = 0.0127`
 
 # %%
@@ -75,8 +75,8 @@ print('FORM record of the function gradient:', form.state_function_gradient_reco
 
 # %% md
 #
-# This problem can be visualized in the following plots that show the FORM results in both :math:`\bm{X}` and
-# :math:`\bm{U}` space.
+# This problem can be visualized in the following plots that show the FORM results in both :math:`\textbf{X}` and
+# :math:`\textbf{U}` space.
 
 # %%
 

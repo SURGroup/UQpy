@@ -2,7 +2,7 @@ FORM
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-In FORM, the performance function is linearized according to
+In FORM :cite:`FORM_XDu`, the performance function is linearized according to
 
 .. math:: G(\textbf{U})  \approx  G(\textbf{U}^\star) + \nabla G(\textbf{U}^\star)(\textbf{U}-\textbf{U}^\star)^\intercal
 
@@ -17,9 +17,9 @@ is the norm of the design point known as the Hasofer-Lind reliability index calc
 Hasofer-Lind-Rackwitz-Fiessler (HLRF) algorithm.  The convergence criteria used for HLRF algorithm are:
 
 
-.. math:: \text{tolerance}_U:\ ||\textbf{U}^{k} - \textbf{U}^{k-1}||_2 \leq 10^{-3}
+.. math:: \text{tolerance}_{\textbf{U}}:\ ||\textbf{U}^{k} - \textbf{U}^{k-1}||_2 \leq 10^{-3}
 .. math:: \text{tolerance}_\beta:\ ||\beta_{HL}^{k} - \beta_{HL}^{k-1}||_2 \leq 10^{-3}
-.. math:: \text{tolerance}_{\nabla G(U)}:\ ||\nabla G(\textbf{U}^{k})- \nabla G(\textbf{U}^{k-1})||_2 \leq 10^{-3}
+.. math:: \text{tolerance}_{\nabla G(\textbf{U})}:\ ||\nabla G(\textbf{U}^{k})- \nabla G(\textbf{U}^{k-1})||_2 \leq 10^{-3}
 
 
 
