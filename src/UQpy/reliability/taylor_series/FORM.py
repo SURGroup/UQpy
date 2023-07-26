@@ -103,7 +103,7 @@ class FORM(TaylorSeries):
         # Initialize output
         self.alpha: float = np.nan
         """Direction cosine."""
-        self.alpha_record : list = []
+        self.alpha_record: list = []
         """Record of the alpha (directional cosine)."""
         self.beta: list = []
         """Hasofer-Lind reliability index."""
@@ -217,15 +217,16 @@ class FORM(TaylorSeries):
 
             u[k + 1, :] = -beta[k + 1] * self.alpha
 
-            error1 = np.linalg.norm(u[k + 1, :] - u[k, :])
-            error2 = np.linalg.norm(beta[k + 1] - beta[k])
-            error3 = np.linalg.norm(state_function_gradient - state_function_gradient_record[k, :])
-            self.error_record.append([error1, error2, error3])
+            error_u = np.linalg.norm(u[k + 1, :] - u[k, :])
+            error_beta = np.linalg.norm(beta[k + 1] - beta[k])
+            error_gradient = np.linalg.norm(state_function_gradient - state_function_gradient_record[k, :])
+            self.error_record.append([error_u, error_beta, error_gradient])
 
-            converged_in_error1 = True if (self.tolerance_u is None) else (error1 <= self.tolerance_u)
-            converged_in_error2 = True if (self.tolerance_beta is None) else (error2 <= self.tolerance_beta)
-            converged_in_error3 = True if (self.tolerance_gradient is None) else (error3 <= self.tolerance_gradient)
-            converged = converged_in_error1 and converged_in_error2 and converged_in_error3
+            converged_in_u = True if (self.tolerance_u is None) else (error_u <= self.tolerance_u)
+            converged_in_beta = True if (self.tolerance_beta is None) else (error_beta <= self.tolerance_beta)
+            converged_in_gradient = True if (self.tolerance_gradient is None) \
+                else (error_gradient <= self.tolerance_gradient)
+            converged = converged_in_u and converged_in_beta and converged_in_gradient
             if not converged:
                 k += 1
 
