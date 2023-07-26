@@ -115,7 +115,7 @@ class FORM(TaylorSeries):
         """Design point in the parameter space X."""
         self.error_record: list = []
         """Record of the error defined by 
-         criteria :math:`\\text{tolerance}_U, \\text{tolerance}_\\beta, \\text{tolerance}_{\\nabla G(U)}`."""
+         criteria :math:`\\text{tolerance}_\\textbf{U}, \\text{tolerance}_\\beta, \\text{tolerance}_{\\nabla G(\\textbf{U})}`."""
         self.failure_probability: list = []
         """FORM probability of failure :math:`\\Phi(-\\beta)`."""
         self.g0 = None
