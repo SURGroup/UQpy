@@ -43,6 +43,15 @@ def test_seeds_x_is_none(setup):
     np.testing.assert_allclose(form_obj.failure_probability, 0.0126, rtol=1e-02)
 
 
+def test_seed_u_is_none(setup):
+    """ToDo: Fix FORM.run(seed_x=numpy_array) to pass this test"""
+    distributions = [Normal(loc=200, scale=20), Normal(loc=150, scale=10)]
+    form = FORM(distributions=distributions, runmodel_object=setup)
+    seed_x = np.array([225, 140])
+    form.run(seed_x=seed_x)
+    np.testing.assert_allclose(form.failure_probability, 0.0126, rtol=1e-02)
+
+
 def test_tol1_is_not_none(setup):
     path = os.path.abspath(os.path.dirname(__file__))
     os.chdir(path)
