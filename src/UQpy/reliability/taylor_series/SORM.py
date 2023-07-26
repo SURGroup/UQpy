@@ -29,12 +29,12 @@ class SORM(TaylorSeries):
         """
 
         self.logger = logging.getLogger(__name__)
-        """Design point in the parameter space **X**."""
         self.df_step = df_step
-        """Record of the error defined by criteria `e1, e2, e3`."""
+        """Finite difference step in standard normal space."""
 
         self.failure_probability: float = None
-        self.beta_second_order = None
+        """FORM probability of failure :math:`\\Phi(-\\beta_{HL}) \\prod_{i=1}^{n-1} (1+\\beta_{HL}\\kappa_i)^{-\\frac{1}{2}}`."""
+        self.beta_second_order: list = None
         """Hasofer-Lind reliability index using the SORM method."""
         self.call = None
 
@@ -61,25 +61,19 @@ class SORM(TaylorSeries):
         :param distributions: Marginal probability distributions of each random variable. Must be an object of
          type :class:`.DistributionContinuous1D` or :class:`.JointIndependent`.
         :param runmodel_object: The computational model. It should be of type :class:`RunModel`.
-        :param seed_u: The initial starting point in the uncorrelated standard normal space **U** for the `Hasofer-Lind`
-         algorithm.
+        :param seed_x: The initial starting point for the `Hasofer-Lind` algorithm.
          Either `seed_u` or `seed_x` must be provided.
-         Default: :code:`seed_u = (0, 0, ..., 0)`
-         If either `seed_u` or `seed_x` is provided, then the :py:meth:`run` method will be executed automatically.
-         Otherwise, the the :py:meth:`run` method must be executed by the user.
-        :param seed_x: The initial starting point in the parameter space **X** for the `Hasofer-Lind` algorithm.
-         Either `seed_u` or `seed_x` must be provided.
-         If either `seed_u` or `seed_x` is provided, then the :py:meth:`run` method will be executed automatically.
-         Otherwise, the the :py:meth:`run` method must be executed by the user.
+         If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
+         If `seed_x` is provided, it should be a point in the parameter space of **X**.
+        :param seed_u: Either `seed_u` or `seed_x` must be provided.
+         If `seed_u` is provided, it should be a point in the uncorrelated standard normal space of **U**.
+         If `seed_x` is provided, it should be a point in the parameter space of **X**.
         :param df_step: Finite difference step in standard normal space. Default: :math:`0.01`
-        :param corr_z: Covariance matrix
-         If `corr_z` is provided, it is the correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal random
-         vector **Z** .
+        :param corr_x: Covariance matrix
          If `corr_x` is provided, it is the correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
         :param corr_z: Covariance matrix
-         If `corr_x` is provided, it is the correlation matrix (:math:`\mathbf{C_X}`) of the random vector **X** .
          If `corr_z` is provided, it is the correlation matrix (:math:`\mathbf{C_Z}`) of the standard normal random
-         vector **Z** .
+         vector **Z** . Default: `corr_z` is specified as the identity matrix.
          Default: `corr_z` is specified as the identity matrix.
         :param n_iterations: Maximum number of iterations for the `HLRF` algorithm. Default: :math:`100`
         :param tolerance_u: Convergence threshold for criterion :math:`||\mathbf{U}^{k} - \mathbf{U}^{k-1}||_2 \leq`
@@ -91,7 +85,7 @@ class SORM(TaylorSeries):
          of the `HLRF` algorithm. Default: :math:`1.0e-3`
 
         Any number of tolerances can be provided. Only the provided tolerances will be considered for the convergence
-        of the algorithm. In case none of the tolerances is provided then they are considered equal to :math:`1e-3` and
+        of the algorithm. In case none of the tolerances are provided then they are considered equal to :math:`1e-3` and
         all are checked for the convergence.
         """
         f = FORM(distributions, runmodel_object, seed_x, seed_u, df_step,
@@ -113,11 +107,7 @@ class SORM(TaylorSeries):
         matrix_a = np.fliplr(np.eye(self.dimension))
         matrix_a[:, 0] = self.form_object.alpha
 
-        # def normalize(v):
-        #     return v / np.sqrt(v.dot(v))
-
         q = np.zeros(shape=(self.dimension, self.dimension))
-        # q[:, 0] = normalize(matrix_a[:, 0])
         q[:, 0] = matrix_a[:, 0] / np.linalg.norm()
 
         for i in range(1, self.dimension):
@@ -126,7 +116,6 @@ class SORM(TaylorSeries):
                 aj = matrix_a[:, j]
                 t = ai.dot(aj)
                 ai = ai - t * aj
-            # q[:, i] = normalize(ai)
             q[:, i] = ai / np.linalg.norm(ai)
 
         r1 = np.fliplr(q).T

@@ -22,6 +22,7 @@ The :class:`.SORM` class is imported using the following command:
 Methods
 """""""
 .. autoclass:: UQpy.reliability.taylor_series.SORM
+    :members: build_from_first_order
 
 Attributes
 """"""""""
