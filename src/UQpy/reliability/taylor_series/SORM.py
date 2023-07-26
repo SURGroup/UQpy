@@ -118,7 +118,7 @@ class SORM(TaylorSeries):
 
         q = np.zeros(shape=(self.dimension, self.dimension))
         # q[:, 0] = normalize(matrix_a[:, 0])
-        q[:, 0] = matrix_a[:, 0] / np.linalg.norm()
+        q[:, 0] = matrix_a[:, 0] / np.linalg.norm(matrix_a[:, 0])
 
         for i in range(1, self.dimension):
             ai = matrix_a[:, i]
