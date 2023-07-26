@@ -53,9 +53,9 @@ class SORM(TaylorSeries):
             corr_x: Union[list, np.ndarray] = None,
             corr_z: Union[list, np.ndarray] = None,
             n_iterations: PositiveInteger = 100,
-            tol1: Union[float, int] = None,
-            tol2: Union[float, int] = None,
-            tol3: Union[float, int] = None,
+            tolerance_u: Union[float, int] = None,
+            tolerance_beta: Union[float, int] = None,
+            tolerance_gradient: Union[float, int] = None,
     ):
         """
         :param distributions: Marginal probability distributions of each random variable. Must be an object of
@@ -82,16 +82,20 @@ class SORM(TaylorSeries):
          vector **Z** .
          Default: `corr_z` is specified as the identity matrix.
         :param n_iterations: Maximum number of iterations for the `HLRF` algorithm. Default: :math:`100`
-        :param tol1: Convergence threshold for criterion `e1` of the `HLRF` algorithm. Default: :math:`1.0e-3`
-        :param tol2: Convergence threshold for criterion `e2` of the `HLRF` algorithm. Default: :math:`1.0e-3`
-        :param tol3: Convergence threshold for criterion `e3` of the  `HLRF` algorithm. Default: :math:`1.0e-3`
+        :param tolerance_u: Convergence threshold for criterion :math:`||\mathbf{U}^{k} - \mathbf{U}^{k-1}||_2 \leq`
+         :code:`tolerance_u` of the `HLRF` algorithm. Default: :math:`1.0e-3`
+        :param tolerance_beta: Convergence threshold for criterion :math:`||\\beta_{HL}^{k}-\\beta_{HL}^{k-1}||_2 \leq`
+         :code:`tolerance_beta` of the `HLRF` algorithm. Default: :math:`1.0e-3`
+        :param tolerance_gradient: Convergence threshold for criterion
+         :math:`||\\nabla G(\mathbf{U}^{k})- \\nabla G(\mathbf{U}^{k-1})||_2 \leq` :code:`tolerance_gradient`
+         of the `HLRF` algorithm. Default: :math:`1.0e-3`
 
         Any number of tolerances can be provided. Only the provided tolerances will be considered for the convergence
         of the algorithm. In case none of the tolerances is provided then they are considered equal to :math:`1e-3` and
         all are checked for the convergence.
         """
         f = FORM(distributions, runmodel_object, seed_x, seed_u, df_step,
-                 corr_x, corr_z, n_iterations, tol1, tol2, tol3)
+                 corr_x, corr_z, n_iterations, tolerance_u, tolerance_beta, tolerance_gradient)
 
         return cls(f, df_step)
 
@@ -104,16 +108,17 @@ class SORM(TaylorSeries):
 
         self.dimension = self.form_object.dimension
         model = self.form_object.runmodel_object
-        dg_u_record = self.form_object.state_function_gradient_record
+        state_function_gradient_record = self.form_object.state_function_gradient_record
 
         matrix_a = np.fliplr(np.eye(self.dimension))
         matrix_a[:, 0] = self.form_object.alpha
 
-        def normalize(v):
-            return v / np.sqrt(v.dot(v))
+        # def normalize(v):
+        #     return v / np.sqrt(v.dot(v))
 
         q = np.zeros(shape=(self.dimension, self.dimension))
-        q[:, 0] = normalize(matrix_a[:, 0])
+        # q[:, 0] = normalize(matrix_a[:, 0])
+        q[:, 0] = matrix_a[:, 0] / np.linalg.norm()
 
         for i in range(1, self.dimension):
             ai = matrix_a[:, i]
@@ -121,7 +126,8 @@ class SORM(TaylorSeries):
                 aj = matrix_a[:, j]
                 t = ai.dot(aj)
                 ai = ai - t * aj
-            q[:, i] = normalize(ai)
+            # q[:, i] = normalize(ai)
+            q[:, i] = ai / np.linalg.norm(ai)
 
         r1 = np.fliplr(q).T
         self.logger.info("UQpy: Calculating the hessian for SORM..")
@@ -134,7 +140,7 @@ class SORM(TaylorSeries):
                                       df_step=self.df_step,
                                       point_qoi=self.form_object.state_function_record[-1])
 
-        matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(dg_u_record[-1])
+        matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(state_function_gradient_record[-1])
         kappa = np.linalg.eig(matrix_b[: self.dimension - 1, : self.dimension - 1])
         if self.call is None:
             self.failure_probability = [stats.norm.cdf(-1 * beta) * np.prod(1 / (1 + beta * kappa[0]) ** 0.5)]
