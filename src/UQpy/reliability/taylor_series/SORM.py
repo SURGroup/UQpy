@@ -104,7 +104,7 @@ class SORM(TaylorSeries):
 
         self.dimension = self.form_object.dimension
         model = self.form_object.runmodel_object
-        dg_u_record = self.form_object.dg_u_record
+        dg_u_record = self.form_object.state_function_gradient_record
 
         matrix_a = np.fliplr(np.eye(self.dimension))
         matrix_a[:, 0] = self.form_object.alpha
@@ -126,13 +126,13 @@ class SORM(TaylorSeries):
         r1 = np.fliplr(q).T
         self.logger.info("UQpy: Calculating the hessian for SORM..")
 
-        hessian_g = self._derivatives(point_u=self.form_object.DesignPoint_U[-1],
-                                      point_x=self.form_object.DesignPoint_X[-1],
+        hessian_g = self._derivatives(point_u=self.form_object.design_point_u[-1],
+                                      point_x=self.form_object.design_point_x[-1],
                                       runmodel_object=model,
                                       nataf_object=self.form_object.nataf_object,
                                       order="second",
                                       df_step=self.df_step,
-                                      point_qoi=self.form_object.g_record[-1][-1])
+                                      point_qoi=self.form_object.state_function_record[-1])
 
         matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(dg_u_record[-1])
         kappa = np.linalg.eig(matrix_b[: self.dimension - 1, : self.dimension - 1])
