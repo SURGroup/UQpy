@@ -49,7 +49,7 @@ def test_tol1_is_not_none(setup):
     dist1 = Normal(loc=200, scale=20)
     dist2 = Normal(loc=150, scale=10)
     dist = [dist1, dist2]
-    form_obj = FORM(distributions=dist, runmodel_object=setup, seed_u=[1, 1], tol1=1.0e-3)
+    form_obj = FORM(distributions=dist, runmodel_object=setup, seed_u=[1, 1], tolerance_u=1.0e-3)
     form_obj.run()
     for file_name in glob.glob("Model_Runs_*"):
         shutil.rmtree(file_name)
@@ -62,7 +62,7 @@ def test_tol2_is_not_none(setup):
     dist1 = Normal(loc=200, scale=20)
     dist2 = Normal(loc=150, scale=10)
     dist = [dist1, dist2]
-    form_obj = FORM(distributions=dist, runmodel_object=setup, seed_u=[1, 1], tol2=1.0e-3)
+    form_obj = FORM(distributions=dist, runmodel_object=setup, seed_u=[1, 1], tolerance_beta=1.0e-3)
     form_obj.run()
     for file_name in glob.glob("Model_Runs_*"):
         shutil.rmtree(file_name)
@@ -75,7 +75,7 @@ def test_tol3_is_not_none(setup):
     dist1 = Normal(loc=200, scale=20)
     dist2 = Normal(loc=150, scale=10)
     dist = [dist1, dist2]
-    form_obj = FORM(distributions=dist, runmodel_object=setup, seed_u=[1, 1], tol3=1.0e-3)
+    form_obj = FORM(distributions=dist, runmodel_object=setup, seed_u=[1, 1], tolerance_gradient=1.0e-3)
     form_obj.run()
     for file_name in glob.glob("Model_Runs_*"):
         shutil.rmtree(file_name)
@@ -88,7 +88,7 @@ def test_tol12_is_not_none(setup):
     dist1 = Normal(loc=200, scale=20)
     dist2 = Normal(loc=150, scale=10)
     dist = [dist1, dist2]
-    form_obj = FORM(distributions=dist, runmodel_object=setup, seed_u=[1, 1], tol1=1.0e-3, tol2=1.0e-3)
+    form_obj = FORM(distributions=dist, runmodel_object=setup, seed_u=[1, 1], tolerance_u=1.0e-3, tolerance_beta=1.0e-3)
     form_obj.run()
     for file_name in glob.glob("Model_Runs_*"):
         shutil.rmtree(file_name)
@@ -101,7 +101,7 @@ def test_tol13_is_not_none(setup):
     dist1 = Normal(loc=200, scale=20)
     dist2 = Normal(loc=150, scale=10)
     dist = [dist1, dist2]
-    form_obj = FORM(distributions=dist, runmodel_object=setup, seed_u=[1, 1], tol1=1.0e-3, tol3=1.0e-3)
+    form_obj = FORM(distributions=dist, runmodel_object=setup, seed_u=[1, 1], tolerance_u=1.0e-3, tolerance_gradient=1.0e-3)
     form_obj.run()
     for file_name in glob.glob("Model_Runs_*"):
         shutil.rmtree(file_name)
@@ -114,7 +114,7 @@ def test_tol23_is_not_none(setup):
     dist1 = Normal(loc=200, scale=20)
     dist2 = Normal(loc=150, scale=10)
     dist = [dist1, dist2]
-    form_obj = FORM(distributions=dist, runmodel_object=setup, seed_u=[1, 1], tol3=1.0e-3, tol2=1.0e-3)
+    form_obj = FORM(distributions=dist, runmodel_object=setup, seed_u=[1, 1], tolerance_gradient=1.0e-3, tolerance_beta=1.0e-3)
     form_obj.run()
     for file_name in glob.glob("Model_Runs_*"):
         shutil.rmtree(file_name)
@@ -127,7 +127,7 @@ def test_tol123_is_not_none(setup):
     dist1 = Normal(loc=200, scale=20)
     dist2 = Normal(loc=150, scale=10)
     dist = [dist1, dist2]
-    form_obj = FORM(distributions=dist, runmodel_object=setup, seed_u=[1, 1], tol1=1.0e-3, tol3=1.0e-3, tol2=1.0e-3)
+    form_obj = FORM(distributions=dist, runmodel_object=setup, seed_u=[1, 1], tolerance_u=1.0e-3, tolerance_gradient=1.0e-3, tolerance_beta=1.0e-3)
     form_obj.run()
     for file_name in glob.glob("Model_Runs_*"):
         shutil.rmtree(file_name)
@@ -142,13 +142,13 @@ def test_form_example():
     dist1 = Normal(loc=200., scale=20.)
     dist2 = Normal(loc=150, scale=10.)
     Q = FORM(distributions=[dist1, dist2], runmodel_object=RunModelObject,
-             tol1=1e-5, tol2=1e-5)
+             tolerance_u=1e-5, tolerance_beta=1e-5)
     Q.run()
 
     # print results
-    np.allclose(Q.DesignPoint_U, np.array([-2., 1.]))
-    np.allclose(Q.DesignPoint_X, np.array([160., 160.]))
+    np.allclose(Q.design_point_u, np.array([-2., 1.]))
+    np.allclose(Q.design_point_x, np.array([160., 160.]))
     assert Q.beta[0] == 2.236067977499917
     assert Q.failure_probability[0] == 0.012673659338729965
-    np.allclose(Q.dg_u_record, np.array([0., 0.]))
+    np.allclose(Q.state_function_gradient_record, np.array([0., 0.]))
 

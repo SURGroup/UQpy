@@ -24,10 +24,10 @@ class GrassmannInterpolation:
         :param interpolation_method: Type of interpolation to perform. This may be specified as a :class:`Surrogate`
             object or a callable function. If :any:`None`, then multi-linear interpolation is performed.
         :param manifold_data: Data points on the Grassmann manifold.
-        :param optimization_method: Optimization method for calculating the Karcher mean. See
-            :py:meth:`.GrassmannOperations.karcher_mean`.
         :param coordinates: Nodes of the interpolant.
         :param distance:  Distance measure.
+        :param optimization_method: Optimization method for calculating the Karcher mean. See
+            :py:meth:`.GrassmannOperations.karcher_mean`.
         """
         self.interpolation_method = interpolation_method
 

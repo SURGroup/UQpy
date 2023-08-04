@@ -13,18 +13,13 @@ This example shows how to use the UQpy Grassmann class to compute distances
 
 # %%
 
-import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from UQpy import SVDProjection
-import sys
+import numpy as np
 
+from UQpy import SVDProjection
 from UQpy.utilities import GrassmannPoint
 from UQpy.utilities.distances.baseclass.GrassmannianDistance import GrassmannianDistance
 from UQpy.utilities.distances.grassmannian_distances.GeodesicDistance import GeodesicDistance
-
-from UQpy.dimension_reduction import GrassmannOperations
 
 # %% md
 #
