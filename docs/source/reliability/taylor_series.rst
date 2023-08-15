@@ -21,6 +21,7 @@ respectively. These classes can be imported in a python script using the followi
 
     FORM <form>
     SORM <sorm>
+    InverseFORM <inverse_form>
 
 
 
