@@ -1,25 +1,25 @@
 """
 Inverse FORM - Cantilever Beam
------
+-----------------------------------
+The following example is Example 7.2 from Chapter 7 of :cite:`FORM_XDu`.
 
-A cantilever beam (example 7.2 in :cite:`FORM_XDu`) is considered to fail if the displacement at the tip exceeds the
-threshold :math:`D_0`. The performance function :math:`G(\textbf{U})` of this problem is given by
+A cantilever beam is considered to fail if the displacement at the tip exceeds the threshold :math:`D_0`.
+The performance function :math:`G(\\textbf{U})` of this problem is given by
 
-.. math:: G = D_0 - \frac{4L^3}{Ewt} \sqrt{ \left(\frac{P_x}{w^2}\right)^2 + \left(\frac{P_y}{t^2}\right)^2}
+.. math:: G = D_0 - \\frac{4L^3}{Ewt} \\sqrt{ \\left(\\frac{P_x}{w^2}\\right)^2 + \\left(\\frac{P_y}{t^2}\\right)^2}
 
 Where the external forces are modeled as random variables :math:`P_x \sim N(500, 100)` and :math:`P_y \sim N(1000,100)`.
-The constants in the problem are length (:math:`L=100`), elastic modulus (:math:E=30\times 10^6), cross section width
-(:math:`w=2`) and cross section height (:math:`t=4`).
+The constants in the problem are length (:math:`L=100`), elastic modulus (:math:`E=30\\times 10^6`), cross section width
+(:math:`w=2`), cross section height (:math:`t=4`), and :math:`D_0=3`.
 
 """
 # %% md
 #
-# Import the necessary modules.
+# First, we import the necessary modules.
 
 # %%
+
 import numpy as np
-import matplotlib.pyplot as plt
-plt.style.use('ggplot')
 from scipy import stats
 from UQpy.distributions import Normal
 from UQpy.reliability.taylor_series import InverseFORM
@@ -34,7 +34,7 @@ from UQpy.run_model.model_execution.PythonModel import PythonModel
 
 # %%
 
-model = PythonModel(model_script='performance_function.py', model_object_name="cantilever_beam")
+model = PythonModel(model_script='local_pfn.py', model_object_name="cantilever_beam")
 runmodel_object = RunModel(model=model)
 
 # %% md

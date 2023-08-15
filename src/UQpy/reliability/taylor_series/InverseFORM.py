@@ -111,16 +111,17 @@ class InverseFORM(TaylorSeries):
         self.alpha_record: list = []
         """Record of alpha :math:`\\alpha=\\frac{\\nabla G(u)}{||\\nabla G(u)||}`"""
         self.beta: float = self.beta
-        """Feasibility criteria for the optimization :math:`||\\textbf{U}|| = \\beta`"""
+        """Feasibility criteria for the optimization :math:`||\\textbf{U}|| = \\beta_{HL}`"""
         self.beta_record: list = []
-        """Record of Hasofer-Lind reliability index that defines the feasibility criteria :math:`||u||=\\beta_{HL}`"""
+        """Record of Hasofer-Lind reliability index that defines the feasibility criteria 
+         :math:`||\\textbf{U}||=\\beta_{HL}`"""
         self.design_point_u: list = []
         """Design point in the standard normal space :math:`\\textbf{U}`"""
         self.design_point_x: list = []
         """Design point in the parameter space :math:`\\textbf{X}`"""
         self.error_record: list = []
         """Record of the final error defined by 
-         :math:`error_u = ||u_new - u||` and :math:`error_{gradient} = || \\nabla G(u_new) - \\nabla G(u)||`"""
+         :math:`error_u = ||u_{new} - u||` and :math:`error_{\\nabla G(u)} = || \\nabla G(u_{new}) - \\nabla G(u)||`"""
         self.iteration_record: list = []
         """Record of the number of iterations before algorithm termination"""
         self.failure_probability_record: list = []
