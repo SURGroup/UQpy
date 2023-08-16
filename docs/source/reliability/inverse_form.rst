@@ -31,9 +31,9 @@ The feasibility criteria :math:`||\textbf{U}||=\beta` may be equivalently define
 :math:`\beta = -\Phi^{-1}(p_{fail})`, where :math:`\Phi^{-1}(\cdot)` is the inverse standard normal CDF.
 
 Algorithm
------------------
+---------
 This method implements a gradient descent algorithm to solve the optimization problem within the tolerances specified by
-:math:`\text{tolerance}_{\textbf{U}}` (:code:`tolerance_u`) and :math:`\text{tolerance}_{\nabla G(\textbf{U})}` (:code:`tolerance_gradient`).
+:code:`tolerance_u` and :code:`tolerance_gradient`.
 
 0. Define :math:`u_0` and :math:`\beta` directly or :math:`\beta=-\Phi^{-1}(p_\text{fail})`
 1. Set :math:`u=u_0` and :math:`\text{converged}=False`
@@ -50,12 +50,14 @@ The :class:`.InverseFORM` class is imported using the following command:
 >>> from UQpy.reliability.taylor_series import InverseFORM
 
 Methods
------------------
+-------
+
 .. autoclass:: UQpy.reliability.taylor_series.InverseFORM
     :members: run
 
 Attributes
------------------
+----------
+
 .. autoattribute:: UQpy.reliability.taylor_series.InverseFORM.alpha
 .. autoattribute:: UQpy.reliability.taylor_series.InverseFORM.alpha_record
 .. autoattribute:: UQpy.reliability.taylor_series.InverseFORM.beta
@@ -68,7 +70,8 @@ Attributes
 
 
 Examples
-""""""""""
+--------
+
 .. toctree::
 
    InverseFORM Examples <../auto_examples/reliability/inverse_form/index>

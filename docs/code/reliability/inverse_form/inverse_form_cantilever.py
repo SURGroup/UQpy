@@ -59,7 +59,7 @@ inverse_form = InverseFORM(distributions=distributions,
 # With everything defined we are ready to run the inverse first-order reliability method and print the results.
 # The solution to this problem given by Du is :math:`\textbf{U}^*=(1.7367, 0.16376)` with a reliability index of
 # :math:`\beta_{HL}=||\textbf{U}^*||=1.7444` and probability of failure of
-# :math:`p_{fail} = \Phi(-\beta_{HL})=\Phi(-1.7444)=0.04054`. We expect this problem to converge in 4 iterations.
+# :math:`p_{fail} = \Phi(-\beta_{HL})=0.04054`. We expect this problem to converge in 4 iterations.
 # We confirm our design point matches this length, and therefore has a probability of failure specified by our input.
 
 # %%
