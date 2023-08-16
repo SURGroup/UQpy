@@ -34,9 +34,9 @@ class InverseFORM(TaylorSeries):
         """Class to perform the Inverse First Order Reliability Method.
 
         Each time :meth:`run` is called the results are appended to the class attributes.
-         This is a child class of the :class:`TaylorSeries` class.
-         By default, :code:`tolerance_u` and :code:`tolerance_gradient` must be satisfied for convergence.
-         Specifying a tolerance as :code:`None` will ignore that criteria, but both cannot be :code:`None`.
+        By default, :code:`tolerance_u` and :code:`tolerance_gradient` must be satisfied for convergence.
+        Specifying a tolerance as :code:`None` will ignore that criteria, but both cannot be :code:`None`.
+        This is a child class of the :class:`TaylorSeries` class.
 
         :param distributions: Marginal probability distributions of each random variable. Must be of
          type :class:`.DistributionContinuous1D` or :class:`.JointIndependent`.
@@ -46,19 +46,19 @@ class InverseFORM(TaylorSeries):
          Only one of :code:`p_fail` or :code:`beta` may be provided.
         :param beta: Hasofer-Lind reliability index defining the feasibility criteria as :math:`||u|| = \\beta`.
          Default: :code:`None`.
-         Only one of code:`p_fail` or :code:`beta` may be provided.
+         Only one of :code:`p_fail` or :code:`beta` may be provided.
         :param seed_x: Point in the parameter space :math:`\mathbf{X}` to start from.
          Only one of :code:`seed_x` or :code:`seed_u` may be provided.
-         If neither is provided, the zero vector in :math:`\mathbf{U}` space is used as the seed.
+         If neither is provided, the zero vector in :math:`\mathbf{U}` space is the seed.
         :param seed_u: Point in the uncorrelated standard normal space :math:`\mathbf{U}` to start from.
          Only one of :code:`seed_x` or :code:`seed_u` may be provided.
-         If neither is provided, the zero vector in :math:`\mathbf{U}` space is used as the seed.
+         If neither is provided, the zero vector in :math:`\mathbf{U}` space is the seed.
         :param df_step: Finite difference step in standard normal space. Default: :math:`0.01`
         :param corr_x: Correlation matrix :math:`\mathbf{C_X}` of the random vector :math:`\mathbf{X}`
         :param corr_z: Correlation matrix :math:`\mathbf{C_Z}` of the random vector :math:`\mathbf{Z}`
          Default: :code:`corr_z` is the identity matrix.
         :param max_iterations: Maximum number of iterations for the `HLRF` algorithm. Default: :math:`100`
-        :param tolerance_u: Convergence threshold for criterion :math:`||\mathbf{U}^{k} - \mathbf{U}^{k-1}||_2 \leq`
+        :param tolerance_u: Convergence threshold for criterion :math:`||\mathbf{U}_i - \mathbf{U}_{i-1}||_2 \leq`
          :code:`tolerance_u` of the `HLRF` algorithm.
          Default: :math:`1.0e-3`
         :param tolerance_gradient: Convergence threshold for criterion
@@ -107,11 +107,12 @@ class InverseFORM(TaylorSeries):
 
         # Initialize attributes
         self.alpha: float = np.nan
-        """Normalized vector in :math:`\\textbf{U}`-space"""
+        """Normalized gradient vector in :math:`\\textbf{U}` space"""
         self.alpha_record: list = []
-        """Record of alpha :math:`\\alpha=\\frac{\\nabla G(u)}{||\\nabla G(u)||}`"""
+        """Record of :math:`\\alpha=\\frac{\\nabla G(u)}{||\\nabla G(u)||}`"""
         self.beta: float = self.beta
-        """Feasibility criteria for the optimization :math:`||\\textbf{U}|| = \\beta_{HL}`"""
+        """Hasofer-Lind reliability index that defines the feasibility criteria as
+         :math:`||\\textbf{U}|| = \\beta_{HL}`"""
         self.beta_record: list = []
         """Record of Hasofer-Lind reliability index that defines the feasibility criteria 
          :math:`||\\textbf{U}||=\\beta_{HL}`"""
@@ -131,11 +132,11 @@ class InverseFORM(TaylorSeries):
         """Runs the inverse FORM algorithm.
 
         :param seed_x: Point in the parameter space :math:`\mathbf{X}` to start from.
-         Only one of `seed_x` or `seed_u` may be provided.
-         If neither is provided, the zero vector in :math:`\mathbf{U}` space is used as the seed.
+         Only one of :code:`seed_x` or :code:`seed_u` may be provided.
+         If neither is provided, the zero vector in :math:`\mathbf{U}` space is the seed.
         :param seed_u: Point in the uncorrelated standard normal space :math:`\mathbf{U}` to start from.
-         Only one of `seed_x` or `seed_u` may be provided.
-         If neither is provided, the zero vector in :math:`\mathbf{U}` space is used as the seed.
+         Only one of :code:`seed_x` or :code:`seed_u` may be provided.
+         If neither is provided, the zero vector in :math:`\mathbf{U}` space is the seed.
         """
         self.logger.info('UQpy: Running InverseFORM...')
         if (seed_x is not None) and (seed_u is not None):

@@ -10,11 +10,11 @@ from UQpy.reliability.taylor_series import InverseFORM
 
 @pytest.fixture
 def inverse_form():
-    """Example 7.2 from Chapter 7 of Du 2005
+    """Example 7.2 from Chapter 7 of X. Du 2005
 
     Distributions are :math:`P_X \\sim N(500, 100)`, :math:`P_Y \\sim N(1000, 100)`
-
-    Solution from the reference is :math:`u^*=(1.7367, 0.16376)`
+    Solution from the reference is :math:`u^*=(1.7367, 0.16376)`.
+    Tolerances of :math:`1e-5` are used to ensure convergence to level of precision given by Du.
     """
     path = os.path.abspath(os.path.dirname(__file__))
     os.chdir(path)
@@ -31,7 +31,6 @@ def inverse_form():
 
 
 def test_no_seed(inverse_form):
-    """Solution to Chapter 7 Example 7.2 from Du 2005"""
     inverse_form.run()
     assert np.allclose(inverse_form.design_point_u, np.array([1.7367, 0.16376]), atol=1e-4)
 
@@ -81,7 +80,6 @@ def test_beta():
                                delete_files=True)
     runmodel_object = RunModel(model=python_model)
     distributions = [Normal(loc=500, scale=100), Normal(loc=1_000, scale=100)]
-    # with pytest.raises(ValueError, match='UQpy: At least one tolerance .* must be provided'):
     inverse_form = InverseFORM(distributions=distributions,
                                runmodel_object=runmodel_object,
                                p_fail=None,
@@ -91,6 +89,7 @@ def test_beta():
 
 
 def test_no_beta_no_pfail():
+    """Expected behavior is to raise ValueError and inform the user exactly one in put must be provided"""
     path = os.path.abspath(os.path.dirname(__file__))
     os.chdir(path)
     python_model = PythonModel(model_script='example_7_2.py',
