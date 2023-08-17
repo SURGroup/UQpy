@@ -127,6 +127,8 @@ class InverseFORM(TaylorSeries):
         """Record of the number of iterations before algorithm termination"""
         self.failure_probability_record: list = []
         """Record of the probability of failure defined by :math:`p_{fail} = \\Phi(-\\beta_{HL})`"""
+        self.state_function: list = []
+        """State function :math:`G(u)` evaluated at each step in the optimization"""
 
     def run(self, seed_x: Union[list, np.ndarray] = None, seed_u: Union[list, np.ndarray] = None):
         """Runs the inverse FORM algorithm.
@@ -144,6 +146,7 @@ class InverseFORM(TaylorSeries):
 
         # Allocate u and the gradient of G(u) as arrays
         u = np.zeros([self.max_iterations + 1, self.dimension])
+        state_function = np.full(self.max_iterations + 1, np.nan)
         state_function_gradient = np.zeros([self.max_iterations + 1, self.dimension])
 
         # Set initial seed. If both seed_x and seed_u are None, the initial seed is a vector of zeros in U space.
@@ -170,12 +173,14 @@ class InverseFORM(TaylorSeries):
                 self.nataf_object.run(samples_z=z, jacobian=True)
                 x = self.nataf_object.samples_x
             self.logger.info(f'Design Point U: {u[iteration, :]}\nDesign Point X: {x}\n')
-            state_function_gradient[iteration + 1, :], _, _ = self._derivatives(point_u=u[iteration, :],
-                                                                                point_x=x,
-                                                                                runmodel_object=self.runmodel_object,
-                                                                                nataf_object=self.nataf_object,
-                                                                                df_step=self.df_step,
-                                                                                order='first')
+            state_function_gradient[iteration + 1, :], qoi, _ = self._derivatives(point_u=u[iteration, :],
+                                                                                  point_x=x,
+                                                                                  runmodel_object=self.runmodel_object,
+                                                                                  nataf_object=self.nataf_object,
+                                                                                  df_step=self.df_step,
+                                                                                  order='first')
+            self.logger.info(f'State Function: {qoi}')
+            self.state_function[iteration] = qoi
 
             alpha = state_function_gradient[iteration + 1]
             alpha /= np.linalg.norm(state_function_gradient[iteration + 1])
@@ -196,11 +201,11 @@ class InverseFORM(TaylorSeries):
 
         if iteration >= self.max_iterations:
             self.logger.info(f'UQpy: Maximum number of iterations {self.max_iterations} reached before convergence')
-        else:
-            self.alpha_record.append(alpha)
-            self.beta_record.append(self.beta)
-            self.design_point_u.append(u[iteration, :])
-            self.design_point_x.append(x)
-            self.error_record.append((error_u, error_gradient))
-            self.iteration_record.append(iteration)
-            self.failure_probability_record.append(self.p_fail)
+        self.alpha_record.append(alpha)
+        self.beta_record.append(self.beta)
+        self.design_point_u.append(u[iteration, :])
+        self.design_point_x.append(x)
+        self.error_record.append((error_u, error_gradient))
+        self.iteration_record.append(iteration)
+        self.failure_probability_record.append(self.p_fail)
+        self.state_function.append(state_function)
