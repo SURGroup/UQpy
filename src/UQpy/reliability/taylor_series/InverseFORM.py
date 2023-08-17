@@ -180,7 +180,7 @@ class InverseFORM(TaylorSeries):
                                                                                   df_step=self.df_step,
                                                                                   order='first')
             self.logger.info(f'State Function: {qoi}')
-            self.state_function[iteration] = qoi
+            state_function[iteration + 1] = qoi
 
             alpha = state_function_gradient[iteration + 1]
             alpha /= np.linalg.norm(state_function_gradient[iteration + 1])
