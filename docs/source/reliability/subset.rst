@@ -24,26 +24,24 @@ and in the second stage is accepted/rejected based on whether the sample belongs
 :class:`.SubsetSimulation` can be used with any of the available (or custom) :class:`.MCMC` classes in the
 :py:mod:`Sampling` module.
 
-SubsetSimulation Class
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 The :class:`.SubsetSimulation` class is imported using the following command:
 
 >>> from UQpy.reliability.SubsetSimulation import SubsetSimulation
 
 Methods
 """""""
+
 .. autoclass:: UQpy.reliability.SubsetSimulation
 
 Attributes
 """"""""""
-.. autoattribute:: UQpy.reliability.SubsetSimulation.samples
-.. autoattribute:: UQpy.reliability.SubsetSimulation.performance_function_per_level
-.. autoattribute:: UQpy.reliability.SubsetSimulation.performance_threshold_per_level
+
+.. autoattribute:: UQpy.reliability.SubsetSimulation.dependent_chains_CoV
 .. autoattribute:: UQpy.reliability.SubsetSimulation.failure_probability
 .. autoattribute:: UQpy.reliability.SubsetSimulation.independent_chains_CoV
-.. autoattribute:: UQpy.reliability.SubsetSimulation.dependent_chains_CoV
-
+.. autoattribute:: UQpy.reliability.SubsetSimulation.performance_function_per_level
+.. autoattribute:: UQpy.reliability.SubsetSimulation.performance_threshold_per_level
+.. autoattribute:: UQpy.reliability.SubsetSimulation.samples
 
 Examples
 """"""""""
