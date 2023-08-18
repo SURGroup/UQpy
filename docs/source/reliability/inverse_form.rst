@@ -23,15 +23,15 @@ are:
 .. math:: \text{tolerance}_{\nabla G(\textbf{U})}:\ ||\nabla G(\textbf{U}_i)- \nabla G(\textbf{U}_{i-1})||_2 \leq 10^{-3}
 
 
-Problem Statement
------------------
+**Problem Statement**
+
 Compute :math:`u^* = \text{argmin}\ G(\textbf{U})` such that :math:`||\textbf{U}||=\beta`.
 
 The feasibility criteria :math:`||\textbf{U}||=\beta` may be equivalently defined as
 :math:`\beta = -\Phi^{-1}(p_{fail})`, where :math:`\Phi^{-1}(\cdot)` is the inverse standard normal CDF.
 
-Algorithm
----------
+**Algorithm**
+
 This method implements a gradient descent algorithm to solve the optimization problem within the tolerances specified by
 :code:`tolerance_u` and :code:`tolerance_gradient`.
 
