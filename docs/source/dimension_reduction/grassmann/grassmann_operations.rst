@@ -46,10 +46,6 @@ To use the :meth:`.exp_map` method, one needs to import the :class:`.GrassmannOp
 
 >>> from UQpy.dimension_reduction.grassmann_manifold import GrassmannOperations
 
-It can then be used as follows:
-
->>> GrassmannOperations.exp_map()
-
 Since :meth:`.exp_map` is a static method, it does not require instantiation of the :class:`.GrassmannOperations` class.
 
 .. automethod:: UQpy.dimension_reduction.grassmann_manifold.GrassmannOperations.exp_map
@@ -74,10 +70,6 @@ To use the :meth:`.log_map` method, one needs to import the :class:`.GrassmannOp
 
 >>> from UQpy.dimension_reduction.grassmann_manifold import GrassmannOperations
 
-It can then be used as follows:
-
->>> GrassmannOperations.log_map()
-
 
 Since :meth:`.log_map` is a static method, it does not require instantiation of the :class:`.GrassmannOperations` class.
 
@@ -97,10 +89,6 @@ To use the :meth:`.karcher_mean` method, one needs to import the :class:`.Grassm
 :mod:`UQpy.dimension_reduction.grassmann_manifold` module as follows:
 
 >>> from UQpy.dimension_reduction.grassmann_manifold import GrassmannOperations
-
-It can then be used as follows:
-
->>> Grassmann.karcher_mean()
 
 Since :meth:`.karcher_mean` is a static method, it does not require instantiation of the :class:`.GrassmannOperations`
 class.
@@ -125,10 +113,6 @@ To use the :meth:`.frechet_variance` method, one needs to import the :class:`.Gr
 :mod:`UQpy.dimension_reduction.grassmann_manifold` module as follows:
 
 >>> from UQpy.dimension_reduction.grassmann_manifold import GrassmannOperations
-
-It can then be used as follows:
-
->>> GrassmannOperations.frechet_variance()
 
 Since :meth:`.frechet_variance` is a static method, it does not require instantiation of the
 :class:`.GrassmannOperations` class.

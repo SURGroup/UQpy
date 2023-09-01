@@ -15,7 +15,8 @@ class GrassmannOperations:
     @beartype
     def __init__(self, grassmann_points: Union[list[Numpy2DFloatArrayOrthonormal], list[GrassmannPoint]],
                  kernel: GrassmannianKernel = ProjectionKernel(),
-                 p: Union[int, str] = "max", optimization_method: str = "GradientDescent",
+                 p: Union[int, str] = "max",
+                 optimization_method: str = "GradientDescent",
                  distance: GrassmannianDistance = GeodesicDistance()):
         """
         The :class:`.GrassmannOperations` class can used in two ways. In the first case, the user can invoke the
@@ -49,7 +50,8 @@ class GrassmannOperations:
     @beartype
     def log_map(grassmann_points: Union[list[Numpy2DFloatArrayOrthonormal], list[GrassmannPoint]],
                 reference_point: Union[Numpy2DFloatArrayOrthonormal, GrassmannPoint]) -> list[Numpy2DFloatArray]:
-        """
+        """Maps the endpoint of the unique geodesic from :math:`\mathbf{X}` to tangent vector(s)
+
         :param grassmann_points: Point(s) on the Grassmann manifold.
         :param reference_point: Origin of the tangent space.
         :return: Point(s) on the tangent space.
@@ -83,7 +85,8 @@ class GrassmannOperations:
     @beartype
     def exp_map(tangent_points: list[Numpy2DFloatArray],
                 reference_point: Union[np.ndarray, GrassmannPoint]) -> list[GrassmannPoint]:
-        """
+        """Maps tangent vector(s) to the endpoint of a unique geodesic.
+
         :param tangent_points: Tangent vector(s).
         :param reference_point: Origin of the tangent space.
         :return: Point(s) on the Grassmann manifold.
@@ -118,7 +121,8 @@ class GrassmannOperations:
     def frechet_variance(grassmann_points: Union[list[Numpy2DFloatArrayOrthonormal], list[GrassmannPoint]],
                          reference_point: Union[Numpy2DFloatArrayOrthonormal, GrassmannPoint],
                          distance: GrassmannianDistance) -> float:
-        """
+        """Variance measure of the Grassman distance in relation to the Karcher mean.
+
         :param grassmann_points: Point(s) on the Grassmann manifold
         :param reference_point: Reference point for the Frechet variance (:math:`\mu`). Typically assigned as the
             Karcher mean.

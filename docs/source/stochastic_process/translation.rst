@@ -14,14 +14,14 @@ function of the prescribed non-Gaussian probability distribution.
 
 The nonlinear translation in the equation above has the effect of distorting the correlation of the stochastic process.
 That is, if the Gaussian process has correlation function :math:`\rho(\tau)` where :math:`\tau=t_2-t_1` is a time lag,
-then the non-Gaussian correlation function of the process :math:`X(t)` can be compuated as:
+then the non-Gaussian correlation function of the process :math:`X(t)` can be computed as:
 
 .. math:: \xi(\tau) = \int_{-\infty}^{\infty} \int_{-\infty}^{\infty} F^{-1}(\Phi(y_1)) F^{-1}(\Phi(y_2)) \phi(y_1, y_2; \rho(\tau)) dy_1 dy_2
 
 where :math:`\phi(y_1, y_2; \rho(\tau))` is the bivariate normal probability density function having correlation
 :math:`\rho(\tau)`. This operation is known as correlation distortion and is not, in general, invertible. That is, given
-the non-Gaussian correlation function :math:`\xi(\tau) ` and an arbitrarily prescribed non-Gaussian probability
-distribution with cdf :math:`F(x)`, it is not always possible to identify a correponding Gaussian process having
+the non-Gaussian correlation function :math:`\xi(\tau)` and an arbitrarily prescribed non-Gaussian probability
+distribution with cdf :math:`F(x)`, it is not always possible to identify a corresponding Gaussian process having
 correlation function :math:`\rho(\tau)` that can be translated to this non-Gaussian process through the equations
 above :cite:`StochasticProcess11`.
 
@@ -47,10 +47,10 @@ Methods
 
 Attributes
 """"""""""
-.. autoattribute:: UQpy.stochastic_process.Translation.samples_gaussian
 .. autoattribute:: UQpy.stochastic_process.Translation.correlation_function_non_gaussian
-.. autoattribute:: UQpy.stochastic_process.Translation.scaled_correlation_function_non_gaussian
 .. autoattribute:: UQpy.stochastic_process.Translation.power_spectrum_non_gaussian
+.. autoattribute:: UQpy.stochastic_process.Translation.samples_gaussian
+.. autoattribute:: UQpy.stochastic_process.Translation.scaled_correlation_function_non_gaussian
 
 
 Examples
@@ -76,6 +76,6 @@ Methods
 
 Attributes
 """"""""""
-.. autoattribute:: UQpy.stochastic_process.InverseTranslation.samples_gaussian
-.. autoattribute:: UQpy.stochastic_process.InverseTranslation.power_spectrum_gaussian
 .. autoattribute:: UQpy.stochastic_process.InverseTranslation.correlation_function_gaussian
+.. autoattribute:: UQpy.stochastic_process.InverseTranslation.power_spectrum_gaussian
+.. autoattribute:: UQpy.stochastic_process.InverseTranslation.samples_gaussian

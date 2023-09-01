@@ -20,7 +20,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from UQpy.dimension_reduction.grassmann_manifold.projections.SVDProjection import SVDProjection
 from UQpy.dimension_reduction import GrassmannOperations
 from UQpy.utilities import GrassmannPoint
-from UQpy.utilities.kernels import Kernel, ProjectionKernel
+from UQpy.utilities.kernels import ProjectionKernel
 import sys
 
 # %% md
@@ -73,10 +73,10 @@ manifold_projection = SVDProjection(matrices, p="max")
 # %%
 projection_kernel = ProjectionKernel()
 
-projection_kernel.calculate_kernel_matrix(points=manifold_projection.u)
+projection_kernel.calculate_kernel_matrix(x=manifold_projection.u, s=manifold_projection.u)
 kernel_psi = projection_kernel.kernel_matrix
 
-projection_kernel.calculate_kernel_matrix(points=manifold_projection.v)
+projection_kernel.calculate_kernel_matrix(x=manifold_projection.v, s=manifold_projection.v)
 kernel_phi = projection_kernel.kernel_matrix
 
 fig, (ax1, ax2) = plt.subplots(1, 2)
@@ -92,9 +92,9 @@ plt.show()
 
 # %%
 
-projection_kernel.calculate_kernel_matrix(points=[manifold_projection.u[0],
-                                                  manifold_projection.u[1],
-                                                  manifold_projection.u[2]])
+projection_kernel.\
+    calculate_kernel_matrix(x=[manifold_projection.u[0], manifold_projection.u[1], manifold_projection.u[2]],
+                            s=[manifold_projection.u[0], manifold_projection.u[1], manifold_projection.u[2]])
 kernel_01 = projection_kernel.kernel_matrix
 
 fig = plt.figure()
@@ -111,17 +111,18 @@ from UQpy.utilities.kernels.baseclass.GrassmannianKernel import GrassmannianKern
 
 class UserKernel(GrassmannianKernel):
 
-    def kernel_entry(self, xi: GrassmannPoint, xj: GrassmannPoint):
-        r = np.dot(xi.data.T, xj.data)
+    def element_wise_operation(self, xi_j) -> float:
+        xi, xj = xi_j
+        r = np.dot(xi.T, xj)
         det = np.linalg.det(r)
         return det * det
 
 
 user_kernel = UserKernel()
-user_kernel.calculate_kernel_matrix(points=manifold_projection.u)
+user_kernel.calculate_kernel_matrix(x=manifold_projection.u, s=manifold_projection.u)
 kernel_user_psi = user_kernel.kernel_matrix
 
-user_kernel.calculate_kernel_matrix(points=manifold_projection.v)
+user_kernel.calculate_kernel_matrix(x=manifold_projection.v, s=manifold_projection.v)
 kernel_user_phi = user_kernel.kernel_matrix
 
 fig, (ax1, ax2) = plt.subplots(1, 2)

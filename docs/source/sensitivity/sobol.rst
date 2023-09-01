@@ -81,8 +81,8 @@ Attributes
 .. autoattribute:: UQpy.sensitivity.SobolSensitivity.second_order_confidence_interval
 .. autoattribute:: UQpy.sensitivity.SobolSensitivity.total_order_confidence_interval
 .. autoattribute:: UQpy.sensitivity.SobolSensitivity.n_samples
-.. autoattribute:: UQpy.sensitivity.Sobol.n_variables
-.. autoattribute:: UQpy.sensitivity.Sobol.is_multi_output
+.. autoattribute:: UQpy.sensitivity.SobolSensitivity.n_variables
+.. autoattribute:: UQpy.sensitivity.SobolSensitivity.is_multi_output
 
 
 Examples

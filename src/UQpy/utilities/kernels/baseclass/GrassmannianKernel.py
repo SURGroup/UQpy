@@ -1,5 +1,6 @@
 import itertools
-from abc import ABC
+from abc import ABC, abstractmethod
+from typing import Union, Tuple
 
 import numpy as np
 
@@ -10,36 +11,21 @@ from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 class GrassmannianKernel(Kernel, ABC):
     """The parent class for Grassmannian kernels implemented in the :py:mod:`kernels` module ."""
 
-    def __init__(self):
-        super().__init__()
-
-    def calculate_kernel_matrix(self, points: list[GrassmannPoint], p: int = None):
+    def __init__(self, kernel_parameter: Union[int, float] = None):
         """
-        Compute the kernel matrix given a list of points on the Grassmann manifold.
-
-        :param points: Points on the Grassmann manifold
-        :param p: Number of independent p-planes of each Grassmann point.
-        :return: :class:`ndarray` The kernel matrix.
+        :param kernel_parameter: Number of independent p-planes of each Grassmann point.
         """
-        nargs = len(points)
-        # Define the pairs of points to compute the entries of the kernel matrix.
-        indices = range(nargs)
-        pairs = list(itertools.combinations_with_replacement(indices, 2))
+        super().__init__(kernel_parameter)
 
-        # Estimate entries of the kernel matrix.
-        kernel = np.zeros((nargs, nargs))
-        for id_pair in range(np.shape(pairs)[0]):
-            i = pairs[id_pair][0]  # Point i
-            j = pairs[id_pair][1]  # Point j
-            if not p:
-                xi = points[i]
-                xj = points[j]
-            else:
-                xi = GrassmannPoint(points[i].data[:, :p])
-                xj = GrassmannPoint(points[j].data[:, :p])
+    def calculate_kernel_matrix(self, x: list[GrassmannPoint], s: list[GrassmannPoint]):
+        p = self.kernel_parameter
+        list1 = [point.data if not p else point.data[:, :p] for point in x]
+        list2 = [point.data if not p else point.data[:, :p] for point in s]
+        product = [self.element_wise_operation(point_pair)
+                   for point_pair in list(itertools.product(list1, list2))]
+        self.kernel_matrix = np.array(product).reshape(len(list1), len(list2))
+        return self.kernel_matrix
 
-            # RiemannianDistance.check_rows(xi, xj)
-            kernel[i, j] = self.kernel_entry(xi, xj)
-            kernel[j, i] = kernel[i, j]
-
-        self.kernel_matrix = kernel
+    @abstractmethod
+    def element_wise_operation(self, xi_j: Tuple) -> float:
+        pass

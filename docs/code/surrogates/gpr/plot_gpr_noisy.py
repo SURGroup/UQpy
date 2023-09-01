@@ -22,10 +22,13 @@ Gaussian Process with noisy output
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
+
+from UQpy.utilities import RBF
+
 warnings.filterwarnings('ignore')
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer
 from UQpy.surrogates.gaussian_process.regression_models.LinearRegression import LinearRegression
-from UQpy.surrogates import GaussianProcessRegression, RBF
+from UQpy.surrogates import GaussianProcessRegression
 
 
 # %% md

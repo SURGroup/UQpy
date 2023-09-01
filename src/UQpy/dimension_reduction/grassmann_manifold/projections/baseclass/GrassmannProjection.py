@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-from UQpy.utilities.kernels.baseclass.Kernel import Kernel
-
 
 class GrassmannProjection(ABC):
     """

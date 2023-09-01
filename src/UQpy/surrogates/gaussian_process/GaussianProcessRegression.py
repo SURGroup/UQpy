@@ -4,13 +4,11 @@ from scipy.linalg import cholesky, cho_solve
 
 from beartype import beartype
 
-
 from UQpy.utilities.Utilities import process_random_state
 from UQpy.surrogates.baseclass.Surrogate import Surrogate
 from UQpy.utilities.ValidationTypes import RandomStateType
-from UQpy.surrogates.gaussian_process.kernels.baseclass.Kernel import Kernel
+from UQpy.utilities.kernels.baseclass.Kernel import Kernel
 from UQpy.surrogates.gaussian_process.constraints.baseclass.Constraints import ConstraintsGPR
-from UQpy.surrogates.gaussian_process.regression_models.baseclass.Regression import Regression
 
 
 class GaussianProcessRegression(Surrogate):
@@ -204,14 +202,18 @@ class GaussianProcessRegression(Surrogate):
                 raise NotImplementedError("Maximum likelihood estimator failed: Choose different starting point or "
                                           "increase nopt")
             t = np.argmin(fun_value)
-            self.hyperparameters = 10**minimizer[t, :]
+            self.hyperparameters = 10 ** minimizer[t, :]
 
         # Updated Correlation matrix corresponding to MLE estimates of hyperparameters
         if self.noise:
-            self.K = self.kernel.c(x=s_, s=s_, params=self.hyperparameters[:-1]) + \
-                     np.eye(nsamples)*(self.hyperparameters[-1])**2
+            self.kernel.kernel_parameter = self.hyperparameters[:-2]
+            sigma = self.hyperparameters[-2]
+            self.K = sigma ** 2 * self.kernel.calculate_kernel_matrix(x=s_, s=s_) + \
+                     np.eye(nsamples) * (self.hyperparameters[-1]) ** 2
         else:
-            self.K = self.kernel.c(x=s_, s=s_, params=self.hyperparameters)
+            self.kernel.kernel_parameter = self.hyperparameters[:-1]
+            sigma = self.hyperparameters[-1]
+            self.K = sigma ** 2 * self.kernel.calculate_kernel_matrix(x=s_, s=s_)
 
         self.cc = cholesky(self.K + 1e-10 * np.eye(nsamples), lower=True)
         self.alpha_ = cho_solve((self.cc, True), y_)
@@ -264,7 +266,9 @@ class GaussianProcessRegression(Surrogate):
 
         if hyperparameters is not None:
             # This is used for MLE constraints, if constraints call 'predict' method.
-            K = self.kernel.c(x=s_, s=s_, params=kernelparameters) + \
+            self.kernel.kernel_parameter = kernelparameters[:-1]
+            sigma = kernelparameters[-1]
+            K = sigma ** 2 * self.kernel.calculate_kernel_matrix(x=s_, s=s_) + \
                 np.eye(self.samples.shape[0]) * (noise_std ** 2)
             cc = np.linalg.cholesky(K + 1e-10 * np.eye(self.samples.shape[0]))
             mu = 0
@@ -278,7 +282,7 @@ class GaussianProcessRegression(Surrogate):
                 # Design parameters (beta: regression coefficient)
                 beta = np.linalg.solve(g_, np.matmul(np.transpose(q_), y_dash))
                 mu = np.einsum("ij,jk->ik", self.F, beta)
-            alpha_ = cho_solve((cc, True), y_-mu)
+            alpha_ = cho_solve((cc, True), y_ - mu)
         else:
             cc, alpha_ = self.cc, self.alpha_
 
@@ -290,7 +294,10 @@ class GaussianProcessRegression(Surrogate):
             else:
                 mu1 = np.einsum("ij,jk->ik", fx, self.beta)
 
-        k = self.kernel.c(x=x_, s=s_, params=kernelparameters)
+        self.kernel.kernel_parameter = kernelparameters[:-1]
+        sigma = kernelparameters[-1]
+
+        k = sigma**2*self.kernel.calculate_kernel_matrix(x=x_, s=s_)
         y = mu1 + k @ alpha_
         if self.normalize:
             y = self.value_mean + y * self.value_std
@@ -298,7 +305,9 @@ class GaussianProcessRegression(Surrogate):
             y = y.flatten()
 
         if return_std:
-            k1 = self.kernel.c(x=x_, s=x_, params=kernelparameters)
+            self.kernel.kernel_parameter = kernelparameters[:-1]
+            sigma = kernelparameters[-1]
+            k1 = sigma**2*self.kernel.calculate_kernel_matrix(x=x_, s=x_)
             var = (k1 - k @ cho_solve((cc, True), k.T)).diagonal()
             mse = np.sqrt(var)
             if self.normalize:
@@ -326,9 +335,13 @@ class GaussianProcessRegression(Surrogate):
         m = s.shape[0]
 
         if ind_noise:
-            k__ = k_.c(x=s, s=s, params=10 ** p0[:-1]) + np.eye(m) * (10 ** p0[-1]) ** 2
+            k_.kernel_parameter = 10 ** p0[:-2]
+            sigma = 10 ** p0[-2]
+            k__ = sigma ** 2 * k_.calculate_kernel_matrix(x=s, s=s) + np.eye(m) * (10 ** p0[-1]) ** 2
         else:
-            k__ = k_.c(x=s, s=s, params=10 ** p0)
+            k_.kernel_parameter = 10 ** p0[:-1]
+            sigma = 10 ** p0[-1]
+            k__ = sigma ** 2 * k_.calculate_kernel_matrix(x=s, s=s)
         cc = cholesky(k__ + 1e-10 * np.eye(m), lower=True)
 
         mu = 0
@@ -343,7 +356,7 @@ class GaussianProcessRegression(Surrogate):
             beta = np.linalg.solve(g_, np.matmul(np.transpose(q_), y_dash))
             mu = np.einsum("ij,jk->ik", fx_, beta)
 
-        term1 = (y-mu).T @ (cho_solve((cc, True), y-mu))
+        term1 = (y - mu).T @ (cho_solve((cc, True), y - mu))
         term2 = 2 * np.sum(np.log(np.abs(np.diag(cc))))
 
         return 0.5 * (term1 + term2 + m * np.log(2 * np.pi))[0, 0]

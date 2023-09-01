@@ -29,4 +29,4 @@ Examples
 
 .. toctree::
 
-   Karhunen Loeve Examples <../auto_examples/stochastic_processes/karhunen_loeve/index>
+   Karhunen Loeve Examples <../auto_examples/stochastic_processes/karhunen_loeve_1d/index>

@@ -13,13 +13,11 @@ This example shows how to use the UQpy Grassmann class to use the logarithmic ma
 
 #%%
 
-import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import sys
-from UQpy.dimension_reduction.grassmann_manifold.projections.SVDProjection import SVDProjection
+import numpy as np
+
 from UQpy.dimension_reduction import GrassmannOperations
+from UQpy.dimension_reduction.grassmann_manifold.projections.SVDProjection import SVDProjection
 
 #%% md
 #

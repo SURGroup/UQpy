@@ -29,7 +29,7 @@ Methods
 ~~~~~~~~~
 
 .. autoclass:: UQpy.utilities.kernels.GaussianKernel
-    :members: kernel_entry, optimize_parameters
+    :members: optimize_parameters
 
 Attributes
 ~~~~~~~~~~
