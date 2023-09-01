@@ -133,6 +133,8 @@ class FORM(TaylorSeries):
         self.x_record: list = []
         """Record of all iteration points in the parameter space **X**."""
 
+        if (seed_x is not None) and (seed_u is not None):
+            raise ValueError('UQpy: Only one input (seed_x or seed_u) may be provided')
         if self.seed_u is not None:
             self.run(seed_u=self.seed_u)
         elif self.seed_x is not None:
