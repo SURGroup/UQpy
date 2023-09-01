@@ -49,10 +49,10 @@ class InverseFORM(TaylorSeries):
          Only one of :code:`p_fail` or :code:`beta` may be provided.
         :param seed_x: Point in the parameter space :math:`\mathbf{X}` to start from.
          Only one of :code:`seed_x` or :code:`seed_u` may be provided.
-         If neither is provided, the zero vector in :math:`\mathbf{U}` space is the seed.
+         If either :code:`seed_u` or :code:`seed_x` is provided, then the :py:meth:`run` method will be executed automatically.
         :param seed_u: Point in the uncorrelated standard normal space :math:`\mathbf{U}` to start from.
          Only one of :code:`seed_x` or :code:`seed_u` may be provided.
-         If neither is provided, the zero vector in :math:`\mathbf{U}` space is the seed.
+         If either :code:`seed_u` or :code:`seed_x` is provided, then the :py:meth:`run` method will be executed automatically.
         :param df_step: Finite difference step in standard normal space. Default: :math:`0.01`
         :param corr_x: Correlation matrix :math:`\mathbf{C_X}` of the random vector :math:`\mathbf{X}`
         :param corr_z: Correlation matrix :math:`\mathbf{C_Z}` of the random vector :math:`\mathbf{Z}`
@@ -129,6 +129,13 @@ class InverseFORM(TaylorSeries):
         """Record of the probability of failure defined by :math:`p_{fail} = \\Phi(-\\beta_{HL})`"""
         self.state_function: list = []
         """State function :math:`G(u)` evaluated at each step in the optimization"""
+
+        if (seed_x is not None) and (seed_u is not None):
+            raise ValueError('UQpy: Only one input (seed_x or seed_u) may be provided')
+        if self.seed_u is not None:
+            self.run(seed_u=self.seed_u)
+        elif self.seed_x is not None:
+            self.run(seed_x=self.seed_x)
 
     def run(self, seed_x: Union[list, np.ndarray] = None, seed_u: Union[list, np.ndarray] = None):
         """Runs the inverse FORM algorithm.
