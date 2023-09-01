@@ -110,9 +110,6 @@ class InverseFORM(TaylorSeries):
         """Normalized gradient vector in :math:`\\textbf{U}` space"""
         self.alpha_record: list = []
         """Record of :math:`\\alpha=\\frac{\\nabla G(u)}{||\\nabla G(u)||}`"""
-        self.beta: float = self.beta
-        """Hasofer-Lind reliability index that defines the feasibility criteria as
-         :math:`||\\textbf{U}|| = \\beta_{HL}`"""
         self.beta_record: list = []
         """Record of Hasofer-Lind reliability index that defines the feasibility criteria 
          :math:`||\\textbf{U}||=\\beta_{HL}`"""
