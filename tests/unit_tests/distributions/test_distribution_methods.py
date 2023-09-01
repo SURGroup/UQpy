@@ -140,10 +140,3 @@ def test_normal_pdf(value):
 def test_normal_cdf(value):
     normal = Normal()
     assert (np.isclose(normal.cdf(value), scipy.stats.norm.cdf(value))).all()
-
-
-@pytest.mark.parametrize("probability", [-1, 0, 1e-9, 0.15, 0.6626, 1-1e-9, 1, 2, np.array([-1, 0, 0.321123, 1, 5])])
-def test_normal_icdf(probability):
-    normal = Normal()
-    expected_value = np.atleast_1d(scipy.stats.norm.ppf(probability))
-    assert np.allclose(normal.icdf(probability), expected_value, equal_nan=True)

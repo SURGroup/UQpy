@@ -48,17 +48,3 @@ class Normal(DistributionContinuous1D):
         standard_deviation = self.parameters['scale']
         erf_input = (x - mean) / (standard_deviation * np.sqrt(2.0))
         return (1.0 + erf(erf_input)) / 2.0
-
-    @beartype
-    def __inverse_cumulative_distribution_function(self, y: NumericArrayLike):
-        """Inverse cumulative distribution function for normal distribution defined with inverse error function
-
-        Note: Currently this implementation is slower than scipy.stats.norm.ppf
-        :param y:
-        :return:
-        """
-        y = np.atleast_1d(y)
-        icdf = np.full(y.shape, np.nan)
-        mask = (0 <= y) & (y <= 1)
-        icdf[mask] = np.sqrt(2) * erfinv(2*y[mask] - 1)
-        return icdf
