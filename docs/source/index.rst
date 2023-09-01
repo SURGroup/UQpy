@@ -18,7 +18,7 @@ as a set of modules centered around core capabilities in Uncertainty Quantificat
 +                       +                                                                  +
 |                       | Ketson RM dos Santos, Katiana Kontolati, Dimitris Loukrezis,     |
 +                       +                                                                  +
-|                       | Promit Chakroborty, Lukáš Novák, Andrew Solanto                  |
+|                       | Promit Chakroborty, Lukáš Novák, Andrew Solanto, Connor Krill    |
 +-----------------------+------------------------------------------------------------------+
 | **Contributors:**     | Michael Gardner, Prateek Bhustali, Julius Schultz, Ulrich Römer  |
 +-----------------------+------------------------------------------------------------------+

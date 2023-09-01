@@ -34,13 +34,13 @@ loc_ = 0.0
 
 dist1 = Normal(loc=20., scale=2)
 dist2 = Lognormal(s=s, loc=0.0, scale=scale)
-model = PythonModel(model_script='local_pfn.py', model_object_name="example4",)
+model = PythonModel(model_script='local_model4.py', model_object_name="example4")
 RunModelObject4 = RunModel(model=model)
 form = FORM(distributions=[dist1, dist2], runmodel_object=RunModelObject4)
 form.run()
-Q0 = SORM(form_object=form)
+sorm = SORM(form_object=form)
 
 
 # print results
-print('SORM probability of failure: %s' % Q0.failure_probability)
+print('SORM probability of failure: %s' % sorm.failure_probability)
 

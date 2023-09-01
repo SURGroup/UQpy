@@ -156,7 +156,7 @@ class FORM(TaylorSeries):
         elif seed_u is None and seed_x is not None:
             self.nataf_object.run(samples_x=seed_x.reshape(1, -1), jacobian=False)
             seed_z = self.nataf_object.samples_z
-            seed = Decorrelate(seed_z, self.nataf_object.corr_z)
+            seed = Decorrelate(seed_z, self.nataf_object.corr_z).samples_u
         elif seed_u is not None and seed_x is None:
             seed = np.squeeze(seed_u)
         else:
