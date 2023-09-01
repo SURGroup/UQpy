@@ -76,7 +76,7 @@ class InverseFORM(TaylorSeries):
             self.p_fail = p_fail
             self.beta = -stats.norm.ppf(self.p_fail)
         elif beta is not None:
-            self.p_fail = stats.norm.cdf(-beta)
+            self.p_fail = stats.norm.cdf(-1*beta)
             self.beta = beta
         self.seed_x = seed_x
         self.seed_u = seed_u
