@@ -2,10 +2,10 @@ Reliability
 ===========
 
 Reliability of a system refers to the assessment of its probability of failure (i.e the system no longer satisfies some
-performance measure), given the model uncertainty in the structural, environmental and load parameters. Given a vector
+performance measures), given the model uncertainty in the structural, environmental and load parameters. Given a vector
 of random variables :math:`\textbf{X}=[X_1, X_2, \ldots, X_n]^T \in \mathcal{D}_\textbf{X}\subset \mathbb{R}^n`, where
-:math:`\mathcal{D}_\textbf{X}` is the domain of interest and :math:`f_{\textbf{X}}(\textbf{x})` is its joint probability density
-function, then the probability that the system will fail is defined as
+:math:`\mathcal{D}` is the domain of interest and :math:`f_{\textbf{X}}(\textbf{x})` is its joint probability density
+function then, the probability that the system will fail is defined as
 
 
 .. math:: P_f =\mathbb{P}(g(\textbf{X}) \leq 0) = \int_{\mathcal{D}_f} f_{\textbf{X}}(\textbf{x})d\textbf{x} = \int_{\{\textbf{X}:g(\textbf{X})\leq 0 \}} f_{\textbf{X}}(\textbf{x})d\textbf{x}
@@ -23,8 +23,8 @@ transformation and can support reliability analysis for problems with arbitraril
 This module contains functionality for all reliability methods supported in :py:mod:`UQpy`.
 The module currently contains the following classes:
 
-- :class:`.TaylorSeries`: Class to perform reliability analysis using First Order reliability Method (:class:`FORM`) and Second Order
-  Reliability Method (:class:`SORM`).
+- :class:`.TaylorSeries`: Class to perform reliability analysis using First Order Reliability Method (:class:`FORM`),
+  Inverse First Order Reliability Method (:class:`InverseFORM`) and Second Order Reliability Method (:class:`SORM`).
 - :class:`.SubsetSimulation`: Class to perform reliability analysis using subset simulation.
 
 
