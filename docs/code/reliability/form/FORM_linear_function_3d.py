@@ -35,13 +35,13 @@ dist2 = Normal(loc=5., scale=0.8)
 dist3 = Normal(loc=4., scale=0.4)
 
 model = PythonModel(model_script='local_pfn.py', model_object_name="example3",)
-RunModelObject3 = RunModel(model=model)
+run_model = RunModel(model=model)
 
-Z0 = FORM(distributions=[dist1, dist2, dist3], runmodel_object=RunModelObject3)
-Z0.run()
+form = FORM(distributions=[dist1, dist2, dist3], runmodel_object=run_model)
+form.run()
 
-print('Design point in standard normal space: %s' % Z0.design_point_u)
-print('Design point in original space: %s' % Z0.design_point_x)
-print('Hasofer-Lind reliability index: %s' % Z0.beta)
-print('FORM probability of failure: %s' % Z0.failure_probability)
+print('Design point in standard normal space: %s' % form.design_point_u)
+print('Design point in original space: %s' % form.design_point_x)
+print('Hasofer-Lind reliability index: %s' % form.beta)
+print('FORM probability of failure: %s' % form.failure_probability)
 
