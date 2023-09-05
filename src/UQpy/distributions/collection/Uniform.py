@@ -28,7 +28,7 @@ class Uniform(DistributionContinuous1D):
     def __probability_density_function(self, x: NumericArrayLike) -> np.ndarray:
         """Probability Density Function for the uniform distribution
 
-        :param x:
+        :param x: Points at which to evaluate the probability density function
         :return: pdf at all points in x
         """
         x = np.atleast_1d(x)
@@ -43,7 +43,7 @@ class Uniform(DistributionContinuous1D):
     def __cumulative_distribution_function(self, x: NumericArrayLike) -> np.ndarray:
         """Cumulative Distribution Function for the Uniform Distribution
 
-        :param x:
+        :param x: Points at which to evaluate the cumulative distribution function
         """
         x = np.atleast_1d(x)
         loc = self.parameters['loc']
@@ -55,16 +55,16 @@ class Uniform(DistributionContinuous1D):
         cdf[upper_mask] = 1
         return cdf
 
-    def __inverse_cumulative_distribution_function(self, y: NumericArrayLike) -> np.ndarray:
+    def __inverse_cumulative_distribution_function(self, x: NumericArrayLike) -> np.ndarray:
         """Inverse cumulative distribution function for uniform distribution
 
-        :param y:
+        :param x: Point at which to evaluate the inverse cumulative distribution function
         :return:
         """
-        y = np.atleast_1d(y)
+        x = np.atleast_1d(x)
         loc = self.parameters['loc']
         scale = self.parameters['scale']
-        icdf = np.full(y.shape, np.nan)
-        mask = (0 <= y) & (y <= 1)
-        icdf[mask] = loc + (y[mask] * scale)
+        icdf = np.full(x.shape, np.nan)
+        mask = (0 <= x) & (x <= 1)
+        icdf[mask] = loc + (x[mask] * scale)
         return icdf
