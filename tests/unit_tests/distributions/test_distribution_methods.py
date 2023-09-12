@@ -99,7 +99,8 @@ def test_update_params_copula():
 ])
 def test_uniform_pdf(value, expected_probability):
     uniform = Uniform()
-    assert all(uniform.pdf(value) == expected_probability)
+    assert (np.isclose(uniform.pdf(value), expected_probability, equal_nan=True)).all()
+    # assert all(uniform.pdf(value) == expected_probability)
 
 
 @pytest.mark.parametrize("value,expected_probability", [
@@ -112,7 +113,8 @@ def test_uniform_pdf(value, expected_probability):
 ])
 def test_uniform_cdf(value, expected_probability):
     uniform = Uniform()
-    assert all(uniform.cdf(value) == expected_probability)
+    assert (np.isclose(uniform.cdf(value), expected_probability, equal_nan=True)).all()
+    # assert all(uniform.cdf(value) == expected_probability)
 
 
 @pytest.mark.parametrize("probability,expected_value", [
@@ -127,7 +129,7 @@ def test_uniform_cdf(value, expected_probability):
 ])
 def test_uniform_icdf(probability, expected_value):
     uniform = Uniform()
-    assert np.array_equal(uniform.icdf(probability), np.atleast_1d(expected_value), equal_nan=True)
+    assert (np.isclose(uniform.icdf(probability), expected_value, equal_nan=True)).all()
 
 
 @pytest.mark.parametrize("value", [-3, -2.5, -1, 0, 1, 2.415, 6.168, np.array([-8, -4.13, -1, 0, 2])])

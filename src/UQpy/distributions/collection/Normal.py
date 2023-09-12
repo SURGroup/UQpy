@@ -30,11 +30,14 @@ class Normal(DistributionContinuous1D):
         :param x:
         :return:
         """
-        x = np.atleast_1d(x)
+        x_array = np.atleast_1d(x)
         mean = self.parameters['loc']
         standard_deviation = self.parameters['scale']
         normalizing_constant = 1 / (standard_deviation * np.sqrt(2 * np.pi))
-        return normalizing_constant * np.exp(-0.5 * ((x - mean) / standard_deviation)**2)
+        pdf = normalizing_constant * np.exp(-0.5 * ((x_array - mean) / standard_deviation)**2)
+        if isinstance(x, int) or isinstance(x, float):
+            return pdf[0]
+        return pdf
 
     @beartype
     def __cumulative_distribution_function(self, x: NumericArrayLike):
@@ -43,8 +46,11 @@ class Normal(DistributionContinuous1D):
         :param x:
         :return:
         """
-        x = np.atleast_1d(x)
+        x_array = np.atleast_1d(x)
         mean = self.parameters['loc']
         standard_deviation = self.parameters['scale']
-        erf_input = (x - mean) / (standard_deviation * np.sqrt(2.0))
-        return (1.0 + erf(erf_input)) / 2.0
+        erf_input = (x_array - mean) / (standard_deviation * np.sqrt(2.0))
+        cdf = (1.0 + erf(erf_input)) / 2.0
+        if isinstance(x, int) or isinstance(x, float):
+            return cdf[0]
+        return cdf
