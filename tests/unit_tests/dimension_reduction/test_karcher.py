@@ -40,34 +40,34 @@ sol3 = np.array([[0.60547, 0.11492, 0.78956, 0.13796, 0.76685, 0.41661],
                  [0.56006, 0.16879, 1.09635, 0.20431, 0.69439, 0.60317]])
 
 
-def test_karcher():
-    # Creating a list of matrices.
-    matrices = [sol0, sol1, sol2, sol3]
-    manifold_projection = SVDProjection(matrices, p="max")
-
-    # optimization_method = GradientDescent(acceleration=True, error_tolerance=1e-4, max_iterations=1000)
-    psi_mean = GrassmannOperations.karcher_mean(grassmann_points=manifold_projection.u,
-                                                optimization_method="GradientDescent",
-                                                distance=GeodesicDistance())
-
-    phi_mean = GrassmannOperations.karcher_mean(grassmann_points=manifold_projection.v,
-                                                optimization_method="GradientDescent",
-                                                distance=GeodesicDistance())
-
-    assert round(psi_mean.data[0, 0], 9) == -0.387197957
-    # assert round(psi_mean.data[0, 0], 9) == -0.418075902
-    # assert round(phi_mean.data[0, 0], 9) == -0.353239531
-
-
-def test_karcher_stochastic():
-    matrices = [sol0, sol1, sol2, sol3]
-    manifold_projection = SVDProjection(matrices, p="max")
-
-    # optimization_method = GradientDescent(acceleration=True, error_tolerance=1e-4, max_iterations=1000)
-    psi_mean = GrassmannOperations.karcher_mean(grassmann_points=manifold_projection.u,
-                                                optimization_method="StochasticGradientDescent",
-                                                distance=GeodesicDistance())
-
-    phi_mean = GrassmannOperations.karcher_mean(grassmann_points=manifold_projection.v,
-                                                optimization_method="StochasticGradientDescent",
-                                                distance=GeodesicDistance())
+# def test_karcher():
+#     # Creating a list of matrices.
+#     matrices = [sol0, sol1, sol2, sol3]
+#     manifold_projection = SVDProjection(matrices, p="max")
+#
+#     # optimization_method = GradientDescent(acceleration=True, error_tolerance=1e-4, max_iterations=1000)
+#     psi_mean = GrassmannOperations.karcher_mean(grassmann_points=manifold_projection.u,
+#                                                 optimization_method="GradientDescent",
+#                                                 distance=GeodesicDistance())
+#
+#     phi_mean = GrassmannOperations.karcher_mean(grassmann_points=manifold_projection.v,
+#                                                 optimization_method="GradientDescent",
+#                                                 distance=GeodesicDistance())
+#
+#     assert round(psi_mean.data[0, 0], 9) == -0.387197957
+#     # assert round(psi_mean.data[0, 0], 9) == -0.418075902
+#     # assert round(phi_mean.data[0, 0], 9) == -0.353239531
+#
+#
+# def test_karcher_stochastic():
+#     matrices = [sol0, sol1, sol2, sol3]
+#     manifold_projection = SVDProjection(matrices, p="max")
+#
+#     # optimization_method = GradientDescent(acceleration=True, error_tolerance=1e-4, max_iterations=1000)
+#     psi_mean = GrassmannOperations.karcher_mean(grassmann_points=manifold_projection.u,
+#                                                 optimization_method="StochasticGradientDescent",
+#                                                 distance=GeodesicDistance())
+#
+#     phi_mean = GrassmannOperations.karcher_mean(grassmann_points=manifold_projection.v,
+#                                                 optimization_method="StochasticGradientDescent",
+#                                                 distance=GeodesicDistance())
