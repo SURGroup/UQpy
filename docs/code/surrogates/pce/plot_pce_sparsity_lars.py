@@ -15,8 +15,7 @@ algorithm based on Least Angle Regression.
 # %%
 
 import numpy as np
-import math
-import numpy as np
+
 from UQpy.distributions import Uniform, JointIndependent
 from UQpy.surrogates import *
 
@@ -24,7 +23,8 @@ from UQpy.surrogates import *
 # %% md
 #
 # We then define the Ishigami function, which reads:
-# :math:` f(x_1, x_2, x_3) = \sin(x_1) + a \sin^2(x_2) + b x_3^4 \sin(x_1)`
+#
+# .. math:: f(x_1, x_2, x_3) = \sin(x_1) + a \sin^2(x_2) + b x_3^4 \sin(x_1)
 
 # %%
 
@@ -41,7 +41,7 @@ def ishigami(xx):
 
 # %% md
 #
-# The Ishigami function has three indepdent random inputs, which are uniformly distributed in
+# The Ishigami function has three independent random inputs, which are uniformly distributed in
 # interval :math:`[-\pi, \pi]`.
 
 # %%
@@ -70,7 +70,7 @@ joint = JointIndependent(marginals=marg)
 #
 # where :math:`N` is the number of random inputs (here, :math:`N=3`).
 #
-# Note that the size of the basis is highly dependent both on :math:`N` and :math:`P:math:`. It is generally advisable
+# Note that the size of the basis is highly dependent both on :math:`N` and :math:`P`. It is generally advisable
 # that the experimental design has :math:`2-10` times more data points than the number of PCE polynomials. This might
 # lead to curse of dimensionality and thus we will utilize the best model selection algorithm based on
 # Least Angle Regression.
@@ -102,8 +102,8 @@ yy_train = np.array([ishigami(x) for x in xx_train])
 
 # %% md
 #
-# We now fit the PCE coefficients by solving a regression problem. Here we opt for the _np.linalg.lstsq_ method,
-# which is based on the _dgelsd_ solver of LAPACK. This original PCE class will be used for further selection of
+# We now fit the PCE coefficients by solving a regression problem. Here we opt for the :code:`_np.linalg.lstsq_` method,
+# which is based on the :code:`_dgelsd_` solver of LAPACK. This original PCE class will be used for further selection of
 # the best basis functions.
 
 # %%
@@ -238,7 +238,7 @@ for degree in range(16):
 # %% md
 #
 # In case of high-dimensional input and/or high :math:P` it is also beneficial to reduce the TD basis set by hyperbolic
-# trunction. The hyperbolic truncation reduces higher-order interaction terms in dependence to parameter :math:`q` in
+# truncation. The hyperbolic truncation reduces higher-order interaction terms in dependence to parameter :math:`q` in
 # interval :math:`(0,1)`. The set of multi indices :math:`\alpha` is reduced as follows:
 #
 # :math:`\alpha\in \mathbb{N}^{N}: || \boldsymbol{\alpha}||_q \equiv \Big( \sum_{i=1}^{N} \alpha_i^q \Big)^{1/q} \leq P`

@@ -133,6 +133,8 @@ class FORM(TaylorSeries):
         self.x_record: list = []
         """Record of all iteration points in the parameter space **X**."""
 
+        if (seed_x is not None) and (seed_u is not None):
+            raise ValueError('UQpy: Only one input (seed_x or seed_u) may be provided')
         if self.seed_u is not None:
             self.run(seed_u=self.seed_u)
         elif self.seed_x is not None:
@@ -156,7 +158,7 @@ class FORM(TaylorSeries):
         elif seed_u is None and seed_x is not None:
             self.nataf_object.run(samples_x=seed_x.reshape(1, -1), jacobian=False)
             seed_z = self.nataf_object.samples_z
-            seed = Decorrelate(seed_z, self.nataf_object.corr_z)
+            seed = Decorrelate(seed_z, self.nataf_object.corr_z).samples_u
         elif seed_u is not None and seed_x is None:
             seed = np.squeeze(seed_u)
         else:

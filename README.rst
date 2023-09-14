@@ -6,8 +6,6 @@
 .. |AzureDevops| image:: https://img.shields.io/azure-devops/build/UQpy/5ce1851f-e51f-4e18-9eca-91c3ad9f9900/1?style=plastic   :alt: Azure DevOps builds
 .. |PyPIdownloads| image:: https://img.shields.io/pypi/dm/UQpy?style=plastic   :alt: PyPI - Downloads
 .. |PyPI| image:: https://img.shields.io/pypi/v/UQpy?style=plastic   :alt: PyPI
-.. |Binder| image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/SURGroup/UQpy/master
 
 .. |bear-ified| image:: https://raw.githubusercontent.com/beartype/beartype-assets/main/badge/bear-ified.svg
    :align: top
@@ -32,7 +30,7 @@ Uncertainty Quantification with python (UQpy)
 +                       +                                                                  +
 |                       | Ketson RM dos Santos, Katiana Kontolati, Dimitris Loukrezis,     |
 +                       +                                                                  +
-|                       | Promit Chakroborty, Lukáš Novák, Andrew Solanto                  |
+|                       | Promit Chakroborty, Lukáš Novák, Andrew Solanto, Connor Krill    |
 +-----------------------+------------------------------------------------------------------+
 | **Contributors:**     | Michael Gardner, Prateek Bhustali, Julius Schultz, Ulrich Römer  |
 +-----------------------+------------------------------------------------------------------+
