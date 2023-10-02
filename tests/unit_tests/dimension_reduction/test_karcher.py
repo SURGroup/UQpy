@@ -23,8 +23,8 @@ def test_karcher_mean_2point():
     assert np.allclose(mean.data, solution)
 
 
-def test_karcher_mean_3point():
-    """Test karcher mean on 3 points in the manifold Gr(1, 2)"""
+def test_karcher_mean_4point():
+    """Test karcher mean on 4 points in the manifold Gr(1, 2)"""
     points = [np.array([[np.cos(np.deg2rad(theta))],
                         [np.sin(np.deg2rad(theta))]]) for theta in (0, 15, 75, 90)]
     mean = GrassmannOperations.karcher_mean(grassmann_points=points,
