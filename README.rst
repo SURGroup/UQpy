@@ -1,4 +1,4 @@
-|AzureDevops| |PyPIdownloads| |PyPI| |CondaPlatforms| |GithubRelease| |Binder| |Docs| |bear-ified|
+|AzureDevops| |PyPIdownloads| |PyPI| |CondaPlatforms| |GithubRelease| |Docs| |bear-ified|
 
 .. |Docs| image:: https://img.shields.io/readthedocs/uqpy?style=plastic  :alt: Read the Docs
 .. |CondaPlatforms| image:: https://img.shields.io/conda/pn/SURG_JHU/uqpy?style=plastic   :alt: Conda
