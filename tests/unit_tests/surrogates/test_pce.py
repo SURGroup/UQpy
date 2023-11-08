@@ -1,5 +1,4 @@
 import pytest
-
 from UQpy import ThetaCriterionPCE
 from UQpy.distributions import JointIndependent, Normal
 from UQpy.sampling import MonteCarloSampling
@@ -11,6 +10,7 @@ import numpy as np
 
 from UQpy.surrogates.polynomial_chaos.polynomials.TotalDegreeBasis import TotalDegreeBasis
 from UQpy.surrogates.polynomial_chaos.polynomials.TensorProductBasis import TensorProductBasis
+import UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE as PC2
 
 np.random.seed(1)
 max_degree, n_samples = 2, 10
@@ -438,3 +438,110 @@ def test_23():
     ref_sample[:, 1] = ref_sample2
     ref_pdf = ref_pdf1 * ref_pdf2
     assert (standardized_samples == ref_sample).all() and (standardized_pdf == ref_pdf).all()
+
+def test_24():
+    """
+    Test Physics-Informed PCE of Euler-Bernoutli Beam
+    """
+
+    # Definition of PDE/ODE in context of PC^2
+
+    # Definition of PDE/ODE
+    def pde_func(S, pce):
+        der_order = 4
+        deriv_0_PCE = PC2.derivative_basis(S, pce, der_order=der_order, variable=0) * ((2 / 1) ** der_order)
+
+        pde_basis = deriv_0_PCE
+
+        return pde_basis
+
+    # Definition of the source term
+    def pde_res(S):
+        load_s = Load(S)
+
+        return -load_s[:, 0]
+
+    def Load(S):
+        return Const_Load(S)
+
+    def Const_Load(S):
+        l = np.ones((len(S), 1))
+        return l
+
+    # define sampling and evaluation of BC for estimation of error
+    def bc_res(nsim, pce):
+        bc_x = np.zeros((2, 1))
+        bc_x[1, 0] = 1
+        bc_s = polynomial_chaos.Polynomials.standardize_sample(bc_x, pce.polynomial_basis.distributions)
+
+        der_order = 2
+        deriv_0_PCE = np.sum(
+            PC2.derivative_basis(bc_s, pce, der_order=der_order, variable=0) * ((2 / 1) ** der_order) * np.array(
+                pce.coefficients).T, axis=1)
+
+        return deriv_0_PCE
+
+    def ref_sol(x):
+        return -(x ** 4) / 24 + x ** 3 / 12 - x / 24
+
+    # definition of the stochastic model
+
+    nvar = 1
+    least_squares = LeastSquareRegression()
+    dist1 = Uniform(loc=0, scale=1)
+
+    joint = dist1
+
+    # define geometry of physical space
+    geometry_xmin = np.array([0])
+    geometry_xmax = np.array([1])
+
+    # prescribing BC of PDEs
+
+    # derivation orders of prescribed BCs
+    der_orders = [0, 2]
+    # normals associated to precribed BCs
+    bc_normals = np.array([0, 0])
+    # sampling of BC points
+    bc_xtotal = np.zeros((2, 1))
+    bc_xtotal[1, 0] = 1
+    bc_ytotal = np.zeros(len(bc_xtotal))
+    bc_x = [bc_xtotal, bc_xtotal]
+    bc_y = [bc_ytotal, bc_ytotal]
+
+    # construct object containing all PDE data
+    pde_data = PC2.PdeData(geometry_xmax, geometry_xmin, der_orders, bc_normals, bc_x, bc_y)
+
+    #  construct object containing PDE data and PC^2 definitions of PDE
+    pde_pce = PC2.PdePce(pde_data, pde_func, pde_res=pde_res, bc_res=bc_res)
+
+    # extract dirichlet BC
+    dirichlet_bc = pde_data.dirichlet
+    x_train = dirichlet_bc[:, :-1]
+    y_train = dirichlet_bc[:, -1]
+
+    # construct PC^2
+
+    p = 8
+
+    PCEorder = p
+    polynomial_basis = TotalDegreeBasis(joint, PCEorder, hyperbolic=1)
+
+    #  create initial PCE object containing basis, regression method and dirichlet BC
+    initpce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
+    initpce.set_ed(x_train, y_train)
+
+    # construct a PC^2 object combining pde_data, pde_pce and initial PCE objects
+    pcpc = PC2.ConstrainedPce(pde_data, pde_pce, initpce)
+    # get coefficients of PC^2 by least angle regression
+    pcpc.ols()
+
+    real_ogrid = PC2.ortho_grid(100, nvar, 0, 1)
+    yy_val_pce_kkt = pcpc.initial_pce.predict(real_ogrid).flatten()
+    yy_val_true = ref_sol(real_ogrid).flatten()
+
+    err = np.abs(yy_val_pce_kkt - yy_val_true)
+    tot_err = np.sum(err)
+    assert tot_err<10**-6
+
+
