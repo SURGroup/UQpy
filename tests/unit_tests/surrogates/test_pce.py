@@ -441,7 +441,7 @@ def test_23():
 
 def test_24():
     """
-    Test Physics-Informed PCE of Euler-Bernoutli Beam
+    Test Physics-Informed PCE of Euler-Bernoulli Beam
     """
 
     # Definition of PDE/ODE in context of PC^2
