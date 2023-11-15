@@ -64,6 +64,7 @@ class ReducedPce:
 
         """
         Evaluate reduced PCE coefficients for given deterministic coordinates.
+
         :param coordinates: deterministic coordinates for evaluation of reduced PCE
         :param return_coeff: if True, return a vector of deterministic coefficients, else return Mean and Variance
         :return: mean and variance, or a vector of deterministic coefficients if return_coeff
@@ -100,6 +101,7 @@ class ReducedPce:
 
         """
         Evaluate derivative of reduced PCE coefficients for given deterministic coordinates.
+
         :param coordinates: deterministic coordinates for evaluation of reduced PCE
         :param der_order: derivation order of reduced PCE
         :param der_var: leading variable for derivation
@@ -148,6 +150,7 @@ class ReducedPce:
 
         """
         Get first order conditional variances from coefficients of reduced PCE evaluated in specific deterministic coordinates
+
         :param unique_beta: vector of reduced PCE coefficients
         :return: first order conditional variances associated to each input random variable
         """

@@ -237,7 +237,7 @@ for degree in range(16):
 
 # %% md
 #
-# In case of high-dimensional input and/or high :math:P` it is also beneficial to reduce the TD basis set by hyperbolic
+# In case of high-dimensional input and/or high :math:`P` it is also beneficial to reduce the TD basis set by hyperbolic
 # truncation. The hyperbolic truncation reduces higher-order interaction terms in dependence to parameter :math:`q` in
 # interval :math:`(0,1)`. The set of multi indices :math:`\alpha` is reduced as follows:
 #

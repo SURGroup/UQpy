@@ -10,7 +10,11 @@ import numpy as np
 
 from UQpy.surrogates.polynomial_chaos.polynomials.TotalDegreeBasis import TotalDegreeBasis
 from UQpy.surrogates.polynomial_chaos.polynomials.TensorProductBasis import TensorProductBasis
-import UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE as PC2
+# load PC^2
+from UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE import ConstrainedPce
+from UQpy.surrogates.polynomial_chaos.physics_informed.PdeData import PdeData
+from UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE import PdePce
+from UQpy.surrogates.polynomial_chaos.physics_informed.Utilities import *
 
 np.random.seed(1)
 max_degree, n_samples = 2, 10
@@ -449,7 +453,7 @@ def test_24():
     # Definition of PDE/ODE
     def pde_func(S, pce):
         der_order = 4
-        deriv_0_PCE = PC2.derivative_basis(S, pce, der_order=der_order, variable=0) * ((2 / 1) ** der_order)
+        deriv_0_PCE = derivative_basis(S, pce, der_order=der_order, variable=0) * ((2 / 1) ** der_order)
 
         pde_basis = deriv_0_PCE
 
@@ -476,7 +480,7 @@ def test_24():
 
         der_order = 2
         deriv_0_PCE = np.sum(
-            PC2.derivative_basis(bc_s, pce, der_order=der_order, variable=0) * ((2 / 1) ** der_order) * np.array(
+            derivative_basis(bc_s, pce, der_order=der_order, variable=0) * ((2 / 1) ** der_order) * np.array(
                 pce.coefficients).T, axis=1)
 
         return deriv_0_PCE
@@ -510,10 +514,10 @@ def test_24():
     bc_y = [bc_ytotal, bc_ytotal]
 
     # construct object containing all PDE data
-    pde_data = PC2.PdeData(geometry_xmax, geometry_xmin, der_orders, bc_normals, bc_x, bc_y)
+    pde_data = PdeData(geometry_xmax, geometry_xmin, der_orders, bc_normals, bc_x, bc_y)
 
     #  construct object containing PDE data and PC^2 definitions of PDE
-    pde_pce = PC2.PdePce(pde_data, pde_func, pde_res=pde_res, bc_res=bc_res)
+    pde_pce = PdePce(pde_data, pde_func, pde_res=pde_res, bc_res=bc_res)
 
     # extract dirichlet BC
     dirichlet_bc = pde_data.dirichlet
@@ -532,11 +536,11 @@ def test_24():
     initpce.set_ed(x_train, y_train)
 
     # construct a PC^2 object combining pde_data, pde_pce and initial PCE objects
-    pcpc = PC2.ConstrainedPce(pde_data, pde_pce, initpce)
+    pcpc = ConstrainedPce(pde_data, pde_pce, initpce)
     # get coefficients of PC^2 by least angle regression
     pcpc.ols()
 
-    real_ogrid = PC2.ortho_grid(100, nvar, 0, 1)
+    real_ogrid = ortho_grid(100, nvar, 0, 1)
     yy_val_pce_kkt = pcpc.initial_pce.predict(real_ogrid).flatten()
     yy_val_true = ref_sol(real_ogrid).flatten()
 

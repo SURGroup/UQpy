@@ -4,230 +4,13 @@ from scipy.special import legendre
 from sklearn import linear_model as regresion
 from UQpy.surrogates import *
 from UQpy.distributions.collection import Uniform, Normal
+import UQpy.surrogates.polynomial_chaos.physics_informed.Utilities as utils
 import copy
-
-def transformation_multiplier(original_geometry, var, derivation_order=1):
-    """
-    Get transformation multiplier for derivatives of PCE basis functions (assuming Uniform distribution)
-    :param original_geometry: number of samples per dimension, i.e. total number is n**nvar
-    :param var: number of dimensions
-    :param derivation_order: order of derivative
-    :return: multiplier reflecting a different sizes of physical and standardized spaces
-    """
-
-    size = np.abs(original_geometry.xmax[var] - original_geometry.xmin[var])
-    multplier = (2 / size) ** derivation_order
-
-    return multplier
-
-
-def ortho_grid(n, nvar, xmin=-1, xmax=1):
-    """
-    Create orthogonal grid of samples.
-    :param n: number of samples per dimension, i.e. total number is n**nvar
-    :param nvar: number of dimensions
-    :param xmin: lower bound of hypercube
-    :param xmax: upper bound of hypercube
-    :return: generated grid of samples
-    """
-
-    xrange = (xmax - xmin) / 2
-    nsim = n ** nvar
-    x = np.linspace(xmin + xrange / n, xmax - xrange / n, n)
-    x_list = [x] * nvar
-    X = np.meshgrid(*x_list)
-    grid = np.array(X).reshape((nvar, nsim)).T
-    return grid
-
-
-def derivative_basis(s, pce, der_order=0, variable=None):
-    """
-    Create orthogonal grid of samples.
-    :param s: samples in standardized space for an evaluation of derived basis
-    :param pce: an object of the :py:meth:`UQpy` :class:`PolynomialChaosExpansion` class
-    :param der_order: order of derivative
-    :param variable: leading variable of derivatives
-    :return: evaluated derived basis
-    """
-
-    multindex = pce.multi_index_set
-    joint_distribution = pce.polynomial_basis.distributions
-
-    card_basis, nvar = multindex.shape
-
-    if nvar == 1:
-        marginals = [joint_distribution]
-    else:
-        marginals = joint_distribution.marginals
-
-    mask_herm = [type(marg) == Normal for marg in marginals]
-    mask_lege = [type(marg) == Uniform for marg in marginals]
-    if variable is not None:
-
-        ns = multindex[:, variable]
-        polysd = []
-
-        if mask_lege[variable]:
-
-            for n in ns:
-                polysd.append(legendre(n).deriv(der_order))
-
-            prep_l_deriv = np.sqrt((2 * multindex[:, variable] + 1)).reshape(-1, 1)
-
-            prep_deriv = []
-            for poly in polysd:
-                prep_deriv.append(np.polyval(poly, s[:, variable]).reshape(-1, 1))
-
-            prep_deriv = np.array(prep_deriv)
-
-        mask_herm[variable] = False
-        mask_lege[variable] = False
-
-    prep_hermite = sp.eval_hermitenorm(multindex[:, mask_herm][:, np.newaxis, :], s[:, mask_herm])
-    prep_legendre = sp.eval_legendre(multindex[:, mask_lege][:, np.newaxis, :], s[:, mask_lege])
-
-    prep_fact = np.sqrt(sp.factorial(multindex[:, mask_herm]))
-    prep = np.sqrt((2 * multindex[:, mask_lege] + 1))
-
-    multivariate_basis = np.prod(prep_hermite / prep_fact[:, np.newaxis, :], axis=2).T
-    multivariate_basis *= np.prod(prep_legendre * prep[:, np.newaxis, :], axis=2).T
-
-    if variable is not None:
-        multivariate_basis *= np.prod(prep_deriv * prep_l_deriv[:, np.newaxis, :], axis=2).T
-
-    return multivariate_basis
-
-
-class PdeData:
-    def __init__(self, geometry_xmax, geometry_xmin, der_orders, bc_normals, bc_x, bc_y):
-        """
-        Class containing information about PDE solved by Physics-informed PCE
-
-        :param geometry_xmax: list of upper bounds of determnistic variables (geometry and time)
-        :param geometry_xmin:list of lower bounds of determnistic variables (geometry and time)
-        :param der_orders: list of derivative orders of boundary conditions
-        :param bc_normals: normals of boundary conditions
-        :param bc_x: coordinates of boundary samples
-        :param bc_y: prescribed values of boundary conditions in bc_x
-        """
-        self.xmax = geometry_xmax
-        self.xmin = geometry_xmin
-        self.der_orders = der_orders
-        self.bc_normals = bc_normals
-        self.bc_x = bc_x
-        self.bc_y = bc_y
-
-        self.nconst = 0
-        self.dirichlet = None
-        self.extract_dirichlet()
-
-    def extract_dirichlet(self):
-        """
-        Extract Dirichlet boundary conditions in form [coordinates, prescribed values]
-        """
-        coord = []
-        value = []
-        dirichletbc = None
-
-        nconst = 0
-        for i in range(len(self.der_orders)):
-
-            if self.der_orders[i] == 0:
-                coord.append(self.bc_x[i])
-                value.append(self.bc_y[i])
-            else:
-                nconst = nconst + len((self.bc_x[i]))
-
-        self.nconst = nconst
-
-        if len(coord) > 0:
-            coord = np.concatenate(coord)
-            value = np.concatenate(value)
-            dirichletbc = np.c_[coord, value]
-
-        self.dirichlet = dirichletbc
-
-    def get_bcsamples(self, order):
-        """
-        Extract boundary conditions of defined order
-        :param order: order of extracted boundary conditions
-        :return: extracted bc samples in form [coordinates, prescribed values]
-        """
-        coord = []
-        value = []
-        bcsamples = None
-
-        for i in range(len(self.der_orders)):
-            if self.der_orders[i] == order:
-                coord.append(self.bc_x[i])
-                value.append(self.bc_y[i])
-
-        if len(coord) > 0:
-            coord = np.concatenate(coord)
-            value = np.array(value).reshape(-1)
-            bcsamples = np.c_[coord, value]
-
-        return bcsamples
-
-
-class PdePce:
-    def __init__(self, pde_data, pde_func, pde_res=None, bc_res=None, bc_func=None, virt_func=None, nonlinear=False):
-        """
-        Class containing information about PDE needed for physics-informed PCE
-
-        :param pde_data: an object of the :py:meth:`UQpy` :class:`PdeData` class
-        :param pde_func: pde defined in basis functions
-        :param pde_res: source term of pde
-        :param bc_res: evaluation of boundary conditions for estimation of an error
-        :param bc_func: function for sampling of boundary conditions
-        :param virt_func: function for sampling of virtual samples
-        :param nonlinear: if True, prescribed pde is non-linear
-        """
-
-        self.pde_data = pde_data
-        self.pde = pde_func
-        self.pde_res = pde_res
-        self.bc_func = bc_func
-        self.bc_res = bc_res
-        self.virt_func = virt_func
-        self.nonlinear = nonlinear
-
-    def pde_eval(self, s, pce, coefficients=None):
-
-        pde_basis = self.pde(s, pce)
-
-        if coefficients is not None:
-            return np.sum(pde_basis * np.array(coefficients).T, axis=1)
-        else:
-            return pde_basis
-
-    def bc_eval(self, nsim, pce):
-        return self.bc_res(nsim, pce)
-
-    def pderes_eval(self, s, multindex=None, coefficients=None):
-
-        if self.pde_res is not None:
-            if self.nonlinear:
-                return self.pde_res(s, multindex, coefficients)
-            else:
-                return self.pde_res(s)
-        else:
-            return 0
-
-    def bcfunc_eval(self, s, multindex=None, coefficients=None):
-        if self.bc_func is not None:
-            if coefficients is not None:
-                bc_pce = self.bc_func(s, multindex, coefficients)
-            else:
-                bc_pce = self.bc_func(s)
-            return bc_pce
-        else:
-            return 0
-
+from beartype import beartype
 
 class ConstrainedPce:
+    @beartype
     def __init__(self, pde_data, pde_pce, pce):
-
         """
         Class for construction of physics-informed PCE using Karush-Kuhn-Tucker normal equations
 
@@ -281,7 +64,7 @@ class ConstrainedPce:
         pce = copy.deepcopy(self.initial_pce)
 
         if self.pde_pce.virt_func is None:
-            verif_S = ortho_grid(n_PI, pce.inputs_number, -1, 1)
+            verif_S = utils.ortho_grid(n_PI, pce.inputs_number, -1, 1)
         else:
             virtual_x = self.pde_pce.virt_func(n_PI)
             verif_S = polynomial_chaos.Polynomials.standardize_sample(virtual_x, pce.polynomial_basis.distributions)
@@ -465,13 +248,12 @@ class ConstrainedPce:
             if not return_coeff:
                 self.initial_pce.coefficients = a_opt_c
                 if self.pde_pce.virt_func is None:
-                    verif_S = ortho_grid(n_PI, pce.inputs_number, -1, 1)
+                    verif_S = utils.ortho_grid(n_PI, pce.inputs_number, -1, 1)
                 else:
                     virtual_x = self.pde_pce.virt_func(n_PI)
                     verif_S = polynomial_chaos.Polynomials.standardize_sample(virtual_x,
                                                                               pce.polynomial_basis.distributions)
                 err = self.estimate_error(self.initial_pce, verif_S)
-                print('Error by OLS: ', err)
                 self.ols_err = err
             else:
                 return a_opt_c
