@@ -1,8 +1,8 @@
 import numpy as np
 from UQpy.surrogates import *
 import copy
+import UQpy.surrogates.polynomial_chaos.physics_informed.Utilities as utils
 
-import UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE as PC2
 
 
 class ReducedPce:
@@ -123,7 +123,7 @@ class ReducedPce:
 
         pce_deriv = copy.deepcopy(self.original_pce)
         pce_deriv.multi_index_set = determ_multi_index
-        determ_basis_eval = PC2.derivative_basis(coord_s, pce_deriv, der_order=der_order, variable=der_var) * (
+        determ_basis_eval = utils.derivative_basis(coord_s, pce_deriv, der_order=der_order, variable=der_var) * (
                 der_multiplier ** der_order)
 
         determ_beta = np.transpose(determ_basis_eval * self.original_beta)

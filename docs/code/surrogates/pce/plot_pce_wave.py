@@ -151,7 +151,7 @@ geometry_xmax = np.array([1, 2])
 #
 # Boundary conditions are prescribed as
 #
-# .. math::\frac{\partial u(x,0)}{\partial t}=0, \qquad u(0,t)=u(1,t) = 0, \qquad u(x,0) =\sin{(\pi x)}
+# .. math:: \frac{d u(x,0)}{d t}=0, \qquad u(0,t)=u(1,t) = 0, \qquad u(x,0) =\sin{(\pi x)}
 
 
 # number of BC samples
@@ -196,7 +196,7 @@ y_train = dirichlet_bc[:, -1]
 
 # %% md
 #
-# Finally, p-adaptive PC :math:`^2` is constructed using Karush-Kuhn-Tucker normal equations solve by ordinary least squares:
+# Finally, p-adaptive PC :math:`^2` is constructed using Karush-Kuhn-Tucker normal equations solved by ordinary least squares:
 
 
 # construct PC^2

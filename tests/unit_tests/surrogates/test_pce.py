@@ -15,6 +15,7 @@ from UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE import Con
 from UQpy.surrogates.polynomial_chaos.physics_informed.PdeData import PdeData
 from UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE import PdePce
 from UQpy.surrogates.polynomial_chaos.physics_informed.Utilities import *
+from UQpy.surrogates.polynomial_chaos.physics_informed.ReducedPCE import ReducedPce
 
 np.random.seed(1)
 max_degree, n_samples = 2, 10
@@ -445,7 +446,7 @@ def test_23():
 
 def test_24():
     """
-    Test Physics-Informed PCE of Euler-Bernoulli Beam
+    Test Physics-Informed PCE of Euler-Bernoulli Beam and UQ
     """
 
     # Definition of PDE/ODE in context of PC^2
@@ -469,12 +470,12 @@ def test_24():
         return Const_Load(S)
 
     def Const_Load(S):
-        l = np.ones((len(S), 1))
+        l = (1 + (1 + S[:, 1]) / 2).reshape(-1, 1)
         return l
 
     # define sampling and evaluation of BC for estimation of error
     def bc_res(nsim, pce):
-        bc_x = np.zeros((2, 1))
+        bc_x = np.zeros((2, 2))
         bc_x[1, 0] = 1
         bc_s = polynomial_chaos.Polynomials.standardize_sample(bc_x, pce.polynomial_basis.distributions)
 
@@ -485,16 +486,32 @@ def test_24():
 
         return deriv_0_PCE
 
-    def ref_sol(x):
-        return -(x ** 4) / 24 + x ** 3 / 12 - x / 24
+    def ref_sol(x, q):
+        return (q + 1) * (-(x ** 4) / 24 + x ** 3 / 12 - x / 24)
+
+    def bc_sampling(nsim=1000):
+        # BC sampling
+
+        nsim_half = round(nsim / 2)
+        sample = np.zeros((nsim, 2))
+        real_ogrid_1d = ortho_grid(nsim_half, 1, 0, 1)[:, 0]
+
+        sample[:nsim_half, 0] = np.zeros(nsim_half)
+        sample[:nsim_half, 1] = real_ogrid_1d
+
+        sample[nsim_half:, 0] = np.ones(nsim_half)
+        sample[nsim_half:, 1] = real_ogrid_1d
+
+        return sample
 
     # definition of the stochastic model
-
-    nvar = 1
+    nrand = 1
+    nvar = 1 + nrand
     least_squares = LeastSquareRegression()
     dist1 = Uniform(loc=0, scale=1)
-
-    joint = dist1
+    dist2 = Uniform(loc=0, scale=1)
+    marg = [dist1, dist2]
+    joint = JointIndependent(marginals=marg)
 
     # define geometry of physical space
     geometry_xmin = np.array([0])
@@ -507,8 +524,9 @@ def test_24():
     # normals associated to precribed BCs
     bc_normals = np.array([0, 0])
     # sampling of BC points
-    bc_xtotal = np.zeros((2, 1))
-    bc_xtotal[1, 0] = 1
+
+    bc_xtotal = bc_sampling(20)
+
     bc_ytotal = np.zeros(len(bc_xtotal))
     bc_x = [bc_xtotal, bc_xtotal]
     bc_y = [bc_ytotal, bc_ytotal]
@@ -526,7 +544,7 @@ def test_24():
 
     # construct PC^2
 
-    p = 8
+    p = 9
 
     PCEorder = p
     polynomial_basis = TotalDegreeBasis(joint, PCEorder, hyperbolic=1)
@@ -538,14 +556,66 @@ def test_24():
     # construct a PC^2 object combining pde_data, pde_pce and initial PCE objects
     pcpc = ConstrainedPce(pde_data, pde_pce, initpce)
     # get coefficients of PC^2 by least angle regression
+    pcpc.lar()
     pcpc.ols()
 
     real_ogrid = ortho_grid(100, nvar, 0, 1)
-    yy_val_pce_kkt = pcpc.initial_pce.predict(real_ogrid).flatten()
-    yy_val_true = ref_sol(real_ogrid).flatten()
+    yy_val_pce = pcpc.lar_pce.predict(real_ogrid).flatten()
+    yy_val_pce_ols = pcpc.initial_pce.predict(real_ogrid).flatten()
+    yy_val_true = ref_sol(real_ogrid[:, 0], real_ogrid[:, 1]).flatten()
 
-    err = np.abs(yy_val_pce_kkt - yy_val_true)
+    err = np.abs(yy_val_pce - yy_val_true)
     tot_err = np.sum(err)
-    assert tot_err<10**-6
+    print(tot_err)
+
+    err_ols = np.abs(yy_val_pce_ols - yy_val_true)
+    tot_err_ols = np.sum(err_ols)
+    print(tot_err_ols)
+
+    reduced_pce = ReducedPce(pcpc.lar_pce, n_det=1)
+
+    coeff_res = []
+    var_res = []
+    mean_res = []
+    vartot_res = []
+    lower_quantiles_modes = []
+    upper_quantiles_modes = []
+
+    n_derivations = 4
+    sigma_mult = 2
+    beam_x = np.arange(0, 101) / 100
+
+    for x in beam_x:
+        mean = np.zeros(n_derivations + 1)
+        var = np.zeros(n_derivations + 1)
+        variances = np.zeros((n_derivations + 1, nrand))
+        lq = np.zeros((1 + n_derivations, nrand))
+        uq = np.zeros((1 + n_derivations, nrand))
+        for d in range(1 + n_derivations):
+            if d == 0:
+                coeff = (reduced_pce.eval_coord(x, return_coeff=True))
+            else:
+                coeff = reduced_pce.derive_coord(x, der_order=d, der_var=0, return_coeff=True)
+            mean[d] = coeff[0]
+            var[d] = np.sum(coeff[1:] ** 2)
+            variances[d, :] = reduced_pce.variance_contributions(coeff)
+
+            for e in range(nrand):
+                lq[d, e] = mean[d] + sigma_mult * np.sqrt(np.sum(variances[d, :e + 1]))
+                uq[d, e] = mean[d] - sigma_mult * np.sqrt(np.sum(variances[d, :e + 1]))
+
+        lower_quantiles_modes.append(lq)
+        upper_quantiles_modes.append(uq)
+        var_res.append(variances)
+        mean_res.append(mean)
+        vartot_res.append(var)
+
+    mean_res = np.array(mean_res)
+    vartot_res = np.array(vartot_res)
+    var_res = np.array(var_res)
+    lower_quantiles_modes = np.array(lower_quantiles_modes)
+    upper_quantiles_modes = np.array(upper_quantiles_modes)
+
+    assert tot_err<10**-5 and tot_err_ols<10**-5 and round(mean_res[50, 4], 3) == -1.5 and round(mean_res[50, 3], 3) == 0 and round(vartot_res[50, 3], 3) == 0
 
 

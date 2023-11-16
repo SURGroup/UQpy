@@ -93,6 +93,8 @@ class ConstrainedPce:
         if minsize_basis > steps - 2 or no_iter == True:
             minsize_basis = steps - 3
 
+        print('\nStart of the iterative LAR algorithm:')
+        print('-------------------------------------')
         for i in range(minsize_basis, steps - 2):
             print('\nStep No. ', i)
             mask = lar_path[:i]
@@ -123,7 +125,10 @@ class ConstrainedPce:
             if best_err < target_error:
                 break
 
-        print('Best error: ', best_err)
+        print('End of the iterative LAR algorithm:')
+        print('-------------------------------------')
+
+        print('\nLowest error: ', best_err)
 
         if len(lar_error) > 1:
             pce.polynomial_basis.polynomials_number = len(best_basis)
@@ -132,7 +137,9 @@ class ConstrainedPce:
             pce.set_ed(pce.experimental_design_input, pce.experimental_design_output)
             pce.coefficients = self.ols(pce, nvirtual=nvirtual)
             err = self.estimate_error(pce, verif_S)
-        print('Final error: ', err)
+        print('\nFinal PCE error: ', err)
+
+
         self.lar_pce = pce
         self.lar_basis = best_basis
         self.lar_multindex = best_index
