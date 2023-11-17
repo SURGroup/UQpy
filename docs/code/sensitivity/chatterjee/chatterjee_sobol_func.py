@@ -29,10 +29,9 @@ rank statistics approach as in [1]_.
 """
 
 # %%
-import numpy as np
 
 from UQpy.run_model.RunModel import RunModel
-from UQpy.run_model.model_execution.PythonModel import PythonModel
+from UQpy.run_model.model_types.PythonModel import PythonModel
 from UQpy.distributions import Uniform
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sensitivity.ChatterjeeSensitivity import ChatterjeeSensitivity

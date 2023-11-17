@@ -1,5 +1,5 @@
 from UQpy.run_model.RunModel import RunModel
-from UQpy.run_model.model_execution.PythonModel import PythonModel
+from UQpy.run_model.model_types.PythonModel import PythonModel
 from UQpy.sensitivity.MorrisSensitivity import MorrisSensitivity
 from UQpy.distributions import Uniform
 import pytest

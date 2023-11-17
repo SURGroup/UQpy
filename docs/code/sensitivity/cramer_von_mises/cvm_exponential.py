@@ -17,7 +17,7 @@ Cramér-von Mises Distance. SIAM/ASA Journal on Uncertainty Quantification, 6(2)
 
 # %%
 from UQpy.run_model.RunModel import RunModel
-from UQpy.run_model.model_execution.PythonModel import PythonModel
+from UQpy.run_model.model_types.PythonModel import PythonModel
 from UQpy.distributions import Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sensitivity.CramerVonMisesSensitivity import CramerVonMisesSensitivity as cvm

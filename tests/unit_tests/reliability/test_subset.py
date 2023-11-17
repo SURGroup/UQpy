@@ -1,8 +1,5 @@
-import shutil
-
 import numpy as np
 
-from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions.collection.Normal import Normal
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.sampling.MonteCarloSampling import MonteCarloSampling
@@ -37,7 +34,7 @@ def test_subset():  # Define the structural problem
 
     init_sus_samples = mc.samples
     from UQpy.run_model.RunModel import RunModel
-    from UQpy.run_model.model_execution.PythonModel import PythonModel
+    from UQpy.run_model.model_types.PythonModel import PythonModel
 
     model = PythonModel(model_script=model, model_object_name=Example)
     RunModelObject_SuS = RunModel(model=model)

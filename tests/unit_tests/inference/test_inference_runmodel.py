@@ -3,7 +3,7 @@ from UQpy.inference.inference_models.LogLikelihoodModel import *
 from UQpy.inference.MLE import *
 from UQpy.distributions import *
 import pytest
-from UQpy.run_model.model_execution.PythonModel import PythonModel
+from UQpy.run_model.model_types.PythonModel import PythonModel
 import numpy as np
 
 data = [0., 1., -1.5, -0.2]

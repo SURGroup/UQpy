@@ -1,7 +1,9 @@
 import umbridge
 import logging
-
+import beartype
 import importlib
+from UQpy.run_model.model_types import ComputationalModelType
+
 spec = importlib.util.find_spec('umbridge')
 if spec is not None:
     raise ImportError("UM-Bridge library is not installed, use the command:\n"
@@ -9,9 +11,10 @@ if spec is not None:
                       "to enable this functionality.")
     print('module is installed')
 
-class UmBridgeModel:
+
+class UmBridgeModel(ComputationalModelType):
     @beartype
-    def __init__(self, url:str='http://localhost:4242',
+    def __init__(self, url: str = 'http://localhost:4242',
                  var_names: list[str] = None,
                  **model_object_name_kwargs):
         if var_names is None:
@@ -22,7 +25,7 @@ class UmBridgeModel:
         self.model_object_name_kwargs = model_object_name_kwargs
 
         self.logger.info(f"Model supported by server: {umbridge.supported_models(url)}")
-        self.umbridge_model=umbridge.HTTPModel(url, "forward")
+        self.umbridge_model = umbridge.HTTPModel(url, "forward")
 
     def initialize(self, samples):
         pass
@@ -34,7 +37,7 @@ class UmBridgeModel:
         if len(self.model_object_name_kwargs) == 0:
             return self.umbridge_model(sample_to_send)
         else:
-            #need to turn parameters into a list for this to work
+            # need to turn parameters into a list for this to work
             return self.umbridge_model(sample_to_send, **self.model_object_name_kwargs)
 
     def postprocess_single_file(self, index, model_output):

@@ -5,10 +5,11 @@ import platform
 import numpy as np
 from beartype import beartype
 
+from UQpy.run_model.model_types.baseclass.ComputationalModelType import ComputationalModelType
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 
 
-class PythonModel:
+class PythonModel(ComputationalModelType):
     @beartype
     def __init__(self, model_script: str, model_object_name: str, var_names: list[str] = None,
                  delete_files: bool = False, **model_object_name_kwargs):

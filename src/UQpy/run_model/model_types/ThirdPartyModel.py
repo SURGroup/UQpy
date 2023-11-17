@@ -6,12 +6,13 @@ import pathlib
 import platform
 import re
 import shutil
-import subprocess
 
 import numpy as np
 
+from UQpy.run_model.model_types import ComputationalModelType
 
-class ThirdPartyModel:
+
+class ThirdPartyModel(ComputationalModelType):
 
     def __init__(self, var_names: list[str], input_template: str, model_script: str, output_script: str = None,
                  model_object_name: str = None, output_object_name: str = None, fmt: str = None, separator: str = ', ',

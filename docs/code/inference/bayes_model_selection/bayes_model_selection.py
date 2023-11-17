@@ -32,7 +32,7 @@ from UQpy.sampling.mcmc import MetropolisHastings
 from UQpy.inference import BayesModelSelection, BayesParameterEstimation, ComputationalModel
 from UQpy.run_model.RunModel import RunModel  # required to run the quadratic model
 from UQpy.distributions import Normal, JointIndependent
-from scipy.stats import multivariate_normal, norm
+from scipy.stats import norm
 
 
 #%% md
@@ -46,7 +46,7 @@ var_n = 1
 error_covariance = var_n * np.eye(50)
 print(param_true.shape)
 
-from UQpy.run_model.model_execution.PythonModel import PythonModel
+from UQpy.run_model.model_types.PythonModel import PythonModel
 m=PythonModel(model_script='local_pfn_models.py', model_object_name='model_quadratic', var_names=['theta_1', 'theta_2'])
 z = RunModel(samples=param_true, model=m)
 data_clean = z.qoi_list[0].reshape((-1,))

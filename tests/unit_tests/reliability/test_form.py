@@ -1,4 +1,4 @@
-from UQpy.run_model.model_execution.PythonModel import PythonModel
+from UQpy.run_model.model_types.PythonModel import PythonModel
 from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import *
 from UQpy.reliability import FORM

@@ -2,13 +2,12 @@ import shutil
 
 from beartype.roar import BeartypeCallHintPepParamException
 
-from UQpy.run_model.model_execution.PythonModel import PythonModel
-from UQpy.run_model import ThirdPartyModel, RunModel
+from UQpy.run_model.model_types.PythonModel import PythonModel
+from UQpy.run_model import ThirdPartyModel
 from UQpy.sampling import MonteCarloSampling
 from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Normal
 import pytest
-import os
 import numpy as np
 
 d = Normal(loc=0, scale=1)

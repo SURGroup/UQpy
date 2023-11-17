@@ -18,11 +18,9 @@ Cluster Script Example for Third-party
 # %%
 from UQpy.sampling import LatinHypercubeSampling
 from UQpy.run_model.RunModel import RunModel
-from UQpy.run_model.model_execution.ThirdPartyModel import ThirdPartyModel
+from UQpy.run_model.model_types.ThirdPartyModel import ThirdPartyModel
 from UQpy.distributions import Uniform
-import numpy as np
 import time
-import csv
 
 # %% md
 #

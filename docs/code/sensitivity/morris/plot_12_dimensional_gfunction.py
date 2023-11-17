@@ -13,8 +13,7 @@ Campolongo et al, 2007
 # Initially we have to import the necessary modules.
 
 # %%
-import shutil
-from UQpy.run_model.model_execution.PythonModel import PythonModel
+from UQpy.run_model.model_types.PythonModel import PythonModel
 from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions import Uniform
 from UQpy.sensitivity import MorrisSensitivity
