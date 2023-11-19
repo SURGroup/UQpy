@@ -108,7 +108,7 @@ class ReducedPCE:
         pce_deriv.multi_index_set = determ_multi_index
         determ_basis_eval = utils.derivative_basis(coord_s, pce_deriv, derivative_order=derivative_order,
                                                    leading_variable=leading_variable) * (
-                derivative_multiplier ** derivative_order)
+                derivative_multiplier)
 
         return self._unique_coefficients(determ_basis_eval, return_coefficients)
 
