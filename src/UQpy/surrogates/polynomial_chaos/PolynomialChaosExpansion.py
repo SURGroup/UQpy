@@ -52,7 +52,15 @@ class PolynomialChaosExpansion(Surrogate):
     def inputs_number(self):
         return self.polynomial_basis.inputs_number
 
-    def set_ed(self, x: np.ndarray, y: np.ndarray):
+    def set_data(self, x: np.ndarray, y: np.ndarray):
+        """
+        Set the experimental design of the surrogate model.
+
+        :param x: containing the training points.
+        :param y: containing the model evaluations at the training points.
+
+        The :meth:`set_data` method has no returns and it creates an :class:`numpy.ndarray` with the design matrix.
+        """
         self.experimental_design_input = x
         self.experimental_design_output = y
         self.design_matrix = self.polynomial_basis.evaluate_basis(x)
@@ -68,7 +76,7 @@ class PolynomialChaosExpansion(Surrogate):
         The :meth:`fit` method has no returns and it creates an :class:`numpy.ndarray` with the
         polynomial_chaos coefficients.
         """
-        self.set_ed(x,y)
+        self.set_data(x,y)
         self.logger.info("UQpy: Running polynomial_chaos.fit")
         self.coefficients, self.bias, self.outputs_number = self.regression_method.run(x, y, self.design_matrix)
         self.logger.info("UQpy: polynomial_chaos fit complete.")

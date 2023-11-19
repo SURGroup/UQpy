@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class PdeData:
     def __init__(self, geometry_xmax, geometry_xmin, der_orders, bc_normals, bc_x, bc_y):
         """
@@ -73,4 +74,3 @@ class PdeData:
             bcsamples = np.c_[coord, value]
 
         return bcsamples
-

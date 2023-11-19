@@ -1,6 +1,6 @@
 import numpy as np
 
-class PdePce:
+class PdePCE:
     def __init__(self, pde_data, pde_func, pde_res=None, bc_res=None, bc_func=None, virt_func=None, nonlinear=False):
         """
         Class containing information about PDE needed for physics-informed PCE

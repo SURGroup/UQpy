@@ -19,10 +19,11 @@ from UQpy.sampling.stratified_sampling.latin_hypercube_criteria import *
 from UQpy.sampling import LatinHypercubeSampling
 
 # load PC^2
-from UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE import ConstrainedPce
+from UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE import ConstrainedPCE
 from UQpy.surrogates.polynomial_chaos.physics_informed.PdeData import PdeData
-from UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE import PdePce
+from UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE import PdePCE
 from UQpy.surrogates.polynomial_chaos.physics_informed.Utilities import *
+
 
 # %% md
 #
@@ -36,12 +37,12 @@ def pde_func(s, pce):
 
     # partial derivation according to the first input variable x (second order)
     # derived basis must be multiplied by constant reflecting the difference between physical and standardized space
-    deriv_0_pce = derivative_basis(s, pce, der_order=2, variable=0) * transformation_multiplier(
-        pde_data, var=0,
-        derivation_order=2)
-    deriv_1_pce = derivative_basis(s, pce, der_order=2, variable=1) * transformation_multiplier(pde_data,
-                                                                                                        var=1,
-                                                                                                        derivation_order=2)
+    deriv_0_pce = derivative_basis(s, pce, derivative_order=2, leading_variable=0) * transformation_multiplier(pde_data,
+                                                                                                               leading_variable=0,
+                                                                                                               derivation_order=2)
+    deriv_1_pce = derivative_basis(s, pce, derivative_order=2, leading_variable=1) * transformation_multiplier(pde_data,
+                                                                                                               leading_variable=1,
+                                                                                                               derivation_order=2)
     pde_basis = deriv_1_pce - 4 * deriv_0_pce
 
     return pde_basis
@@ -58,7 +59,7 @@ def bc_sampling(nsim=1000):
 
     nsim_half = round(nsim / 2)
     sample = np.zeros((nsim, 2))
-    real_ogrid_1d = ortho_grid(nsim_half, 1, 0, 2)[:, 0]
+    real_ogrid_1d = ortho_grid(nsim_half, 1, 0.0, 2.0)[:, 0]
 
     sample[:nsim_half, 0] = np.zeros(int(nsim / 2))
     sample[:nsim_half, 1] = real_ogrid_1d
@@ -77,7 +78,7 @@ def bc_res(nsim, pce):
 
     der_order = 0
     deriv_0_pce = np.sum(
-        derivative_basis(bc_s, pce, der_order=der_order, variable=0) * ((2 / 1) ** der_order) * np.array(
+        derivative_basis(bc_s, pce, derivative_order=der_order, leading_variable=0) * ((2 / 1) ** der_order) * np.array(
             pce.coefficients).T, axis=1)
 
     bc_init_x, bc_init_y = init_sampling(nsim)
@@ -85,12 +86,14 @@ def bc_res(nsim, pce):
 
     der_order = 0
     deriv_0_init = np.sum(
-        derivative_basis(bc_init_s, pce, der_order=der_order, variable=0) * ((2 / 1) ** der_order) * np.array(
+        derivative_basis(bc_init_s, pce, derivative_order=der_order, leading_variable=0) * (
+                    (2 / 1) ** der_order) * np.array(
             pce.coefficients).T, axis=1)
 
     der_order = 1
     deriv_1_init = np.sum(
-        derivative_basis(bc_init_s, pce, der_order=der_order, variable=1) * ((2 / 1) ** der_order) * np.array(
+        derivative_basis(bc_init_s, pce, derivative_order=der_order, leading_variable=1) * (
+                    (2 / 1) ** der_order) * np.array(
             pce.coefficients).T, axis=1)
 
     return deriv_0_pce + np.abs(deriv_0_init - bc_init_y[:, 0]) + deriv_1_init
@@ -100,7 +103,7 @@ def bc_res(nsim, pce):
 def init_sampling(nsim=1000):
     init_x = joint.rvs(nsim)
 
-    init_x[:, 0] = ortho_grid(nsim, 1, 0, 1)[:, 0]
+    init_x[:, 0] = ortho_grid(nsim, 1, 0.0, 1.0)[:, 0]
 
     # initial conditions are defined for t=0
     init_x[:, 1] = np.zeros(nsim)
@@ -181,8 +184,7 @@ pde_data = PdeData(geometry_xmax, geometry_xmin, der_orders, bc_normals, bc_coor
 # Further we construct an object containing PDE physical data and PC :math:`^2` definitions of PDE
 
 
-
-pde_pce = PdePce(pde_data, pde_func, pde_res=pde_res, virt_func=virt_sampling, bc_func=bc_sampling, bc_res=bc_res)
+pde_pce = PdePCE(pde_data, pde_func, pde_res=pde_res, virt_func=virt_sampling, bc_func=bc_sampling, bc_res=bc_res)
 
 # %% md
 #
@@ -209,10 +211,10 @@ for p in range(12, 15):
 
     #  create initial PCE object containing basis, regression method and dirichlet BC
     initpce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
-    initpce.set_ed(x_train, y_train)
+    initpce.set_data(x_train, y_train)
 
     # construct a PC^2 object combining pde_data, pde_pce and initial PCE objects
-    pcpc = ConstrainedPce(pde_data, pde_pce, initpce)
+    pcpc = ConstrainedPCE(pde_data, pde_pce, initpce)
 
     # get coefficients of PC^2 by KKT-OLS
     pcpc.ols(n_PI=10000)
@@ -230,10 +232,10 @@ polynomial_basis = TotalDegreeBasis(joint, best_p, hyperbolic=1)
 
 #  create initial PCE object containing basis, regression method and dirichlet BC
 initpce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
-initpce.set_ed(x_train, y_train)
+initpce.set_data(x_train, y_train)
 
 # construct a PC^2 object combining pde_data, pde_pce and initial PCE objects
-pcpc = ConstrainedPce(pde_data, pde_pce, initpce)
+pcpc = ConstrainedPCE(pde_data, pde_pce, initpce)
 
 # get coefficients of PC^2 by KKT-OLS
 pcpc.ols(n_PI=10000)
@@ -248,7 +250,7 @@ print('Sum of errors in PDE, BCs and training data: ', best_err)
 
 
 # plot the results and calculate absolute error
-real_ogrid = ortho_grid(200, nvar, 0, 2)
+real_ogrid = ortho_grid(200, nvar, 0.0, 2.0)
 real_ogrid[:, 0] = real_ogrid[:, 0] / 2
 
 yy_val_pce = pcpc.initial_pce.predict(real_ogrid).flatten()
@@ -256,9 +258,10 @@ yy_val_true = ref_sol(real_ogrid).flatten()
 abs_err = np.abs(yy_val_true - yy_val_pce)
 
 print('\nComparison to the reference solution:')
-print('Mean squared error of PC^2: ', np.mean(abs_err**2))
+print('Mean squared error of PC^2: ', np.mean(abs_err ** 2))
 
 import matplotlib.pyplot as plt
+
 vmin = yy_val_pce.min()
 vmax = yy_val_pce.max()
 norm = plt.Normalize(vmin=vmin, vmax=vmax)

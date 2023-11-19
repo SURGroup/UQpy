@@ -2,35 +2,34 @@ import numpy as np
 from UQpy.surrogates import *
 import copy
 import UQpy.surrogates.polynomial_chaos.physics_informed.Utilities as utils
+from beartype import beartype
 
-
-
-class ReducedPce:
-
-    def __init__(self, pce, n_det, determ_pos=None):
+class ReducedPCE:
+    @beartype
+    def __init__(self, pce: PolynomialChaosExpansion, n_deterministic: int, deterministic_positions: list = None):
         """
         Class to create a reduced PCE filtering out deterministic input variables (e.g. geometry)
 
         :param pce: an object of the :py:meth:`UQpy` :class:`PolynomialChaosExpansion` class
-        :param n_det: number of deterministic input variables
-        :param determ_pos: list of positions of deterministic random variables in input vector.
+        :param n_deterministic: number of deterministic input variables
+        :param deterministic_positions: list of positions of deterministic random variables in input vector.
          If None, positions are assumed to be the first n_det variables.
         """
 
-        if determ_pos is None:
-            determ_pos = list(np.arange(n_det))
+        if deterministic_positions is None:
+            deterministic_positions = list(np.arange(n_deterministic))
 
         self.original_multindex = pce.multi_index_set
         self.original_beta = pce.coefficients
         self.original_P, self.nvar = self.original_multindex.shape
         self.original_pce = pce
-        self.determ_pos = determ_pos
+        self.determ_pos = deterministic_positions
 
         #   select basis containing only deterministic variables
         determ_multi_index = np.zeros(self.original_multindex.shape)
         determ_selection_mask = [False] * self.nvar
 
-        for i in determ_pos:
+        for i in deterministic_positions:
             determ_selection_mask[i] = True
 
         determ_multi_index[:, determ_selection_mask] = self.original_multindex[:, determ_selection_mask]
@@ -43,7 +42,7 @@ class ReducedPce:
         reduced_multi_mask = self.original_multindex > 0
 
         reduced_var_mask = [True] * self.nvar
-        for i in determ_pos:
+        for i in deterministic_positions:
             reduced_var_mask[i] = False
 
         reduced_multi_mask = reduced_multi_mask * reduced_var_mask
@@ -60,13 +59,14 @@ class ReducedPce:
         P_unique, nrand = unique_basis.shape
         self.unique_basis = np.concatenate((np.zeros((1, nrand)), unique_basis), axis=0)
 
-    def eval_coord(self, coordinates, return_coeff=False):
+    @beartype
+    def evaluate_coordinate(self, coordinates: np.ndarray, return_coefficients: bool = False):
 
         """
         Evaluate reduced PCE coefficients for given deterministic coordinates.
 
         :param coordinates: deterministic coordinates for evaluation of reduced PCE
-        :param return_coeff: if True, return a vector of deterministic coefficients, else return Mean and Variance
+        :param return_coefficients: if True, return a vector of deterministic coefficients, else return Mean and Variance
         :return: mean and variance, or a vector of deterministic coefficients if return_coeff
         """
 
@@ -77,36 +77,19 @@ class ReducedPce:
                                                              self.determ_multi_index, self.determ_basis,
                                                              self.original_pce.polynomial_basis.distributions).evaluate_basis(
             coord_x)
-        determ_beta = np.transpose(determ_basis_eval * self.original_beta)
+        return self._unique_coefficients(determ_basis_eval, return_coefficients)
 
-        reduced_beta = determ_beta[self.reduced_positions]
-        complement_beta = determ_beta[~self.reduced_positions]
-
-        unique_beta = []
-        for ind in np.unique(self.unique_indices):
-            sum_beta = np.sum(reduced_beta[self.unique_indices == ind, 0])
-            unique_beta.append(sum_beta)
-
-        unique_beta = np.array([0] + unique_beta)
-        unique_beta[0] = unique_beta[0] + np.sum(complement_beta)
-
-        if not return_coeff:
-            mean = unique_beta[0]
-            var = np.sum(unique_beta[1:] ** 2)
-            return mean, var
-        else:
-            return unique_beta
-
-    def derive_coord(self, coordinates, der_order, der_var, der_multiplier=2, return_coeff=False):
+    @beartype
+    def derive_coordinate(self, coordinates: np.ndarray, derivative_order: int, leading_variable: int, derivative_multiplier: float = 1, return_coefficients: bool = False):
 
         """
         Evaluate derivative of reduced PCE coefficients for given deterministic coordinates.
 
         :param coordinates: deterministic coordinates for evaluation of reduced PCE
-        :param der_order: derivation order of reduced PCE
-        :param der_var: leading variable for derivation
-        :param der_multiplier: multiplier reflecting different sizes of the original physical and transformed spaces
-        :param return_coeff: if True, return a vector of deterministic coefficients, else return Mean and Variance
+        :param derivative_order: derivation order of reduced PCE
+        :param leading_variable: leading variable for derivation
+        :param derivative_multiplier: multiplier reflecting different sizes of the original physical and transformed spaces
+        :param return_coefficients: if True, return a vector of deterministic coefficients, else return Mean and Variance
         :return: mean and variance, or a vector of deterministic coefficients if return_coeff
         """
 
@@ -123,33 +106,18 @@ class ReducedPce:
 
         pce_deriv = copy.deepcopy(self.original_pce)
         pce_deriv.multi_index_set = determ_multi_index
-        determ_basis_eval = utils.derivative_basis(coord_s, pce_deriv, der_order=der_order, variable=der_var) * (
-                der_multiplier ** der_order)
+        determ_basis_eval = utils.derivative_basis(coord_s, pce_deriv, derivative_order=derivative_order,
+                                                   leading_variable=leading_variable) * (
+                derivative_multiplier ** derivative_order)
 
-        determ_beta = np.transpose(determ_basis_eval * self.original_beta)
+        return self._unique_coefficients(determ_basis_eval, return_coefficients)
 
-        reduced_beta = determ_beta[self.reduced_positions]
-        complement_beta = determ_beta[~self.reduced_positions]
-
-        unique_beta = []
-        for ind in np.unique(self.unique_indices):
-            sum_beta = np.sum(reduced_beta[self.unique_indices == ind, 0])
-            unique_beta.append(sum_beta)
-
-        unique_beta = np.array([0] + unique_beta)
-        unique_beta[0] = unique_beta[0] + np.sum(complement_beta)
-
-        if not return_coeff:
-            mean = unique_beta[0]
-            var = np.sum(unique_beta[1:] ** 2)
-            return mean, var
-        else:
-            return unique_beta
-
-    def variance_contributions(self, unique_beta):
+    @beartype
+    def variance_contributions(self, unique_beta: np.ndarray):
 
         """
-        Get first order conditional variances from coefficients of reduced PCE evaluated in specific deterministic coordinates
+        Get first order conditional variances from coefficients of reduced PCE evaluated in the specified deterministic
+        physical coordinates
 
         :param unique_beta: vector of reduced PCE coefficients
         :return: first order conditional variances associated to each input random variable
@@ -172,3 +140,24 @@ class ReducedPce:
             variances[nn] = variance_contribution
 
         return variances
+
+    def _unique_coefficients(self, determ_basis_eval, return_coefficients):
+        determ_beta = np.transpose(determ_basis_eval * self.original_beta)
+
+        reduced_beta = determ_beta[self.reduced_positions]
+        complement_beta = determ_beta[~self.reduced_positions]
+
+        unique_beta = []
+        for ind in np.unique(self.unique_indices):
+            sum_beta = np.sum(reduced_beta[self.unique_indices == ind, 0])
+            unique_beta.append(sum_beta)
+
+        unique_beta = np.array([0] + unique_beta)
+        unique_beta[0] = unique_beta[0] + np.sum(complement_beta)
+
+        if not return_coefficients:
+            mean = unique_beta[0]
+            var = np.sum(unique_beta[1:] ** 2)
+            return mean, var
+        else:
+            return unique_beta

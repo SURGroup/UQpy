@@ -17,12 +17,11 @@ from UQpy.surrogates import *
 
 # load PC^2
 from UQpy.surrogates.polynomial_chaos.polynomials.TotalDegreeBasis import TotalDegreeBasis
-from UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE import ConstrainedPce
+from UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE import ConstrainedPCE
 from UQpy.surrogates.polynomial_chaos.physics_informed.PdeData import PdeData
-from UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE import PdePce
+from UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE import PdePCE
 from UQpy.surrogates.polynomial_chaos.physics_informed.Utilities import *
-from UQpy.surrogates.polynomial_chaos.physics_informed.ReducedPCE import ReducedPce
-
+from UQpy.surrogates.polynomial_chaos.physics_informed.ReducedPCE import ReducedPCE
 
 
 # %% md
@@ -32,25 +31,28 @@ from UQpy.surrogates.polynomial_chaos.physics_informed.ReducedPCE import Reduced
 # %%
 
 # Definition of PDE/ODE
-def pde_func(S, pce):
+def pde_func(standardized_sample, pce):
     der_order = 4
-    deriv_0_PCE = derivative_basis(S, pce, der_order=der_order, variable=0) * ((2 / 1) ** der_order)
+    deriv_pce = derivative_basis(standardized_sample, pce, derivative_order=der_order, leading_variable=0) * ((2 / 1) ** der_order)
 
-    pde_basis = deriv_0_PCE
+    pde_basis = deriv_pce
 
     return pde_basis
 
+
 # Definition of the source term
-def pde_res(S):
-    load_s = Load(S)
+def pde_res(standardized_sample):
+    load_s = load(standardized_sample)
 
     return -load_s[:, 0]
 
-def Load(S):
-    return Const_Load(S)
 
-def Const_Load(S):
-    l = (1+(1+S[:, 1])/2).reshape(-1,1)
+def load(standardized_sample):
+    return const_load(standardized_sample)
+
+
+def const_load(standardized_sample):
+    l = (1 + (1 + standardized_sample[:, 1]) / 2).reshape(-1, 1)
     return l
 
 
@@ -60,7 +62,7 @@ def bc_sampling(nsim=1000):
 
     nsim_half = round(nsim / 2)
     sample = np.zeros((nsim, 2))
-    real_ogrid_1d = ortho_grid(nsim_half, 1, 0, 1)[:, 0]
+    real_ogrid_1d = ortho_grid(nsim_half, 1, 0.0, 1.0)[:, 0]
 
     sample[:nsim_half, 0] = np.zeros(nsim_half)
     sample[:nsim_half, 1] = real_ogrid_1d
@@ -70,41 +72,41 @@ def bc_sampling(nsim=1000):
 
     return sample
 
+
 # define sampling and evaluation of BC for estimation of error
 def bc_res(nsim, pce):
-    bc_x = np.zeros((2, 2))
-    bc_x[1, 0] = 1
-    bc_s = polynomial_chaos.Polynomials.standardize_sample(bc_x, pce.polynomial_basis.distributions)
+    physical_sample= np.zeros((2, 2))
+    physical_sample[1, 0] = 1
+    standardized_sample = polynomial_chaos.Polynomials.standardize_sample(physical_sample, pce.polynomial_basis.distributions)
 
     der_order = 2
-    deriv_0_PCE = np.sum(
-        derivative_basis(bc_s, pce, der_order=der_order, variable=0) * ((2 / 1) ** der_order) * np.array(
-            pce.coefficients).T, axis=1)
+    deriv_pce = np.sum(
+        derivative_basis(standardized_sample, pce, derivative_order=der_order, leading_variable=0) *
+        ((2 / 1) ** der_order) * np.array(pce.coefficients).T, axis=1)
 
-    return deriv_0_PCE
+    return deriv_pce
 
 
 # Definition of the reference solution for an error estimation
-def ref_sol(x, q):
-    return (q+1)*(-(x ** 4) / 24 + x ** 3 / 12 - x / 24)
+def ref_sol(physical_coordinate, q):
+    return (q + 1) * (-(physical_coordinate ** 4) / 24 + physical_coordinate ** 3 / 12 - physical_coordinate / 24)
 
 
 # %% md
 #
 # Beam equation is parametrized by one deterministic input variable (coordinate :math:`x`) and
-# random load intesity :math:`q`, both modeled as Uniform random variables.
+# random load intensity :math:`q`, both modeled as Uniform random variables.
 
 # number of input variables
 
-nrand=1
-nvar = 1+nrand
+nrand = 1
+nvar = 1 + nrand
 
 #   definition of a joint probability distribution
 dist1 = Uniform(loc=0, scale=1)
 dist2 = Uniform(loc=0, scale=1)
 marg = [dist1, dist2]
 joint = JointIndependent(marginals=marg)
-
 
 # %% md
 #
@@ -145,7 +147,7 @@ pde_data = PdeData(geometry_xmax, geometry_xmin, der_orders, bc_normals, bc_x, b
 #
 # Further we construct an object containing PDE physical data and PC :math:`^2` definitions of PDE
 
-pde_pce = PdePce(pde_data, pde_func, pde_res=pde_res, bc_res=bc_res)
+pde_pce = PdePCE(pde_data, pde_func, pde_res=pde_res, bc_res=bc_res)
 
 # %% md
 #
@@ -168,36 +170,35 @@ polynomial_basis = TotalDegreeBasis(joint, PCEorder, hyperbolic=1)
 
 #  create initial PCE object containing basis, regression method and dirichlet BC
 initpce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
-initpce.set_ed(x_train, y_train)
+initpce.set_data(x_train, y_train)
 
 # construct a PC^2 object combining pde_data, pde_pce and initial PCE objects
-pcpc = ConstrainedPce(pde_data, pde_pce, initpce)
+pcpc = ConstrainedPCE(pde_data, pde_pce, initpce)
 # get coefficients of PC^2 by least angle regression
 pcpc.lar()
 
 # get coefficients of PC^2 by ordinary least squares
 pcpc.ols()
 
-
 # evaluate errors of approximations
-real_ogrid = ortho_grid(100, nvar, 0, 1)
+real_ogrid = ortho_grid(100, nvar, 0.0, 1.0)
 yy_val_pce = pcpc.lar_pce.predict(real_ogrid).flatten()
 yy_val_pce_ols = pcpc.initial_pce.predict(real_ogrid).flatten()
-yy_val_true = ref_sol(real_ogrid[:,0],real_ogrid[:,1]).flatten()
+yy_val_true = ref_sol(real_ogrid[:, 0], real_ogrid[:, 1]).flatten()
 
 err = np.abs(yy_val_pce - yy_val_true)
 tot_err = np.sum(err)
-print('\nTotal approximation error by PC^2-LAR: ',tot_err)
+print('\nTotal approximation error by PC^2-LAR: ', tot_err)
 
 err_ols = np.abs(yy_val_pce_ols - yy_val_true)
 tot_err_ols = np.sum(err_ols)
-print('Total approximation error by PC^2-OLS: ',tot_err_ols)
+print('Total approximation error by PC^2-OLS: ', tot_err_ols)
 
 # %% md
 #
 # Once the PC :math:`^2` is constructed, we use ReducedPce class to filter out influence of deterministic variable in UQ
 
-reduced_pce=ReducedPce(pcpc.lar_pce, n_det=1)
+reduced_pce = ReducedPCE(pcpc.lar_pce, n_deterministic=1)
 
 # %% md
 #
@@ -221,9 +222,11 @@ for x in beam_x:
     uq = np.zeros((1 + n_derivations, nrand))
     for d in range(1 + n_derivations):
         if d == 0:
-            coeff = (reduced_pce.eval_coord(x, return_coeff=True))
+            coeff = (reduced_pce.evaluate_coordinate(np.array(x), return_coefficients=True))
         else:
-            coeff = reduced_pce.derive_coord(x, der_order=d, der_var=0, return_coeff=True)
+            coeff = reduced_pce.derive_coordinate(np.array(x), derivative_order=d, leading_variable=0,
+                                                  return_coefficients=True,
+                                                  derivative_multiplier=transformation_multiplier(pde_data, 0, d))
         mean[d] = coeff[0]
         var[d] = np.sum(coeff[1:] ** 2)
         variances[d, :] = reduced_pce.variance_contributions(coeff)
@@ -251,24 +254,20 @@ upper_quantiles_modes = np.array(upper_quantiles_modes)
 # plot results
 import matplotlib.pyplot as plt
 
-
-
 fig, ax = plt.subplots(1, 4, figsize=(14.5, 3))
 colors = ['black', 'blue', 'green', 'red']
 
 for d in range(2, 1 + n_derivations):
+    ax[d - 1].plot(beam_x, mean_res[:, d], color=colors[d - 1])
+    ax[d - 1].plot(beam_x, mean_res[:, d] + sigma_mult * np.sqrt(vartot_res[:, d]), color=colors[d - 1])
+    ax[d - 1].plot(beam_x, mean_res[:, d] - sigma_mult * np.sqrt(vartot_res[:, d]), color=colors[d - 1])
 
-    ax[d-1].plot(beam_x, mean_res[:, d], color=colors[d-1])
-    ax[d-1].plot(beam_x, mean_res[:, d] + sigma_mult * np.sqrt(vartot_res[:, d]), color=colors[d-1])
-    ax[d-1].plot(beam_x, mean_res[:, d] - sigma_mult * np.sqrt(vartot_res[:, d]), color=colors[d-1])
+    ax[d - 1].plot(beam_x, lower_quantiles_modes[:, d, 0], '--', alpha=0.7, color=colors[d - 1])
+    ax[d - 1].plot(beam_x, upper_quantiles_modes[:, d, 0], '--', alpha=0.7, color=colors[d - 1])
+    ax[d - 1].fill_between(beam_x, lower_quantiles_modes[:, d, 0], upper_quantiles_modes[:, d, 0],
+                           facecolor=colors[d - 1], alpha=0.05)
 
-
-    ax[d-1].plot(beam_x, lower_quantiles_modes[:, d, 0], '--', alpha=0.7, color=colors[d-1])
-    ax[d-1].plot(beam_x, upper_quantiles_modes[:, d, 0], '--', alpha=0.7, color=colors[d-1])
-    ax[d-1].fill_between(beam_x, lower_quantiles_modes[:, d, 0], upper_quantiles_modes[:, d, 0],
-                           facecolor=colors[d-1], alpha=0.05)
-
-    ax[d-1].plot(beam_x, np.zeros(len(beam_x)), color='black')
+    ax[d - 1].plot(beam_x, np.zeros(len(beam_x)), color='black')
 
 ax[0].plot(beam_x, mean_res[:, 0], color=colors[0])
 ax[0].plot(beam_x, mean_res[:, 0] + sigma_mult * np.sqrt(vartot_res[:, 0]), color=colors[0])
@@ -277,7 +276,7 @@ ax[0].plot(beam_x, mean_res[:, 0] - sigma_mult * np.sqrt(vartot_res[:, 0]), colo
 ax[0].plot(beam_x, lower_quantiles_modes[:, 0, 0], '--', alpha=0.7, color=colors[0])
 ax[0].plot(beam_x, upper_quantiles_modes[:, 0, 0], '--', alpha=0.7, color=colors[0])
 ax[0].fill_between(beam_x, lower_quantiles_modes[:, 0, 0], upper_quantiles_modes[:, 0, 0],
-                       facecolor=colors[0], alpha=0.05)
+                   facecolor=colors[0], alpha=0.05)
 
 ax[0].plot(beam_x, np.zeros(len(beam_x)), color='black')
 
@@ -292,4 +291,3 @@ ax[0].set_title(r'Deflection $w$', y=1.04)
 for axi in ax.flatten():
     axi.set_xlabel(r'$x$')
 plt.show()
-

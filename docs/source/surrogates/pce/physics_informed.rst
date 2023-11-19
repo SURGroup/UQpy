@@ -21,11 +21,11 @@ governing differential equation. It is imported using the following command:
 PdePce class
 """""""""""""""""""""""""""""""""""
 
-The second class in the PC :math:`^2` framework is :class:`.PdePce` containing PDE physical data and definitions of PDE
+The second class in the PC :math:`^2` framework is :class:`.PdePCE` containing PDE physical data and definitions of PDE
 in PCE context. The class is imported using the following command:
 
 
->>> from UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE import PdePce
+>>> from UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE import PdeCE
 
 
 .. autoclass:: UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE.PdePce
@@ -37,7 +37,7 @@ ConstrainedPCE class
 Finally, a numerical solvers based on Karush-Kuhn-Tucker normal equations are defined in  the :class:`.ConstrainedPCE`
 imported using the following command:
 
->>> from UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE import ConstrainedPce
+>>> from UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE import ConstrainedPCE
 
 
 .. autoclass:: UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE.ConstrainedPce
@@ -62,7 +62,7 @@ Their influence can be filtered out by the :class:`.ReducedPCE` class.
 
 The :class:`.ReducedPCE` class is imported using the following command:
 
->>> from UQpy.surrogates.polynomial_chaos.physics_informed.ReducedPCE import ReducedPce
+>>> from UQpy.surrogates.polynomial_chaos.physics_informed.ReducedPCE import ReducedPCE
 
 .. autoclass:: UQpy.surrogates.polynomial_chaos.physics_informed.ReducedPCE.ReducedPce
     :members:

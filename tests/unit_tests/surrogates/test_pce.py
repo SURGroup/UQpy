@@ -11,11 +11,11 @@ import numpy as np
 from UQpy.surrogates.polynomial_chaos.polynomials.TotalDegreeBasis import TotalDegreeBasis
 from UQpy.surrogates.polynomial_chaos.polynomials.TensorProductBasis import TensorProductBasis
 # load PC^2
-from UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE import ConstrainedPce
+from UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE import ConstrainedPCE
 from UQpy.surrogates.polynomial_chaos.physics_informed.PdeData import PdeData
-from UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE import PdePce
+from UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE import PdePCE
 from UQpy.surrogates.polynomial_chaos.physics_informed.Utilities import *
-from UQpy.surrogates.polynomial_chaos.physics_informed.ReducedPCE import ReducedPce
+from UQpy.surrogates.polynomial_chaos.physics_informed.ReducedPCE import ReducedPCE
 
 np.random.seed(1)
 max_degree, n_samples = 2, 10
@@ -444,57 +444,42 @@ def test_23():
     ref_pdf = ref_pdf1 * ref_pdf2
     assert (standardized_samples == ref_sample).all() and (standardized_pdf == ref_pdf).all()
 
+
 def test_24():
     """
     Test Physics-Informed PCE of Euler-Bernoulli Beam and UQ
     """
 
-    # Definition of PDE/ODE in context of PC^2
-
     # Definition of PDE/ODE
-    def pde_func(S, pce):
+    def pde_func(standardized_sample, pce):
         der_order = 4
-        deriv_0_PCE = derivative_basis(S, pce, der_order=der_order, variable=0) * ((2 / 1) ** der_order)
+        deriv_pce = derivative_basis(standardized_sample, pce, derivative_order=der_order, leading_variable=0) * (
+                (2 / 1) ** der_order)
 
-        pde_basis = deriv_0_PCE
+        pde_basis = deriv_pce
 
         return pde_basis
 
     # Definition of the source term
-    def pde_res(S):
-        load_s = Load(S)
+    def pde_res(standardized_sample):
+        load_s = load(standardized_sample)
 
         return -load_s[:, 0]
 
-    def Load(S):
-        return Const_Load(S)
+    def load(standardized_sample):
+        return const_load(standardized_sample)
 
-    def Const_Load(S):
-        l = (1 + (1 + S[:, 1]) / 2).reshape(-1, 1)
+    def const_load(standardized_sample):
+        l = (1 + (1 + standardized_sample[:, 1]) / 2).reshape(-1, 1)
         return l
 
-    # define sampling and evaluation of BC for estimation of error
-    def bc_res(nsim, pce):
-        bc_x = np.zeros((2, 2))
-        bc_x[1, 0] = 1
-        bc_s = polynomial_chaos.Polynomials.standardize_sample(bc_x, pce.polynomial_basis.distributions)
-
-        der_order = 2
-        deriv_0_PCE = np.sum(
-            derivative_basis(bc_s, pce, der_order=der_order, variable=0) * ((2 / 1) ** der_order) * np.array(
-                pce.coefficients).T, axis=1)
-
-        return deriv_0_PCE
-
-    def ref_sol(x, q):
-        return (q + 1) * (-(x ** 4) / 24 + x ** 3 / 12 - x / 24)
-
+    # Definition of the function for sampling of boundary conditions
     def bc_sampling(nsim=1000):
         # BC sampling
 
         nsim_half = round(nsim / 2)
         sample = np.zeros((nsim, 2))
-        real_ogrid_1d = ortho_grid(nsim_half, 1, 0, 1)[:, 0]
+        real_ogrid_1d = ortho_grid(nsim_half, 1, 0.0, 1.0)[:, 0]
 
         sample[:nsim_half, 0] = np.zeros(nsim_half)
         sample[:nsim_half, 1] = real_ogrid_1d
@@ -504,10 +489,30 @@ def test_24():
 
         return sample
 
-    # definition of the stochastic model
+    # define sampling and evaluation of BC for estimation of error
+    def bc_res(nsim, pce):
+        physical_sample = np.zeros((2, 2))
+        physical_sample[1, 0] = 1
+        standardized_sample = polynomial_chaos.Polynomials.standardize_sample(physical_sample,
+                                                                              pce.polynomial_basis.distributions)
+
+        der_order = 2
+        deriv_pce = np.sum(
+            derivative_basis(standardized_sample, pce, derivative_order=der_order, leading_variable=0) *
+            ((2 / 1) ** der_order) * np.array(pce.coefficients).T, axis=1)
+
+        return deriv_pce
+
+    # Definition of the reference solution for an error estimation
+    def ref_sol(physical_coordinate, q):
+        return (q + 1) * (-(physical_coordinate ** 4) / 24 + physical_coordinate ** 3 / 12 - physical_coordinate / 24)
+
+    # number of input variables
+
     nrand = 1
     nvar = 1 + nrand
-    least_squares = LeastSquareRegression()
+
+    #   definition of a joint probability distribution
     dist1 = Uniform(loc=0, scale=1)
     dist2 = Uniform(loc=0, scale=1)
     marg = [dist1, dist2]
@@ -517,7 +522,8 @@ def test_24():
     geometry_xmin = np.array([0])
     geometry_xmax = np.array([1])
 
-    # prescribing BC of PDEs
+    # number of BC samples
+    nbc = 2 * 10
 
     # derivation orders of prescribed BCs
     der_orders = [0, 2]
@@ -526,24 +532,20 @@ def test_24():
     # sampling of BC points
 
     bc_xtotal = bc_sampling(20)
-
     bc_ytotal = np.zeros(len(bc_xtotal))
+
     bc_x = [bc_xtotal, bc_xtotal]
     bc_y = [bc_ytotal, bc_ytotal]
 
-    # construct object containing all PDE data
     pde_data = PdeData(geometry_xmax, geometry_xmin, der_orders, bc_normals, bc_x, bc_y)
 
-    #  construct object containing PDE data and PC^2 definitions of PDE
-    pde_pce = PdePce(pde_data, pde_func, pde_res=pde_res, bc_res=bc_res)
+    pde_pce = PdePCE(pde_data, pde_func, pde_res=pde_res, bc_res=bc_res)
 
-    # extract dirichlet BC
     dirichlet_bc = pde_data.dirichlet
     x_train = dirichlet_bc[:, :-1]
     y_train = dirichlet_bc[:, -1]
 
-    # construct PC^2
-
+    least_squares = LeastSquareRegression()
     p = 9
 
     PCEorder = p
@@ -551,28 +553,29 @@ def test_24():
 
     #  create initial PCE object containing basis, regression method and dirichlet BC
     initpce = PolynomialChaosExpansion(polynomial_basis=polynomial_basis, regression_method=least_squares)
-    initpce.set_ed(x_train, y_train)
+    initpce.set_data(x_train, y_train)
 
     # construct a PC^2 object combining pde_data, pde_pce and initial PCE objects
-    pcpc = ConstrainedPce(pde_data, pde_pce, initpce)
+    pcpc = ConstrainedPCE(pde_data, pde_pce, initpce)
     # get coefficients of PC^2 by least angle regression
     pcpc.lar()
+
+    # get coefficients of PC^2 by ordinary least squares
     pcpc.ols()
 
-    real_ogrid = ortho_grid(100, nvar, 0, 1)
+    # evaluate errors of approximations
+    real_ogrid = ortho_grid(100, nvar, 0.0, 1.0)
     yy_val_pce = pcpc.lar_pce.predict(real_ogrid).flatten()
     yy_val_pce_ols = pcpc.initial_pce.predict(real_ogrid).flatten()
     yy_val_true = ref_sol(real_ogrid[:, 0], real_ogrid[:, 1]).flatten()
 
     err = np.abs(yy_val_pce - yy_val_true)
     tot_err = np.sum(err)
-    print(tot_err)
 
     err_ols = np.abs(yy_val_pce_ols - yy_val_true)
     tot_err_ols = np.sum(err_ols)
-    print(tot_err_ols)
 
-    reduced_pce = ReducedPce(pcpc.lar_pce, n_det=1)
+    reduced_pce = ReducedPCE(pcpc.lar_pce, n_deterministic=1)
 
     coeff_res = []
     var_res = []
@@ -593,9 +596,11 @@ def test_24():
         uq = np.zeros((1 + n_derivations, nrand))
         for d in range(1 + n_derivations):
             if d == 0:
-                coeff = (reduced_pce.eval_coord(x, return_coeff=True))
+                coeff = (reduced_pce.evaluate_coordinate(np.array(x), return_coefficients=True))
             else:
-                coeff = reduced_pce.derive_coord(x, der_order=d, der_var=0, return_coeff=True)
+                coeff = reduced_pce.derive_coordinate(np.array(x), derivative_order=d, leading_variable=0,
+                                                      return_coefficients=True,
+                                                      derivative_multiplier=transformation_multiplier(pde_data, 0, d))
             mean[d] = coeff[0]
             var[d] = np.sum(coeff[1:] ** 2)
             variances[d, :] = reduced_pce.variance_contributions(coeff)
@@ -616,6 +621,5 @@ def test_24():
     lower_quantiles_modes = np.array(lower_quantiles_modes)
     upper_quantiles_modes = np.array(upper_quantiles_modes)
 
-    assert tot_err<10**-5 and tot_err_ols<10**-5 and round(mean_res[50, 4], 3) == -1.5 and round(mean_res[50, 3], 3) == 0 and round(vartot_res[50, 3], 3) == 0
-
-
+    assert tot_err < 10 ** -5 and tot_err_ols < 10 ** -5 and round(mean_res[50, 4], 3) == -1.5 and round(
+        mean_res[50, 3], 3) == 0 and round(vartot_res[50, 3], 3) == 0
