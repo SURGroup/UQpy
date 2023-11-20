@@ -1,9 +1,10 @@
 import numpy as np
 
 from sklearn import linear_model as regresion
-from UQpy.surrogates.polynomial_chaos.physics_informed.Utilities import *
+from UQpy.surrogates.polynomial_chaos.physics_informed.Utilities import ortho_grid, derivative_basis
 import copy
 from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import Polynomials
+from UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion import PolynomialChaosExpansion
 from UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE import PdePCE
 from UQpy.surrogates.polynomial_chaos.physics_informed.PdeData import PdeData
 from beartype import beartype
@@ -82,7 +83,7 @@ class ConstrainedPCE:
             virtual_samples = ortho_grid(n_PI, pce.inputs_number, -1.0, 1.0)
         else:
             virtual_x = self.pde_pce.virt_func(n_PI)
-            virtual_samples = polynomial_chaos.Polynomials.standardize_sample(virtual_x, pce.polynomial_basis.distributions)
+            virtual_samples = Polynomials.standardize_sample(virtual_x, pce.polynomial_basis.distributions)
 
         if max_niter is None:
             max_niter = self.pde_data.nconst + 200
