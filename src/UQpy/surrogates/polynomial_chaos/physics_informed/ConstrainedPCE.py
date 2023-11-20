@@ -2,8 +2,9 @@ import numpy as np
 
 from sklearn import linear_model as regresion
 from UQpy.surrogates import *
-import UQpy.surrogates.polynomial_chaos.physics_informed.Utilities as utils
+from UQpy.surrogates.polynomial_chaos.physics_informed.Utilities import *
 import copy
+from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import Polynomials
 from UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE import PdePCE
 from UQpy.surrogates.polynomial_chaos.physics_informed.PdeData import PdeData
 from beartype import beartype
@@ -79,7 +80,7 @@ class ConstrainedPCE:
         pce = copy.deepcopy(self.initial_pce)
 
         if self.pde_pce.virt_func is None:
-            virtual_samples = utils.ortho_grid(n_PI, pce.inputs_number, -1.0, 1.0)
+            virtual_samples = ortho_grid(n_PI, pce.inputs_number, -1.0, 1.0)
         else:
             virtual_x = self.pde_pce.virt_func(n_PI)
             virtual_samples = polynomial_chaos.Polynomials.standardize_sample(virtual_x, pce.polynomial_basis.distributions)
@@ -210,7 +211,7 @@ class ConstrainedPCE:
             else:
                 virtual_x = self.pde_pce.virt_func(nvirtual)
 
-            virtual_s = polynomial_chaos.Polynomials.standardize_sample(virtual_x, pce.polynomial_basis.distributions)
+            virtual_s = Polynomials.standardize_sample(virtual_x, pce.polynomial_basis.distributions)
 
             self.virtual_s = virtual_s
             self.virtual_x = virtual_x
@@ -235,9 +236,9 @@ class ConstrainedPCE:
                     samples = self.pde_data.get_bcsamples(self.pde_data.der_orders[i])
                     coord_x = samples[:, :-1]
                     bc_res = samples[:, -1]
-                    coord_s = polynomial_chaos.Polynomials.standardize_sample(coord_x,
+                    coord_s = Polynomials.standardize_sample(coord_x,
                                                                               pce.polynomial_basis.distributions)
-                    ac = utils.derivative_basis(coord_s, pce, derivative_order=self.pde_data.der_orders[i],
+                    ac = derivative_basis(coord_s, pce, derivative_order=self.pde_data.der_orders[i],
                                                 leading_variable=int(leadvariable))
                     a_const.append(ac)
                     b_const.append(bc_res.reshape(-1, 1))
@@ -270,10 +271,10 @@ class ConstrainedPCE:
             if not return_coeff:
                 self.initial_pce.coefficients = a_opt_c
                 if self.pde_pce.virt_func is None:
-                    standardized_sample = utils.ortho_grid(n_PI, pce.inputs_number, -1.0, 1.0)
+                    standardized_sample = ortho_grid(n_PI, pce.inputs_number, -1.0, 1.0)
                 else:
                     virtual_x = self.pde_pce.virt_func(n_PI)
-                    standardized_sample = polynomial_chaos.Polynomials.standardize_sample(virtual_x,
+                    standardized_sample = Polynomials.standardize_sample(virtual_x,
                                                                               pce.polynomial_basis.distributions)
                 err = self.estimate_error(self.initial_pce, standardized_sample)
                 self.ols_err = err

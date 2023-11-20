@@ -1,11 +1,13 @@
 import numpy as np
-import UQpy.distributions.baseclass.Distribution
-from UQpy.distributions.collection import Uniform, Normal
-from scipy import special as sp
 from scipy.special import legendre
 from beartype import beartype
-from UQpy.surrogates.polynomial_chaos.physics_informed.PdeData import PdeData
+from UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion import PolynomialChaosExpansion
+from UQpy.distributions.baseclass.Distribution import Distribution
+from UQpy.distributions.collection.Normal import Normal
+from UQpy.distributions.collection.Uniform import Uniform
 from UQpy.surrogates import *
+from UQpy.surrogates.polynomial_chaos.physics_informed.PdeData import PdeData
+from scipy import special as sp
 
 
 @beartype
@@ -70,7 +72,7 @@ def derivative_basis(standardized_sample: np.ndarray, pce: PolynomialChaosExpans
 
 @beartype
 def construct_basis(standardized_sample: np.ndarray, multindex: np.ndarray,
-                    joint_distribution: UQpy.distributions.baseclass.Distribution,
+                    joint_distribution: Distribution,
                     derivative_order: int = 0, leading_variable: int = 0):
     """
         Construct and evaluate derivative basis.

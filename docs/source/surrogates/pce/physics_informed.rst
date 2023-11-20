@@ -1,5 +1,5 @@
 Physics-informed Polynomial Chaos Expansion
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Polynomial chaos expansion can be used in physics-informed machine learning as an efficient surrogate model allowing for
 analytical uncertainty quantification. The PCE constrained to adhere to the known physics of the model (referenced as
 (PC :math:`^2`), combines the conventional experimental design with additional constraints from the physics of the model.
@@ -25,10 +25,10 @@ The second class in the PC :math:`^2` framework is :class:`.PdePCE` containing P
 in PCE context. The class is imported using the following command:
 
 
->>> from UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE import PdeCE
+>>> from UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE import PdePCE
 
 
-.. autoclass:: UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE.PdePce
+.. autoclass:: UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE.PdePCE
     :members:
 
 ConstrainedPCE class
@@ -40,15 +40,8 @@ imported using the following command:
 >>> from UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE import ConstrainedPCE
 
 
-.. autoclass:: UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE.ConstrainedPce
+.. autoclass:: UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE.ConstrainedPCE
     :members:
-
-
-
-
-
-
-
 
 
 
@@ -64,7 +57,7 @@ The :class:`.ReducedPCE` class is imported using the following command:
 
 >>> from UQpy.surrogates.polynomial_chaos.physics_informed.ReducedPCE import ReducedPCE
 
-.. autoclass:: UQpy.surrogates.polynomial_chaos.physics_informed.ReducedPCE.ReducedPce
+.. autoclass:: UQpy.surrogates.polynomial_chaos.physics_informed.ReducedPCE.ReducedPCE
     :members:
 
 Examples

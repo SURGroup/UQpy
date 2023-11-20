@@ -3,6 +3,9 @@ from UQpy.surrogates import *
 import copy
 import UQpy.surrogates.polynomial_chaos.physics_informed.Utilities as utils
 from beartype import beartype
+from UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion import PolynomialChaosExpansion
+from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.PolynomialBasis import PolynomialBasis
+from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import Polynomials
 
 class ReducedPCE:
     @beartype
@@ -35,7 +38,7 @@ class ReducedPCE:
         determ_multi_index[:, determ_selection_mask] = self.original_multindex[:, determ_selection_mask]
 
         self.determ_multi_index = determ_multi_index.astype(int)
-        self.determ_basis = polynomial_chaos.PolynomialBasis.construct_arbitrary_basis(self.nvar,
+        self.determ_basis = PolynomialBasis.construct_arbitrary_basis(self.nvar,
                                                                                        self.original_pce.polynomial_basis.distributions,
                                                                                        self.determ_multi_index)
 
@@ -73,7 +76,7 @@ class ReducedPCE:
         coord_x = np.zeros((1, self.nvar))
         coord_x[0, self.determ_pos] = coordinates
 
-        determ_basis_eval = polynomial_chaos.PolynomialBasis(self.nvar, len(self.determ_multi_index),
+        determ_basis_eval = PolynomialBasis(self.nvar, len(self.determ_multi_index),
                                                              self.determ_multi_index, self.determ_basis,
                                                              self.original_pce.polynomial_basis.distributions).evaluate_basis(
             coord_x)
@@ -95,7 +98,7 @@ class ReducedPCE:
 
         coord_x = np.zeros((1, self.nvar))
         coord_x[0, self.determ_pos] = coordinates
-        coord_s = polynomial_chaos.Polynomials.standardize_sample(coord_x,
+        coord_s = Polynomials.standardize_sample(coord_x,
                                                                   self.original_pce.polynomial_basis.distributions)
 
         determ_multi_index = np.zeros(self.original_multindex.shape)
