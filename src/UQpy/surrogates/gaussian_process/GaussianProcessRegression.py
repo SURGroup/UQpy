@@ -267,7 +267,10 @@ class GaussianProcessRegression(Surrogate):
         if hyperparameters is not None:
             # This is used for MLE constraints, if constraints call 'predict' method.
             self.kernel.kernel_parameter = kernelparameters[:-1]
-            sigma = kernelparameters[-1]
+            if kernelparameters is not None:
+                sigma = kernelparameters[-1]
+            else:
+                raise ValueError('kernelparameters is None')
             K = sigma ** 2 * self.kernel.calculate_kernel_matrix(x=s_, s=s_) + \
                 np.eye(self.samples.shape[0]) * (noise_std ** 2)
             cc = np.linalg.cholesky(K + 1e-10 * np.eye(self.samples.shape[0]))
