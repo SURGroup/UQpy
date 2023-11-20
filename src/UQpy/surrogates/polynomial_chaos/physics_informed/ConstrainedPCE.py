@@ -14,7 +14,9 @@ import logging
 
 class ConstrainedPCE:
     @beartype
-    def __init__(self, pde_data: PdeData, pde_pce: PdePCE, pce: PolynomialChaosExpansion):
+    def __init__(self, pde_data: PdeData,
+                 pde_pce: PdePCE,
+                 pce: PolynomialChaosExpansion):
         """
         Class for construction of physics-informed PCE using Karush-Kuhn-Tucker normal equations
 
@@ -51,44 +53,50 @@ class ConstrainedPCE:
         err_data = (np.sum((pce.experimental_design_output - ypce) ** 2) / len(ypce))
 
         err_pde = np.abs(
-            self.pde_pce.pde_eval(standardized_sample, pce, coefficients=pce.coefficients) - self.pde_pce.pderes_eval(
+            self.pde_pce.evaluate_pde(standardized_sample, pce, coefficients=pce.coefficients) - self.pde_pce.pderes_eval(
                 standardized_sample,
                 multindex=pce.multi_index_set,
                 coefficients=pce.coefficients))
         err_pde = np.mean(err_pde ** 2)
-        err_bc = self.pde_pce.bc_eval(len(standardized_sample), pce)
+        err_bc = self.pde_pce.evaluate_boundary_conditions(len(standardized_sample), pce)
         err_bc = np.mean(err_bc ** 2)
         err_complete = (err_data + err_pde + err_bc)
         return err_complete
 
     @beartype
-    def lar(self, n_PI: int = 50, virtual_niters: bool = False, max_niter: int = None, no_iter: bool = False, minsize_basis: int = 1, nvirtual: int = -1,
+    def lar(self,
+            n_error_points: int = 50,
+            virtual_niters: bool = False,
+            max_iterations: int = None,
+            no_iterations: bool = False,
+            min_basis_functions: int = 1,
+            nvirtual: int = -1,
             target_error: float = 0):
         """
             Fit the sparse physics-informed PCE by Least Angle Regression from Karush-Kuhn-Tucker normal equations
 
-            :param n_PI: number of virtual samples used for estimation of an error
+            :param n_error_points: number of virtual samples used for estimation of an error
             :param virtual_niters: if True, minimum number of basis functions is equal to number of BCs
-            :param max_niter: maximum number of iterations for construction of LAR Path
-            :param no_iter: use all obtained basis functions in the first step, i.e. no iterations
-            :param minsize_basis: minimum number of basis functions for starting the iterative process
+            :param max_iterations: maximum number of iterations for construction of LAR Path
+            :param no_iterations: use all obtained basis functions in the first step, i.e. no iterations
+            :param min_basis_functions: minimum number of basis functions for starting the iterative process
             :param nvirtual: set number of virtual points, -1 corresponds to the optimal number
             :param target_error: target error of iterative process
         """
-        self.ols(calc_coeff=False, nvirtual=nvirtual)
+        self.ols(calculate_coefficients=False, nvirtual=nvirtual)
         logger = logging.getLogger(__name__)
         pce = copy.deepcopy(self.initial_pce)
 
-        if self.pde_pce.virt_func is None:
-            virtual_samples = ortho_grid(n_PI, pce.inputs_number, -1.0, 1.0)
+        if self.pde_pce.virtual_functions is None:
+            virtual_samples = ortho_grid(n_error_points, pce.inputs_number, -1.0, 1.0)
         else:
-            virtual_x = self.pde_pce.virt_func(n_PI)
+            virtual_x = self.pde_pce.virtual_functions(n_error_points)
             virtual_samples = Polynomials.standardize_sample(virtual_x, pce.polynomial_basis.distributions)
 
-        if max_niter is None:
-            max_niter = self.pde_data.nconst + 200
+        if max_iterations is None:
+            max_iterations = self.pde_data.nconst + 200
 
-        lar_path = regresion.lars_path(self.basis_extended, self.y_extended, max_iter=max_niter)[1]
+        lar_path = regresion.lars_path(self.basis_extended, self.y_extended, max_iter=max_iterations)[1]
 
         steps = len(lar_path)
 
@@ -104,15 +112,15 @@ class ConstrainedPCE:
         lar_index = []
         lar_error = []
 
-        if virtual_niters == True and minsize_basis == 1:
-            minsize_basis = self.pde_data.nconst + 1
+        if virtual_niters == True and min_basis_functions == 1:
+            min_basis_functions = self.pde_data.nconst + 1
 
-        if minsize_basis > steps - 2 or no_iter == True:
-            minsize_basis = steps - 3
+        if min_basis_functions > steps - 2 or no_iterations == True:
+            min_basis_functions = steps - 3
 
-        logger.info('Start of the iterative LAR algorithm ({} steps)'.format(steps - 2 - minsize_basis))
+        logger.info('Start of the iterative LAR algorithm ({} steps)'.format(steps - 2 - min_basis_functions))
 
-        for i in range(minsize_basis, steps - 2):
+        for i in range(min_basis_functions, steps - 2):
 
             mask = lar_path[:i]
             mask = np.concatenate([[0], mask])
@@ -162,20 +170,24 @@ class ConstrainedPCE:
         self.lar_error_path = lar_error
 
     @beartype
-    def ols(self, pce: PolynomialChaosExpansion = None, nvirtual: int = -1, calc_coeff: bool = True, return_coeff: bool = True, n_PI: int = 100):
+    def ols(self, pce: PolynomialChaosExpansion = None,
+            nvirtual: int = -1,
+            calculate_coefficients: bool = True,
+            return_coefficients: bool = True,
+            n_error_points: int = 100):
         """
         Fit the sparse physics-informed PCE by ordinary least squares from Karush-Kuhn-Tucker normal equations
 
         :param pce: an object of the :class:`PolynomialChaosExpansion` class
         :param nvirtual: set number of virtual points, -1 corresponds to the optimal number
-        :param calc_coeff: if True, estimate deterministic coefficients. Othewise, construct only KKT normal equations
+        :param calculate_coefficients: if True, estimate deterministic coefficients. Othewise, construct only KKT normal equations
          for sparse solvers
-        :param return_coeff: if True, return coefficients of pce
-        :param n_PI: number of virtual samples used for estimation of an error
+        :param return_coefficients: if True, return coefficients of pce
+        :param n_error_points: number of virtual samples used for estimation of an error
         """
         if pce is None:
             pce = self.initial_pce
-            return_coeff = False
+            return_coefficients = False
 
         multindex = pce.multi_index_set
         polynomialbasis = pce.design_matrix
@@ -206,10 +218,10 @@ class ConstrainedPCE:
             kkt = np.zeros((card_basis + n_constraints + nvirtual, card_basis + n_constraints + nvirtual))
             right_vector = np.zeros((card_basis + n_constraints + nvirtual, 1))
 
-            if self.pde_pce.virt_func is None:
+            if self.pde_pce.virtual_functions is None:
                 virtual_x = pce.polynomial_basis.distributions.rvs(nvirtual)
             else:
-                virtual_x = self.pde_pce.virt_func(nvirtual)
+                virtual_x = self.pde_pce.virtual_functions(nvirtual)
 
             virtual_s = Polynomials.standardize_sample(virtual_x, pce.polynomial_basis.distributions)
 
@@ -218,7 +230,7 @@ class ConstrainedPCE:
 
             b[-nvirtual:, 0] = self.pde_pce.pderes_eval(self.virtual_s)
 
-            a_pde = self.pde_pce.pde_eval(self.virtual_s, pce)
+            a_pde = self.pde_pce.evaluate_pde(self.virtual_s, pce)
 
             a[n_constraints:, :] = a_pde
 
@@ -233,7 +245,7 @@ class ConstrainedPCE:
                     leadvariable = 0
 
                 if self.pde_data.der_orders[i] > 0:
-                    samples = self.pde_data.get_bcsamples(self.pde_data.der_orders[i])
+                    samples = self.pde_data.get_boundary_samples(self.pde_data.der_orders[i])
                     coord_x = samples[:, :-1]
                     bc_res = samples[:, -1]
                     coord_s = Polynomials.standardize_sample(coord_x,
@@ -258,7 +270,7 @@ class ConstrainedPCE:
         self.basis_extended = np.r_[polynomialbasis, a]
         self.y_extended = np.r_[y, b.reshape(-1)]
 
-        if calc_coeff:
+        if calculate_coefficients:
             # Construct the right vector
 
             right_vector[:card_basis, 0] = np.dot(polynomialbasis.T, y).reshape(-1)
@@ -268,12 +280,12 @@ class ConstrainedPCE:
             a_opt_c_lambda = np.linalg.pinv(kkt) @ right_vector
             a_opt_c = a_opt_c_lambda[:card_basis, 0]
 
-            if not return_coeff:
+            if not return_coefficients:
                 self.initial_pce.coefficients = a_opt_c
-                if self.pde_pce.virt_func is None:
-                    standardized_sample = ortho_grid(n_PI, pce.inputs_number, -1.0, 1.0)
+                if self.pde_pce.virtual_functions is None:
+                    standardized_sample = ortho_grid(n_error_points, pce.inputs_number, -1.0, 1.0)
                 else:
-                    virtual_x = self.pde_pce.virt_func(n_PI)
+                    virtual_x = self.pde_pce.virtual_functions(n_error_points)
                     standardized_sample = Polynomials.standardize_sample(virtual_x,
                                                                               pce.polynomial_basis.distributions)
                 err = self.estimate_error(self.initial_pce, standardized_sample)

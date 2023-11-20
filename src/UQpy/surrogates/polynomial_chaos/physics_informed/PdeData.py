@@ -1,24 +1,31 @@
 import numpy as np
+from beartype import beartype
 
 
 class PdeData:
-    def __init__(self, geometry_xmax, geometry_xmin, der_orders, bc_normals, bc_x, bc_y):
+    @beartype
+    def __init__(self, upper_bounds: list,
+                 lower_bounds: list,
+                 derivative_orders,
+                 boundary_normals,
+                 boundary_coordinates,
+                 boundary_values):
         """
         Class containing information about PDE solved by Physics-informed PCE
 
-        :param geometry_xmax: list of upper bounds of determnistic variables (geometry and time)
-        :param geometry_xmin: list of lower bounds of determnistic variables (geometry and time)
-        :param der_orders: list of derivative orders of boundary conditions
-        :param bc_normals: normals of boundary conditions
-        :param bc_x: coordinates of boundary samples
-        :param bc_y: prescribed values of boundary conditions in bc_x
+        :param upper_bounds: list of upper bounds of deterministic variables (geometry and time)
+        :param lower_bounds: list of lower bounds of deterministic variables (geometry and time)
+        :param derivative_orders: list of derivative orders of boundary conditions
+        :param boundary_normals: normals of boundary conditions
+        :param boundary_coordinates: coordinates of boundary samples
+        :param boundary_values: prescribed values of boundary conditions in bc_x
         """
-        self.xmax = geometry_xmax
-        self.xmin = geometry_xmin
-        self.der_orders = der_orders
-        self.bc_normals = bc_normals
-        self.bc_x = bc_x
-        self.bc_y = bc_y
+        self.xmax = upper_bounds
+        self.xmin = lower_bounds
+        self.der_orders = derivative_orders
+        self.bc_normals = boundary_normals
+        self.bc_x = boundary_coordinates
+        self.bc_y = boundary_values
 
         self.nconst = 0
         self.dirichlet = None
@@ -52,7 +59,8 @@ class PdeData:
 
         self.dirichlet = dirichletbc
 
-    def get_bcsamples(self, order):
+    @beartype
+    def get_boundary_samples(self, order:int):
         """
         Extract boundary conditions of defined order
 

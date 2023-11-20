@@ -82,7 +82,11 @@ class ReducedPCE:
         return self._unique_coefficients(determ_basis_eval, return_coefficients)
 
     @beartype
-    def derive_coordinate(self, coordinates: np.ndarray, derivative_order: int, leading_variable: int, derivative_multiplier: float = 1, return_coefficients: bool = False):
+    def derive_coordinate(self, coordinates: np.ndarray,
+                          derivative_order: int,
+                          leading_variable: int,
+                          derivative_multiplier: float = 1,
+                          return_coefficients: bool = False):
 
         """
         Evaluate derivative of reduced PCE coefficients for given deterministic coordinates.

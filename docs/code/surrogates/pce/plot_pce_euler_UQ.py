@@ -147,7 +147,7 @@ pde_data = PdeData(geometry_xmax, geometry_xmin, der_orders, bc_normals, bc_x, b
 #
 # Further we construct an object containing PDE physical data and PC :math:`^2` definitions of PDE
 
-pde_pce = PdePCE(pde_data, pde_func, pde_res=pde_res, bc_res=bc_res)
+pde_pce = PdePCE(pde_data, pde_func, pde_source=pde_res, boundary_conditions=bc_res)
 
 # %% md
 #

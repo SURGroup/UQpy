@@ -184,7 +184,7 @@ pde_data = PdeData(geometry_xmax, geometry_xmin, der_orders, bc_normals, bc_coor
 # Further we construct an object containing PDE physical data and PC :math:`^2` definitions of PDE
 
 
-pde_pce = PdePCE(pde_data, pde_func, pde_res=pde_res, virt_func=virt_sampling, bc_func=bc_sampling, bc_res=bc_res)
+pde_pce = PdePCE(pde_data, pde_func, pde_source=pde_res, virtual_points_function=virt_sampling, boundary_condition_function=bc_sampling, boundary_conditions=bc_res)
 
 # %% md
 #
@@ -217,7 +217,7 @@ for p in range(12, 15):
     pcpc = ConstrainedPCE(pde_data, pde_pce, initpce)
 
     # get coefficients of PC^2 by KKT-OLS
-    pcpc.ols(n_PI=10000)
+    pcpc.ols(n_error_points=10000)
 
     # get PC^2 error
     err = pcpc.ols_err
@@ -238,7 +238,7 @@ initpce.set_data(x_train, y_train)
 pcpc = ConstrainedPCE(pde_data, pde_pce, initpce)
 
 # get coefficients of PC^2 by KKT-OLS
-pcpc.ols(n_PI=10000)
+pcpc.ols(n_error_points=10000)
 print('\np adaptive results: ')
 print('Best polynomial order: ', best_p)
 print('Sum of errors in PDE, BCs and training data: ', best_err)

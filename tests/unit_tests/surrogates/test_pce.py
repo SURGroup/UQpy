@@ -539,7 +539,7 @@ def test_24():
 
     pde_data = PdeData(geometry_xmax, geometry_xmin, der_orders, bc_normals, bc_x, bc_y)
 
-    pde_pce = PdePCE(pde_data, pde_func, pde_res=pde_res, bc_res=bc_res)
+    pde_pce = PdePCE(pde_data, pde_func, pde_source=pde_res, boundary_conditions=bc_res)
 
     dirichlet_bc = pde_data.dirichlet
     x_train = dirichlet_bc[:, :-1]
