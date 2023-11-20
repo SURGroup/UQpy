@@ -1,5 +1,4 @@
 import numpy as np
-from UQpy.surrogates import *
 import copy
 import UQpy.surrogates.polynomial_chaos.physics_informed.Utilities as utils
 from beartype import beartype

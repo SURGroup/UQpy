@@ -1,7 +1,6 @@
 import numpy as np
 
 from sklearn import linear_model as regresion
-from UQpy.surrogates import *
 from UQpy.surrogates.polynomial_chaos.physics_informed.Utilities import *
 import copy
 from UQpy.surrogates.polynomial_chaos.polynomials.baseclass.Polynomials import Polynomials
