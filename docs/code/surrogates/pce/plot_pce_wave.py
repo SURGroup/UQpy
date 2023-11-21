@@ -87,13 +87,13 @@ def bc_res(nsim, pce):
     der_order = 0
     deriv_0_init = np.sum(
         derivative_basis(bc_init_s, pce, derivative_order=der_order, leading_variable=0) * (
-                    (2 / 1) ** der_order) * np.array(
+                (2 / 1) ** der_order) * np.array(
             pce.coefficients).T, axis=1)
 
     der_order = 1
     deriv_1_init = np.sum(
         derivative_basis(bc_init_s, pce, derivative_order=der_order, leading_variable=1) * (
-                    (2 / 1) ** der_order) * np.array(
+                (2 / 1) ** der_order) * np.array(
             pce.coefficients).T, axis=1)
 
     return deriv_0_pce + np.abs(deriv_0_init - bc_init_y[:, 0]) + deriv_1_init
@@ -147,8 +147,8 @@ joint = JointIndependent(marginals=marg)
 
 # define geometry of physical space
 
-geometry_xmin = np.array([0, 0])
-geometry_xmax = np.array([1, 2])
+geometry_xmin = [0, 0]
+geometry_xmax = [1, 2]
 
 # %% md
 #
@@ -164,7 +164,7 @@ ninit = 10
 # derivation orders of prescribed BCs
 der_orders = [0, 1, 0]
 # normals associated to prescribed BCs
-bc_normals = np.array([0, 1, 1])
+bc_normals = [0, 1, 1]
 # sampling of BC points
 bc_x = bc_sampling(nbc)
 bc_y = np.zeros(len(bc_x))
@@ -184,7 +184,8 @@ pde_data = PdeData(geometry_xmax, geometry_xmin, der_orders, bc_normals, bc_coor
 # Further we construct an object containing PDE physical data and PC :math:`^2` definitions of PDE
 
 
-pde_pce = PdePCE(pde_data, pde_func, pde_source=pde_res, virtual_points_function=virt_sampling, boundary_condition_function=bc_sampling, boundary_conditions=bc_res)
+pde_pce = PdePCE(pde_data, pde_func, pde_source=pde_res, boundary_conditions_evaluate=bc_res,
+                 virtual_points_sampling=virt_sampling)
 
 # %% md
 #

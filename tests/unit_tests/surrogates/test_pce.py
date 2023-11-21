@@ -519,8 +519,8 @@ def test_24():
     joint = JointIndependent(marginals=marg)
 
     # define geometry of physical space
-    geometry_xmin = np.array([0])
-    geometry_xmax = np.array([1])
+    geometry_xmin = [0]
+    geometry_xmax = [1]
 
     # number of BC samples
     nbc = 2 * 10
@@ -528,7 +528,7 @@ def test_24():
     # derivation orders of prescribed BCs
     der_orders = [0, 2]
     # normals associated to precribed BCs
-    bc_normals = np.array([0, 0])
+    bc_normals = [0, 0]
     # sampling of BC points
 
     bc_xtotal = bc_sampling(20)
@@ -539,7 +539,7 @@ def test_24():
 
     pde_data = PdeData(geometry_xmax, geometry_xmin, der_orders, bc_normals, bc_x, bc_y)
 
-    pde_pce = PdePCE(pde_data, pde_func, pde_source=pde_res, boundary_conditions=bc_res)
+    pde_pce = PdePCE(pde_data, pde_func, pde_source=pde_res, boundary_conditions_evaluate=bc_res)
 
     dirichlet_bc = pde_data.dirichlet
     x_train = dirichlet_bc[:, :-1]

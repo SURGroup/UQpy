@@ -53,10 +53,8 @@ class ConstrainedPCE:
         err_data = (np.sum((pce.experimental_design_output - ypce) ** 2) / len(ypce))
 
         err_pde = np.abs(
-            self.pde_pce.evaluate_pde(standardized_sample, pce, coefficients=pce.coefficients) - self.pde_pce.pderes_eval(
-                standardized_sample,
-                multindex=pce.multi_index_set,
-                coefficients=pce.coefficients))
+            self.pde_pce.evaluate_pde(standardized_sample, pce, coefficients=pce.coefficients) - self.pde_pce.evaluate_pde_source(
+                standardized_sample, multindex=pce.multi_index_set, coefficients=pce.coefficients))
         err_pde = np.mean(err_pde ** 2)
         err_bc = self.pde_pce.evaluate_boundary_conditions(len(standardized_sample), pce)
         err_bc = np.mean(err_bc ** 2)
@@ -87,14 +85,14 @@ class ConstrainedPCE:
         logger = logging.getLogger(__name__)
         pce = copy.deepcopy(self.initial_pce)
 
-        if self.pde_pce.virtual_functions is None:
+        if self.pde_pce.virtual_points_sampling is None:
             virtual_samples = ortho_grid(n_error_points, pce.inputs_number, -1.0, 1.0)
         else:
-            virtual_x = self.pde_pce.virtual_functions(n_error_points)
+            virtual_x = self.pde_pce.virtual_points_sampling(n_error_points)
             virtual_samples = Polynomials.standardize_sample(virtual_x, pce.polynomial_basis.distributions)
 
         if max_iterations is None:
-            max_iterations = self.pde_data.nconst + 200
+            max_iterations = self.pde_data.nconstraints + 200
 
         lar_path = regresion.lars_path(self.basis_extended, self.y_extended, max_iter=max_iterations)[1]
 
@@ -113,7 +111,7 @@ class ConstrainedPCE:
         lar_error = []
 
         if virtual_niters == True and min_basis_functions == 1:
-            min_basis_functions = self.pde_data.nconst + 1
+            min_basis_functions = self.pde_data.nconstraints + 1
 
         if min_basis_functions > steps - 2 or no_iterations == True:
             min_basis_functions = steps - 3
@@ -197,7 +195,7 @@ class ConstrainedPCE:
 
         y = pce.experimental_design_output
 
-        n_constraints = self.pde_data.nconst
+        n_constraints = self.pde_data.nconstraints
         card_basis, nvar = multindex.shape
 
         if nvirtual == -1:
@@ -218,17 +216,17 @@ class ConstrainedPCE:
             kkt = np.zeros((card_basis + n_constraints + nvirtual, card_basis + n_constraints + nvirtual))
             right_vector = np.zeros((card_basis + n_constraints + nvirtual, 1))
 
-            if self.pde_pce.virtual_functions is None:
+            if self.pde_pce.virtual_points_sampling is None:
                 virtual_x = pce.polynomial_basis.distributions.rvs(nvirtual)
             else:
-                virtual_x = self.pde_pce.virtual_functions(nvirtual)
+                virtual_x = self.pde_pce.virtual_points_sampling(nvirtual)
 
             virtual_s = Polynomials.standardize_sample(virtual_x, pce.polynomial_basis.distributions)
 
             self.virtual_s = virtual_s
             self.virtual_x = virtual_x
 
-            b[-nvirtual:, 0] = self.pde_pce.pderes_eval(self.virtual_s)
+            b[-nvirtual:, 0] = self.pde_pce.evaluate_pde_source(self.virtual_s)
 
             a_pde = self.pde_pce.evaluate_pde(self.virtual_s, pce)
 
@@ -282,10 +280,10 @@ class ConstrainedPCE:
 
             if not return_coefficients:
                 self.initial_pce.coefficients = a_opt_c
-                if self.pde_pce.virtual_functions is None:
+                if self.pde_pce.virtual_points_sampling is None:
                     standardized_sample = ortho_grid(n_error_points, pce.inputs_number, -1.0, 1.0)
                 else:
-                    virtual_x = self.pde_pce.virtual_functions(n_error_points)
+                    virtual_x = self.pde_pce.virtual_points_sampling(n_error_points)
                     standardized_sample = Polynomials.standardize_sample(virtual_x,
                                                                               pce.polynomial_basis.distributions)
                 err = self.estimate_error(self.initial_pce, standardized_sample)
