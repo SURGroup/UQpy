@@ -6,10 +6,10 @@ class PdeData:
     @beartype
     def __init__(self, upper_bounds: list,
                  lower_bounds: list,
-                 derivative_orders,
-                 boundary_normals,
-                 boundary_coordinates,
-                 boundary_values):
+                 derivative_orders: list,
+                 boundary_normals: list,
+                 boundary_coordinates: list,
+                 boundary_values: list):
         """
         Class containing information about PDE solved by Physics-informed PCE
 
@@ -27,7 +27,7 @@ class PdeData:
         self.bc_x = boundary_coordinates
         self.bc_y = boundary_values
 
-        self.nconst = 0
+        self.nconstraints = 0
         self.dirichlet = None
         self.extract_dirichlet()
 
@@ -50,7 +50,7 @@ class PdeData:
             else:
                 nconst = nconst + len((self.bc_x[i]))
 
-        self.nconst = nconst
+        self.nconstraints = nconst
 
         if len(coord) > 0:
             coord = np.concatenate(coord)
@@ -60,11 +60,11 @@ class PdeData:
         self.dirichlet = dirichletbc
 
     @beartype
-    def get_boundary_samples(self, order:int):
+    def get_boundary_samples(self, order: int):
         """
         Extract boundary conditions of defined order
 
-        :param order: order of extracted boundary conditions
+        :param order: derivative order of extracted boundary conditions
         :return: extracted bc samples in form [coordinates, prescribed values]
         """
         coord = []
