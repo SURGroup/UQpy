@@ -1,0 +1,4 @@
+from UQpy.surrogates.polynomial_chaos.physics_informed.ConstrainedPCE import ConstrainedPCE
+from UQpy.surrogates.polynomial_chaos.physics_informed.PdeData import PdeData
+from UQpy.surrogates.polynomial_chaos.physics_informed.PdePCE import PdePCE
+from UQpy.surrogates.polynomial_chaos.physics_informed.ReducedPCE import ReducedPCE
