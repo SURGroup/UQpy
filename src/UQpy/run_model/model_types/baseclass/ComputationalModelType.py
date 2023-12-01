@@ -11,6 +11,10 @@ class ComputationalModelType(ABC):
         pass
 
     @abstractmethod
+    def preprocess_single_sample(self, i, sample):
+        pass
+
+    @abstractmethod
     def execute_single_sample(self, index, sample_to_send):
         pass
 
