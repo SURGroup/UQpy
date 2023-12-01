@@ -33,7 +33,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from UQpy.distributions import Uniform
 from UQpy.sampling import MonteCarloSampling
-from UQpy.sensitivity import GPSobolSensitivity
+from UQpy.sensitivity.GPSobolSensitivity import GPSobolSensitivity
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel
 from sklearn.gaussian_process import GaussianProcessRegressor
 
