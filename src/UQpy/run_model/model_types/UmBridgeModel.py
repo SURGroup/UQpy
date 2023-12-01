@@ -1,11 +1,11 @@
 import umbridge
 import logging
-import beartype
+from beartype import beartype
 import importlib
 from UQpy.run_model.model_types import ComputationalModelType
 
 spec = importlib.util.find_spec('umbridge')
-if spec is not None:
+if spec is None:
     raise ImportError("UM-Bridge library is not installed, use the command:\n"
                       "pip install umbridge\n"
                       "to enable this functionality.")
