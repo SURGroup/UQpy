@@ -4,6 +4,7 @@ from UQpy.sensitivity.SobolSensitivity import SobolSensitivity
 from UQpy.sensitivity.CramerVonMisesSensitivity import CramerVonMisesSensitivity
 from UQpy.sensitivity.ChatterjeeSensitivity import ChatterjeeSensitivity
 from UQpy.sensitivity.GeneralisedSobolSensitivity import GeneralisedSobolSensitivity
+from UQpy.sensitivity.GPSobolSensitivity import GPSobolSensitivity
 
 from . import MorrisSensitivity
 from . import PceSensitivity
@@ -11,3 +12,4 @@ from . import SobolSensitivity
 from . import CramerVonMisesSensitivity
 from . import ChatterjeeSensitivity
 from . import GeneralisedSobolSensitivity
+from . import GPSobolSensitivity

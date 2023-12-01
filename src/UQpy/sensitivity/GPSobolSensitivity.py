@@ -1,15 +1,18 @@
 import os
 import logging
-import numpy as np
+from typing import Union, Callable
 from beartype import beartype
 import matplotlib.pyplot as plt
 from UQpy.distributions import *
-from UQpy.sampling import MonteCarloSampling
-from UQpy.surrogates import GaussianProcessRegression as UQpyGaussianProcessRegressor
-from sklearn.gaussian_process import GaussianProcessRegressor
 from joblib import Parallel, delayed
 from scipy.integrate import quad, dblquad
 from line_profiler_pycharm import profile
+from UQpy.utilities.ValidationTypes import *
+from UQpy.sampling import MonteCarloSampling
+from UQpy.surrogates.baseclass import Surrogate
+from sklearn.gaussian_process import GaussianProcessRegressor
+SurrogateType = Union[Surrogate, GaussianProcessRegressor,
+                      Annotated[object, Is[lambda x: hasattr(x, 'fit') and hasattr(x, 'predict')]]]
 
 
 class GPSobolSensitivity:
@@ -102,10 +105,25 @@ class GPSobolSensitivity:
 
         **Methods:**
     """
-    def __init__(self, surrogate=None, distributions=None, samples=None, mcs_object=None, single_integral=None,
-                 double_integral=None, n_candidates=200, n_simulations=1000, lower_bound=0.01, upper_bound=0.99,
-                 random_state=None, n_cores=1, transform_x=None, transform_y=None, compute_var=False,
-                 compute_cov=False, **kwargs) -> None:
+    # TODO: Update doc strings, add types of attributes
+    def __init__(self, surrogate: SurrogateType,
+                 distributions: Union[JointIndependent, Union[list, tuple]] = None,
+                 samples: Union[NumpyFloatArray, NumpyIntArray] = None,
+                 mcs_object: MonteCarloSampling = None,
+                 single_integral: Callable = None,
+                 double_integral: Callable = None,
+                 n_candidates: PositiveInteger = 1000,
+                 n_simulations: PositiveInteger = 10000,
+                 lower_bound: PositiveFloat = 0.001,
+                 upper_bound: PositiveFloat = 0.999,
+                 random_state: RandomStateType = 0,
+                 n_cores: PositiveInteger = 1,
+                 transform_x: callable = None,
+                 transform_y: callable = None,
+                 compute_var: bool = False,
+                 compute_cov: bool = False,
+                 **kwargs
+                 ) -> None:
 
         # Create logger with the same name as the class
         self.logger = logging.getLogger(__name__)
@@ -149,19 +167,15 @@ class GPSobolSensitivity:
             self.mcs_object = MonteCarloSampling(distributions=self.distributions, nsamples=100000,
                                                  random_state=self.random_state)
 
-        if not isinstance(self.surrogate, (UQpyGaussianProcessRegressor, GaussianProcessRegressor)):
-            raise NotImplementedError("Attribute 'surrogate' should be an UQpy.Surrogates.Kriging object or "
-                                      "sklearn.gaussian_process.GaussianProcessRegressor object")
-
         if isinstance(self.distributions, list):
-            for i in range(len(self.distributions)):
-                if not isinstance(self.distributions[i], DistributionContinuous1D):
-                    raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
+            # for i in range(len(self.distributions)):
+            #     if not isinstance(self.distributions[i], DistributionContinuous1D):
+            #         raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
             self.dimension = len(self.distributions)
         else:
             self.dimension = 1
-            if not isinstance(self.distributions, DistributionContinuous1D):
-                raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
+            # if not isinstance(self.distributions, DistributionContinuous1D):
+            #     raise TypeError('UQpy: A DistributionContinuous1D object must be provided.')
 
         if self.single_integral is None:
             self.single_integral = self._numerical_approx_single
@@ -206,7 +220,7 @@ class GPSobolSensitivity:
 
         sam_mean, sam_std = [0] * self.dimension, [1] * self.dimension
         if self.transform_x is not None:
-            # TODO: Update this properly, so that transform_x and transform_y are updated after executing 'run' method
+            # Update this properly, so that transform_x and transform_y are updated after executing 'run' method
             sam_mean, sam_std = self.transform_x.mean_, self.transform_x.scale_
 
         # ################## COMPUTE EXPECTION OF KERNEL ##################
