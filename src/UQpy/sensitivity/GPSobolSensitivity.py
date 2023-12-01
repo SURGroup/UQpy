@@ -17,95 +17,40 @@ SurrogateType = Union[Surrogate, GaussianProcessRegressor,
 
 class GPSobolSensitivity:
     """
-    The class for computing first order Sobol Indices.
+    Gaussian Process based computation of first order Sobol indices.
 
-    **Inputs:**
-
-    * **samples** (`ndarray`):
-        A numpy array containing the data set used to train the surrgate model.
-
-    * **surrogate** (`class` object):
-        A object defining a GP surrogate model, this object must have ``fit`` and ``predict`` methods.
-
-        This can be an object of the ``UQpy`` ``GaussianProcessRegression`` class or an object of the ``scikit-learn``
-        ``GaussianProcessRegressor``
-
-    * **distributions** ((list of) ``Distribution`` object(s)):
-        List of ``Distribution`` objects corresponding to each random variable.
-
-    * **mcs_object** (`class` object):
-        A class object of UQpy.SampleMethods.MCS class to compute a monte carlo estimate of the output variance using
-        surrogate's prediction method.
-
-    * **single_integral** (`callable`):
-        A method to compute the single integration of correlation model. If None, a numerical estimate is identified
-        using `scipy.integrate.quad`.
-
-    * **double_integral** (`callable`):
-        A method to compute the double integration of correlation model. If None, a numerical estimate is identified
-        using `scipy.integrate.dblquad`.
-
-    * **step_size** (`float`)
-        Defines the size of the step to use for gradient estimation using central difference method.
-
-        Used only in gradient-enhanced refined stratified sampling.
-
-    * **n_candidates** (`int`):
-        Number of candidate points along each dimension, randomly generated using Latin Hypercube Sampling, to compute
-        Sobol Indices.
-
-    * **n_simulations** (`int`):
-        Number of estimates of Sobol Indices to compute mean and standard deviation.
-
-    * **lower_bound** (`float`):
-        A float between 0 and 1, which defines the lower bound for integration of correlation model. The lower bound is
-        computed by taking the inverse transform of the provide value.
-
-        Eg: If `distributions`=Uniform(loc=1, scale=1) and `lower_bound`=0.02
-        then lower bound for integration is distributions.icdf(0.02) = 1.02.
-
-        This value is used if a callable is not provided for  `single_integral` and 'double_integral' attribute.
-        Default: 0.01
-
-    * **lower_bound** (`float`):
-        A float between 0 and 1, which defines the upper bound for integration of correlation model. The upper bound is
-        computed by taking the inverse transform of the provide value.
-
-        Eg: If `distributions`=Uniform(loc=1, scale=1) and `upper_bound`=0.98
-        then upper bound for integration is distributions.icdf(0.98) = 1.98.
-
-        This value is used if a callable is not provided for  `single_integral` and 'double_integral' attribute.
-        Default: 0.99
-
-    * **transform_x** (`class` object):
-        A class object to transform and inverse transform the input samples. This class object should have `transform`
-        and `inverse_transform` methods.
-
-    * **transform_y** (`class` object):
-        A class object to transform and inverse transform the output samples. This class object should have `transform`
-        and `inverse_transform` methods.
-
-    * **random_state** (None or `int` or ``numpy.random.RandomState`` object):
-        Random seed used to initialize the pseudo-random number generator. Default is None.
-
-        If an integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the
-        object itself can be passed directly.
-
-        Default value: False
-
-    **Attributes:**
-
-    Each of the above inputs are saved as attributes, in addition to the following created attributes.
-
-        * **sobol_mean** (`ndarray`):
-            The generated stratified samples following the prescribed distribution.
-
-        * **sobol_std** (`ndarray`)
-            The generated samples on the unit hypercube.
-
-        **Methods:**
+    :param samples: A numpy array containing the data set used to train the surrgate model.
+    :param surrogate: A object defining a GP surrogate model, this object must have ``fit`` and ``predict`` methods.
+    This can be an object of the ``UQpy`` ``GaussianProcessRegression`` class or an object of the ``scikit-learn``
+    ``GaussianProcessRegressor``
+    :param distributions: List of :class:`.Distribution` objects corresponding to each random variable
+    :param mcs_object: A class object of UQpy.SampleMethods.MCS class to compute a monte carlo estimate of the output
+    variance using surrogate's prediction method.
+    :param single_integral: A method to compute the single integration of correlation model. If None, a numerical
+    estimate is identified using `scipy.integrate.quad`.
+    :param double_integral: A method to compute the double integration of correlation model. If None, a numerical
+    estimate is identified using `scipy.integrate.dblquad`.
+    :param n_candidates: Number of candidate points along each dimension, randomly generated using MonteCarloSampling
+    to compute Sobol indices.
+    :param n_simulations: Number of estimates of Sobol Indices to compute mean and standard deviation. Default: 10000
+    :param lower_bound: A float between 0 and 1, which defines the lower bound for integration of correlation model. The
+    lower bound is computed by taking the inverse transform of the provide value. Eg: If `distributions`=
+    Uniform(loc=1, scale=1) and `lower_bound`=0.02 then lower bound for integration is distributions.icdf(0.02) = 1.02.
+    This value is used if a callable is not provided for  `single_integral` and 'double_integral' attribute. Default:
+    0.001
+    :param lower_bound: A float between 0 and 1, which defines the upper bound for integration of correlation model. The
+    upper bound is computed by taking the inverse transform of the provide value. Eg: If `distributions`=
+    Uniform(loc=1, scale=1) and `upper_bound`=0.98 then upper bound for integration is distributions.icdf(0.98) = 1.98.
+    This value is used if a callable is not provided for  `single_integral` and 'double_integral' attribute. Default:
+    0.999
+    :param transform_x: A class object to transform and inverse transform the input samples. This class object should
+    have `transform` and `inverse_transform` methods.
+    :param transform_y: A class object to transform and inverse transform the output samples. This class object should
+    have `transform` and `inverse_transform` methods.
+    :param random_state: Random seed used to initialize the pseudo-random number generator. Default is 0. If an
+    integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the object itself
+    can be passed directly.
     """
-    # TODO: Update doc strings, add types of attributes
     def __init__(self, surrogate: SurrogateType,
                  distributions: Union[JointIndependent, Union[list, tuple]] = None,
                  samples: Union[NumpyFloatArray, NumpyIntArray] = None,
@@ -142,7 +87,10 @@ class GPSobolSensitivity:
         self.dist_moments = None
         self.single_int_corr_f, self.double_int_corr_f = None, None
         self.mean_vec, self.cov_mat = None, None
-        self.sobol_mean, self.sobol_std = None, None
+        self.sobol_mean: list = []
+        """ Mean estimates of Sobol indices"""
+        self.sobol_std: list = []
+        """ Standard deviation of Sobol indices estimates"""
         self.sobol_mean1, self.sobol_std1 = None, None
         self.discrete_samples, self.transformed_discrete_samples = None, None
         self.transform_x, self.transform_y = transform_x, transform_y
@@ -244,7 +192,7 @@ class GPSobolSensitivity:
                                                                   sam_std=sam_std, k__=l_, l_=self.lower[l_],
                                                                   u_=self.upper[l_], sam_mean=sam_mean,
                                                                   kg_=self.surrogate)
-        self.sobol_mean, self.sobol_std, self.sobol_mean1, self.sobol_std1 = [], [], [], []
+        self.sobol_mean1, self.sobol_std1 = [], []
         self.cov_mat = np.ones([self.dimension, self.n_candidates])
         if self.compute_cov:
             self.cov_mat = np.ones([self.dimension, self.n_candidates, self.n_candidates])
