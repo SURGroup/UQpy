@@ -35,40 +35,40 @@ class GPSobolSensitivity:
                  **kwargs
                  ) -> None:
         """
-            Gaussian Process based computation of first order Sobol indices.
+        Gaussian Process based computation of first order Sobol indices.
 
-            :param samples: A numpy array containing the data set used to train the surrgate model.
-            :param surrogate: A object defining a GP surrogate model, this object must have ``fit`` and ``predict`` methods.
-             This can be an object of the ``UQpy`` ``GaussianProcessRegression`` class or an object of the ``scikit-learn``
-             ``GaussianProcessRegressor``
-            :param distributions: List of :class:`.Distribution` objects corresponding to each random variable
-            :param mcs_object: A class object of UQpy.SampleMethods.MCS class to compute a monte carlo estimate of the output
-             variance using surrogate's prediction method.
-            :param single_integral: A method to compute the single integration of correlation model. If None, a numerical
-             estimate is identified using `scipy.integrate.quad`.
-            :param double_integral: A method to compute the double integration of correlation model. If None, a numerical
-             estimate is identified using `scipy.integrate.dblquad`.
-            :param n_candidates: Number of candidate points along each dimension, randomly generated using MonteCarloSampling
-             to compute Sobol indices.
-            :param n_simulations: Number of estimates of Sobol Indices to compute mean and standard deviation. Default: 10000
-            :param lower_bound: A float between 0 and 1, which defines the lower bound for integration of correlation model. The
-             lower bound is computed by taking the inverse transform of the provide value. Eg: If `distributions`=
-             Uniform(loc=1, scale=1) and `lower_bound`=0.02 then lower bound for integration is distributions.icdf(0.02) = 1.02.
-             This value is used if a callable is not provided for  `single_integral` and 'double_integral' attribute. Default:
-             0.001
-            :param lower_bound: A float between 0 and 1, which defines the upper bound for integration of correlation model. The
-             upper bound is computed by taking the inverse transform of the provide value. Eg: If `distributions`=
-             Uniform(loc=1, scale=1) and `upper_bound`=0.98 then upper bound for integration is distributions.icdf(0.98) = 1.98.
-             This value is used if a callable is not provided for  `single_integral` and 'double_integral' attribute. Default:
-             0.999
-            :param transform_x: A class object to transform and inverse transform the input samples. This class object should
-             have `transform` and `inverse_transform` methods.
-            :param transform_y: A class object to transform and inverse transform the output samples. This class object should
-             have `transform` and `inverse_transform` methods.
-            :param random_state: Random seed used to initialize the pseudo-random number generator. Default is 0. If an
-             integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the object itself
-             can be passed directly.
-            """
+        :param samples: A numpy array containing the data set used to train the surrgate model.
+        :param surrogate: A object defining a GP surrogate model, this object must have ``fit`` and ``predict`` methods.
+         This can be an object of the ``UQpy`` ``GaussianProcessRegression`` class or an object of the ``scikit-learn``
+         ``GaussianProcessRegressor``
+        :param distributions: List of :class:`.Distribution` objects corresponding to each random variable
+        :param mcs_object: A class object of UQpy.SampleMethods.MCS class to compute a monte carlo estimate of the output
+         variance using surrogate's prediction method.
+        :param single_integral: A method to compute the single integration of correlation model. If None, a numerical
+         estimate is identified using `scipy.integrate.quad`.
+        :param double_integral: A method to compute the double integration of correlation model. If None, a numerical
+         estimate is identified using `scipy.integrate.dblquad`.
+        :param n_candidates: Number of candidate points along each dimension, randomly generated using MonteCarloSampling
+         to compute Sobol indices.
+        :param n_simulations: Number of estimates of Sobol Indices to compute mean and standard deviation. Default: 10000
+        :param lower_bound: A float between 0 and 1, which defines the lower bound for integration of correlation model. The
+         lower bound is computed by taking the inverse transform of the provide value. Eg: If `distributions`=
+         Uniform(loc=1, scale=1) and `lower_bound`=0.02 then lower bound for integration is distributions.icdf(0.02) = 1.02.
+         This value is used if a callable is not provided for  `single_integral` and 'double_integral' attribute. Default:
+         0.001
+        :param lower_bound: A float between 0 and 1, which defines the upper bound for integration of correlation model. The
+         upper bound is computed by taking the inverse transform of the provide value. Eg: If `distributions`=
+         Uniform(loc=1, scale=1) and `upper_bound`=0.98 then upper bound for integration is distributions.icdf(0.98) = 1.98.
+         This value is used if a callable is not provided for  `single_integral` and 'double_integral' attribute. Default:
+         0.999
+        :param transform_x: A class object to transform and inverse transform the input samples. This class object should
+         have `transform` and `inverse_transform` methods.
+        :param transform_y: A class object to transform and inverse transform the output samples. This class object should
+         have `transform` and `inverse_transform` methods.
+        :param random_state: Random seed used to initialize the pseudo-random number generator. Default is 0. If an
+         integer is provided, this sets the seed for an object of ``numpy.random.RandomState``. Otherwise, the object itself
+         can be passed directly.
+        """
 
         # Create logger with the same name as the class
         self.logger = logging.getLogger(__name__)

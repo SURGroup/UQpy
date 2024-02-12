@@ -30,7 +30,6 @@ First order Sobol indices
 # %%
 
 import numpy as np
-import matplotlib.pyplot as plt
 from UQpy.distributions import Uniform
 from UQpy.sampling import MonteCarloSampling
 from UQpy.sensitivity.GPSobolSensitivity import GPSobolSensitivity
