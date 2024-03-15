@@ -10,24 +10,34 @@ class NeuralNetwork(ABC, nn.Module):
 
     @property
     @abstractmethod
-    def _algorithm(self):
+    def optimizer(self):
         """Implementation of `Pytorch optimization method`_
 
         .. _Pytorch optimization method: https://pytorch.org/docs/stable/optim.html
         """
         ...
 
+    @optimizer.setter
+    @abstractmethod
+    def optimizer(self, value):
+        self._optimizer = value
+
     @property
     @abstractmethod
-    def _loss_function(self):
+    def loss_function(self):
         """Implementation of `Pytorch loss function`_
 
         .. _Pytorch loss function: https://pytorch.org/docs/stable/nn.html#loss-functions
         """
         ...
 
+    @loss_function.setter
     @abstractmethod
-    def forward(self):
+    def loss_function(self, value):
+        self._loss_function = value
+
+    @abstractmethod
+    def forward(self, **kwargs):
         """Define the computation at every model call. Inherited from :code:`torch.nn.Module`.
         See `Pytorch documentation`_ for details
 
@@ -36,7 +46,7 @@ class NeuralNetwork(ABC, nn.Module):
         ...
 
     @abstractmethod
-    def optimize(self):
+    def train(self, **kwargs):
         """Optimize network parameters using the error measured by :code:`loss_function`
         and algorithm defined by :code:`optimizer`.
         """
