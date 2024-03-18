@@ -5,8 +5,9 @@ from abc import ABC, abstractmethod
 class NeuralNetwork(ABC, nn.Module):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.history = {"loss": None, "train loss": None, "test loss": None}
-        self.is_deterministic = True
+        self.history: dict = {"loss": None, "train loss": None, "test loss": None}
+        """History of training and test loss during ``train`` method."""
+        self.is_deterministic: bool = True
 
     @property
     @abstractmethod
