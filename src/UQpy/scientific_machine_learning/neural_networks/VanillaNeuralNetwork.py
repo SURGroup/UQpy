@@ -12,9 +12,11 @@ class VanillaNeuralNetwork(NeuralNetwork):
         :param network: Network defining the function from :math:`f(x)=y`
         """
         super().__init__(**kwargs)
-        self.network = network
-        self.optimizer = torch.optim.Adam(self.parameters())
-        self.loss_function = nn.MSELoss(reduction="mean")
+        self.network: nn.Module = network
+        """Neural network architecture defined as a ``torch.nn.Module``"""
+        self.optimizer: torch.optim.Optimizer = torch.optim.Adam(self.parameters())
+        self.loss_function: nn.Module = nn.MSELoss(reduction="mean")
+        """Loss function used during ``train``. Default is ``torch.nn.MSELoss(reduction="mean")``"""
 
         self.logger = logging.getLogger(__name__)
 
@@ -42,7 +44,6 @@ class VanillaNeuralNetwork(NeuralNetwork):
 
         :param data_loader: DataLoader that returns tuple of :math:`(x, y)` at each iteration
         :param epochs: Number of epochs to loop over data provided by ``data_loader``
-        :return:
         """
         self.network.train(True)
         self.logger.info(

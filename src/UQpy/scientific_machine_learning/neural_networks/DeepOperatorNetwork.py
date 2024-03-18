@@ -23,11 +23,14 @@ class DeepOperatorNetwork(NeuralNetwork):
         :param trunk_network: Encodes mapping of the transformed domain :math:`y` for :math:`Gu(y)`
         """
         super().__init__(**kwargs)
-        self.branch_network = branch_network
-        self.trunk_network = trunk_network
+        self.branch_network: nn.Module = branch_network
+        """Architecture of the branch neural network defined by a ``torch.nn.Module``"""
+        self.trunk_network: nn.Module = trunk_network
+        """Architecture of the trunk neural network defined by a ``torch.nn.Module``"""
 
-        self.optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
-        self.loss_function = nn.MSELoss(reduction="mean")
+        self.optimizer: torch.optim.Optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
+        self.loss_function: nn.Module = nn.MSELoss(reduction="mean")
+        """Loss function used during ``train``. Default is ``torch.nn.MSELoss(reduction="mean")``"""
 
         self.logger = logging.getLogger(__name__)
 
@@ -70,7 +73,7 @@ class DeepOperatorNetwork(NeuralNetwork):
         """Train the network parameters using data provided by ``data_loader`` for ``epochs`` number of epochs
 
         Note: Modifying the ``optimizer`` and ``loss_function`` attributes must be done *before* ``train`` is called.
-        # ToDo: implement testing_data_loader and test loss history
+
         :param data_loader: Dataloader that returns tuple of :math:`(x, u(x), Gu(x))` at each iteration
         :param epochs: Number of epochs to loop over data provided by ``data_loader``
         """
