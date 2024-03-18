@@ -19,6 +19,6 @@ Scientific Machine Learning methodologies are focused on the architecture and tr
    :caption: Scientific Machine Learning
 
     Loss Functions <losses>
-    Neural Networks <neural_networks>
+    Neural Networks <neural_networks/index>
     Neural Network Layers <layers>
     Optimizers <optimizers>
