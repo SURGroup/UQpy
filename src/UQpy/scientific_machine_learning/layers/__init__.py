@@ -1,2 +1,2 @@
-from UQpy.scientific_machine_learning.layers.Bayesian import Bayesian
+from UQpy.scientific_machine_learning.layers.BayesByBackpropagationLinear import BayesByBackpropagationLinear
 from UQpy.scientific_machine_learning.layers.Dropout import Dropout
