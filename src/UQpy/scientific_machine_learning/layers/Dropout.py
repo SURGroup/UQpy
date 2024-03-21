@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import beartype
+from beartype import beartype
 from beartype.vale import Is
 from typing import Annotated
 from UQpy.scientific_machine_learning.baseclass.Layer import Layer
