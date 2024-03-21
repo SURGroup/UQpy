@@ -1,11 +1,12 @@
-import beartype
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from beartype import beartype
 from UQpy.scientific_machine_learning.baseclass.Layer import Layer
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
+@beartype
 class BayesianLayer(Layer):
     def __init__(
         self,
