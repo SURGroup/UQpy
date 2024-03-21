@@ -35,7 +35,7 @@ def test_accuracy():
     model.optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     training_dataset = QuadraticDataset()
     data_loader = DataLoader(training_dataset, batch_size=20, shuffle=True)
-    model.train(data_loader, epochs=3_000)
+    model.learn(data_loader, epochs=3_000)
 
     final_loss = model.history["train loss"][-1]
     assert final_loss < 1e-2
