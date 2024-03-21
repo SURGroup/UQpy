@@ -162,7 +162,7 @@ class UNeuralOperator(NeuralNetwork):
     def loss_function(self):
         return nn.MSELoss(reduction="mean")
 
-    def train(self, data_loader: torch.utils.data.DataLoader, epochs: int = 100):
+    def learn(self, data_loader: torch.utils.data.DataLoader, epochs: int = 100):
         """
 
         :param data_loader:

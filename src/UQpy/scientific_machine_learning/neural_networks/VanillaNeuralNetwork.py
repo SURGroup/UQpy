@@ -39,7 +39,7 @@ class VanillaNeuralNetwork(NeuralNetwork):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.network(x)
 
-    def train(self, data_loader: torch.utils.data.DataLoader, epochs: int = 100):
+    def learn(self, data_loader: torch.utils.data.DataLoader, epochs: int = 100):
         """Train the network parameters using data provided by ``data_loader`` for ``epochs`` number of epochs
 
         :param data_loader: DataLoader that returns tuple of :math:`(x, y)` at each iteration

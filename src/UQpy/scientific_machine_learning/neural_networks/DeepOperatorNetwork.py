@@ -69,7 +69,7 @@ class DeepOperatorNetwork(NeuralNetwork):
         # return torch.einsum("...i,...i -> ...i", branch_output, trunk_output)
         return torch.einsum("ik, ijk -> ij", branch_output, trunk_output)
 
-    def train(self, data_loader: torch.utils.data.DataLoader, epochs: int = 100):
+    def learn(self, data_loader: torch.utils.data.DataLoader, epochs: int = 100):
         """Train the network parameters using data provided by ``data_loader`` for ``epochs`` number of epochs
 
         Note: Modifying the ``optimizer`` and ``loss_function`` attributes must be done *before* ``train`` is called.

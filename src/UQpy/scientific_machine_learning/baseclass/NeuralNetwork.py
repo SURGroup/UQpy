@@ -47,7 +47,7 @@ class NeuralNetwork(ABC, nn.Module):
         ...
 
     @abstractmethod
-    def train(self, **kwargs):
+    def learn(self, **kwargs):
         """Optimize network parameters using the error measured by :code:`loss_function`
         and algorithm defined by :code:`optimizer`.
         """
