@@ -15,24 +15,24 @@ class BayesianLayer(Layer):
         function: nn.Module = F.linear,
         bias: bool = True,
         priors: dict = None,
+        sample: bool = True,
         **kwargs
     ):
         """Construct a Bayesian layer with weights and bias set by I.I.D. Normal distributions
-
-        # ToDo: Is it useful / interesting to implement arbitrary distributions for weights and biases?
-        # ToDo: should we implement the weights and bias distributions using existing UQpy distributions?
 
         :param in_features: Size of each input sample
         :param out_features: Size of each output sample
         :param function: Function to apply to the input on ``self.forward``
         :param bias: If set to ``False``, the layer will not learn an additive bias. Default: ``True``
         :param priors:
+        :param sample:
         """
         super().__init__(**kwargs)
         self.in_features = in_features
         self.out_features = out_features
         self.bias = bias
         self.function = function
+        self.sample = sample
 
         if priors is None:
             priors = {
@@ -64,7 +64,7 @@ class BayesianLayer(Layer):
             self.bias_mu.data.normal_(*self.posterior_mu_initial)
             self.bias_sigma.data.normal_(*self.posterior_rho_initial)
 
-    def forward(self, x: torch.Tensor, sample: bool = True) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward model evaluation
 
         :param x: Input tensor
@@ -72,7 +72,7 @@ class BayesianLayer(Layer):
         :return: output tensor
         """
         if (
-            self.training or sample
+            self.training or self.sample
         ):  # Randomly sample weights and biases from normal distribution
             weight_epsilon = torch.empty(self.weight_mu.size()).normal_(0, 1)
             self.weight_sigma.data = torch.log1p(torch.exp(self.weight_sigma))
@@ -88,3 +88,4 @@ class BayesianLayer(Layer):
             biases = self.bias_mu if self.bias else None
 
         return self.function(x, weights, biases)
+

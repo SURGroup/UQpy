@@ -3,12 +3,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 import logging
 from UQpy.scientific_machine_learning.baseclass.NeuralNetwork import NeuralNetwork
+from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
 class UNeuralOperator(NeuralNetwork):
 
     def __init__(
-        self, n_filters: int, kernel_size: int, layer_type: nn.Module = nn.Conv2d
+        self, n_filters: list[PositiveInteger], kernel_size: PositiveInteger, layer_type: nn.Module = nn.Conv2d
     ):
         """Initialize a U-Shaped Neural Operator
 
@@ -23,8 +24,11 @@ class UNeuralOperator(NeuralNetwork):
 
         self.encoder_maxpool: list = []
         """Docstring for encoder_maxpool"""
-        self.encoder_convn_1 = []
-        self.encoder_bn_1 = []
+        self.encoder_convolution_1 = []
+        # self.encoder =  nn.Sequential(
+        #
+        # )
+        self.encoder_batch_normalization_1 = []
         self.encoder_convn_2 = []
         self.encoder_bn_2 = []
         self.decoder_upsample = []
@@ -32,6 +36,7 @@ class UNeuralOperator(NeuralNetwork):
         self.decoder_bn_1 = []
         self.decoder_convolution_2 = []
         self.decoder_bn_2 = []
+
         self.final_convolution = []
 
         self.logger = logging.getLogger(__name__)
@@ -148,10 +153,10 @@ class UNeuralOperator(NeuralNetwork):
         x = self.final_conv(x)
         return x
 
-    def optional_step_en(self, x, i):
+    def optional_step_encode(self, x, i):
         return x
 
-    def optional_step_dec(self, x, i):
+    def optional_step_decode(self, x, i):
         return x
 
     @property
