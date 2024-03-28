@@ -42,3 +42,6 @@ class Dropout(Layer):
         :return:
         """
         return self.dropout_function(x)
+
+    def extra_repr(self) -> str:
+        return f"drop_rate={self.drop_rate}, drop_type={self.drop_type}"

@@ -6,13 +6,16 @@ from UQpy.utilities.ValidationTypes import PositiveInteger, PositiveFloat
 
 @beartype
 class EvidenceLowerBound(Loss):
-    def __init__(self, train_size: PositiveInteger, loss_function, **kwargs):
-        """
-
-        # ToDo: figure out default loss function and typing
+    def __init__(
+        self,
+        train_size: PositiveInteger,
+        loss_function: torch.nn.Module = torch.nn.NLLLoss(),
+        **kwargs,
+    ):
+        """Construct an Evidence Lower Bound function
 
         :param train_size: Number of training samples
-        :param loss_function:
+        :param loss_function: Function to compute loss on prior and posterior. Default `torch.nn.NLLLoss`
         """
         super().__init__(**kwargs)
         self.train_size = train_size
@@ -25,7 +28,7 @@ class EvidenceLowerBound(Loss):
         kl: PositiveFloat,
         kl_weight: PositiveFloat,
     ) -> torch.Tensor:
-        """
+        """Forward computational call
 
         :param x: Predicted values
         :param target: Target values
@@ -34,3 +37,6 @@ class EvidenceLowerBound(Loss):
         :return: ELBO Loss
         """
         return (self.loss_function(x, target) * self.train_size) + (kl_weight * kl)
+
+    def extra_repr(self) -> str:
+        return f"train_size={self.train_size}, loss_function={self.loss_function}"
