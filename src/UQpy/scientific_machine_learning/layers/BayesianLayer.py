@@ -15,8 +15,8 @@ class BayesianLayer(Layer):
         function: nn.Module = F.linear,
         bias: bool = True,
         priors: dict = None,
-        sample: bool = True,
-        **kwargs
+        sampling: bool = True,
+        **kwargs,
     ):
         """Construct a Bayesian layer with weights and bias set by I.I.D. Normal distributions
 
@@ -25,14 +25,14 @@ class BayesianLayer(Layer):
         :param function: Function to apply to the input on ``self.forward``
         :param bias: If set to ``False``, the layer will not learn an additive bias. Default: ``True``
         :param priors:
-        :param sample:
+        :param sampling:
         """
         super().__init__(**kwargs)
         self.in_features = in_features
         self.out_features = out_features
         self.bias = bias
         self.function = function
-        self.sample = sample
+        self.sampling = sampling
 
         if priors is None:
             priors = {
@@ -72,7 +72,7 @@ class BayesianLayer(Layer):
         :return: output tensor
         """
         if (
-            self.training or self.sample
+            self.training or self.sampling
         ):  # Randomly sample weights and biases from normal distribution
             weight_epsilon = torch.empty(self.weight_mu.size()).normal_(0, 1)
             self.weight_sigma.data = torch.log1p(torch.exp(self.weight_sigma))
@@ -89,3 +89,18 @@ class BayesianLayer(Layer):
 
         return self.function(x, weights, biases)
 
+    def sample(self, mode: bool = True):
+        """Set sampling mode for Neural Network and all child modules
+
+        Note: Based on the `torch.nn.Module.train` and `torch.nn.Module.training` implementation
+
+        :param mode:
+        :return:
+        """
+        self.sampling = mode
+        for child in self.children():
+            child.sample(mode=mode)
+        return self
+
+    def extra_repr(self) -> str:
+        return f"in_features={self.in_features}, out_features={self.out_features}, sampling={self.sampling}"
