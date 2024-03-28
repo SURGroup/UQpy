@@ -1,4 +1,5 @@
 import torch.nn as nn
+from torchinfo import summary
 from abc import ABC, abstractmethod
 
 
@@ -52,3 +53,7 @@ class NeuralNetwork(ABC, nn.Module):
         and algorithm defined by :code:`optimizer`.
         """
         ...
+
+    def summary(self, **kwargs):
+        """Call `torchinfo.summary()` on `self`"""
+        return summary(self, **kwargs)
