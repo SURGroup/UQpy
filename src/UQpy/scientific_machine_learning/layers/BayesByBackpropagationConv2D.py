@@ -57,7 +57,9 @@ class BayesByBackpropagationConv2D(ModuleWrapper):
 
         if self.use_bias:
             self.bias_mu = nn.Parameter(torch.empty((out_channels), device=self.device))
-            self.bias_rho = nn.Parameter(torch.empty((out_channels), device=self.device))
+            self.bias_rho = nn.Parameter(
+                torch.empty((out_channels), device=self.device)
+            )
         else:
             self.register_parameter("bias_mu", None)
             self.register_parameter("bias_rho", None)
