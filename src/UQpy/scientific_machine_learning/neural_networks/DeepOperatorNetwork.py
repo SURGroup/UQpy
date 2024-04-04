@@ -28,27 +28,7 @@ class DeepOperatorNetwork(NeuralNetwork):
         self.trunk_network: nn.Module = trunk_network
         """Architecture of the trunk neural network defined by a ``torch.nn.Module``"""
 
-        self.optimizer: torch.optim.Optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
-        self.loss_function: nn.Module = nn.MSELoss(reduction="mean")
-        """Loss function used during ``train``. Default is ``torch.nn.MSELoss(reduction="mean")``"""
-
         self.logger = logging.getLogger(__name__)
-
-    @property
-    def optimizer(self):
-        return self._optimizer
-
-    @optimizer.setter
-    def optimizer(self, value):
-        self._optimizer = value
-
-    @property
-    def loss_function(self):
-        return self._loss_function
-
-    @loss_function.setter
-    def loss_function(self, value):
-        self._loss_function = value
 
     def forward(
         self,
@@ -69,33 +49,3 @@ class DeepOperatorNetwork(NeuralNetwork):
         # return torch.einsum("...i,...i -> ...i", branch_output, trunk_output)
         return torch.einsum("ik, ijk -> ij", branch_output, trunk_output)
 
-    def learn(self, data_loader: torch.utils.data.DataLoader, epochs: int = 100):
-        """Train the network parameters using data provided by ``data_loader`` for ``epochs`` number of epochs
-
-        Note: Modifying the ``optimizer`` and ``loss_function`` attributes must be done *before* ``train`` is called.
-
-        :param data_loader: Dataloader that returns tuple of :math:`(x, u(x), Gu(x))` at each iteration
-        :param epochs: Number of epochs to loop over data provided by ``data_loader``
-        """
-        self.branch_network.train(True)
-        self.trunk_network.train(True)
-        self.logger.info(
-            "UQpy: Scientific Machine Learning: Beginning training DeepOperatorNetwork"
-        )
-        self.history["train loss"] = torch.full((epochs,), torch.nan)
-        for i in range(epochs):
-            for batch, (x, u_x, gu_x) in enumerate(data_loader):
-                prediction = self.forward(x, u_x)
-                loss = self.loss_function(prediction, gu_x)
-                loss.backward()
-                self.optimizer.step()
-                self.optimizer.zero_grad()
-            self.logger.info(
-                f"UQpy: Scientific Machine Learning: Epoch {i+1} / {epochs} Loss {loss.item()}"
-            )
-            self.history["train loss"][i] = loss.item()
-        self.branch_network.train(False)
-        self.trunk_network.train(False)
-        self.logger.info(
-            "UQpy: Scientific Machine Learning: Completed training DeepOperatorNetwork"
-        )

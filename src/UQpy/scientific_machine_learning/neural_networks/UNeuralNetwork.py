@@ -180,22 +180,3 @@ class UNeuralNetwork(NeuralNetwork):
         :return:
         """
         return x
-
-    @property
-    def optimizer(self):
-        return torch.optim.Adam(self.parameters(), lr=1e-3)
-
-    @property
-    def loss_function(self):
-        return nn.MSELoss(reduction="mean")
-
-    def learn(self, data_loader: torch.utils.data.DataLoader, epochs: int = 100):
-        """
-
-        :param data_loader:
-        :param epochs:
-        """
-        self.logger.info(
-            "UQpy: Scientific Machine Learning: Beginning training DeepOperatorNetwork"
-        )
-        raise NotImplementedError

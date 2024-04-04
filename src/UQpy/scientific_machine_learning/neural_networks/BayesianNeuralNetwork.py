@@ -19,16 +19,7 @@ class BayesianNeuralNetwork(NeuralNetwork):
 
         self.logger = logging.getLogger(__name__)
 
-    @property
-    def optimizer(self):
-        return torch.optim.Adam(self.parameters())
-
-    @property
-    def loss_function(self):
-        train_size = 1
-        return EvidenceLowerBound(train_size, nn.MSELoss(reduction="mean"))
-
-    def gaussain_kl_divergence(
+    def gaussian_kl_divergence(
         self,
         mu_posterior: torch.Tensor,
         sigma_posterior: torch.Tensor,
@@ -59,42 +50,6 @@ class BayesianNeuralNetwork(NeuralNetwork):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.network(x)
-
-    def learn(
-        self,
-        data_loader: torch.utils.data.DataLoader,
-        kl_weight: float = 0.1,
-        epochs: int = 100,
-    ):
-        """
-
-        Note: Validation method for neural networks should be able to make multiple forward calls for UQ
-
-        :param data_loader:
-        :param kl_weight:
-        :param epochs:
-        """
-        self.network.train(True)
-        self.logger.info(
-            "UQpy: Scientific Machine Learning: Beginning training BayesianNeuralNetwork"
-        )
-        self.history["train loss"] = torch.full((epochs,), torch.nan)
-        for i in range(epochs):
-            for batch, (x, y) in enumerate(data_loader):
-                prediction = self.forward(x)
-                kl = self.gaussain_kl_divergence()
-                loss = self.loss_function(prediction, y, kl, kl_weight)
-                loss.backward()
-                self.optimizer.step()
-                self.optimizer.zero_grad()
-            self.logger.info(
-                f"UQpy: Scientific Machine Learning: Epoch {i+1} / {epochs} Loss {loss.item()}"
-            )
-            self.history["train loss"][i] = loss.item()
-        self.network.train(False)
-        self.logger.info(
-            "UQpy: Scientific Machine Learning: Completed training BayesianNeuralNetwork"
-        )
 
     def sample(self, mode: bool = True):
         """Set sampling mode for Neural Network and all child modules

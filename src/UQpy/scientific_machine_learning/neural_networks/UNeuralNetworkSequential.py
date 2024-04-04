@@ -77,7 +77,7 @@ class UNeuralNetworkSequential(NeuralNetwork):
         ]
         return nn.Sequential(*layers)
 
-    def _construct_decoder(self, i: PositiveInteger):
+    def _construct_decoder(self, i: PositiveInteger) -> nn.Module:
         """Construct the ``i``-th decoder
 
         :param i: Index of the ``i``-th decoder
@@ -120,7 +120,7 @@ class UNeuralNetworkSequential(NeuralNetwork):
         """
         return getattr(self, f"encoder_{i}")(x)
 
-    def decode(self, x: torch.Tensor, i: PositiveInteger):
+    def decode(self, x: torch.Tensor, i: PositiveInteger) -> torch.Tensor:
         """
 
         :param x:
@@ -148,22 +148,3 @@ class UNeuralNetworkSequential(NeuralNetwork):
 
         x = self.final_layer(x)
         return x
-
-    @property
-    def optimizer(self):
-        return torch.optim.Adam(self.parameters(), lr=1e-3)
-
-    @property
-    def loss_function(self):
-        return nn.MSELoss(reduction="mean")
-
-    def learn(self, data_loader: torch.utils.data.DataLoader, epochs: int = 100):
-        """
-
-        :param data_loader:
-        :param epochs:
-        """
-        self.logger.info(
-            "UQpy: Scientific Machine Learning: Beginning training UNeuralNetwork"
-        )
-        raise NotImplementedError
