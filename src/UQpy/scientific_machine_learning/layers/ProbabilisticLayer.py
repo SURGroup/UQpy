@@ -23,6 +23,9 @@ class ProbabilisticLayer(Layer):
     ):
         """Construct a Probabilistic layer with weights and bias set by independent distributions
 
+        Note:
+            Be careful about initializing the weights of non-Gaussian distributions
+
         :param in_features: Size of each input sample
         :param out_features: Size of each output sample
         :param function: Function to apply to the input on ``self.forward``
