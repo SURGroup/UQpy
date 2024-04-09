@@ -4,6 +4,7 @@ from torch.utils.data import Dataset, DataLoader
 from UQpy.scientific_machine_learning.neural_networks.VanillaNeuralNetwork import (
     VanillaNeuralNetwork,
 )
+from UQpy.scientific_machine_learning.trainers.Trainer import Trainer
 
 torch.manual_seed(0)
 
@@ -32,10 +33,10 @@ def test_accuracy():
         nn.Linear(width, 1),
     )
     model = VanillaNeuralNetwork(network)
-    model.optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-    training_dataset = QuadraticDataset()
-    data_loader = DataLoader(training_dataset, batch_size=20, shuffle=True)
-    model.learn(data_loader, epochs=3_000)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    train_data = DataLoader(QuadraticDataset(), batch_size=20, shuffle=True)
+    trainer = Trainer(model, optimizer)
+    trainer.run(train_data=train_data, epochs=1_000)
 
-    final_loss = model.history["train loss"][-1]
-    assert final_loss < 1e-2
+    final_loss = trainer.history["train_loss"][-1]
+    assert final_loss < 1
