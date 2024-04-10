@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import logging
 from beartype import beartype
-from UQpy.utilities.ValidationTypes import PositiveInteger, PositiveFloat
+from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
 @beartype
@@ -26,7 +26,11 @@ class Trainer:
 
         # ToDo: make sure this can detect bayesian layers and adjust the train method appropriately
 
-        self.history = {"train_loss": None, "test_loss": None}
+        self.history: dict = {"train_loss": None, "test_loss": None}
+        """Record of the loss during training and validation. 
+         Training history is stored as a ``torch.Tensor`` in ``history["train_loss"]``.
+         Testing history is stored as a ``torch.Tensor`` in ``history["test_loss"]``.
+         Note if training ends early there may be ``NaN`` values, as the histories are initialized with ``NaN``."""
         self.logger = logging.getLogger(__name__)
 
     def run(
@@ -36,13 +40,15 @@ class Trainer:
         epochs: PositiveInteger = 100,
         tolerance: float = 1e-3,
     ):
-        """Run the ``optimizer`` algorithm to learn the weights of the ``model`` that fit ``train_data``
+        """Run the ``optimizer`` algorithm to learn the parameters of the ``model`` that fit ``train_data``
 
         :param train_data: Data used to compute ``model`` loss
         :param test_data: Data used to validate the performance of the model
         :param epochs: Maximum number of epochs to run the ``optimizer`` for
         :param tolerance: Optimization terminates early if *average* training loss is below tolerance.
          Default :math:`1e-3`
+
+        :raises RuntimeError: If neither ``train_data`` nor ``test_data`` is provided, a RuntimeError occurs.
         """
         if train_data and not test_data:
             log_note = f"training {self.model.__class__.__name__}"
@@ -51,14 +57,18 @@ class Trainer:
         elif train_data and test_data:
             log_note = f"training and testing {self.model.__class__.__name__}"
         else:
-            raise ValueError(
+            raise RuntimeError(
                 "UQpy: At least one of `train_data` or `test_data` must be provided."
             )
 
         if train_data:
-            self.history["train_loss"] = torch.full(epochs, torch.nan, requires_grad=False)
+            self.history["train_loss"] = torch.full(
+                epochs, torch.nan, requires_grad=False
+            )
         if test_data:
-            self.history["test_loss"] = torch.full(epochs, torch.nan, requires_grad=False)
+            self.history["test_loss"] = torch.full(
+                epochs, torch.nan, requires_grad=False
+            )
 
         self.logger.info("UQpy: Scientific Machine Learning: Beginning " + log_note)
         i = 0

@@ -15,10 +15,10 @@ class Dropout(Layer):
         drop_type: int = 0,
         **kwargs
     ):
-        """
+        """Initialize a dropout layer to randomly zero components of a tensor
 
-        :param drop_rate:
-        :param drop_type:
+        :param drop_rate: Probability of a dropout occurring
+        :param drop_type: If ``0`` drop elements, ``1`` drops vectors, ``2`` drops channels, ``3`` drops 3D
         :param kwargs:
         """
         super().__init__(**kwargs)
@@ -36,7 +36,7 @@ class Dropout(Layer):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward computational call
 
-        Note: Function behavior is determind by the dimensions of ``x`` as N x C x H x W
+        Note: Function behavior is determined by the dimensions of ``x`` as N x C x H x W
 
         :param x:
         :return:
