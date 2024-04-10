@@ -19,6 +19,3 @@ Attributes
 
 .. autoattribute:: UQpy.scientific_machine_learning.neural_networks.DeepOperatorNetwork.branch_network
 .. autoattribute:: UQpy.scientific_machine_learning.neural_networks.DeepOperatorNetwork.trunk_network
-.. autoattribute:: UQpy.scientific_machine_learning.neural_networks.DeepOperatorNetwork.loss_function
-.. autoattribute:: UQpy.scientific_machine_learning.baseclass.NeuralNetwork.NeuralNetwork.optimizer
-.. autoattribute:: UQpy.scientific_machine_learning.baseclass.NeuralNetwork.NeuralNetwork.history
