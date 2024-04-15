@@ -20,6 +20,6 @@ specifically on the architecture and training of Neural Networks.
 
     Loss Functions <losses>
     Neural Networks <neural_networks/index>
-    Neural Network Layers <layers>
+    Layers <layers>
     Optimizers <optimizers>
     Trainers <trainers/index>
