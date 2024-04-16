@@ -6,7 +6,7 @@ from UQpy.scientific_machine_learning.baseclass.Layer import Layer
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
-@beartype
+#@beartype
 class BayesianLayer(Layer):
     def __init__(
         self,
@@ -75,12 +75,12 @@ class BayesianLayer(Layer):
             self.training or self.sampling
         ):  # Randomly sample weights and biases from normal distribution
             weight_epsilon = torch.empty(self.weight_mu.size()).normal_(0, 1)
-            self.weight_sigma.data = torch.log1p(torch.exp(self.weight_sigma))
-            weights = self.weight_mu + (weight_epsilon * self.weight_sigma)
+            w_sigma = torch.log1p(torch.exp(self.weight_sigma))
+            weights = self.weight_mu + (weight_epsilon * w_sigma)
             if self.bias:
                 bias_epsilon = torch.empty(self.bias_mu.size()).normal_(0, 1)
-                self.bias_sigma.data = torch.log1p(torch.exp(self.bias_sigma))
-                biases = self.bias_mu + (bias_epsilon * self.bias_sigma)
+                b_sigma = torch.log1p(torch.exp(self.bias_sigma))
+                biases = self.bias_mu + (bias_epsilon * b_sigma)
             else:
                 biases = None
         else:  # Use mean values for weights and biases
