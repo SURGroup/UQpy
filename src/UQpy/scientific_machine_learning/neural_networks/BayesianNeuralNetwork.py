@@ -22,8 +22,6 @@ def gaussian_kl_divergence(mu_posterior: torch.Tensor,
                            ) -> torch.Tensor:
     """Compute the Gaussian closed-form Kullback-Leibler Divergence
 
-    # ToDo: Should this function have inputs? or can it read parameters off network?
-
     :param mu_posterior: Mean of the Gaussian variational posterior
     :param sigma_posterior: Standard deviation of the Gaussian variational posterior
     :param mu_prior: Mean of the Gaussian prior
