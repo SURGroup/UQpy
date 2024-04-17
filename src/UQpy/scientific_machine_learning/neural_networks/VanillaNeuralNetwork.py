@@ -18,4 +18,9 @@ class VanillaNeuralNetwork(NeuralNetwork):
         self.logger = logging.getLogger(__name__)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward call of the neural network
+
+        :param x: Input tensor
+        :return: Output tensor
+        """
         return self.network(x)

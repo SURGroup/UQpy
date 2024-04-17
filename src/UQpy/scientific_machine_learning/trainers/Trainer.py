@@ -28,9 +28,11 @@ class Trainer:
 
         self.history: dict = {"train_loss": None, "test_loss": None}
         """Record of the loss during training and validation. 
-         Training history is stored as a ``torch.Tensor`` in ``history["train_loss"]``.
-         Testing history is stored as a ``torch.Tensor`` in ``history["test_loss"]``.
-         Note if training ends early there may be ``NaN`` values, as the histories are initialized with ``NaN``."""
+        Note if training ends early there may be ``NaN`` values, as the histories are initialized with ``NaN``.
+        
+         - ``history["train_loss"]`` contains training history as a ``torch.Tensor``.
+         - ``history["test_loss"]`` contains testing history as a ``torch.Tensor``.
+         """
         self.logger = logging.getLogger(__name__)
 
     def run(
