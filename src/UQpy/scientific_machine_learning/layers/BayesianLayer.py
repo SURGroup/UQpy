@@ -24,8 +24,14 @@ class BayesianLayer(Layer):
         :param out_features: Size of each output sample
         :param function: Function to apply to the input on ``self.forward``
         :param bias: If set to ``False``, the layer will not learn an additive bias. Default: ``True``
-        :param priors:
-        :param sampling:
+        :param priors: Prior and posterior distribution parameters. The dictionary keys and their default values are:
+
+         - ``priors["prior_mu"]`` = :math:`0`
+         - ``priors["prior_sigma"]`` = :math:`0.1`
+         - ``priors["posterior_mu_initial"]`` = ``(0, 0.1)``
+         - ``priors["posterior_rho_initial"]`` = ``(-3, 0.1)``
+        :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
+        If ``False``, use distribution mean as parameter values.
         """
         super().__init__(**kwargs)
         self.in_features = in_features
@@ -68,7 +74,6 @@ class BayesianLayer(Layer):
         """Forward model evaluation
 
         :param x: Input tensor
-        :param sample: If ``True`` sample weights and bias from Gaussian distribution. If ``False`` use mean values.
         :return: output tensor
         """
         if (

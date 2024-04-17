@@ -5,14 +5,14 @@ from beartype import beartype
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
-#@beartype
+# @beartype
 class BBBTrainer:
 
     def __init__(
-            self,
-            model: nn.Module,
-            optimizer: torch.optim.Optimizer,
-            loss_function: nn.Module = nn.MSELoss(),
+        self,
+        model: nn.Module,
+        optimizer: torch.optim.Optimizer,
+        loss_function: nn.Module = nn.MSELoss(),
     ):
         """Prepare to train a Bayesian neural network using Bayes by back propagation
 
@@ -24,21 +24,30 @@ class BBBTrainer:
         self.optimizer = optimizer
         self.loss_function = loss_function
 
-        self.history: dict = {"train_loss": None, "train_kl": None, "train_nll": None, "test_nll": None}
+        self.history: dict = {
+            "train_loss": None,
+            "train_kl": None,
+            "train_nll": None,
+            "test_nll": None,
+        }
         """Record of the loss during training and validation. 
-         Training history is stored as a ``torch.Tensor`` in ``history["train_loss"]``.
-         Testing history is stored as a ``torch.Tensor`` in ``history["test_loss"]``.
-         Note if training ends early there may be ``NaN`` values, as the histories are initialized with ``NaN``."""
+        Note if training ends early there may be ``NaN`` values, as the histories are initialized with ``NaN``.
+        
+        - ``history["train_loss"]`` contains the training history as a ``torch.Tensor``.
+        - ``history["train_kl"]`` contains the training Kullback–Leibler divergence as a ``torch.Tensor``.
+        - ``history["train_nll"]`` contains the training negative log likelihood loss as a ``torch.Tensor``.
+        - ``history["test_nll"]`` contains the testing negative log likelihood loss as a ``torch.Tensor``.
+         """
         self.logger = logging.getLogger(__name__)
 
     def run(
-            self,
-            train_data: torch.utils.data.DataLoader = None,
-            test_data: torch.utils.data.DataLoader = None,
-            epochs: PositiveInteger = 100,
-            num_samples: PositiveInteger = 1,
-            tolerance: float = 1e-3,
-            beta: float = 1.0
+        self,
+        train_data: torch.utils.data.DataLoader = None,
+        test_data: torch.utils.data.DataLoader = None,
+        epochs: PositiveInteger = 100,
+        num_samples: PositiveInteger = 1,
+        tolerance: float = 1e-3,
+        beta: float = 1.0,
     ):
         """Run the ``optimizer`` algorithm to learn the parameters of the ``model`` that fit ``train_data``
 
@@ -107,7 +116,10 @@ class BBBTrainer:
                 self.history["train_kl"][i] = total_kl_loss
                 self.logger.info(
                     f"UQpy: Scientific Machine Learning: "
-                    f"Epoch {i + 1:,} / {epochs:,} Train Loss {total_train_loss} Train NLL {total_nll_loss} Train Loss {total_kl_loss}"
+                    f"Epoch {i + 1:,} / {epochs:,} "
+                    f"Train Loss {total_train_loss} "
+                    f"Train NLL {total_nll_loss} "
+                    f"Train KL {total_kl_loss}"
                 )
                 self.model.train(False)
             if test_data:
