@@ -22,7 +22,7 @@ class QuadraticDataset(Dataset):
 
 
 def test_accuracy():
-    """Test a single hidden layer neural network learning the functino f(x) = x ** 2"""
+    """Test a single hidden layer neural network learning the function f(x) = x ** 2"""
     width = 10
     network = nn.Sequential(
         BayesianLayer(1, width),
