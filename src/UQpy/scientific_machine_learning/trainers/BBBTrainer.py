@@ -101,7 +101,7 @@ class BBBTrainer:
                     for sample in range(num_samples):
                         prediction = self.model(x)
                         nll_loss[sample] = self.loss_function(prediction, y)
-                    kl_loss = self.model.compute_kl_div()
+                    kl_loss = self.model.compute_kullback_leibler_divergence()
                     mean_nll = torch.mean(nll_loss)
                     train_loss = mean_nll + beta * kl_loss
                     train_loss.backward()

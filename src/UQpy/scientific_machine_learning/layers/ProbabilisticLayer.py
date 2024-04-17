@@ -51,7 +51,9 @@ class ProbabilisticLayer(Layer):
         )
         """Parameters of the weight distribution for each element in ``weight``"""
         for i, param in enumerate(self.weight_distribution.parameters):
-            self.weight_parameters[:, i].data *= self.weight_distribution.parameters[param]
+            self.weight_parameters[:, i].data *= self.weight_distribution.parameters[
+                param
+            ]
         if self.bias_distribution:
             self.bias = torch.empty((out_features,))
             """Bias of the layer"""
@@ -62,7 +64,9 @@ class ProbabilisticLayer(Layer):
             )
             """Parameters of the bias distribution for each element in ``bias``"""
             for i, param in enumerate(self.bias_distribution.parameters):
-                self.bias_parameters[:, i].data *= self.bias_distribution.parameters[param]
+                self.bias_parameters[:, i].data *= self.bias_distribution.parameters[
+                    param
+                ]
         else:
             self.bias = None
             self.bias_parameters = None
@@ -115,7 +119,9 @@ class ProbabilisticLayer(Layer):
             samples = torch.tensor(random_variable.rvs(), dtype=torch.float)
             self.bias.data = samples.reshape(self.bias.shape)
 
-    def _get_joint_independent(self, base_distribution: Distribution, parameters: torch.Tensor):
+    def _get_joint_independent(
+        self, base_distribution: Distribution, parameters: torch.Tensor
+    ):
         """Construct a really, really high dimensional random variable"""
         distributions = []
         for i in range(parameters.shape[0]):

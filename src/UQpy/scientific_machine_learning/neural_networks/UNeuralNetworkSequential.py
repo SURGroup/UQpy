@@ -13,7 +13,7 @@ class UNeuralNetworkSequential(NeuralNetwork):
 
     def __init__(
         self,
-        filter_sizes: Union[list[PositiveInteger], torch.Tensor[PositiveInteger]],
+        filter_sizes: Union[list[PositiveInteger]],
         kernel_size: PositiveInteger,
         out_channels: PositiveInteger,
         layer_type: nn.Module = nn.Conv2d,

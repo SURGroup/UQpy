@@ -95,17 +95,15 @@ class BayesianLayer(Layer):
         return self.function(x, weights, biases)
 
     def sample(self, mode: bool = True):
-        """Set sampling mode for Neural Network and all child modules
+        """Set sampling mode.
 
-        Note: Based on the `torch.nn.Module.train` and `torch.nn.Module.training` implementation
-
-        :param mode:
-        :return:
+        :param mode: If ``True``, layer parameters are sampled from their distributions.
+         If ``False``, layer parameters are set to their means and layer acts deterministically.
         """
         self.sampling = mode
-        for child in self.children():
-            child.sample(mode=mode)
-        return self
+        # for child in self.children():
+        #     child.sample(mode=mode)
+        # return self
 
     def extra_repr(self) -> str:
         return f"in_features={self.in_features}, out_features={self.out_features}, sampling={self.sampling}"

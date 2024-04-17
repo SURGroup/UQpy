@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 class NeuralNetwork(ABC, nn.Module):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.is_deterministic: bool = True
 
     @abstractmethod
     def forward(self, **kwargs):

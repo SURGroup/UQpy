@@ -43,7 +43,6 @@ class BayesianNeuralNetwork(NeuralNetwork):
         :param kwargs:  Keywords passed to ``torch.nn.Module``
         """
         super().__init__(**kwargs)
-        # self.is_deterministic = False
         self.sampling = True
         self.network = network
 
@@ -89,8 +88,11 @@ class BayesianNeuralNetwork(NeuralNetwork):
         :return: ``self``
         """
         self.sampling = mode
-        for child in self.children():
-            child.sample(mode=mode)
+        for m in self.network.modules():
+            if hasattr(m, "sample"):
+                m.sample(mode)
+        # for child in self.children():
+        #     child.sample(mode=mode)
         return self
 
     def is_deterministic(self) -> bool:
