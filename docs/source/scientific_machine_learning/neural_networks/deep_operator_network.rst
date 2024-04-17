@@ -1,5 +1,5 @@
 Deep Operator Network (DeepONet)
-~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Implementation of the Deep Operator Network (DeepONet) as defined by Lu 2021.
 

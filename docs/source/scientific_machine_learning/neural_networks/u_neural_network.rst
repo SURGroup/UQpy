@@ -1,5 +1,5 @@
 U-Shaped Neural Network
-~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
 
 The :class:`.UNeuralNetwork` class is imported using the following command:
 
