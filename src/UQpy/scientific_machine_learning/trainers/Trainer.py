@@ -65,11 +65,11 @@ class Trainer:
 
         if train_data:
             self.history["train_loss"] = torch.full(
-                epochs, torch.nan, requires_grad=False
+                [epochs], torch.nan, requires_grad=False
             )
         if test_data:
             self.history["test_loss"] = torch.full(
-                epochs, torch.nan, requires_grad=False
+                [epochs], torch.nan, requires_grad=False
             )
 
         self.logger.info("UQpy: Scientific Machine Learning: Beginning " + log_note)
@@ -79,8 +79,8 @@ class Trainer:
             if train_data:
                 self.model.train(True)
                 total_train_loss = 0
-                for batch_number, (x, y) in enumerate(train_data):
-                    prediction = self.model(x)
+                for batch_number, (*x, y) in enumerate(train_data):
+                    prediction = self.model(*x)
                     train_loss = self.loss_function(prediction, y)
                     train_loss.backward()
                     total_train_loss += train_loss.item()
