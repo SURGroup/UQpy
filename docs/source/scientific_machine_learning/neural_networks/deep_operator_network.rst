@@ -19,3 +19,10 @@ Attributes
 
 .. autoattribute:: UQpy.scientific_machine_learning.neural_networks.DeepOperatorNetwork.branch_network
 .. autoattribute:: UQpy.scientific_machine_learning.neural_networks.DeepOperatorNetwork.trunk_network
+
+Examples
+--------
+
+.. toctree::
+
+   DeepOperatorNetwork Examples <../../auto_examples/scientific_machine_learning/deep_operator_network/index>
