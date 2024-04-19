@@ -1,0 +1,2 @@
+from UQpy.scientific_machine_learning.losses.EvidenceLowerBound import EvidenceLowerBound
+from UQpy.scientific_machine_learning.losses.PhysicsInformedLoss import PhysicsInformedLoss

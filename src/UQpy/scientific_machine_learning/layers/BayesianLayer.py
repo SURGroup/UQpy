@@ -74,7 +74,7 @@ class BayesianLayer(Layer):
         """Forward model evaluation
 
         :param x: Input tensor
-        :return: output tensor
+        :return: Output tensor
         """
         if (
             self.training or self.sampling
@@ -101,9 +101,6 @@ class BayesianLayer(Layer):
          If ``False``, layer parameters are set to their means and layer acts deterministically.
         """
         self.sampling = mode
-        # for child in self.children():
-        #     child.sample(mode=mode)
-        # return self
 
     def extra_repr(self) -> str:
         return f"in_features={self.in_features}, out_features={self.out_features}, sampling={self.sampling}"

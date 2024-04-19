@@ -1,4 +1,42 @@
-Loss Functions
---------------
+Losses
+------
 
-This is a placeholder for the Loss Function documentation.
+Loss Baseclass
+^^^^^^^^^^^^^^
+
+The :py:class:`Loss` is an abstract baseclass and a subclass of :py:class:`torch.nn.Module`.
+
+This is an abstract baseclass and the parent class to all loss functions.
+Like all abstract baseclasses, this cannot be instantiated but can be subclassed to write custom layers.
+
+Methods
+~~~~~~~
+.. autoclass:: UQpy.scientific_machine_learning.baseclass.Loss
+    :members: forward
+
+----
+
+List of Losses
+^^^^^^^^^^^^^^^^^^^^^^
+
+Evidence Lower Bound
+~~~~~~~~~~~~~~~~~~~~
+
+This is a placeholder for the documentation on ELBO.
+
+.. autoclass:: UQpy.scientific_machine_learning.losses.EvidenceLowerBound
+    :members: forward
+
+
+Physics Informed Loss
+~~~~~~~~~~~~~~~~~~~~~
+
+This is a placeholder for the documentation on Physics Informed Loss
+
+.. autoclass:: UQpy.scientific_machine_learning.losses.PhysicsInformedLoss
+    :members: forward
+
+Attributes
+~~~~~~~~~~
+.. autoattribute:: UQpy.scientific_machine_learning.losses.PhysicsInformedLoss.adaptive_weight_data
+.. autoattribute:: UQpy.scientific_machine_learning.losses.PhysicsInformedLoss.adaptive_weight_physics

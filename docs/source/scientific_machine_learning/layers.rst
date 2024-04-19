@@ -1,11 +1,17 @@
-Neural Network Layers
----------------------
+Layers
+------
 
 Layer Baseclass
-^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 
-This is an abstract baseclass and the parent class to all layers.
-Like all abstract baseclasses, this cannot be called instantiated but can be subclassed to write custom layers.
+The :class:`Layer` is an abstract baseclass and a subclass of :class:`torch.nn.Module`,
+just as all :py:mod:`torch` loss functions are.
+
+This is the parent class to all losses.
+Like all abstract baseclasses, this cannot be instantiated but can be subclassed to write custom losses.
+All loss functions use the :py:meth:`forward` method to define the forward model call.
+
+
 
 Methods
 ~~~~~~~
@@ -18,7 +24,7 @@ List of Layers
 ^^^^^^^^^^^^^^
 
 Dropout Layer
-~~~~~~~
+~~~~~~~~~~~~~
 
 This is a placeholder for the documentation on Dropout layers.
 
@@ -28,7 +34,7 @@ This is a placeholder for the documentation on Dropout layers.
 ______
 
 Bayesian Layer
-~~~~~~~~
+~~~~~~~~~~~~~~
 
 This is a placeholder for the documentation on Bayesian layers.
 
