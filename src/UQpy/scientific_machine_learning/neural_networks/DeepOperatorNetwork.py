@@ -53,4 +53,4 @@ class DeepOperatorNetwork(NeuralNetwork):
                                         trunk_output[:, :, ind * num:ind * (num + 1)]))
         # return branch_output @ trunk_output
         # return torch.einsum("...i,...i -> ...i", branch_output, trunk_output)
-        return outputs
+        return outputs[0] if self.num_outputs == 1 else outputs

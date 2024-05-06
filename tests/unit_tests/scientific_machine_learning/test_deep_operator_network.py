@@ -17,7 +17,7 @@ def test_1d_output_shape(x_resolution, n_samples):
 
     model = DeepOperatorNetwork(nn.Linear(x_resolution, 7), nn.Linear(x_dimension, 7), 1)
 
-    prediction, = model(x, u_x)
+    prediction = model(x, u_x)
     assert prediction.shape == torch.Size([n_samples, x_resolution])
 
 
@@ -30,7 +30,7 @@ def test_2d_output_shape(x_resolution, n_samples):
 
     model = DeepOperatorNetwork(nn.Linear(x_resolution, 10), nn.Linear(x_dimension, 10), 1)
 
-    prediction, = model(x, u_x)
+    prediction = model(x, u_x)
     assert prediction.shape == torch.Size([n_samples, x_resolution])
 
 
@@ -43,7 +43,7 @@ def test_3d_output_shape(x_resolution, n_samples):
 
     model = DeepOperatorNetwork(nn.Linear(x_resolution, 10), nn.Linear(x_dimension, 10), 1)
 
-    prediction, = model(x, u_x)
+    prediction = model(x, u_x)
     assert prediction.shape == torch.Size([n_samples, x_resolution])
 
 
@@ -55,7 +55,7 @@ def test_no_bias():
 
     model = DeepOperatorNetwork(nn.Linear(x_resolution, 7, bias=False), nn.Linear(1, 7, bias=False), 1)
 
-    prediction, = model(x, u_x)
+    prediction = model(x, u_x)
     assert torch.allclose(prediction, torch.zeros_like(prediction))
 
 
