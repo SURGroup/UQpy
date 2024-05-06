@@ -16,7 +16,7 @@ class DeepOperatorNetwork(NeuralNetwork):
      https://doi.org/10.1038/s42256-021-00302-5
     """
 
-    def __init__(self, branch_network: nn.Module, trunk_network: nn.Module, **kwargs):
+    def __init__(self, branch_network: nn.Module, trunk_network: nn.Module, num_outputs=1, **kwargs):
         """Define DeepONet architecture with trunk and branch networks
 
         :param branch_network: Encodes mapping of the function :math:`u(x)`
@@ -27,14 +27,14 @@ class DeepOperatorNetwork(NeuralNetwork):
         """Architecture of the branch neural network defined by a ``torch.nn.Module``"""
         self.trunk_network: nn.Module = trunk_network
         """Architecture of the trunk neural network defined by a ``torch.nn.Module``"""
-
+        self.num_outputs = num_outputs
         self.logger = logging.getLogger(__name__)
 
     def forward(
-        self,
-        x: torch.Tensor,
-        u_x: torch.Tensor,
-    ) -> torch.Tensor:
+            self,
+            x: torch.Tensor,
+            u_x: torch.Tensor,
+    ) -> list[torch.Tensor]:
         """# ToDo: no clue if this einsum stuff is anywhere near reasonable or will generalize to higher dimensions
 
         :param x: Points in the domain
@@ -45,7 +45,12 @@ class DeepOperatorNetwork(NeuralNetwork):
         u_x = torch.atleast_2d(u_x)
         branch_output = self.branch_network(u_x)
         trunk_output = self.trunk_network(x)
+        assert (trunk_output.shape[-1] % self.num_outputs) == 0
+        ind = trunk_output.shape[-1] // self.num_outputs
+        outputs = []
+        for num in range(self.num_outputs):
+            outputs.append(torch.einsum("ik, ijk -> ij", branch_output[:, ind * num:ind * (num + 1)],
+                                        trunk_output[:, :, ind * num:ind * (num + 1)]))
         # return branch_output @ trunk_output
         # return torch.einsum("...i,...i -> ...i", branch_output, trunk_output)
-        return torch.einsum("ik, ijk -> ij", branch_output, trunk_output)
-
+        return outputs
