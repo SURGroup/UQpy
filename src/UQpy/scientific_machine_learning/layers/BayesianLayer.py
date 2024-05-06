@@ -31,7 +31,7 @@ class BayesianLayer(Layer):
          - ``priors["posterior_mu_initial"]`` = ``(0, 0.1)``
          - ``priors["posterior_rho_initial"]`` = ``(-3, 0.1)``
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
-        If ``False``, use distribution mean as parameter values.
+         If ``False``, use distribution mean as parameter values.
         """
         super().__init__(**kwargs)
         self.in_features = in_features
