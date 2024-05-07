@@ -45,6 +45,8 @@ class DeepOperatorNetwork(NeuralNetwork):
         u_x = torch.atleast_2d(u_x)
         branch_output = self.branch_network(u_x)
         trunk_output = self.trunk_network(x)
+        # Implementing multiple outputs
+        """ ToDo: Find a better way of doing this """
         assert (trunk_output.shape[-1] % self.num_outputs) == 0
         ind = trunk_output.shape[-1] // self.num_outputs
         outputs = []
