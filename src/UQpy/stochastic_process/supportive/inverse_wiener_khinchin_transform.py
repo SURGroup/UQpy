@@ -1,30 +1,15 @@
 import numpy as np
 
 
-def inverse_wiener_khinchin_transform(correlation_function, frequency, time):
-    """
-    A function to transform the autocorrelation function to a power spectrum by the Inverse Wiener Khinchin
-    transformation.
+def inverse_wiener_khinchin_transform(
+    correlation_function: np.ndarray, frequency: np.ndarray, time: np.ndarray
+) -> np.ndarray:
+    """Transform the autocorrelation function to a power spectrum by the Inverse Wiener Khinchin transformation.
 
-    ** Input:**
-
-    * **correlation_function** (`list or numpy.array`):
-
-        The correlation function of the signal.
-
-    * **frequency** (`list or numpy.array`):
-
-        The frequency discretizations of the power spectrum.
-
-    * **time** (`list or numpy.array`):
-
-        The time discretizations of the signal.
-
-    **Output/Returns:**
-
-    * **power_spectrum** (`list or numpy.array`):
-
-        The power spectrum of the signal.
+    :param correlation_function: The correlation function of the signal.
+    :param frequency: The frequency discretizations of the power spectrum.
+    :param time: The time discretizations of the signal.
+    :return: The power spectrum of the signal.
     """
     time_length = time[1] - time[0]
     fac = np.ones(len(time))
