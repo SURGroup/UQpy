@@ -84,7 +84,7 @@ class ElasticityDataSet(Dataset):
         self.u_y = u_y
 
     def __len__(self):
-        return int(self.x.shape[0])
+        return int(self.f_x.shape[0])
 
     def __getitem__(self, i):
         return self.x, self.f_x[i, :], (self.u_x[i, :, 0], self.u_y[i, :, 0])
@@ -95,9 +95,9 @@ class ElasticityDataSet(Dataset):
 train_data = DataLoader(
     ElasticityDataSet(np.float32(X), np.float32(F_train), np.float32(Ux_train), np.float32(Uy_train)), batch_size=100,
     shuffle=True)
-
-for *x, v in train_data:
-    op = model(*x)
+test_data = DataLoader(
+    ElasticityDataSet(np.float32(X), np.float32(F_test), np.float32(Ux_test), np.float32(Uy_test)), batch_size=100,
+    shuffle=True)
 
 
 class LossFunction(nn.Module):
@@ -112,4 +112,5 @@ class LossFunction(nn.Module):
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 trainer = Trainer(model, optimizer, LossFunction())
-trainer.run(train_data=train_data, epochs=100, tolerance=1e-6)
+trainer.run(train_data=train_data, test_data=test_data, epochs=100, tolerance=1e-4)
+torch.save(model.state_dict(), './DeepOnet_LE.pt')
