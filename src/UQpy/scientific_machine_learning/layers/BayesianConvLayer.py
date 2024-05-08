@@ -1,0 +1,121 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+from UQpy.scientific_machine_learning.baseclass.Layer import Layer
+from UQpy.utilities.ValidationTypes import PositiveInteger
+
+
+# @beartype
+class BayesianConvLayer(Layer):
+    def __init__(
+            self,
+            in_channels: PositiveInteger,
+            out_channels: PositiveInteger,
+            kernel_size: PositiveInteger,
+            function: nn.Module = F.conv2d,
+            stride: PositiveInteger = 1,
+            padding=0,
+            dilation=1,
+            bias: bool = True,
+            priors: dict = None,
+            sampling: bool = True,
+            **kwargs,
+    ):
+        """Construct a Bayesian layer with weights and bias set by I.I.D. Normal distributions
+
+        :param in_channels: Size of each input channels
+        :param out_channels: Size of each output channels
+        :param kernel_size: Size of kernel
+        :param function: Function to apply to the input on ``self.forward``
+        :param bias: If set to ``False``, the layer will not learn an additive bias. Default: ``True``
+        :param priors: Prior and posterior distribution parameters. The dictionary keys and their default values are:
+
+         - ``priors["prior_mu"]`` = :math:`0`
+         - ``priors["prior_sigma"]`` = :math:`0.1`
+         - ``priors["posterior_mu_initial"]`` = ``(0, 0.1)``
+         - ``priors["posterior_rho_initial"]`` = ``(-3, 0.1)``
+        :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
+         If ``False``, use distribution mean as parameter values.
+        """
+        super().__init__(**kwargs)
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = (
+            kernel_size
+            if isinstance(kernel_size, tuple)
+            else (kernel_size, kernel_size)
+        )
+        self.stride = stride
+        self.padding = padding
+        self.dilation = dilation
+        self.groups = 1
+        self.bias = bias
+        self.function = function
+        self.sampling = sampling
+
+        if priors is None:
+            priors = {
+                "prior_mu": 0,
+                "prior_sigma": 0.1,
+                "posterior_mu_initial": (0, 0.1),
+                "posterior_rho_initial": (-3, 0.1),
+            }
+        self.prior_mu = priors["prior_mu"]
+        self.prior_sigma = priors["prior_sigma"]
+        self.posterior_mu_initial = priors["posterior_mu_initial"]
+        self.posterior_rho_initial = priors["posterior_rho_initial"]
+
+        self.weight_mu = nn.Parameter(torch.empty((out_channels, in_channels, *self.kernel_size)))
+        self.weight_sigma = nn.Parameter(torch.empty((out_channels, in_channels, *self.kernel_size)))
+        if self.bias:
+            self.bias_mu = nn.Parameter(torch.empty(out_channels))
+            self.bias_sigma = nn.Parameter(torch.empty(out_channels))
+        else:
+            self.bias_mu = None
+            self.bias_sigma = None
+        self._sample_parameters()
+
+    def _sample_parameters(self):
+        """Randomly populate weights and biases with samples from Normal distributions"""
+        self.weight_mu.data.normal_(*self.posterior_mu_initial)
+        self.weight_sigma.data.normal_(*self.posterior_rho_initial)
+        if self.bias:
+            self.bias_mu.data.normal_(*self.posterior_mu_initial)
+            self.bias_sigma.data.normal_(*self.posterior_rho_initial)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward model evaluation
+
+        :param x: Input tensor
+        :return: Output tensor
+        """
+        if (
+                self.training or self.sampling
+        ):  # Randomly sample weights and biases from normal distribution
+            weight_epsilon = torch.empty(self.weight_mu.size()).normal_(0, 1)
+            w_sigma = torch.log1p(torch.exp(self.weight_sigma))
+            weights = self.weight_mu + (weight_epsilon * w_sigma)
+            if self.bias:
+                bias_epsilon = torch.empty(self.bias_mu.size()).normal_(0, 1)
+                b_sigma = torch.log1p(torch.exp(self.bias_sigma))
+                biases = self.bias_mu + (bias_epsilon * b_sigma)
+            else:
+                biases = None
+        else:  # Use mean values for weights and biases
+            weights = self.weight_mu
+            biases = self.bias_mu if self.bias else None
+
+        return self.function(x, weights, biases, self.stride, self.padding, self.dilation, self.groups)
+
+    def sample(self, mode: bool = True):
+        """Set sampling mode.
+
+        :param mode: If ``True``, layer parameters are sampled from their distributions.
+         If ``False``, layer parameters are set to their means and layer acts deterministically.
+        """
+        self.sampling = mode
+
+    def extra_repr(self) -> str:
+        return (f"in_channels={self.in_channels}, out_channels={self.out_channels}, stride={self.stride}, "
+                f"padding={self.padding}, sampling={self.sampling}")

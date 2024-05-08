@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 from UQpy.scientific_machine_learning.baseclass.NeuralNetwork import NeuralNetwork
 from UQpy.scientific_machine_learning.layers.BayesianLayer import BayesianLayer
+from UQpy.scientific_machine_learning.layers.BayesianConvLayer import BayesianConvLayer
 
 
 def gaussian_kullback_leibler_divergence(
@@ -55,7 +56,7 @@ class BayesianNeuralNetwork(NeuralNetwork):
         """
         kl = 0
         for layer in self.network.modules():
-            if isinstance(layer, BayesianLayer):
+            if isinstance(layer, BayesianLayer) or isinstance(layer, BayesianConvLayer):
                 kl += gaussian_kullback_leibler_divergence(
                     layer.weight_mu,
                     torch.log1p(torch.exp(layer.weight_sigma)),
