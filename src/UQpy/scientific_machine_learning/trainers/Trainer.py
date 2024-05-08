@@ -5,7 +5,7 @@ from beartype import beartype
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
-@beartype
+#@beartype
 class Trainer:
 
     def __init__(
@@ -96,8 +96,8 @@ class Trainer:
             if test_data:
                 total_test_loss = 0
                 with torch.no_grad():
-                    for batch_number, (x, y) in enumerate(test_data):
-                        test_prediction = self.model(x)
+                    for batch_number, (*x, y) in enumerate(test_data):
+                        test_prediction = self.model(*x)
                         test_loss = self.loss_function(test_prediction, y)
                         total_test_loss += test_loss.item()
                     self.history["test_loss"][i] = total_test_loss

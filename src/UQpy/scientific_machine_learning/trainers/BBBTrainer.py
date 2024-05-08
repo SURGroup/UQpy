@@ -96,10 +96,10 @@ class BBBTrainer:
                 total_train_loss = 0
                 total_nll_loss = 0
                 total_kl_loss = 0
-                for batch_number, (x, y) in enumerate(train_data):
+                for batch_number, (*x, y) in enumerate(train_data):
                     nll_loss = torch.zeros(num_samples)
                     for sample in range(num_samples):
-                        prediction = self.model(x)
+                        prediction = self.model(*x)
                         nll_loss[sample] = self.loss_function(prediction, y)
                     kl_loss = self.model.compute_kullback_leibler_divergence()
                     mean_nll = torch.mean(nll_loss)
@@ -109,7 +109,7 @@ class BBBTrainer:
                     self.optimizer.zero_grad()
                     total_train_loss += train_loss.item()
                     total_nll_loss += mean_nll.item()
-                    total_kl_loss += kl_loss / len(train_data)
+                    total_kl_loss += kl_loss
                 average_train_loss = total_train_loss / len(train_data)
                 self.history["train_loss"][i] = total_train_loss
                 self.history["train_nll"][i] = total_nll_loss
@@ -125,8 +125,8 @@ class BBBTrainer:
             if test_data:
                 total_test_nll = 0
                 with torch.no_grad():
-                    for batch_number, (x, y) in enumerate(test_data):
-                        test_prediction = self.model(x)
+                    for batch_number, (*x, y) in enumerate(test_data):
+                        test_prediction = self.model(*x)
                         test_nll = self.loss_function(test_prediction, y)
                         total_test_nll += test_nll.item()
                     self.history["test_nll"][i] = total_test_nll
