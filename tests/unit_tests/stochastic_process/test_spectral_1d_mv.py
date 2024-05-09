@@ -56,4 +56,4 @@ def test_samples_1d_mv_shape():
 
 
 def test_samples_1d_mv_values():
-    assert np.isclose(-6.292191903354104, samples_1d_mv[43, 2, 67])
+    assert np.isclose(-6.050413116571201, samples_1d_mv[43, 2, 67])

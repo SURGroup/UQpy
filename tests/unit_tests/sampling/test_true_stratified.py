@@ -1,5 +1,5 @@
 import pytest
-from beartype.roar import BeartypeCallHintPepParamException
+from beartype.roar import BeartypeCallHintParamViolation
 
 from UQpy.distributions.collection import *
 from UQpy.sampling.stratified_sampling.TrueStratifiedSampling import *
@@ -108,7 +108,7 @@ def test_rect_strata_object():
     """
         Test type of strata_object. It should be a RectangularStrata object.
     """
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         TrueStratifiedSampling(distributions=marginals, strata_object=None, nsamples_per_stratum=1)
 
 
@@ -140,7 +140,7 @@ def test_vor_strata_object():
     """
         Test type of strata_object. It should be a VoronoiStrata object.
     """
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         TrueStratifiedSampling(distributions=marginals, strata_object=None)
 
 
@@ -148,7 +148,7 @@ def test_vor_random_state():
     """
         Check 'random_state' is an integer or RandomState object.
     """
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         TrueStratifiedSampling(distributions=marginals, strata_object=strata_vor, random_state='abc')
 
 
@@ -156,7 +156,7 @@ def test_vor_dist_object():
     """
         Check 'dist_object' is a Distribution object.
     """
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         TrueStratifiedSampling(distributions=[2, 1], strata_object=strata_vor)
 
 
@@ -164,7 +164,7 @@ def test_vor_dist_object2():
     """
         Check 'dist_object' is a Distribution object.
     """
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         TrueStratifiedSampling(distributions=2, strata_object=strata_vor)
 
 
@@ -172,7 +172,7 @@ def test_voronoi_nsamples_check():
     """
         In case of centered sampling, nsamples should be equal to number of strata in strata_object.
     """
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         sts_vor.run(nsamples='abc')
 
 
@@ -188,7 +188,7 @@ def test_voronoi_nsamples_per_stratum_check2():
     """
         Check nsamples_per_stratum should an integer or list.
     """
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         sts_vor.run(nsamples_per_stratum='abc')
 
 
@@ -207,6 +207,6 @@ def test_del_strata_object():
     """
         Test type of strata_object. It should be a DelaunayStrata object.
     """
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         TrueStratifiedSampling(distributions=marginals, strata_object=None)
 

@@ -1,5 +1,5 @@
 import pytest
-from beartype.roar import BeartypeCallHintPepParamException, BeartypeCallHintParamViolation
+from beartype.roar import BeartypeCallHintParamViolation
 
 from UQpy import GaussianProcessRegression, LinearRegression
 from UQpy.utilities.kernels.euclidean_kernels.RBF import RBF
@@ -144,7 +144,7 @@ def test_rss_random_state():
     marginals = [Uniform(loc=0., scale=2.), Uniform(loc=0., scale=1.)]
     strata = RectangularStrata(strata_number=[2, 2])
     x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1, random_state=1)
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         RefinedStratifiedSampling(stratified_sampling=x, samples_number=6, samples_per_iteration=2, random_state='abc',
                                   refinement_algorithm=RandomRefinement(x.strata_object))
 
@@ -164,7 +164,7 @@ def test_rss_runmodel_object():
                                     random_state=0)
     model = PythonModel(model_script='python_model_function.py', model_object_name="y_func")
     rmodel = RunModel(model=model)
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         refinement = GradientEnhancedRefinement(strata=x.strata_object, runmodel_object='abc',
                                                 surrogate=gpr)
         RefinedStratifiedSampling(stratified_sampling=x, samples_number=6, samples_per_iteration=2,
@@ -192,6 +192,6 @@ def test_nsamples():
     marginals = [Uniform(loc=0., scale=2.), Uniform(loc=0., scale=1.)]
     strata = RectangularStrata(strata_number=[2, 2])
     x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1, random_state=1)
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         RefinedStratifiedSampling(stratified_sampling=x, nsamples='a', samples_per_iteration=2,
                                   refinement_algorithm=RandomRefinement(x.strata_object))
