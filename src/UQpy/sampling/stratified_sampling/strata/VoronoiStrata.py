@@ -175,18 +175,18 @@ class VoronoiStrata(Strata):
 
             # Compute volume of each delaunay
             volume = list()
-            for i in range(len(delaunay_obj.vertices)):
-                vert = delaunay_obj.vertices[i]
+            for i in range(len(delaunay_obj.simplices)):
+                vert = delaunay_obj.simplices[i]
                 ch = ConvexHull(seed_and_vertices[vert])
                 volume.append(ch.volume)
 
             temp_prob = np.array(volume) / sum(volume)
-            a = list(range(len(delaunay_obj.vertices)))
+            a = list(range(len(delaunay_obj.simplices)))
             for k in range(int(nsamples_per_stratum[j])):
                 simplex = random_state.choice(a, p=temp_prob)
 
                 new_samples = SimplexSampling(
-                    nodes=seed_and_vertices[delaunay_obj.vertices[simplex]],
+                    nodes=seed_and_vertices[delaunay_obj.simplices[simplex]],
                     nsamples=1,
                     random_state=self.random_state,
                 ).samples
@@ -205,15 +205,15 @@ class VoronoiStrata(Strata):
 
         for j in range(self.mesh.nsimplex):
             try:
-                ConvexHull(self.points[self.mesh.vertices[j]])
+                ConvexHull(self.points[self.mesh.simplices[j]])
                 self.mesh.centroids[j, :], self.mesh.volumes[j] = \
-                    DelaunayStrata.compute_delaunay_centroid_volume(self.points[self.mesh.vertices[j]])
+                    DelaunayStrata.compute_delaunay_centroid_volume(self.points[self.mesh.simplices[j]])
             except qhull.QhullError:
                 self.mesh.centroids[j, :], self.mesh.volumes[j] = (np.mean(self.points[self.mesh.vertices[j]]), 0,)
 
     def initialize(self, samples_number, training_points):
         self.add_boundary_points_and_construct_delaunay(samples_number, training_points)
-        self.mesh.old_vertices = self.mesh.vertices.copy()
+        self.mesh.old_vertices = self.mesh.simplices.copy()
 
     def add_boundary_points_and_construct_delaunay(
             self, samples_number, training_points
@@ -377,7 +377,7 @@ class VoronoiStrata(Strata):
         p_ = new_point.shape[0]
         # Update the matrices to have recognize the new point
         self.points_to_samplesU01 = np.hstack([self.points_to_samplesU01, np.arange(i_, i_ + p_)])
-        self.mesh.old_vertices = self.mesh.vertices
+        self.mesh.old_vertices = self.mesh.simplices
 
         # Update the Delaunay triangulation mesh to include the new point.
         self.mesh.add_points(new_point)

@@ -1,5 +1,5 @@
 import pytest
-from beartype.roar import BeartypeCallHintPepParamException
+from beartype.roar import BeartypeCallHintPepParamException, BeartypeCallHintParamViolation
 
 from UQpy import GaussianProcessRegression, LinearRegression
 from UQpy.utilities.kernels.euclidean_kernels.RBF import RBF
@@ -180,11 +180,9 @@ def test_rss_kriging_object():
     x = TrueStratifiedSampling(distributions=marginals, strata_object=strata, nsamples_per_stratum=1, random_state=1)
     model = PythonModel(model_script='python_model_function.py', model_object_name="y_func")
     rmodel = RunModel(model=model)
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(BeartypeCallHintParamViolation):
         refinement = GradientEnhancedRefinement(strata=x.strata_object, runmodel_object=rmodel,
                                                 surrogate="abc")
-        RefinedStratifiedSampling(stratified_sampling=x, nsamples=6, samples_per_iteration=2,
-                                  refinement_algorithm=refinement)
 
 
 def test_nsamples():
