@@ -119,7 +119,7 @@ For assistance with the UQpy software package, please raise an issue on the Gith
 
 .. |logo| image:: logo.jpg
     :height: 250px
-    :target: https://gihub.com/SURGroup/UQpy
+    :target: https://github.com/SURGroup/UQpy
     
     
 
