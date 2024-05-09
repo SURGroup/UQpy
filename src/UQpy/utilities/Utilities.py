@@ -316,7 +316,7 @@ def correlation_distortion(dist_object, rho):
     :rtype: float
     """
 
-    if rho == 1.0:
+    if np.isclose(rho, 1.0):
         rho = 0.999
     n = 512
     zmax = 8
