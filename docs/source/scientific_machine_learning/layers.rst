@@ -43,7 +43,7 @@ This is a placeholder for the documentation on Bayesian layers.
 
 
 Probabilistic Layer
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 This is an attempt to generalize a Bayesian layer to sample weights from an arbitrary distribution.
 

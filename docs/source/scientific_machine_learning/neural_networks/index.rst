@@ -7,5 +7,5 @@ This file is a placeholder for the Neural Network documentation.
    :maxdepth: 1
 
     DeepOperatorNetwork <deep_operator_network>
-    Vanilla Neural Network <vanilla_neural_network>
+    Feed Forward Neural Network <feed_forward_neural_network>
     UNeuralNetwork <u_neural_network>
