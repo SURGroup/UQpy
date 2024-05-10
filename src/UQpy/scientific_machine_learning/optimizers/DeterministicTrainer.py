@@ -13,7 +13,6 @@ class DeterministicTrainer:
         data_loader: torch.utils.data.DataLoader = None,
     ):
         """
-        # ToDo: implement validation data_loader
 
         :param network:
         :param optimizer:
@@ -25,7 +24,7 @@ class DeterministicTrainer:
         self.optimizer = optimizer
         self.data_loader = data_loader
 
-        self.history = None  # ToDo: keep track of training_history
+        self.history = None
         self.logger = logging.getLogger(__name__)
 
         if self.data_loader:

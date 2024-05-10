@@ -24,8 +24,6 @@ class Trainer:
         self.optimizer = optimizer
         self.loss_function = loss_function
 
-        # ToDo: make sure this can detect bayesian layers and adjust the train method appropriately
-
         self.history: dict = {"train_loss": None, "test_loss": None}
         """Record of the loss during training and validation. 
         Note if training ends early there may be ``NaN`` values, as the histories are initialized with ``NaN``.

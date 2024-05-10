@@ -43,7 +43,7 @@ class DeepOperatorNetwork(NeuralNetwork):
         x: torch.Tensor,
         u_x: torch.Tensor,
     ) -> list[torch.Tensor]:
-        """# ToDo: no clue if this einsum stuff is anywhere near reasonable or will generalize to higher dimensions
+        """# ToDo: Replace lists with  appropriate einsum
 
         :param x: Points in the domain
         :param u_x: evaluations of the function :math:`u(x)` at the points ``x``

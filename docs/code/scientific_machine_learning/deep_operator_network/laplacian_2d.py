@@ -111,8 +111,11 @@ model = DeepOperatorNetwork(branch_network, trunk_network)
 x, f = srm_2d_samples(100)
 g = compute_laplacian()
 
-# ToDo: how do I compute the laplacian of the SRM samples using autograd?
-# ToDo: I need to implement SRM samples in pytorch don't I
+
+"""
+how do I compute the laplacian of the SRM samples using autograd?
+I need to implement SRM samples in pytorch don't I
+"""
 laplacian = compute_laplacian(lambda x, y: torch.exp(x) * torch.sin(y), x, y)
 
 

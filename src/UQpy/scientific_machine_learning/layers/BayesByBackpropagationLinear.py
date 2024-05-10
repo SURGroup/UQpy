@@ -55,7 +55,6 @@ class BayesByBackpropagationLinear(Layer):
         self.reset_parameters()
 
     def reset_parameters(self):
-        """#ToDo: Fill in docstring"""
         self.W_mu.data.normal_(*self.posterior_mu_initial)
         self.W_rho.data.normal_(*self.posterior_rho_initial)
         if self.use_bias:
