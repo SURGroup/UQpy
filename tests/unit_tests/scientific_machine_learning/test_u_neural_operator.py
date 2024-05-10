@@ -4,6 +4,7 @@ from UQpy.scientific_machine_learning.neural_networks.UNeuralNetwork import UNeu
 
 
 def test_output_shape():
+    """Expected shape of y is (n, out_channels, h, w)"""
     n_filters = [8, 3, 1, 9, 5]
     kernel_size = 3
     out_channels = 12
@@ -12,4 +13,3 @@ def test_output_shape():
     x = torch.ones((n, c, h, w))
     y = model(x)
     print(x.shape, y.shape)
-    # ToDo: expected shape of y is (n, out_channels, h, w)

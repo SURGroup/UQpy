@@ -5,7 +5,7 @@ from UQpy.scientific_machine_learning.losses.metrics import calculate_kl as KL_D
 
 
 class BayesByBackpropagationConv2D(ModuleWrapper):
-    def __init__(  # ToDo: beartype, docstring
+    def __init__(
         self,
         in_channels,
         out_channels,

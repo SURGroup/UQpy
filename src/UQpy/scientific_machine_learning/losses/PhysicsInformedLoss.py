@@ -35,7 +35,7 @@ class PhysicsInformedLoss(Loss):
         If ``self_adapative`` is ``False``, this attribute is 1.
         If ``self_adapative`` is ``True``, this attribute is a ``torch.nn.Parameter``.
         """
-        if self.self_adaptive:  # ToDo: does this work?
+        if self.self_adaptive:
             self.adaptive_weight_physics = torch.nn.Parameter()
             self.adaptive_weight_data = torch.nn.Parameter()
 
