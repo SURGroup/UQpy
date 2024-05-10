@@ -89,7 +89,7 @@ def spectral_representation():
 
 
 srm_object = spectral_representation()
-srm_object.run(n_samples, phi=phi)
+srm_object.run(n_samples, phase_angles=phi)
 print('n_variables', srm_object.n_variables)
 '''Plot phase angles'''
 # frequency_x, frequency_y = np.meshgrid(*frequency_vectors, indexing='ij')
@@ -105,7 +105,7 @@ ax.set_title('Sample of SRM Stochastic Process')
 ax.set_aspect('equal')
 
 '''Plot Cosine representation'''
-cosines = sum_of_cosines(srm_object.phi[0, :, :])
+cosines = sum_of_cosines(srm_object.phase_angles[0, :, :])
 # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 fig, ax = plt.subplots()
 ax.pcolormesh(x_array, y_array, cosines, vmin=-0.3, vmax=0.7, cmap='plasma')
