@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import integrate
 from UQpy.distributions import Distribution, Normal
 from UQpy.utilities import *
 from UQpy.utilities.ValidationTypes import PositiveFloat
@@ -9,7 +10,7 @@ from UQpy.stochastic_process.supportive import (
 from beartype import beartype
 
 
-@beartype
+# @beartype
 class InverseTranslation:
     def __init__(
         self,
@@ -32,80 +33,93 @@ class InverseTranslation:
         :param frequency_interval: The value of frequency discretization.
         :param n_time_intervals: The number of time discretizations.
         :param n_frequency_intervals: The number of frequency discretizations.
-        :param target_correlation_function_non_gaussian: The target non-Gaussian autocorrelation function :math:`R_{NG}^T(\\tau)`
-         stochastic processes.
+        :param target_correlation_function_non_gaussian: The target non-Gaussian autocorrelation function :math:`R_{NG}^T(\tau)`
          Either ``target_correlation_function_non_gaussian`` or ``target_power_spectrum_non_gaussian`` must be defined.
-        :param target_power_spectrum_non_gaussian: The target non-Gaussian power spectrum :math:`S_{NG}^T(\\omega)`.
+        :param target_power_spectrum_non_gaussian: The target non-Gaussian power spectrum :math:`S_{NG}^T(\omega)`.
          Either ``target_correlation_function_non_gaussian`` or ``target_power_spectrum_non_gaussian`` must be defined.
         :param samples_non_gaussian: Samples of non-Gaussian stochastic processes.
          ``samples_non_gaussian`` is optional. If no samples are passed, the :class:`.InverseTranslation` class will
          compute the underlying Gaussian correlation using the ITAM.
         :param percentage_error: Percentage error that defines stopping criteria for ITAM. Default: 5.0
+
+        :raise RuntimeError: If :math:`\Delta t > \pi / (\Delta \omega * n_{\omega})`, raise RuntimeError because aliasing will occur
         """
-        self.distributions = distributions
-        self.time_interval = time_interval
-        self.frequency_interval = frequency_interval
-        self.n_time_intervals = n_time_intervals
-        self.n_frequency_intervals = n_frequency_intervals
-        self.samples_non_gaussian = samples_non_gaussian
-        self.percentage_error = percentage_error
-        if (  # only target_power_spectrum_non_gaussian is input
-            target_correlation_function_non_gaussian is None
-            and target_power_spectrum_non_gaussian is not None
+        if (
+            target_power_spectrum_non_gaussian is None
+            and target_correlation_function_non_gaussian is None
+        ) or (
+            target_power_spectrum_non_gaussian is not None
+            and target_correlation_function_non_gaussian is not None
         ):
-            self.target_power_spectrum_non_gaussian = target_power_spectrum_non_gaussian
-            self.target_correlation_function_non_gaussian = wiener_khinchin_transform(
-                target_power_spectrum_non_gaussian, self.frequency, self.time
-            )
-        elif (  # only target_correlation_function_non_gaussian is input
-            target_correlation_function_non_gaussian is not None
-            and target_power_spectrum_non_gaussian is None
-        ):
-            self.target_correlation_function_non_gaussian = (
-                target_correlation_function_non_gaussian
-            )
-            self.target_power_spectrum_non_gaussian = inverse_wiener_khinchin_transform(
-                target_correlation_function_non_gaussian, self.frequency, self.time
-            )
-        else:
             raise RuntimeError(
                 "UQpy: Exactly one of `target_correlation_function_non_gaussian` "
                 "or `target_power_spectrum_non_gaussian` must be provided."
             )
 
-        power_spectrum_gaussian, power_spectrum_non_gaussian = self._itam_power_spectrum()
-        self.power_spectrum_gaussian: np.ndarray = power_spectrum_gaussian
-        """The Gaussian power spectrum :math:`S_G(\\omega)` of the inverse translated Gaussian stochastic processes"""
-        self.power_spectrum_non_gaussian: np.ndarray = power_spectrum_non_gaussian
+        self.distributions = distributions
+        self.time_interval = time_interval
+        self.frequency_interval = frequency_interval
+        self.n_time_intervals = n_time_intervals
+        self.n_frequency_intervals = n_frequency_intervals
+
+        cutoff_frequency = self.frequency_interval * self.n_frequency_intervals
+        if (
+            self.time_interval > np.pi / cutoff_frequency
+        ):  # Equation 45 from Shinozuka 1991
+            raise RuntimeError(
+                "UQpy: `time_interval` is too large for cutoff frequency. Aliasing will occur."
+            )
+
+        self.frequency = np.arange(0, n_frequency_intervals) * frequency_interval
+        self.time = np.arange(0, n_time_intervals) * time_interval
+        self.logger = logging.getLogger(__name__)
+
+        self.target_power_spectrum_non_gaussian = (
+            target_power_spectrum_non_gaussian
+            if (target_power_spectrum_non_gaussian is not None)
+            else inverse_wiener_khinchin_transform(
+                target_correlation_function_non_gaussian, self.frequency, self.time
+            )
+        )
+        self.target_correlation_function_non_gaussian = (
+            target_correlation_function_non_gaussian
+            if (target_correlation_function_non_gaussian is not None)
+            else wiener_khinchin_transform(
+                target_power_spectrum_non_gaussian, self.frequency, self.time
+            )
+        )
+        self.samples_non_gaussian = samples_non_gaussian
+        self.percentage_error = percentage_error
+
+        s_g, s_ng = self._itam_power_spectrum()
+        self.power_spectrum_gaussian: np.ndarray = s_g
+        """The Gaussian power spectrum :math:`S_G(\\omega)` of the inverse translated Gaussian stochastic processes."""
+        self.power_spectrum_non_gaussian: np.ndarray = s_ng
         """The non-Gaussian power spectrum :math:`S_{NG}(\\omega)`.
-         This is a reconstruction from the forward translation of ``power_spectrum_gaussian``"""
-        self.auto_correlation_function_gaussian: np.ndarry = wiener_khinchin_transform(
+         This is a reconstruction from the forward translation of ``power_spectrum_gaussian``."""
+        self.auto_correlation_function_gaussian: np.ndarray = wiener_khinchin_transform(
             self.power_spectrum_gaussian, self.frequency, self.time
         )
         """The correlation function :math:`R_G(\\tau)` computed from ``power_spectrum_gaussian``."""
-        self.correlation_function_gaussian: np.ndarry = (
+        self.correlation_function_gaussian: np.ndarray = (
             self.auto_correlation_function_gaussian
             / self.auto_correlation_function_gaussian[0]
         )
         """The correlation function of the inverse translated Gaussian stochastic processes."""
         self.samples_gaussian: np.ndarray = None
         """The inverse translated Gaussian samples from the non-Gaussian samples.
-         The array is the same shape as ``samples_non_gaussian``."""
-
-        self.frequency = np.arange(0, n_frequency_intervals) * frequency_interval
-        self.time = np.arange(0, n_time_intervals) * time_interval
-        self.logger = logging.getLogger(__name__)
+         This array is the same shape as ``samples_non_gaussian``."""
 
         if self.samples_non_gaussian:
             self.run(self.samples_non_gaussian)
 
-    def run(self, samples_non_gaussian):
-        """Run the inverse translation approximation method to convert non-Gaussian smples to Gaussian samples
+    def run(self, samples_non_gaussian: np.ndarray):
+        """Run the inverse translation approximation method to convert non-Gaussian samples to Gaussian samples
 
-        :param samples_non_gaussian: Samples of non-Gaussian stochastic processes. If samples are provided at the
-         initialization, then the run method is executed automatically. If no samples are passed at the
-         initialization, the :class:`.InverseTranslation` class will compute the underlying Gaussian correlation using
-         the ITAM and the run method needs to be manually executed by the user.
+        :param samples_non_gaussian: Samples of non-Gaussian stochastic processes.
+         If samples are provided at the initialization, then the run method is executed automatically.
+         If no samples are passed at the initialization, the :class:`.InverseTranslation` class will compute the
+         underlying Gaussian correlation using the ITAM and the run method needs to be manually executed by the user.
         """
         self.samples_non_gaussian = samples_non_gaussian.flatten()[:, np.newaxis]
         self.samples_gaussian = self._inverse_translate_non_gaussian_samples().reshape(
@@ -126,48 +140,87 @@ class InverseTranslation:
         R_g_iterate = target_R
         S_g_iterate = target_S
         R_ng_iterate = np.zeros_like(R_g_iterate)
-        r_ng_iterate = np.zeros_like(R_g_iterate)
         S_ng_iterate = np.zeros_like(S_g_iterate)
-        non_gaussian_moments = getattr(self.distributions, "moments")()
+        mean_ng, variance_ng = self.distributions.moments(moments2return="mv")
         self.logger.info(
             "UQpy: Stochastic Process: Beginning Inverse Translation Approximation Method"
         )
         max_iter = 500
         i = 0
         error = np.inf
+        normal = Normal(scale=float(variance_ng))
+
+        def integrand(x1, x2, rho):
+            return (
+                self.distributions.icdf(normal.cdf(x1))
+                * self.distributions.icdf(normal.cdf(x2))
+                * self._bivariate_normal_pdf(x1, x2, rho, sigma_squared=var)
+            )
+
+        bounds = 10
+        self.logger.info(
+            f"UQpy: Stochastic Process: Iteration={i} / {max_iter} Error={error} ErrorThreshold={self.percentage_error}"
+        )
         while i < max_iter and error > self.percentage_error:
             R_g_iterate = wiener_khinchin_transform(
                 S_g_iterate, self.frequency, self.time
             )
+            var = R_g_iterate[0]
             for j in range(len(target_R)):
-                r_ng_iterate[j] = correlation_distortion(
-                    dist_object=self.distributions, rho=R_g_iterate[j] / R_g_iterate[0]
+                R_ng_iterate[j], _ = integrate.dblquad(
+                    lambda x1, x2: integrand(x1, x2, rho=R_g_iterate[j] / var),
+                    -bounds,
+                    bounds,
+                    -bounds,
+                    bounds,
                 )
-            R_ng_iterate = (
-                r_ng_iterate * non_gaussian_moments[1] + non_gaussian_moments[0] ** 2
-            )
+                # R_ng_iterate[j] = correlation_distortion(
+                #     dist_object=self.distributions, rho=R_g_iterate[j] / R_g_iterate[0]
+                # )
+
+            R_ng_iterate = (R_ng_iterate * variance_ng) + (mean_ng**2)
             S_ng_iterate = inverse_wiener_khinchin_transform(
                 R_ng_iterate, self.frequency, self.time
             )
 
-            error_1 = np.sum((target_S - S_ng_iterate) ** 2)
-            error_2 = np.sum(target_S**2)
-            error = 100 * np.sqrt(error_1 / error_2)
+            error = 100 * np.sqrt(
+                np.sum((target_S - S_ng_iterate) ** 2) / np.sum(target_S**2)
+            )
 
             ratio = target_S / S_ng_iterate
             ratio = np.nan_to_num(ratio, nan=0.0, posinf=0.0, neginf=0.0)
+            ratio = np.clip(
+                ratio, 0, None
+            )  # Set negative entries to zero to avoid complex numbers in fractional exponent
             S_g_next_iterate = (ratio**1.3) * S_g_iterate
-            # Set negative entries to zero to eliminate numerical error of upgrading scheme
-            S_g_next_iterate[S_g_next_iterate < 0] = 0
-            S_g_iterate = S_g_next_iterate
+            S_g_iterate = np.clip(S_g_next_iterate, 0, None)
 
             i += 1
-        if error <= self.percentage_error:
             self.logger.info(
-                "UQpy: Stochastic Process: Ended Inverse Translation Approximation Method due to error convergence"
+                f"UQpy: Stochastic Process: Iteration={i} / {max_iter} Error={error} ErrorThreshold={self.percentage_error}"
             )
-        if i == max_iter:
-            self.logger.warning(
-                "UQpy: Stochastic Process: Ended Inverse Translation Approximation Method after max iterations reached"
-            )
+
+        self.logger.info(
+            f"UQpy: Stochastic Process: Ended Inverse Translation Approximation Method"
+        )
+        if error > self.percentage_error:
+            self.logger.warning("UQpy: Stochastic Process: InverseTranslation may have undesirably large error")
         return S_g_iterate, S_ng_iterate
+
+    def _bivariate_normal_pdf(
+        self, x1: float, x2: float, rho: float, sigma_squared: float = 1.0
+    ) -> np.ndarray:
+        """The probability density function of a zero-mean bivariate normal distribution with correlation ``rho``
+
+        As defined by Equation 17 of Shields 2011
+
+        :param x1: First coordinate
+        :param x2: Second coordinate
+        :param rho: Normalized correlation function
+        :return: :math:`\phi(x_1, x_2; \rho)`
+        """
+        rho = np.clip(rho, -0.999, 0.999)
+        coefficient = 1 / (2 * np.pi * sigma_squared * np.sqrt(1 - rho**2))
+        numerator = x1**2 + x2**2 - (2 * rho * x1 * x2)
+        denominator = 2 * sigma_squared * (1 - rho)
+        return coefficient * np.exp(-numerator / denominator)

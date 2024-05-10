@@ -6,7 +6,7 @@ from UQpy.run_model.RunModel import RunModel
 
 
 def svd(matrix, rank=None, tol=None):
-    """
+    """ ToDo: can I fix this documentation
     Compute the singular value decomposition (SVD) of a matrix.
 
     **Inputs:**
@@ -102,7 +102,7 @@ def nearest_pd(input_matrix):
     k = 1
     while not _is_pd(pd_matrix):
         min_eig = np.min(np.real(np.linalg.eigvals(pd_matrix)))
-        pd_matrix += np.eye(input_matrix.shape[0]) * (-min_eig * k ** 2 + spacing)
+        pd_matrix += np.eye(input_matrix.shape[0]) * (-min_eig * k**2 + spacing)
         k += 1
 
     return pd_matrix
@@ -157,7 +157,9 @@ def gradient(runmodel_object=None, point=None, order="first", df_step=None):
             df_step = [df_step[0]] * dimension
 
     if not callable(runmodel_object) and not isinstance(runmodel_object, RunModel):
-        raise RuntimeError("A RunModel object or callable function must be provided as model.")
+        raise RuntimeError(
+            "A RunModel object or callable function must be provided as model."
+        )
 
     def func(m):
         def func_eval(x):
@@ -235,7 +237,7 @@ def gradient(runmodel_object=None, point=None, order="first", df_step=None):
             u_1i_1j[:, i[0]] -= eps_i1_0
             u_1i_1j[:, i[1]] -= eps_i1_1
 
-            print("hi")
+            print("hi")  # ToDo: this is almost funny enough to leave in
             qoi_0 = f_eval(u_i1_j1)
             qoi_1 = f_eval(u_i1_1j)
             qoi_2 = f_eval(u_1i_j1)
@@ -252,9 +254,10 @@ def gradient(runmodel_object=None, point=None, order="first", df_step=None):
 def bi_variate_normal_pdf(x1, x2, rho):
     return (
         1
-        / (2 * np.pi * np.sqrt(1 - rho ** 2))
-        * np.exp(-1 / (2 * (1 - rho ** 2)) * (x1 ** 2 - 2 * rho * x1 * x2 + x2 ** 2))
+        / (2 * np.pi * np.sqrt(1 - rho**2))
+        * np.exp(-1 / (2 * (1 - rho**2)) * (x1**2 - 2 * rho * x1 * x2 + x2**2))
     )
+
 
 def _get_a_plus(a):
     eig_val, eig_vec = np.linalg.eig(a)
@@ -265,7 +268,7 @@ def _get_a_plus(a):
 
 
 def _get_ps(a, w=None):
-    w05 = np.matrix(w ** 0.5)
+    w05 = np.matrix(w**0.5)
 
     return w05.I * _get_a_plus(w05 * a * w05) * w05.I
 
@@ -306,7 +309,7 @@ def _nn_coord(x, k):
 
 
 def correlation_distortion(dist_object, rho):
-    """
+    """ ToDo: I think this is recreating equation 16 from Shields 2011. Can I replace this with numpy dblquad?
     This method computes the correlation distortion from Gaussian distribution to any other distribution defined in
     UQpy.distributions
 
@@ -334,6 +337,7 @@ def correlation_distortion(dist_object, rho):
 
 
 def calculate_gauss_quadrature_2d(n, zmax, zmin):
+    # ToDo: document what this does, view usages
     points, weights = np.polynomial.legendre.leggauss(n)
     points = -(0.5 * (points + 1) * (zmax - zmin) + zmin)
     weights = weights * (0.5 * (zmax - zmin))
