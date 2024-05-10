@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
 import logging
-from UQpy.scientific_machine_learning.baseclass.NeuralNetwork import NeuralNetwork
+from UQpy.scientific_machine_learning.baseclass import NeuralNetwork
 
 
-class VanillaNeuralNetwork(NeuralNetwork):
+class FeedForwardNeuralNetwork(NeuralNetwork):
 
     def __init__(self, network: nn.Module, **kwargs):
         """Initialize a typical feed-forward neural network using the architecture provided by ``network``

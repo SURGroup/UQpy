@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
-from UQpy.scientific_machine_learning.neural_networks.BayesianNeuralNetwork import BayesianNeuralNetwork
-from UQpy.scientific_machine_learning.layers.BayesianLayer import BayesianLayer
+from UQpy.scientific_machine_learning.neural_networks import FeedForwardNeuralNetwork
+from UQpy.scientific_machine_learning.layers import BayesianLayer,  BayesianConvLayer
 from UQpy.scientific_machine_learning.trainers.BBBTrainer import BBBTrainer
 
 torch.manual_seed(0)
@@ -31,11 +31,11 @@ def test_accuracy():
         nn.ReLU(),
         BayesianLayer(width, 1),
     )
-    model = BayesianNeuralNetwork(network)
+    model = FeedForwardNeuralNetwork(network)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     train_data = DataLoader(QuadraticDataset(), batch_size=20, shuffle=True)
     trainer = BBBTrainer(model, optimizer)
-    trainer.run(train_data=train_data, epochs=1000, beta=1e-6, num_samples=10)
+    trainer.run(train_data=train_data, epochs=1_000, beta=1e-6, num_samples=10)
 
     final_loss = trainer.history["train_nll"][-1]
     assert final_loss < 1

@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
-from UQpy.scientific_machine_learning.neural_networks.VanillaNeuralNetwork import (
-    VanillaNeuralNetwork,
+from UQpy.scientific_machine_learning.neural_networks.FeedForwardNeuralNetwork import (
+    FeedForwardNeuralNetwork,
 )
 from UQpy.scientific_machine_learning.trainers.Trainer import Trainer
 
@@ -32,7 +32,7 @@ def test_accuracy():
         nn.ReLU(),
         nn.Linear(width, 1),
     )
-    model = VanillaNeuralNetwork(network)
+    model = FeedForwardNeuralNetwork(network)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     train_data = DataLoader(QuadraticDataset(), batch_size=20, shuffle=True)
     trainer = Trainer(model, optimizer)
