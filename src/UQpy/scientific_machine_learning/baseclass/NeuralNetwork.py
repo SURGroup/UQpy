@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import torchinfo
 from abc import ABC, abstractmethod
-from UQpy.scientific_machine_learning.layers import BayesianLayer, BayesianConvLayer
+from UQpy.scientific_machine_learning.layers.BayesianLayer import BayesianLayer
+from UQpy.scientific_machine_learning.layers.BayesianConvLayer import BayesianConvLayer
 
 
 class NeuralNetwork(ABC, nn.Module):
