@@ -85,11 +85,7 @@ class Trainer:
                     self.optimizer.step()
                     self.optimizer.zero_grad()
                 average_train_loss = total_train_loss / len(train_data)
-                self.history["train_loss"][i] = total_train_loss
-                self.logger.info(
-                    f"UQpy: Scientific Machine Learning: "
-                    f"Epoch {i+1:,} / {epochs:,} Train Loss {total_train_loss}"
-                )
+                self.history["train_loss"][i] = average_train_loss
                 self.model.train(False)
             if test_data:
                 total_test_loss = 0
@@ -98,11 +94,17 @@ class Trainer:
                         test_prediction = self.model(*x)
                         test_loss = self.loss_function(test_prediction, y)
                         total_test_loss += test_loss.item()
-                    self.history["test_loss"][i] = total_test_loss
+                    average_test_loss = total_test_loss/ len(test_data)
+                    self.history["test_loss"][i] = average_test_loss
                     self.logger.info(
                         f"UQpy: Scientific Machine Learning: "
-                        f"Epoch {i+1:,} / {epochs:,} Test Loss {total_test_loss}"
+                        f"Epoch {i+1:,} / {epochs:,} Train Loss {average_train_loss} Test Loss {average_test_loss}"
                     )
+            else:
+                self.logger.info(
+                    f"UQpy: Scientific Machine Learning: "
+                    f"Epoch {i+1:,} / {epochs:,} Train Loss {average_train_loss}"
+                )
             i += 1
 
         self.logger.info(f"UQpy: Scientific Machine Learning: Completed " + log_note)

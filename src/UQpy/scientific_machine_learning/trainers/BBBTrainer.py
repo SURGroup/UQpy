@@ -111,16 +111,11 @@ class BBBTrainer:
                     total_nll_loss += mean_nll.item()
                     total_kl_loss += kl_loss
                 average_train_loss = total_train_loss / len(train_data)
-                self.history["train_loss"][i] = total_train_loss
-                self.history["train_nll"][i] = total_nll_loss
-                self.history["train_kl"][i] = total_kl_loss
-                self.logger.info(
-                    f"UQpy: Scientific Machine Learning: "
-                    f"Epoch {i + 1:,} / {epochs:,} "
-                    f"Train Loss {total_train_loss} "
-                    f"Train NLL {total_nll_loss} "
-                    f"Train KL {total_kl_loss}"
-                )
+                average_train_nll = total_nll_loss / len(train_data)
+                average_kl_loss = total_kl_loss / len(train_data)
+                self.history["train_loss"][i] = average_train_loss
+                self.history["train_nll"][i] = average_train_nll
+                self.history["train_kl"][i] = average_kl_loss
                 self.model.train(False)
             if test_data:
                 total_test_nll = 0
@@ -129,11 +124,25 @@ class BBBTrainer:
                         test_prediction = self.model(*x)
                         test_nll = self.loss_function(test_prediction, y)
                         total_test_nll += test_nll.item()
-                    self.history["test_nll"][i] = total_test_nll
+                    average_test_nll = total_test_nll / len(test_data)
+                    self.history["test_nll"][i] = average_test_nll
                     self.logger.info(
                         f"UQpy: Scientific Machine Learning: "
-                        f"Epoch {i + 1:,} / {epochs:,} Test NLL {total_test_nll}"
+                        f"Epoch {i + 1:,} / {epochs:,} "
+                        f"Train Loss {average_train_loss} "
+                        f"Train NLL {average_train_nll}"
+                        f" Train KL {average_kl_loss} "
+                        f"Test NLL {average_test_nll}"
                     )
+            else:
+                self.logger.info(
+                    f"UQpy: Scientific Machine Learning: "
+                    f"Epoch {i + 1:,} / {epochs:,} "
+                    f"Train Loss {average_train_loss} "
+                    f"Train NLL {average_train_nll} "
+                    f"Train KL {average_kl_loss}"
+                )
+
             i += 1
 
         self.logger.info(f"UQpy: Scientific Machine Learning: Completed " + log_note)
