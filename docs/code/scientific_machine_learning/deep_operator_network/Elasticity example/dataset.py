@@ -51,3 +51,7 @@ def load_data():
 
     return F_train, Ux_train, Uy_train, F_test, Ux_test, Uy_test, X, ux_train_mean, \
         ux_train_std, uy_train_mean, uy_train_std
+
+def rescale(x, u_mean, u_std):
+    x = x * (u_std + 1.0e-9) + u_mean
+    return x
