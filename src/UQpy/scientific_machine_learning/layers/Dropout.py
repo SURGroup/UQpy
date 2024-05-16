@@ -6,7 +6,7 @@ from typing import Annotated
 from UQpy.scientific_machine_learning.baseclass.Layer import Layer
 
 
-@beartype
+#@beartype
 class Dropout(Layer):
 
     def __init__(
