@@ -157,7 +157,7 @@ class InverseTranslation:
                 * self._bivariate_normal_pdf(x1, x2, rho, sigma_squared=var)
             )
 
-        bounds = 10
+        bounds = 4
         self.logger.info(
             f"UQpy: Stochastic Process: Iteration={i} / {max_iter} Error={error} ErrorThreshold={self.percentage_error}"
         )
@@ -167,16 +167,13 @@ class InverseTranslation:
             )
             var = R_g_iterate[0]
             for j in range(len(target_R)):
-                R_ng_iterate[j], _ = integrate.dblquad(
+                R_ng_iterate[j], _ = integrate.dblquad(  # ToDo: should this be a n-dimensional scipy.integrate.nquad integral
                     lambda x1, x2: integrand(x1, x2, rho=R_g_iterate[j] / var),
                     -bounds,
                     bounds,
                     -bounds,
                     bounds,
                 )
-                # R_ng_iterate[j] = correlation_distortion(
-                #     dist_object=self.distributions, rho=R_g_iterate[j] / R_g_iterate[0]
-                # )
 
             R_ng_iterate = (R_ng_iterate * variance_ng) + (mean_ng**2)
             S_ng_iterate = inverse_wiener_khinchin_transform(
@@ -211,7 +208,7 @@ class InverseTranslation:
         self, x1: float, x2: float, rho: float, sigma_squared: float = 1.0
     ) -> np.ndarray:
         """The probability density function of a zero-mean bivariate normal distribution with correlation ``rho``
-
+        ToDo: can this be replaced with the UQpy.distributions bivariate normal pdf
         As defined by Equation 17 of Shields 2011
 
         :param x1: First coordinate
