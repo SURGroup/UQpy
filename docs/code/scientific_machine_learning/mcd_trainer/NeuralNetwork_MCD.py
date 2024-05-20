@@ -1,4 +1,14 @@
 # %%
+
+#!!!
+import sys
+import os
+
+# Add the src directory to sys.path
+src_path = '/Users/george/Documents/Main_Files/Scripts/UQpy/src'
+if src_path not in sys.path:
+    sys.path.append(src_path)
+#!!!
 import numpy as np
 import torch
 import torch.nn as nn
@@ -52,7 +62,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 train_data = DataLoader(SinusoidalDataset(), batch_size=20, shuffle=True)
 trainer = Trainer(model, optimizer)
 print("Starting Training...", end="")
-trainer.run(train_data=train_data, epochs=5000)
+trainer.run(train_data=train_data, epochs=20000)
 print("done")
 # Plotting Results
 x = SinusoidalDataset().x
