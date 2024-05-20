@@ -30,9 +30,9 @@ class Dropout(Layer):
         if self.drop_type == 0:
             self.dropout_function = nn.Dropout(self.drop_rate)
         elif self.drop_type == 1:
-            self.dropout_function = nn.Dropout(self.drop_rate)
+            self.dropout_function = nn.Dropout1d(self.drop_rate)
         elif self.drop_type == 2:
-            self.dropout_function = nn.Dropout(self.drop_rate)
+            self.dropout_function = nn.Dropout2d(self.drop_rate)
         elif self.drop_type == 3:
             self.dropout_function = nn.Dropout3d(self.drop_rate)
 
@@ -44,7 +44,7 @@ class Dropout(Layer):
         :param x:
         :return:
         """
-        return self.dropout_function(x) if self.drop else x
+        return self.dropout_function(x) if self.dropping else x
 
     def drop(self, mode: bool = True):
         """Set dropping mode.

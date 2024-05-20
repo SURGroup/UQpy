@@ -46,8 +46,8 @@ class NeuralNetwork(ABC, nn.Module):
 
         """
         self.dropping = mode
-        for m in self.network.modules():
-            if hasattr(m,"drop"):
+        for m in self.network:
+            if hasattr(m, "drop"):
                 m.drop(mode)
         return self
 
