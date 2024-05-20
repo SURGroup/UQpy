@@ -211,7 +211,7 @@ class MorrisSensitivity:
             self.runmodel_object.run(samples=samples, append_samples=False)
             qoi = np.array(self.runmodel_object.qoi_list)
             el_effect = np.zeros((self.dimension,))
-            perms = [np.argwhere(not np.isclose(bi, 0.0))[0, 0] for bi in (samples[1:] - samples[:-1])]
+            perms = [np.argwhere(bi != 0.0)[0, 0] for bi in (samples[1:] - samples[:-1])]
             for count_d, d in enumerate(perms):
                 el_effect[d] = (qoi[count_d + 1] - qoi[count_d]) / self.delta
             elementary_effects.append(el_effect)
