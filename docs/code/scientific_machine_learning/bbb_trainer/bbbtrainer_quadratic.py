@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 
 # UQpy imports
 from UQpy.scientific_machine_learning.layers import BayesianLayer
-from UQpy.scientific_machine_learning.neural_networks import BayesianNeuralNetwork
+from UQpy.scientific_machine_learning.neural_networks import FeedForwardNeuralNetwork
 from UQpy.scientific_machine_learning.trainers import BBBTrainer
 
 # %% md
@@ -39,7 +39,7 @@ network = nn.Sequential(
     nn.ReLU(),
     BayesianLayer(width, 1),
 )
-model = BayesianNeuralNetwork(network)
+model = FeedForwardNeuralNetwork(network)
 
 # %% md
 #

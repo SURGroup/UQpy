@@ -6,24 +6,27 @@ from typing import Annotated
 from UQpy.scientific_machine_learning.baseclass.Layer import Layer
 
 
-@beartype
+#@beartype
 class Dropout(Layer):
 
     def __init__(
         self,
         drop_rate: Annotated[float, Is[lambda p: 0 <= p <= 1]] = 0.5,
         drop_type: int = 0,
+        dropping: bool = True,
         **kwargs
     ):
         """Initialize a dropout layer to randomly zero components of a tensor
 
         :param drop_rate: Probability of a dropout occurring
         :param drop_type: If ``0`` drop elements, ``1`` drops vectors, ``2`` drops channels, ``3`` drops 3D
+        :param dropping: If ``True`` activate drop out layer. If ``False`` behaves as fully connected layer
         :param kwargs:
         """
         super().__init__(**kwargs)
         self.drop_rate = drop_rate
         self.drop_type = drop_type
+        self.dropping = dropping
         if self.drop_type == 0:
             self.dropout_function = nn.Dropout(self.drop_rate)
         elif self.drop_type == 1:
@@ -41,7 +44,14 @@ class Dropout(Layer):
         :param x:
         :return:
         """
-        return self.dropout_function(x)
+        return self.dropout_function(x) if self.drop else x
+
+    def drop(self, mode: bool = True):
+        """Set dropping mode.
+
+        :param mode: If ``True``, layer parameters are dropped.
+        """
+        self.dropping = mode
 
     def extra_repr(self) -> str:
-        return f"drop_rate={self.drop_rate}, drop_type={self.drop_type}"
+        return f"drop_rate={self.drop_rate}, drop_type={self.drop_type}, dropping={self.dropping}"

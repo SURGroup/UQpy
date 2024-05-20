@@ -2,8 +2,7 @@ import numpy as np
 import scipy.io as io
 
 
-def load_data():
-    # Source data
+def load_data(modes):
     file = io.loadmat('./Data/Dataset_1Circle')
     s_bc = 101
     s = 1048
@@ -49,8 +48,31 @@ def load_data():
     Uy_test = np.reshape(uy_test, (-1, s, 1))
     Uy_test = (Uy_test - uy_train_mean) / (uy_train_std + 1.0e-9) + 8.5
 
-    return F_train, Ux_train, Uy_train, F_test, Ux_test, Uy_test, X, ux_train_mean, \
-        ux_train_std, uy_train_mean, uy_train_std
+    # Train data
+    num_train = F_train.shape[0]  #check this
+    Ux = np.reshape(Ux_train, (-1, s))
+    C_ux = 1. / (num_train - 1) * np.matmul(Ux.T, Ux)
+    lam_ux, phi_ux = np.linalg.eigh(C_ux)
+
+    lam_ux = np.flip(lam_ux)
+    phi_ux = np.fliplr(phi_ux)
+    phi_ux = phi_ux * np.sqrt(s)
+
+    ux_basis = phi_ux[:, :modes]
+
+    Uy = np.reshape(Uy_train, (-1, s))
+    C_uy = 1. / (num_train - 1) * np.matmul(Uy.T, Uy)
+    lam_uy, phi_uy = np.linalg.eigh(C_uy)
+
+    lam_uy = np.flip(lam_uy)
+    phi_uy = np.fliplr(phi_uy)
+    phi_uy = phi_uy * np.sqrt(s)
+
+    uy_basis = phi_uy[:, :modes]
+
+    return (F_train, Ux_train, Uy_train, F_test, Ux_test, Uy_test, X,
+            ux_train_mean, ux_train_std, uy_train_mean, uy_train_std,
+            ux_basis, uy_basis, lam_ux, lam_uy)
 
 
 def rescale(x, u_mean, u_std):

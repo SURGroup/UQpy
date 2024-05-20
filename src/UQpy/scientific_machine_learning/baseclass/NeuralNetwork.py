@@ -41,6 +41,16 @@ class NeuralNetwork(ABC, nn.Module):
                 m.sample(mode)
         return self
 
+    def drop(self, mode: bool = True):
+        """
+
+        """
+        self.dropping = mode
+        for m in self.network.modules():
+            if hasattr(m,"drop"):
+                m.drop(mode)
+        return self
+
     def is_deterministic(self) -> bool:
         """Check if neural network is behaving deterministically or probabilistically
 
