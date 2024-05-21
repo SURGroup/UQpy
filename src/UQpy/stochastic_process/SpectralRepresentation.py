@@ -62,8 +62,6 @@ class SpectralRepresentation:
          they are randomly generated as i.i.d. uniform random variables :math:`\phi_i\sim Uniform(0, 2\pi)`.
         The shape of the phase angles is
          :code:`(n_samples, n_variables, n_frequency_intervals[0], ..., n_frequency_intervals[n_dimensions-1])
-          ToDo: Double check the shape of this array, make cases for univariate and multivariate
-          ToDo: check this shape with Eq 37 and 44  in Shinozuka 1996
         :param random_state: Random seed used to initialize the pseudo-random number generator. Default is :code:`None`.
          If an :code:`int` or :code:`np.random.RandomState` is provided, this sets :py:meth:`np.random.seed`.
         """
@@ -78,14 +76,6 @@ class SpectralRepresentation:
         if self.random_state is not None:
             np.random.seed(self.random_state)
 
-        # Check if Equation 45 from Shinozuka and Deodatis 1991 is satisfied
-        frequency_cutoff = self.frequency_interval * self.n_frequency_intervals
-        max_time_interval = 2 * np.pi / (2 * frequency_cutoff)
-        if (self.time_interval > max_time_interval).any():
-            raise RuntimeError(
-                "UQpy: time_interval greater than pi / cutoff_frequency. Aliasing might occur during execution."
-            )
-
         self.n_dimensions: int = len(self.n_frequency_intervals)
         """The dimensionality of the stochastic process."""
         self.n_variables: int = (
@@ -98,6 +88,20 @@ class SpectralRepresentation:
         """Generated samples. The shape of the samples is 
          :code:`(n_samples, n_variables, n_time_intervals[0], ..., n_time_intervals[n_dimensions-1])`"""
         self.logger = logging.getLogger(__name__)
+
+        # Check if Equation 45 from Shinozuka and Deodatis 1991 is satisfied
+        frequency_cutoff = self.frequency_interval * self.n_frequency_intervals
+        max_time_interval = 2 * np.pi / (2 * frequency_cutoff)
+        if (self.time_interval > max_time_interval).any():
+            raise RuntimeError(
+                "UQpy: time_interval greater than pi / cutoff_frequency. Aliasing might occur during execution."
+            )
+
+        if (self.n_samples is None) and (self.phase_angles is not None):
+            raise RuntimeError(
+                "UQpy: Specifying `phase_angles` without `n_samples` may cause unintended results."
+                "Either specify both on initialization or both via the `run` method."
+            )
 
         if self.n_samples is not None:
             self.run(n_samples=self.n_samples, phase_angles=self.phase_angles)
@@ -119,22 +123,28 @@ class SpectralRepresentation:
         the :class:`.SpectralRepresentation` class.
         """
         self.n_samples = n_samples
+        if phase_angles is None:
+            phase_angles = np.random.uniform(
+                low=0,
+                high=2 * np.pi,
+                size=[
+                    self.n_samples,
+                    self.n_variables,
+                    *self.n_frequency_intervals,
+                ],
+            )
+
         if self.n_variables == 1:  # uni-variate case
             self.logger.info(
-                "UQpy: Stochastic Process: Starting simulation of uni-variate Stochastic Processes."
+                "UQpy: Stochastic Process: Starting simulation of uni-variate Spectral Representation Method."
             )
             self.logger.info(
                 f"UQpy: Stochastic Process: The number of dimensions is {self.n_dimensions}",
             )
-            if phase_angles is None:
-                size = np.append(
-                    self.n_samples, self.n_frequency_intervals
-                )  # ToDo: Double check the shape of this array
-                phase_angles = np.random.uniform(low=0, high=2 * np.pi, size=size)
             samples = self._simulate_univariate(phase_angles)
         else:  # multi-variate case
             self.logger.info(
-                "UQpy: Stochastic Process: Starting simulation of multi-variate Stochastic Processes."
+                "UQpy: Stochastic Process: Starting simulation of multi-variate Spectral Representation Method."
             )
             self.logger.info(
                 f"UQpy: Stochastic Process: The number of variables is {self.n_variables}:"
@@ -142,24 +152,26 @@ class SpectralRepresentation:
             self.logger.info(
                 f"UQpy: Stochastic Process: The number of dimensions is {self.n_dimensions}:"
             )
-            if phase_angles is None:
-                size = np.append(
-                    self.n_samples,
-                    np.append(self.n_frequency_intervals, self.n_variables),
-                )  # ToDo: Double check the shape of this array
-                phase_angles = np.random.uniform(low=0, high=2 * np.pi, size=size)
+            # if phase_angles is None:
+            #     size = np.append(
+            #         self.n_samples,
+            #         np.append(self.n_frequency_intervals, self.n_variables),
+            #     )
+            #     phase_angles = np.random.uniform(low=0, high=2 * np.pi, size=size)
             samples = self._simulate_multivariate(phase_angles)
 
         if self.samples is None:
             self.samples = samples
         else:
             self.samples = np.concatenate((self.samples, samples), axis=0)
+
         if self.phase_angles is None:
             self.phase_angles = phase_angles
         else:
             self.phase_angles = np.concatenate(
                 (self.phase_angles, phase_angles), axis=0
             )
+
         self.logger.info(
             "UQpy: Stochastic Process: Spectral Representation Method Complete."
         )
@@ -170,17 +182,23 @@ class SpectralRepresentation:
         :param phase_angles: Phase angles :math:`\Phi` used in the spectral representation method
         :return: Random samples computed using spectral representation method
         """
-        fourier_coefficient = np.exp(phase_angles * 1.0j) * np.sqrt(
-            2 ** (self.n_dimensions + 1)
-            * self.power_spectrum
-            * np.prod(self.frequency_interval)
+        # fourier_coefficient = (
+        #     2
+        #     * np.exp(phase_angles * 1.0j)
+        #     * np.sqrt(
+        #         # 2 ** (self.n_dimensions + 1)  # ToDo: Is there any reason this should scale with dimension?
+        #         self.power_spectrum
+        #         * np.prod(self.frequency_interval)
+        #     )
+        # )
+        fourier_coefficient = np.sqrt(self.power_spectrum) * np.exp(phase_angles * 1.0j)
+        samples = np.real(np.fft.ifftn(fourier_coefficient, s=self.n_time_intervals))
+        time_domain_coefficient = (
+            2
+            * np.prod(self.n_time_intervals)
+            * np.sqrt(np.prod(self.frequency_interval))
         )
-        samples = np.prod(self.n_time_intervals) * np.fft.ifftn(
-            fourier_coefficient, s=self.n_time_intervals
-        )
-        samples = np.real(samples)
-        samples = samples[:, np.newaxis]
-        return samples
+        return time_domain_coefficient * samples
 
     def _simulate_multivariate(self, phase_angles: np.ndarray) -> np.ndarray:
         """Simulate multivariate random process using spectral representation method
