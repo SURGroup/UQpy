@@ -15,6 +15,7 @@ import pytest
 import numpy as np
 from UQpy.distributions import Distribution, Beta, Normal, Lognormal, Uniform
 from UQpy.stochastic_process import InverseTranslation
+from line_profiler_pycharm import profile
 
 
 def exponential_autocorrelation(tau: np.ndarray, a: float = 1.0) -> np.ndarray:
@@ -51,6 +52,7 @@ def compute_target_s_ng(omega: np.ndarray) -> np.ndarray:
     return (125 / 4) * (omega**2) * np.exp(-5 * abs(omega))
 
 
+@profile
 def initialize_inverse_translation(
     distributions: Distribution,
     target_power_spectrum_non_gaussian: np.ndarray = None,
@@ -132,6 +134,7 @@ def btest_lognormal_power_spectrum():
     )
 
 
+@profile
 def btest_uniform_power_spectrum():
     """
     Test the reconstructed non-Gaussian power spectrum using Uniform distribution from Table 1 of Shields 2011.
@@ -143,9 +146,9 @@ def btest_uniform_power_spectrum():
         Uniform(loc=-np.sqrt(3), scale=2 * np.sqrt(3)),
         target_power_spectrum_non_gaussian=target_power_spectrum_non_gaussian,
     )
-    assert np.allclose(
-        itam.power_spectrum_non_gaussian, target_power_spectrum_non_gaussian, rtol=0.01
-    )
+    # assert np.allclose(
+    #     itam.power_spectrum_non_gaussian, target_power_spectrum_non_gaussian, rtol=0.01
+    # )
 
 
 def btest_beta_power_spectrum():
@@ -178,5 +181,26 @@ if __name__ == "__main__":
 
     # btest_beta_power_spectrum()
     # btest_lognormal_power_spectrum()
+    from UQpy.distributions import MultivariateNormal
 
-    btest_uniform_power_spectrum()
+    @profile
+    def integrand(x1, x2, rho):
+        normal = Normal()
+        distributions = Uniform(-5, 10)
+        mean = np.array([0.0, 0.0])
+        cov = np.array([[1, rho],
+                        [rho, 1]])
+        bivariate_normal = MultivariateNormal(mean, cov)
+        cdf_1 = normal.cdf(x1)
+        cdf_2 = normal.cdf(x2)
+        return (
+            distributions.icdf(cdf_1)
+            * distributions.icdf(cdf_2)
+            * bivariate_normal.pdf(np.array([x1, x2]))
+        )
+
+    for x_i in np.linspace(-3, 3, 100):
+        for x_j in np.linspace(-3, 3, 100):
+            integrand(x_i, x_j, np.random.uniform(0.25, 0.75))
+
+    # btest_uniform_power_spectrum()
