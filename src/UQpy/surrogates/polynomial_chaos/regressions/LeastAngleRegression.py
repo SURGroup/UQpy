@@ -45,7 +45,7 @@ class LeastAngleRegression(Regression):
         n_samples, inputs_number = x.shape
 
         reg = regresion.Lars(fit_intercept=self.fit_intercept, verbose=self.verbose,
-                             n_nonzero_coefs=self.n_nonzero_coefs, normalize=self.normalize)
+                             n_nonzero_coefs=self.n_nonzero_coefs)
         reg.fit(design_matrix, y)
 
         # LarsBeta = reg.coef_path_

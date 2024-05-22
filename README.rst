@@ -13,27 +13,31 @@
    :alt: bear-ified
 
 
-*******************************************
+**********************************************
 Uncertainty Quantification with python (UQpy)
-*******************************************
+**********************************************
 
 |logo|
 
-====
+================================================================================================
 
-+-----------------------+------------------------------------------------------------------+
-| **Product Owner:**    | Michael D. Shields                                               |
-+-----------------------+------------------------------------------------------------------+
-| **Lead Developers:**  | Dimitris Giovanis, Audrey Olivier, Dimitris Tsapetis             |
-+-----------------------+------------------------------------------------------------------+
-| **Development Team:** | Aakash Bangalore Satish, Mohit Singh Chauhan, Lohit Vandanapu,   |
-+                       +                                                                  +
-|                       | Ketson RM dos Santos, Katiana Kontolati, Dimitris Loukrezis,     |
-+                       +                                                                  +
-|                       | Promit Chakroborty, Lukáš Novák, Andrew Solanto, Connor Krill    |
-+-----------------------+------------------------------------------------------------------+
-| **Contributors:**     | Michael Gardner, Prateek Bhustali, Julius Schultz, Ulrich Römer  |
-+-----------------------+------------------------------------------------------------------+
+.. list-table:: 
+   :widths: 100, 200 
+   :header-rows: 0
+
+   * - **Product Owner:**
+     - Michael D. Shields
+
+   * - **Lead Developers:**
+     - Dimitris Giovanis, Audrey Olivier, Dimitris Tsapetis
+
+   * - **Development Team:**
+     - Aakash Bangalore Satish, Mohit Singh Chauhan, Lohit Vandanapu, Ketson RM dos Santos, Katiana Kontolati, Dimitris Loukrezis, Promit Chakroborty, Lukáš Novák, Andrew Solanto, Connor Krill
+
+   * - **Contributors:**
+     - Michael Gardner, Prateek Bhustali, Julius Schultz, Ulrich Römer
+     
+
 
 Contact
 ===========
@@ -54,7 +58,7 @@ Website:
            https://uqpyproject.readthedocs.io
 
 Dependencies
-===========
+===============
 
             * ::
             
@@ -65,7 +69,7 @@ License
 ===========
 UQpy is distributed under the MIT license
 
-Copyright (C) <2018> <Michael D. Shields>
+Copyright (C) <2024> <Michael D. Shields>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -75,7 +79,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 
 Installation
-===========
+===============
 
 From PyPI
 
@@ -109,13 +113,13 @@ Olivier, A., Giovanis, D.G., Aakash, B.S., Chauhan, M., Vandanapu, L., and Shiel
 
 
 Help and Support
-===========
+==================
 
 For assistance with the UQpy software package, please raise an issue on the Github Issues page. Please use the appropriate labels to indicate which module you are specifically inquiring about.
 
 .. |logo| image:: logo.jpg
-    :scale: 25 %
-    :target: https://gihub.com/SURGroup/UQpy
+    :height: 250px
+    :target: https://github.com/SURGroup/UQpy
     
     
 
