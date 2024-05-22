@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import integrate
-from UQpy.distributions import Distribution, Normal
+from UQpy.distributions import Distribution, Normal, MultivariateNormal
 from UQpy.utilities import *
 from UQpy.utilities.ValidationTypes import PositiveFloat
 from UQpy.stochastic_process.supportive import (
@@ -151,10 +151,12 @@ class InverseTranslation:
         normal = Normal(scale=float(variance_ng))
 
         def integrand(x1, x2, rho):
+            cov = np.array([[var, rho], [rho, var]])
+            bivariate_normal = MultivariateNormal(np.array([0., 0.]), cov)
             return (
                 self.distributions.icdf(normal.cdf(x1))
                 * self.distributions.icdf(normal.cdf(x2))
-                * self._bivariate_normal_pdf(x1, x2, rho, sigma_squared=var)
+                * bivariate_normal.pdf(np.array([x1, x2]))
             )
 
         bounds = 4
@@ -167,7 +169,7 @@ class InverseTranslation:
             )
             var = R_g_iterate[0]
             for j in range(len(target_R)):
-                R_ng_iterate[j], _ = integrate.dblquad(  # ToDo: should this be a n-dimensional scipy.integrate.nquad integral
+                R_ng_iterate[j], _ = integrate.dblquad(
                     lambda x1, x2: integrand(x1, x2, rho=R_g_iterate[j] / var),
                     -bounds,
                     bounds,
@@ -204,20 +206,19 @@ class InverseTranslation:
             self.logger.warning("UQpy: Stochastic Process: InverseTranslation may have undesirably large error")
         return S_g_iterate, S_ng_iterate
 
-    def _bivariate_normal_pdf(
-        self, x1: float, x2: float, rho: float, sigma_squared: float = 1.0
-    ) -> np.ndarray:
-        """The probability density function of a zero-mean bivariate normal distribution with correlation ``rho``
-        ToDo: can this be replaced with the UQpy.distributions bivariate normal pdf
-        As defined by Equation 17 of Shields 2011
-
-        :param x1: First coordinate
-        :param x2: Second coordinate
-        :param rho: Normalized correlation function
-        :return: :math:`\phi(x_1, x_2; \rho)`
-        """
-        rho = np.clip(rho, -0.999, 0.999)
-        coefficient = 1 / (2 * np.pi * sigma_squared * np.sqrt(1 - rho**2))
-        numerator = x1**2 + x2**2 - (2 * rho * x1 * x2)
-        denominator = 2 * sigma_squared * (1 - rho)
-        return coefficient * np.exp(-numerator / denominator)
+    # def _bivariate_normal_pdf(
+    #     self, x1: float, x2: float, rho: float, sigma_squared: float = 1.0
+    # ) -> np.ndarray:
+    #     """The probability density function of a zero-mean bivariate normal distribution with correlation ``rho``
+    #     As defined by Equation 17 of Shields 2011
+    #
+    #     :param x1: First coordinate
+    #     :param x2: Second coordinate
+    #     :param rho: Normalized correlation function
+    #     :return: :math:`\phi(x_1, x_2; \rho)`
+    #     """
+    #     rho = np.clip(rho, -0.999, 0.999)
+    #     coefficient = 1 / (2 * np.pi * sigma_squared * np.sqrt(1 - rho**2))
+    #     numerator = x1**2 + x2**2 - (2 * rho * x1 * x2)
+    #     denominator = 2 * sigma_squared * (1 - rho)
+    #     return coefficient * np.exp(-numerator / denominator)
