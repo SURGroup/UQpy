@@ -6,6 +6,7 @@ from UQpy.distributions.baseclass import DistributionContinuous1D
 from UQpy.utilities.ValidationTypes import NumericArrayLike
 from line_profiler_pycharm import profile
 
+
 @beartype
 class Uniform(DistributionContinuous1D):
     def __init__(
