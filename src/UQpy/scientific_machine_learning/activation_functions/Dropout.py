@@ -35,7 +35,7 @@ class _Dropout(ABC, ActivationFunction):
         self.dropping = mode
 
     def extra_repr(self) -> str:
-        return f"p={self.p}, inplace={self.inplace}"
+        return f"p={self.p}, inplace={self.inplace}, dropping={self.dropping}"
 
 
 class Dropout(_Dropout):
