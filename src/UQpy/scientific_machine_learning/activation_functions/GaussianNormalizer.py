@@ -5,12 +5,12 @@ from UQpy.utilities.ValidationTypes import PositiveFloat
 
 @beartype
 class GaussianNormalizer:
-    def __init__(self, x: torch.Tensor, epsilon: PositiveFloat = 1e-5, **kwargs):
+    def __init__(self, x: torch.Tensor, epsilon: PositiveFloat = 1e-8, **kwargs):
         """Scale the tensor ``x`` to follow a standard normal distribution
 
         :param x: Input tensor
-        :param epsilon: Small number to add to standard deviation for numerical stability
-        :param kwargs: Keyword arguments for ``torch.mean`` and ``torch.sum``
+        :param epsilon: Small number added to standard deviation for numerical stability
+        :param kwargs: Keyword arguments for ``torch.mean`` and ``torch.std``
         """
         self.x = x
         self.epsilon = epsilon
@@ -30,6 +30,6 @@ class GaussianNormalizer:
         """Restore the tensor ``y`` as ``x = (y * (std + epsilon)) + mean``
 
         :param y: Normalized tensor
-        :return: Restore tensor
+        :return: Restored tensor
         """
         return (y * (self.standard_deviation + self.epsilon)) + self.mean
