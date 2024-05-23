@@ -8,18 +8,18 @@ from UQpy.utilities.ValidationTypes import PositiveInteger
 # @beartype
 class BayesianConvLayer(Layer):
     def __init__(
-            self,
-            in_channels: PositiveInteger,
-            out_channels: PositiveInteger,
-            kernel_size: PositiveInteger,
-            function: nn.Module = F.conv2d,
-            stride: PositiveInteger = 1,
-            padding=0,
-            dilation=1,
-            bias: bool = True,
-            priors: dict = None,
-            sampling: bool = True,
-            **kwargs,
+        self,
+        in_channels: PositiveInteger,
+        out_channels: PositiveInteger,
+        kernel_size: PositiveInteger,
+        function: nn.Module = F.conv2d,
+        stride: PositiveInteger = 1,
+        padding=0,
+        dilation=1,
+        bias: bool = True,
+        priors: dict = None,
+        sampling: bool = True,
+        **kwargs,
     ):
         """Construct a Bayesian layer with weights and bias set by I.I.D. Normal distributions
 
@@ -65,8 +65,12 @@ class BayesianConvLayer(Layer):
         self.posterior_mu_initial = priors["posterior_mu_initial"]
         self.posterior_rho_initial = priors["posterior_rho_initial"]
 
-        self.weight_mu = nn.Parameter(torch.empty((out_channels, in_channels, *self.kernel_size)))
-        self.weight_sigma = nn.Parameter(torch.empty((out_channels, in_channels, *self.kernel_size)))
+        self.weight_mu = nn.Parameter(
+            torch.empty((out_channels, in_channels, *self.kernel_size))
+        )
+        self.weight_sigma = nn.Parameter(
+            torch.empty((out_channels, in_channels, *self.kernel_size))
+        )
         if self.bias:
             self.bias_mu = nn.Parameter(torch.empty(out_channels))
             self.bias_sigma = nn.Parameter(torch.empty(out_channels))
@@ -90,7 +94,7 @@ class BayesianConvLayer(Layer):
         :return: Output tensor
         """
         if (
-                self.training or self.sampling
+            self.training or self.sampling
         ):  # Randomly sample weights and biases from normal distribution
             weight_epsilon = torch.empty(self.weight_mu.size()).normal_(0, 1)
             w_sigma = torch.log1p(torch.exp(self.weight_sigma))
@@ -105,7 +109,9 @@ class BayesianConvLayer(Layer):
             weights = self.weight_mu
             biases = self.bias_mu if self.bias else None
 
-        return self.function(x, weights, biases, self.stride, self.padding, self.dilation, self.groups)
+        return self.function(
+            x, weights, biases, self.stride, self.padding, self.dilation, self.groups
+        )
 
     def sample(self, mode: bool = True):
         """Set sampling mode.
@@ -116,5 +122,10 @@ class BayesianConvLayer(Layer):
         self.sampling = mode
 
     def extra_repr(self) -> str:
-        return (f"in_channels={self.in_channels}, out_channels={self.out_channels}, stride={self.stride}, "
-                f"padding={self.padding}, sampling={self.sampling}")
+        return (
+            f"in_channels={self.in_channels}, "
+            f"out_channels={self.out_channels}, "
+            f"stride={self.stride}, "
+            f"padding={self.padding}, "
+            f"sampling={self.sampling}"
+        )
