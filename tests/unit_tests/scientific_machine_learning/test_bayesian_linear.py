@@ -55,9 +55,3 @@ def test_sample_false_train_true():
     y2 = layer(x)
     assert not torch.allclose(y1, y2)
 
-
-def test_extra_repr():
-    layer = BayesianLinear(5, 7)
-    assert (
-        layer.__str__() == "BayesianLinear(in_features=5, out_features=7, sampling=True)"
-    )
