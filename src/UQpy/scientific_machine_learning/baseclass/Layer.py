@@ -7,5 +7,9 @@ class Layer(ABC, nn.Module):
         super().__init__(**kwargs)
 
     @abstractmethod
-    def forward(self, **kwargs):
+    def forward(self):
+        ...
+
+    @abstractmethod
+    def extra_repr(self) -> str:
         ...

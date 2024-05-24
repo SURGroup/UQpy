@@ -5,8 +5,8 @@ from abc import ABC, abstractmethod
 
 class ActivationFunction(ABC, nn.Module):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     @abstractmethod
     def forward(self, x: torch.Tensor) -> torch.Tensor:

@@ -1,18 +1,15 @@
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from beartype import beartype
-from UQpy.scientific_machine_learning.baseclass.Layer import Layer
+from UQpy.scientific_machine_learning.baseclass import BayesianLayer
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
-#@beartype
-class BayesianLinear(Layer):
+class BayesianLinear(BayesianLayer):
+
     def __init__(
         self,
         in_features: PositiveInteger,
         out_features: PositiveInteger,
-        function: nn.Module = F.linear,
         bias: bool = True,
         priors: dict = None,
         sampling: bool = True,
@@ -33,42 +30,11 @@ class BayesianLinear(Layer):
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
          If ``False``, use distribution mean as parameter values.
         """
-        super().__init__(**kwargs)
+        weight_shape = (out_features, in_features)
+        bias_shape = out_features if bias else None
+        super().__init__(weight_shape, bias_shape, priors, sampling, **kwargs)
         self.in_features = in_features
         self.out_features = out_features
-        self.bias = bias
-        self.function = function
-        self.sampling = sampling
-
-        if priors is None:
-            priors = {
-                "prior_mu": 0,
-                "prior_sigma": 0.1,
-                "posterior_mu_initial": (0, 0.1),
-                "posterior_rho_initial": (-3, 0.1),
-            }
-        self.prior_mu = priors["prior_mu"]
-        self.prior_sigma = priors["prior_sigma"]
-        self.posterior_mu_initial = priors["posterior_mu_initial"]
-        self.posterior_rho_initial = priors["posterior_rho_initial"]
-
-        self.weight_mu = nn.Parameter(torch.empty((out_features, in_features)))
-        self.weight_sigma = nn.Parameter(torch.empty((out_features, in_features)))
-        if self.bias:
-            self.bias_mu = nn.Parameter(torch.empty(out_features))
-            self.bias_sigma = nn.Parameter(torch.empty(out_features))
-        else:
-            self.bias_mu = None
-            self.bias_sigma = None
-        self._sample_parameters()
-
-    def _sample_parameters(self):
-        """Randomly populate weights and biases with samples from Normal distributions"""
-        self.weight_mu.data.normal_(*self.posterior_mu_initial)
-        self.weight_sigma.data.normal_(*self.posterior_rho_initial)
-        if self.bias:
-            self.bias_mu.data.normal_(*self.posterior_mu_initial)
-            self.bias_sigma.data.normal_(*self.posterior_rho_initial)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward model evaluation
@@ -76,31 +42,15 @@ class BayesianLinear(Layer):
         :param x: Input tensor
         :return: Output tensor
         """
-        if (
-            self.training or self.sampling
-        ):  # Randomly sample weights and biases from normal distribution
-            weight_epsilon = torch.empty(self.weight_mu.size()).normal_(0, 1)
-            w_sigma = torch.log1p(torch.exp(self.weight_sigma))
-            weights = self.weight_mu + (weight_epsilon * w_sigma)
-            if self.bias:
-                bias_epsilon = torch.empty(self.bias_mu.size()).normal_(0, 1)
-                b_sigma = torch.log1p(torch.exp(self.bias_sigma))
-                biases = self.bias_mu + (bias_epsilon * b_sigma)
-            else:
-                biases = None
-        else:  # Use mean values for weights and biases
-            weights = self.weight_mu
-            biases = self.bias_mu if self.bias else None
-
-        return self.function(x, weights, biases)
-
-    def sample(self, mode: bool = True):
-        """Set sampling mode.
-
-        :param mode: If ``True``, layer parameters are sampled from their distributions.
-         If ``False``, layer parameters are set to their means and layer acts deterministically.
-        """
-        self.sampling = mode
+        weight, bias = self.get_weight_bias()
+        return F.linear(x, weight, bias)
 
     def extra_repr(self) -> str:
-        return f"in_features={self.in_features}, out_features={self.out_features}, sampling={self.sampling}"
+        s = "{in_features}, {out_features}"
+        if not self.bias:
+            s += ", bias={bias}"
+        if self.priors:
+            s += ", priors={priors}"
+        if not self.sampling:
+            s += ", sampling={sampling}"
+        return s.format(**self.__dict__)

@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from UQpy.scientific_machine_learning.baseclass.Layer import Layer
 from UQpy.utilities.ValidationTypes import PositiveInteger
+from typing import Union
 
 
 # @beartype
@@ -11,11 +12,12 @@ class BayesianConvLayer(Layer):
         self,
         in_channels: PositiveInteger,
         out_channels: PositiveInteger,
-        kernel_size: PositiveInteger,
+        kernel_size: Union[int, tuple[int, int]],
         function: nn.Module = F.conv2d,
-        stride: PositiveInteger = 1,
-        padding=0,
-        dilation=1,
+        stride: Union[int, tuple[int, int]] = 1,
+        padding: Union[str, int, tuple[int, int]] = 0,
+        dilation: Union[int, tuple[int, int]] = 1,
+        groups: int = 1,
         bias: bool = True,
         priors: dict = None,
         sampling: bool = True,
@@ -27,6 +29,13 @@ class BayesianConvLayer(Layer):
         :param out_channels: Size of each output channels
         :param kernel_size: Size of kernel
         :param function: Function to apply to the input on ``self.forward``
+        :param stride:  Controls the stride for the cross-correlation
+        :param padding: controls the amount of padding applied to the input.
+         It can be a string ``"valid"`` or ``"same"``, an integer, or a tuple of integers giving the amount of implicit padding applied on both sides.
+        :param dilation: Controls the spacing between the kernel points; also known as the à trous algorithm.
+         It is harder to describe, but this [link](https://github.com/vdumoulin/conv_arithmetic/blob/master/README.md) has a nice visualization of what dilation does.
+        :param groups: Controls the connections between inputs and outputs.
+         ``in_channels`` and ``out_channels`` must both be divisible by ``groups``.
         :param bias: If set to ``False``, the layer will not learn an additive bias. Default: ``True``
         :param priors: Prior and posterior distribution parameters. The dictionary keys and their default values are:
 
@@ -36,6 +45,7 @@ class BayesianConvLayer(Layer):
          - ``priors["posterior_rho_initial"]`` = ``(-3, 0.1)``
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
          If ``False``, use distribution mean as parameter values.
+
         """
         super().__init__(**kwargs)
         self.in_channels = in_channels
@@ -48,7 +58,7 @@ class BayesianConvLayer(Layer):
         self.stride = stride
         self.padding = padding
         self.dilation = dilation
-        self.groups = 1
+        self.groups = groups
         self.bias = bias
         self.function = function
         self.sampling = sampling
