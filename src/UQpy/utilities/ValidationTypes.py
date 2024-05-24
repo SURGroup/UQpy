@@ -5,6 +5,7 @@ from beartype.vale import Is
 
 RandomStateType = Union[None, int, np.random.RandomState]
 PositiveInteger = Annotated[int, Is[lambda number: number > 0]]
+NonNegativeInteger = Annotated[int, Is[lambda number: number >= 0]]
 PositiveFloat = Annotated[float, Is[lambda number: number > 0]]
 Numpy2DFloatArray = Annotated[
     np.ndarray,
