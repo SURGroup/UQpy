@@ -10,7 +10,6 @@ class SpectralConv1d(Layer):
         :param in_channels:
         :param out_channels:
         :param modes:  Number of Fourier modes to multiply, at most floor(N/2) + 1
-        :param kwargs:
         """
         super().__init__(**kwargs)
         self.in_channels = in_channels
@@ -50,7 +49,6 @@ class SpectralConv1d(Layer):
             batchsize,
             self.out_channels,
             x.size(-1) // 2 + 1,
-            device=x.device,
             dtype=torch.cfloat,
         )
         out_ft[:, :, : self.modes] = self.complex_multiplication(
@@ -60,3 +58,6 @@ class SpectralConv1d(Layer):
         # Return to physical space
         x = torch.fft.irfft(out_ft, n=x.size(-1))
         return x
+
+    def extra_repr(self) -> str:
+        return f"in_channels={self.in_channels}, out_channels={self.out_channels}, modes={self.modes}"
