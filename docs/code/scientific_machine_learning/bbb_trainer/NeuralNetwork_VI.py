@@ -5,7 +5,7 @@ from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 
 # UQpy imports
-from UQpy.scientific_machine_learning.layers import BayesianLayer
+from UQpy.scientific_machine_learning.layers import BayesianLinear
 from UQpy.scientific_machine_learning.neural_networks import FeedForwardNeuralNetwork
 from UQpy.scientific_machine_learning.trainers import BBBTrainer
 
@@ -16,15 +16,15 @@ logger.setLevel(logging.INFO)
 
 width = 20
 network = nn.Sequential(
-    BayesianLayer(1, width),
+    BayesianLinear(1, width),
     nn.ReLU(),
-    BayesianLayer(width, width),
+    BayesianLinear(width, width),
     nn.ReLU(),
-    BayesianLayer(width, width),
+    BayesianLinear(width, width),
     nn.ReLU(),
-    BayesianLayer(width, width),
+    BayesianLinear(width, width),
     nn.ReLU(),
-    BayesianLayer(width, 1),
+    BayesianLinear(width, 1),
 )
 model = FeedForwardNeuralNetwork(network)
 

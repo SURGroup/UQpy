@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 from UQpy.scientific_machine_learning.neural_networks import DeepOperatorNetwork
 from UQpy.scientific_machine_learning.trainers import BBBTrainer
-from UQpy.scientific_machine_learning.layers.BayesianLayer import BayesianLayer
+from UQpy.scientific_machine_learning.layers.BayesianLinear import BayesianLinear
 from UQpy.scientific_machine_learning.layers.BayesianConvLayer import BayesianConvLayer
 from dataset import load_data
 
@@ -32,7 +32,7 @@ priors = {
 class BranchNet(nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fnn = nn.Sequential(BayesianLayer(101, 100, priors=priors), nn.Tanh())
+        self.fnn = nn.Sequential(BayesianLinear(101, 100, priors=priors), nn.Tanh())
         self.conv_layers = nn.Sequential(
             BayesianConvLayer(1, 16, (5, 5), padding="same", priors=priors),
             nn.AvgPool2d(2, 1, padding=0),
@@ -45,11 +45,11 @@ class BranchNet(nn.Module):
         )
         self.dnn = nn.Sequential(
             nn.Flatten(),
-            BayesianLayer(64 * 6 * 6, 512, priors=priors),
+            BayesianLinear(64 * 6 * 6, 512, priors=priors),
             nn.Tanh(),
-            BayesianLayer(512, 512, priors=priors),
+            BayesianLinear(512, 512, priors=priors),
             nn.Tanh(),
-            BayesianLayer(512, 200, priors=priors),
+            BayesianLinear(512, 200, priors=priors),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -64,13 +64,13 @@ class TrunkNet(nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fnn = nn.Sequential(
-            BayesianLayer(2, 128, priors=priors),
+            BayesianLinear(2, 128, priors=priors),
             nn.Tanh(),
-            BayesianLayer(128, 128, priors=priors),
+            BayesianLinear(128, 128, priors=priors),
             nn.Tanh(),
-            BayesianLayer(128, 128, priors=priors),
+            BayesianLinear(128, 128, priors=priors),
             nn.Tanh(),
-            BayesianLayer(128, 200, priors=priors),
+            BayesianLinear(128, 200, priors=priors),
             nn.Tanh(),
         )
         self.Xmin = np.array([0.0, 0.0]).reshape((-1, 2))

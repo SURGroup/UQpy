@@ -7,7 +7,7 @@ from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
 #@beartype
-class BayesianLayer(Layer):
+class BayesianLinear(Layer):
     def __init__(
         self,
         in_features: PositiveInteger,

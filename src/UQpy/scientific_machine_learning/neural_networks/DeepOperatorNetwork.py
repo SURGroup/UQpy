@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import logging
 from UQpy.scientific_machine_learning.baseclass.NeuralNetwork import NeuralNetwork
-from UQpy.scientific_machine_learning.layers import BayesianLayer, BayesianConvLayer
+from UQpy.scientific_machine_learning.layers import BayesianLinear, BayesianConvLayer
 from UQpy.scientific_machine_learning.baseclass.NeuralNetwork import gaussian_kullback_leibler_divergence
 
 
@@ -77,7 +77,7 @@ class DeepOperatorNetwork(NeuralNetwork):
         """
         kl = 0
         for layer in self.branch_network.modules():
-            if isinstance(layer, BayesianLayer) or isinstance(layer, BayesianConvLayer):
+            if isinstance(layer, BayesianLinear) or isinstance(layer, BayesianConvLayer):
                 kl += gaussian_kullback_leibler_divergence(
                     layer.weight_mu,
                     torch.log1p(torch.exp(layer.weight_sigma)),
@@ -92,7 +92,7 @@ class DeepOperatorNetwork(NeuralNetwork):
                         layer.prior_sigma,
                     )
         for layer in self.trunk_network.modules():
-            if isinstance(layer, BayesianLayer) or isinstance(layer, BayesianConvLayer):
+            if isinstance(layer, BayesianLinear) or isinstance(layer, BayesianConvLayer):
                 kl += gaussian_kullback_leibler_divergence(
                     layer.weight_mu,
                     torch.log1p(torch.exp(layer.weight_sigma)),

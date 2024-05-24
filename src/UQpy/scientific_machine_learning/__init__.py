@@ -1,4 +1,4 @@
-from UQpy.scientific_machine_learning.layers import BayesianLayer, BayesianConvLayer, Dropout
+from UQpy.scientific_machine_learning.layers import BayesianLinear, BayesianConvLayer, Dropout
 from UQpy.scientific_machine_learning.neural_networks import (
     FeedForwardNeuralNetwork,
     DeepOperatorNetwork,

@@ -1,5 +1,5 @@
 from UQpy.scientific_machine_learning.layers.Dropout import Dropout
-from UQpy.scientific_machine_learning.layers.BayesianLayer import BayesianLayer
+from UQpy.scientific_machine_learning.layers.BayesianLinear import BayesianLinear
 from UQpy.scientific_machine_learning.layers.BayesianConvLayer import BayesianConvLayer
 from UQpy.scientific_machine_learning.layers.ProbabilisticLayer import (
     ProbabilisticLayer,

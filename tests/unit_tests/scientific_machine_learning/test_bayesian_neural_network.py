@@ -5,12 +5,12 @@ from hypothesis.strategies import integers
 from UQpy.scientific_machine_learning.neural_networks.BayesianNeuralNetwork import (
     BayesianNeuralNetwork,
 )
-from UQpy.scientific_machine_learning.layers.BayesianLayer import BayesianLayer
+from UQpy.scientific_machine_learning.layers.BayesianLinear import BayesianLinear
 
 
 @given(integers(min_value=1, max_value=1_000), integers(min_value=1, max_value=1_000))
 def test_output_shape(in_features, out_features):
-    model = BayesianNeuralNetwork(BayesianLayer(in_features, out_features))
+    model = BayesianNeuralNetwork(BayesianLinear(in_features, out_features))
     x = torch.ones((in_features,))
     assert model(x).shape == torch.Size([out_features])
 
@@ -20,11 +20,11 @@ def test_deterministic_output():
     width = 5
     out_features = 200
     network = nn.Sequential(
-        BayesianLayer(in_features, width),
+        BayesianLinear(in_features, width),
         nn.ReLU(),
         nn.Linear(width, width),
         nn.ReLU(),
-        BayesianLayer(width, out_features),
+        BayesianLinear(width, out_features),
     )
     model = BayesianNeuralNetwork(network)
     model.train(False)
@@ -41,11 +41,11 @@ def test_probabilistic_output():
     width = 7
     out_features = 3
     network = nn.Sequential(
-        BayesianLayer(in_features, width),
+        BayesianLinear(in_features, width),
         nn.ReLU(),
         nn.Linear(width, width),
         nn.ReLU(),
-        BayesianLayer(width, out_features),
+        BayesianLinear(width, out_features),
     )
     model = BayesianNeuralNetwork(network)
     model.train(False)
