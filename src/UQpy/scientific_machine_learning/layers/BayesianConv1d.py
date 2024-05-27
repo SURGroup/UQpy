@@ -62,3 +62,6 @@ class BayesianConv1d(BayesianLayer):
         return F.conv1d(
             x, weight, bias, self.stride, self.padding, self.dilation, self.groups
         )
+
+    def extra_repr(self) -> str:
+        return ""

@@ -1,6 +1,8 @@
 Neural Network Layers
 ---------------------
 
+This is a placeholder for documentation on neural network layers.
+
 Layer Baseclass
 ^^^^^^^^^^^^^^^
 
@@ -16,10 +18,14 @@ Methods
 .. autoclass:: UQpy.scientific_machine_learning.baseclass.Layer
     :members: forward
 
+------
+
+List of Layers
+^^^^^^^^^^^^^^
 
 .. toctree::
    :maxdepth: 1
-   :caption: Neural Network Layers
 
-    Bayesian <bayesian>
+    Bayesian Parent Class <bayesian_parent>
+    Bayesian Layers <bayesian_layers>
     Spectral Convolution <spectral_conv_1d>

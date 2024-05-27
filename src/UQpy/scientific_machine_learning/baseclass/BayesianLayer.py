@@ -1,43 +1,71 @@
 import torch
 import torch.nn as nn
 from UQpy.scientific_machine_learning.baseclass.Layer import Layer
+from abc import ABC, abstractmethod
+from typing import Union
 
 
-class BayesianLayer(Layer):
+class BayesianLayer(Layer, ABC):
     def __init__(self, weight_shape, bias_shape, priors, sampling=True, **kwargs):
-        """
+        """Initialize the random variables governing the parameters of the layer.
 
         :param weight_shape: Shape of the weight_mu and weight_sigma matrices
-        :param bias_shape: Shpe of the bias_mu and bias_sigma matrices
-        :param priors: Parameters for prior and posterior distributions
-        :param sampling:
+        :param bias_shape: Shape of the bias_mu and bias_sigma matrices
+        :param priors: Prior and posterior distribution parameters.
+        The dictionary keys and their default values are:
+
+        .. list-table::
+           :widths: 50 35 25
+           :header-rows: 1
+
+           * - Key
+             - Type
+             - Default
+           * - ``"prior_mu"``
+             - float
+             - 0.0
+           * - ``"prior_sigma"``
+             - float
+             - 0.1
+           * - ``"posterior_mu_initial"``
+             - tuple[float, float]
+             - (0.0, 0.1)
+           * - ``"posterior_rho_initial"``
+             - tuple[float, float]
+             - (-3.0, 0.1)
+
+
+        :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
+         If ``False``, use distribution mean as parameter values. Default: ``True``
         """
         super().__init__(**kwargs)
         self.sampling = sampling
         self.priors = priors
         if self.priors is None:
             priors = {
-                "prior_mu": 0,
+                "prior_mu": 0.0,
                 "prior_sigma": 0.1,
-                "posterior_mu_initial": (0, 0.1),
-                "posterior_rho_initial": (-3, 0.1),
+                "posterior_mu_initial": (0.0, 0.1),
+                "posterior_rho_initial": (-3.0, 0.1),
             }
-        self.prior_mu = priors["prior_mu"]
-        self.prior_sigma = priors["prior_sigma"]
-        self.posterior_mu_initial = priors["posterior_mu_initial"]
-        self.posterior_rho_initial = priors["posterior_rho_initial"]
+        self.prior_mu: float = priors["prior_mu"]
+        self.prior_sigma: float = priors["prior_sigma"]
+        self.posterior_mu_initial: tuple[float, float] = priors["posterior_mu_initial"]
+        self.posterior_rho_initial: tuple[float, float] = priors[
+            "posterior_rho_initial"
+        ]
 
-        self.weight_mu = nn.Parameter(torch.empty(weight_shape))
-        self.weight_sigma = nn.Parameter(torch.empty(weight_shape))
+        self.weight_mu: nn.Parameter = nn.Parameter(torch.empty(weight_shape))
+        self.weight_sigma: nn.Parameter = nn.Parameter(torch.empty(weight_shape))
 
-        self.bias = True if bias_shape else False
+        self.bias: bool = True if bias_shape else False
+        self.bias_mu: Union[None, nn.Parameter] = None
+        self.bias_sigma: Union[None, nn.Parameter] = None
         if self.bias:
             self.bias_mu = nn.Parameter(torch.empty(bias_shape))
             self.bias_sigma = nn.Parameter(torch.empty(bias_shape))
-        else:
-            self.bias_mu = None
-            self.bias_sigma = None
-        self._sample_parameters()
+
+        self.sample_parameters()
 
     def sample(self, mode: bool = True):
         """Set sampling mode.
@@ -47,8 +75,10 @@ class BayesianLayer(Layer):
         """
         self.sampling = mode
 
-    def _sample_parameters(self):
-        """Randomly populate weights and biases with samples from Normal distributions"""
+    def sample_parameters(self):
+        """Randomly populate ``weight_mu`` and ``weight_sigma`` with samples from Normal distributions.
+        If ``bias`` is ``True``, populate ``bias_mu`` and ``bias_sigma`` with samples from Normal distributions.
+        """
         self.weight_mu.data.normal_(*self.posterior_mu_initial)
         self.weight_sigma.data.normal_(*self.posterior_rho_initial)
         if self.bias:
@@ -56,9 +86,12 @@ class BayesianLayer(Layer):
             self.bias_sigma.data.normal_(*self.posterior_rho_initial)
 
     def get_weight_bias(self) -> tuple[torch.Tensor, torch.Tensor]:
-        """
+        """Get the weights and biases for the layer.
 
-        :return:
+        If ``training`` or ``sampling`` is ``True``, then sample weights and biases from their respective distributions.
+        Otherwise, use distribution means for weights and biases.
+
+        :return: weights, biases
         """
         if (
             self.training or self.sampling
@@ -77,8 +110,10 @@ class BayesianLayer(Layer):
             biases = self.bias_mu if self.bias else None
         return weights, biases
 
+    @abstractmethod
     def forward(self, *args, **kwargs):
         pass
 
+    @abstractmethod
     def extra_repr(self):
         pass

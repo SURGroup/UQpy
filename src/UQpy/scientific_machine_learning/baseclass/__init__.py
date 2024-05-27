@@ -1,5 +1,6 @@
 from UQpy.scientific_machine_learning.baseclass.ActivationFunction import ActivationFunction
 from UQpy.scientific_machine_learning.baseclass.BayesianLayer import BayesianLayer
+from UQpy.scientific_machine_learning.baseclass.DropoutActivationFunction import DropoutActivationFunction
 from UQpy.scientific_machine_learning.baseclass.Layer import Layer
 from UQpy.scientific_machine_learning.baseclass.Loss import Loss
 from UQpy.scientific_machine_learning.baseclass.NeuralNetwork import NeuralNetwork
