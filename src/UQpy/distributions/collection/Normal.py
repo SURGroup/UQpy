@@ -2,7 +2,7 @@ from typing import Union
 import numpy as np
 import scipy.stats as stats
 from beartype import beartype
-from scipy.special import erf
+from scipy.special import erf, erfinv
 from UQpy.distributions.baseclass import DistributionContinuous1D
 from UQpy.utilities.ValidationTypes import NumericArrayLike
 
@@ -21,6 +21,7 @@ class Normal(DistributionContinuous1D):
         self._construct_from_scipy(scipy_name=stats.norm)
         self.pdf = self.__probability_density_function
         self.cdf = self.__cumulative_distribution_function
+        self.icdf = self.__inverse_cumulative_distribution_function
 
     def __probability_density_function(
         self, x: NumericArrayLike
@@ -57,3 +58,20 @@ class Normal(DistributionContinuous1D):
         if isinstance(x, int) or isinstance(x, float):
             return cdf[0]
         return cdf
+
+    def __inverse_cumulative_distribution_function(
+        self, y: NumericArrayLike
+    ) -> Union[float, np.ndarray]:
+        """Compute the inverse CDF for the normal distribution with the inverse error function
+
+        :param y:
+        :return:
+        """
+        y_array = np.atleast_1d(y)
+        mean = self.parameters["loc"]
+        standard_deviation = self.parameters["scale"]
+        normalized_icdf = erfinv((2 * y_array) - 1)
+        icdf = (normalized_icdf * standard_deviation * np.sqrt(2.0)) + mean
+        if isinstance(y, int) or isinstance(y, float):
+            return icdf[0]
+        return icdf
