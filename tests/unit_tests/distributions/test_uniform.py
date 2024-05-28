@@ -62,7 +62,8 @@ def test_uniform_icdf_array(size):
     assert np.allclose(icdf, scipy_icdf, equal_nan=True)
 
 
-@given(st.floats(allow_nan=True))  # FixMe: restrict these values between 0 and
+@given(st.floats(0, 1))
 def test_uniform_icdf_cdf(x):
+    """Reconstruct x as x = icdf(cdf(x))"""
     y = uniform.icdf(uniform.cdf(x))
     assert np.allclose(x, y, equal_nan=True)

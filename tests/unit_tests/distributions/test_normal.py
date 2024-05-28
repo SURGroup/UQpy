@@ -62,7 +62,11 @@ def test_normal_icdf_array(size):
     assert np.allclose(icdf, scipy_icdf, equal_nan=True)
 
 
-@given(st.floats(allow_nan=False, allow_infinity=False))
-def test_normal_cdf_icdf(x):  # FixMe: restrict these values to += 5 standard deviations.
+@given(st.floats(-7, 7, allow_nan=False, allow_infinity=False))
+def test_normal_cdf_icdf(x):
+    """Reconstruct x as x = icdf(cdf(x))
+    Note: For +/- 7 standard deviations, UQpy and SciPy accurately reconstruct x.
+    At 8 standard deviations, both UQpy and scipy.stats.norm() begin to divergence from the correct answer
+    """
     y = normal.icdf(normal.cdf(x))
     assert np.allclose(x, y)
