@@ -4,23 +4,13 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
 
-from UQpy.scientific_machine_learning.neural_networks import DeepOperatorNetwork
-from UQpy.scientific_machine_learning.trainers import Trainer
+import UQpy.scientific_machine_learning as sml
 from dataset import load_data, rescale
 from scipy.io import savemat
-
 import logging
 
 logger = logging.getLogger("UQpy")
 logger.setLevel(logging.INFO)
-
-
-# if logger.hasHandlers():
-#     logger.removeHandler(
-#         logger.handlers[0]
-#     )  # remove existing handlers to eliminate print statements
-# file_handler = logging.FileHandler("example.log")
-# logger.addHandler(file_handler)
 
 
 class BranchNet(nn.Module):
@@ -65,7 +55,7 @@ class TrunkNet(nn.Module):
 
 branch_network = BranchNet()
 trunk_network = TrunkNet()
-model = DeepOperatorNetwork(branch_network, trunk_network, 2)
+model = sml.DeepOperatorNetwork(branch_network, trunk_network, 2)
 
 
 class ElasticityDataSet(Dataset):
@@ -85,19 +75,41 @@ class ElasticityDataSet(Dataset):
 
 
 modes = 100
-(F_train, Ux_train, Uy_train, F_test, Ux_test, Uy_test, X,
- ux_train_mean, ux_train_std, uy_train_mean, uy_train_std,
- ux_basis, uy_basis, lam_ux, lam_uy) = load_data(modes)
+(
+    F_train,
+    Ux_train,
+    Uy_train,
+    F_test,
+    Ux_test,
+    Uy_test,
+    X,
+    ux_train_mean,
+    ux_train_std,
+    uy_train_mean,
+    uy_train_std,
+    ux_basis,
+    uy_basis,
+    lam_ux,
+    lam_uy,
+) = load_data(modes)
 train_data = DataLoader(
     ElasticityDataSet(
-        np.float32(ux_basis), np.float32(uy_basis), np.float32(F_train), np.float32(Ux_train), np.float32(Uy_train)
+        np.float32(ux_basis),
+        np.float32(uy_basis),
+        np.float32(F_train),
+        np.float32(Ux_train),
+        np.float32(Uy_train),
     ),
     batch_size=100,
     shuffle=True,
 )
 test_data = DataLoader(
     ElasticityDataSet(
-        np.float32(ux_basis), np.float32(uy_basis), np.float32(F_test), np.float32(Ux_test), np.float32(Uy_test)
+        np.float32(ux_basis),
+        np.float32(uy_basis),
+        np.float32(F_test),
+        np.float32(Ux_test),
+        np.float32(Uy_test),
     ),
     batch_size=100,
     shuffle=True,
@@ -116,7 +128,7 @@ class LossFunction(nn.Module):
 
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-trainer = Trainer(model, optimizer, LossFunction())
+trainer = sml.Trainer(model, optimizer, LossFunction())
 trainer.run(train_data=train_data, test_data=test_data, epochs=100, tolerance=1e-4)
 
 
@@ -136,16 +148,44 @@ def eval_model(test_data, model):
         ux_test_list.append(ux_test)
         uy_test_list.append(uy_test)
         x_list.append(x[1][:, 0, :])
-    return torch.cat(ux_pred_list), torch.cat(uy_pred_list), torch.cat(ux_test_list), torch.cat(
-        uy_test_list), torch.cat(x_list)
+    return (
+        torch.cat(ux_pred_list),
+        torch.cat(uy_pred_list),
+        torch.cat(ux_test_list),
+        torch.cat(uy_test_list),
+        torch.cat(x_list),
+    )
 
 
 ux_pred, uy_pred, ux_test, uy_test, x_test = eval_model(test_data, model)
-ux_pred = rescale(ux_pred.detach(), np.squeeze(ux_train_mean, axis=2), np.squeeze(ux_train_std, axis=2))
-uy_pred = rescale(uy_pred.detach(), np.squeeze(uy_train_mean, axis=2), np.squeeze(uy_train_std, axis=2))
-ux_test = rescale(ux_test.detach(), np.squeeze(ux_train_mean, axis=2), np.squeeze(ux_train_std, axis=2))
-uy_test = rescale(uy_test.detach(), np.squeeze(uy_train_mean, axis=2), np.squeeze(uy_train_std, axis=2))
+ux_pred = rescale(
+    ux_pred.detach(),
+    np.squeeze(ux_train_mean, axis=2),
+    np.squeeze(ux_train_std, axis=2),
+)
+uy_pred = rescale(
+    uy_pred.detach(),
+    np.squeeze(uy_train_mean, axis=2),
+    np.squeeze(uy_train_std, axis=2),
+)
+ux_test = rescale(
+    ux_test.detach(),
+    np.squeeze(ux_train_mean, axis=2),
+    np.squeeze(ux_train_std, axis=2),
+)
+uy_test = rescale(
+    uy_test.detach(),
+    np.squeeze(uy_train_mean, axis=2),
+    np.squeeze(uy_train_std, axis=2),
+)
 
-savemat('POD_Elastic_plate.mat',
-        {'x_test': x_test.detach().numpy(), 'ux_test': ux_test.detach().numpy(), 'uy_test': uy_test.detach().numpy(),
-         'ux_pred': ux_pred.detach().numpy(), 'uy_pred': uy_pred.detach().numpy()})
+savemat(
+    "POD_Elastic_plate.mat",
+    {
+        "x_test": x_test.detach().numpy(),
+        "ux_test": ux_test.detach().numpy(),
+        "uy_test": uy_test.detach().numpy(),
+        "ux_pred": ux_pred.detach().numpy(),
+        "uy_pred": uy_pred.detach().numpy(),
+    },
+)

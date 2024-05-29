@@ -4,8 +4,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
 
-from UQpy.scientific_machine_learning.neural_networks import DeepOperatorNetwork
-from UQpy.scientific_machine_learning.trainers import Trainer
+import UQpy.scientific_machine_learning as sml
 from dataset import load_data
 
 import logging
@@ -76,7 +75,7 @@ class TrunkNet(nn.Module):
 
 branch_network = BranchNet()
 trunk_network = TrunkNet()
-model = DeepOperatorNetwork(branch_network, trunk_network, 2)
+model = sml.DeepOperatorNetwork(branch_network, trunk_network, 2)
 
 
 class ElasticityDataSet(Dataset):
@@ -136,6 +135,6 @@ class LossFunction(nn.Module):
 
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-trainer = Trainer(model, optimizer, LossFunction())
+trainer = sml.Trainer(model, optimizer, LossFunction())
 trainer.run(train_data=train_data, test_data=test_data, epochs=100, tolerance=1e-4)
 torch.save(model.state_dict(), "./DeepOnet_LE.pt")

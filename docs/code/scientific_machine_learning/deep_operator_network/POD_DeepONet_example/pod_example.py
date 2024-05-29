@@ -4,8 +4,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
 
-from UQpy.scientific_machine_learning.neural_networks import DeepOperatorNetwork
-from UQpy.scientific_machine_learning.trainers import Trainer
+import UQpy.scientific_machine_learning as sml
 from dataset import load_data
 
 import logging
@@ -23,18 +22,19 @@ logger.setLevel(logging.INFO)
 class BranchNet(nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.conv_layers = nn.Sequential(nn.Conv2d(1, 16, (8, 8), padding='same'),
-                                         nn.AvgPool2d(2, 1, padding=0),
-                                         nn.Conv2d(16, 16, (8, 8), padding='same'),
-                                         nn.AvgPool2d(2, 1, padding=0),
-                                         nn.Conv2d(16, 16, (8, 8), padding='same'),
-                                         nn.AvgPool2d(2, 1, padding=0),
-                                         nn.Conv2d(16, 16, (8, 8), padding='same'),
-                                         nn.AvgPool2d(2, 1, padding=0))
-        self.dnn = nn.Sequential(nn.Flatten(),
-                                 nn.Linear(16 * 24 * 24, 256),
-                                 nn.Tanh(),
-                                 nn.Linear(256, 180))
+        self.conv_layers = nn.Sequential(
+            nn.Conv2d(1, 16, (8, 8), padding="same"),
+            nn.AvgPool2d(2, 1, padding=0),
+            nn.Conv2d(16, 16, (8, 8), padding="same"),
+            nn.AvgPool2d(2, 1, padding=0),
+            nn.Conv2d(16, 16, (8, 8), padding="same"),
+            nn.AvgPool2d(2, 1, padding=0),
+            nn.Conv2d(16, 16, (8, 8), padding="same"),
+            nn.AvgPool2d(2, 1, padding=0),
+        )
+        self.dnn = nn.Sequential(
+            nn.Flatten(), nn.Linear(16 * 24 * 24, 256), nn.Tanh(), nn.Linear(256, 180)
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = torch.swapaxes(x, 1, 3)
@@ -54,7 +54,7 @@ class TrunkNet(nn.Module):
 
 branch_network = BranchNet()
 trunk_network = TrunkNet()
-model = DeepOperatorNetwork(branch_network, trunk_network)
+model = sml.DeepOperatorNetwork(branch_network, trunk_network)
 
 
 class PodDataSet(Dataset):
@@ -73,26 +73,22 @@ class PodDataSet(Dataset):
 
 
 modes = 180
-file_name = './data/Brusselator_data_KLE_lx_0.11_ly_0.15_v_0.15.npz'
-F_train, U_train, F_test, U_test, \
-    X, u_mean, u_std, \
-    u_basis, lam_u = load_data(modes, file_name)
+file_name = "./data/Brusselator_data_KLE_lx_0.11_ly_0.15_v_0.15.npz"
+F_train, U_train, F_test, U_test, X, u_mean, u_std, u_basis, lam_u = load_data(
+    modes, file_name
+)
 
 train_data = DataLoader(
-    PodDataSet(
-        np.float32(u_basis), np.float32(F_train), np.float32(U_train)
-    ),
+    PodDataSet(np.float32(u_basis), np.float32(F_train), np.float32(U_train)),
     batch_size=100,
     shuffle=True,
 )
 test_data = DataLoader(
-    PodDataSet(
-        np.float32(u_basis), np.float32(F_test), np.float32(U_train)
-    ),
+    PodDataSet(np.float32(u_basis), np.float32(F_test), np.float32(U_train)),
     batch_size=100,
     shuffle=True,
 )
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-trainer = Trainer(model, optimizer)
+trainer = sml.Trainer(model, optimizer)
 trainer.run(train_data=train_data, test_data=test_data, epochs=100, tolerance=1e-4)

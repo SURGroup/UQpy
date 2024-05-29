@@ -1,5 +1,4 @@
 """
-
 Training a Bayesian neural network
 =============================================================
 
@@ -18,8 +17,6 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
-
-# UQpy imports
 import UQpy.scientific_machine_learning as sml
 
 # %% md

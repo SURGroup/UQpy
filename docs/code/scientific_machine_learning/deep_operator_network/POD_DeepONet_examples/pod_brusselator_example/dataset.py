@@ -3,10 +3,10 @@ import numpy as np
 
 def load_data(modes, file_name):
     file1 = np.load(file_name)
-    nt, nx, ny = 20, file1['nx'], file1['ny']
-    n_samples = file1['n_samples']
-    inputs = file1['inputs'].reshape(n_samples, nx, ny)
-    outputs = np.array((file1['outputs'])).reshape(n_samples, nt, nx, ny)
+    nt, nx, ny = 20, file1["nx"], file1["ny"]
+    n_samples = file1["n_samples"]
+    inputs = file1["inputs"].reshape(n_samples, nx, ny)
+    outputs = np.array((file1["outputs"])).reshape(n_samples, nt, nx, ny)
 
     # n_samples_ood = file2['n_samples']
     # inputs_ood = file2['inputs'].reshape(n_samples_ood, nx, ny)
@@ -15,14 +15,13 @@ def load_data(modes, file_name):
     num_train = 800
     num_test = 200
 
-
     s, t = 28, 20
 
     f_train = inputs[:num_train, :, :]
     u_train = outputs[:num_train, :, :, :]
 
-    f_test = inputs[num_train:num_train + num_test, :, :]
-    u_test = outputs[num_train:num_train + num_test, :, :, :]
+    f_test = inputs[num_train : num_train + num_test, :, :]
+    u_test = outputs[num_train : num_train + num_test, :, :, :]
 
     # f_ood = inputs_ood[:num_ood]
     # u_ood = outputs_ood[:num_ood]
@@ -31,7 +30,7 @@ def load_data(modes, file_name):
     y = np.linspace(0, 1, s)
     z = np.linspace(0, 1, t)
 
-    zz, xx, yy = np.meshgrid(z, x, y, indexing='ij')
+    zz, xx, yy = np.meshgrid(z, x, y, indexing="ij")
 
     xx = np.reshape(xx, (-1, 1))  # flatten
     yy = np.reshape(yy, (-1, 1))  # flatten
@@ -84,7 +83,7 @@ def load_data(modes, file_name):
 
     # Train data
     U = np.reshape(U_train, (-1, num_res))
-    C_u = 1. / (num_train - 1) * np.matmul(U.T, U)
+    C_u = 1.0 / (num_train - 1) * np.matmul(U.T, U)
     lam_u, phi_u = np.linalg.eigh(C_u)
 
     lam_u = np.flip(lam_u)
@@ -93,7 +92,17 @@ def load_data(modes, file_name):
 
     u_basis = phi_u[:, :modes]
 
-    return F_train, U_train, F_test, U_test, X, u_train_mean, u_train_std, u_basis, lam_u
+    return (
+        F_train,
+        U_train,
+        F_test,
+        U_test,
+        X,
+        u_train_mean,
+        u_train_std,
+        u_basis,
+        lam_u,
+    )
 
 
 def rescale(x, u_mean, u_std):
