@@ -12,10 +12,10 @@ class EvidenceLowerBound(Loss):
         loss_function: torch.nn.Module = torch.nn.NLLLoss(),
         **kwargs,
     ):
-        """Construct an Evidence Lower Bound function
+        """Construct an Evidence Lower Bound (ELBO) function
 
         :param train_size: Number of training samples
-        :param loss_function: Function to compute loss on prior and posterior. Default `torch.nn.NLLLoss`
+        :param loss_function: Function to compute loss on prior and posterior. Default: ``torch.nn.NLLLoss``
         """
         super().__init__(**kwargs)
         self.train_size = train_size
