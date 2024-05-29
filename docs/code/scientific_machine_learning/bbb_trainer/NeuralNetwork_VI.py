@@ -1,3 +1,10 @@
+"""
+Training with Variational Inference
+=============================================================
+
+In this example, we train a Bayesian neural network using Variational Inference.
+
+"""
 import numpy as np
 import torch
 import torch.nn as nn

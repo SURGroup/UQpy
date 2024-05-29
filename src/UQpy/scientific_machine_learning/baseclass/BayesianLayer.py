@@ -11,8 +11,12 @@ class BayesianLayer(Layer, ABC):
 
         :param weight_shape: Shape of the weight_mu and weight_sigma matrices
         :param bias_shape: Shape of the bias_mu and bias_sigma matrices
-        :param priors: Prior and posterior distribution parameters.
-        The dictionary keys and their default values are:
+        :param priors: Prior and posterior distribution parameters. See table for default values
+        :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
+         If ``False``, use distribution mean as parameter values. Default: ``True``
+
+        ``priors`` Keys and Defaults
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         .. list-table::
            :widths: 50 35 25
@@ -34,9 +38,6 @@ class BayesianLayer(Layer, ABC):
              - tuple[float, float]
              - (-3.0, 0.1)
 
-
-        :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
-         If ``False``, use distribution mean as parameter values. Default: ``True``
         """
         super().__init__(**kwargs)
         self.sampling = sampling
@@ -49,18 +50,27 @@ class BayesianLayer(Layer, ABC):
                 "posterior_rho_initial": (-3.0, 0.1),
             }
         self.prior_mu: float = priors["prior_mu"]
+        """Prior mean of the normal distribution"""
         self.prior_sigma: float = priors["prior_sigma"]
+        """Prior standard deviation of the normal distribution"""
         self.posterior_mu_initial: tuple[float, float] = priors["posterior_mu_initial"]
+        """Initial posterior mean of the distribution"""
         self.posterior_rho_initial: tuple[float, float] = priors[
             "posterior_rho_initial"
         ]
+        """initial posterior rho of the distribution"""
 
         self.weight_mu: nn.Parameter = nn.Parameter(torch.empty(weight_shape))
+        """Distribution means for the weights"""
         self.weight_sigma: nn.Parameter = nn.Parameter(torch.empty(weight_shape))
+        """Distribution standard deviations for the weights"""
 
         self.bias: bool = True if bias_shape else False
+        """If ``True``, add bias"""
         self.bias_mu: Union[None, nn.Parameter] = None
+        """Distribution means for the bias. If ``bias`` is ``False``, this is ``None``."""
         self.bias_sigma: Union[None, nn.Parameter] = None
+        """Distribution standard deviations for the bias. If ``bias`` is ``False``, this is ``None``."""
         if self.bias:
             self.bias_mu = nn.Parameter(torch.empty(bias_shape))
             self.bias_sigma = nn.Parameter(torch.empty(bias_shape))

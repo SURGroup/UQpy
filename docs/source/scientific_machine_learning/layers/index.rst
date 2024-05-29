@@ -1,22 +1,25 @@
 Neural Network Layers
 ---------------------
 
-This is a placeholder for documentation on neural network layers.
+In this module, a layer in a neural network refers to an operation on tensor :math:`x` that maps it to a tensor :math:`y`.
+Layers have weights and/or biases, implemented via :class:`torch.nn.Parameter`, unlike activation functions which do not.
+The layers available here are designed for compatability with torch's layers, and recreate their naming and syntax
+conventions as much as practical.
 
 Layer Baseclass
 ^^^^^^^^^^^^^^^
 
 The :class:`Layer` is an abstract baseclass and a subclass of :class:`torch.nn.Module`,
-just as all :py:mod:`torch` loss functions are.
+just as all torch layers are.
 
-This is the parent class to all losses.
+This is the parent class to all layers.
 Like all abstract baseclasses, this cannot be instantiated but can be subclassed to write custom losses.
-All loss functions use the :py:meth:`forward` method to define the forward model call.
+All layers use the :py:meth:`forward` method to define the forward model call.
 
 Methods
 ~~~~~~~
 .. autoclass:: UQpy.scientific_machine_learning.baseclass.Layer
-    :members: forward
+    :members: forward, extra_repr
 
 ------
 
