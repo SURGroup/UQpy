@@ -49,7 +49,7 @@ class BayesianConv2d(BayesianLayer):
             if isinstance(kernel_size, tuple)
             else (kernel_size, kernel_size)
         )
-        weight_shape = (self.out_channels, self.in_channels, *kernel_size)
+        weight_shape = (out_channels, in_channels, *kernel_size)
         bias_shape = out_channels if bias else None
         super().__init__(weight_shape, bias_shape, priors, sampling, **kwargs)
         self.in_channels = in_channels

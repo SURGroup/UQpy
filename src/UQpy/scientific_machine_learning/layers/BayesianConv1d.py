@@ -21,7 +21,7 @@ class BayesianConv1d(BayesianLayer):
         sampling: bool = True,
         **kwargs
     ):
-        """Applies a Bayesian 2D convolution over an input signal composed of several input planes.
+        """Applies a Bayesian 1D convolution over an input signal composed of several input planes.
 
         :param in_channels: Number of channels in the input image
         :param out_channels: Number of channels produced by the convolution
