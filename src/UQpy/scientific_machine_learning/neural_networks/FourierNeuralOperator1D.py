@@ -2,11 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from UQpy.scientific_machine_learning.baseclass import NeuralNetwork
-from UQpy.scientific_machine_learning.layers import SpectralConv1D
+from UQpy.scientific_machine_learning.layers import SpectralConv1d
 
 
 class FourierNeuralOperator1D(NeuralNetwork):
-    def __init__(self, modes, width, **kwargs):
+    def __init__(self, modes: int, width: int, padding: int = 0, **kwargs):
         """
 
         The overall network. It contains 4 layers of the Fourier layer.
@@ -26,15 +26,15 @@ class FourierNeuralOperator1D(NeuralNetwork):
         """
         super().__init__(**kwargs)
 
-        self.modes1 = modes
+        self.modes = modes
         self.width = width
-        self.padding = 2  # pad the domain if input is non-periodic
+        self.padding = padding  # pad the domain if input is non-periodic
         self.fc0 = nn.Linear(2, self.width)  # input channel is 2: (a(x), x)
 
-        self.conv0 = SpectralConv1D(self.width, self.width, self.modes1)
-        self.conv1 = SpectralConv1D(self.width, self.width, self.modes1)
-        self.conv2 = SpectralConv1D(self.width, self.width, self.modes1)
-        self.conv3 = SpectralConv1D(self.width, self.width, self.modes1)
+        self.conv0 = SpectralConv1d(self.width, self.width, self.modes)
+        self.conv1 = SpectralConv1d(self.width, self.width, self.modes)
+        self.conv2 = SpectralConv1d(self.width, self.width, self.modes)
+        self.conv3 = SpectralConv1d(self.width, self.width, self.modes)
 
         self.w0 = nn.Conv1d(self.width, self.width, 1)
         self.w1 = nn.Conv1d(self.width, self.width, 1)
@@ -49,7 +49,8 @@ class FourierNeuralOperator1D(NeuralNetwork):
         x = torch.cat((x, grid), dim=-1)
         x = self.fc0(x)
         x = x.permute(0, 2, 1)
-        # x = F.pad(x, [0,self.padding]) # pad the domain if input is non-periodic
+        if self.padding > 0:
+            x = F.pad(x, [0, self.padding])  # pad the domain if input is non-periodic
 
         x1 = self.conv0(x)
         x2 = self.w0(x)
@@ -70,7 +71,8 @@ class FourierNeuralOperator1D(NeuralNetwork):
         x2 = self.w3(x)
         x = x1 + x2
 
-        # x = x[..., :-self.padding] # pad the domain if input is non-periodic
+        if self.padding > 0:
+            x = x[..., : -self.padding]  # pad the domain if input is non-periodic
         x = x.permute(0, 2, 1)
         x = self.fc1(x)
         x = F.relu(x)

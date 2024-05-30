@@ -32,10 +32,12 @@ class RangeNormalizer:
         x_max = torch.max(x)
         if x_min == x_max:
             raise RuntimeError(
-                "UQpy: RangeNormalizer is not defined if x_min is equal to x_max."
+                "UQpy: RangeNormalizer is not defined if `torch.min(x)` is equal to `torch.max(x)`."
             )
         self.scale = (self.high - self.low) / (x_max - x_min)
+        """Multiplicative factor to rescale range of x to interval width"""
         self.shift = self.low - (self.scale * x_min)
+        """Additive factor to make interval start at ``low``"""
 
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         """Scale and shift ``x`` to fall within [low, high] as ``y = (x * scale) + shift``
@@ -54,4 +56,9 @@ class RangeNormalizer:
         return (y - self.shift) / self.scale
 
     def extra_repr(self) -> str:
-        return f"low={self.low}, high={self.high}"
+        keywords = []
+        if self.low != 0.0:
+            keywords.append(f"low={self.low}")
+        if self.high != 1.0:
+            keywords.append(f"high={self.high}")
+        return ",".join(keywords)

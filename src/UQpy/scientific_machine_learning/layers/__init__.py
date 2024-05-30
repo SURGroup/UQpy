@@ -4,4 +4,4 @@ from UQpy.scientific_machine_learning.layers.BayesianLinear import BayesianLinea
 from UQpy.scientific_machine_learning.layers.ProbabilisticLayer import (
     ProbabilisticLayer,
 )
-from UQpy.scientific_machine_learning.layers.SpectralConv1D import SpectralConv1d
+from UQpy.scientific_machine_learning.layers.SpectralConv1d import SpectralConv1d
