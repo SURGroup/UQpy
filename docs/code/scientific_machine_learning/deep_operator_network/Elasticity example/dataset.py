@@ -1,10 +1,15 @@
+import torch
 import numpy as np
 import scipy.io as io
 
 
-def load_data():
-    # Source data
-    file = io.loadmat("./Data/Dataset_1Circle")
+def load_data(filename: str ="linear_elasticity_data.mat") -> tuple[torch.Tensor]:
+    """Load and format the linear elastic data for a deep operator network
+
+    :param filename: Relative path to .mat file
+    :return: Tuple of torch.Tensors
+    """
+    file = io.loadmat(filename)
     s_bc = 101
     s = 1048
     f_train = file["f_bc_train"]
@@ -49,19 +54,23 @@ def load_data():
     Uy_test = np.reshape(uy_test, (-1, s, 1))
     Uy_test = (Uy_test - uy_train_mean) / (uy_train_std + 1.0e-9) + 8.5
 
-    return (
-        F_train,
-        Ux_train,
-        Uy_train,
-        F_test,
-        Ux_test,
-        Uy_test,
-        X,
-        ux_train_mean,
-        ux_train_std,
-        uy_train_mean,
-        uy_train_std,
-    )
+    tensors = [
+        torch.tensor(x, dtype=torch.float32)
+        for x in (
+            F_train,
+            Ux_train,
+            Uy_train,
+            F_test,
+            Ux_test,
+            Uy_test,
+            X,
+            ux_train_mean,
+            ux_train_std,
+            uy_train_mean,
+            uy_train_std
+        )
+    ]
+    return tensors
 
 
 def rescale(x, u_mean, u_std):

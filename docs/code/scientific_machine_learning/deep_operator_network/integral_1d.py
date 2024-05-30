@@ -1,6 +1,6 @@
 """
 Learning the 1D Integral Operator
-=============================================================
+=================================
 
 In this example, we train a Deep Operator Network to learn the operator :math:`\mathcal{L}f(x) = \int f(x) dx`.
 
@@ -11,7 +11,7 @@ In this example, we train a Deep Operator Network to learn the operator :math:`\
 # Using a Deep Operator Network. This example
 #
 # 1. Generates training data from a stochastic process
-# 2. Defines the architecture of  a Deep Operator Network
+# 2. Defines the architecture of a Deep Operator Network
 # 3. Fits the network parameters to the training data
 # 4. Visualizes the results
 #

@@ -16,7 +16,7 @@ We denote the neural network's approximation as :math:`\hat{f}`, and can visuali
    :width: 300
    :alt: A diagram showing a neural network learning the approximation of a function between vector spaces.
 
-    Neural networks approximate a function between vectors.
+   Neural networks approximate a function between vectors.
 
 In contrast, neural operators do not map one vector to another.
 Rather, neural operators map a function to another function as :math:`\mathcal{L}: f \to g`.
@@ -39,7 +39,7 @@ denote :math:`\hat{\mathcal{L}}`. We can visualize this relationship as:
    :width: 300
    :alt: A diagram showing a neural network approximating the operator from one function to another.
 
-    Neural operators approximate an operator between functions.
+   Neural operators approximate an operator between functions.
 
 This requires many realizations of :math:`f` paired with the output :math:`g` and we
 try to find an approximation :math:`\hat{\mathcal{L}}` that minimizes the loss on the input-output pairs.
