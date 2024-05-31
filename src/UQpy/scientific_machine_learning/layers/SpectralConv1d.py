@@ -34,13 +34,12 @@ class SpectralConv1d(Layer):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Compute the truncated spectral convolution of ``x``
 
-        :param x: Input tensor
-        :return: Output tensor
+        :param x: Tensor of shape (n_batch, in_channels, x_resolution)
+        :return: Tensor of shape (n_batch, out_channels, x_resolution)
         """
         batchsize = x.shape[0]
         # Compute Fourier coeffcients up to factor of e^(- something constant)
         x_ft = torch.fft.rfft(x)
-        # x_ft = torch.rfft(x,1,normalized=True,onesided=False)
 
         # Multiply relevant Fourier modes
         out_ft = torch.zeros(

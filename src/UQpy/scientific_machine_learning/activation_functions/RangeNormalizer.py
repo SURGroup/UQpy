@@ -19,8 +19,8 @@ class RangeNormalizer:
         :param low: Lower bound of the normalized range
         :param high: Upper bound of the normalized range
 
-        :raises ValueError: If ``low`` > `high`
-        :raises RuntimeError: If x_min equals x_max
+        :raises ValueError: If ``low`` greater or equal to ``high``
+        :raises RuntimeError: If ``torch.min(x)`` equals ``torch.max(x)``
         """
         if low > high:
             raise ValueError("UQpy: `high` must be strictly greater than `low`")
