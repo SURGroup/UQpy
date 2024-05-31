@@ -6,7 +6,7 @@ from UQpy.utilities.ValidationTypes import PositiveFloat
 @beartype
 class GaussianNormalizer:
     def __init__(self, x: torch.Tensor, epsilon: PositiveFloat = 1e-8, **kwargs):
-        """Scale the tensor ``x`` to follow a standard normal distribution
+        """Scale and shift the tensor ``x`` to have mean of 0 and standard deviation of 1
 
         :param x: Input tensor
         :param epsilon: Small number added to standard deviation for numerical stability
