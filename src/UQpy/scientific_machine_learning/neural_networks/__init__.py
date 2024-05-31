@@ -10,3 +10,6 @@ from UQpy.scientific_machine_learning.neural_networks.FeedForwardNeuralNetwork i
 from UQpy.scientific_machine_learning.neural_networks.FourierNeuralOperator1D import (
     FourierNeuralOperator1D,
 )
+from UQpy.scientific_machine_learning.neural_networks.FourierNeuralOperator import (
+    FourierNeuralOperator,
+)

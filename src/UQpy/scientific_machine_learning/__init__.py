@@ -4,9 +4,16 @@ from UQpy.scientific_machine_learning.activation_functions import (
     Dropout2d,
     Dropout3d,
 )
-from UQpy.scientific_machine_learning.layers import BayesianLinear, BayesianConv1d, BayesianConv2d, SpectralConv1d
+from UQpy.scientific_machine_learning.layers import (
+    BayesianLinear,
+    BayesianConv1d,
+    BayesianConv2d,
+    SpectralConv1d,
+    FourierBlock1d,
+)
 from UQpy.scientific_machine_learning.neural_networks import (
     FeedForwardNeuralNetwork,
+    FourierNeuralOperator,
     DeepOperatorNetwork,
     UNeuralNetwork,
 )
