@@ -16,7 +16,7 @@ class LpLoss(Loss):
     ):
         """Compute the :math:`L_p(x, y)` loss on two tensors
 
-        :param d: ToDo: this isn't used in relative loss?
+        :param d: ToDo:  is this  Dimensionality of the input plus one?
         :param p: Exponent used in the loss function
         :param reduction: Optional, defines method to simplify loss output
         """
@@ -25,7 +25,7 @@ class LpLoss(Loss):
         self.reduction = reduction
 
     def absolute(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        """Absolute L1 Loss (Mean Absolute Error)  ToDo: this isn't used anywhere?
+        """Absolute L1 Loss (Mean Absolute Error)  ToDo: How should the user invoke this?
 
         :param x:
         :param y:
