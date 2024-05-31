@@ -14,7 +14,7 @@ class Trainer:
         model: nn.Module,
         optimizer: torch.optim.Optimizer,
         loss_function: nn.Module = nn.MSELoss(),
-        scheduler: Union[torch.optim.LRScheduler, list] = None,
+        scheduler: Union[torch.optim.lr_scheduler.LRScheduler, list] = None,
     ):
         """Prepare to train a neural network
 
