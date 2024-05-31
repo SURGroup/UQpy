@@ -5,6 +5,7 @@ from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
 class SobolevLoss(Loss):
+    """FixMe: This is used in Physics-Informed FNO."""
     def __init__(
         self,
         d: PositiveInteger = 2,
