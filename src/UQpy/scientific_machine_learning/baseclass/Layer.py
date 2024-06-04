@@ -2,7 +2,7 @@ import torch.nn as nn
 from abc import ABC, abstractmethod
 
 
-class Layer(ABC, nn.Module):
+class Layer(nn.Module, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 

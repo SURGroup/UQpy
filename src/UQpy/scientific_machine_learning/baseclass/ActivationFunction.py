@@ -3,7 +3,7 @@ import torch.nn as nn
 from abc import ABC, abstractmethod
 
 
-class ActivationFunction(ABC, nn.Module):
+class ActivationFunction(nn.Module, ABC):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

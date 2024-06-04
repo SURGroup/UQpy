@@ -2,7 +2,7 @@ import torch.nn as nn
 from abc import ABC, abstractmethod
 
 
-class Loss(ABC, nn.Module):
+class Loss(nn.Module, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 

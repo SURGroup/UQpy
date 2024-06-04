@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from UQpy.scientific_machine_learning.baseclass import BayesianLayer
 
 
-class NeuralNetwork(ABC, nn.Module):
+class NeuralNetwork(nn.Module, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
