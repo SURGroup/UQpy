@@ -8,7 +8,9 @@ from UQpy.scientific_machine_learning.layers import (
     BayesianLinear,
     BayesianConv1d,
     BayesianConv2d,
+    Permutation,
     SpectralConv1d,
+    # Fourier1d,
     FourierBlock1d,
 )
 from UQpy.scientific_machine_learning.neural_networks import (
