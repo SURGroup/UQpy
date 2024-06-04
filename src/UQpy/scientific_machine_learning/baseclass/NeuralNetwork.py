@@ -8,6 +8,8 @@ from UQpy.scientific_machine_learning.baseclass import BayesianLayer
 class NeuralNetwork(nn.Module, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.sampling = False
+        self.dropping = False
 
     @abstractmethod
     def forward(self, **kwargs):
@@ -55,7 +57,7 @@ class NeuralNetwork(nn.Module, ABC):
 
         :return: ``True`` if output is deterministic, ``False`` if output is probabilistic
         """
-        return not self.sampling and not self.training
+        return not self.sampling and not self.dropping and not self.training
 
     def compute_kullback_leibler_divergence(self) -> float:
         """Computes the Kullback-Leibler divergence between the current and prior ``network`` parameters
