@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import UQpy.scientific_machine_learning as sml
 import logging
 from beartype import beartype
 from UQpy.utilities.ValidationTypes import PositiveInteger
@@ -13,16 +14,20 @@ class BBBTrainer:
         model: nn.Module,
         optimizer: torch.optim.Optimizer,
         loss_function: nn.Module = nn.MSELoss(),
+        divergence: nn.Module = sml.GaussianKullbackLeiblerLoss(),
     ):
         """Prepare to train a Bayesian neural network using Bayes by back propagation
 
         :param model: Bayesian Neural Network model to be trained
         :param optimizer: Optimization algorithm used to update ``model`` parameters
         :param loss_function: Function used to compute negative log likelihood of the data during training
+        :param divergence: Divergence measured between prior and posterior distribution of Bayesian layers
+         Default: sml.GaussianKullbackLeiblerLoss
         """
         self.model = model
         self.optimizer = optimizer
         self.loss_function = loss_function
+        self.divergence = divergence
 
         self.history: dict = {
             "train_loss": None,
@@ -76,7 +81,10 @@ class BBBTrainer:
             self.history["train_loss"] = torch.full(
                 [epochs], torch.nan, requires_grad=False
             )
-            self.history["train_kl"] = torch.full(
+            # self.history["train_kl"] = torch.full(
+            #     [epochs], torch.nan, requires_grad=False
+            # )
+            self.history["train_divergence"] = torch.full(
                 [epochs], torch.nan, requires_grad=False
             )
             self.history["train_nll"] = torch.full(
@@ -95,28 +103,38 @@ class BBBTrainer:
                 self.model.train(True)
                 total_train_loss = 0
                 total_nll_loss = 0
-                total_kl_loss = 0
+                # total_kl_loss = 0
+                total_divergence_loss = 0
                 for batch_number, (*x, y) in enumerate(train_data):
                     nll_loss = torch.zeros(num_samples)
                     for sample in range(num_samples):
                         prediction = self.model(*x)
                         nll_loss[sample] = self.loss_function(prediction, y)
-                    kl_loss = self.model.compute_kullback_leibler_divergence()
+                    divergence_loss = self.divergence(self.model)  # kl_loss = self.model.compute_kullback_leibler_divergence()
                     mean_nll = torch.mean(nll_loss)
-                    train_loss = mean_nll + beta * kl_loss
+                    train_loss = mean_nll + beta * divergence_loss  # kl_loss
                     train_loss.backward()
                     self.optimizer.step()
                     self.optimizer.zero_grad()
                     total_train_loss += train_loss.item()
                     total_nll_loss += mean_nll.item()
-                    total_kl_loss += kl_loss
+                    total_divergence_loss += divergence_loss  # total_kl_loss += kl_loss
                 average_train_loss = total_train_loss / len(train_data)
                 average_train_nll = total_nll_loss / len(train_data)
-                average_kl_loss = total_kl_loss / len(train_data)
+                # average_kl_loss = total_kl_loss / len(train_data)
+                average_divergence_loss = total_divergence_loss / len(train_data)
                 self.history["train_loss"][i] = average_train_loss
                 self.history["train_nll"][i] = average_train_nll
-                self.history["train_kl"][i] = average_kl_loss
+                # self.history["train_kl"][i] = average_kl_loss
+                self.history["train_divergence"] = average_divergence_loss
                 self.model.train(False)
+            log_message = (
+                f"UQpy: Scientific Machine Learning: "
+                f"Epoch {i + 1:,} / {epochs:,} "
+                f"Train Loss {average_train_loss} "
+                f"Train NLL {average_train_nll} "
+                f"Train KL {average_divergence_loss} "  # average_kl_loss
+            )
             if test_data:
                 total_test_nll = 0
                 with torch.no_grad():
@@ -124,24 +142,26 @@ class BBBTrainer:
                         test_prediction = self.model(*x)
                         test_nll = self.loss_function(test_prediction, y)
                         total_test_nll += test_nll.item()
-                    average_test_nll = total_test_nll / len(test_data)
-                    self.history["test_nll"][i] = average_test_nll
-                    self.logger.info(
-                        f"UQpy: Scientific Machine Learning: "
-                        f"Epoch {i + 1:,} / {epochs:,} "
-                        f"Train Loss {average_train_loss} "
-                        f"Train NLL {average_train_nll}"
-                        f" Train KL {average_kl_loss} "
-                        f"Test NLL {average_test_nll}"
-                    )
-            else:
-                self.logger.info(
-                    f"UQpy: Scientific Machine Learning: "
-                    f"Epoch {i + 1:,} / {epochs:,} "
-                    f"Train Loss {average_train_loss} "
-                    f"Train NLL {average_train_nll} "
-                    f"Train KL {average_kl_loss}"
-                )
+                average_test_nll = total_test_nll / len(test_data)
+                self.history["test_nll"][i] = average_test_nll
+                log_message += f"Test NLL {average_test_nll} "
+                # self.logger.info(
+                #     f"UQpy: Scientific Machine Learning: "
+                #     f"Epoch {i + 1:,} / {epochs:,} "
+                #     f"Train Loss {average_train_loss} "
+                #     f"Train NLL {average_train_nll} "
+                #     f"Train KL {average_divergence_loss} "  # average_kl_loss
+                #     f"Test NLL {average_test_nll}"
+                # )
+            self.logger.info(log_message)
+            # else:
+            #     self.logger.info(
+            #         f"UQpy: Scientific Machine Learning: "
+            #         f"Epoch {i + 1:,} / {epochs:,} "
+            #         f"Train Loss {average_train_loss} "
+            #         f"Train NLL {average_train_nll} "
+            #         f"Train KL {average_divergence_loss} "  # average_kl_loss
+            #     )
 
             i += 1
 
