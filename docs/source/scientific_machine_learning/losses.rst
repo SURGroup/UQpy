@@ -17,7 +17,7 @@ Methods
 ----
 
 List of Losses
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 
 Evidence Lower Bound
 ~~~~~~~~~~~~~~~~~~~~
@@ -27,6 +27,17 @@ This is a placeholder for the documentation on ELBO.
 .. autoclass:: UQpy.scientific_machine_learning.losses.EvidenceLowerBound
     :members: forward
 
+------
+
+Gaussian Kullback-Leibler
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is a placeholder for KL Divergence.
+
+.. autoclass:: UQpy.scientific_machine_learning.losses.GaussianKullbackLeiblerLoss
+    :members: forward
+
+------
 
 Physics Informed Loss
 ~~~~~~~~~~~~~~~~~~~~~

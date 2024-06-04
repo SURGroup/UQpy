@@ -3,12 +3,17 @@ import torch.nn as nn
 from UQpy.scientific_machine_learning.baseclass import BayesianLayer, Loss
 
 
-class GaussianKullbackLeibler(Loss):
+class GaussianKullbackLeiblerLoss(Loss):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def forward(self, network: nn.Module) -> torch.Tensor:
+        """Compute the Gaussian KL divergence on all Bayesian layers in a module
+
+        :param network: Network containing Bayesian layers
+        :return: Gaussian KL divergence between prior and posterior distributions
+        """
         divergence = torch.tensor(0)
         for layer in network.modules():
             if isinstance(layer, BayesianLayer):
@@ -34,13 +39,13 @@ class GaussianKullbackLeibler(Loss):
         prior_mu: torch.Tensor,
         prior_sigma: torch.Tensor,
     ) -> torch.Tensor:
-        """Compute the Gaussian Kullback-Liebler divergence
+        """Compute the Gaussian Kullback-Liebler divergence for a prior and posterior distribution
 
-        :param posterior_mu:
-        :param posterior_sigma:
-        :param prior_mu:
-        :param prior_sigma:
-        :return:
+        :param posterior_mu: Mean of the posterior distribution
+        :param posterior_sigma: Standard deviation of the posterior distribution
+        :param prior_mu: Mean of the prior distribution
+        :param prior_sigma: Standard deviation of the prior distribution
+        :return: KL divergence between prior and posterior
         """
         gkl_divergence = (
             0.5
