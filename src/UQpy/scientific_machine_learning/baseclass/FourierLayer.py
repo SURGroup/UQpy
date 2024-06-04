@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 from UQpy.scientific_machine_learning.baseclass.Layer import Layer
 from UQpy.utilities.ValidationTypes import PositiveInteger
 from abc import ABC, abstractmethod
@@ -19,12 +20,12 @@ class FourierLayer(Layer, ABC):
 
     @property
     @abstractmethod
-    def spectral_conv(self):
+    def spectral_conv(self) -> nn.Module:
         ...
 
     @property
     @abstractmethod
-    def conv(self):
+    def conv(self) -> nn.Module:
         ...
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
