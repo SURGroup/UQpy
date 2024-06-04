@@ -31,4 +31,6 @@ List of Layers
 
     Bayesian Parent Class <bayesian_parent>
     Bayesian Layers <bayesian_layers>
+    Fourier Parent Class <fourier_parent>
+    Fourier Layers <fourier_layers>
     Spectral Convolution <spectral_conv_1d>

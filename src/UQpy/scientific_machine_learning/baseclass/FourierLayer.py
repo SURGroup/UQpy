@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 class FourierLayer(Layer, ABC):
 
     def __init__(self, width: PositiveInteger, modes: PositiveInteger, **kwargs):
-        """
+        """Construct a Fourier layer
 
         :param width: In_channels and out_channels of the spectral and regular convolution
         :param modes: Number of Fourier modes to keep
@@ -21,11 +21,13 @@ class FourierLayer(Layer, ABC):
     @property
     @abstractmethod
     def spectral_conv(self) -> nn.Module:
+        """Spectral convolution defining a truncated Fourier series"""
         ...
 
     @property
     @abstractmethod
     def conv(self) -> nn.Module:
+        """Standard convolution added to spectral convolution in ``forward``"""
         ...
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

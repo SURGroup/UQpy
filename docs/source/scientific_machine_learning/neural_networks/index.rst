@@ -59,4 +59,5 @@ This is a placeholder on the discretization of neural operators.
 
     DeepOperatorNetwork <deep_operator_network>
     Feed Forward Neural Network <feed_forward_neural_network>
+    Fourier Neural Operator <fourier_neural_network>
     UNeuralNetwork <u_neural_network>

@@ -3,20 +3,28 @@ from UQpy.scientific_machine_learning.activation_functions import (
     Dropout1d,
     Dropout2d,
     Dropout3d,
+    Permutation,
 )
 from UQpy.scientific_machine_learning.layers import (
-    BayesianLinear,
     BayesianConv1d,
     BayesianConv2d,
-    Permutation,
+    BayesianLinear,
+    Fourier1d,
+    Fourier2d,
+    Fourier3d,
     SpectralConv1d,
-    # Fourier1d,
-    FourierBlock1d,
+)
+from UQpy.scientific_machine_learning.losses import (
+    EvidenceLowerBound,
+    GaussianKullbackLeiblerLoss,
+    PhysicsInformedLoss,
+    LpLoss,
+    SobolevLoss,
 )
 from UQpy.scientific_machine_learning.neural_networks import (
+    DeepOperatorNetwork,
     FeedForwardNeuralNetwork,
     FourierNeuralOperator,
-    DeepOperatorNetwork,
     UNeuralNetwork,
 )
 from UQpy.scientific_machine_learning.trainers import Trainer, BBBTrainer, HMCTrainer
