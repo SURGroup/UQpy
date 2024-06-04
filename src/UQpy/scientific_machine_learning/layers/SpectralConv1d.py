@@ -12,7 +12,7 @@ class SpectralConv1d(Layer):
         modes: PositiveInteger,
         **kwargs,
     ):
-        """1D Fourier layer. Applies FFT, linear transform, then Inverse FFT.
+        """1D Truncated Fourier series. Applies FFT, linear transform, then inverse FFT.
 
         :param in_channels: Number of channels in the input image
         :param out_channels: Number of channels produced by the convolution
@@ -23,37 +23,34 @@ class SpectralConv1d(Layer):
         self.out_channels = out_channels
         self.modes = modes
 
-        self.scale: float = 1 / (in_channels * out_channels)
+        self.scale: float = 1 / (self.in_channels * self.out_channels)
         """Scalar normalizing factor for weights"""
         self.weights: nn.Parameter = nn.Parameter(
             self.scale
-            * torch.rand(in_channels, out_channels, self.modes, dtype=torch.cfloat)
+            * torch.rand(self.in_channels, self.out_channels, self.modes, dtype=torch.cfloat)
         )
         """Learnable parameters to be optimized."""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Compute the truncated spectral convolution of ``x``
+        """Compute Fourier coefficients up to factor of :math:`e^{\\text{-some constant}}`
 
-        :param x: Tensor of shape (n_batch, in_channels, x_resolution)
-        :return: Tensor of shape (n_batch, out_channels, x_resolution)
+        :param x: Tensor of shape (n_batch, in_channels, n_x)
+        :return: Tensor of shape (n_batch, out_channels, n_x)
         """
-        batchsize = x.shape[0]
-        # Compute Fourier coeffcients up to factor of e^(- something constant)
+        batch_size = x.shape[0]
         x_ft = torch.fft.rfft(x)
 
-        # Multiply relevant Fourier modes
         out_ft = torch.zeros(
-            batchsize,
+            batch_size,
             self.out_channels,
             x.size(-1) // 2 + 1,
             dtype=torch.cfloat,
-        )
+        )  # multiply relevant Fourier modes
         out_ft[:, :, : self.modes] = self.complex_multiplication(
             x_ft[:, :, : self.modes], self.weights
         )
 
-        # Return to physical space
-        x = torch.fft.irfft(out_ft, n=x.size(-1))
+        x = torch.fft.irfft(out_ft, n=x.size(-1))  # return to physical space
         return x
 
     @staticmethod
@@ -62,11 +59,10 @@ class SpectralConv1d(Layer):
     ) -> torch.Tensor:
         """Complex multiplication using ``torch.einsum``
 
-        :param input:
-        :param weights:
-        :return:
+        :param input: Tensor of shape (batch_size, in_channel, n_x)
+        :param weights: Tensor for shape (in_channel, out_channel, n_x)
+        :return: Tensor of shape (batch_size, out_channel, n_x)
         """
-        # (batch, in_channel, x ), (in_channel, out_channel, x) -> (batch, out_channel, x)
         return torch.einsum("bix,iox->box", input, weights)
 
     def extra_repr(self) -> str:
