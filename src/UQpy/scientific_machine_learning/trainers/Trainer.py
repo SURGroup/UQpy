@@ -22,7 +22,7 @@ class Trainer:
         :param optimizer: Optimization algorithm used to update ``model`` parameters
         :param loss_function: Function used to compute loss during training
         :param scheduler: Scheduler used to adjust the learning rate of the ``optimizer``.
-        Schedulers may be chained together by creating a list of schedulers
+         Schedulers may be chained together by creating a list of schedulers
         """
         self.model = model
         self.optimizer = optimizer
@@ -36,6 +36,7 @@ class Trainer:
         
          - ``history["train_loss"]`` contains training history as a ``torch.Tensor``.
          - ``history["test_loss"]`` contains testing history as a ``torch.Tensor``.
+
          """
         self.logger = logging.getLogger(__name__)
 
