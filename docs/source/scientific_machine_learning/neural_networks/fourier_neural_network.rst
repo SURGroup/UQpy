@@ -13,7 +13,7 @@ then project the Fourier representation to the desired number of out channels.
    :align: center
    :class: with-border
    :width: 800
-   :alt: A diagram showing the architecture of a Fourier neural network network.
+   :alt: A diagram showing the architecture of a Fourier neural network.
 
    The architecture of a generic Fourier Neural Network.
 

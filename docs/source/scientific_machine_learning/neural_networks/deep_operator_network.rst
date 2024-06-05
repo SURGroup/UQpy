@@ -2,6 +2,15 @@ Deep Operator Network (DeepONet)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Implementation of the Deep Operator Network (DeepONet) as defined by Lu 2021.
+The deep operator network is defined by its branch and trunk networks, as shown below.
+
+.. figure:: ./figures/deep_operator_network_diagram.png
+   :align: center
+   :class: with-border
+   :width: 600
+   :alt: A diagram showing the architecture of a deep operator network.
+
+   The architecture of a generic deep operator network.
 
 The :class:`.DeepOperatorNetwork` class is imported using the following command:
 
