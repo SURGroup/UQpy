@@ -29,6 +29,28 @@ class BayesianLinear(BayesianLayer):
          - ``priors["posterior_rho_initial"]`` = ``(-3, 0.1)``
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
          If ``False``, use distribution mean as parameter values.
+
+        Shape:
+
+        - Input: :math:`(*, H_{in})` where :math:`*` means any number of
+          dimensions including none and :math:`H_{in} = \\text{in\_features}`.
+        - Output: :math:`(*, H_{out})` where all but the last dimension
+          are the same shape as the input and :math:`H_{out} = \\text{out\_features}`.
+
+        Example:
+
+            >>> f = sml.BayesianLinear(4, 15)
+            >>> x = torch.rand(20, 4)
+            >>> f.sample(False)
+            >>> deterministic_output = f(x)
+            >>> f.sample()
+            >>> probabilistic_output = f(x)
+            >>> print(deterministic_output.shape)
+            >>> print(probabilistic_output.shape)
+            >>> print(torch.all(deterministic_output == probabilistic_output))
+            torch.Size([20, 15])
+            torch.Size([20, 15])
+            tensor(False)
         """
         weight_shape = (out_features, in_features)
         bias_shape = out_features if bias else None

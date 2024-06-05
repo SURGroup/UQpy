@@ -17,11 +17,15 @@ Bayesian Linear
 .. autoclass:: UQpy.scientific_machine_learning.layers.BayesianLinear
     :members: forward
 
+-----
+
 Bayesian Convolution 1D
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: UQpy.scientific_machine_learning.layers.BayesianConv1d
     :members: forward
+
+-----
 
 Bayesian Convolution 2D
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -29,6 +33,7 @@ Bayesian Convolution 2D
 .. autoclass:: UQpy.scientific_machine_learning.layers.BayesianConv2d
     :members: forward
 
+-----
 
 Probabilistic Layer
 ~~~~~~~~~~~~~~~~~~~

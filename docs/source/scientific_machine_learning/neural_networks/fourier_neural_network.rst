@@ -18,6 +18,9 @@ then project the Fourier representation to the desired number of out channels.
    The architecture of a generic Fourier Neural Network.
 
 
+Examples
+--------
+
 The following example considers a 1-dimensional input, with 1 in channel and 6 out channels.
 We build a large Fourier neural operator to map the in channel to the out channels.
 We construct Fourier Neural Operator with a standard linear lifting layer from the number of
