@@ -14,7 +14,7 @@ class GaussianKullbackLeiblerLoss(Loss):
         :param network: Network containing Bayesian layers
         :return: Gaussian KL divergence between prior and posterior distributions
         """
-        divergence = torch.tensor(0)
+        divergence = torch.tensor(0.0, dtype=torch.float)
         for layer in network.modules():
             if isinstance(layer, BayesianLayer):
                 divergence += self.compute_gkl_divergence(
