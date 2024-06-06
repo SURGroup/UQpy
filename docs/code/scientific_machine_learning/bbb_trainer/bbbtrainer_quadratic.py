@@ -51,7 +51,7 @@ model = sml.FeedForwardNeuralNetwork(network)
 class QuadraticDataset(Dataset):
     def __init__(self, n_samples=200):
         self.n_samples = n_samples
-        self.x = torch.linspace(-5, 5, n_samples).reshape(-1, 1)
+        self.x = torch.linspace(-5, 5, n_samples, dtype=torch.float).reshape(-1, 1)
         self.y = self.x**2
 
     def __len__(self):
