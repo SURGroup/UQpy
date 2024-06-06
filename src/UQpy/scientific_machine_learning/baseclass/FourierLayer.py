@@ -1,13 +1,14 @@
+from abc import ABC, abstractmethod
+from collections.abc import Sequence
 import torch
 import torch.nn as nn
 from UQpy.scientific_machine_learning.baseclass.Layer import Layer
 from UQpy.utilities.ValidationTypes import PositiveInteger
-from abc import ABC, abstractmethod
 
 
 class FourierLayer(Layer, ABC):
 
-    def __init__(self, width: PositiveInteger, modes: PositiveInteger, **kwargs):
+    def __init__(self, width: PositiveInteger, modes: Sequence[PositiveInteger], **kwargs):
         """Construct a Fourier layer
 
         :param width: In_channels and out_channels of the spectral and regular convolution
@@ -31,7 +32,7 @@ class FourierLayer(Layer, ABC):
         ...
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
+        """Computational call
 
         :param x: Input tensor
         :return: Output tensor

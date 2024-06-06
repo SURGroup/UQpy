@@ -8,3 +8,5 @@ from UQpy.scientific_machine_learning.layers.ProbabilisticLayer import (
     ProbabilisticLayer,
 )
 from UQpy.scientific_machine_learning.layers.SpectralConv1d import SpectralConv1d
+from UQpy.scientific_machine_learning.layers.SpectralConv2d import SpectralConv2d
+from UQpy.scientific_machine_learning.layers.SpectralConv3d import SpectralConv3d

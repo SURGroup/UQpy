@@ -13,6 +13,8 @@ from UQpy.scientific_machine_learning.layers import (
     Fourier2d,
     Fourier3d,
     SpectralConv1d,
+    SpectralConv2d,
+    SpectralConv3d
 )
 from UQpy.scientific_machine_learning.losses import (
     EvidenceLowerBound,
