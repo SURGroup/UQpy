@@ -58,22 +58,20 @@ class SinusoidalDataset(Dataset):
 
 
 # %% Train with dropout layers inactive
-model.eval()  # this activates the dropout layers
+# model.eval()  # this activates the dropout layers
+model.drop(False)  # this deactivates the dropout layers
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 train_data = DataLoader(SinusoidalDataset(), batch_size=20, shuffle=True)
 trainer = Trainer(model, optimizer)
 print("Starting Training...", end="")
-<<<<<<< HEAD
-trainer.run(train_data=train_data, epochs=20000)
-=======
-trainer.run(train_data=train_data, epochs=50000)
->>>>>>> 20811659939c9b1dad189d64437bc2e27670f47a
+trainer.run(train_data=train_data, epochs=1000)
 print("done")
 # Plotting Results
 x = SinusoidalDataset().x
 y = SinusoidalDataset().y
 x_val = torch.linspace(-1, 1, 1000).view(-1,1)
 y_val = (0.4 * torch.sin(4 * x_val) + 0.5 * torch.cos(12 * x_val))
+model.drop = True  # this activates the dropout layers
 pred_val = model(x_val)
 #%% Plot the deterministic model estimates
 fig, ax = plt.subplots()
@@ -107,7 +105,7 @@ ax.set_title("Deterministic training Loss")
 ax.set(xlabel="Epoch", ylabel="Loss")
 plt.show()
 # %%
-model.train() # this activates the dropout layers
+model.drop(True)  # this activates the dropout layers
 n = 10000
 samples = torch.zeros(len(x_val), n)
 for i in range(n):
