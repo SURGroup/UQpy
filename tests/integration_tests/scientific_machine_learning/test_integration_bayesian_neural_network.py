@@ -1,9 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
-from UQpy.scientific_machine_learning.neural_networks import FeedForwardNeuralNetwork
-from UQpy.scientific_machine_learning.layers import BayesianLayer,  BayesianConvLayer
-from UQpy.scientific_machine_learning.trainers.BBBTrainer import BBBTrainer
+import UQpy.scientific_machine_learning as sml
 
 torch.manual_seed(0)
 
@@ -25,16 +23,16 @@ def test_accuracy():
     """Test a single hidden layer neural network learning the function f(x) = x ** 2"""
     width = 10
     network = nn.Sequential(
-        BayesianLayer(1, width),
+        sml.BayesianLinear(1, width),
         nn.ReLU(),
-        BayesianLayer(width, width),
+        sml.BayesianLinear(width, width),
         nn.ReLU(),
-        BayesianLayer(width, 1),
+        sml.BayesianLinear(width, 1),
     )
-    model = FeedForwardNeuralNetwork(network)
+    model = sml.FeedForwardNeuralNetwork(network)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     train_data = DataLoader(QuadraticDataset(), batch_size=20, shuffle=True)
-    trainer = BBBTrainer(model, optimizer)
+    trainer = sml.BBBTrainer(model, optimizer)
     trainer.run(train_data=train_data, epochs=1_000, beta=1e-6, num_samples=10)
 
     final_loss = trainer.history["train_nll"][-1]

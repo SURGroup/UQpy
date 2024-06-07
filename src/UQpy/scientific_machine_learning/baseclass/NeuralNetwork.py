@@ -2,13 +2,14 @@ import torch
 import torch.nn as nn
 import torchinfo
 from abc import ABC, abstractmethod
-from UQpy.scientific_machine_learning.layers.BayesianLayer import BayesianLayer
-from UQpy.scientific_machine_learning.layers.BayesianConvLayer import BayesianConvLayer
+from UQpy.scientific_machine_learning.baseclass import BayesianLayer
 
 
-class NeuralNetwork(ABC, nn.Module):
+class NeuralNetwork(nn.Module, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.sampling = False
+        self.dropping = False
 
     @abstractmethod
     def forward(self, **kwargs):
@@ -46,8 +47,8 @@ class NeuralNetwork(ABC, nn.Module):
 
         """
         self.dropping = mode
-        for m in self.network.modules():
-            if hasattr(m,"drop"):
+        for m in self.network:
+            if hasattr(m, "drop"):
                 m.drop(mode)
         return self
 
@@ -56,7 +57,7 @@ class NeuralNetwork(ABC, nn.Module):
 
         :return: ``True`` if output is deterministic, ``False`` if output is probabilistic
         """
-        return not self.sampling and not self.training
+        return not self.sampling and not self.dropping and not self.training
 
     def compute_kullback_leibler_divergence(self) -> float:
         """Computes the Kullback-Leibler divergence between the current and prior ``network`` parameters
@@ -65,7 +66,7 @@ class NeuralNetwork(ABC, nn.Module):
         """
         kl = 0
         for layer in self.network.modules():
-            if isinstance(layer, BayesianLayer) or isinstance(layer, BayesianConvLayer):
+            if isinstance(layer, BayesianLayer):
                 kl += gaussian_kullback_leibler_divergence(
                     layer.weight_mu,
                     torch.log1p(torch.exp(layer.weight_sigma)),

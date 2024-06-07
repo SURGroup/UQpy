@@ -1,4 +1,12 @@
-from UQpy.scientific_machine_learning.layers.Dropout import Dropout
-from UQpy.scientific_machine_learning.layers.BayesianLayer import BayesianLayer
-from UQpy.scientific_machine_learning.layers.BayesianConvLayer import BayesianConvLayer
-from UQpy.scientific_machine_learning.layers.ProbabilisticLayer import ProbabilisticLayer
+from UQpy.scientific_machine_learning.layers.BayesianConv1d import BayesianConv1d
+from UQpy.scientific_machine_learning.layers.BayesianConv2d import BayesianConv2d
+from UQpy.scientific_machine_learning.layers.BayesianLinear import BayesianLinear
+from UQpy.scientific_machine_learning.layers.Fourier1d import Fourier1d
+from UQpy.scientific_machine_learning.layers.Fourier2d import Fourier2d
+from UQpy.scientific_machine_learning.layers.Fourier3d import Fourier3d
+from UQpy.scientific_machine_learning.layers.ProbabilisticLayer import (
+    ProbabilisticLayer,
+)
+from UQpy.scientific_machine_learning.layers.SpectralConv1d import SpectralConv1d
+from UQpy.scientific_machine_learning.layers.SpectralConv2d import SpectralConv2d
+from UQpy.scientific_machine_learning.layers.SpectralConv3d import SpectralConv3d

@@ -27,9 +27,7 @@ import matplotlib.pyplot as plt
 
 plt.style.use("ggplot")
 
-# UQpy imports
-from UQpy.scientific_machine_learning.neural_networks import DeepOperatorNetwork
-from UQpy.scientific_machine_learning.trainers import Trainer
+import UQpy.scientific_machine_learning as sml
 from local_utilities import srm_2d_samples
 
 # %% md
@@ -70,6 +68,7 @@ class DONTwoDimensionalDataSet(Dataset):
     def __getitem__(self, item):
         return self.x, self.f_x[item, ...], self.g_x[item, ...]
 
+
 # %% md
 # **2. Initialize Deep Operator Network**
 
@@ -80,7 +79,7 @@ n_dimension = 1
 width = 20
 final_width = 100  # Number of nodes on output of branch and trunk network
 branch_network = nn.Sequential(
-    nn.Linear(n_points ** 2, width),
+    nn.Linear(n_points**2, width),
     nn.ReLU(),
     nn.Linear(width, width),
     nn.ReLU(),
@@ -94,7 +93,7 @@ trunk_network = nn.Sequential(
     nn.Linear(width, final_width),
     nn.ReLU(),
 )
-model = DeepOperatorNetwork(branch_network, trunk_network)
+model = sml.DeepOperatorNetwork(branch_network, trunk_network)
 
 
 # %% md

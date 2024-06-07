@@ -1,6 +1,6 @@
 """
 Learning the 1D Integral Operator
-=============================================================
+=================================
 
 In this example, we train a Deep Operator Network to learn the operator :math:`\mathcal{L}f(x) = \int f(x) dx`.
 
@@ -11,7 +11,7 @@ In this example, we train a Deep Operator Network to learn the operator :math:`\
 # Using a Deep Operator Network. This example
 #
 # 1. Generates training data from a stochastic process
-# 2. Defines the architecture of  a Deep Operator Network
+# 2. Defines the architecture of a Deep Operator Network
 # 3. Fits the network parameters to the training data
 # 4. Visualizes the results
 #
@@ -29,9 +29,8 @@ import matplotlib.pyplot as plt
 plt.style.use("ggplot")
 
 # UQpy imports
+import UQpy.scientific_machine_learning as sml
 from UQpy.stochastic_process import SpectralRepresentation
-from UQpy.scientific_machine_learning.neural_networks import DeepOperatorNetwork
-from UQpy.scientific_machine_learning.trainers import Trainer
 
 # %% md
 # **1. Generate Training Data**
@@ -130,7 +129,7 @@ trunk_network = nn.Sequential(
     nn.Linear(width, final_width),
     nn.ReLU(),
 )
-model = DeepOperatorNetwork(branch_network, trunk_network)
+model = sml.DeepOperatorNetwork(branch_network, trunk_network)
 
 # %% md
 # **3. Train the network on the data**
@@ -144,8 +143,8 @@ Lf_x = operator(x, f_x)
 train_data = DataLoader(DONDataSet(x, f_x, Lf_x), batch_size=20, shuffle=True)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-trainer = Trainer(model, optimizer)
-trainer.run(train_data=train_data, epochs=5_000, tolerance=1e-6)
+trainer = sml.Trainer(model, optimizer)
+trainer.run(train_data=train_data, epochs=1_000, tolerance=1e-6)
 
 # %% md
 # **4. Visualize the results**

@@ -11,6 +11,9 @@ from UQpy.utilities.ValidationTypes import PositiveInteger
 
 @beartype
 class ProbabilisticLayer(Layer):
+    def extra_repr(self) -> str:
+        pass
+
     def __init__(
         self,
         in_features: PositiveInteger,

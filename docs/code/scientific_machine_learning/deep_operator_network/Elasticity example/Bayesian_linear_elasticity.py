@@ -4,10 +4,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
 
-from UQpy.scientific_machine_learning.neural_networks import DeepOperatorNetwork
-from UQpy.scientific_machine_learning.trainers import BBBTrainer
-from UQpy.scientific_machine_learning.layers.BayesianLayer import BayesianLayer
-from UQpy.scientific_machine_learning.layers.BayesianConvLayer import BayesianConvLayer
+import UQpy.scientific_machine_learning as sml
 from dataset import load_data
 
 import logging
@@ -32,24 +29,24 @@ priors = {
 class BranchNet(nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fnn = nn.Sequential(BayesianLayer(101, 100, priors=priors), nn.Tanh())
+        self.fnn = nn.Sequential(sml.BayesianLinear(101, 100, priors=priors), nn.Tanh())
         self.conv_layers = nn.Sequential(
-            BayesianConvLayer(1, 16, (5, 5), padding="same", priors=priors),
+            sml.BayesianConv2d(1, 16, (5, 5), padding="same", priors=priors),
             nn.AvgPool2d(2, 1, padding=0),
-            BayesianConvLayer(16, 16, (5, 5), padding="same", priors=priors),
+            sml.BayesianConvLayer(16, 16, (5, 5), padding="same", priors=priors),
             nn.AvgPool2d(2, 1, padding=0),
-            BayesianConvLayer(16, 16, (5, 5), padding="same", priors=priors),
+            sml.BayesianConv2d(16, 16, (5, 5), padding="same", priors=priors),
             nn.AvgPool2d(2, 1, padding=0),
-            BayesianConvLayer(16, 64, (5, 5), padding="same", priors=priors),
+            sml.BayesianConv2d(16, 64, (5, 5), padding="same", priors=priors),
             nn.AvgPool2d(2, 1, padding=0),
         )
         self.dnn = nn.Sequential(
             nn.Flatten(),
-            BayesianLayer(64 * 6 * 6, 512, priors=priors),
+            sml.BayesianLinear(64 * 6 * 6, 512, priors=priors),
             nn.Tanh(),
-            BayesianLayer(512, 512, priors=priors),
+            sml.BayesianLinear(512, 512, priors=priors),
             nn.Tanh(),
-            BayesianLayer(512, 200, priors=priors),
+            sml.BayesianLinear(512, 200, priors=priors),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -64,13 +61,13 @@ class TrunkNet(nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fnn = nn.Sequential(
-            BayesianLayer(2, 128, priors=priors),
+            sml.BayesianLinear(2, 128, priors=priors),
             nn.Tanh(),
-            BayesianLayer(128, 128, priors=priors),
+            sml.BayesianLinear(128, 128, priors=priors),
             nn.Tanh(),
-            BayesianLayer(128, 128, priors=priors),
+            sml.BayesianLinear(128, 128, priors=priors),
             nn.Tanh(),
-            BayesianLayer(128, 200, priors=priors),
+            sml.BayesianLinear(128, 200, priors=priors),
             nn.Tanh(),
         )
         self.Xmin = np.array([0.0, 0.0]).reshape((-1, 2))
@@ -85,7 +82,7 @@ class TrunkNet(nn.Module):
 
 branch_network = BranchNet()
 trunk_network = TrunkNet()
-model = DeepOperatorNetwork(branch_network, trunk_network, 2)
+model = sml.DeepOperatorNetwork(branch_network, trunk_network, 2)
 
 
 class ElasticityDataSet(Dataset):
@@ -145,7 +142,7 @@ class LossFunction(nn.Module):
 
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-trainer = BBBTrainer(model, optimizer, LossFunction())
+trainer = sml.BBBTrainer(model, optimizer, LossFunction())
 trainer.run(
     train_data=train_data,
     test_data=test_data,

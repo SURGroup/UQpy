@@ -2,10 +2,11 @@ import torch
 import torch.nn as nn
 import logging
 from beartype import beartype
+from typing import Union
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
-#@beartype
+# @beartype
 class Trainer:
 
     def __init__(
@@ -13,16 +14,21 @@ class Trainer:
         model: nn.Module,
         optimizer: torch.optim.Optimizer,
         loss_function: nn.Module = nn.MSELoss(),
+        scheduler: Union[torch.optim.lr_scheduler.LRScheduler, list] = None,
     ):
         """Prepare to train a neural network
 
         :param model: Neural Network model to be trained
         :param optimizer: Optimization algorithm used to update ``model`` parameters
         :param loss_function: Function used to compute loss during training
+        :param scheduler: Scheduler used to adjust the learning rate of the ``optimizer``.
+         Schedulers may be chained together by creating a list of schedulers
         """
         self.model = model
         self.optimizer = optimizer
         self.loss_function = loss_function
+        if (scheduler is not None) and (not isinstance(scheduler, list)):
+            self.scheduler = [scheduler]
 
         self.history: dict = {"train_loss": None, "test_loss": None}
         """Record of the loss during training and validation. 
@@ -30,6 +36,7 @@ class Trainer:
         
          - ``history["train_loss"]`` contains training history as a ``torch.Tensor``.
          - ``history["test_loss"]`` contains testing history as a ``torch.Tensor``.
+
          """
         self.logger = logging.getLogger(__name__)
 
@@ -83,6 +90,9 @@ class Trainer:
                     train_loss.backward()
                     total_train_loss += train_loss.item()
                     self.optimizer.step()
+                    if self.scheduler:
+                        for s in self.scheduler:
+                            s.step()
                     self.optimizer.zero_grad()
                 average_train_loss = total_train_loss / len(train_data)
                 self.history["train_loss"][i] = average_train_loss
@@ -94,7 +104,7 @@ class Trainer:
                         test_prediction = self.model(*x)
                         test_loss = self.loss_function(test_prediction, y)
                         total_test_loss += test_loss.item()
-                    average_test_loss = total_test_loss/ len(test_data)
+                    average_test_loss = total_test_loss / len(test_data)
                     self.history["test_loss"][i] = average_test_loss
                     self.logger.info(
                         f"UQpy: Scientific Machine Learning: "

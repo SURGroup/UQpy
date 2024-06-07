@@ -1,5 +1,4 @@
 """
-
 Training a Bayesian neural network
 =============================================================
 
@@ -18,11 +17,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
-
-# UQpy imports
-from UQpy.scientific_machine_learning.layers import BayesianLayer
-from UQpy.scientific_machine_learning.neural_networks import FeedForwardNeuralNetwork
-from UQpy.scientific_machine_learning.trainers import BBBTrainer
+import UQpy.scientific_machine_learning as sml
 
 # %% md
 #
@@ -33,13 +28,13 @@ from UQpy.scientific_machine_learning.trainers import BBBTrainer
 
 width = 5
 network = nn.Sequential(
-    BayesianLayer(1, width),
+    sml.BayesianLinear(1, width),
     nn.ReLU(),
-    BayesianLayer(width, width),
+    sml.BayesianLinear(width, width),
     nn.ReLU(),
-    BayesianLayer(width, 1),
+    sml.BayesianLinear(width, 1),
 )
-model = FeedForwardNeuralNetwork(network)
+model = sml.FeedForwardNeuralNetwork(network)
 
 # %% md
 #
@@ -56,7 +51,7 @@ model = FeedForwardNeuralNetwork(network)
 class QuadraticDataset(Dataset):
     def __init__(self, n_samples=200):
         self.n_samples = n_samples
-        self.x = torch.linspace(-5, 5, n_samples).reshape(-1, 1)
+        self.x = torch.linspace(-5, 5, n_samples, dtype=torch.float).reshape(-1, 1)
         self.y = self.x**2
 
     def __len__(self):
@@ -84,7 +79,7 @@ initial_prediction = model(QuadraticDataset().x)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 train_data = DataLoader(QuadraticDataset(), batch_size=20, shuffle=True)
-trainer = BBBTrainer(model, optimizer)
+trainer = sml.BBBTrainer(model, optimizer)
 print("Starting Training...", end="")
 trainer.run(train_data=train_data, epochs=300, beta=1e-6, num_samples=10)
 print("done")
