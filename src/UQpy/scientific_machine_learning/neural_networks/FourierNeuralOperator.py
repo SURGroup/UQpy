@@ -25,7 +25,7 @@ class FourierNeuralOperator(NeuralNetwork):
         super().__init__(**kwargs)
         self.spectral_network = spectral_network
         self.upscale_network = upscale_network or nn.Linear(
-            self.n_dimension, self.width  # todo: how do I get the dimension and width from spectral_network
+            self.n_dimension, self.width
         )
         self.downscale_network = downscale_network or nn.Linear(
             self.width, self.n_dimension

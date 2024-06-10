@@ -72,16 +72,14 @@ class FourierNeuralOperator1D(NeuralNetwork):
         x1 = self.conv3(x)
         x2 = self.w3(x)
         x = x1 + x2
-        # todo: note last FNO does not have activation
-
         if self.padding > 0:
             x = x[..., : -self.padding]  # pad the domain if input is non-periodic
         x = x.permute(0, 2, 1)
 
-        x = self.fc1(x)  # ToDo: User should be allowed to place constraints
+        x = self.fc1(x)
         x = F.relu(x)
 
-        x = self.fc2(x)  # ToDo: default linear always applied
+        x = self.fc2(x)
         return x
 
     # def get_grid(self, shape, device):
