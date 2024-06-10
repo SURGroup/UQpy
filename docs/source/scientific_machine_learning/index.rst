@@ -31,7 +31,7 @@ The module contains the following parent classes:
    :maxdepth: 1
    :caption: Scientific Machine Learning
 
-    Activation Functions <activation_functions/index>
+    Activations <activations/index>
     Layers <layers/index>
     Loss Functions <losses>
     Neural Networks <neural_networks/index>

@@ -16,7 +16,7 @@ class SpectralConv1d(Layer):
 
         :param in_channels: Number of channels in the input image
         :param out_channels: Number of channels produced by the convolution
-        :param modes:  Number of Fourier modes to multiply, at most :math:`\lfloor L / 2 \rfloor + 1`
+        :param modes:  Number of Fourier modes to multiply, at most :math:`\\lfloor L / 2 \\rfloor + 1`
         """
         super().__init__(**kwargs)
         self.in_channels = in_channels
@@ -31,13 +31,16 @@ class SpectralConv1d(Layer):
                 self.in_channels, self.out_channels, self.modes, dtype=torch.cfloat
             )
         )
-        """Learnable parameters to be optimized."""
+        """Weights of the Fourier modes. 
+        
+        Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes})` 
+        with complex entries provided by ``torch.cfloat``"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Computational call
 
-        :param x: Tensor of shape :math:`(N, C_\text{in}, L)`
-        :return: Tensor of shape :math:`(N, C_\text{out}, L)`
+        :param x: Tensor of shape :math:`(N, C_\\text{in}, L)`
+        :return: Tensor of shape :math:`(N, C_\\text{out}, L)`
         """
         batch_size = x.shape[0]
         length = x.shape[2]
