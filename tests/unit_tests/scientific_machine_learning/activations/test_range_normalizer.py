@@ -1,6 +1,6 @@
 import pytest
 import torch
-from UQpy.scientific_machine_learning.activation_functions import RangeNormalizer
+from UQpy.scientific_machine_learning.activations import RangeNormalizer
 from hypothesis import given, strategies as st
 from hypothesis.extra.numpy import array_shapes
 
