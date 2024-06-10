@@ -1,12 +1,12 @@
 import torch
-from UQpy.scientific_machine_learning.baseclass import ActivationFunction
+from UQpy.scientific_machine_learning.baseclass import Activation
 from beartype import beartype
 from typing import Union
 from UQpy.utilities.ValidationTypes import PositiveFloat
 
 
 @beartype
-class GaussianActivationNormalizer(ActivationFunction):
+class GaussianActivationNormalizer(Activation):
     def __init__(self, epsilon: PositiveFloat = 1e-8):
         """
 
