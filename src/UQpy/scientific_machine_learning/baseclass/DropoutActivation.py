@@ -1,4 +1,4 @@
-from UQpy.scientific_machine_learning.baseclass import ActivationFunction
+from UQpy.scientific_machine_learning.baseclass import Activation
 from beartype import beartype
 from beartype.vale import Is
 from typing import Annotated
@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 
 @beartype
-class DropoutActivationFunction(ActivationFunction, ABC):
+class DropoutActivation(Activation, ABC):
     def __init__(
         self,
         p: Annotated[float, Is[lambda p: 0 <= p <= 1]] = 0.5,
@@ -17,8 +17,8 @@ class DropoutActivationFunction(ActivationFunction, ABC):
         """Randomly zero out some elements of a tensor
 
         :param p: Probability of an element to be zeroed. Default: 0.5
-        :param inplace: If set to ``True``, will do this operation in-place. Default: ``False``
-        :param dropping: If set to ``True``, randomly zeros some tensor elements. Default: ``True``
+        :param inplace: If ``True``, will do this operation in-place. Default: ``False``
+        :param dropping: If ``True``, will perform dropout, otherwise acts as identity function. Default: ``True``
         """
         super().__init__(**kwargs)
         self.p = p
@@ -28,7 +28,7 @@ class DropoutActivationFunction(ActivationFunction, ABC):
     def drop(self, mode: bool = True):
         """Set dropping mode.
 
-        :param mode: If ``True``, layer parameters are dropped.
+        :param mode: If ``True``, will perform dropout, otherwise acts as identity function.
         """
         self.dropping = mode
 

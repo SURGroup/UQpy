@@ -1,4 +1,4 @@
-from UQpy.scientific_machine_learning.activation_functions import (
+from UQpy.scientific_machine_learning.activations import (
     Dropout,
     Dropout1d,
     Dropout2d,
