@@ -3,7 +3,6 @@ import torch.nn as nn
 import logging
 from UQpy.scientific_machine_learning.baseclass.NeuralNetwork import NeuralNetwork
 from UQpy.scientific_machine_learning.baseclass import BayesianLayer
-from UQpy.scientific_machine_learning.baseclass.NeuralNetwork import gaussian_kullback_leibler_divergence
 
 
 class DeepOperatorNetwork(NeuralNetwork):
@@ -70,40 +69,40 @@ class DeepOperatorNetwork(NeuralNetwork):
         # return torch.einsum("...i,...i -> ...i", branch_output, trunk_output)
         return outputs[0] if self.num_outputs == 1 else outputs
 
-    def compute_kullback_leibler_divergence(self) -> float:
-        """Computes the Kullback-Leibler divergence between the current and prior ``network`` parameters
-
-        :return: Kullback-Leibler divergence
-        """
-        kl = 0
-        for layer in self.branch_network.modules():
-            if isinstance(layer, BayesianLayer):
-                kl += gaussian_kullback_leibler_divergence(
-                    layer.weight_mu,
-                    torch.log1p(torch.exp(layer.weight_sigma)),
-                    layer.prior_mu,
-                    layer.prior_sigma,
-                )
-                if layer.bias:
-                    kl += gaussian_kullback_leibler_divergence(
-                        layer.bias_mu,
-                        torch.log1p(torch.exp(layer.bias_sigma)),
-                        layer.prior_mu,
-                        layer.prior_sigma,
-                    )
-        for layer in self.trunk_network.modules():
-            if isinstance(layer, BayesianLinear) or isinstance(layer, BayesianConvLayer):
-                kl += gaussian_kullback_leibler_divergence(
-                    layer.weight_mu,
-                    torch.log1p(torch.exp(layer.weight_sigma)),
-                    layer.prior_mu,
-                    layer.prior_sigma,
-                )
-                if layer.bias:
-                    kl += gaussian_kullback_leibler_divergence(
-                        layer.bias_mu,
-                        torch.log1p(torch.exp(layer.bias_sigma)),
-                        layer.prior_mu,
-                        layer.prior_sigma,
-                    )
-        return kl
+    # def compute_kullback_leibler_divergence(self) -> float:
+    #     """Computes the Kullback-Leibler divergence between the current and prior ``network`` parameters
+    #
+    #     :return: Kullback-Leibler divergence
+    #     """
+    #     kl = 0
+    #     for layer in self.branch_network.modules():
+    #         if isinstance(layer, BayesianLayer):
+    #             kl += gaussian_kullback_leibler_divergence(
+    #                 layer.weight_mu,
+    #                 torch.log1p(torch.exp(layer.weight_sigma)),
+    #                 layer.prior_mu,
+    #                 layer.prior_sigma,
+    #             )
+    #             if layer.bias:
+    #                 kl += gaussian_kullback_leibler_divergence(
+    #                     layer.bias_mu,
+    #                     torch.log1p(torch.exp(layer.bias_sigma)),
+    #                     layer.prior_mu,
+    #                     layer.prior_sigma,
+    #                 )
+    #     for layer in self.trunk_network.modules():
+    #         if isinstance(layer, BayesianLinear) or isinstance(layer, BayesianConvLayer):
+    #             kl += gaussian_kullback_leibler_divergence(
+    #                 layer.weight_mu,
+    #                 torch.log1p(torch.exp(layer.weight_sigma)),
+    #                 layer.prior_mu,
+    #                 layer.prior_sigma,
+    #             )
+    #             if layer.bias:
+    #                 kl += gaussian_kullback_leibler_divergence(
+    #                     layer.bias_mu,
+    #                     torch.log1p(torch.exp(layer.bias_sigma)),
+    #                     layer.prior_mu,
+    #                     layer.prior_sigma,
+    #                 )
+    #     return kl
