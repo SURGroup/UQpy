@@ -6,7 +6,13 @@ from UQpy.utilities.ValidationTypes import PositiveFloat
 
 @beartype
 class GaussianNormalizer(Layer):
-    def __init__(self, x: torch.Tensor, epsilon: PositiveFloat = 1e-8, encoding: bool = True, **kwargs):
+    def __init__(
+        self,
+        x: torch.Tensor,
+        epsilon: PositiveFloat = 1e-8,
+        encoding: bool = True,
+        **kwargs,
+    ):
         """
 
         :param x:
