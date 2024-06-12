@@ -57,4 +57,5 @@ class NeuralNetwork(nn.Module, ABC):
 
         :return: ``True`` if output is deterministic, ``False`` if output is probabilistic
         """
-        return not self.sampling and not self.dropping and not self.training
+
+        return not (self.sampling or self.dropping or self.training)
