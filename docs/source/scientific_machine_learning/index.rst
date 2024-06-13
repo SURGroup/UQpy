@@ -18,7 +18,7 @@ which uses similar inputs.
 
    The relationship between UQ4ML and ML4UQ.
 
-The module contains the following parent classes:
+The module contains the following parent classes for neural networks:
 
 - :class:`ActivationFunction`: Parent class to all activation functions. Subclass of :class:`torch.nn.Module`.
 - :class:`BayesianLayer`: Parent class to all Bayesian layers. Subclass of :class:`Layer`
@@ -26,12 +26,25 @@ The module contains the following parent classes:
 - :class:`.Loss`: Parent class to all Loss functions. Subclass of :class:`torch.nn.Module`.
 - :class:`.NeuralNetwork`: Parent class to all Neural Networks and Neural Operators.  Subclass of :class:`torch.nn.Module`.
 
+Consistent with Pytorch's architecture, those classes and their subclasses primarily organize and store tensors and parameters.
+The bulk of the computation is done by the methods in the ``functional`` folder.
+For example, the ``SpectralConv1d`` class is used to define a spectral convolution in a neural network, but hands off
+the actual Fourier transform and other calculations to ``funtional.spectral_conv1d``.
+
+To prevent naming conflicts with the common torch imports, we recommend importing this module as the following.
+
+>>> import torch.nn as nn
+>>> import torch.nn.functional as F
+>>> import UQpy.scientific_machine_learning as sml  # jokingly pronounced 'smile'
+>>> import UQpy.scientific_machine_learning.functional as func
+
 
 .. toctree::
    :maxdepth: 1
    :caption: Scientific Machine Learning
 
     Activations <activations/index>
+    Functional <functional/index>
     Layers <layers/index>
     Loss Functions <losses>
     Neural Networks <neural_networks/index>
