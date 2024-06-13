@@ -17,7 +17,7 @@ The :class:`.Dropout` class is imported using the following command:
 
 >>> from UQpy.scientific_machine_learning import Dropout
 
-.. autoclass:: UQpy.scientific_machine_learning.activation_functions.Dropout
+.. autoclass:: UQpy.scientific_machine_learning.activations.Dropout
     :members: forward
 
 ______
@@ -31,7 +31,7 @@ The :class:`.Dropout1d` class is imported using the following command:
 
 >>> from UQpy.scientific_machine_learning import Dropout1d
 
-.. autoclass:: UQpy.scientific_machine_learning.activation_functions.Dropout1d
+.. autoclass:: UQpy.scientific_machine_learning.activations.Dropout1d
     :members: forward
 
 ______
@@ -45,7 +45,7 @@ The :class:`.Dropout2d` class is imported using the following command:
 
 >>> from UQpy.scientific_machine_learning import Dropout2d
 
-.. autoclass:: UQpy.scientific_machine_learning.activation_functions.Dropout2d
+.. autoclass:: UQpy.scientific_machine_learning.activations.Dropout2d
     :members: forward
 
 ______
@@ -59,5 +59,5 @@ The :class:`.Dropout3d` class is imported using the following command:
 
 >>> from UQpy.scientific_machine_learning import Dropout3d
 
-.. autoclass:: UQpy.scientific_machine_learning.activation_functions.Dropout3d
+.. autoclass:: UQpy.scientific_machine_learning.activations.Dropout3d
     :members: forward

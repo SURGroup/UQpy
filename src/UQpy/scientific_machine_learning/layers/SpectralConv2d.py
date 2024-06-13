@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import UQpy.scientific_machine_learning.functional as func
 from UQpy.scientific_machine_learning.baseclass import Layer
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
@@ -13,12 +14,12 @@ class SpectralConv2d(Layer):
         modes2: PositiveInteger,
         **kwargs,
     ):
-        """2D Fourier layer. It does FFT, linear transform, and Inverse FFT.
+        """Applies 2d FFT, linear transform, then inverse FFT.
 
-        :param in_channels: Number of channels in the input signal
-        :param out_channels: Number of channels in the output signal
-        :param modes1: Number of Fourier modes to multiply, at most :math:`\lfloor H / 2 \rfloor + 1`
-        :param modes2: Number of Fourier modes to multiply, at most :math:`\lfloor W / 2 \rfloor + 1`
+        :param in_channels: :math:`C_\text{in}`, Number of channels in the input signal
+        :param out_channels: :math:`C_\text{out}`, Number of channels in the output signal
+        :param modes1: Number of Fourier modes to keep, at most :math:`\lfloor H / 2 \rfloor + 1`
+        :param modes2: Number of Fourier modes to keep, at most :math:`\lfloor W / 2 \rfloor + 1`
         """
         super().__init__(**kwargs)
         self.in_channels = in_channels
@@ -28,65 +29,31 @@ class SpectralConv2d(Layer):
 
         self.scale: float = 1 / (in_channels * out_channels)
         """Normalizing factor for weights"""
-        shape = (in_channels, out_channels, self.modes1, self.modes2, 2)
-        self.weights1 = nn.Parameter(
+        shape = (in_channels, out_channels, self.modes1, self.modes2)
+        self.weights1: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(*shape, dtype=torch.cfloat)
         )
-        self.weights2 = nn.Parameter(
+        """First weights of the Fourier modes.
+        
+        Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes1}, \\text{modes2})` 
+        with dtype ``torch.cfloat``"""
+        self.weights2: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(*shape, dtype=torch.cfloat)
         )
+        """Second weights of the Fourier modes.
+
+        Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes1}, \\text{modes2})` 
+        with dtype ``torch.cfloat``"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Computational call
+        """Compute the 2d spectral convolution of ``x``
 
         :param x: Tensor of shape :math:`(N, C_\text{in}, H, W)`
         :return: Tensor of shape :math:`(N, C_\text{out}, H, W)`
         """
-        batch_size = x.shape[0]
-        height = x.shape[2]
-        width = x.shape[3]
-
-        # Compute Fourier coefficients up to factor of e^(- something constant)
-        x_ft = torch.fft.rfft(x, 2, normalized=True, onesided=True)
-        # Multiply relevant Fourier modes
-        out_ft = torch.zeros(
-            batch_size,
-            self.out_channels,
-            height,
-            (width // 2) + 1,
-            2,
-            dtype=torch.cfloat,
-        )
-        out_ft[:, :, : self.modes1, : self.modes2] = self.complex_multiplication_2d(
-            x_ft[:, :, : self.modes1, : self.modes2], self.weights1
-        )
-        out_ft[:, :, -self.modes1 :, : self.modes2] = self.complex_multiplication_2d(
-            x_ft[:, :, -self.modes1 :, : self.modes2], self.weights2
-        )
-        # Return to physical space
-        x = torch.fft.irfft(
-            out_ft, 2, normalized=True, onesided=True, signal_sizes=(height, width)
-        )
-        return x
-
-    @staticmethod
-    def complex_multiplication_2d(
-        input: torch.Tensor, weights: torch.Tensor
-    ) -> torch.Tensor:
-        """Complex multiplication over a 2d signal
-
-        :param input: Tensor of shape :math:`(N, C_{\text{in}}, H, W)`
-        :param weights: Tensor of shape :math:`(C_\text{in}, C_\text{out}, H, W)`
-        :return: Tensor of shape :math:`(N, C_\text{out}, H, W)`
-        """
-        equation = "bixy,ioxy->boxy"
-        upper = torch.einsum(equation, input[..., 0], weights[..., 0]) - torch.einsum(
-            equation, input[..., 1], weights[..., 1]
-        )
-        lower = torch.einsum(equation, input[..., 1], weights[..., 0]) + torch.einsum(
-            equation, input[..., 0], weights[..., 1]
-        )
-        return torch.stack([upper, lower], dim=-1)
+        weights = (self.weights1, self.weights2)
+        modes = (self.modes1, self.modes2)
+        return func.spectral_conv2d(x, weights, modes, self.out_channels)
 
     def extra_repr(self) -> str:
         return (

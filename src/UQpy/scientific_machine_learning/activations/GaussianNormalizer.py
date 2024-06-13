@@ -5,6 +5,7 @@ from UQpy.utilities.ValidationTypes import PositiveFloat
 
 @beartype
 class GaussianNormalizer:
+    # TODO: is this the same thing as torch batchnorm? or do we need the decoder function
     def __init__(self, x: torch.Tensor, epsilon: PositiveFloat = 1e-8, **kwargs):
         """Scale and shift the tensor ``x`` to have mean of 0 and standard deviation of 1
 
