@@ -14,13 +14,13 @@ def spectral_conv3d(
     modes: tuple[PositiveInteger, PositiveInteger, PositiveInteger],
     out_channels: PositiveInteger,
 ) -> torch.Tensor:
-    """
+    """Compute the 3d spectral convolution :math:`\mathcal{F}^{-1}(R (\mathcal{F}x) )`
 
-    :param x:
-    :param weights:
-    :param modes:
-    :param out_channels
-    :return:
+    :param x: Tensor of shape :math:`(N, C_\text{in}, H, W, D)`
+    :param weights: Tuple of four tensors each with shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes1}, \\text{modes2}, \\text{modes3})`
+    :param modes: Tuple of three positive integers
+    :param out_channels: :math:`C_\text{out}`, Number of channels in the output signal
+    :return: Tensor :math:`\mathcal{F}^{-1}(R (\mathcal{F}x) )` of shape :math:`(N, C_\text{out}, H, W, D)`
     """
     batch_size, in_channels, height, width, depth = x.shape
 
@@ -58,8 +58,8 @@ def spectral_conv3d(
             slice(-modes[1], None),
             slice(0, modes[2]),
         ),
-    ]
-    equation = "bixyz,ioxyz->boxyz"
+    ]  # ToDo: benchmark the 3d FNO.
+    equation = "bihwd,iohwd->bohwd"  # "bixyz,ioxyz->boxyz"
     for i, w in zip(indices, weights):
         out_ft[i] = torch.einsum(equation, x_ft[i], w)
     # Return to physical space

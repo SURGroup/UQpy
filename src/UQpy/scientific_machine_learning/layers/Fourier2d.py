@@ -14,11 +14,11 @@ class Fourier2d(Layer):
         modes2: PositiveInteger,
         **kwargs,
     ):
-        """
+        """Construct a 2d Fourier block to compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`
 
-        :param width:
-        :param modes1:
-        :param modes2:
+        :param width: Number of neurons in the layer and channels in the spectral convolution
+        :param modes1: Number of Fourier modes to keep, at most :math:`\lfloor H / 2 \rfloor + 1`
+        :param modes2: Number of Fourier modes to keep, at most :math:`\lfloor W / 2 \rfloor + 1`
         """
         super().__init__(**kwargs)
         self.width = width
@@ -31,10 +31,10 @@ class Fourier2d(Layer):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Computational call
+        """Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`
 
-        :param x: Input tensor
-        :return: Output tensor
+        :param x: Tensor of shape :math:`(N, \text{width}, H, W)`
+        :return: Tensor of shape :math:`(N, \text{width}, H, W)`
         """
         return self.spectral_conv(x) + self.conv(x)
 

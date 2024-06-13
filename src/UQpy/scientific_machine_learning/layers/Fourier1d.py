@@ -7,10 +7,10 @@ from UQpy.utilities.ValidationTypes import PositiveInteger
 
 class Fourier1d(Layer):
     def __init__(self, width: PositiveInteger, modes: PositiveInteger, **kwargs):
-        """Construct a Fourier block to compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x))`
+        """Construct a 1d Fourier block to compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`
 
-        :param width: Number of neurons in the layer
-        :param modes: Number of Fourier modes to keep
+        :param width: Number of neurons in the layer and channels in the spectral convolution
+        :param modes: Number of Fourier modes to keep, at most :math:`\lfloor L / 2 \rfloor + 1`
         """
         super().__init__(**kwargs)
         self.width = width
@@ -20,10 +20,10 @@ class Fourier1d(Layer):
         self.spectral_conv = sml.SpectralConv1d(self.width, self.width, self.modes)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
+        """Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`
 
-        :param x:
-        :return:
+        :param x: Tensor of shape :math:`(N, \text{width}, L)`
+        :return: Tensor of shape :math:`(N, \text{width}, L)`
         """
         return self.spectral_conv(x) + self.conv(x)
 
