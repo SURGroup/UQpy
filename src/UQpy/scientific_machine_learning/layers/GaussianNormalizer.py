@@ -15,7 +15,7 @@ class GaussianNormalizer(Layer):
     ):
         """
 
-        :param x:
+        :param x: Tensor of any shape
         :param epsilon:
         :param kwargs:
 
@@ -43,10 +43,10 @@ class GaussianNormalizer(Layer):
         self.std = torch.std(self.x)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
+        """Scale ``x`` to have a new mean and std
 
-        :param x:
-        :return:
+        :param x: Tensor of any shape
+        :return: Tensor of any
         """
         if self.encoding:
             return self.scale_down(x)
@@ -70,12 +70,18 @@ class GaussianNormalizer(Layer):
         return (y * (self.std + self.epsilon)) + self.mean
 
     def encode(self, mode: bool = True):
-        """
+        """Set the Normalizer to scale a tensor to mean=0 and std=1
 
-        :param mode:
-        :return:
+        :param mode: If ``True``, set ``self.encoding`` to ``True``. Default: ``True``
         """
         self.encoding = mode
+
+    def decode(self, mode: bool = True):
+        """Set the normalizer to restore a tensor to its original mean and std
+
+        :param mode: If ``True``, set ``self.encoding`` to ``False``. Default: ``True``
+        """
+        self.encoding = not mode
 
     def extra_repr(self) -> str:
         return f"epsilon={self.epsilon}, encoding={self.encoding}"
