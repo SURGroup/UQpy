@@ -96,7 +96,7 @@ class BayesianLayer(Layer, ABC):
             self.bias_sigma.data.normal_(*self.posterior_rho_initial)
 
     def get_weight_bias(self) -> tuple[torch.Tensor, torch.Tensor]:
-        """Get the weights and biases for the layer.
+        """Get the weights and biases for the Bayesian layer.
 
         If ``training`` or ``sampling`` is ``True``, then sample weights and biases from their respective distributions.
         Otherwise, use distribution means for weights and biases.
