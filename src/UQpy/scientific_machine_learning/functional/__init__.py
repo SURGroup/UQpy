@@ -1,3 +1,4 @@
+from UQpy.scientific_machine_learning.functional.gaussian_kullback_leiber_loss import gaussian_kullback_leiber_loss
 from UQpy.scientific_machine_learning.functional.spectral_conv1d import spectral_conv1d
-# from UQpy.scientific_machine_learning.functional.spectral_conv2d import spectral_conv2d
+from UQpy.scientific_machine_learning.functional.spectral_conv2d import spectral_conv2d
 from UQpy.scientific_machine_learning.functional.spectral_conv3d import spectral_conv3d
