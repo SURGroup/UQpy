@@ -1,7 +1,10 @@
 from UQpy.scientific_machine_learning.losses.EvidenceLowerBound import (
     EvidenceLowerBound,
 )
-from UQpy.scientific_machine_learning.losses.GaussianKullbackLeiblerLoss import (
+from UQpy.scientific_machine_learning.losses.GaussianJensenShannonDivergence import (
+    GaussianJensonShannonDivergence,
+)
+from UQpy.scientific_machine_learning.losses.GaussianKullbackLeiblerDivergence import (
     GaussianKullbackLeiblerLoss,
 )
 from UQpy.scientific_machine_learning.losses.LpLoss import LpLoss
