@@ -53,10 +53,10 @@ class BayesianConv1d(BayesianLayer):
         self.groups = groups
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Apply ``F.conv1d`` to ``x``
+        r"""Apply ``F.conv1d`` to ``x``
 
-        :param x: Input tensor
-        :return: Output tensor
+        :param x: Tensor of shape :math:`(N, C_\text{in}, L)` or :math:`(C_\text{in}, L)`
+        :return: Tensor of shape :math:`(N, C_\text{out}, L)` or :math:`(C_\text{out}, L)`
         """
         weight, bias = self.get_weight_bias()
         return F.conv1d(
@@ -64,4 +64,4 @@ class BayesianConv1d(BayesianLayer):
         )
 
     def extra_repr(self) -> str:
-        return ""
+        return f"priors={self.priors}, sampling={self.sampling}"

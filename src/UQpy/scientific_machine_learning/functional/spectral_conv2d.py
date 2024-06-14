@@ -16,10 +16,10 @@ def spectral_conv2d(
     modes1: PositiveInteger,
     modes2: PositiveInteger,
 ) -> torch.Tensor:
-    """Compute the 2d spectral convolution :math:`\mathcal{F}^{-1}(R (\mathcal{F}x) )`
+    r"""Compute the 2d spectral convolution :math:`\mathcal{F}^{-1}(R (\mathcal{F}x) )`
 
     :param x: Tensor of shape :math:`(N, C_\text{in}, H, W)`
-    :param weights: Tuple of two tensors each with shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes1}, \\text{modes2})`
+    :param weights: Tuple of two tensors each with shape :math:`(C_\text{in}, C_\text{out}, \text{modes1}, \text{modes2})`
     :param out_channels: :math:`C_\text{out}`, Number of channels in the output signal
     :param modes1: Number of Fourier modes to keep, at most :math:`\lfloor H / 2 \rfloor + 1`
     :param modes2: Number of Fourier modes to keep, at most :math:`\lfloor W / 2 \rfloor + 1`

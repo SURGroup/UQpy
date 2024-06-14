@@ -13,7 +13,7 @@ class SpectralConv1d(Layer):
         modes: PositiveInteger,
         **kwargs,
     ):
-        """Applies FFT, linear transform, then inverse FFT.
+        r"""Applies FFT, linear transform, then inverse FFT.
 
         :param in_channels: :math:`C_\text{in}`, Number of channels in the input signal
         :param out_channels: :math:`C_\text{out}`, Number of channels in the output signal
@@ -32,12 +32,12 @@ class SpectralConv1d(Layer):
                 self.in_channels, self.out_channels, self.modes, dtype=torch.cfloat
             )
         )
-        """Weights of the Fourier modes. 
+        r"""Weights of the Fourier modes. 
         
         Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes})` with dtype ``torch.cfloat``"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Compute the 1d spectral convolution of ``x``
+        r"""Compute the 1d spectral convolution of ``x``
 
         :param x: Tensor of shape :math:`(N, C_\text{in}, L)`
         :return: Tensor of shape :math:`(N, C_\text{out}, L)`

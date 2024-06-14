@@ -42,7 +42,6 @@ class BayesianConv2d(BayesianLayer):
          - ``priors["posterior_rho_initial"]`` = ``(-3, 0.1)``
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
          If ``False``, use distribution mean as parameter values.
-
         """
         kernel_size = (
             kernel_size
@@ -63,8 +62,8 @@ class BayesianConv2d(BayesianLayer):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward model evaluation
 
-        :param x: Input tensor
-        :return: Output tensor
+        :param x: Tensor of shape :math:`(N, C_\text{in}, H, W)`
+        :return: Tensor of shape :math:`(N, C_\text{out}, H, W)`
         """
         weight, bias = self.get_weight_bias()
         return F.conv2d(

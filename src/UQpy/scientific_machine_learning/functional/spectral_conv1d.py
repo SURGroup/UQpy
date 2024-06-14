@@ -4,15 +4,17 @@ from beartype import beartype
 from beartype.vale import Is
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
+tensor3d = Annotated[torch.Tensor, Is[lambda x: x.ndim == 3]]
+
 
 @beartype
 def spectral_conv1d(
-    x: Annotated[torch.Tensor, Is[lambda x: x.ndim == 3]],
-    weights: Annotated[torch.Tensor, Is[lambda x: x.ndim == 3]],
+    x: tensor3d,
+    weights: tensor3d,
     out_channels: PositiveInteger,
     modes: PositiveInteger,
 ) -> torch.Tensor:
-    """Compute the 1d spectral convolution :math:`\mathcal{F}^{-1}(R (\mathcal{F}x) )`
+    r"""Compute the 1d spectral convolution :math:`\mathcal{F}^{-1}(R (\mathcal{F}x) )`
 
     :param x: Tensor of shape :math:`(N, C_\text{in}, L)`
     :param weights: Tensor of shape :math:`(C_\text{in}, C_\text{out}, L)`

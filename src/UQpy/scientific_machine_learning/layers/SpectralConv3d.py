@@ -15,7 +15,7 @@ class SpectralConv3d(Layer):
         modes3: PositiveInteger,
         **kwargs,
     ):
-        """Applies 3d FFT, linear transform, then inverse FFT.
+        r"""Applies 3d FFT, linear transform, then inverse FFT.
 
         :param in_channels: :math:`C_\text{in}`, Number of channels in the input signal
         :param out_channels: :math:`C_\text{out}`, Number of channels in the output signal
@@ -37,34 +37,34 @@ class SpectralConv3d(Layer):
         self.weights1 = nn.Parameter(
             self.scale * torch.rand(*shape, dtype=torch.cfloat)
         )
-        """First weights of the Fourier modes.
+        r"""First weights of the Fourier modes.
 
         Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes1}, \\text{modes2}, \\text{modes3})` 
         with dtype ``torch.cfloat``"""
         self.weights2 = nn.Parameter(
             self.scale * torch.rand(*shape, dtype=torch.cfloat)
         )
-        """Second weights of the Fourier modes.
+        r"""Second weights of the Fourier modes.
 
         Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes1}, \\text{modes2}, \\text{modes3})` 
         with dtype ``torch.cfloat``"""
         self.weights3 = nn.Parameter(
             self.scale * torch.rand(*shape, dtype=torch.cfloat)
         )
-        """Third weights of the Fourier modes.
+        r"""Third weights of the Fourier modes.
 
         Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes1}, \\text{modes2}, \\text{modes3})` 
         with dtype ``torch.cfloat``"""
         self.weights4 = nn.Parameter(
             self.scale * torch.rand(*shape, dtype=torch.cfloat)
         )
-        """Fourth weights of the Fourier modes.
+        r"""Fourth weights of the Fourier modes.
 
         Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes1}, \\text{modes2}, \\text{modes3})` 
         with dtype ``torch.cfloat``"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Compute the 3d spectral convolution of ``x``
+        r"""Compute the 3d spectral convolution of ``x``
 
         :param x: Tensor of shape :math:`(N, C_\text{in}, H, W, D)`
         :return: Tensor of shape :math:`(N, C_\text{out}, H, W, D)`

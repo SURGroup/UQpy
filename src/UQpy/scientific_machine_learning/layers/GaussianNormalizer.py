@@ -46,7 +46,7 @@ class GaussianNormalizer(Layer):
         """Scale ``x`` to have a new mean and std
 
         :param x: Tensor of any shape
-        :return: Tensor of any
+        :return: Tensor of any shape
         """
         if self.encoding:
             return self.scale_down(x)

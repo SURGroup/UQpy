@@ -26,10 +26,10 @@ class BayesianSpectralConv1d(BayesianLayer):
         """Scalar normalizing factor for weights"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Compute Fourier coefficients up to factor of :math:`e^{\\text{-some constant}}`
+        r"""Compute Fourier coefficients up to factor of :math:`e^{\text{-some constant}}`
 
-        :param x: Tensor of shape :math:`(N, C_\\text{in}, L)`
-        :return: Tensor of shape :math:`(N, C_\\text{out}, L)`
+        :param x: Tensor of shape :math:`(N, C_\text{in}, L)`
+        :return: Tensor of shape :math:`(N, C_\text{out}, L)`
         """
         weights, _ = self.get_weight_bias()
         return func.spectral_conv1d(x, weights, self.out_channels, self.modes)

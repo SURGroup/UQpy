@@ -14,7 +14,7 @@ class SpectralConv2d(Layer):
         modes2: PositiveInteger,
         **kwargs,
     ):
-        """Applies 2d FFT, linear transform, then inverse FFT.
+        r"""Applies 2d FFT, linear transform, then inverse FFT.
 
         :param in_channels: :math:`C_\text{in}`, Number of channels in the input signal
         :param out_channels: :math:`C_\text{out}`, Number of channels in the output signal
@@ -33,20 +33,20 @@ class SpectralConv2d(Layer):
         self.weights1: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(*shape, dtype=torch.cfloat)
         )
-        """First weights of the Fourier modes.
+        r"""First weights of the Fourier modes.
         
         Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes1}, \\text{modes2})` 
         with dtype ``torch.cfloat``"""
         self.weights2: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(*shape, dtype=torch.cfloat)
         )
-        """Second weights of the Fourier modes.
+        r"""Second weights of the Fourier modes.
 
         Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes1}, \\text{modes2})` 
         with dtype ``torch.cfloat``"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Compute the 2d spectral convolution of ``x``
+        r"""Compute the 2d spectral convolution of ``x``
 
         :param x: Tensor of shape :math:`(N, C_\text{in}, H, W)`
         :return: Tensor of shape :math:`(N, C_\text{out}, H, W)`

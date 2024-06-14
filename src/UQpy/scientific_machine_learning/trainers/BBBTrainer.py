@@ -6,7 +6,7 @@ from beartype import beartype
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
-# @beartype
+@beartype
 class BBBTrainer:
 
     def __init__(
@@ -22,7 +22,7 @@ class BBBTrainer:
         :param optimizer: Optimization algorithm used to update ``model`` parameters
         :param loss_function: Function used to compute negative log likelihood of the data during training
         :param divergence: Divergence measured between prior and posterior distribution of Bayesian layers
-         Default: sml.GaussianKullbackLeiblerLoss
+         Default: ``sml.GaussianKullbackLeiblerLoss()``
         """
         self.model = model
         self.optimizer = optimizer
@@ -39,7 +39,7 @@ class BBBTrainer:
         Note if training ends early there may be ``NaN`` values, as the histories are initialized with ``NaN``.
         
         - ``history["train_loss"]`` contains the training history as a ``torch.Tensor``.
-        - ``history["train_kl"]`` contains the training Kullback–Leibler divergence as a ``torch.Tensor``.
+        - ``history["train_divergence"]`` contains the training divergence as a ``torch.Tensor``.
         - ``history["train_nll"]`` contains the training negative log likelihood loss as a ``torch.Tensor``.
         - ``history["test_nll"]`` contains the testing negative log likelihood loss as a ``torch.Tensor``.
          """
@@ -61,8 +61,8 @@ class BBBTrainer:
         :param epochs: Maximum number of epochs to run the ``optimizer`` for
         :param num_samples: Number of Monte Carlo samples to approximate the loss
         :param tolerance: Optimization terminates early if *average* training loss is below tolerance.
-         Default :math:`1e-3`
-         :param beta: Weighting for the KL term in ELBO loss. Default :math: '1.0'
+         Default: :math:`1e-3`
+        :param beta: Weighting for the KL term in ELBO loss. Default: 1.0
 
         :raises RuntimeError: If neither ``train_data`` nor ``test_data`` is provided, a RuntimeError occurs.
         """

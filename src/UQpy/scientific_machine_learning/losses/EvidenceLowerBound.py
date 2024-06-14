@@ -28,7 +28,7 @@ class EvidenceLowerBound(Loss):
         kl: PositiveFloat,
         kl_weight: PositiveFloat,
     ) -> torch.Tensor:
-        """Forward computational call
+        """Compute ELBO loss
 
         :param x: Predicted values
         :param target: Target values
