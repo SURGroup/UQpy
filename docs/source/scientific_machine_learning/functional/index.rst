@@ -8,4 +8,5 @@ Here we define Python functions that perform computations for neural network com
    :maxdepth: 1
    :caption: Functional
 
+    Losses <losses>
     Spectral Convolutions <spectral_conv>

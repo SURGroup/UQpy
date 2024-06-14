@@ -40,7 +40,7 @@ To prevent naming conflicts with the common torch imports, we recommend importin
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Scientific Machine Learning
 
     Activations <activations/index>

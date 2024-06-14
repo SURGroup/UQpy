@@ -22,4 +22,3 @@ Attributes
 .. autoattribute:: UQpy.scientific_machine_learning.baseclass.BayesianLayer.bias
 .. autoattribute:: UQpy.scientific_machine_learning.baseclass.BayesianLayer.bias_mu
 .. autoattribute:: UQpy.scientific_machine_learning.baseclass.BayesianLayer.bias_sigma
-

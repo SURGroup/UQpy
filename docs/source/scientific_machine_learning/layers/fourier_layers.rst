@@ -1,5 +1,5 @@
 List of Fourier Layers
-^^^^^^^^^^^^^^^^^^^^^^
+======================
 
 All Fourier layers are types of convolutions, although they do not have a direct counterpart in :py:mod:`torch`.
 
