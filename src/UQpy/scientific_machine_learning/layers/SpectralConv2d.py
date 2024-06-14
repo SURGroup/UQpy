@@ -35,14 +35,14 @@ class SpectralConv2d(Layer):
         )
         r"""First weights of the Fourier modes.
         
-        Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes1}, \\text{modes2})` 
+        Tensor of shape :math:`(C_\text{in}, C_\text{out}, \text{modes1}, \text{modes2})` 
         with dtype ``torch.cfloat``"""
         self.weights2: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(*shape, dtype=torch.cfloat)
         )
         r"""Second weights of the Fourier modes.
 
-        Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes1}, \\text{modes2})` 
+        Tensor of shape :math:`(C_\text{in}, C_\text{out}, \text{modes1}, \text{modes2})` 
         with dtype ``torch.cfloat``"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

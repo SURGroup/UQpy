@@ -34,7 +34,7 @@ class SpectralConv1d(Layer):
         )
         r"""Weights of the Fourier modes. 
         
-        Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes})` with dtype ``torch.cfloat``"""
+        Tensor of shape :math:`(C_\text{in}, C_\text{out}, \text{modes})` with dtype ``torch.cfloat``"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         r"""Compute the 1d spectral convolution of ``x``

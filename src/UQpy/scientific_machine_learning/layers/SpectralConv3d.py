@@ -34,33 +34,33 @@ class SpectralConv3d(Layer):
         self.scale: float = 1 / (in_channels * out_channels)
         """Normalizing factor for weights"""
         shape = (in_channels, out_channels, self.modes1, self.modes2, self.modes3)
-        self.weights1 = nn.Parameter(
+        self.weights1: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(*shape, dtype=torch.cfloat)
         )
         r"""First weights of the Fourier modes.
 
-        Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes1}, \\text{modes2}, \\text{modes3})` 
+        Tensor of shape :math:`(C_\text{in}, C_\text{out}, \text{modes1}, \text{modes2}, \text{modes3})` 
         with dtype ``torch.cfloat``"""
-        self.weights2 = nn.Parameter(
+        self.weights2: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(*shape, dtype=torch.cfloat)
         )
         r"""Second weights of the Fourier modes.
 
-        Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes1}, \\text{modes2}, \\text{modes3})` 
+        Tensor of shape :math:`(C_\text{in}, C_\text{out}, \text{modes1}, \text{modes2}, \text{modes3})` 
         with dtype ``torch.cfloat``"""
-        self.weights3 = nn.Parameter(
+        self.weights3: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(*shape, dtype=torch.cfloat)
         )
         r"""Third weights of the Fourier modes.
 
-        Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes1}, \\text{modes2}, \\text{modes3})` 
+        Tensor of shape :math:`(C_\text{in}, C_\text{out}, \text{modes1}, \text{modes2}, \text{modes3})` 
         with dtype ``torch.cfloat``"""
-        self.weights4 = nn.Parameter(
+        self.weights4: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(*shape, dtype=torch.cfloat)
         )
         r"""Fourth weights of the Fourier modes.
 
-        Tensor of shape :math:`(C_\\text{in}, C_\\text{out}, \\text{modes1}, \\text{modes2}, \\text{modes3})` 
+        Tensor of shape :math:`(C_\text{in}, C_\text{out}, \text{modes1}, \text{modes2}, \text{modes3})` 
         with dtype ``torch.cfloat``"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
