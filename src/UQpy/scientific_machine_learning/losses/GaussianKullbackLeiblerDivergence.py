@@ -2,8 +2,10 @@ import torch
 import torch.nn as nn
 import UQpy.scientific_machine_learning.functional as func
 from UQpy.scientific_machine_learning.baseclass import BayesianLayer, Loss
+from beartype import beartype
 
 
+@beartype
 class GaussianKullbackLeiblerLoss(Loss):
 
     def __init__(self, **kwargs):
@@ -32,4 +34,3 @@ class GaussianKullbackLeiblerLoss(Loss):
                         layer.prior_sigma,
                     )
         return divergence
-

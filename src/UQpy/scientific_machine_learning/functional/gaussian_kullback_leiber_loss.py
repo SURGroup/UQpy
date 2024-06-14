@@ -1,6 +1,8 @@
 import torch
+from beartype import beartype
 
 
+@beartype
 def gaussian_kullback_leiber_loss(
     posterior_mu: torch.Tensor,
     posterior_sigma: torch.Tensor,
