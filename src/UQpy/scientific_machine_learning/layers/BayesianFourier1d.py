@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 import UQpy.scientific_machine_learning.functional as func
+import UQpy.scientific_machine_learning as sml
 from UQpy.scientific_machine_learning.baseclass import BayesianLayer
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
@@ -14,7 +15,7 @@ class BayesianFourier1d(BayesianLayer):
         sampling: bool = True,
         **kwargs,
     ):
-        """Construct a Fourier block as :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`
+        r"""Construct a Fourier block as :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`
         where :math:`R` and :math:`W` are a random variables
 
         :param width: Number of neurons in the layer and channels in the spectral convolution
@@ -34,17 +35,27 @@ class BayesianFourier1d(BayesianLayer):
         super().__init__(weight_shape, bias_shape, priors, sampling=sampling, **kwargs)
         self.width = width
         self.modes = modes
+        self.conv = sml.BayesianConv1d(self.width, self.width, 1)
+        self.spectral_conv = sml.BayesianSpectralConv1d(self.width, self.width, self.modes)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`
+        r"""Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`
 
         :param x: Tensor of shape :math:`(N, \text{width}, L)`
         :return: Tensor of shape :math:`(N, \text{width}, L)`
         """
-        weight_spectral_conv, weight_conv = self.get_weight_bias()
-        return func.spectral_conv1d(
-            x, weight_spectral_conv, out_channels=self.modes, modes=self.modes
-        ) + F.conv1(x, weight_conv)
+        return self.spectral_conv(x) + self.conv(x)
+
+    # def forward(self, x: torch.Tensor) -> torch.Tensor:
+    #     r"""Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`
+    #
+    #     :param x: Tensor of shape :math:`(N, \text{width}, L)`
+    #     :return: Tensor of shape :math:`(N, \text{width}, L)`
+    #     """
+    #     weight_spectral_conv, weight_conv = self.get_weight_bias()
+    #     return func.spectral_conv1d(
+    #         x, weight_spectral_conv, out_channels=self.modes, modes=self.modes
+    #     ) + F.conv1d(x, weight_conv)
 
     def extra_repr(self) -> str:
         return f"width={self.width}, modes={self.modes}, priors={self.priors}, sampling={self.sampling}"

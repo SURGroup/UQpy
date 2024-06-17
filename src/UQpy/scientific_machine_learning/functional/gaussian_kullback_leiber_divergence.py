@@ -2,7 +2,7 @@ import torch
 from beartype import beartype
 
 
-@beartype
+# @beartype
 def gaussian_kullback_leiber_divergence(
     posterior_mu: torch.Tensor,
     posterior_sigma: torch.Tensor,
