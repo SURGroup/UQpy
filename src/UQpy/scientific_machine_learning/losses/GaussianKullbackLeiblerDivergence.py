@@ -20,17 +20,19 @@ class GaussianKullbackLeiblerLoss(Loss):
         divergence = torch.tensor(0.0, dtype=torch.float)
         for layer in network.modules():
             if isinstance(layer, BayesianLayer):
-                divergence += func.gaussian_kullback_leiber_divergence(
+                weight_divergence = func.gaussian_kullback_leiber_divergence(
                     layer.weight_mu,
                     torch.log1p(torch.exp(layer.weight_sigma)),
                     layer.prior_mu,
                     layer.prior_sigma,
                 )
+                divergence += weight_divergence / layer.weight_mu.nelement()
                 if layer.bias:
-                    divergence += func.gaussian_kullback_leiber_divergence(
+                    bias_divergence = func.gaussian_kullback_leiber_divergence(
                         layer.bias_mu,
                         torch.log1p(torch.exp(layer.bias_sigma)),
                         layer.prior_mu,
                         layer.prior_sigma,
                     )
+                    divergence += bias_divergence / layer.bias_mu.nelement()
         return divergence
