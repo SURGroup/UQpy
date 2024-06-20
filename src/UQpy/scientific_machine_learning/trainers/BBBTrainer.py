@@ -31,7 +31,7 @@ class BBBTrainer:
 
         self.history: dict = {
             "train_loss": None,
-            "train_kl": None,
+            "train_divergence": None,
             "train_nll": None,
             "test_nll": None,
         }
@@ -62,7 +62,7 @@ class BBBTrainer:
         :param num_samples: Number of Monte Carlo samples to approximate the loss
         :param tolerance: Optimization terminates early if *average* training loss is below tolerance.
          Default: :math:`1e-3`
-        :param beta: Weighting for the KL term in ELBO loss. Default: 1.0
+        :param beta: Weighting for the divergence term in ELBO loss. Default: 1.0
 
         :raises RuntimeError: If neither ``train_data`` nor ``test_data`` is provided, a RuntimeError occurs.
         """
@@ -98,6 +98,7 @@ class BBBTrainer:
         while i < epochs and average_train_loss > tolerance:
             if train_data:
                 self.model.train(True)
+                self.model.sample(True)
                 total_train_loss = 0
                 total_nll_loss = 0
                 total_divergence_loss = 0
@@ -125,9 +126,9 @@ class BBBTrainer:
             log_message = (
                 f"UQpy: Scientific Machine Learning: "
                 f"Epoch {i + 1:,} / {epochs:,} "
-                f"Train Loss {average_train_loss} "
-                f"Train NLL {average_train_nll} "
-                f"Train KL {average_divergence_loss} "
+                f"Train Loss {average_train_loss:.6e} "
+                f"Train NLL {average_train_nll:.6e} "
+                f"Train Divergence {average_divergence_loss:.6e}"
             )
             if test_data:
                 total_test_nll = 0
@@ -138,7 +139,7 @@ class BBBTrainer:
                         total_test_nll += test_nll.item()
                 average_test_nll = total_test_nll / len(test_data)
                 self.history["test_nll"][i] = average_test_nll
-                log_message += f"Test NLL {average_test_nll} "
+                log_message += f"Test NLL {average_test_nll:.6e} "
             self.logger.info(log_message)
 
             i += 1
