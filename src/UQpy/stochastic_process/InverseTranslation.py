@@ -8,6 +8,7 @@ from UQpy.stochastic_process.supportive import (
     wiener_khinchin_transform,
 )
 from beartype import beartype
+from line_profiler_pycharm import profile
 
 
 # @beartype
@@ -24,7 +25,7 @@ class InverseTranslation:
         samples_non_gaussian: Union[list, np.ndarray] = None,
         percentage_error: PositiveFloat = 5.0,
     ):
-        """A class to perform Iterative Translation Approximation Method to find the underlying Gaussian Stochastic
+        r"""A class to perform Iterative Translation Approximation Method to find the underlying Gaussian Stochastic
         Processes which upon translation would yield the target non-Gaussian Stochastic Processes.
 
         :param distributions: An instance of the :py:mod:`UQpy` :class:`.Distributions` class defining the marginal
@@ -93,14 +94,14 @@ class InverseTranslation:
 
         s_g, s_ng = self._itam_power_spectrum()
         self.power_spectrum_gaussian: np.ndarray = s_g
-        """The Gaussian power spectrum :math:`S_G(\\omega)` of the inverse translated Gaussian stochastic processes."""
+        r"""The Gaussian power spectrum :math:`S_G(\omega)` of the inverse translated Gaussian stochastic processes."""
         self.power_spectrum_non_gaussian: np.ndarray = s_ng
-        """The non-Gaussian power spectrum :math:`S_{NG}(\\omega)`.
+        r"""The non-Gaussian power spectrum :math:`S_{NG}(\omega)`.
          This is a reconstruction from the forward translation of ``power_spectrum_gaussian``."""
         self.auto_correlation_function_gaussian: np.ndarray = wiener_khinchin_transform(
             self.power_spectrum_gaussian, self.frequency, self.time
         )
-        """The correlation function :math:`R_G(\\tau)` computed from ``power_spectrum_gaussian``."""
+        r"""The correlation function :math:`R_G(\tau)` computed from ``power_spectrum_gaussian``."""
         self.correlation_function_gaussian: np.ndarray = (
             self.auto_correlation_function_gaussian
             / self.auto_correlation_function_gaussian[0]
@@ -130,6 +131,7 @@ class InverseTranslation:
         samples_cdf = self.distributions.cdf(self.samples_non_gaussian)
         return Normal(loc=0.0, scale=1.0).icdf(samples_cdf)
 
+    @profile
     def _itam_power_spectrum(self) -> tuple[np.ndarray, np.ndarray]:
         """Compute the Gaussian and reconstructed non-Gaussian power spectrum from the target non-Gaussian power spectrum
 
@@ -150,9 +152,10 @@ class InverseTranslation:
         error = np.inf
         normal = Normal(scale=float(variance_ng))
 
+        @profile
         def integrand(x1, x2, rho):
             cov = np.array([[var, rho], [rho, var]])
-            bivariate_normal = MultivariateNormal(np.array([0., 0.]), cov)
+            bivariate_normal = MultivariateNormal(np.array([0.0, 0.0]), cov)
             return (
                 self.distributions.icdf(normal.cdf(x1))
                 * self.distributions.icdf(normal.cdf(x2))
@@ -190,7 +193,7 @@ class InverseTranslation:
             ratio = np.nan_to_num(ratio, nan=0.0, posinf=0.0, neginf=0.0)
             ratio = np.clip(
                 ratio, 0, None
-            )  # Set negative entries to zero to avoid complex numbers in fractional exponent
+            )  # Set negative entries to zero to avoid complex numbers after fractional exponent
             S_g_next_iterate = (ratio**1.3) * S_g_iterate
             S_g_iterate = np.clip(S_g_next_iterate, 0, None)
 
@@ -203,7 +206,9 @@ class InverseTranslation:
             f"UQpy: Stochastic Process: Ended Inverse Translation Approximation Method"
         )
         if error > self.percentage_error:
-            self.logger.warning("UQpy: Stochastic Process: InverseTranslation may have undesirably large error")
+            self.logger.warning(
+                "UQpy: Stochastic Process: InverseTranslation may have undesirably large error"
+            )
         return S_g_iterate, S_ng_iterate
 
     # def _bivariate_normal_pdf(
