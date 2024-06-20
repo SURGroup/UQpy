@@ -17,14 +17,10 @@ def gaussian_kullback_leiber_divergence(
     :param prior_sigma: Standard deviation of the prior distribution
     :return: Gaussian KL divergence between prior and posterior distributions
     """
-    gkl_divergence = (
-        0.5
-        * (
-            2 * torch.log(prior_sigma / posterior_sigma)
-            - 1
-            + (posterior_sigma / prior_sigma).pow(2)
-            + ((prior_mu - posterior_mu) / prior_sigma).pow(2)
-        ).sum()
+    gkl_divergence = 0.5 * (
+        2 * torch.log(prior_sigma / posterior_sigma)
+        - 1
+        + (posterior_sigma / prior_sigma).pow(2)
+        + ((prior_mu - posterior_mu) / prior_sigma).pow(2)
     )
-    gkl_divergence /= gkl_divergence.nelement()
-    return gkl_divergence
+    return torch.mean(gkl_divergence)
