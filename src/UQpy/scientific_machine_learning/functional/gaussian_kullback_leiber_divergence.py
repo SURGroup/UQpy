@@ -26,4 +26,5 @@ def gaussian_kullback_leiber_divergence(
             + ((prior_mu - posterior_mu) / prior_sigma).pow(2)
         ).sum()
     )
+    gkl_divergence /= gkl_divergence.nelement()
     return gkl_divergence
