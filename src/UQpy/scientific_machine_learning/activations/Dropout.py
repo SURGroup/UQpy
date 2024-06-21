@@ -24,7 +24,7 @@ class Dropout(DropoutActivation):
         Shape:
 
         - Input: Any shape
-        - Output: Any shape  (same shape as input)
+        - Output: Any shape (same shape as input)
 
         Example:
 

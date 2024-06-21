@@ -20,9 +20,9 @@ def gaussian_jenson_shannon_divergence(
 
     Formula
     -------
-    The Jenson-Shannon divergence :math:`D+{JS}` is computed as
+    The Jenson-Shannon divergence :math:`D_{JS}` is computed as
 
-    .. math:: D_{JS}(P, Q) = (D_{KL}(P, M) + D_{KL}(Q, M)) / 2
+    .. math:: D_{JS}(P, Q) = \frac12 \left( D_{KL}(P, M) + D_{KL}(Q, M) \right)
 
     where :math:`D_{KL}` is the Kullback-Leiber divergence and :math:`M=P+Q` is the mixture distribution.
     """

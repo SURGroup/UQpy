@@ -6,15 +6,15 @@ All Fourier layers are types of convolutions, although they do not have a direct
 Formula
 ^^^^^^^
 
-Using the notation from Li 2021, the spectral convolution is defined by
+Using the notation from Li 2021, the Fourier layer is defined as
 
-.. math:: SC(x) = \mathcal{F}^{-1}( R ( \mathcal{F}(x) ) ) + W
+.. math:: FL(x) = \underbrace{\mathcal{F}^{-1}( R ( \mathcal{F}(x) ) )}_\text{Spectral Convolution} + \underbrace{W(x)}_\text{Convolution}
 
 Where the spectral convolution :math:`\mathcal{F}^{-1}( R ( \mathcal{F}(x) ) )` is computed by UQpy's
-``SpectralConv`` class and :math:`W` is computed by ``torch.nn.Conv``, each of the appropriate dimension.
-Note that these functions do not construct :math:`R` or :math:`W`,
-allowing them to be used in both the deterministic and Bayesian cases.
+``SpectralConv`` class and :math:`W` is computed by ``torch.nn.Conv``.
+The ``Fourier1d`` layer calls ``SpectralConv1d`` and ``Conv1d`` and the higher dimensional Fourier layers call the appropriate analogues.
 
+-----
 
 Fourier1d
 ~~~~~~~~~

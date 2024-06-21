@@ -13,7 +13,9 @@ from beartype import beartype
 
 @beartype
 class HMCTrainer:
-    def __init__(self, net: nn.Module, device: torch.device, params_hmc_path: str = None):
+    def __init__(
+        self, net: nn.Module, device: torch.device, params_hmc_path: str = None
+    ):
         self.net = net.to(device)
         self.device = device
         self.params_hmc_path = params_hmc_path
@@ -39,7 +41,7 @@ class HMCTrainer:
         burn: int = 0,
         inv_mass: torch.Tensor = None,
         jitter: float = None,
-        normalizing_const: float = 1.,
+        normalizing_const: float = 1.0,
         softabs_const: float = None,
         explicit_binding_const: float = 100,
         fixed_point_threshold: float = 1e-5,
@@ -49,7 +51,7 @@ class HMCTrainer:
         integrator: hamiltorch.Integrator = hamiltorch.Integrator.IMPLICIT,
         metric: hamiltorch.Metric = hamiltorch.Metric.HESSIAN,
         debug: bool = False,
-        tau_out: float = 1.,
+        tau_out: float = 1.0,
         tau_list: torch.Tensor = None,
         tau: float = 1.0,
         store_on_GPU: bool = False,
@@ -114,32 +116,33 @@ class HMCTrainer:
         :param verbose: bool
             If set to True then do not display loading bar.
         """
-        
+
         return hamiltorch.sample_model(
-            self.net, 
-            X_tr, 
+            self.net,
+            X_tr,
             Y_tr,
-            params_init = self.params_init, 
-            model_loss = loss_function, 
-            num_samples = num_samples_hmc, 
-            burn = burn,
-            step_size = step_size, 
-            num_steps_per_sample = num_steps_per_sample, 
-            tau_out = tau_out,
-            tau_list = tau_list, 
-            normalizing_const = normalizing_const,
-            store_on_GPU = store_on_GPU,
-            sampler = sampler, 
-            #X_batch = X_ts_tensor.to(self.device), 
-            #Y_batch= Y_ts_tensor.to(self.device), 
-            #data_path= data_path, 
-            tau = tau)
+            params_init=self.params_init,
+            model_loss=loss_function,
+            num_samples=num_samples_hmc,
+            burn=burn,
+            step_size=step_size,
+            num_steps_per_sample=num_steps_per_sample,
+            tau_out=tau_out,
+            tau_list=tau_list,
+            normalizing_const=normalizing_const,
+            store_on_GPU=store_on_GPU,
+            sampler=sampler,
+            # X_batch = X_ts_tensor.to(self.device),
+            # Y_batch= Y_ts_tensor.to(self.device),
+            # data_path= data_path,
+            tau=tau,
+        )
 
     def _save_params_hmc(self, params_hmc, params_hmc_path: str = None):
         if params_hmc_path is None:
             params_hmc_path = self.params_hmc_path
         torch.save(params_hmc, params_hmc_path)
-        
+
     def run_training(self):
         self.net.train()
         # Prepare initial parameters for HMC

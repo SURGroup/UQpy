@@ -55,7 +55,9 @@ class NeuralNetwork(nn.Module, ABC):
         return self
 
     def is_deterministic(self) -> bool:
-        """Check if neural network is behaving deterministically or probabilistically
+        """Check if neural network is behaving deterministically or probabilistically.
+
+        Note: Returns ``True`` if sampling, dropping, and training are all ``False``.
 
         :return: ``True`` if output is deterministic, ``False`` if output is probabilistic
         """

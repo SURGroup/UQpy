@@ -66,7 +66,7 @@ class BayesianLayer(Layer, ABC):
         """Distribution standard deviations for the weights"""
 
         self.bias: bool = True if bias_shape else False
-        """If ``True``, add bias"""
+        """If ``True``, add bias. Inferred from ``bias_shape``"""
         self.bias_mu: Union[None, nn.Parameter] = None
         """Distribution means for the bias. If ``bias`` is ``False``, this is ``None``."""
         self.bias_sigma: Union[None, nn.Parameter] = None

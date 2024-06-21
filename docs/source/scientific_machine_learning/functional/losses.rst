@@ -2,6 +2,11 @@ Losses
 ======
 
 Documentation for loss functions and divergences.
+Note that Loss functions are typically used to define a "distance" (used colloquially, not as a formal metric)
+between a prediction and true value from a dataset.
+
+In contrast, divergences define a "distance" between a prior and posterior distribution during the training of a
+Bayesian neural network. While both terms contribute to the total loss, they are used in very different ways.
 
 
 Gaussian Kullback-Leiber Divergence
