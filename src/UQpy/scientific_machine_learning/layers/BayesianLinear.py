@@ -15,7 +15,7 @@ class BayesianLinear(BayesianLayer):
         sampling: bool = True,
         **kwargs,
     ):
-        """Construct a Bayesian layer with weights and bias set by I.I.D. Normal distributions
+        r"""Construct a Bayesian layer with weights and bias set by I.I.D. Normal distributions
 
         :param in_features: Size of each input sample
         :param out_features: Size of each output sample
@@ -32,10 +32,10 @@ class BayesianLinear(BayesianLayer):
 
         Shape:
 
-        - Input: :math:`(*, H_{in})` where :math:`*` means any number of
-          dimensions including none and :math:`H_{in} = \\text{in\_features}`.
-        - Output: :math:`(*, H_{out})` where all but the last dimension
-          are the same shape as the input and :math:`H_{out} = \\text{out\_features}`.
+        - Input: :math:`(*, H_\text{in})` where :math:`*` means any number of
+          dimensions including none and :math:`H_\text{in} = \text{in\_features}`.
+        - Output: :math:`(*, H_\text{out})` where all but the last dimension
+          are the same shape as the input and :math:`H_\text{out} = \text{out\_features}`.
 
         Example:
 
@@ -61,18 +61,18 @@ class BayesianLinear(BayesianLayer):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward model evaluation
 
-        :param x: Input tensor
-        :return: Output tensor
+        :param x: Tensor of shape :math:`(*, \text{in_features})`
+        :return: Tensor of shape :math:`(*, \text{out_features})`
         """
         weight, bias = self.get_weight_bias()
         return F.linear(x, weight, bias)
 
     def extra_repr(self) -> str:
-        s = "{in_features}, {out_features}"
+        s = f"in_features={self.in_features}, out_features={self.out_features}"
         if not self.bias:
-            s += ", bias={bias}"
+            s += f", bias={self.bias}"
         if self.priors:
-            s += ", priors={priors}"
+            s += f", priors={self.priors}"
         if not self.sampling:
-            s += ", sampling={sampling}"
+            s += f", sampling={self.sampling}"
         return s.format(**self.__dict__)

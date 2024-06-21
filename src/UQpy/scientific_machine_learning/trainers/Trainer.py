@@ -6,7 +6,7 @@ from typing import Union
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
-# @beartype
+@beartype
 class Trainer:
 
     def __init__(
@@ -53,7 +53,7 @@ class Trainer:
         :param test_data: Data used to validate the performance of the model
         :param epochs: Maximum number of epochs to run the ``optimizer`` for
         :param tolerance: Optimization terminates early if *average* training loss is below tolerance.
-         Default :math:`1e-3`
+         Default: :math:`1e-3`
 
         :raises RuntimeError: If neither ``train_data`` nor ``test_data`` is provided, a RuntimeError occurs.
         """

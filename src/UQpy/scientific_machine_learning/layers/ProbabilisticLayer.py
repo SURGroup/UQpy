@@ -24,7 +24,7 @@ class ProbabilisticLayer(Layer):
         sample: bool = True,
         **kwargs
     ):
-        """Construct a Probabilistic layer with weights and bias set by independent distributions
+        r"""Construct a Probabilistic layer with weights and bias set by independent distributions
 
         Note:
             Be careful about initializing the weights of non-Gaussian distributions
@@ -77,7 +77,7 @@ class ProbabilisticLayer(Layer):
         self._sample_bias()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward model evaluation
+        r"""Forward model evaluation
 
         Note: If ``self.sample`` or ``self.training`` is ``True``,
         then weight and bias are sampled from their distributions and the output is probabilistic.

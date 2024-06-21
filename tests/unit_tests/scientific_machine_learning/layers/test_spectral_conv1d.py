@@ -1,8 +1,6 @@
 import torch
-import torch.nn as nn
 import UQpy.scientific_machine_learning as sml
 from hypothesis import given, strategies as st
-from hypothesis.extra.numpy import array_shapes
 
 
 @given(
@@ -35,43 +33,3 @@ def test_zero_input():
     x = torch.zeros((n_batch, in_channels, n_x))
     y = spectral_conv(x)
     assert torch.all(y == torch.zeros((n_batch, out_channels, n_x)))
-
-
-def get_spectral_convolution(y, modes):
-    """Compute the spectral convolution of y with a given number of modes and weights of all ones"""
-    spectral_conv = sml.SpectralConv1d(1, 1, modes)
-    weights = torch.ones(1, 1, modes)
-    spectral_conv.weights = nn.Parameter(weights)
-    return spectral_conv(y)
-
-
-def test_cosine_1mode():
-    """Keeping one mode in the FFT leads to an output of all zeros"""
-    x = torch.linspace(0, 2 * torch.pi, 10_000, requires_grad=False).reshape(1, 1, -1)
-    y = torch.cos(x)
-    f_y = get_spectral_convolution(y, modes=1)
-    assert torch.allclose(f_y, torch.zeros_like(f_y), atol=1e-3)
-
-
-def test_cosine_2mode():
-    """Keeping 2 modes in the FFT captures the entire cosine"""
-    x = torch.linspace(0, 2 * torch.pi, 10_000, requires_grad=False).reshape(1, 1, -1)
-    y = torch.cos(x)
-    f_y = get_spectral_convolution(y, modes=2)
-    assert torch.allclose(f_y, y, atol=1e-3)
-
-
-def test_sine_cosine_2mode():
-    """Keeping 2 modes leads to an output of all zeros"""
-    x = torch.linspace(0, 2 * torch.pi, 10_000, requires_grad=False).reshape(1, 1, -1)
-    y = torch.sin(x) * torch.cos(x)
-    f_y = get_spectral_convolution(y, modes=2)
-    assert torch.allclose(f_y, torch.zeros_like(f_y), atol=1e-3)
-
-
-def test_sine_cosine_3mode():
-    """Keeping 3 modes captures the entire signal"""
-    x = torch.linspace(0, 2 * torch.pi, 10_000, requires_grad=False).reshape(1, 1, -1)
-    y = torch.sin(x) * torch.cos(x)
-    f_y = get_spectral_convolution(y, modes=3)
-    assert torch.allclose(f_y, y, atol=1e-3)

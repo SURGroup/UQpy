@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torchinfo
 from abc import ABC, abstractmethod
-from UQpy.scientific_machine_learning.baseclass import BayesianLayer
 
 
 class NeuralNetwork(nn.Module, ABC):
@@ -31,9 +30,9 @@ class NeuralNetwork(nn.Module, ABC):
     def sample(self, mode: bool = True):
         """Set sampling mode for Neural Network and all child modules
 
-        Note: Based on the `torch.nn.Module.train` and `torch.nn.Module.training` method and attributes
+        Note: This method and ``self.sampling`` only affects Bayesian layers
 
-        :param mode:
+        :param mode: If ``True, sample from distributions, otherwise use distribution means.
         :return: ``self``
         """
         self.sampling = mode
@@ -43,8 +42,11 @@ class NeuralNetwork(nn.Module, ABC):
         return self
 
     def drop(self, mode: bool = True):
-        """
+        """Set dropping mode.
 
+        Note: This method and ``self.dropping`` only affects dropout layers
+
+        :param mode: If ``True``, will perform dropout, otherwise acts as identity function.
         """
         self.dropping = mode
         for m in self.network:
