@@ -43,3 +43,6 @@ class GaussianJensonShannonDivergence(Loss):
                         reduction=self.reduction,
                     )
         return divergence
+
+    def extra_repr(self) -> str:
+        return f"reduction={self.reduction}"
