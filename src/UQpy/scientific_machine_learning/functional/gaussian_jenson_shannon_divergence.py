@@ -9,6 +9,7 @@ def gaussian_jenson_shannon_divergence(
     posterior_sigma: torch.Tensor,
     prior_mu: torch.Tensor,
     prior_sigma: torch.Tensor,
+    reduction: str = "mean",
 ) -> torch.Tensor:
     r"""Compute the Gaussian Jenson-Shannon divergence for a prior and posterior distribution
 
@@ -16,6 +17,10 @@ def gaussian_jenson_shannon_divergence(
     :param posterior_sigma: Standard deviation of the posterior distribution
     :param prior_mu: Mean of the prior distribution
     :param prior_sigma: Standard deviation of the prior distribution
+    :param reduction: Specifies the reduction to apply to the output: 'none', 'mean', or 'sum'.
+     'none': no reduction will be applied, 'mean': the output will be averaged, 'sum': the output will be summed.
+     Default: 'mean'
+
     :return: Gaussian JS divergence between prior and posterior distributions
 
     Formula
@@ -29,9 +34,9 @@ def gaussian_jenson_shannon_divergence(
     mixture_mu = (prior_mu + posterior_mu) / 2
     mixture_sigma = torch.sqrt((prior_sigma**2 + posterior_sigma**2) / 2)
     dkl_prior_mixture = func.gaussian_kullback_leiber_divergence(
-        prior_mu, prior_sigma, mixture_mu, mixture_sigma
+        prior_mu, prior_sigma, mixture_mu, mixture_sigma, reduction=reduction
     )
     dkl_posterior_mixture = func.gaussian_kullback_leiber_divergence(
-        posterior_mu, posterior_sigma, mixture_mu, mixture_sigma
+        posterior_mu, posterior_sigma, mixture_mu, mixture_sigma, reduction=reduction
     )
     return (dkl_prior_mixture + dkl_posterior_mixture) / 2
