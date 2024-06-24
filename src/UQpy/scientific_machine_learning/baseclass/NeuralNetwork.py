@@ -36,10 +36,13 @@ class NeuralNetwork(nn.Module, ABC):
         :return: ``self``
         """
         self.sampling = mode
-        for m in self.network.modules():
-            if hasattr(m, "sample"):
-                m.sample(mode)
+        self.apply(self.__set_sampling)
         return self
+
+    @torch.no_grad()
+    def __set_sampling(self, m):
+        if hasattr(m, "sampling"):
+            m.sampling = self.sampling
 
     def drop(self, mode: bool = True):
         """Set dropping mode.
@@ -49,10 +52,13 @@ class NeuralNetwork(nn.Module, ABC):
         :param mode: If ``True``, will perform dropout, otherwise acts as identity function.
         """
         self.dropping = mode
-        for m in self.network:
-            if hasattr(m, "drop"):
-                m.drop(mode)
+        self.apply(self.__set_dropping)
         return self
+
+    @torch.no_grad()
+    def __set_dropping(self, m):
+        if hasattr(m, "dropping"):
+            m.dropping = self.dropping
 
     def is_deterministic(self) -> bool:
         """Check if neural network is behaving deterministically or probabilistically.
@@ -61,5 +67,4 @@ class NeuralNetwork(nn.Module, ABC):
 
         :return: ``True`` if output is deterministic, ``False`` if output is probabilistic
         """
-
         return not (self.sampling or self.dropping or self.training)

@@ -77,14 +77,6 @@ class BayesianLayer(Layer, ABC):
 
         self.sample_parameters()
 
-    def sample(self, mode: bool = True):
-        """Set sampling mode.
-
-        :param mode: If ``True``, layer parameters are sampled from their distributions.
-         If ``False``, layer parameters are set to their means and layer acts deterministically.
-        """
-        self.sampling = mode
-
     def sample_parameters(self):
         """Randomly populate ``weight_mu`` and ``weight_sigma`` with samples from Normal distributions.
         If ``bias`` is ``True``, populate ``bias_mu`` and ``bias_sigma`` with samples from Normal distributions.
