@@ -14,7 +14,7 @@ class BBBTrainer:
         model: nn.Module,
         optimizer: torch.optim.Optimizer,
         loss_function: nn.Module = nn.MSELoss(),
-        divergence: nn.Module = sml.GaussianKullbackLeiblerLoss(),
+        divergence: nn.Module = sml.GaussianKullbackLeiblerDivergence(),
     ):
         """Prepare to train a Bayesian neural network using Bayes by back propagation
 
