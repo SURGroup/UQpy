@@ -139,7 +139,7 @@ class BBBTrainer:
                         total_test_nll += test_nll.item()
                 average_test_nll = total_test_nll / len(test_data)
                 self.history["test_nll"][i] = average_test_nll
-                log_message += f"Test NLL {average_test_nll:.6e} "
+                log_message += f" Test NLL {average_test_nll:.6e}"
             self.logger.info(log_message)
 
             i += 1
