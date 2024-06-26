@@ -34,28 +34,28 @@ class SpectralConv3d(Layer):
         )
         r"""First weights of the Fourier modes.
 
-        Tensor of shape :math:`(C_\text{in}, C_\text{out}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]]})` 
+        Tensor of shape :math:`(C_\text{in}, C_\text{out}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` 
         with dtype ``torch.cfloat``"""
         self.weights2: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(shape, dtype=torch.cfloat)
         )
         r"""Second weights of the Fourier modes.
 
-        Tensor of shape :math:`(C_\text{in}, C_\text{out}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]]})` 
+        Tensor of shape :math:`(C_\text{in}, C_\text{out}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` 
         with dtype ``torch.cfloat``"""
         self.weights3: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(shape, dtype=torch.cfloat)
         )
         r"""Third weights of the Fourier modes.
 
-        Tensor of shape :math:`(C_\text{in}, C_\text{out}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]]})` 
+        Tensor of shape :math:`(C_\text{in}, C_\text{out}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` 
         with dtype ``torch.cfloat``"""
         self.weights4: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(shape, dtype=torch.cfloat)
         )
         r"""Fourth weights of the Fourier modes.
 
-        Tensor of shape :math:`(C_\text{in}, C_\text{out}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]]})` 
+        Tensor of shape :math:`(C_\text{in}, C_\text{out}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` 
         with dtype ``torch.cfloat``"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

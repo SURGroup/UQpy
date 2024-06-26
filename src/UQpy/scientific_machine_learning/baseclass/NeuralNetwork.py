@@ -20,7 +20,7 @@ class NeuralNetwork(nn.Module, ABC):
         ...
 
     def summary(self, **kwargs):
-        """Call `torchinfo.summary()` on `self`"""
+        """Call ``torchinfo.summary()`` on ``self``"""
         return torchinfo.summary(self, **kwargs)
 
     def count_parameters(self):
@@ -32,7 +32,7 @@ class NeuralNetwork(nn.Module, ABC):
 
         Note: This method and ``self.sampling`` only affects Bayesian layers
 
-        :param mode: If ``True, sample from distributions, otherwise use distribution means.
+        :param mode: If ``True``, sample from distributions, otherwise use distribution means.
         :return: ``self``
         """
         self.sampling = mode

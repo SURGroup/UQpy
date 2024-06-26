@@ -12,8 +12,8 @@ class GaussianKullbackLeiblerDivergence(Loss):
         """Analytic form for Gaussian KL divergence for all Bayesian layers in a module
 
         :param reduction: Specifies the reduction to apply to the output: 'none', 'mean', or 'sum'.
-        'none': no reduction will be applied, 'mean': the output will be averaged, 'sum': the output will be summed.
-        Default: 'mean'
+         'none': no reduction will be applied, 'mean': the output will be averaged, 'sum': the output will be summed.
+         Default: 'mean'
         """
         super().__init__(**kwargs)
         self.reduction = reduction

@@ -44,7 +44,7 @@ class Fourier1d(Layer):
             torch.empty(self.width, self.width // groups, kernel_size)
         )
         r"""Weights for the convolution. 
-        Tensor of shape :math:`(\text{width}, \text{width} // \text{groups}, \text{kernel_size}`"""
+        Tensor of shape :math:`(\text{width}, \text{width} // \text{groups}, \text{kernel_size})`"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         r"""Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`

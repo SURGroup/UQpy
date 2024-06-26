@@ -78,6 +78,7 @@ class BayesianLayer(Layer, ABC):
 
     def sample_parameters(self):
         """Randomly populate ``weight_mu`` and ``weight_sigma`` with samples from Normal distributions.
+
         If ``bias`` is ``True``, populate ``bias_mu`` and ``bias_sigma`` with samples from Normal distributions.
         """
         self.weight_mu.data.normal_(*self.posterior_mu_initial)

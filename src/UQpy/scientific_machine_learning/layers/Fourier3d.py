@@ -64,7 +64,7 @@ class Fourier3d(Layer):
             torch.empty(self.width, self.width // groups, *kernel_size)
         )
         r"""Weights for the convolution. 
-        Tensor of shape :math:`(\text{width}, \text{width} // \text{groups}, \text{kernel_size[0]}, \text{kernel_size[1]}, \text{kernel_size[2]}`"""
+        Tensor of shape :math:`(\text{width}, \text{width} // \text{groups}, \text{kernel_size[0]}, \text{kernel_size[1]}, \text{kernel_size[2]})`"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         r"""Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`

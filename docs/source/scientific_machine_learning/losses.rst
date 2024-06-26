@@ -34,7 +34,7 @@ Gaussian Kullback-Leibler
 
 This is a placeholder for KL Divergence.
 
-.. autoclass:: UQpy.scientific_machine_learning.losses.GaussianKullbackLeiblerLoss
+.. autoclass:: UQpy.scientific_machine_learning.losses.GaussianKullbackLeiblerDivergence
     :members: forward
 
 ------
