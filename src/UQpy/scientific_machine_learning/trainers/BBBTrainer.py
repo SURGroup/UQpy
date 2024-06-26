@@ -4,6 +4,7 @@ import UQpy.scientific_machine_learning as sml
 import logging
 from beartype import beartype
 from UQpy.utilities.ValidationTypes import PositiveInteger
+from typing import Union
 
 
 @beartype
@@ -13,6 +14,7 @@ class BBBTrainer:
         self,
         model: nn.Module,
         optimizer: torch.optim.Optimizer,
+        scheduler: Union[torch.optim.lr_scheduler.LRScheduler, list] = None,
         loss_function: nn.Module = nn.MSELoss(),
         divergence: nn.Module = sml.GaussianKullbackLeiblerDivergence(),
     ):
@@ -20,12 +22,19 @@ class BBBTrainer:
 
         :param model: Bayesian Neural Network model to be trained
         :param optimizer: Optimization algorithm used to update ``model`` parameters
+        :param scheduler: Scheduler used to adjust the learning rate of the ``optimizer``.
+         Schedulers may be chained together by creating a list of schedulers
         :param loss_function: Function used to compute negative log likelihood of the data during training
         :param divergence: Divergence measured between prior and posterior distribution of Bayesian layers
          Default: ``sml.GaussianKullbackLeiblerLoss()``
         """
         self.model = model
         self.optimizer = optimizer
+        self.scheduler = (
+            [scheduler]
+            if isinstance(scheduler, torch.optim.lr_scheduler.LRScheduler)
+            else scheduler
+        )
         self.loss_function = loss_function
         self.divergence = divergence
 
@@ -116,6 +125,9 @@ class BBBTrainer:
                     total_train_loss += train_loss.item()
                     total_nll_loss += mean_nll.item()
                     total_divergence_loss += divergence_loss
+                if self.scheduler:
+                    for s in self.scheduler:
+                        s.step()
                 average_train_loss = total_train_loss / len(train_data)
                 average_train_nll = total_nll_loss / len(train_data)
                 average_divergence_loss = total_divergence_loss / len(train_data)
