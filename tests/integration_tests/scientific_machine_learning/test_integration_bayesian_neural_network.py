@@ -30,10 +30,14 @@ def test_accuracy():
         sml.BayesianLinear(width, 1),
     )
     model = sml.FeedForwardNeuralNetwork(network)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-1)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.9)
+    divergence = sml.GaussianKullbackLeiblerDivergence(reduction="mean")
+    trainer = sml.BBBTrainer(
+        model, optimizer, scheduler=scheduler, divergence=divergence
+    )
     train_data = DataLoader(QuadraticDataset(), batch_size=20, shuffle=True)
-    trainer = sml.BBBTrainer(model, optimizer)
-    trainer.run(train_data=train_data, epochs=1_000, beta=1e-6, num_samples=10)
+    trainer.run(train_data=train_data, epochs=1_000, beta=1e-3, num_samples=10)
 
     final_loss = trainer.history["train_nll"][-1]
     assert final_loss < 1
