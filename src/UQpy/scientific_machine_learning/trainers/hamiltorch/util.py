@@ -103,20 +103,6 @@ def has_nan_or_inf(value):
 class LogProbError(Exception):
     pass
 
-# def flatten(value):
-#     # Taken from autograd.misc.flatten
-#     t = type(value)
-#     if t in (list, tuple):
-#         return concatenate(map(flatten, value))
-#     elif t is dict:
-#         return concatenate(flatten(value[k]) for k in sorted(value))
-#     else:
-#         return value.contiguous().view(-1)
-#
-# def concatenate(lst):
-#     lst = list(lst)
-#     return torch.cat(lst) if lst else torch.tensor([])
-
 
 def flatten(model):
     return torch.cat([p.flatten() for p in model.parameters()])

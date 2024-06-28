@@ -64,68 +64,6 @@ def collect_gradients(log_prob, params, pass_grad = None):
         params.grad = torch.autograd.grad(log_prob,params)[0]
     return params
 
-
-def fisher(params, log_prob_func=None, jitter=None, normalizing_const=1., softabs_const=1e6, metric=Metric.HESSIAN):
-    """Called upon when using RMHMC. Returns the Fisher Information Matrix or Metric (often referred to as G).
-
-    Parameters
-    ----------
-    params : torch.tensor
-        Flat vector of model parameters: shape (D,), where D is the dimensionality of the parameters.
-    log_prob_func : function
-        A log_prob_func must take a 1-d vector of length equal to the number of parameters that are being sampled.
-    jitter : float
-        Jitter is often added to the diagonal to the metric tensor to ensure it can be inverted. `jitter` is a float corresponding to scale of random draws from a uniform distribution.
-    normalizing_const : float
-        This constant is currently set to 1.0 and might be removed in future versions as it plays no immediate role.
-    softabs_const : float
-        Controls the "filtering" strength of the negative eigenvalues. Large values -> absolute value. See Betancourt 2013.
-    metric : Metric
-        Determines the metric to be used for RMHMC. E.g. default is the Hessian hamiltorch.Metric.HESSIAN.
-
-    Returns
-    -------
-    fish : torch.tensor
-        Fisher Matrix: shape (D,D).
-    abs_eigenvalues : torch.tensor or None
-        Absolute value of the eigenvalues, or None when not using softabs.
-
-    """
-
-    log_prob = log_prob_func(params)
-    if util.has_nan_or_inf(log_prob):
-        print('Invalid log_prob: {}, params: {}'.format(log_prob, params))
-        raise util.LogProbError()
-    if metric == Metric.JACOBIAN_DIAG:
-        # raise NotImplementedError()
-        # import pdb; pdb.set_trace()
-        jac = util.jacobian(log_prob, params, create_graph=True, return_inputs=False)
-        jac = torch.cat([j.flatten() for j in jac])
-        # util.flatten(jac).view(1,-1)
-        fish = torch.matmul(jac.view(-1,1),jac.view(1,-1)).diag().diag()#/ normalizing_const #.diag().diag() / normalizing_const
-    else:
-        hess = torch.autograd.functional.hessian(log_prob_func, params, create_graph=True)
-        fish = - hess #/ normalizing_const
-    if util.has_nan_or_inf(fish):
-        print('Invalid hessian: {}, params: {}'.format(fish, params))
-        raise util.LogProbError()
-    if jitter is not None:
-        params_n_elements = fish.shape[0]
-        fish += (torch.eye(params_n_elements) * torch.rand(params_n_elements) * jitter).to(fish.device)
-    if (metric is Metric.HESSIAN) or (metric is Metric.JACOBIAN_DIAG):
-        return fish, None
-    elif metric == Metric.SOFTABS:
-        eigenvalues, eigenvectors = torch.linalg.eigh(fish, UPLO='L')
-        abs_eigenvalues = (1./torch.tanh(softabs_const * eigenvalues)) * eigenvalues
-        fish = torch.matmul(eigenvectors, torch.matmul(abs_eigenvalues.diag(), eigenvectors.t()))
-        return fish, abs_eigenvalues
-    else:
-            # if metric == Metric.JACOBIAN:
-            #     jac = jacobian(log_prob, params, create_graph=True)
-            #     fish = torch.matmul(jac.t(),jac) / normalizing_const
-        raise ValueError('Unknown metric: {}'.format(metric))
-
-
 def cholesky_inverse(fish, momentum):
     """Performs the inverse of a matrix, using the cholesky inverse (with the vector).
 
@@ -179,9 +117,7 @@ def gibbs(params, sampler=Sampler.HMC, log_prob_func=None, jitter=None, normaliz
 
     """
 
-    if sampler == Sampler.RMHMC:
-        dist = torch.distributions.MultivariateNormal(torch.zeros_like(params), fisher(params, log_prob_func, jitter, normalizing_const, softabs_const, metric)[0])
-    elif mass is None:
+    if mass is None:
         dist = torch.distributions.Normal(torch.zeros_like(params), torch.ones_like(params))
     else:
         if type(mass) is list:
@@ -301,164 +237,7 @@ def leapfrog(params, momentum, log_prob_func, steps=10, step_size=0.1, jitter=0.
         ret_momenta[-1] = ret_momenta[-1] - 0.5 * step_size * p_grad.clone()
             # import pdb; pdb.set_trace()
         return ret_params, ret_momenta
-    elif sampler == Sampler.RMHMC and (integrator == Integrator.IMPLICIT or integrator == Integrator.S3):
-        if integrator is not Integrator.S3:
-            ham_func = None
-            # Else we are doing semi sep and need auxiliary for Riemann version.
-        if pass_grad is not None:
-            raise RuntimeError('Passing user-determined gradients not implemented for RMHMC')
 
-        def fixed_point_momentum(params, momentum):
-            momentum_old = momentum.clone()
-            # print('s')
-            for i in range(fixed_point_max_iterations):
-                momentum_prev = momentum.clone()
-                params = params.detach().requires_grad_()
-                ham = hamiltonian(params, momentum, log_prob_func, jitter=jitter, softabs_const=softabs_const, normalizing_const=normalizing_const, ham_func=ham_func, sampler=sampler, integrator=integrator, metric=metric)
-                params = collect_gradients(ham, params)
-
-                # draw the jitter on the diagonal of Fisher again (probably a better place to do this)
-                tries = 0
-                while util.has_nan_or_inf(params.grad):
-                    params = params.detach().requires_grad_()
-                    ham = hamiltonian(params, momentum, log_prob_func, jitter=jitter, softabs_const=softabs_const, normalizing_const=normalizing_const, ham_func=ham_func, sampler=sampler, integrator=integrator, metric=metric)
-                    params = collect_gradients(ham, params)
-                    tries += 1
-                    if tries > jitter_max_tries:
-                        print('Warning: reached jitter_max_tries {}'.format(jitter_max_tries))
-                        # import pdb; pdb.set_trace()
-                        raise util.LogProbError()
-                        # import pdb; pdb.set_trace()
-                        # break
-
-                momentum = momentum_old - 0.5 * step_size * params.grad
-                momenta_diff = torch.max((momentum_prev-momentum)**2)
-                if momenta_diff < fixed_point_threshold:
-                    break
-            if debug == 1:
-                print('Converged (momentum), iterations: {}, momenta_diff: {}'.format(i, momenta_diff))
-            return momentum
-
-        def fixed_point_params(params, momentum):
-            params_old = params.clone()
-            momentum = momentum.detach().requires_grad_()
-            ham = hamiltonian(params, momentum, log_prob_func, jitter=jitter, softabs_const=softabs_const, normalizing_const=normalizing_const, ham_func=ham_func, sampler=sampler, integrator=integrator, metric=metric)
-            momentum = collect_gradients(ham,momentum)
-            momentum_grad_old = momentum.grad.clone()
-            for i in range(fixed_point_max_iterations):
-                params_prev = params.clone()
-                momentum = momentum.detach().requires_grad_()
-                ham = hamiltonian(params, momentum, log_prob_func, jitter=jitter, softabs_const=softabs_const, normalizing_const=normalizing_const, ham_func=ham_func, sampler=sampler, integrator=integrator, metric=metric)
-                momentum = collect_gradients(ham,momentum)#collect_gradients(ham, params)
-                params = params_old + 0.5 * step_size * momentum.grad + 0.5 * step_size * momentum_grad_old
-                params_diff = torch.max((params_prev-params)**2)
-                if params_diff < fixed_point_threshold:
-                    break
-            if debug == 1:
-                print('Converged (params), iterations: {}, params_diff: {}'.format(i, params_diff))
-            return params
-        ret_params = []
-        ret_momenta = []
-        for n in range(steps):
-            # import pdb; pdb.set_trace()
-            momentum = fixed_point_momentum(params, momentum)
-            params = fixed_point_params(params, momentum)
-
-            params = params.detach().requires_grad_()
-            ham = hamiltonian(params, momentum, log_prob_func, jitter=jitter, softabs_const=softabs_const, normalizing_const=normalizing_const, ham_func=ham_func, sampler=sampler, integrator=integrator, metric=metric)
-            params = collect_gradients(ham, params)
-
-            # draw the jitter on the diagonal of Fisher again (probably a better place to do this)
-            tries = 0
-            while util.has_nan_or_inf(params.grad):
-                params = params.detach().requires_grad_()
-                ham = hamiltonian(params, momentum, log_prob_func, jitter=jitter, softabs_const=softabs_const, normalizing_const=normalizing_const, ham_func=ham_func, sampler=sampler, integrator=integrator, metric=metric)
-                params = collect_gradients(ham, params)
-                tries += 1
-                if tries > jitter_max_tries:
-                    print('Warning: reached jitter_max_tries {}'.format(jitter_max_tries))
-                    raise util.LogProbError()
-                    # break
-            momentum -= 0.5 * step_size * params.grad
-
-            ret_params.append(params)
-            ret_momenta.append(momentum)
-        return ret_params, ret_momenta
-
-    elif sampler == Sampler.RMHMC and integrator == Integrator.EXPLICIT:
-        if pass_grad is not None:
-            raise RuntimeError('Passing user-determined gradients not implemented for RMHMC')
-
-        #During leapfrog define integrator as implict when passing into riemannian_hamiltonian
-        leapfrog_hamiltonian_flag = Integrator.IMPLICIT
-        def hamAB_grad_params(params,momentum):
-            params = params.detach().requires_grad_()
-            ham = hamiltonian(params, momentum.detach(), log_prob_func, jitter=jitter, normalizing_const=normalizing_const, softabs_const=softabs_const, explicit_binding_const=explicit_binding_const, sampler=sampler, integrator=leapfrog_hamiltonian_flag, metric=metric)
-            params = collect_gradients(ham, params)
-
-            # draw the jitter on the diagonal of Fisher again (probably a better place to do this)
-            tries = 0
-            while util.has_nan_or_inf(params.grad):
-                # import pdb; pdb.set_trace()
-                params = params.detach().requires_grad_()
-                ham = hamiltonian(params, momentum.detach(), log_prob_func, jitter=jitter, normalizing_const=normalizing_const, softabs_const=softabs_const, explicit_binding_const=explicit_binding_const, sampler=sampler, integrator=leapfrog_hamiltonian_flag, metric=metric)
-                params = collect_gradients(ham, params)
-                tries += 1
-                if tries > jitter_max_tries:
-                    print('Warning: reached jitter_max_tries {}'.format(jitter_max_tries))
-                    raise util.LogProbError()
-                    # import pdb; pdb.set_trace()
-                    # break
-
-            return params.grad
-        def hamAB_grad_momentum(params,momentum):
-            momentum = momentum.detach().requires_grad_()
-            params = params.detach().requires_grad_()
-            # Can't detach p as we still need grad to do derivatives
-            ham = hamiltonian(params, momentum, log_prob_func, jitter=jitter, normalizing_const=normalizing_const, softabs_const=softabs_const, explicit_binding_const=explicit_binding_const, sampler=sampler, integrator=leapfrog_hamiltonian_flag, metric=metric)
-            # import pdb; pdb.set_trace()
-            momentum = collect_gradients(ham,momentum)
-            return momentum.grad
-        ret_params = []
-        ret_momenta = []
-        params_copy = params.clone()
-        momentum_copy = momentum.clone()
-        for n in range(steps):
-            # \phi_{H_A}
-            momentum = momentum - 0.5 * step_size * hamAB_grad_params(params,momentum_copy)
-            params_copy = params_copy + 0.5 * step_size * hamAB_grad_momentum(params,momentum_copy)
-            # \phi_{H_B}
-            params = params + 0.5 * step_size * hamAB_grad_momentum(params_copy,momentum)
-            momentum_copy = momentum_copy - 0.5 * step_size * hamAB_grad_params(params_copy,momentum)
-            # \phi_{H_C}
-            c = torch.cos(torch.FloatTensor([2* explicit_binding_const * step_size])).to(params.device)
-            s = torch.sin(torch.FloatTensor([2* explicit_binding_const * step_size])).to(params.device)
-            # params_add = params + params_copy
-            # params_sub = params - params_copy
-            # momentum_add = momentum + momentum_copy
-            # momentum_sub = momentum - momentum_copy
-            # ### CHECK IF THE VALUES ON THE RIGHT NEED TO BE THE OLD OR UPDATED ones
-            # ### INSTINCT IS THAT USING UPDATED ONES IS BETTER
-            # params = 0.5 * ((params_add) + c*(params_sub) + s*(momentum_sub))
-            # momentum = 0.5 * ((momentum_add) - s*(params_sub) + c*(momentum_sub))
-            # params_copy = 0.5 * ((params_add) - c*(params_sub) - s*(momentum_sub))
-            # momentum_copy = 0.5 * ((momentum_add) + s*(params_sub) - c*(momentum_sub))
-            params = 0.5 * ((params+params_copy) + c*(params-params_copy) + s*(momentum-momentum_copy))
-            momentum = 0.5 * ((momentum+momentum_copy) - s*(params-params_copy) + c*(momentum-momentum_copy))
-            params_copy = 0.5 * ((params+params_copy) - c*(params-params_copy) - s*(momentum-momentum_copy))
-            momentum_copy = 0.5 * ((momentum+momentum_copy) + s*(params-params_copy) - c*(momentum-momentum_copy))
-
-
-            # \phi_{H_B}
-            params = params + 0.5 * step_size * hamAB_grad_momentum(params_copy,momentum)
-            momentum_copy = momentum_copy - 0.5 * step_size * hamAB_grad_params(params_copy,momentum)
-            # \phi_{H_A}
-            momentum = momentum - 0.5 * step_size * hamAB_grad_params(params,momentum_copy)
-            params_copy = params_copy + 0.5 * step_size * hamAB_grad_momentum(params,momentum_copy)
-
-            ret_params.append(params.clone())
-            ret_momenta.append(momentum.clone())
-        return [ret_params,params_copy], [ret_momenta, momentum_copy]
 
     # PAGE 35 MCMC Using Hamiltonian dynamics (Neal 2011)
     elif sampler == Sampler.HMC and (integrator == Integrator.SPLITTING or integrator == Integrator.SPLITTING_RAND or Integrator.SPLITTING_KMID):
@@ -1089,63 +868,6 @@ def define_model_log_prob(model, model_loss, x, y, params_flattened_list, params
 
     return log_prob_func
 
-def define_split_model_log_prob(model, model_loss, train_loader, num_splits, params_flattened_list, params_shape_list, tau_list, tau_out, normalizing_const=1., predict=False, device = 'cpu', verbose = False):
-    """This function defines the list of log_prob_func's to be used for splitting. It follows the same formulation as `define_model_log_prob`, except
-    it will split the log_prob_func according to data subsets.
-
-    Parameters
-    ----------
-    model : torch.nn.Module
-        This is the torch neural network model, which will be used when performing inference.
-    model_loss : {'binary_class_linear_output', 'multi_class_linear_output', 'multi_class_log_softmax_output', 'regression'} or function
-        This determines the likelihood to be used for the model. The options correspond to:
-        * 'binary_class_linear_output': model has linear output and using binary cross entropy,
-        * 'multi_class_linear_output': model has linear output and using cross entropy,
-        * 'multi_class_log_softmax_output': model has log softmax output and using cross entropy,
-        * 'regression': model has linear output and using Gaussian likelihood,
-        * function: function of the form func(y_pred, y_true). It should return a vector (N,), where N is the number of data points.
-    train_loader : torch.utils.data.Dataloader
-        Data loader to be used for dividing data into subsets. The batch size corresponds to the subset size.
-    num_splits : int
-        Determines the number of splits to use. For maximum use of data set, set to the total number of batches. Be careful to ensure each batch
-        is the same length.
-    params_flattened_list : list
-        A list containing the total number of parameters (weights/biases) per layer in order of the model.
-        E.g. `[weights.nelement() for weights in model.parameters()]`.
-    params_shape_list : list
-        A list describing the shape of each set of parameters in the model.
-        E.g. `[weights.shape for weights in model.parameters()]`.
-    tau_list : torch.tensor
-        A tensor containing the corresponding prior precision for each set of per layer parameters. This is assuming a Gaussian prior.
-    tau_out : float
-        Only relevant for model_loss = 'regression' (otherwise leave as 1.0). This corresponds the likelihood output precision.
-    normalizing_const : float
-        This constant is currently set to 1.0 and might be removed in future versions as it plays no immediate role.
-    predict : bool
-        Flag to set equal to `True` when used as part of `hamiltorch.predict_model`, otherwise set to False. This controls the number of objects
-        to return.
-    device : name of device, or {'gpu', 'cpu'}
-        The device to run on.
-    verbose : bool
-        If set to true then do not display loading bar.
-
-    Returns
-    -------
-    list
-        Returns a list of functions, where each function corresponds to the data subset split.
-
-    """
-
-    log_prob_list = []
-    for batch_idx, (data, target) in enumerate(train_loader):
-        if batch_idx > num_splits - 1:
-            break
-        log_prob_func = define_model_log_prob(model, model_loss, data.clone().to('cpu'), target.clone().to('cpu'), params_flattened_list, params_shape_list, tau_list, tau_out, normalizing_const=normalizing_const, prior_scale = num_splits, predict = predict, device = device)
-        log_prob_list.append(log_prob_func)
-    if not verbose:
-        print('Number of splits: ',len(log_prob_list), ' , each of batch size ', train_loader.batch_size, '\n')
-    return log_prob_list
-
 
 def sample_model(model, x, y, params_init, model_loss='multi_class_linear_output' ,num_samples=10, num_steps_per_sample=10, step_size=0.1, burn=0, inv_mass=None, jitter=None, normalizing_const=1., softabs_const=None, explicit_binding_const=100, fixed_point_threshold=1e-5, fixed_point_max_iterations=1000, jitter_max_tries=10, sampler=Sampler.HMC, integrator=Integrator.IMPLICIT, metric=Metric.HESSIAN, debug=False, tau_out=1.,tau_list=None, store_on_GPU = True, desired_accept_rate=0.8, verbose = False):
     """Sample weights from a NN model to perform inference. This function builds a log_prob_func from the torch.nn.Module and passes it to `hamiltorch.sample`.
@@ -1301,30 +1023,7 @@ def predict_model(model, samples, x = None, y = None, test_loader = None, model_
             params_flattened_list.append(weights.nelement())
             if build_tau:
                 tau_list.append(torch.tensor(1.))
-
-        if test_loader.__class__ is torch.utils.data.dataloader.DataLoader:
-            # Calc number of batches
-            if len(test_loader.dataset) % test_loader.batch_size == 0.0:
-                num_batches = len(test_loader.dataset) / test_loader.batch_size
-            else:
-                num_batches = int(round(len(test_loader.dataset)/ test_loader.batch_size) + 1)
-
-            log_prob_list = define_split_model_log_prob(model, model_loss, test_loader, num_batches, params_flattened_list, params_shape_list, tau_list, tau_out, normalizing_const=1., predict=True, device = samples[0].device, verbose = verbose)
-
-            pred_log_prob_list = []
-            pred_list = []
-            for s in samples:
-                lp_l = 0.
-                pred_l = []
-                for log_prob_func in log_prob_list:
-                    lp, pred = log_prob_func(s)
-                    lp_l += lp.cpu()
-                    pred_l.append(pred)
-                lp = lp_l
-                pred = torch.cat(pred_l)
-                pred_log_prob_list.append(lp.detach()) # Side effect is to update weights to be s
-                pred_list.append(pred.detach())
-        elif x is not None and y is not None:
+        if x is not None and y is not None:
 
             if x.device != samples[0].device:
                 raise RuntimeError('x on device: {} and samples on device: {}'.format(x.device, samples[0].device))
