@@ -55,7 +55,7 @@ class HMCTrainer:
                      normalizing_const: int = 1,
                      inv_mass = None):
         
-        "Use hamiltorch functions to run the Hamiltonian Monte Carlo algorithm to learn the parameters of the model and make predictions in the validation dataset"
+        "Use hamiltorch functions to run the Hamiltonian Monte Carlo algorithm to learn the parameters of the model and make predictions"
         
         params_hmc = hamiltorch.samplers.sample_model(
             model = self.net, 

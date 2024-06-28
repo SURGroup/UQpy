@@ -90,10 +90,11 @@ class Trainer:
                     train_loss.backward()
                     total_train_loss += train_loss.item()
                     self.optimizer.step()
-                    if self.scheduler:
-                        for s in self.scheduler:
-                            s.step()
+
                     self.optimizer.zero_grad()
+                if self.scheduler:
+                    for s in self.scheduler:
+                        s.step()
                 average_train_loss = total_train_loss / len(train_data)
                 self.history["train_loss"][i] = average_train_loss
                 self.model.train(False)

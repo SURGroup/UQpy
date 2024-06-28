@@ -35,7 +35,7 @@ class ProbabilisticLayer(Layer):
         :param weight_distribution: Random variable for weight distribution
         :param bias_distribution: Random variable for bias distribution. If ``None`` bias is zero
         :param sample: If ``True`` sample weight and bias from their distribution.
-        If ``False`` weight and bias are their means
+         If ``False`` weight and bias are their means
         """
         super().__init__(**kwargs)
         self.in_features = in_features
@@ -79,8 +79,7 @@ class ProbabilisticLayer(Layer):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         r"""Forward model evaluation
 
-        Note: If ``self.sample`` or ``self.training`` is ``True``,
-        then weight and bias are sampled from their distributions and the output is probabilistic.
+        Note: If ``self.sample`` or ``self.training`` is ``True``, then weight and bias are sampled from their distributions and the output is probabilistic.
         If both are ``False``, weight and bias are mean of their distributions and output is deterministic.
 
         :param x: Input tensor
