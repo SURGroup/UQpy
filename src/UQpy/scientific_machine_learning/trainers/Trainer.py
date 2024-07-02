@@ -109,12 +109,12 @@ class Trainer:
                     self.history["test_loss"][i] = average_test_loss
                     self.logger.info(
                         f"UQpy: Scientific Machine Learning: "
-                        f"Epoch {i+1:,} / {epochs:,} Train Loss {average_train_loss} Test Loss {average_test_loss}"
+                        f"Epoch {i+1:,} / {epochs:,} Train Loss {average_train_loss:.6e} Test Loss {average_test_loss:.6e}"
                     )
             else:
                 self.logger.info(
                     f"UQpy: Scientific Machine Learning: "
-                    f"Epoch {i+1:,} / {epochs:,} Train Loss {average_train_loss}"
+                    f"Epoch {i+1:,} / {epochs:,} Train Loss {average_train_loss:.6e}"
                 )
             i += 1
 
