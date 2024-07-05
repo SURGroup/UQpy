@@ -27,7 +27,7 @@ class Dropout2d(DropoutActivation):
         Shape:
 
         - Input: :math:`(N, C, H, W)`
-        - Output: :math:`(N, C, H, W)`  (same shape as input)
+        - Output: :math:`(N, C, H, W)`
 
         Example:
 
@@ -44,6 +44,6 @@ class Dropout2d(DropoutActivation):
         """Calls ``torch.nn.functional.dropout2d``
 
         :param x: Tensor of shape :math:`(N, C, H, W)`
-        :return: Tensor of same shape as ``x``
+        :return: Tensor of same shape as :math:`(N, C, H, W)`
         """
         return F.dropout2d(x, self.p, self.dropping, self.inplace)
