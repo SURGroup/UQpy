@@ -39,18 +39,14 @@ class BayesianLinear(BayesianLayer):
 
         Example:
 
-            >>> f = sml.BayesianLinear(4, 15)
-            >>> x = torch.rand(20, 4)
-            >>> f.sample(False)
-            >>> deterministic_output = f(x)
-            >>> f.sample()
-            >>> probabilistic_output = f(x)
-            >>> print(deterministic_output.shape)
-            >>> print(probabilistic_output.shape)
-            >>> print(torch.all(deterministic_output == probabilistic_output))
-            torch.Size([20, 15])
-            torch.Size([20, 15])
-            tensor(False)
+        >>> layer = sml.BayesianLinear(4, 15)
+        >>> input = torch.rand(20, 4)
+        >>> layer.sample(False)
+        >>> deterministic_output = layer(input)
+        >>> layer.sample()
+        >>> probabilistic_output = layer(input)
+        >>> print(torch.all(deterministic_output == probabilistic_output))
+        tensor(False)
         """
         weight_shape = (out_features, in_features)
         bias_shape = out_features if bias else None
