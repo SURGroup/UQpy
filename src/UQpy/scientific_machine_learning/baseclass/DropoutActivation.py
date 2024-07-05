@@ -37,15 +37,7 @@ class DropoutActivation(Activation, ABC):
         ...
 
     def extra_repr(self) -> str:
-        keyword_args = []
-        if self.p != 0.5:
-            keyword_args.append("p={p}")
+        s = "p={p}, dropping={dropping}"
         if self.inplace:
-            keyword_args.append("inplace={inplace}")
-        if not self.dropping:
-            keyword_args.append("dropping={dropping}")
-        if not keyword_args:
-            return ""
-        else:
-            s = ", ".join(keyword_args)
-            return s.format(**self.__dict__)
+            s += "inplace={inplace}"
+        return s.format(**self.__dict__)
