@@ -1,7 +1,6 @@
 import torch
 import torch.nn.functional as F
 import UQpy.scientific_machine_learning.functional as func
-import UQpy.scientific_machine_learning as sml
 from UQpy.scientific_machine_learning.baseclass import BayesianLayer
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
@@ -28,6 +27,11 @@ class BayesianFourier1d(BayesianLayer):
          - ``priors["posterior_rho_initial"]`` = ``(-3, 0.1)``
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
          If ``False``, use distribution mean as parameter values.
+
+
+        Shape:
+
+        Example:
         """
         weight_shape = (width, width, modes)  # Parameters for func.spectral_conv1d
         kernel_size = 1
