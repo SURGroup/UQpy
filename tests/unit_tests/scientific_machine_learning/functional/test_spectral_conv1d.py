@@ -34,6 +34,22 @@ def test_invalid_modes_raises_error():
         func.spectral_conv1d(x, weights, out_channels, modes)
 
 
+@pytest.mark.parametrize("weights_shape", [(2, 1, 1), (1, 2, 1), (1, 1, 2)])
+def test_invalid_weights_shape_raises_error(weights_shape):
+    """If shapes of the weights is not (in_channels, out_channels, modes), raise an error
+    Note the correct shape for the weights in this example is (1, 1, 1)
+    """
+    batch_size = 10
+    in_channels = 1
+    out_channels = 1
+    length = 16
+    modes = 1
+    x = torch.rand((batch_size, in_channels, length))
+    weights = torch.rand(weights_shape, dtype=torch.cfloat)
+    with pytest.raises(AssertionError):
+        func.spectral_conv1d(x, weights, out_channels, modes)
+
+
 def test_cosine_1mode():
     """Keeping one mode in the FFT leads to an output of all zeros"""
     in_channels = 1

@@ -15,7 +15,7 @@ def spectral_conv2d(
     r"""Compute the 2d spectral convolution :math:`\mathcal{F}^{-1}(R (\mathcal{F}x) )`
 
     :param x: Tensor of shape :math:`(N, C_\text{in}, H, W)`
-    :param weights: Tuple of two tensors each with shape :math:`(C_\text{in}, C_\text{out}, \text{modes1}, \text{modes2})`.
+    :param weights: Tuple of two tensors each with shape :math:`(C_\text{in}, C_\text{out}, \text{modes[0]}, \text{modes[1]})`.
      Both weight tensors must have complex entries.
     :param out_channels: :math:`C_\text{out}`, Number of channels in the output signal
     :param modes: Tuple of Fourier modes to keep.
@@ -30,6 +30,17 @@ def spectral_conv2d(
     if modes[1] > (width // 2) + 1:
         raise ValueError(
             "UQpy: Invalid `modes[1]`. `modes[1]` must be less than or equal to (width // 2) + 1"
+        )
+    correct_shape = torch.Size([in_channels, out_channels, modes[0], modes[1]])
+    if weights[0].shape != correct_shape:
+        raise AssertionError(
+            "UQpy: Invalid shape for `weights[0]`. "
+            "`weights[0]` must be of shape (in_channels, out_channels, modes[0], modes[1])"
+        )
+    if weights[1].shape != correct_shape:
+        raise AssertionError(
+            "UQpy: Invalid shape for `weights[1]`."
+            "`weights[1] must be of shape (in_channels, out_channels, modes[0], modes[1])"
         )
     # Fourier transform
     # x_ft = torch.fft.rfft(x, 2, normalized=True, onesided=True)

@@ -40,6 +40,16 @@ def spectral_conv3d(
         raise ValueError(
             "UQpy: invalid `modes[2]`. `modes[2]` must be less than or equal to (depth // 2) + 1"
         )
+    correct_shape = torch.Size(
+        [in_channels, out_channels, modes[0], modes[1], modes[2]]
+    )
+    for i, w in enumerate(weights):  # check that all weight tensors have the correct shape
+        if w.shape != correct_shape:
+            raise AssertionError(
+                f"UQpy: Invalid shape for `weights[{i}]`. "
+                f"`weights[{i}]` must be of shape (in_channels, out_channels, modes[0], modes[1], modes[2])"
+            )
+
     # Apply Fourier transform
     x_ft = torch.fft.rfftn(x, s=(height, width, depth))
     # Apply linear transform in Fourier space

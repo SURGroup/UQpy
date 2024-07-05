@@ -54,3 +54,23 @@ def test_invalid_modes1_raises_error():
     )
     with pytest.raises(ValueError):
         func.spectral_conv2d(x, weights, out_channels, modes)
+
+
+@pytest.mark.parametrize(
+    "weight_shape", [(2, 1, 1, 1), (1, 2, 1, 1), (1, 1, 2, 1), (1, 1, 1, 2)]
+)
+def test_invalid_weights_shape_raises_error(weight_shape):
+    """If either weight matrix is not of shape (in_channels, out_channels, modes[0], modes[1]), raise an error
+    Note the correct weight shape for this example is (1, 1, 1, 1)
+    """
+    batch_size, in_channels, out_channels = 1, 1, 1
+    height = 64
+    width = 32
+    modes = (1, 1)
+    x = torch.rand((batch_size, in_channels, height, width))
+    weight_good = torch.rand((in_channels, out_channels, *modes), dtype=torch.cfloat)
+    weight_bad = torch.rand(weight_shape, dtype=torch.cfloat)
+    with pytest.raises(AssertionError):
+        func.spectral_conv2d(x, (weight_good, weight_bad), out_channels, modes)
+    with pytest.raises(AssertionError):
+        func.spectral_conv2d(x, (weight_bad, weight_good), out_channels, modes)

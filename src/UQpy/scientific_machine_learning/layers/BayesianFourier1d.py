@@ -43,7 +43,7 @@ class BayesianFourier1d(BayesianLayer):
         self.modes = modes
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        r"""Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`
+        r"""Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W(x)`
 
         :param x: Tensor of shape :math:`(N, \text{width}, L)`
         :return: Tensor of shape :math:`(N, \text{width}, L)`
