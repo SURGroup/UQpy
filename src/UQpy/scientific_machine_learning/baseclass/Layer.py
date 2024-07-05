@@ -25,7 +25,6 @@ class Layer(nn.Module, ABC):
         """
         self.sampling = mode
         self.apply(self.__set_sampling)
-        return self
 
     @torch.no_grad()
     def __set_sampling(self, m):
