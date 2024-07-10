@@ -8,12 +8,12 @@ from beartype import beartype
 @beartype
 class GaussianKullbackLeiblerDivergence(Loss):
 
-    def __init__(self, reduction: str = "mean", **kwargs):
+    def __init__(self, reduction: str = "sum", **kwargs):
         """Analytic form for Gaussian KL divergence for all Bayesian layers in a module
 
         :param reduction: Specifies the reduction to apply to the output: 'none', 'mean', or 'sum'.
          'none': no reduction will be applied, 'mean': the output will be averaged, 'sum': the output will be summed.
-         Default: 'mean'
+         Default: 'sum'
         """
         super().__init__(**kwargs)
         self.reduction = reduction
