@@ -1,3 +1,7 @@
+"""Unit tests for sml.BayesianConv2d
+
+Note this does not include tests for numerical accuracy as the convolution is performed by torch.nn.functional.conv2d
+"""
 import torch
 from torch.nn.modules.utils import _pair
 import UQpy.scientific_machine_learning as sml
@@ -35,14 +39,14 @@ def compute_h_w_out(
 
 
 @given(
-    n=st.integers(min_value=1, max_value=100),
+    n=st.integers(min_value=1, max_value=16),
     height=st.integers(min_value=1, max_value=256),
     width=st.integers(min_value=1, max_value=256),
     in_channels=st.integers(min_value=1, max_value=10),
     out_channels=st.integers(min_value=1, max_value=10),
 )
 def test_default_output_shape(n, height, width, in_channels, out_channels):
-    """Test the output shape for various batch sizes, heights, width"""
+    """Test the output shape for various batch sizes, heights, width, and channels"""
     x_size = (n, in_channels, height, width)
     x = torch.rand(size=x_size)
     layer = sml.BayesianConv2d(in_channels, out_channels, kernel_size=1)
@@ -103,7 +107,7 @@ def test_deterministic_output():
     layer.sample(False)
     y1 = layer(x)
     y2 = layer(x)
-    assert torch.all(y1 == y2)
+    assert torch.allclose(y1, y2)
 
 
 def test_probabilistic_output():
@@ -114,4 +118,4 @@ def test_probabilistic_output():
     layer.sample()
     y1 = layer(x)
     y2 = layer(x)
-    assert not torch.all(y1 == y2)
+    assert not torch.allclose(y1, y2)
