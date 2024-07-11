@@ -17,10 +17,10 @@ class FeedForwardNeuralNetwork(NeuralNetwork):
 
         self.logger = logging.getLogger(__name__)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, *x) -> torch.Tensor:
         """Forward call of the neural network
 
         :param x: Input tensor
         :return: Output tensor
         """
-        return self.network(x)
+        return self.network(*x)
