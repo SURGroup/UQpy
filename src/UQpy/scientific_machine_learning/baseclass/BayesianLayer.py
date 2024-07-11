@@ -90,14 +90,12 @@ class BayesianLayer(Layer, ABC):
     def get_weight_bias(self) -> tuple[torch.Tensor, torch.Tensor]:
         """Get the weights and biases for the Bayesian layer.
 
-        If ``training`` or ``sampling`` is ``True``, then sample weights and biases from their respective distributions.
+        If ``sampling`` is ``True``, then sample weights and biases from their respective distributions.
         Otherwise, use distribution means for weights and biases.
 
         :return: weights, biases
         """
-        if (
-            self.training or self.sampling
-        ):  # Randomly sample weights and biases from normal distribution
+        if self.sampling:  # Randomly sample weights and biases from normal distribution
             weight_epsilon = torch.empty(self.weight_mu.size()).normal_(0, 1)
             w_sigma = torch.log1p(torch.exp(self.weight_sigma))
             weights = self.weight_mu + (weight_epsilon * w_sigma)
