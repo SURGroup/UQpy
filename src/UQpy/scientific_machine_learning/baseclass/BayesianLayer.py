@@ -58,7 +58,7 @@ class BayesianLayer(Layer, ABC):
         self.posterior_rho_initial: tuple[float, float] = priors[
             "posterior_rho_initial"
         ]
-        """initial posterior rho of the distribution"""
+        """Initial posterior rho of the distribution"""
         self.weight_mu: nn.Parameter = nn.Parameter(torch.empty(weight_shape, dtype=dtype))
         """Distribution means for the weights"""
         self.weight_sigma: nn.Parameter = nn.Parameter(torch.empty(weight_shape, dtype=dtype))
