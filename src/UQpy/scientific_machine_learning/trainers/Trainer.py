@@ -29,6 +29,8 @@ class Trainer:
         self.loss_function = loss_function
         if (scheduler is not None) and (not isinstance(scheduler, list)):
             self.scheduler = [scheduler]
+        else:
+            self.scheduler = scheduler
 
         self.history: dict = {"train_loss": None, "test_loss": None}
         """Record of the loss during training and validation. 
@@ -45,7 +47,7 @@ class Trainer:
         train_data: torch.utils.data.DataLoader = None,
         test_data: torch.utils.data.DataLoader = None,
         epochs: PositiveInteger = 100,
-        tolerance: float = 1e-3,
+        tolerance: float = 0.0,
     ):
         """Run the ``optimizer`` algorithm to learn the parameters of the ``model`` that fit ``train_data``
 
@@ -53,7 +55,7 @@ class Trainer:
         :param test_data: Data used to validate the performance of the model
         :param epochs: Maximum number of epochs to run the ``optimizer`` for
         :param tolerance: Optimization terminates early if *average* training loss is below tolerance.
-         Default: :math:`1e-3`
+         Default: :math:`0.0`
 
         :raises RuntimeError: If neither ``train_data`` nor ``test_data`` is provided, a RuntimeError occurs.
         """
@@ -94,7 +96,10 @@ class Trainer:
                     self.optimizer.zero_grad()
                 if self.scheduler:
                     for s in self.scheduler:
-                        s.step()
+                        if isinstance(s, torch.optim.lr_scheduler.ReduceLROnPlateau):  # ToDo: does this work
+                            s.step(train_loss)
+                        else:
+                            s.step()
                 average_train_loss = total_train_loss / len(train_data)
                 self.history["train_loss"][i] = average_train_loss
                 self.model.train(False)
