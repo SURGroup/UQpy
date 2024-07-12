@@ -28,8 +28,8 @@ The module contains the following parent classes for neural networks:
 
 Consistent with Pytorch's architecture, those classes and their subclasses primarily organize and store tensors and parameters.
 The bulk of the computation is done by the methods in the ``functional`` folder.
-For example, the ``SpectralConv1d`` class is used to define a spectral convolution in a neural network, but hands off
-the actual Fourier transform and other calculations to ``funtional.spectral_conv1d``.
+For example, the ``GaussianKullbackLeiblerDivergence`` class is used to define the divergence for a Bayesian neural
+network, but hands off the actual divergence computation ``functional.gaussian_kullback_leibler_divergence``.
 
 To prevent naming conflicts with the common torch imports, we recommend importing this module as the following.
 
@@ -39,9 +39,20 @@ To prevent naming conflicts with the common torch imports, we recommend importin
 >>> import UQpy.scientific_machine_learning.functional as func
 
 
+Getting Started
+---------------
+
+.. toctree::
+
+    Bayesian Quickstart Training <../auto_examples/scientific_machine_learning/bayesian_quickstart/bayesian_quickstart_training>
+    Bayesian Quickstart Testing <../auto_examples/scientific_machine_learning/bayesian_quickstart/bayesian_quickstart_testing>
+
+
+Documentation
+-------------
+
 .. toctree::
    :maxdepth: 2
-   :caption: Scientific Machine Learning
 
     Activations <activations/index>
     Functional <functional/index>
