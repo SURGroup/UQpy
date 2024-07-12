@@ -96,7 +96,7 @@ class Trainer:
                     self.optimizer.zero_grad()
                 if self.scheduler:
                     for s in self.scheduler:
-                        if isinstance(s, torch.optim.lr_scheduler.ReduceLROnPlateau):  # ToDo: does this work
+                        if isinstance(s, torch.optim.lr_scheduler.ReduceLROnPlateau):
                             s.step(train_loss)
                         else:
                             s.step()
