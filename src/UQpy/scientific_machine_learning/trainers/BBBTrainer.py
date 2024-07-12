@@ -127,7 +127,10 @@ class BBBTrainer:
                     total_divergence_loss += divergence_loss
                 if self.scheduler:
                     for s in self.scheduler:
-                        s.step()
+                        if isinstance(s, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                            s.step(train_loss)
+                        else:
+                            s.step()
                 average_train_loss = total_train_loss / len(train_data)
                 average_train_nll = total_nll_loss / len(train_data)
                 average_divergence_loss = total_divergence_loss / len(train_data)
