@@ -12,7 +12,7 @@ class BayesianFourier1d(BayesianLayer):
         modes: PositiveInteger,
         priors: dict = None,
         sampling: bool = True,
-        **kwargs,
+        device=None,
     ):
         r"""Construct a Bayesian Fourier block as :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`
         where :math:`R` and :math:`W` are a random variables
@@ -41,7 +41,7 @@ class BayesianFourier1d(BayesianLayer):
             bias_shape,
             priors,
             sampling=sampling,
-            **kwargs,
+            device=device,
         )
         self.width = width
         self.modes = modes
