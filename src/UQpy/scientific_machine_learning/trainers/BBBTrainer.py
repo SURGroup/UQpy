@@ -60,7 +60,7 @@ class BBBTrainer:
         test_data: torch.utils.data.DataLoader = None,
         epochs: PositiveInteger = 100,
         num_samples: PositiveInteger = 1,
-        tolerance: float = 1e-3,
+        tolerance: float = 0.0,
         beta: float = 1.0,
     ):
         """Run the ``optimizer`` algorithm to learn the parameters of the ``model`` that fit ``train_data``
@@ -70,7 +70,7 @@ class BBBTrainer:
         :param epochs: Maximum number of epochs to run the ``optimizer`` for
         :param num_samples: Number of Monte Carlo samples to approximate the loss
         :param tolerance: Optimization terminates early if *average* training loss is below tolerance.
-         Default: :math:`1e-3`
+         Default: 0.0
         :param beta: Weighting for the divergence term in ELBO loss. Default: 1.0
 
         :raises RuntimeError: If neither ``train_data`` nor ``test_data`` is provided, a RuntimeError occurs.
@@ -104,7 +104,7 @@ class BBBTrainer:
         self.logger.info("UQpy: Scientific Machine Learning: Beginning " + log_note)
         i = 0
         average_train_loss = torch.inf
-        while i < epochs and average_train_loss > tolerance:
+        while i < epochs and average_train_loss >= tolerance:
             if train_data:
                 self.model.train(True)
                 self.model.sample(True)
