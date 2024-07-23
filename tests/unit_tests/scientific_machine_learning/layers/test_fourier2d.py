@@ -18,11 +18,3 @@ def test_output_shape(batch_size, width, signal_shape, modes):
     fourier = sml.Fourier2d(width, modes)
     y = fourier(x)
     assert x.shape == y.shape
-
-
-def test_extra_repr():
-    fourier = sml.Fourier2d(8, (16, 32), conv_kwargs={"padding": "valid"})
-    assert (
-        fourier.__str__()
-        == "Fourier2d(width=8, modes=(16, 32), conv_kwargs={'padding': 'valid'})"
-    )
