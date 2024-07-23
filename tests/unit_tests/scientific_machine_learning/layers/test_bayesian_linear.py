@@ -18,21 +18,28 @@ def test_output_shape(in_features, out_features):
 
 
 def test_device():
-    """ToDo: does this test work on everyones hardware"""
+    """Note if neither cuda nor mps is available, this test will always pass"""
     cpu = torch.device("cpu")
-    mps = torch.device("mps", index=0)
     layer = sml.BayesianLinear(1, 1, device=cpu)
     assert layer.weight_mu.device == cpu
-    layer.to(mps)
-    assert layer.weight_mu.device == mps
+    device = (
+        torch.device("cuda", 0)
+        if torch.cuda.is_available()
+        else torch.device("mps", 0)
+        if torch.backends.mps.is_available()
+        else "cpu"
+    )
+    layer.to(device)
+    assert layer.weight_mu.device == device
 
 
 def test_dtype():
-    dtype = torch.cfloat
-    layer = sml.BayesianLinear(1, 1, dtype=dtype)
-    x = torch.rand(1, dtype=dtype)
-    y = layer(x)
-    assert y.dtype == dtype
+    layer = sml.BayesianLinear(1, 1, dtype=torch.float)
+    x = torch.rand(1, dtype=torch.float)
+    assert layer(x).dtype == torch.float
+    layer.to(torch.cfloat)
+    x = x.to(torch.cfloat)
+    assert layer(x).dtype == torch.cfloat
 
 
 def test_deterministic_output():

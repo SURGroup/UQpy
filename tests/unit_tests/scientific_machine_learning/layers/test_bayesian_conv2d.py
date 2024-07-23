@@ -101,13 +101,19 @@ def test_fancy_output_shape(kernel_size, stride, padding, dilation):
 
 
 def test_device():
-    """ToDo: does this test work on everyones hardware"""
+    """Note if neither cuda nor mps is available, this test will always pass"""
     cpu = torch.device("cpu")
-    mps = torch.device("mps", index=0)
     layer = sml.BayesianConv2d(1, 1, 1, device=cpu)
     assert layer.weight_mu.device == cpu
-    layer.to(mps)
-    assert layer.weight_mu.device == mps
+    device = (
+        torch.device("cuda", 0)
+        if torch.cuda.is_available()
+        else torch.device("mps", 0)
+        if torch.backends.mps.is_available()
+        else "cpu"
+    )
+    layer.to(device)
+    assert layer.weight_mu.device == device
 
 
 def test_dtype():
