@@ -11,7 +11,6 @@ class GaussianNormalizer(Layer):
         x: torch.Tensor,
         epsilon: PositiveFloat = 1e-8,
         encoding: bool = True,
-        **kwargs,
     ):
         """Normalize a tensor to have mean of zero and standard deviation of one.
 
@@ -56,7 +55,7 @@ class GaussianNormalizer(Layer):
         tensor(0.5003) tensor(-6.5804e-09) tensor(0.5003)
         tensor(0.2879) tensor(1.) tensor(0.2879)
         """
-        super().__init__(**kwargs)
+        super().__init__()
         self.x = x
         self.epsilon = epsilon
         self.encoding = encoding

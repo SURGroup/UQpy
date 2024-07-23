@@ -12,7 +12,6 @@ class RangeNormalizer(Layer):
         low: Union[int, float] = 0.0,
         high: Union[int, float] = 1.0,
         encoding: bool = True,
-        **kwargs,
     ):
         r"""Normalize a tensor to fall within the range :math:`[\text{low}, \text{high}]`
 
@@ -61,7 +60,7 @@ class RangeNormalizer(Layer):
         tensor(4.1015) tensor(1.) tensor(4.1015)
 
         """
-        super().__init__(**kwargs)
+        super().__init__()
         if low >= high:
             raise ValueError("UQpy: `high` must be strictly greater than `low`")
         self.x = x
