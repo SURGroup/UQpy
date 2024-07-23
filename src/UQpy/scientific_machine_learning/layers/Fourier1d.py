@@ -12,12 +12,15 @@ class Fourier1d(Layer):
         self,
         width: PositiveInteger,
         modes: PositiveInteger,
-        **kwargs,
+        device=None,
     ):
         r"""Construct a 1d Fourier block to compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W(x)`
 
         :param width: Number of neurons in the layer and channels in the spectral convolution
         :param modes: Number of Fourier modes to keep, at most :math:`\lfloor L / 2 \rfloor + 1`
+
+        Note this class does *not* accept the ``dtype`` argument
+        since Fourier layers require real and complex tensors where appropriate.
 
         Shape:
 
@@ -33,7 +36,7 @@ class Fourier1d(Layer):
         >>> input = torch.rand(2, width, length)
         >>> output = f(input)
         """
-        super().__init__(**kwargs)
+        super().__init__()
         self.width = width
         self.modes = modes
 
@@ -41,13 +44,15 @@ class Fourier1d(Layer):
         """Normalizing factor for spectral convolution weights"""
         self.weight_spectral_conv: nn.Parameter = nn.Parameter(
             self.scale
-            * torch.rand(self.width, self.width, self.modes, dtype=torch.cfloat)
+            * torch.rand(
+                self.width, self.width, self.modes, dtype=torch.cfloat, device=device
+            )
         )
         r"""Weights for the spectral convolution. 
         Tensor of shape :math:`(\text{width}, \text{width}, \text{modes})` with complex entries"""
         kernel_size = 1
         self.weight_conv: nn.Parameter = nn.Parameter(
-            torch.empty(self.width, self.width, kernel_size)
+            torch.empty(self.width, self.width, kernel_size, device=device)
         )
         r"""Weights for the convolution. 
         Tensor of shape :math:`(\text{width}, \text{width}, \text{kernel_size})`"""
