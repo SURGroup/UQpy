@@ -6,7 +6,15 @@ from typing import Union
 
 
 class BayesianLayer(Layer, ABC):
-    def __init__(self, weight_shape, bias_shape, priors, sampling=True, dtype=torch.float, **kwargs):
+    def __init__(
+        self,
+        weight_shape,
+        bias_shape,
+        priors,
+        sampling=True,
+        device=None,
+        dtype=None,
+    ):
         """Initialize the random variables governing the parameters of the layer.
 
         :param weight_shape: Shape of the weight_mu and weight_sigma matrices
@@ -39,7 +47,8 @@ class BayesianLayer(Layer, ABC):
              - (-3.0, 0.1)
         :param dtype:
         """
-        super().__init__(**kwargs)
+        super().__init__()
+        factory_kwargs = {"device": device, "dtype": dtype}
         self.sampling = sampling
         self.priors = priors
         if self.priors is None:
@@ -59,9 +68,14 @@ class BayesianLayer(Layer, ABC):
             "posterior_rho_initial"
         ]
         """Initial posterior rho of the distribution"""
-        self.weight_mu: nn.Parameter = nn.Parameter(torch.empty(weight_shape, dtype=dtype))
+
+        self.weight_mu: nn.Parameter = nn.Parameter(
+            torch.empty(weight_shape, **factory_kwargs)
+        )
         """Distribution means for the weights"""
-        self.weight_sigma: nn.Parameter = nn.Parameter(torch.empty(weight_shape, dtype=dtype))
+        self.weight_sigma: nn.Parameter = nn.Parameter(
+            torch.empty(weight_shape, **factory_kwargs)
+        )
         """Distribution standard deviations for the weights"""
 
         self.bias: bool = True if bias_shape else False
@@ -71,8 +85,8 @@ class BayesianLayer(Layer, ABC):
         self.bias_sigma: Union[None, nn.Parameter] = None
         """Distribution standard deviations for the bias. If ``bias`` is ``False``, this is ``None``."""
         if self.bias:
-            self.bias_mu = nn.Parameter(torch.empty(bias_shape, dtype=dtype))
-            self.bias_sigma = nn.Parameter(torch.empty(bias_shape, dtype=dtype))
+            self.bias_mu = nn.Parameter(torch.empty(bias_shape, **factory_kwargs))
+            self.bias_sigma = nn.Parameter(torch.empty(bias_shape, **factory_kwargs))
 
         self.sample_parameters()
 
@@ -81,6 +95,7 @@ class BayesianLayer(Layer, ABC):
 
         If ``bias`` is ``True``, populate ``bias_mu`` and ``bias_sigma`` with samples from Normal distributions.
         """
+        dtype = self.weight_mu.dtype
         self.weight_mu.data.normal_(*self.posterior_mu_initial)
         self.weight_sigma.data.normal_(*self.posterior_rho_initial)
         if self.bias:
@@ -95,12 +110,20 @@ class BayesianLayer(Layer, ABC):
 
         :return: weights, biases
         """
+        factory_kwargs = {
+            "device": self.weight_mu.device,
+            "dtype": self.weight_mu.dtype,
+        }
         if self.sampling:  # Randomly sample weights and biases from normal distribution
-            weight_epsilon = torch.empty(self.weight_mu.size()).normal_(0, 1)
+            weight_epsilon = torch.empty(
+                self.weight_mu.size(), **factory_kwargs
+            ).normal_(0, 1)
             w_sigma = torch.log1p(torch.exp(self.weight_sigma))
             weights = self.weight_mu + (weight_epsilon * w_sigma)
             if self.bias:
-                bias_epsilon = torch.empty(self.bias_mu.size()).normal_(0, 1)
+                bias_epsilon = torch.empty(
+                    self.bias_mu.size(), **factory_kwargs
+                ).normal_(0, 1)
                 b_sigma = torch.log1p(torch.exp(self.bias_sigma))
                 biases = self.bias_mu + (bias_epsilon * b_sigma)
             else:

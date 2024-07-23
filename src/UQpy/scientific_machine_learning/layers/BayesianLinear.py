@@ -13,7 +13,8 @@ class BayesianLinear(BayesianLayer):
         bias: bool = True,
         priors: dict = None,
         sampling: bool = True,
-        **kwargs,
+        device=None,
+        dtype=None,
     ):
         r"""Construct a Bayesian layer with weights and bias set by I.I.D. Normal distributions
 
@@ -50,7 +51,8 @@ class BayesianLinear(BayesianLayer):
         """
         weight_shape = (out_features, in_features)
         bias_shape = out_features if bias else None
-        super().__init__(weight_shape, bias_shape, priors, sampling, **kwargs)
+        factory_kwargs = {"device": device, "dtype": dtype}
+        super().__init__(weight_shape, bias_shape, priors, sampling, **factory_kwargs)
         self.in_features = in_features
         self.out_features = out_features
 

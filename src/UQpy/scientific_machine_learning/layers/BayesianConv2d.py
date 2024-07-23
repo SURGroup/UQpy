@@ -22,7 +22,8 @@ class BayesianConv2d(BayesianLayer):
         bias: bool = True,
         priors: dict = None,
         sampling: bool = True,
-        **kwargs,
+        device=None,
+        dtype=None,
     ):
         r"""Applies a Bayesian 2D convolution over an input signal composed of several input planes.
 
@@ -77,7 +78,8 @@ class BayesianConv2d(BayesianLayer):
         kernel_size = _pair(kernel_size)
         weight_shape = (out_channels, in_channels // groups, *kernel_size)
         bias_shape = out_channels if bias else None
-        super().__init__(weight_shape, bias_shape, priors, sampling, **kwargs)
+        factory_kwargs = {"device": device, "dtype": dtype}
+        super().__init__(weight_shape, bias_shape, priors, sampling, **factory_kwargs)
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = _pair(kernel_size)

@@ -48,6 +48,25 @@ def test_fancy_output_shape(kernel_size, stride, padding, dilation):
     assert y.shape == torch.Size([n, out_channels, length_out])
 
 
+def test_device():
+    """ToDo: does this test work on everyones hardware"""
+    cpu = torch.device("cpu")
+    mps = torch.device("mps", index=0)
+    layer = sml.BayesianConv1d(1, 1, 1, device=cpu)
+    assert layer.weight_mu.device == cpu
+    layer.to(mps)
+    assert layer.weight_mu.device == mps
+
+
+def test_dtype():
+    dtype = torch.cfloat
+    layer = sml.BayesianConv1d(1, 1, 1, dtype=dtype)
+    x = torch.rand((1, 1), dtype=dtype)
+    y = layer(x)
+    assert y.dtype == dtype
+
+
+
 def test_deterministic_output():
     x = torch.rand(1, 1, 256)
     layer = sml.BayesianConv1d(1, 1, 1)
