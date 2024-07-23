@@ -3,6 +3,29 @@ import torch.nn as nn
 import UQpy.scientific_machine_learning as sml
 
 
+def test_device():
+    """Test switching a model to another device.
+
+    Note if neither cuda nor mps is available, this test will always pass
+    """
+    cpu = torch.device("cpu")
+    network = nn.Sequential(
+        nn.Linear(1, 1, device=cpu),
+        sml.BayesianLinear(1, 1, device=cpu),
+    )
+    model = sml.FeedForwardNeuralNetwork(network)
+    device = (
+        torch.device("cuda", 0)
+        if torch.cuda.is_available()
+        else torch.device("mps", 0)
+        if torch.backends.mps.is_available()
+        else "cpu"
+    )
+    model.to(device)
+    assert model.network[0].weight.device == device
+    assert model.network[1].weight_mu.device == device
+
+
 def test_mismatch_sampling():
     """If any layers have sampling=True, set the FeedForwardNeuralNetwork and all layers to sampling=True"""
     network = nn.Sequential(
@@ -39,13 +62,13 @@ def test_mismatch_dropping():
     )
 
 
-def test_set_deterministic_true():
+def test_deterministic_output():
     network = nn.Sequential(
         sml.BayesianLinear(1, 10),
         sml.Dropout(),
         sml.BayesianLinear(10, 10),
         sml.Dropout(),
-        sml.BayesianLinear(10, 1)
+        sml.BayesianLinear(10, 1),
     )
     model = sml.FeedForwardNeuralNetwork(network)
     model.set_deterministic(True)
@@ -56,13 +79,13 @@ def test_set_deterministic_true():
     assert y1 == y2
 
 
-def test_set_deterministic_false():
+def test_probabilistic_output():
     network = nn.Sequential(
         sml.BayesianLinear(1, 10),
         sml.Dropout(),
         sml.BayesianLinear(10, 10),
         sml.Dropout(),
-        sml.BayesianLinear(10, 1)
+        sml.BayesianLinear(10, 1),
     )
     model = sml.FeedForwardNeuralNetwork(network)
     model.set_deterministic(False)
