@@ -9,7 +9,16 @@ This intended to be run after `bayesian_quickstart_training.py`
 - Make probabilistic predictions
 - Plot probabilistic predictions
 """
+# %% md
+# This is the first half of a Bayesian version of the classification problem from this
+# [Pytorch Quickstart tutorial](https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html).
+# This script assumes you have already run the Bayesian Quickstart Testing script and saved the optimized model
+# to a file named ``bayesian_model.pth``.
+#
+# First, we import the necessary modules and define the BayesianNeuralNetwork class so we can load the model state
+# dictionary saved in ``bayesian_model.pth``.
 
+# %%
 import torch
 import torch.nn as nn
 from torchvision import datasets
@@ -41,15 +50,19 @@ class BayesianNeuralNetwork(nn.Module):
         logits = self.bayesian_linear_relu_stack(x)
         return logits
 
+# %% md
+# Since the model is already trained, we only need to load test data and can ignore the training data.
+# Then we use Pytorch's framework for loading a model from a state dictionary.
 
 # Download training data from open datasets.
-training_data = datasets.FashionMNIST(
-    root="data",
-    train=True,
-    download=False,
-    transform=ToTensor(),
-)
+# training_data = datasets.FashionMNIST(
+#     root="data",
+#     train=True,
+#     download=False,
+#     transform=ToTensor(),
+# )
 
+# %%
 # Download test data from open datasets.
 test_data = datasets.FashionMNIST(
     root="data",
@@ -61,7 +74,14 @@ test_data = datasets.FashionMNIST(
 device = "cpu"
 network = BayesianNeuralNetwork().to(device)
 model = sml.FeedForwardNeuralNetwork(network).to(device)
-model.load_state_dict(torch.load("bayesian_model.pth"))
+model.load_state_dict(torch.load("bayesian_model.pt"))
+
+# %% md
+# Here we make the deterministic prediction. We set the sample mode to ``False`` and evaluate our model on the first
+# image in ``test_data``.
+
+
+# %%
 
 classes = [
     "T-shirt/top",

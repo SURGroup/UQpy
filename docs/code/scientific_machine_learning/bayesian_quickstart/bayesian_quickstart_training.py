@@ -1,12 +1,10 @@
 """
 Bayesian Quickstart Testing
 ===========================
-
-July 12, 2024
 """
 
 # %% md
-# This is a Bayesian version of the classification problem from this
+# This is the first half of a Bayesian version of the classification problem from this
 # [Pytorch Quickstart tutorial](https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html).
 #
 # We strongly recommend reading the Pytorch quick start first to familiarize yourself with the problem.
@@ -16,6 +14,7 @@ July 12, 2024
 # articles of clothing. Here, we implement a fully connected *Bayesian* neural network to learn the same classification.
 #
 # We import all the same packages, with the addition of UQpy's scientific machine learning module.
+# Note that this demo requires the ``torchvision`` package.
 
 # %%
 
@@ -36,7 +35,7 @@ import UQpy.scientific_machine_learning as sml
 training_data = datasets.FashionMNIST(
     root="data",
     train=True,
-    download=False,
+    download=True,
     transform=ToTensor(),
 )
 
@@ -44,7 +43,7 @@ training_data = datasets.FashionMNIST(
 test_data = datasets.FashionMNIST(
     root="data",
     train=False,
-    download=False,
+    download=True,
     transform=ToTensor(),
 )
 
@@ -192,8 +191,8 @@ for t in range(epochs):
     test(test_dataloader, model, loss_fn)
 print("Done!")
 
-torch.save(model.state_dict(), "bayesian_model.pth")
-print("Saved PyTorch Model State to bayesian_model.pth")
+torch.save(model.state_dict(), "bayesian_model.pt")
+print("Saved PyTorch Model State to bayesian_model.pt")
 
 
 # %% md
