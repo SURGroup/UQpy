@@ -32,7 +32,8 @@ class BayesianConv3d(BayesianLayer):
         :param out_channels: Number of channels produced by the convolution
         :param kernel_size: Size of the convolving kernel
         :param stride: Stride of the convolution. Default: 1
-        :param padding: Padding added to all six sides of the input. Default: 0 todo might need to change notation
+        :param padding: Padding added to all six sides of the input. Default: 0
+         It can be either a string {‘valid’, ‘same’} or a tuple of ints giving the amount of implicit padding applied on both sides.
         :param dilation: Spacing between kernel elements. Default: 1
         :param groups: Number of blocked connections from input channels to output channels. Default: 1.
          ``in_channels`` and ``out_channels`` must both be divisible by ``groups``.
@@ -60,14 +61,19 @@ class BayesianConv3d(BayesianLayer):
 
         :math:`W_\text{out} = \left\lfloor \frac{W_\text{in} + 2 \times \text{padding[1]} - \text{dilation[1]} \times (\text{kernel\_size[1] - 1}) - 1}{\text{stride[1]}} + 1\right\rfloor`
 
-        Example: todo NEED TO MAKE THIS EXAMPLE TEXT DIFFERENT COLOR       todo MAKE SURE THE EXAMPLE IS COMPLETE
+        Example:
 
-        # >>> # With cubic kernels and equal stride
-        # >>> Layer = nn.BayesianConv3d(16, 33, 3, stride=2)
-        # >>> # non-cubic kernels and unequal stride and with padding
-        # >>> Layer = nn.BayesianConv3d(16, 33, (3, 5, 2), stride=(2, 1, 1), padding=(4, 2, 0))
-        # >>> input = torch.randn(20, 16, 10, 50, 100)
-        # >>> output = m(input)
+        >>> # With cubic kernels and equal stride
+        >>> layer = sml.BayesianConv3d(16, 33, 3, stride=2)
+        >>> # non-cubic kernels and unequal stride and with padding
+        >>> layer = sml.BayesianConv3d(16, 33, (3, 5, 2), stride=(2, 1, 1), padding=(4, 2, 0))
+        >>> input = torch.randn(20, 16, 10, 50, 100)
+        >>> layer.sample(False)
+        >>> deterministic_output = layer(input)
+        >>> layer.sample()
+        >>> probabilistic_output = layer(input)
+        >>> print(torch.all(deterministic_output == probabilistic_output))
+        tensor(False)
 
         """
         kernel_size = _triple(kernel_size)
