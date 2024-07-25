@@ -2,6 +2,7 @@
 
 Note this does not include tests for numerical accuracy as the convolution is performed by torch.nn.functional.conv1d
 """
+
 import torch
 import UQpy.scientific_machine_learning as sml
 from hypothesis import given, strategies as st
@@ -56,9 +57,7 @@ def test_device():
     device = (
         torch.device("cuda", 0)
         if torch.cuda.is_available()
-        else torch.device("mps", 0)
-        if torch.backends.mps.is_available()
-        else "cpu"
+        else torch.device("mps", 0) if torch.backends.mps.is_available() else "cpu"
     )
     layer.to(device)
     assert layer.weight_mu.device == device
@@ -70,7 +69,6 @@ def test_dtype():
     x = torch.rand((1, 1), dtype=dtype)
     y = layer(x)
     assert y.dtype == dtype
-
 
 
 def test_deterministic_output():

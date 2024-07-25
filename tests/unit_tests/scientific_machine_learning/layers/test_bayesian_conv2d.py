@@ -127,7 +127,6 @@ def test_dtype():
 def test_deterministic_output():
     x = torch.rand((1, 1, 256, 256))
     layer = sml.BayesianConv2d(1, 1, 1)
-    layer.eval()
     layer.sample(False)
     y1 = layer(x)
     y2 = layer(x)
@@ -138,7 +137,6 @@ def test_probabilistic_output():
     """When sampling, outputs should be slightly different even on the same input"""
     x = torch.rand((1, 1, 256, 256))
     layer = sml.BayesianConv2d(1, 1, 1)
-    layer.eval()
     layer.sample()
     y1 = layer(x)
     y2 = layer(x)
