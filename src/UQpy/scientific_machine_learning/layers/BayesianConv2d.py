@@ -76,10 +76,11 @@ class BayesianConv2d(BayesianLayer):
         tensor(False)
         """
         kernel_size = _pair(kernel_size)
-        weight_shape = (out_channels, in_channels // groups, *kernel_size)
-        bias_shape = out_channels if bias else None
-        factory_kwargs = {"device": device, "dtype": dtype}
-        super().__init__(weight_shape, bias_shape, priors, sampling, **factory_kwargs)
+        parameter_shapes = {
+            "weight": (out_channels, in_channels // groups, *kernel_size),
+            "bias": out_channels if bias else None,
+        }
+        super().__init__(parameter_shapes, priors, sampling, device, dtype)
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = _pair(kernel_size)
@@ -87,6 +88,7 @@ class BayesianConv2d(BayesianLayer):
         self.padding = padding if isinstance(padding, str) else _pair(padding)
         self.dilation = _pair(dilation)
         self.groups = groups
+        self.bias = bias
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         r"""Apply ``F.conv2d`` to ``x`` where the weight and bias are drawn from random variables
@@ -94,7 +96,7 @@ class BayesianConv2d(BayesianLayer):
         :param x: Tensor of shape :math:`(N, C_\text{in}, H_\text{in}, W_\text{in})`
         :return: Tensor of shape :math:`(N, C_\text{out}, H_\text{out}, W_\text{out})`
         """
-        weight, bias = self.get_weight_bias()
+        weight, bias = self.get_bayesian_weights()
         return F.conv2d(
             x,
             weight,

@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+from typing import Union
 from UQpy.scientific_machine_learning.baseclass import BayesianLayer
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
@@ -13,21 +14,21 @@ class BayesianLinear(BayesianLayer):
         bias: bool = True,
         priors: dict = None,
         sampling: bool = True,
-        device=None,
-        dtype=None,
+        device: Union[torch.device, str] = None,
+        dtype: torch.dtype = None,
     ):
         r"""Construct a Bayesian layer with weights and bias set by I.I.D. Normal distributions
 
         :param in_features: Size of each input sample
         :param out_features: Size of each output sample
-        :param function: Function to apply to the input on ``self.forward``
         :param bias: If set to ``False``, the layer will not learn an additive bias. Default: ``True``
-        :param priors: Prior and posterior distribution parameters. The dictionary keys and their default values are:
+        :param priors: Prior and posterior distribution parameters.
+         The dictionary keys and their default values are:
 
-         - ``priors["prior_mu"]`` = :math:`0`
-         - ``priors["prior_sigma"]`` = :math:`0.1`
-         - ``priors["posterior_mu_initial"]`` = ``(0, 0.1)``
-         - ``priors["posterior_rho_initial"]`` = ``(-3, 0.1)``
+         - "prior_mu": 0
+         - "prior_sigma" : 0.1
+         - "posterior_mu_initial": (0.0, 0.1)
+         - "posterior_rho_initial": (-3.0, 0.1)
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
          If ``False``, use distribution mean as parameter values.
 
@@ -37,6 +38,17 @@ class BayesianLinear(BayesianLayer):
           dimensions including none and :math:`H_\text{in} = \text{in\_features}`.
         - Output: :math:`(*, H_\text{out})` where all but the last dimension
           are the same shape as the input and :math:`H_\text{out} = \text{out\_features}`.
+
+        Attributes:
+
+        - weight_mu: The learnable weights of the module of shape :math:`(\text{out_features}, \text{in_features})`.
+          The values are initialized from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
+        - weight_rho: The learnable weights of the module of shape :math:`(\text{out\_features}, \text{in_features})`.
+          The values are initalized from :math:`\mathcal{N}(\rho_\text{posterior}[0], \rho_\text{posterior}[1])`.
+        - bias_mu: The learnable bias of the module of shape :math:`(\text{out_features})`.
+          If ``bias`` is ``True``, the values are initialized from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`
+        - bias_rho: The learnable bias of the module of shaspe :math:`(\text{out_features})`.
+          If ``bias`` is ``True``, the values are initialized from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`
 
         Example:
 
@@ -49,20 +61,22 @@ class BayesianLinear(BayesianLayer):
         >>> print(torch.all(deterministic_output == probabilistic_output))
         tensor(False)
         """
-        weight_shape = (out_features, in_features)
-        bias_shape = out_features if bias else None
-        factory_kwargs = {"device": device, "dtype": dtype}
-        super().__init__(weight_shape, bias_shape, priors, sampling, **factory_kwargs)
+        parameter_shapes = {
+            "weight": (out_features, in_features),
+            "bias": out_features if bias else None,
+        }
+        super().__init__(parameter_shapes, priors, sampling, device, dtype)
         self.in_features = in_features
         self.out_features = out_features
+        self.bias = bias
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward model evaluation
+        r"""Forward model evaluation
 
         :param x: Tensor of shape :math:`(*, \text{in_features})`
         :return: Tensor of shape :math:`(*, \text{out_features})`
         """
-        weight, bias = self.get_weight_bias()
+        weight, bias = self.get_bayesian_weights()
         return F.linear(x, weight, bias)
 
     def extra_repr(self) -> str:

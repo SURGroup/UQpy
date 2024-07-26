@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+from torch.nn.modules.utils import _single
 from UQpy.scientific_machine_learning.baseclass import BayesianLayer
 from UQpy.utilities.ValidationTypes import PositiveInteger, NonNegativeInteger
 from typing import Union
@@ -19,8 +20,8 @@ class BayesianConv1d(BayesianLayer):
         bias: bool = True,
         priors: dict = None,
         sampling: bool = True,
-        device=None,
-        dtype=None,
+        device: Union[torch.device, str] = None,
+        dtype: torch.dtype = None,
     ):
         r"""Applies a Bayesian 1D convolution over an input signal composed of several input planes.
 
@@ -33,12 +34,13 @@ class BayesianConv1d(BayesianLayer):
         :param groups: Number of blocked connections from input channels to output channels. Default: 1.
          ``in_channels`` and ``out_channels`` must both be divisible by ``groups``.
         :param bias: If True, adds a learnable bias to the output. Default: True
-        :param priors: Prior and posterior distribution parameters. The dictionary keys and their default values are:
+        :param priors: Prior and posterior distribution parameters.
+         The dictionary keys and their default values are:
 
-         - ``priors["prior_mu"]`` = :math:`0`
-         - ``priors["prior_sigma"]`` = :math:`0.1`
-         - ``priors["posterior_mu_initial"]`` = ``(0, 0.1)``
-         - ``priors["posterior_rho_initial"]`` = ``(-3, 0.1)``
+         - "prior_mu": 0
+         - "prior_sigma" : 0.1
+         - "posterior_mu_initial": (0.0, 0.1)
+         - "posterior_rho_initial": (-3.0, 0.1)
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
          If ``False``, use distribution mean as parameter values.
 
@@ -51,6 +53,19 @@ class BayesianConv1d(BayesianLayer):
 
         where :math:`L_\text{out}= \left\lfloor \frac{L_\text{in} + 2 \times \text{padding} - \text{dilation} \times (\text{kernel size} - 1) - 1}{\text{stride}} \right\rfloor + 1`
 
+        Attributes:
+
+        - weight_mu (torch.Tensor): The learnable weights of the module of shape
+          :math:`(\text{out\_channels}, \frac{\text{in\_channels}}{\text{groups}}, \text{kernel\_size})`.
+          The values are initialized from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
+        - weight_rho (torch.Tensor): The learnable weights of the module of shape
+          :math:`(\text{out\_channels}, \frac{\text{in\_channels}}{\text{groups}}, \text{kernel\_size})`.
+          The values are initialized from :math:`\mathcal{N}(\rho_\text{posterior}[0], \rho_\text{posterior}[1])`.
+        - bias_mu (torch.Tensor): The learnable bias of the module of shape :math:`(out_channels)`.
+          If ``bias`` is ``True``, the values are initialized from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
+        - bias_rho (torch.Tensor): The learnable bias of the moduel of shape :math:`(out_channels)`.
+          If ``bias`` is ``True``, the values are initialized from :math:`\mathcal{N}(\rho_\text{posterior}[0], \rho_\text{posterior}[1])`.
+
         Example:
 
         >>> layer = sml.BayesianConv1d(16, 33, 3, stride=2)
@@ -62,17 +77,19 @@ class BayesianConv1d(BayesianLayer):
         >>> print(torch.all(deterministic_output == probabilistic_output))
         tensor(False)
         """
-        weight_shape = (out_channels, in_channels, kernel_size)
-        bias_shape = out_channels if bias else None
-        factory_kwargs = {"device": device, "dtype": dtype}
-        super().__init__(weight_shape, bias_shape, priors, sampling, **factory_kwargs)
+        parameter_shapes = {
+            "weight": (out_channels, in_channels, kernel_size),
+            "bias": out_channels if bias else None,
+        }
+        super().__init__(parameter_shapes, priors, sampling, device, dtype)
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = kernel_size
-        self.stride = (stride,) if isinstance(stride, int) else stride
-        self.padding = (padding,) if isinstance(padding, int) else padding
-        self.dilation = (dilation,) if isinstance(dilation, int) else dilation
+        self.stride = _single(stride)
+        self.padding = _single(padding)
+        self.dilation = _single(dilation)
         self.groups = groups
+        self.bias = bias
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         r"""Apply ``F.conv1d`` to ``x`` where the weight and bias are drawn from random variables
@@ -80,7 +97,7 @@ class BayesianConv1d(BayesianLayer):
         :param x: Tensor of shape :math:`(N, C_\text{in}, L)` or :math:`(C_\text{in}, L)`
         :return: Tensor of shape :math:`(N, C_\text{out}, L)` or :math:`(C_\text{out}, L)`
         """
-        weight, bias = self.get_weight_bias()
+        weight, bias = self.get_bayesian_weights()
         return F.conv1d(
             x, weight, bias, self.stride, self.padding, self.dilation, self.groups
         )

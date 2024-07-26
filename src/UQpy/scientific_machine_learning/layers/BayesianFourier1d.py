@@ -3,6 +3,7 @@ import torch.nn.functional as F
 import UQpy.scientific_machine_learning.functional as func
 from UQpy.scientific_machine_learning.baseclass import BayesianLayer
 from UQpy.utilities.ValidationTypes import PositiveInteger
+from typing import Union
 
 
 class BayesianFourier1d(BayesianLayer):
@@ -10,9 +11,10 @@ class BayesianFourier1d(BayesianLayer):
         self,
         width: PositiveInteger,
         modes: PositiveInteger,
+        bias: bool = True,
         priors: dict = None,
         sampling: bool = True,
-        device=None,
+        device: Union[torch.device, str] = None,
     ):
         r"""Construct a Bayesian Fourier block as :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`
         where :math:`R` and :math:`W` are a random variables
@@ -31,17 +33,35 @@ class BayesianFourier1d(BayesianLayer):
 
         Shape:
 
+        - Input: :math:`(N, \text{Width}, L)`
+        - Output: :math:`(N, \text{Width}, L)`
+
         Example:
+
+        >>> length = 128
+        >>> modes = (length // 2) + 1
+        >>> width = 9
+        >>> layer = sml.BayesianFourier1d(width, modes)
+        >>> layer.sample(False)
+        >>> x = torch.randn(2, width, length)
+        >>> deterministic_output = layer(x)
+        >>> layer.sample(True)
+        >>> probabilistic_output = layer(x)
+        >>> print(torch.all(deterministic_output == probabilistic_output))
+        tensor(False)
         """
-        weight_shape = (width, width, modes)  # Parameters for func.spectral_conv1d
         kernel_size = 1
-        bias_shape = (width, width, kernel_size)  # Parameters for F.conv1d
+        parameter_shapes = {
+            "weight_spectral": (width, width, modes),
+            "weight_conv": (width, width, kernel_size),
+            "bias_conv": width if bias else None,
+        }
         super().__init__(
-            weight_shape,
-            bias_shape,
+            parameter_shapes,
             priors,
-            sampling=sampling,
-            device=device,
+            sampling,
+            device,
+            dtype=(torch.cfloat, torch.float, torch.float),
         )
         self.width = width
         self.modes = modes
@@ -52,11 +72,15 @@ class BayesianFourier1d(BayesianLayer):
         :param x: Tensor of shape :math:`(N, \text{width}, L)`
         :return: Tensor of shape :math:`(N, \text{width}, L)`
         """
-        weight_spectral_conv, weight_conv = self.get_weight_bias()
-        weight_spectral_conv = weight_spectral_conv.to(torch.cfloat)
+        weight_spectral, weight_conv, bias_conv = self.get_bayesian_weights()
         return func.spectral_conv1d(
-            x, weight_spectral_conv, self.width, modes=self.modes
-        ) + F.conv1d(x, weight_conv)
+            x, weight_spectral, self.width, self.modes
+        ) + F.conv1d(x, weight_conv, bias_conv)
 
     def extra_repr(self) -> str:
-        return f"width={self.width}, modes={self.modes}, priors={self.priors}, sampling={self.sampling}"
+        return (
+            f"width={self.width}, "
+            f"modes={self.modes}, "
+            f"priors={self.priors}, "
+            f"sampling={self.sampling}"
+        )
