@@ -42,26 +42,31 @@ class Fourier2d(Layer):
         self.width = width
         self.modes = modes
 
-        self.scale: float = 1 / (self.width**2)
-        """Normalizing factor for spectral convolution weights"""
         shape = (self.width, self.width, *self.modes)
         self.weight_spectral_1: nn.Parameter = nn.Parameter(
-            self.scale * torch.rand(shape, dtype=torch.cfloat, device=device)
+            torch.empty(shape, dtype=torch.cfloat, device=device)
         )
-        r"""First of two weights for the spectral convolution. 
-        Tensor of shape :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]})` with complex entries"""
+        r"""The first of two learnable weights for the spectral convolution of shape
+        :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]})` with complex entries"""
         self.weight_spectral_2: nn.Parameter = nn.Parameter(
-            self.scale * torch.rand(shape, dtype=torch.cfloat, device=device)
+            torch.empty(shape, dtype=torch.cfloat, device=device)
         )
-        r"""Second of two weights for the spectral convolution. 
-        Tensor of shape :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]})` with complex entries"""
+        r"""The second of two learnable weights for the spectral convolution of shape 
+        :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]})` with complex entries"""
         kernel_size = (1, 1)
         self.weight_conv: nn.Parameter = nn.Parameter(
             torch.empty(self.width, self.width, *kernel_size, device=device)
         )
-        r"""Weights for the convolution. 
-        Tensor of shape :math:`(\text{width}, \text{width}, \text{kernel_size[0]}, \text{kernel_size[1]})`"""
-        # ToDo: add bias
+        r"""The learnable weights of the convolutions of shape 
+        :math:`(\text{width}, \text{width}, \text{kernel_size[0]}, \text{kernel_size[1]})`"""
+        self.bias_conv: nn.Parameter = nn.Parameter(
+            torch.empty(self.width, device=device)
+        )
+        r"""The learnable bias of the convolution of shape :math:`(\text{width})`."""
+
+        k = torch.sqrt(1 / self.width)
+        self.reset_parameters(-k, k)
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         r"""Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`
 
@@ -70,7 +75,7 @@ class Fourier2d(Layer):
         """
         weights = (self.weight_spectral_1, self.weight_spectral_2)
         return func.spectral_conv2d(x, weights, self.width, self.modes) + F.conv2d(
-            x, self.weight_conv
+            x, self.weight_conv, self.bias_conv
         )
 
     def extra_repr(self) -> str:

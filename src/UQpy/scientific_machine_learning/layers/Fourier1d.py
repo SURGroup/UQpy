@@ -40,22 +40,39 @@ class Fourier1d(Layer):
         self.width = width
         self.modes = modes
 
-        self.scale: float = 1 / (self.width**2)
-        """Normalizing factor for spectral convolution weights"""
         self.weight_spectral_conv: nn.Parameter = nn.Parameter(
-            self.scale
-            * torch.rand(
+            torch.empty(
                 self.width, self.width, self.modes, dtype=torch.cfloat, device=device
             )
         )
-        r"""Weights for the spectral convolution. 
-        Tensor of shape :math:`(\text{width}, \text{width}, \text{modes})` with complex entries"""
+        r"""The learnable weights of the spectral convolution of shape 
+        :math:`(\text{width}, \text{width}, \text{modes})` with complex entries
+        
+        The values of these weights are sampled from
+        :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` 
+        where :math:`k = \frac{1}{\text{width}}`
+        """
         kernel_size = 1
         self.weight_conv: nn.Parameter = nn.Parameter(
             torch.empty(self.width, self.width, kernel_size, device=device)
         )
-        r"""Weights for the convolution. 
-        Tensor of shape :math:`(\text{width}, \text{width}, \text{kernel_size})`"""
+        r"""The learnable weights of the convolution of shape :math:`(\text{width}, \text{width}, \text{kernel_size})`.
+        
+        The values of these weights are sampled from
+        :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` 
+        where :math:`k = \frac{1}{\text{width}}`"""
+        self.bias_conv: nn.Parameter = nn.Parameter(
+            torch.empty(self.width, self.width, kernel_size, device=device)
+        )
+        r"""The learnable bias of the convolution of shape :math:`(\text{width})`.
+        
+        If ``bias`` is ``True``, then the values of these biases are sampled from
+        :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` 
+        where :math:`k = \frac{1}{\text{width}}`
+        """
+
+        k = torch.sqrt(1 / width)
+        self.reset_parameters(-k, k)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         r"""Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W(x)`
@@ -65,7 +82,7 @@ class Fourier1d(Layer):
         """
         return func.spectral_conv1d(
             x, self.weight_spectral_conv, self.width, self.modes
-        ) + F.conv1d(x, self.weight_conv)
+        ) + F.conv1d(x, self.weight_conv, self.bias_conv)
 
     def extra_repr(self) -> str:
         return f"width={self.width}, modes={self.modes}"
