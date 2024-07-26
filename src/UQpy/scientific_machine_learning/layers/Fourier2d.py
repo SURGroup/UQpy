@@ -64,7 +64,7 @@ class Fourier2d(Layer):
         )
         r"""The learnable bias of the convolution of shape :math:`(\text{width})`."""
 
-        k = torch.sqrt(1 / self.width)
+        k = torch.sqrt(1 / torch.tensor(self.width, device=device))
         self.reset_parameters(-k, k)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

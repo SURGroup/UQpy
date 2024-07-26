@@ -49,7 +49,7 @@ class Fourier3d(Layer):
         :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` 
         with complex entries"""
         self.weight_spectral_2: nn.Parameter = nn.Parameter(
-            self.scale * torch.rand(shape, dtype=torch.cfloat, device=device)
+            torch.empty(shape, dtype=torch.cfloat, device=device)
         )
         r"""The second of four learnable weights for the spectral convolution of shape
         :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` 
@@ -76,7 +76,7 @@ class Fourier3d(Layer):
             torch.empty(self.width, device=device)
         )
         r"""The learnable bias of the convolution of shape :math:`(\text{out_channels})`"""
-        k = torch.sqrt(1 / self.width)
+        k = torch.sqrt(1 / torch.tensor(self.width, device=device))
         self.reset_parameters(-k, k)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

@@ -62,7 +62,7 @@ class Fourier1d(Layer):
         :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` 
         where :math:`k = \frac{1}{\text{width}}`"""
         self.bias_conv: nn.Parameter = nn.Parameter(
-            torch.empty(self.width, self.width, kernel_size, device=device)
+            torch.empty(self.width, device=device)
         )
         r"""The learnable bias of the convolution of shape :math:`(\text{width})`.
         
@@ -71,7 +71,7 @@ class Fourier1d(Layer):
         where :math:`k = \frac{1}{\text{width}}`
         """
 
-        k = torch.sqrt(1 / width)
+        k = torch.sqrt(1 / torch.tensor(self.width, device=device))
         self.reset_parameters(-k, k)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
