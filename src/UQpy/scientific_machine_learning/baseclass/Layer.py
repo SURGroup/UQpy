@@ -10,7 +10,7 @@ class Layer(nn.Module, ABC):
     def reset_parameters(self, a, b):
         """Fill all parameters with samples from :math:`\mathcal{U}(a, b)`"""
         for p in self.parameters():
-            p.uniform_(a, b)
+            nn.init.uniform_(p, a, b)
 
     @abstractmethod
     def forward(self, x: torch.Tensor) -> torch.Tensor: ...
