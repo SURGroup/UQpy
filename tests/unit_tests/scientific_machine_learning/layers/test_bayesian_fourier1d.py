@@ -21,14 +21,14 @@ def test_device():
     """Note if neither cuda nor mps is available, this test will always pass"""
     cpu = torch.device("cpu")
     layer = sml.BayesianFourier1d(1, 1, device=cpu)
-    assert layer.weight_mu.device == cpu
+    assert layer.weight_spectral_mu.device == cpu
     device = (
         torch.device("cuda", 0)
         if torch.cuda.is_available()
         else torch.device("mps", 0) if torch.backends.mps.is_available() else "cpu"
     )
     layer.to(device)
-    assert layer.weight_mu.device == device
+    assert layer.weight_spectral_mu.device == device
 
 
 def test_deterministic_output():
