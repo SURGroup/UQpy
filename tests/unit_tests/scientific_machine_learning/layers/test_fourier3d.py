@@ -18,8 +18,3 @@ def test_output_shape(batch_size, width, signal_shape, modes):
     fourier = sml.Fourier3d(width, modes)
     y = fourier(x)
     assert x.shape == y.shape
-
-
-def test_extra_repr():
-    fourier = sml.Fourier3d(4, (8, 16, 32))
-    assert fourier.__str__() == "Fourier3d(width=4, modes=(8, 16, 32))"

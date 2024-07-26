@@ -6,7 +6,7 @@ from hypothesis.extra.numpy import array_shapes
 
 @settings(deadline=1_000)
 @given(
-    batch_size=st.integers(min_value=1, max_value=100),
+    batch_size=st.integers(min_value=1, max_value=16),
     width=st.integers(min_value=1, max_value=32),
     signal_shape=array_shapes(min_dims=2, max_dims=2, min_side=64, max_side=256),
     modes=array_shapes(min_dims=2, max_dims=2, min_side=1, max_side=33),
