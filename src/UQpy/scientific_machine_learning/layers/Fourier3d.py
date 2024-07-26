@@ -45,25 +45,25 @@ class Fourier3d(Layer):
         self.scale: float = 1 / (self.width**2)
         """Normalizing factor for spectral convolution weights"""
         shape = (self.width, self.width, *self.modes)
-        self.weight1_spectral_conv: nn.Parameter = nn.Parameter(
+        self.weight_spectral_1: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(shape, dtype=torch.cfloat, device=device)
         )
         r"""First of four weights for the spectral convolution.
         Tensor of shape :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` 
         with complex entries"""
-        self.weight2_spectral_conv: nn.Parameter = nn.Parameter(
+        self.weight_spectral_2: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(shape, dtype=torch.cfloat, device=device)
         )
         r"""Second of four weights for the spectral convolution.
         Tensor of shape :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` 
         with complex entries"""
-        self.weight3_spectral_conv: nn.Parameter = nn.Parameter(
+        self.weight_spectral_3: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(shape, dtype=torch.cfloat, device=device)
         )
         r"""Third of four weights for the spectral convolution.
         Tensor of shape :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` 
         with complex entries"""
-        self.weight4_spectral_conv: nn.Parameter = nn.Parameter(
+        self.weight_spectral_4: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(shape, dtype=torch.cfloat, device=device)
         )
         r"""Fourth of four weights for the spectral convolution.
@@ -75,6 +75,7 @@ class Fourier3d(Layer):
         )
         r"""Weights for the convolution. 
         Tensor of shape :math:`(\text{width}, \text{width}, \text{kernel_size[0]}, \text{kernel_size[1]}, \text{kernel_size[2]})`"""
+        # ToDo: add bias
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         r"""Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`
@@ -83,10 +84,10 @@ class Fourier3d(Layer):
         :return: Tensor of shape :math:`(N, \text{width}, H, W, D)`
         """
         weights = (
-            self.weight1_spectral_conv,
-            self.weight2_spectral_conv,
-            self.weight3_spectral_conv,
-            self.weight4_spectral_conv,
+            self.weight_spectral_1,
+            self.weight_spectral_2,
+            self.weight_spectral_3,
+            self.weight_spectral_4,
         )
         return func.spectral_conv3d(x, weights, self.width, self.modes) + F.conv3d(
             x, self.weight_conv

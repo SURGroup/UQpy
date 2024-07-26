@@ -45,12 +45,12 @@ class Fourier2d(Layer):
         self.scale: float = 1 / (self.width**2)
         """Normalizing factor for spectral convolution weights"""
         shape = (self.width, self.width, *self.modes)
-        self.weight1_spectral_conv: nn.Parameter = nn.Parameter(
+        self.weight_spectral_1: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(shape, dtype=torch.cfloat, device=device)
         )
         r"""First of two weights for the spectral convolution. 
         Tensor of shape :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]})` with complex entries"""
-        self.weight2_spectral_conv: nn.Parameter = nn.Parameter(
+        self.weight_spectral_2: nn.Parameter = nn.Parameter(
             self.scale * torch.rand(shape, dtype=torch.cfloat, device=device)
         )
         r"""Second of two weights for the spectral convolution. 
@@ -61,14 +61,14 @@ class Fourier2d(Layer):
         )
         r"""Weights for the convolution. 
         Tensor of shape :math:`(\text{width}, \text{width}, \text{kernel_size[0]}, \text{kernel_size[1]})`"""
-
+        # ToDo: add bias
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         r"""Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`
 
         :param x: Tensor of shape :math:`(N, \text{width}, H, W)`
         :return: Tensor of shape :math:`(N, \text{width}, H, W)`
         """
-        weights = (self.weight1_spectral_conv, self.weight2_spectral_conv)
+        weights = (self.weight_spectral_1, self.weight_spectral_2)
         return func.spectral_conv2d(x, weights, self.width, self.modes) + F.conv2d(
             x, self.weight_conv
         )
