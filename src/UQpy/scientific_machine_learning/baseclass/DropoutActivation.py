@@ -1,8 +1,9 @@
-from UQpy.scientific_machine_learning.baseclass import Activation
+import torch
 from beartype import beartype
 from beartype.vale import Is
 from typing import Annotated
 from abc import ABC, abstractmethod
+from UQpy.scientific_machine_learning.baseclass import Activation
 
 
 @beartype
@@ -28,13 +29,12 @@ class DropoutActivation(Activation, ABC):
     def drop(self, mode: bool = True):
         """Set dropping mode.
 
-        :param mode: If ``True``, will perform dropout, otherwise acts as identity function.
+        :param mode: If ``True``, will perform dropout, otherwise acts as identity function. Default: ``True``
         """
         self.dropping = mode
 
     @abstractmethod
-    def forward(self):
-        ...
+    def forward(self, x: torch.Tensor) -> torch.Tensor: ...
 
     def extra_repr(self) -> str:
         s = "p={p}, dropping={dropping}"
