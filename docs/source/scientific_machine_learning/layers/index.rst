@@ -32,4 +32,4 @@ List of Layers
     Bayesian Parent Class <bayesian_parent>
     Bayesian Layers <bayesian_layers>
     Fourier Layers <fourier_layers>
-    Spectral Convolution Layers <spectral_layers>
+    Normalizer Layers <normalizers>

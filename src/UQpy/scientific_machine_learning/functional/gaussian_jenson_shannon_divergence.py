@@ -9,7 +9,7 @@ def gaussian_jenson_shannon_divergence(
     posterior_sigma: torch.Tensor,
     prior_mu: torch.Tensor,
     prior_sigma: torch.Tensor,
-    reduction: str = "mean",
+    reduction: str = "sum",
 ) -> torch.Tensor:
     r"""Compute the Gaussian Jenson-Shannon divergence for a prior and posterior distribution
 
@@ -19,7 +19,7 @@ def gaussian_jenson_shannon_divergence(
     :param prior_sigma: Standard deviation of the prior distribution
     :param reduction: Specifies the reduction to apply to the output: 'none', 'mean', or 'sum'.
      'none': no reduction will be applied, 'mean': the output will be averaged, 'sum': the output will be summed.
-     Default: 'mean'
+     Default: 'sum'
 
     :return: Gaussian JS divergence between prior and posterior distributions
 

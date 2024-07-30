@@ -12,52 +12,77 @@ class Fourier1d(Layer):
         self,
         width: PositiveInteger,
         modes: PositiveInteger,
-        conv_kwargs: dict = {},
-        **kwargs,
+        device=None,
     ):
         r"""Construct a 1d Fourier block to compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W(x)`
 
         :param width: Number of neurons in the layer and channels in the spectral convolution
         :param modes: Number of Fourier modes to keep, at most :math:`\lfloor L / 2 \rfloor + 1`
-        :param conv_kwargs: Keyword arguments pass to ``torch.nn.functional.conv1d``
+
+        Note this class does *not* accept the ``dtype`` argument
+        since Fourier layers require real and complex tensors where appropriate.
+
+        Shape:
+
+        - Input: :math:`(N, \text{width}, L)`
+        - Output: :math:`(N, \text{width}, L)`
+
+        Example:
+
+        >>> length = 128
+        >>> modes = (length // 2) + 1
+        >>> width = 8
+        >>> f = sml.Fourier1d(width, modes)
+        >>> input = torch.rand(2, width, length)
+        >>> output = f(input)
         """
-        super().__init__(**kwargs)
+        super().__init__()
         self.width = width
         self.modes = modes
-        self.conv_kwargs = conv_kwargs
 
-        self.scale: float = 1 / (self.width**2)
-        """Normalizing factor for spectral convolution weights"""
         self.weight_spectral_conv: nn.Parameter = nn.Parameter(
-            self.scale
-            * torch.rand(self.width, self.width, self.modes, dtype=torch.cfloat)
+            torch.empty(
+                self.width, self.width, self.modes, dtype=torch.cfloat, device=device
+            )
         )
-        r"""Weights for the spectral convolution. 
-        Tensor of shape :math:`(\text{width}, \text{width}, \text{modes})` with complex entries"""
-        kernel_size = (
-            self.conv_kwargs["kernel_size"]
-            if ("kernel_size" in self.conv_kwargs)
-            else 1
-        )
-        groups = self.conv_kwargs["groups"] if ("groups" in self.conv_kwargs) else 1
+        r"""The learnable weights of the spectral convolution of shape 
+        :math:`(\text{width}, \text{width}, \text{modes})` with complex entries
+        
+        The values of these weights are sampled from
+        :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` 
+        where :math:`k = \frac{1}{\text{width}}`
+        """
+        kernel_size = 1
         self.weight_conv: nn.Parameter = nn.Parameter(
-            torch.empty(self.width, self.width // groups, kernel_size)
+            torch.empty(self.width, self.width, kernel_size, device=device)
         )
-        r"""Weights for the convolution. 
-        Tensor of shape :math:`(\text{width}, \text{width} // \text{groups}, \text{kernel_size})`"""
+        r"""The learnable weights of the convolution of shape :math:`(\text{width}, \text{width}, \text{kernel_size})`.
+        
+        The values of these weights are sampled from
+        :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` 
+        where :math:`k = \frac{1}{\text{width}}`"""
+        self.bias_conv: nn.Parameter = nn.Parameter(
+            torch.empty(self.width, device=device)
+        )
+        r"""The learnable bias of the convolution of shape :math:`(\text{width})`.
+        
+        If ``bias`` is ``True``, then the values of these biases are sampled from
+        :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` 
+        where :math:`k = \frac{1}{\text{width}}`
+        """
+
+        k = torch.sqrt(1 / torch.tensor(self.width, device=device))
+        self.reset_parameters(-k, k)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        r"""Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W`
+        r"""Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W(x)`
 
         :param x: Tensor of shape :math:`(N, \text{width}, L)`
         :return: Tensor of shape :math:`(N, \text{width}, L)`
         """
         return func.spectral_conv1d(
             x, self.weight_spectral_conv, self.width, self.modes
-        ) + F.conv1d(x, self.weight_conv, **self.conv_kwargs)
+        ) + F.conv1d(x, self.weight_conv, self.bias_conv)
 
     def extra_repr(self) -> str:
-        s = f"width={self.width}, modes={self.modes}"
-        if self.conv_kwargs:
-            s += f", conv_kwargs={self.conv_kwargs}"
-        return s
+        return f"width={self.width}, modes={self.modes}"

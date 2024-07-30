@@ -15,8 +15,3 @@ def test_output_shape(batch_size, width, length, modes):
     fourier = sml.Fourier1d(width, modes)
     y = fourier(x)
     assert x.shape == y.shape
-
-
-def test_extra_repr():
-    fourier = sml.Fourier1d(8, 16, conv_kwargs={"groups": 2})
-    assert fourier.__str__() == "Fourier1d(width=8, modes=16, conv_kwargs={'groups': 2})"
