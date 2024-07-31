@@ -1,10 +1,8 @@
 import torch
 from torch.nn.modules.utils import _triple
 import UQpy.scientific_machine_learning as sml
-import hypothesis
 from hypothesis import given, settings, strategies as st
 from hypothesis.extra.numpy import array_shapes
-from UQpy.scientific_machine_learning.layers.BayesianConv3d import BayesianConv3d
 
 
 def compute_hwl_out(
@@ -42,7 +40,7 @@ def compute_hwl_out(
 def test_default_output_shape(n, shape, in_channels, out_channels):
     """Test the output """
     x = torch.rand((n, in_channels, *shape))
-    layer = BayesianConv3d(in_channels, out_channels, 1)
+    layer = sml.BayesianConv3d(in_channels, out_channels, 1)
     y = layer(x)
     assert y.shape == torch.Size([n, out_channels, *shape])
 
@@ -88,7 +86,7 @@ def test_fancy_output_shape(kernel_size, stride, padding, dilation):
     h_in = 64
     w_in = 64
     l_in = 64
-    layer = BayesianConv3d(
+    layer = sml.BayesianConv3d(
         in_channels, out_channels, kernel_size, stride, padding, dilation
     )
     h_out, w_out, l_out = compute_hwl_out(
@@ -101,7 +99,7 @@ def test_fancy_output_shape(kernel_size, stride, padding, dilation):
 
 def test_deterministic_output():
     x = torch.rand(1, 1, 256, 256, 256)
-    layer = BayesianConv3d(1, 1, 1)
+    layer = sml.BayesianConv3d(1, 1, 1)
     layer.sample(False)
     y1 = layer(x)
     y2 = layer(x)
@@ -110,7 +108,7 @@ def test_deterministic_output():
 
 def test_probabilistic_output():
     x = torch.rand(1, 1, 256, 256, 256)
-    layer = BayesianConv3d(1, 1, 1)
+    layer = sml.BayesianConv3d(1, 1, 1)
     layer.sample()
     y1 = layer(x)
     y2 = layer(x)
