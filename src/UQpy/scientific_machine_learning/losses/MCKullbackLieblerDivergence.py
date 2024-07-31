@@ -6,12 +6,11 @@ import UQpy.scientific_machine_learning.functional as func
 from UQpy.scientific_machine_learning.baseclass import BayesianLayer, Loss
 
 
-
 @beartype
 class MCKullbackLeiblerDivergence(Loss):
 
     def __init__(self, posterior_distribution, prior_distribution, reduction: str = "sum", **kwargs):
-        """KL divergence by sampling for all Bayesian layers in a module
+        """KL divergence by sampling for all Bayesian layers in a module. Note: This is not same as the implementation in Bayes By Backprop.
         :param posterior_distribution: Specifies the posterior distribution: Function handle to one of UQpy.distributions
         :param prior_distribution: Specifies the prior distribution: Funtion handle to one of UQpy.distributions
         :param reduction: Specifies the reduction to apply to the output: 'none', 'mean', or 'sum'.
@@ -57,7 +56,3 @@ class MCKullbackLeiblerDivergence(Loss):
 
     def extra_repr(self) -> str:
         return f"reduction={self.reduction}"
-
-
-
-
