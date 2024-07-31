@@ -7,6 +7,7 @@ from UQpy.scientific_machine_learning.losses.GaussianJensenShannonDivergence imp
 from UQpy.scientific_machine_learning.losses.GaussianKullbackLeiblerDivergence import (
     GaussianKullbackLeiblerDivergence,
 )
+from UQpy.scientific_machine_learning.losses.MCKullbackLieblerDivergence import MCKullbackLeiblerDivergence
 from UQpy.scientific_machine_learning.losses.LpLoss import LpLoss
 from UQpy.scientific_machine_learning.losses.PhysicsInformedLoss import (
     PhysicsInformedLoss,
