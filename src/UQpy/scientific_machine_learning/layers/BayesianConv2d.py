@@ -22,8 +22,8 @@ class BayesianConv2d(BayesianLayer):
         bias: bool = True,
         priors: dict = None,
         sampling: bool = True,
-        device=None,
-        dtype=None,
+        device: Union[torch.device, str] = None,
+        dtype: torch.dtype = None,
     ):
         r"""Applies a Bayesian 2D convolution over an input signal composed of several input planes.
 
@@ -47,8 +47,8 @@ class BayesianConv2d(BayesianLayer):
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
          If ``False``, use distribution mean as parameter values.
 
-        Note: This class calls ``torch.nn.functional.conv2d`` with ``padding_mode='zeros'``.
-
+        .. note::
+            This class calls ``torch.nn.functional.conv2d`` with ``padding_mode='zeros'``.
 
         Shape:
 
@@ -58,6 +58,20 @@ class BayesianConv2d(BayesianLayer):
         where :math:`H_\text{out} = \left\lfloor \frac{H_\text{in} + 2 \times \text{padding[0]} - \text{dilation[0]} \times (\text{kernel\_size[0] - 1}) - 1}{\text{stride[0]}} + 1\right\rfloor`
 
         :math:`W_\text{out} = \left\lfloor \frac{W_\text{in} + 2 \times \text{padding[1]} - \text{dilation[1]} \times (\text{kernel\_size[1] - 1}) - 1}{\text{stride[1]}} + 1\right\rfloor`
+
+        Attributes:
+
+        - weight_mu (:py:class:`torch.Tensor`): The learnable weights of the module of shape
+          :math:`(\text{out\_channels}, \frac{\text{in\_channels}}{\text{groups}}, \text{kernel\_size[0]}, \text{kernel\_size[1]})`.
+          The values are initialized from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
+        - weight_rho (torch.Tensor): The learnable weights of the module of shape
+          :math:`(\text{out\_channels}, \frac{\text{in\_channels}}{\text{groups}}, \text{kernel\_size[0]}, \text{kernel\_size[1]})`.
+          The values are initialized from :math:`\mathcal{N}(\rho_\text{posterior}[0], \rho_\text{posterior}[1])`.
+        - bias_mu (torch.Tensor): The learnable bias of the module of shape :math:`(out_channels)`.
+          If ``bias`` is ``True``, the values are initialized from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
+        - bias_rho (torch.Tensor): The learnable bias of the moduel of shape :math:`(out_channels)`.
+          If ``bias`` is ``True``, the values are initialized from :math:`\mathcal{N}(\rho_\text{posterior}[0], \rho_\text{posterior}[1])`.
+
 
         Example:
 

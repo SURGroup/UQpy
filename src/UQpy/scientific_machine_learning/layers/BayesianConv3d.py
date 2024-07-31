@@ -6,27 +6,34 @@ from UQpy.scientific_machine_learning.baseclass import BayesianLayer
 from UQpy.utilities.ValidationTypes import PositiveInteger, NonNegativeInteger
 
 
-
 class BayesianConv3d(BayesianLayer):
 
     def __init__(
         self,
         in_channels: PositiveInteger,
         out_channels: PositiveInteger,
-        kernel_size: Union[PositiveInteger, tuple[PositiveInteger, PositiveInteger, PositiveInteger]],
-        stride: Union[PositiveInteger, tuple[PositiveInteger, PositiveInteger, PositiveInteger]] = 1,
+        kernel_size: Union[
+            PositiveInteger, tuple[PositiveInteger, PositiveInteger, PositiveInteger]
+        ],
+        stride: Union[
+            PositiveInteger, tuple[PositiveInteger, PositiveInteger, PositiveInteger]
+        ] = 1,
         padding: Union[
-            str, NonNegativeInteger, tuple[NonNegativeInteger, NonNegativeInteger, NonNegativeInteger]
+            str,
+            NonNegativeInteger,
+            tuple[NonNegativeInteger, NonNegativeInteger, NonNegativeInteger],
         ] = 0,
-        dilation: Union[PositiveInteger, tuple[PositiveInteger, PositiveInteger, PositiveInteger]] = 1,
+        dilation: Union[
+            PositiveInteger, tuple[PositiveInteger, PositiveInteger, PositiveInteger]
+        ] = 1,
         groups: PositiveInteger = 1,
         bias: bool = True,
         priors: dict = None,
         sampling: bool = True,
-        **kwargs
+        device: Union[torch.device, str] = None,
+        dtype: torch.dtype = None,
     ):
-
-        """ Applies a Bayesian 3D convolution over an input signal composed of several input planes.
+        """Applies a Bayesian 3D convolution over an input signal composed of several input planes.
 
         :param in_channels: Number of channels in the input image
         :param out_channels: Number of channels produced by the convolution
@@ -47,8 +54,8 @@ class BayesianConv3d(BayesianLayer):
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
          If ``False``, use distribution mean as parameter values.
 
-        Note: This class calls ``torch.nn.functional.conv3d`` with ``padding_mode='zeros'``.
-
+        .. note::
+            This class calls ``torch.nn.functional.conv3d`` with ``padding_mode='zeros'``.
 
         Shape:
 
@@ -77,9 +84,11 @@ class BayesianConv3d(BayesianLayer):
 
         """
         kernel_size = _triple(kernel_size)
-        weight_shape = (out_channels, in_channels // groups, kernel_size[0], kernel_size[1], kernel_size[2])
-        bias_shape = out_channels if bias else None
-        super().__init__(weight_shape, bias_shape, priors, sampling, **kwargs)
+        parameter_shapes = {
+            "weight": (out_channels, in_channels // groups, *kernel_size),
+            "bias": out_channels if bias else None
+        }
+        super().__init__(parameter_shapes, priors, sampling, device, dtype)
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = _triple(kernel_size)
@@ -89,12 +98,12 @@ class BayesianConv3d(BayesianLayer):
         self.groups = groups
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """ Apply ``F.conv3d`` to ``x`` where the weight and bias are drawn from random variables
+        """Apply ``F.conv3d`` to ``x`` where the weight and bias are drawn from random variables
 
         :param x: Tensor of shape :math:`(N, C_\text{in}, D_\text{in}, H_\text{in}, W_\text{in})`
         :return: Tensor of shape :math:`(N, C_\text{out}, D_\text{out}, H_\text{out}, W_\text{out})`
         """
-        weight, bias = self.get_weight_bias()
+        weight, bias = self.get_bayesian_weights()
         return F.conv3d(
             x,
             weight,

@@ -17,7 +17,8 @@ class BayesianLinear(BayesianLayer):
         device: Union[torch.device, str] = None,
         dtype: torch.dtype = None,
     ):
-        r"""Construct a Bayesian layer with weights and bias set by I.I.D. Normal distributions
+        r"""Construct a Bayesian Linear layer as :math:`xA^T + b`
+        where :math:`A` and :math:`b` are normal random variables.
 
         :param in_features: Size of each input sample
         :param out_features: Size of each output sample
@@ -30,25 +31,34 @@ class BayesianLinear(BayesianLayer):
          - "posterior_mu_initial": (0.0, 0.1)
          - "posterior_rho_initial": (-3.0, 0.1)
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
-         If ``False``, use distribution mean as parameter values.
+         If ``False``, use distribution mean as parameter values. Default: ``True``
 
         Shape:
 
         - Input: :math:`(*, H_\text{in})` where :math:`*` means any number of
-          dimensions including none and :math:`H_\text{in} = \text{in\_features}`.
+          dimensions including none and :math:`H_\text{in} = \text{in_features}`.
         - Output: :math:`(*, H_\text{out})` where all but the last dimension
-          are the same shape as the input and :math:`H_\text{out} = \text{out\_features}`.
+          are the same shape as the input and :math:`H_\text{out} = \text{out_features}`.
 
         Attributes:
 
-        - weight_mu: The learnable weights of the module of shape :math:`(\text{out_features}, \text{in_features})`.
-          The values are initialized from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
-        - weight_rho: The learnable weights of the module of shape :math:`(\text{out\_features}, \text{in_features})`.
-          The values are initalized from :math:`\mathcal{N}(\rho_\text{posterior}[0], \rho_\text{posterior}[1])`.
-        - bias_mu: The learnable bias of the module of shape :math:`(\text{out_features})`.
-          If ``bias`` is ``True``, the values are initialized from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`
-        - bias_rho: The learnable bias of the module of shaspe :math:`(\text{out_features})`.
-          If ``bias`` is ``True``, the values are initialized from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`
+        Unless otherwise noted, all parameters are initialized using the ``priors`` with values
+        from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`
+
+        - **weight_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the
+          weights of shape :math:`(\text{out_features}, \text{in_features})`.
+        - **weight_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance of the
+          weights of shape :math:`(\text{out_features}, \text{in_features})`.
+          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
+        - **bias_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the
+          bias of shape :math:`(\text{out_features})`.
+          If ``bias`` is ``True``, the values are initialized from
+          :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`
+        - **bias_rho** (:py:class:`torch.nn.Parameter`): The learnable distributinon variance of the
+          bias of shape :math:`(\text{out_features})`.
+          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
+          If ``bias`` is ``True``, the values are initialized from
+          :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
 
         Example:
 
@@ -80,11 +90,11 @@ class BayesianLinear(BayesianLayer):
         return F.linear(x, weight, bias)
 
     def extra_repr(self) -> str:
-        s = f"in_features={self.in_features}, out_features={self.out_features}"
-        if not self.bias:
-            s += f", bias={self.bias}"
+        s = "in_features={in_features}, out_features={out_features}"
+        if self.bias is False:
+            s += ", bias={bias}"
         if self.priors:
-            s += f", priors={self.priors}"
-        if not self.sampling:
-            s += f", sampling={self.sampling}"
+            s += ", priors={priors}"
+        if self.sampling is False:
+            s += ", sampling={sampling}"
         return s.format(**self.__dict__)
