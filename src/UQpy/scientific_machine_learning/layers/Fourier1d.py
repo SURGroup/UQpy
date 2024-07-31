@@ -5,6 +5,7 @@ import UQpy.scientific_machine_learning as sml
 import UQpy.scientific_machine_learning.functional as func
 from UQpy.scientific_machine_learning.baseclass import Layer
 from UQpy.utilities.ValidationTypes import PositiveInteger
+from typing import Union
 
 
 class Fourier1d(Layer):
@@ -12,20 +13,36 @@ class Fourier1d(Layer):
         self,
         width: PositiveInteger,
         modes: PositiveInteger,
-        device=None,
+        device: Union[torch.device, str] = None,
     ):
-        r"""Construct a 1d Fourier block to compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W(x)`
+        r"""A 1d Fourier layer to compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W(x)`
 
         :param width: Number of neurons in the layer and channels in the spectral convolution
         :param modes: Number of Fourier modes to keep, at most :math:`\lfloor L / 2 \rfloor + 1`
 
-        Note this class does *not* accept the ``dtype`` argument
-        since Fourier layers require real and complex tensors where appropriate.
+        .. note::
+            This class does *not* accept the ``dtype`` argument
+            since Fourier layers require real and complex tensors as described by the attributes.
 
         Shape:
 
         - Input: :math:`(N, \text{width}, L)`
         - Output: :math:`(N, \text{width}, L)`
+
+        Attributes:
+
+        - **weight_spectral_conv** (:py:class:`torch.nn.Parameter`): The learnable weights of the spectral convolution of
+          shape :math:`(\text{width}, \text{width}, \text{modes})` with complex entries.
+          The initial values of these weights are sampled from
+          :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` where :math:`k = \frac{1}{\text{width}}`.
+        - **weight_conv** (:py:class:`torch.nn.Parameter`): The learnable weights of the convolution of shape
+          :math:`(\text{width}, \text{width}, \text{kernel_size})`.
+          The initial values of these weights are sampled from
+          :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` where :math:`k = \frac{1}{\text{width}}`.
+        - **bias_conv** (:py:class:`torch.nn.Parameter`): The learnable bias of the convolution of shape
+          :math:`(\text{width})`.
+          If ``bias`` is ``True``, then the initial values of these weights are sampled from
+          :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` where :math:`k = \frac{1}{\text{width}}`.
 
         Example:
 
@@ -40,7 +57,7 @@ class Fourier1d(Layer):
         self.width = width
         self.modes = modes
 
-        self.weight_spectral_conv: nn.Parameter = nn.Parameter(
+        self.weight_spectral: nn.Parameter = nn.Parameter(
             torch.empty(
                 self.width, self.width, self.modes, dtype=torch.cfloat, device=device
             )
@@ -48,7 +65,7 @@ class Fourier1d(Layer):
         r"""The learnable weights of the spectral convolution of shape 
         :math:`(\text{width}, \text{width}, \text{modes})` with complex entries
         
-        The values of these weights are sampled from
+        The initial values of these weights are sampled from
         :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` 
         where :math:`k = \frac{1}{\text{width}}`
         """
@@ -58,7 +75,7 @@ class Fourier1d(Layer):
         )
         r"""The learnable weights of the convolution of shape :math:`(\text{width}, \text{width}, \text{kernel_size})`.
         
-        The values of these weights are sampled from
+        The initial values of these weights are sampled from
         :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` 
         where :math:`k = \frac{1}{\text{width}}`"""
         self.bias_conv: nn.Parameter = nn.Parameter(
@@ -66,7 +83,7 @@ class Fourier1d(Layer):
         )
         r"""The learnable bias of the convolution of shape :math:`(\text{width})`.
         
-        If ``bias`` is ``True``, then the values of these biases are sampled from
+        If ``bias`` is ``True``, then the initial values of these biases are sampled from
         :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` 
         where :math:`k = \frac{1}{\text{width}}`
         """
