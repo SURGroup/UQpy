@@ -11,11 +11,17 @@ class GaussianKullbackLeiblerDivergence(Loss):
     def __init__(self, reduction: str = "sum", **kwargs):
         """Analytic form for Gaussian KL divergence for all Bayesian layers in a module
 
-        :param reduction: Specifies the reduction to apply to the output: 'none', 'mean', or 'sum'.
-         'none': no reduction will be applied, 'mean': the output will be averaged, 'sum': the output will be summed.
-         Default: 'sum'
+        :param reduction: Specifies the reduction to apply to the output: 'mean' or 'sum'.
+         'mean': the output will be averaged, 'sum': the output will be summed. Default: 'sum'
         """
         super().__init__(**kwargs)
+        if reduction is "none":
+            raise ValueError(
+                "UQpy: GaussianKullbackLeiblerDivergence does not accept reduction='none'. "
+                "Must be 'sum' or 'mean'."
+                "\nWe are deeply sorry this is inconsistent with the behavior of gaussian_kullback_leiber_divergence, "
+                "but we had no other choice."
+            )
         self.reduction = reduction
 
     def forward(self, network: nn.Module) -> torch.Tensor:
@@ -34,24 +40,10 @@ class GaussianKullbackLeiblerDivergence(Loss):
                         divergence += func.gaussian_kullback_leiber_divergence(
                             mu,
                             torch.log1p(torch.exp(rho)),
-                            layer.prior_mu,
-                            layer.prior_sigma,
+                            torch.tensor(layer.prior_mu, device=mu.device),
+                            torch.tensor(layer.prior_sigma, device=mu.device),
+                            reduction=self.reduction,
                         )
-                # divergence += func.gaussian_kullback_leiber_divergence(
-                #     layer.weight_mu,
-                #     torch.log1p(torch.exp(layer.weight_sigma)),
-                #     layer.prior_mu,
-                #     layer.prior_sigma,
-                #     reduction=self.reduction,
-                # )
-                # if layer.bias:
-                #     divergence += func.gaussian_kullback_leiber_divergence(
-                #         layer.bias_mu,
-                #         torch.log1p(torch.exp(layer.bias_sigma)),
-                #         layer.prior_mu,
-                #         layer.prior_sigma,
-                #         reduction=self.reduction,
-                #     )
         return divergence
 
     def extra_repr(self) -> str:

@@ -5,18 +5,13 @@ from beartype import beartype
 
 @beartype
 def mc_kullback_leibler_divergence(
-        posterior_distributions: list,
-        # posterior_sample: torch.Tensor,
-        # posterior_sigma: torch.Tensor,
-        prior_distributions: list,
-        num_samples: int = 1000,
-        # prior_mu: torch.Tensor,
-        # prior_sigma: torch.Tensor,
-        reduction: str = "sum",
+    posterior_distributions: list,
+    prior_distributions: list,
+    num_samples: int = 1000,
+    reduction: str = "sum",
 ) -> torch.Tensor:
     r"""Compute the Kullback-Leibler divergence by sampling for a prior and posterior distribution
     :param posterior_distributions: Variational posterior distribution
-    # :param posterior_sample: Sample from the variational posterior
     :param prior_distributions: Prior distribution of parameters
     :param num_samples: Number of samples in the Monte Carlo estimation
     :param reduction: Specifies the reduction to apply to the output: 'none', 'mean', or 'sum'.
@@ -28,16 +23,17 @@ def mc_kullback_leibler_divergence(
     :raises ValueError: If ``reduction`` is not one of 'none', 'mean', or 'sum'
 
     """
-    mc = MonteCarloSampling(distributions=posterior_distributions,
-                            nsamples=num_samples)
-    mc_kl_divergence = torch.zeros((1, len(posterior_distributions)))
+    mc = MonteCarloSampling(distributions=posterior_distributions, nsamples=num_samples)
+    mc_kl_divergence = torch.zeros(len(posterior_distributions))
     for itr in range(num_samples):
         posterior_samples = mc.samples[itr]
         div_list = []
-        assert len(posterior_distributions) == len(posterior_samples)
-        for prior_dist, post_dist, post_samp in zip(prior_distributions, posterior_distributions, posterior_samples):
-            div_list.append((post_dist.log_pdf(post_samp) - prior_dist.log_pdf(
-                post_samp)).item())
+        for prior_dist, post_dist, post_samp in zip(
+            prior_distributions, posterior_distributions, posterior_samples
+        ):
+            div_list.append(
+                (post_dist.log_pdf(post_samp) - prior_dist.log_pdf(post_samp)).item()
+            )
         mc_kl_divergence += torch.tensor(div_list) / num_samples
     if reduction == "none":
         return mc_kl_divergence
