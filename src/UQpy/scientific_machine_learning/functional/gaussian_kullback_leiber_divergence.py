@@ -3,12 +3,12 @@ from beartype import beartype
 from typing import Union
 
 
-# @beartype
+@beartype
 def gaussian_kullback_leiber_divergence(
-    posterior_mu: torch.Tensor,
-    posterior_sigma: torch.Tensor,
-    prior_mu: torch.Tensor,
-    prior_sigma: torch.Tensor,
+    posterior_mu: Union[float, torch.Tensor],
+    posterior_sigma: Union[float, torch.Tensor],
+    prior_mu: Union[float, torch.Tensor],
+    prior_sigma: Union[float, torch.Tensor],
     reduction: str = "sum",
 ) -> torch.Tensor:
     r"""Compute the Gaussian Kullback-Leibler divergence for a prior and posterior distribution
@@ -44,4 +44,6 @@ def gaussian_kullback_leiber_divergence(
     elif reduction == "sum":
         return torch.sum(gkl_divergence)
     else:
-        raise ValueError("UQpy: `reduction` must be one of 'none', 'mean', or 'sum'")
+        raise ValueError(
+            f"UQpy: Invalid reduction: {reduction}. Must be one of 'none', 'mean', or 'sum'"
+        )
