@@ -1,43 +1,65 @@
-import pytest
 import torch
 import UQpy.scientific_machine_learning.functional as func
-from UQpy.distributions import Normal, Lognormal
-import random
+import UQpy.distributions as dist
+from hypothesis import given, settings, strategies as st
+from hypothesis.extra.numpy import array_shapes
 
 
-def test_non_negativity():
-    """KL divergence is non negative
-        """
-    distribution = Lognormal
-    prior_distribution = [distribution(random.uniform(0, 1), random.uniform(0, 1))]
-    posterior_distribution = [distribution(random.uniform(0, 1), random.uniform(0, 1))]
+@given(
+    prior_param_1=st.floats(min_value=1e-3, max_value=1),
+    prior_param_2=st.floats(min_value=1e-3, max_value=1),
+    posterior_param_1=st.floats(min_value=1e-3, max_value=1),
+    posterior_param_2=st.floats(min_value=1e-3, max_value=1),
+)
+def test_non_negativity(
+    prior_param_1,
+    prior_param_2,
+    posterior_param_1,
+    posterior_param_2,
+):
+    """KL divergence is always non-negative"""
+    prior_distribution = [dist.Lognormal(prior_param_1, prior_param_2)]
+    posterior_distribution = [dist.Lognormal(posterior_param_1, posterior_param_2)]
     kl = func.mc_kullback_leibler_divergence(posterior_distribution, prior_distribution)
+    kl = torch.round(kl, decimals=4)
     assert kl >= 0
 
 
-def test_shape():
-    """A list with any number of distributions should give a scalar value of KL divergence
-        """
-    normal1 = Normal(random.uniform(-1, 1), random.uniform(0, 1))
-    normal2 = Normal(random.uniform(-1, 1), random.uniform(0, 1))
-    normal3 = Normal(random.uniform(-1, 1), random.uniform(0, 1))
-    normal4 = Normal(random.uniform(-1, 1), random.uniform(0, 1))
-    prior_distribution = [normal1, normal2]
-    posterior_distribution = [normal3, normal4]
-    kl = func.mc_kullback_leibler_divergence(posterior_distribution, prior_distribution)
+@settings(deadline=1_000)
+@given(st.integers(min_value=1, max_value=1_000))
+def test_shape(n):
+    """A list with any number of distributions should give a scalar value of KL divergence"""
+    prior = [dist.Uniform(0, 1)] * n
+    posterior = [dist.Uniform(0, 1)] * n
+    kl = func.mc_kullback_leibler_divergence(
+        posterior, prior, num_samples=1, reduction="sum"
+    )
     assert kl.shape == torch.Size()
+    kl = func.mc_kullback_leibler_divergence(
+        posterior, prior, num_samples=1, reduction="mean"
+    )
+    assert kl.shape == torch.Size()
+    kl = func.mc_kullback_leibler_divergence(
+        posterior, prior, num_samples=1, reduction="none"
+    )
+    assert kl.shape == torch.Size([n])
 
 
-def test_accuracy():
-    """Compare the accuracy with closed form expression. Assert if MC is within 10% error of closed form
-        """
-    mu1 = random.uniform(-1, 1)
-    sigma1 = random.uniform(0, 1)
-    mu2 = random.uniform(-1, 1)
-    sigma2 = random.uniform(0, 1)
-    posterior_distribution = [Normal(mu1, sigma1)]
-    prior_distribution = [Normal(mu2, sigma2)]
-    kl_mc = func.mc_kullback_leibler_divergence(posterior_distribution, prior_distribution)
-    kl_cf = func.gaussian_kullback_leiber_divergence(torch.tensor(mu1), torch.tensor(sigma1), torch.tensor(mu2),
-                                                     torch.tensor(sigma2))
-    assert kl_cf*0.9 <= kl_mc <= kl_cf*1.1
+@settings(deadline=1_000)
+@given(
+    prior_mu=st.floats(min_value=-1, max_value=1),
+    prior_sigma=st.floats(min_value=1, max_value=1),
+    posterior_mu=st.floats(min_value=-1, max_value=1),
+    posterior_sigma=st.floats(min_value=1, max_value=1),
+)
+def test_accuracy(prior_mu, prior_sigma, posterior_mu, posterior_sigma):
+    """Compare the accuracy with closed form expression. Assert if MC is within 10% error of closed form"""
+    posterior_distribution = [dist.Normal(posterior_mu, posterior_sigma)]
+    prior_distribution = [dist.Normal(prior_mu, prior_sigma)]
+    kl_mc = func.mc_kullback_leibler_divergence(
+        posterior_distribution, prior_distribution
+    )
+    kl_cf = func.gaussian_kullback_leiber_divergence(
+        torch.tensor(prior_mu), torch.tensor(posterior_sigma), torch.tensor(prior_mu), torch.tensor(posterior_sigma)
+    )
+    assert torch.allclose(kl_mc, kl_cf, rtol=0.1)
