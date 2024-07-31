@@ -29,7 +29,7 @@ class GaussianKullbackLeiblerDivergence(Loss):
             if isinstance(layer, BayesianLayer):
                 divergence += func.gaussian_kullback_leiber_divergence(
                     layer.weight_mu,
-                    torch.log1p(torch.exp(layer.weight_sigma)),
+                    torch.log1p(torch.exp(layer.weight_rho)),
                     layer.prior_mu,
                     layer.prior_sigma,
                     reduction=self.reduction,
@@ -37,7 +37,7 @@ class GaussianKullbackLeiblerDivergence(Loss):
                 if layer.bias:
                     divergence += func.gaussian_kullback_leiber_divergence(
                         layer.bias_mu,
-                        torch.log1p(torch.exp(layer.bias_sigma)),
+                        torch.log1p(torch.exp(layer.bias_rho)),
                         layer.prior_mu,
                         layer.prior_sigma,
                         reduction=self.reduction,
