@@ -8,17 +8,13 @@ Methods
 ~~~~~~~
 
 .. autoclass:: UQpy.scientific_machine_learning.baseclass.BayesianLayer
-    :members: sample, get_weight_bias, sample_parameters, forward, extra_repr
+    :members: reset_parameters, get_bayesian_weights, sample
 
 Attributes
 ~~~~~~~~~~
-
+.. autoattribute:: UQpy.scientific_machine_learning.baseclass.BayesianLayer.parameter_shapes
+.. autoattribute:: UQpy.scientific_machine_learning.baseclass.BayesianLayer.sampling
 .. autoattribute:: UQpy.scientific_machine_learning.baseclass.BayesianLayer.prior_mu
 .. autoattribute:: UQpy.scientific_machine_learning.baseclass.BayesianLayer.prior_sigma
 .. autoattribute:: UQpy.scientific_machine_learning.baseclass.BayesianLayer.posterior_mu_initial
 .. autoattribute:: UQpy.scientific_machine_learning.baseclass.BayesianLayer.posterior_rho_initial
-.. autoattribute:: UQpy.scientific_machine_learning.baseclass.BayesianLayer.weight_mu
-.. autoattribute:: UQpy.scientific_machine_learning.baseclass.BayesianLayer.weight_sigma
-.. autoattribute:: UQpy.scientific_machine_learning.baseclass.BayesianLayer.bias
-.. autoattribute:: UQpy.scientific_machine_learning.baseclass.BayesianLayer.bias_mu
-.. autoattribute:: UQpy.scientific_machine_learning.baseclass.BayesianLayer.bias_sigma
