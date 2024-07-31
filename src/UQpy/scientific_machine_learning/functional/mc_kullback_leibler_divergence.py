@@ -29,12 +29,12 @@ def mc_kullback_leibler_divergence(
 
     """
     mc = MonteCarloSampling(distributions=posterior_distributions,
-                            nsamples=1)
+                            nsamples=num_samples)
     mc_kl_divergence = torch.zeros((1, len(posterior_distributions)))
     for itr in range(num_samples):
-        mc.run(nsamples=1)
-        posterior_samples = mc.samples[-1]
+        posterior_samples = mc.samples[itr]
         div_list = []
+        assert len(posterior_distributions) == len(posterior_samples)
         for prior_dist, post_dist, post_samp in zip(prior_distributions, posterior_distributions, posterior_samples):
             div_list.append((post_dist.log_pdf(post_samp) - prior_dist.log_pdf(
                 post_samp)).item())
@@ -47,9 +47,3 @@ def mc_kullback_leibler_divergence(
         return torch.sum(mc_kl_divergence)
     else:
         raise ValueError("UQpy: `reduction` must be one of 'none', 'mean', or 'sum'")
-
-# from UQpy.distributions import Normal
-#
-# normal1 = Normal(0,1)
-# normal2 = Normal(1,0.1)
-# print(mc_kullback_leibler_divergence([normal1, normal1], [normal2, normal2]))
