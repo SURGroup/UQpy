@@ -5,7 +5,7 @@ from UQpy.distributions import Normal, Lognormal
 import random
 
 
-def test_positivity():
+def test_non_negativity():
     """KL divergence is non negative
         """
     distribution = Lognormal
