@@ -3,9 +3,8 @@ from abc import ABC, abstractmethod
 
 
 class Loss(nn.Module, ABC):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
 
     @abstractmethod
-    def forward(self):
-        ...
+    def forward(self, *args, **kwargs): ...
