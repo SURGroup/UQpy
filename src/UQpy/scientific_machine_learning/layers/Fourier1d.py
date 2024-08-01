@@ -36,13 +36,15 @@ class Fourier1d(Layer):
           The initial values of these weights are sampled from
           :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` where :math:`k = \frac{1}{\text{width}}`.
         - **weight_conv** (:py:class:`torch.nn.Parameter`): The learnable weights of the convolution of shape
-          :math:`(\text{width}, \text{width}, \text{kernel_size})`.
+          :math:`(\text{width}, \text{width}, \text{kernel_size})` with real entries. The :math:`\text{kernel_size}=1`.
           The initial values of these weights are sampled from
           :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` where :math:`k = \frac{1}{\text{width}}`.
         - **bias_conv** (:py:class:`torch.nn.Parameter`): The learnable bias of the convolution of shape
-          :math:`(\text{width})`.
+          :math:`(\text{width})` with real entries.
           If ``bias`` is ``True``, then the initial values of these weights are sampled from
           :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` where :math:`k = \frac{1}{\text{width}}`.
+
+        The kernel for the convolution is fixed as :math:`\text{kernel_size} = 1`.
 
         Example:
 
@@ -62,31 +64,13 @@ class Fourier1d(Layer):
                 self.width, self.width, self.modes, dtype=torch.cfloat, device=device
             )
         )
-        r"""The learnable weights of the spectral convolution of shape 
-        :math:`(\text{width}, \text{width}, \text{modes})` with complex entries
-        
-        The initial values of these weights are sampled from
-        :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` 
-        where :math:`k = \frac{1}{\text{width}}`
-        """
         kernel_size = 1
         self.weight_conv: nn.Parameter = nn.Parameter(
             torch.empty(self.width, self.width, kernel_size, device=device)
         )
-        r"""The learnable weights of the convolution of shape :math:`(\text{width}, \text{width}, \text{kernel_size})`.
-        
-        The initial values of these weights are sampled from
-        :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` 
-        where :math:`k = \frac{1}{\text{width}}`"""
         self.bias_conv: nn.Parameter = nn.Parameter(
             torch.empty(self.width, device=device)
         )
-        r"""The learnable bias of the convolution of shape :math:`(\text{width})`.
-        
-        If ``bias`` is ``True``, then the initial values of these biases are sampled from
-        :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` 
-        where :math:`k = \frac{1}{\text{width}}`
-        """
 
         k = torch.sqrt(1 / torch.tensor(self.width, device=device))
         self.reset_parameters(-k, k)

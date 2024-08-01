@@ -34,16 +34,15 @@ class Fourier2d(Layer):
           :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` where :math:`k = \frac{1}{\text{width}}`.
         - **weight_spectral_2** (:py:class:`torch.nn.Parameter`): The second of two learnable weights for the spectral
           convolution of shape :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]})`
-          with complex entries.
-          The initial values of these weights are sampled from
+          with complex entries. The initial values of these weights are sampled from
           :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` where :math:`k = \frac{1}{\text{width}}`.
         - **weight_conv** (:py:class:`torch.nn.Parameter`): The learnable weights of the convolution of shape
-          :math:`(\text{width}, \text{width}, \text{kernel_size[0]}, \text{kernel_size[1]})`.
-          The initial values of these weights are sampled from
+          :math:`(\text{width}, \text{width}, \text{kernel_size[0]}, \text{kernel_size[1]})` with real entries.
+          The :math:`\text{kernel_size} = (1, 1)`. The initial values of these weights are sampled from
           :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` where :math:`k = \frac{1}{\text{width}}`.
         - **bias_conv** (:py:class:`torch.nn.Parameter`): The learnable bias of the convolution of shape
-          :math:`(\text{width})`.
-          If ``bias`` is ``True``, then the initial values of these weights are sampled from
+          :math:`(\text{width})` with real entries.
+If ``bias`` is ``True``, then the initial values of these weights are sampled from
           :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` where :math:`k = \frac{1}{\text{width}}`.
 
         Shape:

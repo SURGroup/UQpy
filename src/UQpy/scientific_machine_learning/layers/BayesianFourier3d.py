@@ -74,11 +74,11 @@ class BayesianFourier3d(BayesianLayer):
         - **weight_conv_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean for the weights
           of the convolution of shape
           :math:`(\text{width}, \text{width}, \text{kernel_size[0]}, \text{kernel_size[1]}, \text{kernel_size[2]})`
-          with real entries.
+          with real entries. The :math:`\text{kernel_size} = (1, 1, 1)`.
         - **weight_conv_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance for the weights
           of the convolution of shape
           :math:`(\text{width}, \text{width}, \text{kernel_size[0]}, \text{kernel_size[1]}, \text{kernel_size[2]})`
-          with real entries.
+          with real entries. The :math:`\text{kernel_size} = (1, 1, 1)`.
           The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
         - **bias_conv_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean for the bias
           of the convolution of shape :math:`(\text{width})` with real entires.
