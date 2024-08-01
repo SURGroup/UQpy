@@ -16,8 +16,8 @@ class BayesianFourier2d(BayesianLayer):
         sampling: bool = True,
         device: Union[torch.device, str] = None,
     ):
-        r"""Construct a Bayesian Fourier layer as :math:`\mathcal{F}^{-1} ( R (\mathcal{F}x)) + W(x)`
-        where :math:`R` and :math:`W` are normal random variables.
+        r"""A 2d Bayesian Fourier layer as :math:`\mathcal{F}^{-1} ( R (\mathcal{F}x)) + W(x)`
+        where :math:`R`, along with the wieghts and bias for :math:`W`, are normal random variables.
 
         :param width: Number of neurons in the layer and channels in the spectral convolution
         :param modes: Number of Fourier modes to keep,
@@ -40,14 +40,38 @@ class BayesianFourier2d(BayesianLayer):
 
         Attributes:
 
-        - weight_spectral_1_mu (:py:class:`torch.nn.Parameter`)
-        - weight_spectral_1_rho (:py:class:`torch.nn.Parameter`)
-        - weight_spectral_2_mu (:py:class:`torch.nn.Parameter`)
-        - weight_spectral_2_rho (:py:class:`torch.nn.Parameter`)
-        - weight_conv_mu (:py:class:`torch.nn.Parameter`)
-        - weight_conv_rho (:py:class:`torch.nn.Parameter`)
-        - bias_conv_mu (:py:class:`torch.nn.Parameter`)
-        - bias_conv_rho (:py:class:`torch.nn.Parameter`)
+        Unless otherwise noted, all parameters are initialized using the ``priors`` with values
+        from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`
+
+        - **weight_spectral_1_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean for the
+          first of two weights of the spectral convolution of shape
+          :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]})` with complex entries.
+        - **weight_spectral_1_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance for the
+          first of two weights of the spectral convolution of shape
+          :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]})` with complex entries.
+          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
+        - **weight_spectral_2_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean for the
+          second of two weights of the spectral convolution of shape
+          :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]})` with complex entries.
+        - **weight_spectral_2_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance for the
+          second of two weights of the spectral convolution of shape
+          :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]})` with complex entries.
+          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
+        - **weight_conv_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean for the weights
+          of the convolution of shape
+          :math:`(\text{width}, \text{width}, \text{kernel_size[0]}, \text{kernel_size[1])` with real entries.
+        - **weight_conv_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance for the weights
+          of the convolution of shape
+          :math:`(\text{width}, \text{width}, \text{kernel_size[0]}, \text{kernel_size[1])` with real entries.
+          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
+        - **bias_conv_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean for the bias
+          of the convolution of shape :math:`(\text{width})` with real entires.
+          If ``bias`` is ``True``, the values are initialized from
+          :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
+        - **bias_conv_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance for the bias
+          of the convolution of shape :math:`(\text{width})` with real entries. The variance is computed as
+          :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive. If ``bias`` is ``True``, the values are
+          initialized from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
 
         Example:
 

@@ -17,7 +17,7 @@ class BayesianFourier1d(BayesianLayer):
         device: Union[torch.device, str] = None,
     ):
         r"""A 1d Bayesian Fourier layer as :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W(x)`
-        where :math:`R` and :math:`W` are normal random variables.
+        where :math:`R`, along with the wieghts and bias for :math:`W`, are normal random variables.
 
         :param width: Number of neurons in the layer and channels in the spectral convolution
         :param modes: Number of Fourier modes to keep, at most :math:`\lfloor L / 2 \rfloor + 1`
