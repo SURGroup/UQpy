@@ -1,5 +1,5 @@
 """
-Bayesian Quickstart Testing
+Bayesian Quickstart Training
 ===========================
 """
 
@@ -118,7 +118,7 @@ print("model is in sampling mode:", model.sampling)
 
 # %% md
 # With our model defined, we can turn our attention to training. Training a Bayesian neural network uses Torch's
-# ``optim`` library, and we can reuse almost of their training and testing functions.
+# ``optim`` library, and we can reuse almost all of their training and testing functions.
 # We use the testing function from torch's quickstart tutorial, with a small modification to the loss function.
 # We add a divergence term to the loss, which represents the likelihood of the posterior distribution in the Bayesian
 # update. The default prior distribution in a Bayesian layer is a zero mean Gaussian, so this effectively acts as a
