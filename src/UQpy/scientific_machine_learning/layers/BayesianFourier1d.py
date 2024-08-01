@@ -95,6 +95,7 @@ class BayesianFourier1d(BayesianLayer):
         )
         self.width = width
         self.modes = modes
+        self.bias = bias
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         r"""Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W(x)`
