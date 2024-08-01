@@ -14,35 +14,38 @@ def test_divergence_zero(mu, sigma, shape):
     """For identical distributions P and Q, the divergence is zero"""
     mu = torch.full(shape, mu)
     sigma = torch.full(shape, sigma)
-    divergence = func.gaussian_kullback_leiber_divergence(mu, sigma, mu, sigma)
+    divergence = func.gaussian_jenson_shannon_divergence(mu, sigma, mu, sigma)
     assert divergence == 0
 
 
-def test_divergence_one_half():
-    """For distributions with equal variance, and means 0, 1, the GKL divergence is 0.5"""
+def test_divergence_one_eighth():
+    """For distributions N(0, 1) and N(1, 1) the Gaussian JS divergence is 0.125"""
     posterior_mu = torch.tensor(1.0)
     posterior_sigma = torch.tensor(1.0)
     prior_mu = torch.tensor(0.0)
     prior_sigma = torch.tensor(1.0)
-    divergence = func.gaussian_kullback_leiber_divergence(
+    divergence = func.gaussian_jenson_shannon_divergence(
         posterior_mu, posterior_sigma, prior_mu, prior_sigma
     )
-    assert divergence == 0.5
+    assert divergence == 0.125
 
 
 @given(
     shape=array_shapes(min_dims=1, min_side=1, max_side=100),
 )
-def test_divergence_zero(shape):
-    """For any distributions, the KL divergence is non-negative"""
-    prior_mu = torch.rand(shape)
-    prior_sigma = torch.rand(shape) + 1  # must be positive
+def test_divergence_symmetric(shape):
+    """The JS divergence is symmetric, JS(P, Q) = JS(Q, P)"""
     posterior_mu = torch.rand(shape)
-    posterior_sigma = torch.rand(shape) + 1  # must be positive
-    divergence = func.gaussian_kullback_leiber_divergence(
+    posterior_sigma = torch.rand(shape)
+    prior_mu = torch.rand(shape)
+    prior_sigma = torch.rand(shape)
+    divergence_1 = func.gaussian_jenson_shannon_divergence(
         posterior_mu, posterior_sigma, prior_mu, prior_sigma
     )
-    assert divergence >= 0
+    divergence_2 = func.gaussian_jenson_shannon_divergence(
+        prior_mu, prior_sigma, posterior_mu, posterior_sigma
+    )
+    assert torch.allclose(divergence_1, divergence_2)
 
 
 @given(
@@ -56,15 +59,15 @@ def test_reduction_shape(shape):
     posterior_sigma = torch.rand(shape)
     prior_mu = torch.rand(shape)
     prior_sigma = torch.rand(shape)
-    divergence = func.gaussian_kullback_leiber_divergence(
+    divergence = func.gaussian_jenson_shannon_divergence(
         posterior_mu, posterior_sigma, prior_mu, prior_sigma, reduction="sum"
     )
     assert divergence.shape == torch.Size()
-    divergence = func.gaussian_kullback_leiber_divergence(
+    divergence = func.gaussian_jenson_shannon_divergence(
         posterior_mu, posterior_sigma, prior_mu, prior_sigma, reduction="mean"
     )
     assert divergence.shape == torch.Size()
-    divergence = func.gaussian_kullback_leiber_divergence(
+    divergence = func.gaussian_jenson_shannon_divergence(
         posterior_mu, posterior_sigma, prior_mu, prior_sigma, reduction="none"
     )
     assert divergence.shape == torch.Size(shape)
