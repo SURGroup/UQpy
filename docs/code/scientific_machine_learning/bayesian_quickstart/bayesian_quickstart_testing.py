@@ -128,7 +128,7 @@ i = int(torch.argmax(torch.tensor(counts)))
 
 print("Probabilistic Predictions -----")
 print("Most Commonly Predicted:", classes[i], "Actual:", actual)
-print("Probabilities:", {c: round(predictions[c] / n_samples, 3) for c in predictions})
+print("Prediction Counts:", {c: round(predictions[c] / n_samples, 3) for c in predictions})
 
 # Plot probabilistic predictions
 fig, ax = plt.subplots()
