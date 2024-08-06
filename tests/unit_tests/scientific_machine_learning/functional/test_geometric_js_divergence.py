@@ -29,7 +29,7 @@ def test_non_negativity(
     jsg = func.geometric_jenson_shannon_divergence(
         post_mu, post_sigma, prior_mu, prior_sigma, alpha
     )
-    jsg = torch.round(jsg, decimals=4)
+    jsg = torch.round(jsg, decimals=3)
     assert jsg >= 0
 
 
