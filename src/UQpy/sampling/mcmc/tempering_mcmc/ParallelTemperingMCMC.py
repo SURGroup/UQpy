@@ -1,5 +1,5 @@
 from scipy.special import logsumexp
-from scipy.integrate import trapz
+from scipy.integrate import trapezoid
 
 from UQpy.sampling.mcmc import MetropolisHastings
 from UQpy.sampling.mcmc.baseclass.MCMC import *
@@ -216,7 +216,7 @@ class ParallelTemperingMCMC(TemperingMCMC):
         # use quadrature to integrate between 0 and 1
         temper_param_list_for_integration = np.copy(np.array(self.tempering_parameters))
         log_pdf_averages = np.array(log_pdf_averages)
-        int_value = trapz(x=temper_param_list_for_integration, y=log_pdf_averages)
+        int_value = trapezoid(x=temper_param_list_for_integration, y=log_pdf_averages)
         if log_Z0 is None:
             samples_p0 = self.distribution_reference.rvs(nsamples=nsamples_from_p0)
             log_Z0 = np.log(1. / nsamples_from_p0) + logsumexp(
