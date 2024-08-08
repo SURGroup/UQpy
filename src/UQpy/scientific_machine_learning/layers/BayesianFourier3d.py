@@ -117,14 +117,7 @@ class BayesianFourier3d(BayesianLayer):
             priors,
             sampling,
             device,
-            dtype=(
-                torch.cfloat,
-                torch.cfloat,
-                torch.cfloat,
-                torch.cfloat,
-                torch.float,
-                torch.float,
-            ),
+            dtype=torch.float,
         )
         self.width = width
         self.modes = modes
@@ -137,8 +130,14 @@ class BayesianFourier3d(BayesianLayer):
         :return: Tensor of shape :math:`(N, C_\text{in}, D, H, W)`
         """
         w1, w2, w3, w4, weight_conv, bias_conv = self.get_bayesian_weights()
+        spectral_weights = (
+            w1.to(torch.cfloat),
+            w2.to(torch.cfloat),
+            w3.to(torch.cfloat),
+            w4.to(torch.cfloat),
+        )
         return func.spectral_conv3d(
-            x, (w1, w2, w3, w4), self.width, self.modes
+            x, spectral_weights, self.width, self.modes
         ) + F.conv3d(x, weight_conv, bias_conv)
 
     def extra_repr(self):

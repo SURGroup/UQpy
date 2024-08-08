@@ -91,7 +91,7 @@ class BayesianFourier1d(BayesianLayer):
             priors,
             sampling,
             device,
-            dtype=(torch.cfloat, torch.float, torch.float),
+            dtype=torch.float,
         )
         self.width = width
         self.modes = modes
@@ -104,6 +104,7 @@ class BayesianFourier1d(BayesianLayer):
         :return: Tensor of shape :math:`(N, \text{width}, L)`
         """
         weight_spectral, weight_conv, bias_conv = self.get_bayesian_weights()
+        weight_spectral = weight_spectral.to(torch.cfloat)
         return func.spectral_conv1d(
             x, weight_spectral, self.width, self.modes
         ) + F.conv1d(x, weight_conv, bias_conv)
