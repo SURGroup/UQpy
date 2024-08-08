@@ -8,13 +8,13 @@ from beartype import beartype
 @beartype
 class GaussianKullbackLeiblerDivergence(Loss):
 
-    def __init__(self, reduction: str = "sum", **kwargs):
+    def __init__(self, reduction: str = "sum"):
         """Analytic form for Gaussian KL divergence for all Bayesian layers in a module
 
         :param reduction: Specifies the reduction to apply to the output: 'mean' or 'sum'.
          'mean': the output will be averaged, 'sum': the output will be summed. Default: 'sum'
         """
-        super().__init__(**kwargs)
+        super().__init__()
         if reduction is "none":
             raise ValueError(
                 "UQpy: GaussianKullbackLeiblerDivergence does not accept reduction='none'. "
@@ -30,20 +30,23 @@ class GaussianKullbackLeiblerDivergence(Loss):
         :param network: Module containing Bayesian layers as class attributes
         :return: Gaussian KL divergence between prior and posterior distributions
         """
-        divergence = torch.tensor(0.0, dtype=torch.float)
+        device = network.device
+        divergence = torch.tensor(0.0, dtype=torch.float, device=device)
         for layer in network.modules():
-            if isinstance(layer, BayesianLayer):
-                for name in layer.parameter_shapes:
-                    if layer.parameter_shapes[name] is not None:
-                        mu = getattr(layer, f"{name}_mu")
-                        rho = getattr(layer, f"{name}_rho")
-                        divergence += func.gaussian_kullback_leiber_divergence(
-                            mu,
-                            torch.log1p(torch.exp(rho)),
-                            torch.tensor(layer.prior_mu, device=mu.device),
-                            torch.tensor(layer.prior_sigma, device=mu.device),
-                            reduction=self.reduction,
-                        )
+            if not isinstance(layer, BayesianLayer):
+                continue
+            for name in layer.parameter_shapes:
+                if layer.parameter_shapes[name] is None:
+                    continue
+                mu = getattr(layer, f"{name}_mu")
+                rho = getattr(layer, f"{name}_rho")
+                divergence += func.gaussian_kullback_leiber_divergence(
+                    mu,
+                    torch.log1p(torch.exp(rho)),
+                    torch.tensor(layer.prior_mu, device=device),
+                    torch.tensor(layer.prior_sigma, device=device),
+                    reduction=self.reduction,
+                )
         return divergence
 
     def extra_repr(self) -> str:
