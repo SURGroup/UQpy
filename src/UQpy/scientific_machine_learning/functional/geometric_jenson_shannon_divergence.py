@@ -5,12 +5,12 @@ from beartype import beartype
 
 @beartype
 def geometric_jenson_shannon_divergence(
-        posterior_mu: torch.Tensor,
-        posterior_sigma: torch.Tensor,
-        prior_mu: torch.Tensor,
-        prior_sigma: torch.Tensor,
-        alpha: float,
-        reduction: str = "sum",
+    posterior_mu: torch.Tensor,
+    posterior_sigma: torch.Tensor,
+    prior_mu: torch.Tensor,
+    prior_sigma: torch.Tensor,
+    alpha: float,
+    reduction: str = "sum",
 ) -> torch.Tensor:
     r"""Compute the Geometric Jenson-Shannon divergence for a Gaussian prior and Gaussian posterior distributions
 
@@ -43,14 +43,14 @@ def geometric_jenson_shannon_divergence(
     prior_var = prior_sigma.pow(2)
     var_alpha = 1 / (alpha / posterior_var + (1 - alpha) / prior_var)
     mu_alpha = var_alpha * (
-            alpha * posterior_mu / posterior_var + (1 - alpha) * prior_mu / prior_var
+        alpha * posterior_mu / posterior_var + (1 - alpha) * prior_mu / prior_var
     )
     geometric_js_divergence = 0.5 * (
-            ((1 - alpha) * posterior_var + alpha * prior_var) / var_alpha
-            + torch.log(var_alpha / (posterior_var ** (1 - alpha) * prior_var ** alpha))
-            + (1 - alpha) * (mu_alpha - posterior_mu).pow(2) / var_alpha
-            + alpha * (mu_alpha - prior_mu).pow(2) / var_alpha
-            - 1
+        ((1 - alpha) * posterior_var + alpha * prior_var) / var_alpha
+        + torch.log(var_alpha / (posterior_var ** (1 - alpha) * prior_var**alpha))
+        + (1 - alpha) * (mu_alpha - posterior_mu).pow(2) / var_alpha
+        + alpha * (mu_alpha - prior_mu).pow(2) / var_alpha
+        - 1
     )
     if reduction == "none":
         return geometric_js_divergence
