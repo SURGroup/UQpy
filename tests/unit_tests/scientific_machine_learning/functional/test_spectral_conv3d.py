@@ -94,5 +94,5 @@ def test_invalid_weights_shape_raises_error(weight_shape, i):
     weight_bad = torch.rand(weight_shape, dtype=torch.cfloat)
     weights = [weight_good] * 4
     weights[i] = weight_bad
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         func.spectral_conv3d(x, tuple(weights), out_channels, modes)

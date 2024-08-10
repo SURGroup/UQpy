@@ -1,0 +1,65 @@
+import torch
+import UQpy.scientific_machine_learning.functional as func
+import UQpy.distributions as dist
+from hypothesis import given, settings, strategies as st
+from hypothesis.extra.numpy import array_shapes
+
+
+@given(
+    prior_param_1=st.floats(min_value=1e-3, max_value=1),
+    prior_param_2=st.floats(min_value=1e-3, max_value=1),
+    posterior_param_1=st.floats(min_value=1e-3, max_value=1),
+    posterior_param_2=st.floats(min_value=1e-3, max_value=1),
+)
+def test_non_negativity(
+    prior_param_1,
+    prior_param_2,
+    posterior_param_1,
+    posterior_param_2,
+):
+    """KL divergence is always non-negative"""
+    prior_distribution = [dist.Lognormal(prior_param_1, prior_param_2)]
+    posterior_distribution = [dist.Lognormal(posterior_param_1, posterior_param_2)]
+    kl = func.mc_kullback_leibler_divergence(posterior_distribution, prior_distribution)
+    kl = torch.round(kl, decimals=4)
+    assert kl >= 0
+
+
+@settings(deadline=1_000)
+@given(st.integers(min_value=1, max_value=1_000))
+def test_shape(n):
+    """A list with any number of distributions should give a scalar value of KL divergence"""
+    prior = [dist.Uniform(0, 1)] * n
+    posterior = [dist.Uniform(0, 1)] * n
+    kl = func.mc_kullback_leibler_divergence(
+        posterior, prior, num_samples=1, reduction="sum"
+    )
+    assert kl.shape == torch.Size()
+    kl = func.mc_kullback_leibler_divergence(
+        posterior, prior, num_samples=1, reduction="mean"
+    )
+    assert kl.shape == torch.Size()
+    kl = func.mc_kullback_leibler_divergence(
+        posterior, prior, num_samples=1, reduction="none"
+    )
+    assert kl.shape == torch.Size([n])
+
+
+@settings(deadline=1_000)
+@given(
+    prior_mu=st.floats(min_value=-1, max_value=1),
+    prior_sigma=st.floats(min_value=1, max_value=1),
+    posterior_mu=st.floats(min_value=-1, max_value=1),
+    posterior_sigma=st.floats(min_value=1, max_value=1),
+)
+def test_accuracy(prior_mu, prior_sigma, posterior_mu, posterior_sigma):
+    """Compare the accuracy with closed form expression. Assert if MC is within 10% error of closed form"""
+    posterior_distribution = [dist.Normal(posterior_mu, posterior_sigma)]
+    prior_distribution = [dist.Normal(prior_mu, prior_sigma)]
+    kl_mc = func.mc_kullback_leibler_divergence(
+        posterior_distribution, prior_distribution
+    )
+    kl_cf = func.gaussian_kullback_leiber_divergence(
+        torch.tensor(prior_mu), torch.tensor(posterior_sigma), torch.tensor(prior_mu), torch.tensor(posterior_sigma)
+    )
+    assert torch.allclose(kl_mc, kl_cf, rtol=0.1)

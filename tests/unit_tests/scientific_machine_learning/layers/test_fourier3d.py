@@ -12,9 +12,9 @@ from hypothesis.extra.numpy import array_shapes
     modes=array_shapes(min_dims=3, max_dims=3, min_side=1, max_side=33),
 )
 def test_output_shape(batch_size, width, signal_shape, modes):
-    """Fourier3d takes in a tensor (batch_size, width, H, W, D) and outputs a tensor of the same shape"""
-    H, W, D = signal_shape
-    x = torch.rand((batch_size, width, H, W, D))
+    """Fourier3d takes in a tensor (batch_size, width, d, h, w) and outputs a tensor of the same shape"""
+    d, h, w = signal_shape
+    x = torch.rand((batch_size, width, d, h, w))
     fourier = sml.Fourier3d(width, modes)
     y = fourier(x)
     assert x.shape == y.shape

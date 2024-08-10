@@ -35,10 +35,26 @@ Bayesian Convolution 2D
 
 -----
 
-Probabilistic Layer
+Bayesian Fourier 1D
 ~~~~~~~~~~~~~~~~~~~
 
-This is an attempt to generalize a Bayesian layer to sample weights from an arbitrary distribution.
-
-.. autoclass:: UQpy.scientific_machine_learning.layers.ProbabilisticLayer
+.. autoclass:: UQpy.scientific_machine_learning.layers.BayesianFourier1d
     :members: forward
+
+-----
+
+Bayesian Fourier 2D
+~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: UQpy.scientific_machine_learning.layers.BayesianFourier2d
+    :members: forward
+
+-----
+
+Bayesian Fourier 3D
+~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: UQpy.scientific_machine_learning.layers.BayesianFourier3d
+    :members: forward
+
+-----

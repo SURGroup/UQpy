@@ -33,7 +33,7 @@ class BayesianConv1d(BayesianLayer):
         :param dilation: Spacing between kernel elements. Default: 1
         :param groups: Number of blocked connections from input channels to output channels. Default: 1.
          ``in_channels`` and ``out_channels`` must both be divisible by ``groups``.
-        :param bias: If True, adds a learnable bias to the output. Default: True
+        :param bias: If ``True``, adds a learnable bias to the output. Default: ``True``
         :param priors: Prior and posterior distribution parameters.
          The dictionary keys and their default values are:
 
@@ -42,9 +42,10 @@ class BayesianConv1d(BayesianLayer):
          - "posterior_mu_initial": (0.0, 0.1)
          - "posterior_rho_initial": (-3.0, 0.1)
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
-         If ``False``, use distribution mean as parameter values.
+         If ``False``, use distribution mean as parameter values. Default: ``True``
 
-        Note: This class calls ``torch.nn.functional.conv1d`` with ``padding_mode='zeros'``.
+        .. note::
+            This class calls ``torch.nn.functional.conv1d`` with ``padding_mode='zeros'``.
 
         Shape:
 
@@ -55,16 +56,21 @@ class BayesianConv1d(BayesianLayer):
 
         Attributes:
 
-        - weight_mu (torch.Tensor): The learnable weights of the module of shape
-          :math:`(\text{out\_channels}, \frac{\text{in\_channels}}{\text{groups}}, \text{kernel\_size})`.
-          The values are initialized from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
-        - weight_rho (torch.Tensor): The learnable weights of the module of shape
-          :math:`(\text{out\_channels}, \frac{\text{in\_channels}}{\text{groups}}, \text{kernel\_size})`.
-          The values are initialized from :math:`\mathcal{N}(\rho_\text{posterior}[0], \rho_\text{posterior}[1])`.
-        - bias_mu (torch.Tensor): The learnable bias of the module of shape :math:`(out_channels)`.
-          If ``bias`` is ``True``, the values are initialized from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
-        - bias_rho (torch.Tensor): The learnable bias of the moduel of shape :math:`(out_channels)`.
-          If ``bias`` is ``True``, the values are initialized from :math:`\mathcal{N}(\rho_\text{posterior}[0], \rho_\text{posterior}[1])`.
+        Unless otherwise noted, all parameters are initialized using the ``priors`` with values
+        from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`
+
+        - **weight_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the weights of the module
+          of shape :math:`(\text{out\_channels}, \frac{\text{in_channels}}{\text{groups}}, \text{kernel_size})`.
+        - **weight_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance of the weights of the module
+          of shape :math:`(\text{out_channels}, \frac{\text{in_channels}}{\text{groups}}, \text{kernel_size})`.
+          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
+        - **bias_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the bias of the module
+          of shape :math:`(\text{out_channels})`. If ``bias`` is ``True``, the values are initialized
+          from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
+        - **bias_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance of the bias of the module
+          of shape :math:`(\text{out_channels})`.  The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to
+          guarantee it is positive. If ``bias`` is ``True``, the values are initialized
+          from :math:`\mathcal{N}(\rho_\text{posterior}[0], \rho_\text{posterior}[1])`.
 
         Example:
 

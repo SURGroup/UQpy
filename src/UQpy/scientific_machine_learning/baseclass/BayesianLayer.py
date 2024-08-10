@@ -45,9 +45,10 @@ class BayesianLayer(Layer, ABC):
                 )
         else:
             dtype = (dtype,) * len(parameter_shapes)
-        self.parameter_shapes = parameter_shapes
+        self.parameter_shapes: dict = parameter_shapes
+        """Prefix names and shapes of all learnable parameters"""
         self.sampling = sampling
-        """Sampling docstring"""
+        """Boolean represents whether this module is in sampling mode or not."""
         self.priors = priors
         if self.priors is None:
             priors = {
@@ -116,12 +117,13 @@ class BayesianLayer(Layer, ABC):
         return tuple(weights)
 
     def sample(self, mode: bool = True):
-        """Set sampling mode for Neural Network and all child modules
+        """Set sampling mode for this and all child Modules
 
-        Note: This method and ``self.sampling`` only affects Bayesian layers
+        .. note::
+            This method and ``self.sampling`` only affects Bayesian layers
 
-        :param mode: If ``True, sample from distributions, otherwise use distribution means.
-        :return: ``self``
+        :param mode: If ``True``, sample from distributions, otherwise use distribution means.
+         Default: ``True``
         """
         self.sampling = mode
         self.apply(self.__set_sampling)
