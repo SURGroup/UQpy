@@ -55,7 +55,7 @@ class BayesianConv3d(BayesianLayer):
          If ``False``, use distribution mean as parameter values. Default: ``True``
 
         .. note::
-            This class calls ``torch.nn.functional.conv3d`` with ``padding_mode='zeros'``.
+            This class calls :func:`torch.nn.functional.conv3d` with ``padding_mode='zeros'``.
 
         Shape:
 
@@ -115,7 +115,7 @@ class BayesianConv3d(BayesianLayer):
         self.groups = groups
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Apply ``F.conv3d`` to ``x`` where the weight and bias are drawn from random variables
+        """Apply :func:`F.conv3d` to ``x`` where the weight and bias are drawn from random variables
 
         :param x: Tensor of shape :math:`(N, C_\text{in}, D_\text{in}, H_\text{in}, W_\text{in})`
         :return: Tensor of shape :math:`(N, C_\text{out}, D_\text{out}, H_\text{out}, W_\text{out})`

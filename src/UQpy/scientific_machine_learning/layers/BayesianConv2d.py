@@ -48,7 +48,7 @@ class BayesianConv2d(BayesianLayer):
          If ``False``, use distribution mean as parameter values. Default: ``True``
 
         .. note::
-            This class calls ``torch.nn.functional.conv2d`` with ``padding_mode='zeros'``.
+            This class calls :func:`torch.nn.functional.conv2d` with ``padding_mode='zeros'``.
 
         Shape:
 
@@ -110,7 +110,7 @@ class BayesianConv2d(BayesianLayer):
         self.bias = bias
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        r"""Apply ``F.conv2d`` to ``x`` where the weight and bias are drawn from random variables
+        r"""Apply :func:`F.conv2d` to ``x`` where the weight and bias are drawn from random variables
 
         :param x: Tensor of shape :math:`(N, C_\text{in}, H_\text{in}, W_\text{in})`
         :return: Tensor of shape :math:`(N, C_\text{out}, H_\text{out}, W_\text{out})`
