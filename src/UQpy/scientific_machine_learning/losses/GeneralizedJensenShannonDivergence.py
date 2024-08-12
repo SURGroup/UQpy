@@ -9,7 +9,7 @@ from typing import Annotated
 
 
 @beartype
-class GeneralizedJensonShannonDivergence(Loss):
+class GeneralizedJensenShannonDivergence(Loss):
 
     def __init__(
         self,

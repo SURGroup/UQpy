@@ -14,15 +14,15 @@ class MCKullbackLeiblerDivergence(Loss):
         posterior_distribution,
         prior_distribution,
         reduction: str = "sum",
-        **kwargs,
     ):
         """KL divergence by sampling for all Bayesian layers in a module. Note: This is not same as the implementation in Bayes By Backprop.
+
         :param posterior_distribution: Specifies the posterior distribution: Function handle to one of UQpy.distributions
-        :param prior_distribution: Specifies the prior distribution: Funtion handle to one of UQpy.distributions
+        :param prior_distribution: Specifies the prior distribution: Function handle to one of UQpy.distributions
         :param reduction: Specifies the reduction to apply to the output: 'mean', or 'sum'.
          'mean': the output will be averaged, 'sum': the output will be summed. Default: 'sum'
         """
-        super().__init__(**kwargs)
+        super().__init__()
         self.posterior_distribution = posterior_distribution
         self.prior_distribution = prior_distribution
         self.reduction = reduction

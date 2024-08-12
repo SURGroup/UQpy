@@ -56,5 +56,3 @@ Bayesian Fourier 3D
 
 .. autoclass:: UQpy.scientific_machine_learning.layers.BayesianFourier3d
     :members: forward
-
------

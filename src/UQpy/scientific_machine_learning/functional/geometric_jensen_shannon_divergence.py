@@ -4,7 +4,7 @@ from beartype import beartype
 
 
 @beartype
-def geometric_jenson_shannon_divergence(
+def geometric_jensen_shannon_divergence(
     posterior_mu: torch.Tensor,
     posterior_sigma: torch.Tensor,
     prior_mu: torch.Tensor,
@@ -12,7 +12,7 @@ def geometric_jenson_shannon_divergence(
     alpha: float,
     reduction: str = "sum",
 ) -> torch.Tensor:
-    r"""Compute the Geometric Jenson-Shannon divergence for a Gaussian prior and Gaussian posterior distributions
+    r"""Compute the Geometric Jensen-Shannon divergence for a Gaussian prior and Gaussian posterior distributions
 
     :param posterior_mu: Mean of the posterior distribution
     :param posterior_sigma: Standard deviation of the posterior distribution
@@ -27,15 +27,15 @@ def geometric_jenson_shannon_divergence(
 
     Formula
     -------
-    The Geometric Jenson-Shannon divergence :math:`D_{JSG}` is computed as
+    The Geometric Jensen-Shannon divergence :math:`D_{JSG}` is computed as
 
     .. math:: D_{JSG}(P, Q) = (1-\alpha)  D_{KL}(P, M) + \alpha D_{KL}(Q, M)
 
-    where :math:`D_{KL}` is the Kullback-Leiber divergence and :math:`M=P^\alpha Q^{(1-\alpha)}` is the geometric
-    mean distribution. When the distributions P and Q are Gaussian, the closed form for Geometric Jenson-Shannon
-    divergence is given as
+    where :math:`D_{KL}` is the Kullback-Leibler divergence and :math:`M=P^\alpha Q^{(1-\alpha)}` is the geometric
+    mean distribution. When the distributions :math:`P` and :math:`Q` are Gaussian, the closed form for Geometric
+    Jensen-Shannon divergence is given as
 
-    .. math:: D_{JSG}(P, Q) &= 0.5* [ \frac{(1-\alpha)\sigma_0^2 + \alpha \sigma_1^2}{\sigma_alpha^2} + \log \frac{\sigma_\alpha^2}{\sigma_0^{2(1-\alpha)} \sigma_1^{2\alpha}} + (1-\alpha) \frac{(\mu_\alpha - \mu_0)^2}{\sigma_\alpha^2} + \frac{\alpha(\mu_alpha - \mu_1)^2}{\sigma_\alpha^2} -1]
+    .. math:: D_{JSG}(P, Q) &= 0.5 [ \frac{ (1-\alpha) \sigma_0^2 + \alpha \sigma_1^2}{\sigma_alpha^2} + \log \frac{\sigma_\alpha^2}{\sigma_0^{2(1-\alpha)} \sigma_1^{2\alpha}} + (1-\alpha) \frac{(\mu_\alpha - \mu_0)^2}{\sigma_\alpha^2} + \frac{\alpha(\mu_alpha - \mu_1)^2}{\sigma_\alpha^2} -1]
 
     where :math:`\sigma_alpha^2 = \frac{1}{\frac{\alpha}{\sigma_0^2}+\frac{1-\alpha}{\sigma_1^2}}` and :math:`\mu_alpha = \sigma_\alpha^2 [\frac{\alpha \mu_0}{\sigma_0^2} + \frac{(1-\alpha)\mu_1}{\sigma_1^2}]`
     """

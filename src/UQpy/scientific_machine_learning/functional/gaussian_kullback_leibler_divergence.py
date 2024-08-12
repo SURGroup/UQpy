@@ -4,7 +4,7 @@ from typing import Union
 
 
 @beartype
-def gaussian_kullback_leiber_divergence(
+def gaussian_kullback_leibler_divergence(
     posterior_mu: torch.Tensor,
     posterior_sigma: torch.Tensor,
     prior_mu: torch.Tensor,

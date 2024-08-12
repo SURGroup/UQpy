@@ -1,7 +1,7 @@
 Functional
 ==========
 
-This part of the module mirrors the intention and usage of ``torch.nn.functional``.
+This part of the module mirrors the intention and usage of :code:`torch.nn.functional`.
 Here we define Python functions that perform computations for neural network components of the same name.
 
 .. toctree::
