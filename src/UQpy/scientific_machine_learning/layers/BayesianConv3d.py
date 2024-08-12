@@ -116,7 +116,7 @@ class BayesianConv3d(BayesianLayer):
         self.groups = groups
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        r"""Apply :func:`F.conv3d` to ``x`` where the weight and bias are drawn from random variables
+        """Apply :func:`F.conv3d` to ``x`` where the weight and bias are drawn from random variables
 
         :param x: Tensor of shape :math:`(N, C_\text{in}, D_\text{in}, H_\text{in}, W_\text{in})`
         :return: Tensor of shape :math:`(N, C_\text{out}, D_\text{out}, H_\text{out}, W_\text{out})`
