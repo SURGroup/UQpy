@@ -43,6 +43,6 @@ class Dropout1d(DropoutActivation):
         """Calls :func:`torch.nn.functional.dropout1d`
 
         :param x: Tensor of shape :math:`(N, C, L)` or :math:`(C, L)`
-        :return: Tensor of same shape as ``x``
+        :return: Tensor of shape :math:`(N, C, L)` or :math:`(C, L)` (same shape as ``x``)
         """
         return F.dropout1d(x, self.p, self.dropping, self.inplace)

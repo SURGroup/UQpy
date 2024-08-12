@@ -4,8 +4,9 @@ Bayesian Quickstart Testing
 """
 
 # %% md
-# This is the second half of a Bayesian version of the classification problem from this
-# [Pytorch Quickstart tutorial](https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html).
+# This is the second half of a Bayesian version of the classification problem from this Pytorch Quickstart tutorial:
+# https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
+#
 # This script assumes you have already run the Bayesian Quickstart Testing script and saved the optimized model
 # to a file named ``bayesian_model.pth``. This script
 #

@@ -38,12 +38,13 @@ class BayesianConv2d(BayesianLayer):
         :param groups: Number of blocked connections from input channels to output channels. Default: 1.
          ``in_channels`` and ``out_channels`` must both be divisible by ``groups``.
         :param bias: If ``True``, adds a learnable bias to the output. Default: ``True``
-        :param priors: Prior and posterior distribution parameters. The dictionary keys and their default values are:
+        :param priors: Prior and posterior distribution parameters.
+         The dictionary keys and their default values are:
 
-         - ``priors["prior_mu"]`` = :math:`0`
-         - ``priors["prior_sigma"]`` = :math:`0.1`
-         - ``priors["posterior_mu_initial"]`` = ``(0, 0.1)``
-         - ``priors["posterior_rho_initial"]`` = ``(-3, 0.1)``
+         - "prior_mu": 0
+         - "prior_sigma" : 0.1
+         - "posterior_mu_initial": (0.0, 0.1)
+         - "posterior_rho_initial": (-3.0, 0.1)
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
          If ``False``, use distribution mean as parameter values. Default: ``True``
 
@@ -56,16 +57,16 @@ class BayesianConv2d(BayesianLayer):
         - Output: :math:`(N, C_\text{out}, H_\text{out}, W_\text{out})` or :math:`(C_\text{out}, H_\text{out}, W_\text{out})`
 
         where :math:`H_\text{out} = \left\lfloor \frac{H_\text{in} + 2 \times \text{padding[0]} - \text{dilation[0]} \times (\text{kernel\_size[0] - 1}) - 1}{\text{stride[0]}} + 1\right\rfloor`
-
+        and
         :math:`W_\text{out} = \left\lfloor \frac{W_\text{in} + 2 \times \text{padding[1]} - \text{dilation[1]} \times (\text{kernel\_size[1] - 1}) - 1}{\text{stride[1]}} + 1\right\rfloor`
 
         Attributes:
 
         Unless otherwise noted, all parameters are initialized using the ``priors`` with values
-        from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`
+        from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
 
         - **weight_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the weights of the module
-           of shape :math:`(\text{out_channels}, \frac{\text{in_channels}}{\text{groups}}, \text{kernel_size[0]}, \text{kernel_size[1]})`.
+          of shape :math:`(\text{out_channels}, \frac{\text{in_channels}}{\text{groups}}, \text{kernel_size[0]}, \text{kernel_size[1]})`.
         - **weight_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance of the weights of the module
           of shape :math:`(\text{out_channels}, \frac{\text{in_channels}}{\text{groups}}, \text{kernel_size[0]}, \text{kernel_size[1]})`.
           The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.

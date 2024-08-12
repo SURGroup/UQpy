@@ -40,7 +40,7 @@ class BayesianFourier1d(BayesianLayer):
         Attributes:
 
         Unless otherwise noted, all parameters are initialized using the ``priors`` with values
-        from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`
+        from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
 
         - **weight_spectral_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the
           weights of the spectral convolution of shape :math:`(\text{width}, \text{width}, \text{modes})`
@@ -59,7 +59,7 @@ class BayesianFourier1d(BayesianLayer):
         - **bias_conv_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the
           bias of the convolution of shape :math:`(\text{width})`.
           If ``bias`` is ``True``, the values are initialized from
-          :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`
+          :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
         - **bias_conv_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance of the
           bias of the convolution of shape :math:`(\text{width})`.
           The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.

@@ -4,8 +4,8 @@ Bayesian Quickstart Training
 """
 
 # %% md
-# This is the first half of a Bayesian version of the classification problem from this
-# [Pytorch Quickstart tutorial](https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html).
+# This is the first half of a Bayesian version of the classification problem from this Pytorch Quickstart tutorial:
+# https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
 #
 # We strongly recommend reading the Pytorch quick start first to familiarize yourself with the problem.
 # We include many of the comments from the Pytorch example, but assume the reader is familiar with model definitions

@@ -41,7 +41,7 @@ class BayesianFourier2d(BayesianLayer):
         Attributes:
 
         Unless otherwise noted, all parameters are initialized using the ``priors`` with values
-        from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`
+        from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
 
         - **weight_spectral_1_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean for the
           first of two weights of the spectral convolution of shape
@@ -108,7 +108,7 @@ class BayesianFourier2d(BayesianLayer):
         self.bias = bias
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W(x)`
+        r"""Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W(x)`
 
         :param x: Tensor of shape :math:`(N, C_\text{in}, H, W)`
         :return: Tensor of shape :math:`(N, C_\text{in}, H, W)`
