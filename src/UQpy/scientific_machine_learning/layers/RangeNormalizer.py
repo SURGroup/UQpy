@@ -15,7 +15,7 @@ class RangeNormalizer(Layer):
     ):
         r"""Normalize a tensor to fall within the range :math:`[\text{low}, \text{high}]`
 
-        Note: Due to machine precision, normalized values may be outside of range by errors on the order of :math:`10^{-8}`.
+        .. note:: Due to machine precision, normalized values may be outside of range by errors on the order of :math:`10^{-8}`.
 
         :param x: Tensor of any shape
         :param low: Lower bound of the normalized range
