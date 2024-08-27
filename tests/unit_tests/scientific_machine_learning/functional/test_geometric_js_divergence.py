@@ -26,7 +26,7 @@ def test_non_negativity(
     post_sigma = torch.full(shape, posterior_param_2)
     prior_mu = torch.full(shape, prior_param_1)
     prior_sigma = torch.full(shape, prior_param_2)
-    jsg = func.geometric_jenson_shannon_divergence(
+    jsg = func.geometric_jensen_shannon_divergence(
         post_mu, post_sigma, prior_mu, prior_sigma, alpha
     )
     jsg = torch.round(jsg, decimals=3)
@@ -52,10 +52,10 @@ def test_kl_equal(
     post_sigma = torch.full(shape, posterior_param_2)
     prior_mu = torch.full(shape, prior_param_1)
     prior_sigma = torch.full(shape, prior_param_2)
-    jsg = func.geometric_jenson_shannon_divergence(
+    jsg = func.geometric_jensen_shannon_divergence(
         post_mu, post_sigma, prior_mu, prior_sigma, alpha=0.0
     )
-    kl = func.gaussian_kullback_leiber_divergence(
+    kl = func.gaussian_kullback_leibler_divergence(
         post_mu, post_sigma, prior_mu, prior_sigma
     )
     assert torch.allclose(jsg, kl, rtol=1e-4)
@@ -72,15 +72,15 @@ def test_reduction_shape(shape):
     posterior_sigma = torch.rand(shape)
     prior_mu = torch.rand(shape)
     prior_sigma = torch.rand(shape)
-    divergence = func.geometric_jenson_shannon_divergence(
+    divergence = func.geometric_jensen_shannon_divergence(
         posterior_mu, posterior_sigma, prior_mu, prior_sigma, alpha=0.5, reduction="sum"
     )
     assert divergence.shape == torch.Size()
-    divergence = func.geometric_jenson_shannon_divergence(
+    divergence = func.geometric_jensen_shannon_divergence(
         posterior_mu, posterior_sigma, prior_mu, prior_sigma, alpha=0.5, reduction="mean"
     )
     assert divergence.shape == torch.Size()
-    divergence = func.geometric_jenson_shannon_divergence(
+    divergence = func.geometric_jensen_shannon_divergence(
         posterior_mu, posterior_sigma, prior_mu, prior_sigma, alpha=0.5, reduction="none"
     )
     assert divergence.shape == torch.Size(shape)
