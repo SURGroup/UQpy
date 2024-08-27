@@ -36,7 +36,7 @@ class GeometricJensenShannonDivergence(Loss):
                     if layer.parameter_shapes[name] is not None:
                         mu = getattr(layer, f"{name}_mu")
                         rho = getattr(layer, f"{name}_rho")
-                        divergence += func.geometric_jenson_shannon_divergence(
+                        divergence += func.geometric_jensen_shannon_divergence(
                             mu,
                             torch.log1p(torch.exp(rho)),
                             torch.tensor(layer.prior_mu, device=mu.device),

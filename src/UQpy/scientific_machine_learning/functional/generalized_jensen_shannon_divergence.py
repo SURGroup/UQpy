@@ -13,6 +13,7 @@ def generalized_jensen_shannon_divergence(
     num_samples: int = 1000,
     alpha: Annotated[float, Is[lambda x: 0 <= x <= 1]] = 0.5,
     reduction: str = "sum",
+    device=None,
 ) -> torch.Tensor:
     r"""Compute the generalized Jensen-Shannon divergence for a prior and posterior distribution
 
@@ -23,6 +24,7 @@ def generalized_jensen_shannon_divergence(
     :param reduction: Specifies the reduction to apply to the output: 'none', 'mean', or 'sum'.
      'none': no reduction will be applied, 'mean': the output will be averaged, 'sum': the output will be summed.
      Default: 'sum'
+     :param device: An object representing the device on which a :py:class:`torch.Tensor` will be allocated.
 
     :return: JS divergence between prior and posterior distributions
 
@@ -48,7 +50,7 @@ def generalized_jensen_shannon_divergence(
         distributions=prior_distributions, nsamples=num_samples
     )
     n_distributions = len(posterior_distributions)
-    js_divergence = torch.zeros(n_distributions)
+    js_divergence = torch.zeros(n_distributions, device=device)
     for i in range(num_samples):
         posterior_samples = mc_posterior.samples[i]
         prior_samples = mc_prior.samples[i]
