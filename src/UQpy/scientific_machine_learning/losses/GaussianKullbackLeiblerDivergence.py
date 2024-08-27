@@ -8,7 +8,7 @@ from beartype import beartype
 @beartype
 class GaussianKullbackLeiblerDivergence(Loss):
 
-    def __init__(self, reduction: str = "sum"):
+    def __init__(self, reduction: str = "sum", device=None):
         """Analytic form for Gaussian KL divergence for all Bayesian layers in a module
 
         :param reduction: Specifies the reduction to apply to the output: 'mean' or 'sum'.
@@ -19,10 +19,11 @@ class GaussianKullbackLeiblerDivergence(Loss):
             raise ValueError(
                 "UQpy: GaussianKullbackLeiblerDivergence does not accept reduction='none'. "
                 "Must be 'sum' or 'mean'."
-                "\nWe are deeply sorry this is inconsistent with the behavior of gaussian_kullback_leiber_divergence, "
+                "\nWe are deeply sorry this is inconsistent with the behavior of gaussian_kullback_leibler_divergence, "
                 "but we had no other choice."
             )
         self.reduction = reduction
+        self.device = device
 
     def forward(self, network: nn.Module) -> torch.Tensor:
         """Compute the Gaussian KL divergence on all Bayesian layers in a module
@@ -30,8 +31,7 @@ class GaussianKullbackLeiblerDivergence(Loss):
         :param network: Module containing Bayesian layers as class attributes
         :return: Gaussian KL divergence between prior and posterior distributions
         """
-        device = network.device
-        divergence = torch.tensor(0.0, dtype=torch.float, device=device)
+        divergence = torch.tensor(0.0, dtype=torch.float, device=self.device)
         for layer in network.modules():
             if not isinstance(layer, BayesianLayer):
                 continue
@@ -40,11 +40,11 @@ class GaussianKullbackLeiblerDivergence(Loss):
                     continue
                 mu = getattr(layer, f"{name}_mu")
                 rho = getattr(layer, f"{name}_rho")
-                divergence += func.gaussian_kullback_leiber_divergence(
+                divergence += func.gaussian_kullback_leibler_divergence(
                     mu,
                     torch.log1p(torch.exp(rho)),
-                    torch.tensor(layer.prior_mu, device=device),
-                    torch.tensor(layer.prior_sigma, device=device),
+                    torch.tensor(layer.prior_mu, device=self.device),
+                    torch.tensor(layer.prior_sigma, device=self.device),
                     reduction=self.reduction,
                 )
         return divergence
