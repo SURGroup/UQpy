@@ -18,14 +18,25 @@ class GeneralizedJensenShannonDivergence(Loss):
         alpha: Annotated[float, Is[lambda x: 0 <= x <= 1]] = 0.5,
         n_samples: PositiveInteger = 1_000,
         reduction: str = "sum",
+        device=None,
     ):
-        """
+        r"""Estimate the Jensen-Shannon divergence using Monte Carlo sampling for all Bayesian layers in a module
 
-        :param posterior_distribution:
-        :param prior_distribution:
-        :param alpha:
-        :param n_samples:
-        :param reduction:
+        :param posterior_distribution: A class, *not an instance*, of a UQpy distribution defining the variational posterior
+        :param prior_distribution: A class, *not an instance*, of a UQpy distribution defining the prior
+        :param alpha: Weight of the mixture distribution. See formula for details
+        :param n_samples: Number of samples using in the Monte Carlo estimates. Default: 1,000
+        :param reduction: Specifies the reduction to apply to the output: 'mean' or 'sum'.
+         'mean': the output will be averaged, 'sum': the output will be summed. Default: 'sum'
+
+        Formula
+        -------
+        The Jenson-Shannon divergence :math:`D_{JS}` is computed as
+
+        .. math:: D_{JS}(Q, P) = (1- \alpha) D_{KL}(Q, M) + \alpha D_{KL}(P, M)
+
+        where :math:`D_{KL}` is the Kullback-Leibler divergence and :math:`M=\alpha Q + (1-\alpha) P` is the mixture distribution.
+
         """
         super().__init__()
         self.posterior_distribution = posterior_distribution
@@ -36,16 +47,19 @@ class GeneralizedJensenShannonDivergence(Loss):
             raise ValueError(
                 "UQpy: GeometricJensenShannonDivergence does not accept reduction='none'. "
                 "Must be 'sum' or 'mean'."
+                "\nWe are deeply sorry this is inconsistent with the behavior of generalized_jensen_shannon_divergence,"
+                " but we had no other choice."
             )
         self.reduction = reduction
+        self.device = device
 
     def forward(self, network: nn.Module) -> torch.Tensor:
-        """
+        """Compute the Generalized Jensen-Shannon divergence on all Bayesian layers in a module
 
-        :param network:
-        :return:
+        :param network: Module containing Bayesian layers as class attributes
+        :return: Generalized JS divergence between prior and posterior distributions
         """
-        divergence = torch.tensor(0.0)
+        divergence = torch.tensor(0.0, device=self.device)
         for layer in network.modules():
             if not isinstance(layer, BayesianLayer):
                 continue
@@ -64,13 +78,15 @@ class GeneralizedJensenShannonDivergence(Loss):
                     prior_distribution_list.append(
                         self.prior_distribution(layer.prior_mu, layer.prior_sigma)
                     )
-            divergence += func.generalized_jenson_shannon_divergence(
+            divergence += func.generalized_jensen_shannon_divergence(
                 posterior_distribution_list,
                 prior_distribution_list,
                 self.n_samples,
                 self.alpha,
                 self.reduction,
+                device=self.device
             )
+        return divergence
 
     def extra_repr(self) -> str:
         s = (
