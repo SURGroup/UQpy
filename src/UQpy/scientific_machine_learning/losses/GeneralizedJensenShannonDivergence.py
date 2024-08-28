@@ -2,10 +2,12 @@ import torch
 import torch.nn as nn
 import UQpy.scientific_machine_learning.functional as func
 from UQpy.scientific_machine_learning.baseclass import Loss, BayesianLayer
-from UQpy.utilities.ValidationTypes import PositiveInteger
+
+from typing import Annotated
 from beartype import beartype
 from beartype.vale import Is
-from typing import Annotated
+from UQpy.distributions.baseclass import Distribution
+from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
 @beartype
@@ -13,8 +15,12 @@ class GeneralizedJensenShannonDivergence(Loss):
 
     def __init__(
         self,
-        posterior_distribution,
-        prior_distribution,
+        posterior_distribution: Annotated[
+            object, Is[lambda x: issubclass(x, Distribution)]
+        ],
+        prior_distribution: Annotated[
+            object, Is[lambda x: issubclass(x, Distribution)]
+        ],
         alpha: Annotated[float, Is[lambda x: 0 <= x <= 1]] = 0.5,
         n_samples: PositiveInteger = 1_000,
         reduction: str = "sum",
@@ -24,7 +30,8 @@ class GeneralizedJensenShannonDivergence(Loss):
 
         :param posterior_distribution: A class, *not an instance*, of a UQpy distribution defining the variational posterior
         :param prior_distribution: A class, *not an instance*, of a UQpy distribution defining the prior
-        :param alpha: Weight of the mixture distribution. See formula for details
+        :param alpha: Weight of the mixture distribution, :math:`0 \leq \alpha \leq 1`.
+         See formula for details. Default: 0.5
         :param n_samples: Number of samples using in the Monte Carlo estimates. Default: 1,000
         :param reduction: Specifies the reduction to apply to the output: 'mean' or 'sum'.
          'mean': the output will be averaged, 'sum': the output will be summed. Default: 'sum'
@@ -33,7 +40,7 @@ class GeneralizedJensenShannonDivergence(Loss):
         -------
         The Jenson-Shannon divergence :math:`D_{JS}` is computed as
 
-        .. math:: D_{JS}(Q, P) = (1- \alpha) D_{KL}(Q, M) + \alpha D_{KL}(P, M)
+        .. math:: D_{JS}(Q, P) = (1-\alpha) D_{KL}(Q, M) + \alpha D_{KL}(P, M)
 
         where :math:`D_{KL}` is the Kullback-Leibler divergence and :math:`M=\alpha Q + (1-\alpha) P` is the mixture distribution.
 
@@ -45,7 +52,7 @@ class GeneralizedJensenShannonDivergence(Loss):
         self.n_samples = n_samples
         if reduction is "none":
             raise ValueError(
-                "UQpy: GeometricJensenShannonDivergence does not accept reduction='none'. "
+                "UQpy: GeneralizedJensenShannonDivergence does not accept reduction='none'. "
                 "Must be 'sum' or 'mean'."
                 "\nWe are deeply sorry this is inconsistent with the behavior of generalized_jensen_shannon_divergence,"
                 " but we had no other choice."
@@ -84,7 +91,7 @@ class GeneralizedJensenShannonDivergence(Loss):
                 self.n_samples,
                 self.alpha,
                 self.reduction,
-                device=self.device
+                device=self.device,
             )
         return divergence
 
