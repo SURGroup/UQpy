@@ -11,9 +11,8 @@ class DeepOperatorNetwork(NeuralNetwork):
         branch_network: nn.Module,
         trunk_network: nn.Module,
         out_channels: PositiveInteger = 1,
-        **kwargs,
     ):
-        r"""Construct a DeepONet via its branch and trunk networks
+        r"""Construct a Deep Operator Network via its branch and trunk networks
 
         :param branch_network: Encodes mapping of the function :math:`f(x)`
         :param trunk_network: Encodes mapping of the domain :math:`y` for :math:`\mathcal{L}f(y)`
@@ -32,7 +31,7 @@ class DeepOperatorNetwork(NeuralNetwork):
             - Trunk Network (:math:`x`): :math:`(N, m, T_\text{in})`
         - Output: :math:`(N, m, C_\text{out})`
         """
-        super().__init__(**kwargs)
+        super().__init__()
         self.branch_network: nn.Module = branch_network
         """Architecture of the branch neural network defined by a :py:class`torch.nn.Module`"""
         self.trunk_network: nn.Module = trunk_network
