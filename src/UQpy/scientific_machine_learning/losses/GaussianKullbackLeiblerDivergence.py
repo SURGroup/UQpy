@@ -50,4 +50,6 @@ class GaussianKullbackLeiblerDivergence(Loss):
         return divergence
 
     def extra_repr(self) -> str:
-        return f"reduction={self.reduction}"
+        if self.reduction != "sum":
+            return f"reduction={self.reduction}"
+        return ""
