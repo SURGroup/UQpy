@@ -93,6 +93,8 @@ class BayesianLayer(Layer, ABC):
     def reset_parameters(self):
         """Populate parameters with samples from posterior Normal distributions."""
         for name in self.parameter_shapes:
+            if self.parameter_shapes[name] is None:
+                continue
             mu = getattr(self, f"{name}_mu")
             mu.data.normal_(*self.posterior_mu_initial)
             rho = getattr(self, f"{name}_rho")
@@ -109,6 +111,9 @@ class BayesianLayer(Layer, ABC):
         if self.sampling:
             weights = []
             for name in self.parameter_shapes:
+                if self.parameter_shapes[name] is None:
+                    weights.append(None)
+                    continue
                 mu = getattr(self, f"{name}_mu")
                 rho = getattr(self, f"{name}_rho")
                 factory_kwargs = {"device": mu.device, "dtype": mu.dtype}

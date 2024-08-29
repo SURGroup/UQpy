@@ -57,3 +57,12 @@ def test_probabilistic_output():
     y1 = layer(x)
     y2 = layer(x)
     assert not torch.allclose(y1, y2)
+
+
+def test_bias_false():
+    """When bias=False, BayesianFourier1d(0) = 0"""
+    x = torch.zeros((1, 1, 256))
+    layer = sml.BayesianFourier1d(1, 1, bias=False)
+    y = layer(x)
+    assert torch.all(y == torch.zeros_like(y))
+
