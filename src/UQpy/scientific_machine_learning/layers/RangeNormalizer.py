@@ -34,7 +34,8 @@ class RangeNormalizer(Layer):
          If :code:`None`, reduce all dimensions for scalar min and max. Default: None
 
         :raises ValueError: If ``low`` greater or equal to ``high``
-        :raises RuntimeError: If :math:`\min(x)` equals :math:`\max(x)` over any dimension to be reduced
+        :raises RuntimeError: If :math:`\min(x)` equals :math:`\max(x)` over any dimension to be reduced.
+         This is to prevent a :code:`ZeroDivisionError` from occuring in the computation of :code:`scale`
 
         Shape:
 
@@ -80,6 +81,7 @@ class RangeNormalizer(Layer):
         self.encoding = encoding
         self.dim = dim
 
+        # handle cases if dim is None, an integer, or a tuple
         if self.dim is None:
             x_min = torch.min(x)
             x_max = torch.max(x)
@@ -97,7 +99,7 @@ class RangeNormalizer(Layer):
                 f"UQpy: Invalid dim={dim}. Must be one of None, int, or tuple of ints."
             )
 
-        if torch.any(x_min == x_max):
+        if torch.any(x_min == x_max):  # if x_min equals x_max, a divide by zero error will occur when computing scale
             raise RuntimeError(
                 "UQpy: RangeNormalizer is not defined if min(x) is equal to max(x) over any dimension to be reduced."
             )
@@ -116,31 +118,18 @@ class RangeNormalizer(Layer):
         """Additive factor to make interval start at ``self.low``"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        r"""Scale and shift ``x`` to fall within a new range
+        r"""Scale and shift ``x`` to fall within a new range.
+
+        If :code:`self.encoding` is :code:`True`, return :math:`(x \times \text{scale}) + \text{shift}`.
+        If :code:`self.encoding` is :code:`False`, return :math:`\frac{x - \text{shift}}{\text{scale}}`
 
         :param x: Tensor of any shape
         :return: Tensor of same shape as ``x``
         """
         if self.encoding:
-            return self.scale_down(x)
+            return (x * self.scale) + self.shift
         else:
-            return self.scale_up(x)
-
-    def scale_down(self, x: torch.Tensor) -> torch.Tensor:
-        r"""Scale and shift ``x`` as :math:`(x \times \text{scale}) + \text{shift}`
-
-        :param x: Tensor of any shape
-        :return: Normalized tensor of same shape as ``x``
-        """
-        return (x * self.scale) + self.shift
-
-    def scale_up(self, y: torch.Tensor) -> torch.Tensor:
-        r"""Restore the tensor ``y`` as :math:`\frac{y - \text{shift}}{\text{scale}}`
-
-        :param y: Normalized tensor of any shape
-        :return: Restored tensor of same shape as ``x``
-        """
-        return (y - self.shift) / self.scale
+            return (x - self.shift) / self.scale
 
     def encode(self, mode: bool = True):
         """Set the normalizer to scale and shift a tensor to fall within range :math:[\text
