@@ -4,8 +4,10 @@ from torch.nn.modules.utils import _single
 from UQpy.scientific_machine_learning.baseclass import BayesianLayer
 from UQpy.utilities.ValidationTypes import PositiveInteger, NonNegativeInteger
 from typing import Union
+from beartype import beartype
 
 
+@beartype
 class BayesianConv1d(BayesianLayer):
 
     def __init__(
@@ -31,8 +33,8 @@ class BayesianConv1d(BayesianLayer):
         :param stride: Stride of the convolution. Default: 1
         :param padding: Padding added to both sides of the input. Default: 0
         :param dilation: Spacing between kernel elements. Default: 1
-        :param groups: Number of blocked connections from input channels to output channels. Default: 1.
-         ``in_channels`` and ``out_channels`` must both be divisible by ``groups``.
+        :param groups: Number of blocked connections from input channels to output channels.
+         ``in_channels`` and ``out_channels`` must both be divisible by ``groups``. Default: 1
         :param bias: If ``True``, adds a learnable bias to the output. Default: ``True``
         :param priors: Prior and posterior distribution parameters.
          The dictionary keys and their default values are:
@@ -49,8 +51,8 @@ class BayesianConv1d(BayesianLayer):
 
         Shape:
 
-        - Input: :math:`(C_\text{in}, N, L_\text{in})` or :math:`(C_\text{in}, L_\text{in})`
-        - Output: :math:`(C_\text{out}, N, L_\text{out})` or :math:`(C_\text{out}, L_\text{out})`,
+        - Input: :math:`(N, C_\text{in}, L_\text{in})` or :math:`(C_\text{in}, L_\text{in})`
+        - Output: :math:`(N, C_\text{out}, L_\text{out})` or :math:`(C_\text{out}, L_\text{out})`,
 
         where :math:`L_\text{out}= \left\lfloor \frac{L_\text{in} + 2 \times \text{padding} - \text{dilation} \times (\text{kernel size} - 1) - 1}{\text{stride}} \right\rfloor + 1`
 
