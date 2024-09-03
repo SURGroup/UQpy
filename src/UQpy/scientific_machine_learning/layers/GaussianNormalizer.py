@@ -23,6 +23,7 @@ class GaussianNormalizer(Layer):
 
         .. note::
             Due to machine percision, mean and standard deviation may have errors on the order of :math:`10^{-8}`.
+            Using different data types may affect percision of results.
 
         :param x: Tensor of any shape
         :param encoding: If ``True``, scale and shift a tensor to have mean of zero and standard deviation of one.
@@ -86,31 +87,18 @@ class GaussianNormalizer(Layer):
             )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Scale ``x`` to have a new mean and standard deviation
+        """Scale ``x`` to have a new mean and standard deviation.
+
+        If :code:`self.encoding` is :code:`True`, return :math:`\frac{x - \text{mean}}{\text{std} + \epsilon}`.
+        If :code:`self.encoding` is :code:`False`, return :math:`(x \times (\text{std} + \epsilon)) + \text{mean}`
 
         :param x: Tensor of any shape
         :return: Tensor of same shape as ``x``
         """
         if self.encoding:
-            return self.scale_down(x)
+            return (x - self.mean) / (self.std + self.epsilon)
         else:
-            return self.scale_up(x)
-
-    def scale_down(self, x: torch.Tensor) -> torch.Tensor:
-        r"""Scale and shift the tensor ``x`` as :math:`\frac{x - \text{mean}}{\text{std} + \epsilon}`
-
-        :param x: Tensor of any shape
-        :return: Normalized tensor of same shape as ``x``
-        """
-        return (x - self.mean) / (self.std + self.epsilon)
-
-    def scale_up(self, y: torch.Tensor) -> torch.Tensor:
-        r"""Restore the tensor ``y`` as :math:`(y \times (\text{std} + \epsilon)) + \text{mean}`
-
-        :param y: Normalized tensor of any shape
-        :return: Restored tensor of same shape as ``x``
-        """
-        return (y * (self.std + self.epsilon)) + self.mean
+            return (x * (self.std + self.epsilon)) + self.mean
 
     def encode(self, mode: bool = True):
         """Set the Normalizer to scale a tensor a mean of zero and standard deviation of one
