@@ -1,13 +1,13 @@
 import torch
 import torch.nn.functional as F
-from UQpy.scientific_machine_learning.baseclass import DropoutActivation
+from UQpy.scientific_machine_learning.baseclass import DropoutLayer
 from typing import Annotated
 from beartype import beartype
 from beartype.vale import Is
 
 
 @beartype
-class Dropout(DropoutActivation):
+class Dropout(DropoutLayer):
     def __init__(
         self,
         p: Annotated[float, Is[lambda p: 0 <= p <= 1]] = 0.5,

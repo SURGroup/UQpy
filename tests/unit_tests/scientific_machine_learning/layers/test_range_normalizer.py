@@ -76,3 +76,15 @@ def test_inf_raises_error():
     with pytest.raises(RuntimeError):
         x = torch.tensor([1, 2, float("inf")])
         sml.RangeNormalizer(x)
+
+
+def test_low_greater_than_high_raises_error():
+    x = torch.tensor([1, 2, 3])
+    with pytest.raises(ValueError):
+        sml.RangeNormalizer(x, low=2, high=1)
+
+
+def test_min_equals_max_raises_error():
+    x = torch.ones(100)
+    with pytest.raises(RuntimeError):
+        sml.RangeNormalizer(x)

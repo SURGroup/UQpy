@@ -16,7 +16,7 @@ class RangeNormalizer(Layer):
         high: Union[int, float] = 1.0,
         dim: Union[
             NonNegativeInteger,
-            Annotated[tuple, Is[lambda x: all([isinstance(d, NonNegativeInteger) for d in x])]],
+            Annotated[tuple, Is[lambda x: all([isinstance(d, int) for d in x])]],
             None,
         ] = None,
     ):

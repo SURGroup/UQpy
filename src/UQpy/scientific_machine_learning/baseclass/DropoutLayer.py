@@ -1,13 +1,13 @@
 import torch
+from UQpy.scientific_machine_learning.baseclass.Layer import Layer
+from abc import ABC, abstractmethod
 from beartype import beartype
 from beartype.vale import Is
 from typing import Annotated
-from abc import ABC, abstractmethod
-from UQpy.scientific_machine_learning.baseclass import Activation
 
 
 @beartype
-class DropoutActivation(Activation, ABC):
+class DropoutLayer(Layer, ABC):
     def __init__(
         self,
         p: Annotated[float, Is[lambda p: 0 <= p <= 1]] = 0.5,
@@ -21,7 +21,7 @@ class DropoutActivation(Activation, ABC):
         :param inplace: If ``True``, will do this operation in-place. Default: ``False``
         :param dropping: If ``True``, will perform dropout, otherwise acts as identity function. Default: ``True``
         """
-        super().__init__(**kwargs)
+        super(Layer, self).__init__()
         self.p = p
         self.inplace = inplace
         self.dropping = dropping
@@ -34,7 +34,7 @@ class DropoutActivation(Activation, ABC):
         self.dropping = mode
 
     @abstractmethod
-    def forward(self, x: torch.Tensor) -> torch.Tensor:...
+    def forward(self, x: torch.Tensor) -> torch.Tensor: ...
 
     def extra_repr(self) -> str:
         s = "p={p}, dropping={dropping}"
