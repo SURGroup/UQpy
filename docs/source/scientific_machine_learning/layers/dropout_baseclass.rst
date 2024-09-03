@@ -7,5 +7,5 @@ The :class:`DropoutActivation` is an abstract baseclass and a subclass of :class
 Methods
 ~~~~~~~
 
-.. autoclass:: UQpy.scientific_machine_learning.baseclass.DropoutActivation
+.. autoclass:: UQpy.scientific_machine_learning.baseclass.DropoutLayer
     :members: forward, extra_repr

@@ -14,7 +14,7 @@ The deep operator network is defined by its branch and trunk networks, as shown 
 
 The :class:`.DeepOperatorNetwork` class is imported using the following command:
 
->>> from UQpy.scientific_machine_learning.neural_networks.DeepOperatorNetwork import DeepOperatorNetwork
+>>> from UQpy.scientific_machine_learning import DeepOperatorNetwork
 
 
 Methods

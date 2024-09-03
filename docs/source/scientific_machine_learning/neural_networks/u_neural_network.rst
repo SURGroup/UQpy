@@ -3,7 +3,7 @@ U-Shaped Neural Network
 
 The :class:`.UNeuralNetwork` class is imported using the following command:
 
->>> from UQpy.scientific_machine_learning.neural_networks.UNeuralNetworkSequential import UNeuralNetworkSequential
+>>> from UQpy.scientific_machine_learning import UNeuralNetworkSequential
 
 
 Methods
