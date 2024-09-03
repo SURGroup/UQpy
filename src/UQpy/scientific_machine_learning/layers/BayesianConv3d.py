@@ -45,17 +45,18 @@ class BayesianConv3d(BayesianLayer):
         :param groups: Number of blocked connections from input channels to output channels. Default: 1.
          ``in_channels`` and ``out_channels`` must both be divisible by ``groups``.
         :param bias: If ``True``, adds a learnable bias to the output. Default: ``True``
-        :param priors: Prior and posterior distribution parameters. The dictionary keys and their default values are:
+        :param priors: Prior and posterior distribution parameters.
+         The dictionary keys and their default values are:
 
-         - ``priors["prior_mu"]`` = :math:`0`
-         - ``priors["prior_sigma"]`` = :math:`0.1`
-         - ``priors["posterior_mu_initial"]`` = ``(0, 0.1)``
-         - ``priors["posterior_rho_initial"]`` = ``(-3, 0.1)``
+         - "prior_mu": 0
+         - "prior_sigma" : 0.1
+         - "posterior_mu_initial": (0.0, 0.1)
+         - "posterior_rho_initial": (-3.0, 0.1)
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
          If ``False``, use distribution mean as parameter values. Default: ``True``
 
         .. note::
-            This class calls ``torch.nn.functional.conv3d`` with ``padding_mode='zeros'``.
+            This class calls :func:`torch.nn.functional.conv3d` with ``padding_mode='zeros'``.
 
         Shape:
 
@@ -115,7 +116,7 @@ class BayesianConv3d(BayesianLayer):
         self.groups = groups
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Apply ``F.conv3d`` to ``x`` where the weight and bias are drawn from random variables
+        """Apply :func:`F.conv3d` to ``x`` where the weight and bias are drawn from random variables
 
         :param x: Tensor of shape :math:`(N, C_\text{in}, D_\text{in}, H_\text{in}, W_\text{in})`
         :return: Tensor of shape :math:`(N, C_\text{out}, D_\text{out}, H_\text{out}, W_\text{out})`

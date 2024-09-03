@@ -15,7 +15,7 @@ def spectral_conv1d(
     r"""Compute the 1d spectral convolution :math:`\mathcal{F}^{-1}(R (\mathcal{F}x) )`
 
     :param x: Tensor of shape :math:`(N, C_\text{in}, L)`
-    :param weights: Tensor of shape :math:`(C_\text{in}, C_\text{out}, modes)`.
+    :param weights: Tensor of shape :math:`(C_\text{in}, C_\text{out}, \text{modes})`.
      Weight tensor must have complex entries.
     :param out_channels: :math:`C_\text{out}`, Number of channels in the output signal
     :param modes: Number of Fourier modes to keep, at most :math:`\lfloor L / 2 \rfloor + 1`

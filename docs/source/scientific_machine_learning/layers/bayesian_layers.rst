@@ -35,6 +35,15 @@ Bayesian Convolution 2D
 
 -----
 
+Bayesian Convolution 3D
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: UQpy.scientific_machine_learning.layers.BayesianConv3d
+    :members: forward
+
+-----
+
+
 Bayesian Fourier 1D
 ~~~~~~~~~~~~~~~~~~~
 
@@ -56,5 +65,3 @@ Bayesian Fourier 3D
 
 .. autoclass:: UQpy.scientific_machine_learning.layers.BayesianFourier3d
     :members: forward
-
------

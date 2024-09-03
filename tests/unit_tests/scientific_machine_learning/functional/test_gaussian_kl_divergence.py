@@ -14,7 +14,7 @@ def test_divergence_zero(mu, sigma, shape):
     """For identical distributions P and Q, the divergence is zero"""
     mu = torch.full(shape, mu)
     sigma = torch.full(shape, sigma)
-    divergence = func.gaussian_kullback_leiber_divergence(mu, sigma, mu, sigma)
+    divergence = func.gaussian_kullback_leibler_divergence(mu, sigma, mu, sigma)
     assert divergence == 0
 
 
@@ -24,7 +24,7 @@ def test_divergence_one_half():
     posterior_sigma = torch.tensor(1.0)
     prior_mu = torch.tensor(0.0)
     prior_sigma = torch.tensor(1.0)
-    divergence = func.gaussian_kullback_leiber_divergence(
+    divergence = func.gaussian_kullback_leibler_divergence(
         posterior_mu, posterior_sigma, prior_mu, prior_sigma
     )
     assert divergence == 0.5
@@ -39,7 +39,7 @@ def test_divergence_zero(shape):
     prior_sigma = torch.rand(shape) + 1  # must be positive
     posterior_mu = torch.rand(shape)
     posterior_sigma = torch.rand(shape) + 1  # must be positive
-    divergence = func.gaussian_kullback_leiber_divergence(
+    divergence = func.gaussian_kullback_leibler_divergence(
         posterior_mu, posterior_sigma, prior_mu, prior_sigma
     )
     assert divergence >= 0
@@ -56,15 +56,15 @@ def test_reduction_shape(shape):
     posterior_sigma = torch.rand(shape)
     prior_mu = torch.rand(shape)
     prior_sigma = torch.rand(shape)
-    divergence = func.gaussian_kullback_leiber_divergence(
+    divergence = func.gaussian_kullback_leibler_divergence(
         posterior_mu, posterior_sigma, prior_mu, prior_sigma, reduction="sum"
     )
     assert divergence.shape == torch.Size()
-    divergence = func.gaussian_kullback_leiber_divergence(
+    divergence = func.gaussian_kullback_leibler_divergence(
         posterior_mu, posterior_sigma, prior_mu, prior_sigma, reduction="mean"
     )
     assert divergence.shape == torch.Size()
-    divergence = func.gaussian_kullback_leiber_divergence(
+    divergence = func.gaussian_kullback_leibler_divergence(
         posterior_mu, posterior_sigma, prior_mu, prior_sigma, reduction="none"
     )
     assert divergence.shape == torch.Size(shape)

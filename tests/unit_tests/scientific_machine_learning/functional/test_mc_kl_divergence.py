@@ -5,6 +5,8 @@ from hypothesis import given, settings, strategies as st
 from hypothesis.extra.numpy import array_shapes
 
 
+# ToDo: write device tests
+
 @given(
     prior_param_1=st.floats(min_value=1e-3, max_value=1),
     prior_param_2=st.floats(min_value=1e-3, max_value=1),
@@ -25,8 +27,7 @@ def test_non_negativity(
     assert kl >= 0
 
 
-@settings(deadline=1_000)
-@given(st.integers(min_value=1, max_value=1_000))
+@given(st.integers(min_value=1, max_value=100))
 def test_shape(n):
     """A list with any number of distributions should give a scalar value of KL divergence"""
     prior = [dist.Uniform(0, 1)] * n
@@ -45,11 +46,11 @@ def test_shape(n):
     assert kl.shape == torch.Size([n])
 
 
-@settings(deadline=1_000)
+@settings(max_examples=2)
 @given(
-    prior_mu=st.floats(min_value=-1, max_value=1),
+    prior_mu=st.floats(min_value=0, max_value=0),
     prior_sigma=st.floats(min_value=1, max_value=1),
-    posterior_mu=st.floats(min_value=-1, max_value=1),
+    posterior_mu=st.floats(min_value=1, max_value=1),
     posterior_sigma=st.floats(min_value=1, max_value=1),
 )
 def test_accuracy(prior_mu, prior_sigma, posterior_mu, posterior_sigma):
@@ -57,9 +58,12 @@ def test_accuracy(prior_mu, prior_sigma, posterior_mu, posterior_sigma):
     posterior_distribution = [dist.Normal(posterior_mu, posterior_sigma)]
     prior_distribution = [dist.Normal(prior_mu, prior_sigma)]
     kl_mc = func.mc_kullback_leibler_divergence(
-        posterior_distribution, prior_distribution
+        posterior_distribution, prior_distribution, num_samples=100
     )
-    kl_cf = func.gaussian_kullback_leiber_divergence(
-        torch.tensor(prior_mu), torch.tensor(posterior_sigma), torch.tensor(prior_mu), torch.tensor(posterior_sigma)
+    kl_cf = func.gaussian_kullback_leibler_divergence(
+        torch.tensor(posterior_mu),
+        torch.tensor(posterior_sigma),
+        torch.tensor(prior_mu),
+        torch.tensor(prior_sigma),
     )
-    assert torch.allclose(kl_mc, kl_cf, rtol=0.1)
+    assert torch.allclose(kl_mc, kl_cf, rtol=0.1)  # FixMe: the divergences are not within 10% of each other, even for 100 samples

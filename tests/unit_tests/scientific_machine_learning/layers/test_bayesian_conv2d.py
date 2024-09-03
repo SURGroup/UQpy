@@ -2,6 +2,7 @@
 
 Note this does not include tests for numerical accuracy as the convolution is performed by torch.nn.functional.conv2d
 """
+
 import torch
 from torch.nn.modules.utils import _pair
 import UQpy.scientific_machine_learning as sml
@@ -108,9 +109,7 @@ def test_device():
     device = (
         torch.device("cuda", 0)
         if torch.cuda.is_available()
-        else torch.device("mps", 0)
-        if torch.backends.mps.is_available()
-        else "cpu"
+        else torch.device("mps", 0) if torch.backends.mps.is_available() else "cpu"
     )
     layer.to(device)
     assert layer.weight_mu.device == device
@@ -141,3 +140,11 @@ def test_probabilistic_output():
     y1 = layer(x)
     y2 = layer(x)
     assert not torch.allclose(y1, y2)
+
+
+def test_bias_false():
+    """When bias=False, BayesianConv2d(0) = 0"""
+    x = torch.zeros((1, 1, 256, 256))
+    layer = sml.BayesianConv2d(1, 1, 1, bias=False)
+    y = layer(x)
+    assert torch.all(y == torch.zeros_like(y))

@@ -11,8 +11,9 @@ def mc_kullback_leibler_divergence(
     reduction: str = "sum",
 ) -> torch.Tensor:
     r"""Compute the Kullback-Leibler divergence by sampling for a prior and posterior distribution
-    :param posterior_distributions: Variational posterior distribution
-    :param prior_distributions: Prior distribution of parameters
+
+    :param posterior_distributions: List of UQpy distributions defining the variational posterior
+    :param prior_distributions: List of UQpy distributions defining the prior
     :param num_samples: Number of samples in the Monte Carlo estimation
     :param reduction: Specifies the reduction to apply to the output: 'none', 'mean', or 'sum'.
      'none': no reduction will be applied, 'mean': the output will be averaged, 'sum': the output will be summed.

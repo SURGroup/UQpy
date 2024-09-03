@@ -40,9 +40,9 @@ class Dropout3d(DropoutActivation):
         self.dropping = dropping
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Calls ``torch.nn.functional.dropout3d``
+        """Calls :func:`torch.nn.functional.dropout3d`
 
-        :param x: Tensor of shape :math:`(N, C, D, H, W)`
-        :return: Tensor of same shape as ``x``
+        :param x: Tensor of shape :math:`(N, C, D, H, W)` or :math:`(C, D, H, W)`
+        :return: Tensor of shape :math:`(N, C, D, H, W)` or :math:`(C, D, H, W)` (same shape as ``x``)
         """
         return F.dropout3d(x, self.p, self.dropping, self.inplace)

@@ -14,15 +14,16 @@ class GaussianNormalizer(Layer):
     ):
         """Normalize a tensor to have mean of zero and standard deviation of one.
 
-        Note: Due to machine percision, mean and standard deviation may have errors on the order of :math:`10^{-8}`.
+        .. note::
+            Due to machine percision, mean and standard deviation may have errors on the order of :math:`10^{-8}`.
 
         :param x: Tensor of any shape
         :param epsilon: Small positive value added to standard deviation for numerical stability
-        :param encoding: If ``True``, scale and shift a tensor to have mean of zero and std of one.
+        :param encoding: If ``True``, scale and shift a tensor to have mean of zero and standard deviation of one.
          If ``False``, scale and shift from a mean of zero and std of one to the original mean and std of ``x``.
          Default: ``True``
 
-         :raises RuntimeError: If ``torch.mean(x)`` or ``torch.std(x)`` is infinite (``inf``) or not-a-number (``nan``)
+         :raises RuntimeError: If ``torch.mean(x)`` or ``torch.std(x)`` is infinite (:code:`inf`) or not-a-number (:code:`nan`)
 
         Shape:
 

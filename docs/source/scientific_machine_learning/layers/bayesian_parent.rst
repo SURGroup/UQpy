@@ -8,7 +8,7 @@ Methods
 ~~~~~~~
 
 .. autoclass:: UQpy.scientific_machine_learning.baseclass.BayesianLayer
-    :members: reset_parameters, get_bayesian_weights, sample
+    :members: reset_parameters, get_bayesian_weights, sample, forward, extra_repr
 
 Attributes
 ~~~~~~~~~~

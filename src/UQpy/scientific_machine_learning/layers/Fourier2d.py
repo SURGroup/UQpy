@@ -25,6 +25,11 @@ class Fourier2d(Layer):
             This class does *not* accept the ``dtype`` argument
             since Fourier layers require real and complex tensors as described by the attributes.
 
+        Shape:
+
+        - Input: :math:`(N, \text{width}, H, W)`
+        - Output: :math:`(N, \text{width}, H, W)`
+
         Attributes:
 
         - **weight_spectral_1** (:py:class:`torch.nn.Parameter`): The first of two learnable weights for the spectral
@@ -42,13 +47,10 @@ class Fourier2d(Layer):
           :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` where :math:`k = \frac{1}{\text{width}}`.
         - **bias_conv** (:py:class:`torch.nn.Parameter`): The learnable bias of the convolution of shape
           :math:`(\text{width})` with real entries.
-If ``bias`` is ``True``, then the initial values of these weights are sampled from
+          If ``bias`` is ``True``, then the initial values of these weights are sampled from
           :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` where :math:`k = \frac{1}{\text{width}}`.
 
-        Shape:
-
-        - Input: :math:`(N, \text{width}, H, W)`
-        - Output: :math:`(N, \text{width}, H, W)`
+        The kernel for the convolution is fixed as :math:`\text{kernel_size}=(1, 1)`.
 
         Example:
 

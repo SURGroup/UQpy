@@ -45,7 +45,7 @@ class BayesianConv1d(BayesianLayer):
          If ``False``, use distribution mean as parameter values. Default: ``True``
 
         .. note::
-            This class calls ``torch.nn.functional.conv1d`` with ``padding_mode='zeros'``.
+            This class calls :func:`torch.nn.functional.conv1d` with ``padding_mode='zeros'``.
 
         Shape:
 
@@ -57,10 +57,10 @@ class BayesianConv1d(BayesianLayer):
         Attributes:
 
         Unless otherwise noted, all parameters are initialized using the ``priors`` with values
-        from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`
+        from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
 
         - **weight_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the weights of the module
-          of shape :math:`(\text{out\_channels}, \frac{\text{in_channels}}{\text{groups}}, \text{kernel_size})`.
+          of shape :math:`(\text{out_channels}, \frac{\text{in_channels}}{\text{groups}}, \text{kernel_size})`.
         - **weight_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance of the weights of the module
           of shape :math:`(\text{out_channels}, \frac{\text{in_channels}}{\text{groups}}, \text{kernel_size})`.
           The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
@@ -98,7 +98,7 @@ class BayesianConv1d(BayesianLayer):
         self.bias = bias
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        r"""Apply ``F.conv1d`` to ``x`` where the weight and bias are drawn from random variables
+        r"""Apply :func:`F.conv1d` to ``x`` where the weight and bias are drawn from random variables
 
         :param x: Tensor of shape :math:`(N, C_\text{in}, L)` or :math:`(C_\text{in}, L)`
         :return: Tensor of shape :math:`(N, C_\text{out}, L)` or :math:`(C_\text{out}, L)`

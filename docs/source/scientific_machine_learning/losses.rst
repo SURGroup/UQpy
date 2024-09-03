@@ -39,15 +39,31 @@ This is a placeholder for KL Divergence.
 
 ------
 
-Physics Informed Loss
-~~~~~~~~~~~~~~~~~~~~~
+Monte Carlo Kullback-Leiber
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This is a placeholder for the documentation on Physics Informed Loss
+This is a placeholder for the MC KL divergence.
 
-.. autoclass:: UQpy.scientific_machine_learning.losses.PhysicsInformedLoss
+.. autoclass:: UQpy.scientific_machine_learning.losses.MCKullbackLeiblerDivergence
     :members: forward
 
-Attributes
-~~~~~~~~~~
-.. autoattribute:: UQpy.scientific_machine_learning.losses.PhysicsInformedLoss.adaptive_weight_data
-.. autoattribute:: UQpy.scientific_machine_learning.losses.PhysicsInformedLoss.adaptive_weight_physics
+
+------
+
+Generalized Jenson Shannon
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is a placeholder.
+
+.. autoclass:: UQpy.scientific_machine_learning.losses.GeneralizedJensenShannonDivergence
+    :members: forward
+
+------
+
+Geometric Jenson Shannon
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is a placeholder.
+
+.. autoclass:: UQpy.scientific_machine_learning.losses.GeometricJensenShannonDivergence
+    :members: forward

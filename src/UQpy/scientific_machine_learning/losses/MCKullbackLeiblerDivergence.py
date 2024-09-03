@@ -1,8 +1,11 @@
 import torch
 import torch.nn as nn
-from beartype import beartype
-
 import UQpy.scientific_machine_learning.functional as func
+
+from typing import Annotated
+from beartype import beartype
+from beartype.vale import Is
+from UQpy.distributions.baseclass import Distribution
 from UQpy.scientific_machine_learning.baseclass import BayesianLayer, Loss
 
 
@@ -11,18 +14,26 @@ class MCKullbackLeiblerDivergence(Loss):
 
     def __init__(
         self,
-        posterior_distribution,
-        prior_distribution,
+        posterior_distribution: Annotated[
+            object, Is[lambda x: issubclass(x, Distribution)]
+        ],
+        prior_distribution: Annotated[
+            object, Is[lambda x: issubclass(x, Distribution)]
+        ],
         reduction: str = "sum",
-        **kwargs,
+        device=None,
     ):
-        """KL divergence by sampling for all Bayesian layers in a module. Note: This is not same as the implementation in Bayes By Backprop.
-        :param posterior_distribution: Specifies the posterior distribution: Function handle to one of UQpy.distributions
-        :param prior_distribution: Specifies the prior distribution: Funtion handle to one of UQpy.distributions
+        """KL divergence by sampling for all Bayesian layers in a module.
+
+        .. note::
+            This is *not* identical to the Kullback-Leibler divergence computed in Bayes by Backprop
+
+        :param posterior_distribution: A class, *not an instance*, of a UQpy distribution defining the variational posterior
+        :param prior_distribution: A class, *not an instance*, of a UQpy distribution defining the prior
         :param reduction: Specifies the reduction to apply to the output: 'mean', or 'sum'.
          'mean': the output will be averaged, 'sum': the output will be summed. Default: 'sum'
         """
-        super().__init__(**kwargs)
+        super().__init__()
         self.posterior_distribution = posterior_distribution
         self.prior_distribution = prior_distribution
         self.reduction = reduction
@@ -33,6 +44,7 @@ class MCKullbackLeiblerDivergence(Loss):
                 "\nWe are deeply sorry this is inconsistent with the behavior of mc_kullback_leibler_divergence, "
                 "but we had no other choice."
             )
+        self.device = device
 
     def forward(self, network: nn.Module) -> torch.Tensor:
         """Compute the KL divergence by sampling the distributions on all Bayesian layers in a module
@@ -40,13 +52,11 @@ class MCKullbackLeiblerDivergence(Loss):
         :param network: Network containing Bayesian layers
         :return: KL divergence between prior and posterior distributions
         """
-        divergence = torch.tensor(0.0)
-
+        divergence = torch.tensor(0.0, device=self.device)
         for layer in network.modules():
             if isinstance(layer, BayesianLayer):
                 posterior_distributions_list = []
                 prior_distributions_list = []
-
                 for name in layer.parameter_shapes:
                     if layer.parameter_shapes[name] is None:
                         continue

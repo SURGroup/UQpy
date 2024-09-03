@@ -17,7 +17,7 @@ class BayesianFourier3d(BayesianLayer):
         device: Union[torch.device, str] = None,
     ):
         r"""A 3d Bayesian Fourier layer as :math:`\mathcal{F}^{-1} ( R (\mathcal{F}x)) + W(x)`
-        where :math:`R`, along with the wieghts and bias for :math:`W`, are random variables
+        where :math:`R`, along with the wieghts and bias for :math:`W`, are random variables.
 
         :param width: Number of neurons in the layer and channels in the spectral convolution
         :param modes: Number of Fourier modes to keep,
@@ -41,7 +41,7 @@ class BayesianFourier3d(BayesianLayer):
         Attributes:
 
         Unless otherwise noted, all parameters are initialized using the ``priors`` with values
-        from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`
+        from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
 
         - **weight_spectral_1_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean for the
           first of four weights of the spectral convolution of shape
@@ -124,7 +124,7 @@ class BayesianFourier3d(BayesianLayer):
         self.bias = bias
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W(x)`
+        r"""Compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W(x)`
 
         :param x: Tensor of shape :math:`(N, C_\text{in}, D, H, W)`
         :return: Tensor of shape :math:`(N, C_\text{in}, D, H, W)`

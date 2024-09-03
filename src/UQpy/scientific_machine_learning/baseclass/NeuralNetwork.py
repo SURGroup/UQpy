@@ -15,16 +15,15 @@ class NeuralNetwork(nn.Module, ABC):
     @abstractmethod
     def forward(self, **kwargs):
         """Define the computation at every model call. Inherited from :code:`torch.nn.Module`.
-        See `Pytorch documentation`_ for details
-
-        .. _Pytorch documentation: https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.forward
+        See `Pytorch documentation <https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.forward>`__
+        for details.
         """
         ...
 
     def summary(self, **kwargs):
         """Call ``torchinfo.summary()`` on ``self``.
         See `torchinfo documentation <https://github.com/TylerYep/torchinfo?tab=readme-ov-file#documentation>`__
-        for details
+        for details.
 
         :param kwargs: Keyword arguments passed to ``torchinfo.summary``.
         :return: Model statistics
@@ -75,7 +74,7 @@ class NeuralNetwork(nn.Module, ABC):
         ``training``, ``dropping``, or ``sampling``.
 
         :return: ``True`` if ``sampling``, ``dropping``, and ``training`` are all ``False``.
-         Otherwise, returns ``False.
+         Otherwise, returns ``False``.
         """
         return not (self.sampling or self.dropping or self.training)
 

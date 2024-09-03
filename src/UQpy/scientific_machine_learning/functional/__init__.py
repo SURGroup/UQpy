@@ -1,13 +1,12 @@
-from UQpy.scientific_machine_learning.functional.gaussian_kullback_leiber_divergence import (
-    gaussian_kullback_leiber_divergence,
+from UQpy.scientific_machine_learning.functional.gaussian_kullback_leibler_divergence import (
+    gaussian_kullback_leibler_divergence,
 )
-from UQpy.scientific_machine_learning.functional.geometric_jenson_shannon_divergence import (
-    geometric_jenson_shannon_divergence,
+from UQpy.scientific_machine_learning.functional.generalized_jensen_shannon_divergence import (
+    generalized_jensen_shannon_divergence,
 )
-from UQpy.scientific_machine_learning.functional.generalized_jenson_shannon_divergence import (
-    generalized_jenson_shannon_divergence,
+from UQpy.scientific_machine_learning.functional.geometric_jensen_shannon_divergence import (
+    geometric_jensen_shannon_divergence,
 )
-
 from UQpy.scientific_machine_learning.functional.mc_kullback_leibler_divergence import (
     mc_kullback_leibler_divergence,
 )

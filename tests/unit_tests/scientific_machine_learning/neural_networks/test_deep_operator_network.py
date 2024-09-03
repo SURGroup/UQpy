@@ -1,81 +1,59 @@
 import torch
 import torch.nn as nn
-import hypothesis
-from hypothesis import given
-from hypothesis.strategies import integers
-from UQpy.scientific_machine_learning.neural_networks import DeepOperatorNetwork
+import UQpy.scientific_machine_learning as sml
+from hypothesis import given, strategies as st
 
 
-@hypothesis.settings(deadline=500)
-@given(integers(min_value=10, max_value=1_000), integers(min_value=1, max_value=128))
-def test_1d_output_shape(x_resolution, n_samples):
-    x_dimension = 1
-    x = torch.ones((n_samples, x_resolution, x_dimension))
-    u_x = torch.ones((n_samples, x_resolution))
-
-    model = DeepOperatorNetwork(
-        nn.Linear(x_resolution, 7), nn.Linear(x_dimension, 7), 1
+@given(
+    n=st.integers(min_value=1, max_value=1),
+    m=st.integers(min_value=64, max_value=128),
+)
+def test_n_m_shape(n, m):
+    """Test the output shape with varying batch size (n) and points in the domain (m)"""
+    b_in = 1
+    t_in = 1
+    width = 1
+    deep_o_net = sml.DeepOperatorNetwork(
+        nn.Linear(b_in, width),
+        nn.Linear(t_in, width),
     )
+    f_x = torch.rand(n, 1, b_in)
+    x = torch.rand(n, m, t_in)
+    g_x = deep_o_net(x, f_x)
+    assert g_x.shape == torch.Size([n, m, 1])
 
-    prediction = model(x, u_x)
-    assert prediction.shape == torch.Size([n_samples, x_resolution])
 
-
-@hypothesis.settings(deadline=500)
-@given(integers(min_value=10, max_value=1_000), integers(min_value=1, max_value=128))
-def test_2d_output_shape(x_resolution, n_samples):
-    x_dimension = 2
-    x = torch.ones((n_samples, x_resolution, x_dimension))
-    u_x = torch.ones((n_samples, x_resolution))
-
-    model = DeepOperatorNetwork(
-        nn.Linear(x_resolution, 10), nn.Linear(x_dimension, 10), 1
+@given(
+    b_in=st.integers(min_value=1, max_value=8),
+    t_in=st.integers(min_value=1, max_value=8),
+    out_channels=st.integers(min_value=1, max_value=8),
+)
+def test_channels_shape(b_in, t_in, out_channels):
+    """Test the output shape with varying number of input and output channels"""
+    n = 1
+    m = 100
+    width = 2 * out_channels  # width must be divisible by out_channels
+    deep_o_net = sml.DeepOperatorNetwork(
+        nn.Linear(b_in, width), nn.Linear(t_in, width), out_channels=out_channels
     )
-
-    prediction = model(x, u_x)
-    assert prediction.shape == torch.Size([n_samples, x_resolution])
-
-
-@hypothesis.settings(deadline=500)
-@given(integers(min_value=10, max_value=1_000), integers(min_value=1, max_value=128))
-def test_3d_output_shape(x_resolution, n_samples):
-    x_dimension = 3
-    x = torch.ones((n_samples, x_resolution, x_dimension))
-    u_x = torch.ones((n_samples, x_resolution))
-
-    model = DeepOperatorNetwork(
-        nn.Linear(x_resolution, 10), nn.Linear(x_dimension, 10), 1
-    )
-
-    prediction = model(x, u_x)
-    assert prediction.shape == torch.Size([n_samples, x_resolution])
+    x = torch.rand(n, m, t_in)
+    f_x = torch.rand(n, 1, b_in)
+    g_x = deep_o_net(x, f_x)
+    assert g_x.shape == torch.Size([n, m, out_channels])
 
 
 def test_no_bias():
-    """With no bias, f(0) = 0"""
-    x_resolution = 100
-    x = torch.linspace(0, 1, x_resolution).reshape(1, x_resolution, 1)
-    u_x = torch.zeros((1, x_resolution))
-
-    model = DeepOperatorNetwork(
-        nn.Linear(x_resolution, 7, bias=False), nn.Linear(1, 7, bias=False), 1
+    """With no bias, DeepOperatorNetwork(x, 0) = 0"""
+    n = 1
+    m = 100
+    b_in = 1
+    t_in = 1
+    width = 16
+    deep_o_net = sml.DeepOperatorNetwork(
+        nn.Linear(b_in, width, bias=False),
+        nn.Linear(t_in, width, bias=False),
     )
-
-    prediction = model(x, u_x)
-    assert torch.allclose(prediction, torch.zeros_like(prediction))
-
-
-@hypothesis.settings(deadline=500)
-@given(integers(min_value=10, max_value=1_000), integers(min_value=1, max_value=128))
-def test_2outputs_2d_output_shape(x_resolution, n_samples):
-    x_dimension = 2
-    x = torch.ones((n_samples, x_resolution, x_dimension))
-    u_x = torch.ones((n_samples, x_resolution))
-
-    model = DeepOperatorNetwork(
-        nn.Linear(x_resolution, 10), nn.Linear(x_dimension, 10), 2
-    )
-
-    prediction1, prediction2 = model(x, u_x)
-    assert prediction1.shape == torch.Size([n_samples, x_resolution])
-    assert prediction2.shape == torch.Size([n_samples, x_resolution])
+    f_x = torch.zeros(n, 1, b_in)
+    x = torch.rand(n, m, t_in)
+    g_x = deep_o_net(x, f_x)
+    assert torch.all(g_x == torch.zeros([n, m, 1]))

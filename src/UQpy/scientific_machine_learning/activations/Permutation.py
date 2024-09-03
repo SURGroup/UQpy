@@ -6,9 +6,9 @@ class Permutation(Activation):
     def __init__(self, dims: tuple[int], **kwargs):
         """Permute the dimensions of a tensor.
 
-        See ``torch.permute`` for documentation
+        See :py:class:`torch.permute` for documentation
 
-        :param dims: Dimensions passed to ``torch.permute``
+        :param dims: Dimensions passed to :code:`torch.permute`
         """
         super().__init__(**kwargs)
         self.dims = dims

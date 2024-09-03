@@ -34,7 +34,7 @@ class DropoutActivation(Activation, ABC):
         self.dropping = mode
 
     @abstractmethod
-    def forward(self, x: torch.Tensor) -> torch.Tensor: ...
+    def forward(self, x: torch.Tensor) -> torch.Tensor:...
 
     def extra_repr(self) -> str:
         s = "p={p}, dropping={dropping}"

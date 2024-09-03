@@ -43,7 +43,7 @@ class BayesianLinear(BayesianLayer):
         Attributes:
 
         Unless otherwise noted, all parameters are initialized using the ``priors`` with values
-        from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`
+        from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
 
         - **weight_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the
           weights of shape :math:`(\text{out_features}, \text{in_features})`.
@@ -53,7 +53,7 @@ class BayesianLinear(BayesianLayer):
         - **bias_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the
           bias of shape :math:`(\text{out_features})`.
           If ``bias`` is ``True``, the values are initialized from
-          :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`
+          :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
         - **bias_rho** (:py:class:`torch.nn.Parameter`): The learnable distributinon variance of the
           bias of shape :math:`(\text{out_features})`.
           The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
