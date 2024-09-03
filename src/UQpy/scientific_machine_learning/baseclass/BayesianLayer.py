@@ -3,8 +3,10 @@ import torch.nn as nn
 from UQpy.scientific_machine_learning.baseclass.Layer import Layer
 from abc import ABC, abstractmethod
 from typing import Union
+from beartype import beartype
 
 
+@beartype
 class BayesianLayer(Layer, ABC):
     def __init__(
         self,
