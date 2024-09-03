@@ -31,8 +31,8 @@ class BayesianConv2d(BayesianLayer):
         :param out_channels: Number of channels produced by the convolution
         :param kernel_size: Size of the convolving kernel
         :param stride: Stride of the convolution. Default: 1
-        :param padding: Padding added to both sides of the input. Default: 0
-         It can be a string ``"valid"`` or ``"same"``, an integer,
+        :param padding: Padding added to both sides of the input.
+         It can be a string ``"valid"`` or ``"same"`` or an integer. Default: 0
          or a tuple of integers giving the amount of implicit padding applied on both sides.
         :param dilation: Spacing between kernel elements. Default: 1
         :param groups: Number of blocked connections from input channels to output channels. Default: 1.

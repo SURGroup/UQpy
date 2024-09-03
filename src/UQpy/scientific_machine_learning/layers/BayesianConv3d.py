@@ -39,11 +39,11 @@ class BayesianConv3d(BayesianLayer):
         :param out_channels: Number of channels produced by the convolution
         :param kernel_size: Size of the convolving kernel
         :param stride: Stride of the convolution. Default: 1
-        :param padding: Padding added to all six sides of the input. Default: 0
-         It can be either a string {‘valid’, ‘same’} or a tuple of ints giving the amount of implicit padding applied on both sides.
+        :param padding: Padding added to all six sides of the input.
+         It can be either a string {‘valid’, ‘same’} or a tuple of ints giving the amount of implicit padding applied on both sides. Default: 0
         :param dilation: Spacing between kernel elements. Default: 1
-        :param groups: Number of blocked connections from input channels to output channels. Default: 1.
-         ``in_channels`` and ``out_channels`` must both be divisible by ``groups``.
+        :param groups: Number of blocked connections from input channels to output channels.
+         ``in_channels`` and ``out_channels`` must both be divisible by ``groups``. Default: 1.
         :param bias: If ``True``, adds a learnable bias to the output. Default: ``True``
         :param priors: Prior and posterior distribution parameters.
          The dictionary keys and their default values are:
@@ -116,7 +116,7 @@ class BayesianConv3d(BayesianLayer):
         self.groups = groups
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Apply :func:`F.conv3d` to ``x`` where the weight and bias are drawn from random variables
+        r"""Apply :func:`F.conv3d` to ``x`` where the weight and bias are drawn from random variables
 
         :param x: Tensor of shape :math:`(N, C_\text{in}, D_\text{in}, H_\text{in}, W_\text{in})`
         :return: Tensor of shape :math:`(N, C_\text{out}, D_\text{out}, H_\text{out}, W_\text{out})`
