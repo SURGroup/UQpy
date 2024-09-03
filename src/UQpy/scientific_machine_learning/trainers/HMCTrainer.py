@@ -1,91 +1,98 @@
-from torch.nn import functional as F
-from torch import nn
 import torch
-import os
-import hamiltorch
+import pyro.infer.mcmc as mcmc
+import logging
 from beartype import beartype
+from UQpy.utilities.ValidationTypes import PositiveInteger
+from typing import Callable, Optional, Dict, Any
 
 
 @beartype
 class HMCTrainer:
-    def __init__(self, 
-        net: nn.Module, 
-        device: torch.device, 
-        params_hmc_path: str):
-        
-        """Prepare to train a Bayesian neural network using Hamiltonina Monte Carlo
+    def __init__(
+        self,
+        model: Callable,
+        step_size: float = 1.0,
+        trajectory_length: Optional[float] = None,
+        num_steps: Optional[int] = None,
+        adapt_step_size: bool = True,
+        adapt_mass_matrix: bool = True,
+        full_mass: bool = False,
+        target_accept_prob: float = 0.8,
+        max_plate_nesting: Optional[int] = None,
+        warmup_steps: PositiveInteger = 100,
+        num_samples: PositiveInteger = 500,
+    ):
+        """Prepare to train a model using Hamiltonian Monte Carlo (HMC)
 
-        :param model: Neural Network model to be trained
-        :param device: Device to run the model on
+        :param model: Pyro model to be trained using HMC
+        :param step_size: Step size for the HMC sampler
+        :param trajectory_length: Length of a MCMC trajectory (optional)
+        :param num_steps: Number of discrete steps for Hamiltonian dynamics (optional)
+        :param adapt_step_size: Flag to enable/disable step size adaptation during warm-up
+        :param adapt_mass_matrix: Flag to enable/disable mass matrix adaptation during warm-up
+        :param full_mass: Flag to specify if mass matrix is dense or diagonal
+        :param target_accept_prob: Target acceptance probability for HMC
+        :param max_plate_nesting: Maximum number of nested pyro.plate() contexts (optional)
+        :param warmup_steps: Number of warm-up steps before sampling
+        :param num_samples: Number of samples to draw after warm-up
         """
-        self.net = net.to(device)
-        self.device = device
-        self.params_hmc_path = params_hmc_path
-        self.params_init = self._initialize_params()
-        
-    def _initialize_params(self):
-        "Initialize the parameters of the model. Load from file if available."
-        if self.params_hmc_path and os.path.exists(self.params_hmc_path):
-            return torch.load(self.params_hmc_path, map_location=self.device)[0]
-        else:
-            return hamiltorch.util.flatten(self.net).to(self.device).clone()
+        self.model = model
+        self.step_size = step_size
+        self.trajectory_length = trajectory_length
+        self.num_steps = num_steps
+        self.adapt_step_size = adapt_step_size
+        self.adapt_mass_matrix = adapt_mass_matrix
+        self.full_mass = full_mass
+        self.target_accept_prob = target_accept_prob
+        self.max_plate_nesting = max_plate_nesting
+        self.warmup_steps = warmup_steps
+        self.num_samples = num_samples
 
-    def _save_params_hmc(self, params_hmc):
-        torch.save(params_hmc, self.params_hmc_path)
+        self.history: Dict[str, Optional[torch.Tensor]] = {
+            "samples": None,
+            "acceptance_rate": None,
+            "step_size": None,
+            "potential_energy": None,
+        }
 
-    def run_training(self, 
-                     X_tr: torch.Tensor,
-                     Y_tr: torch.Tensor,
-                     X_val: torch.Tensor,
-                     Y_val: torch.Tensor,
-                     loss_function: nn.Module = nn.MSELoss(),
-                     num_samples_hmc: int = 1000,
-                     L: int = 10,
-                     step_size: float = 0.1,
-                     burn_sample: int = 0,
-                     burn_pred: int = 0,
-                     tau_out: float = 1.,
-                     tau_list: torch.Tensor = None,
-                     store_on_GPU: bool = False,
-                     sampler: hamiltorch.Sampler = hamiltorch.Sampler.HMC,
-                     integrator: hamiltorch.Integrator = hamiltorch.Integrator.IMPLICIT,
-                     metric: hamiltorch.Metric = hamiltorch.Metric.HESSIAN,
-                     debug: bool = False,
-                     verbose: bool = False,
-                     normalizing_const: int = 1,
-                     inv_mass = None):
-        
-        "Use hamiltorch functions to run the Hamiltonian Monte Carlo algorithm to learn the parameters of the model and make predictions"
-        
-        params_hmc = hamiltorch.samplers.sample_model(
-            model = self.net, 
-            x = X_tr, 
-            y = Y_tr,
-            model_loss = 'regression',
-            num_samples=num_samples_hmc,
-            num_steps_per_sample = L,
-            step_size = step_size,
-            burn = burn_sample,
-            inv_mass = inv_mass,
-            normalizing_const = normalizing_const,
-            sampler = sampler,
-            integrator = integrator,
-            metric = metric,
-            params_init = self.params_init, 
-            tau_out = tau_out, 
-            tau_list = tau_list)
-        
-        self._save_params_hmc(params_hmc)
-        
-        pred_list, log_prob_list = hamiltorch.predict_model(
-            model=self.net,
-            x = X_val, 
-            y = Y_val, 
-            model_loss = 'regression',
-            samples=params_hmc[burn_pred:],
-            tau_out=tau_out, 
-            tau_list=tau_list)
-        
-        self._save_params_hmc(params_hmc)
-        
-        return params_hmc, pred_list, log_prob_list
+        self.logger = logging.getLogger(__name__)
+
+    def run(
+        self,
+        init_params: Optional[Dict[str, torch.Tensor]] = None,
+    ):
+        """Run HMC to sample from the posterior distribution of the model
+
+        :param init_params: Initial parameters for the model (optional)
+        """
+        hmc_kernel = mcmc.HMC(
+            model=self.model,
+            step_size=self.step_size,
+            trajectory_length=self.trajectory_length,
+            num_steps=self.num_steps,
+            adapt_step_size=self.adapt_step_size,
+            adapt_mass_matrix=self.adapt_mass_matrix,
+            full_mass=self.full_mass,
+            target_accept_prob=self.target_accept_prob,
+            max_plate_nesting=self.max_plate_nesting,
+        )
+
+        mcmc_sampler = mcmc.MCMC(
+            hmc_kernel,
+            num_samples=self.num_samples,
+            warmup_steps=self.warmup_steps,
+            initial_params=init_params,
+        )
+
+        self.logger.info("Starting HMC sampling")
+        mcmc_sampler.run()
+
+        self.history["samples"] = mcmc_sampler.get_samples()
+        self.history["acceptance_rate"] = torch.tensor(
+            mcmc_sampler.diagnostics()['acceptance_rate'])
+        self.history["step_size"] = torch.tensor(
+            mcmc_sampler.diagnostics()['step_size'])
+        self.history["potential_energy"] = torch.tensor(
+            mcmc_sampler.diagnostics()['potential_energy'])
+
+        self.logger.info("HMC sampling completed")
