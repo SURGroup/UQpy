@@ -5,10 +5,10 @@ from UQpy.scientific_machine_learning.layers.BayesianFourier1d import BayesianFo
 from UQpy.scientific_machine_learning.layers.BayesianFourier2d import BayesianFourier2d
 from UQpy.scientific_machine_learning.layers.BayesianFourier3d import BayesianFourier3d
 from UQpy.scientific_machine_learning.layers.BayesianLinear import BayesianLinear
-from UQpy.scientific_machine_learning.layers.Dropout import Dropout
-from UQpy.scientific_machine_learning.layers.Dropout1d import Dropout1d
-from UQpy.scientific_machine_learning.layers.Dropout2d import Dropout2d
-from UQpy.scientific_machine_learning.layers.Dropout3d import Dropout3d
+from UQpy.scientific_machine_learning.layers.ProbabilisticDropout import ProbabilisticDropout
+from UQpy.scientific_machine_learning.layers.ProbabilisticDropout1d import ProbabilisticDropout1d
+from UQpy.scientific_machine_learning.layers.ProbabilisticDropout2d import ProbabilisticDropout2d
+from UQpy.scientific_machine_learning.layers.ProbabilisticDropout3D import ProbabilisticDropout3d
 from UQpy.scientific_machine_learning.layers.Fourier1d import Fourier1d
 from UQpy.scientific_machine_learning.layers.Fourier2d import Fourier2d
 from UQpy.scientific_machine_learning.layers.Fourier3d import Fourier3d

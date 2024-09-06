@@ -1,13 +1,13 @@
 import torch
 import torch.nn.functional as F
-from UQpy.scientific_machine_learning.baseclass import DropoutLayer
+from UQpy.scientific_machine_learning.baseclass import ProbabilisticDropoutLayer
 from typing import Annotated
 from beartype import beartype
 from beartype.vale import Is
 
 
 @beartype
-class Dropout2d(DropoutLayer):
+class ProbabilisticDropout2d(ProbabilisticDropoutLayer):
 
     def __init__(
         self,
@@ -31,7 +31,7 @@ class Dropout2d(DropoutLayer):
 
         Example:
 
-        >>> dropout = sml.Dropout2d(p=0.3)
+        >>> dropout = sml.ProbabilisticDropout2d(p=0.3)
         >>> input = torch.rand(10, 5, 30, 40)
         >>> output = dropout(input)
         """

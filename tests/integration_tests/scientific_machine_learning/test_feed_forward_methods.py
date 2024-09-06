@@ -45,13 +45,13 @@ def test_mismatch_dropping():
     """If any layers have dropping=True, set the FeedForwardNeuralNetwork and all layers to dropping=True"""
     network = nn.Sequential(
         nn.Linear(1, 1),
-        sml.Dropout(dropping=True),
+        sml.ProbabilisticDropout(dropping=True),
         nn.Linear(1, 1),
-        sml.Dropout1d(dropping=False),
+        sml.ProbabilisticDropout1d(dropping=False),
         nn.Linear(1, 1),
-        sml.Dropout2d(dropping=False),
+        sml.ProbabilisticDropout2d(dropping=False),
         nn.Linear(1, 1),
-        sml.Dropout3d(dropping=False),
+        sml.ProbabilisticDropout3d(dropping=False),
         nn.Linear(1, 1),
     )
     model = sml.FeedForwardNeuralNetwork(network)
@@ -65,9 +65,9 @@ def test_mismatch_dropping():
 def test_deterministic_output():
     network = nn.Sequential(
         sml.BayesianLinear(1, 10),
-        sml.Dropout(),
+        sml.ProbabilisticDropout(),
         sml.BayesianLinear(10, 10),
-        sml.Dropout(),
+        sml.ProbabilisticDropout(),
         sml.BayesianLinear(10, 1),
     )
     model = sml.FeedForwardNeuralNetwork(network)
@@ -82,9 +82,9 @@ def test_deterministic_output():
 def test_probabilistic_output():
     network = nn.Sequential(
         sml.BayesianLinear(1, 10),
-        sml.Dropout(),
+        sml.ProbabilisticDropout(),
         sml.BayesianLinear(10, 10),
-        sml.Dropout(),
+        sml.ProbabilisticDropout(),
         sml.BayesianLinear(10, 1),
     )
     model = sml.FeedForwardNeuralNetwork(network)

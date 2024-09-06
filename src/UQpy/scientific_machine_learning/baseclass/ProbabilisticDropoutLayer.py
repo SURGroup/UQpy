@@ -7,7 +7,7 @@ from typing import Annotated
 
 
 @beartype
-class DropoutLayer(Layer, ABC):
+class ProbabilisticDropoutLayer(Layer, ABC):
     def __init__(
         self,
         p: Annotated[float, Is[lambda p: 0 <= p <= 1]] = 0.5,

@@ -1,5 +1,5 @@
-List of Dropout Layers
-~~~~~~~~~~~~~~~~~~~~~~
+List of Probabilistic Dropout Layers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 All dropout layers are nearly identical implementations to their counterparts in Pytorch.
 The difference is these class have a ``dropping`` attribute that controls whether or not they are
@@ -8,56 +8,56 @@ active, rather than relying on the ``training`` attribute as Pytorch's implement
 This allows us to more conveniently call the dropout methods on forward calls of a neural network,
 which is helpful for various computations in uncertainty quantification.
 
-Dropout
-^^^^^^^
+Probabilistic Dropout
+^^^^^^^^^^^^^^^^^^^^^
 
 Randomly zero out elements.
 
-The :class:`.Dropout` class is imported using the following command:
+The :class:`.ProbabilisticDropout` class is imported using the following command:
 
->>> from UQpy.scientific_machine_learning import Dropout
+>>> from UQpy.scientific_machine_learning import ProbabilisticDropout
 
-.. autoclass:: UQpy.scientific_machine_learning.layers.Dropout
+.. autoclass:: UQpy.scientific_machine_learning.layers.ProbabilisticDropout
     :members: forward
 
 ______
 
-Dropout 1D
-^^^^^^^^^^
+Probabilistic Dropout 1d
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-Randomly zero out entire 1D feature maps.
+Randomly zero out entire 1d feature maps.
 
-The :class:`.Dropout1d` class is imported using the following command:
+The :class:`.ProbabilisticDropout1d` class is imported using the following command:
 
->>> from UQpy.scientific_machine_learning import Dropout1d
+>>> from UQpy.scientific_machine_learning import ProbabilisticDropout1d
 
-.. autoclass:: UQpy.scientific_machine_learning.layers.Dropout1d
+.. autoclass:: UQpy.scientific_machine_learning.layers.ProbabilisticDropout1d
     :members: forward
 
 ______
 
-Dropout 2D
-^^^^^^^^^^
+Probabilistic Dropout 2d
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-Randomly zero out entire 2D feature maps.
+Randomly zero out entire 2d feature maps.
 
-The :class:`.Dropout2d` class is imported using the following command:
+The :class:`.ProbabilisticDropout2d` class is imported using the following command:
 
->>> from UQpy.scientific_machine_learning import Dropout2d
+>>> from UQpy.scientific_machine_learning import ProbabilisticDropout2d
 
-.. autoclass:: UQpy.scientific_machine_learning.layers.Dropout2d
+.. autoclass:: UQpy.scientific_machine_learning.layers.ProbabilisticDropout2d
     :members: forward
 
 ______
 
-Dropout 3D
-^^^^^^^^^^
+Probabilistic Dropout 3d
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-Randomly zero out entire 3D feature maps.
+Randomly zero out entire 3d feature maps.
 
-The :class:`.Dropout3d` class is imported using the following command:
+The :class:`.ProbabilisticDropout3d` class is imported using the following command:
 
->>> from UQpy.scientific_machine_learning import Dropout3d
+>>> from UQpy.scientific_machine_learning import ProbabilisticDropout3d
 
-.. autoclass:: UQpy.scientific_machine_learning.layers.Dropout3d
+.. autoclass:: UQpy.scientific_machine_learning.layers.ProbabilisticDropout3d
     :members: forward

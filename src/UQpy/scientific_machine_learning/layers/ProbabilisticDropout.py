@@ -1,13 +1,13 @@
 import torch
 import torch.nn.functional as F
-from UQpy.scientific_machine_learning.baseclass import DropoutLayer
+from UQpy.scientific_machine_learning.baseclass import ProbabilisticDropoutLayer
 from typing import Annotated
 from beartype import beartype
 from beartype.vale import Is
 
 
 @beartype
-class Dropout(DropoutLayer):
+class ProbabilisticDropout(ProbabilisticDropoutLayer):
     def __init__(
         self,
         p: Annotated[float, Is[lambda p: 0 <= p <= 1]] = 0.5,
@@ -28,7 +28,7 @@ class Dropout(DropoutLayer):
 
         Example:
 
-        >>> dropout = sml.Dropout(p=0.75)
+        >>> dropout = sml.ProbabilisticDropout(p=0.75)
         >>> input = torch.rand(12, 100)
         >>> output = dropout(input)
         """
