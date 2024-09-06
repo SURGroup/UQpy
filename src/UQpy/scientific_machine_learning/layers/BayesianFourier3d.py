@@ -1,12 +1,12 @@
 import torch
 import torch.nn.functional as F
 import UQpy.scientific_machine_learning.functional as func
-from UQpy.scientific_machine_learning.baseclass import BayesianLayer
+from UQpy.scientific_machine_learning.baseclass import NormalBayesianLayer
 from UQpy.utilities.ValidationTypes import PositiveInteger
 from typing import Union
 
 
-class BayesianFourier3d(BayesianLayer):
+class BayesianFourier3d(NormalBayesianLayer):
     def __init__(
         self,
         width: PositiveInteger,
@@ -43,49 +43,28 @@ class BayesianFourier3d(BayesianLayer):
         Unless otherwise noted, all parameters are initialized using the ``priors`` with values
         from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
 
-        - **weight_spectral_1_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean for the
-          first of four weights of the spectral convolution of shape
-          :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` with complex entries.
-        - **weight_spectral_1_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance for the
-          first of four weights of the spectral convolution of shape
-          :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` with complex entries.
-          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
-        - **weight_spectral_2_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean for the
-          second of four weights of the spectral convolution of shape
-          :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` with complex entries.
-        - **weight_spectral_2_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance for the
-          second of four weights of the spectral convolution of shape
-          :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` with complex entries.
-          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
-        - **weight_spectral_3_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean for the
-          third of four weights of the spectral convolution of shape
-          :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` with complex entries.
-        - **weight_spectral_3_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance for the
-          third of four weights of the spectral convolution of shape
-          :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` with complex entries.
-          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
-        - **weight_spectral_4_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean for the
-          fourth of four weights of the spectral convolution of shape
-          :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` with complex entries.
-        - **weight_spectral_4_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance for the
-          fourth of four weights of the spectral convolution of shape
-          :math:`(\text{width}, \text{width}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` with complex entries.
-          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
+        - **weight_spectral_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean for the
+          weights of the spectral convolution of shape
+          :math:`(4, \text{width}, \text{width}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` with complex entries.
+        - **weight_spectral_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution standard deviation for
+          the  weights of the spectral convolution of shape
+          :math:`(4, \text{width}, \text{width}, \text{modes[0]}, \text{modes[1]}, \text{modes[2]})` with complex entries.
+          The standard deviation is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
         - **weight_conv_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean for the weights
           of the convolution of shape
           :math:`(\text{width}, \text{width}, \text{kernel_size[0]}, \text{kernel_size[1]}, \text{kernel_size[2]})`
           with real entries. The :math:`\text{kernel_size} = (1, 1, 1)`.
-        - **weight_conv_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance for the weights
-          of the convolution of shape
+        - **weight_conv_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution standard deviation for the
+          weights of the convolution of shape
           :math:`(\text{width}, \text{width}, \text{kernel_size[0]}, \text{kernel_size[1]}, \text{kernel_size[2]})`
           with real entries. The :math:`\text{kernel_size} = (1, 1, 1)`.
-          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
+          The standard deviation is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
         - **bias_conv_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean for the bias
           of the convolution of shape :math:`(\text{width})` with real entires.
           If ``bias`` is ``True``, the values are initialized from
           :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
-        - **bias_conv_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance for the bias
-          of the convolution of shape :math:`(\text{width})` with real entries. The variance is computed as
+        - **bias_conv_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution standard deviation for the bias
+          of the convolution of shape :math:`(\text{width})` with real entries. The standard deviation is computed as
           :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive. If ``bias`` is ``True``, the values are
           initialized from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
 
@@ -105,10 +84,7 @@ class BayesianFourier3d(BayesianLayer):
         """
         kernel_size = (1, 1, 1)
         parameter_shapes = {
-            "weight_spectral_1": (width, width, *modes),
-            "weight_spectral_2": (width, width, *modes),
-            "weight_spectral_3": (width, width, *modes),
-            "weight_spectral_4": (width, width, *modes),
+            "weight_spectral": (4, width, width, *modes),
             "weight_conv": (width, width, *kernel_size),
             "bias_conv": width if bias else None,
         }
@@ -129,15 +105,10 @@ class BayesianFourier3d(BayesianLayer):
         :param x: Tensor of shape :math:`(N, C_\text{in}, D, H, W)`
         :return: Tensor of shape :math:`(N, C_\text{in}, D, H, W)`
         """
-        w1, w2, w3, w4, weight_conv, bias_conv = self.get_bayesian_weights()
-        spectral_weights = (
-            w1.to(torch.cfloat),
-            w2.to(torch.cfloat),
-            w3.to(torch.cfloat),
-            w4.to(torch.cfloat),
-        )
+        weight_spectral, weight_conv, bias_conv = self.get_bayesian_weights()
+        weight_spectral = weight_spectral.to(torch.cfloat)
         return func.spectral_conv3d(
-            x, spectral_weights, self.width, self.modes
+            x, weight_spectral, self.width, self.modes
         ) + F.conv3d(x, weight_conv, bias_conv)
 
     def extra_repr(self):

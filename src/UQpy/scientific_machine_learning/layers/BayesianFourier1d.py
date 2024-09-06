@@ -1,12 +1,12 @@
 import torch
 import torch.nn.functional as F
 import UQpy.scientific_machine_learning.functional as func
-from UQpy.scientific_machine_learning.baseclass import BayesianLayer
+from UQpy.scientific_machine_learning.baseclass import NormalBayesianLayer
 from UQpy.utilities.ValidationTypes import PositiveInteger
 from typing import Union
 
 
-class BayesianFourier1d(BayesianLayer):
+class BayesianFourier1d(NormalBayesianLayer):
     def __init__(
         self,
         width: PositiveInteger,
@@ -45,24 +45,24 @@ class BayesianFourier1d(BayesianLayer):
         - **weight_spectral_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the
           weights of the spectral convolution of shape :math:`(\text{width}, \text{width}, \text{modes})`
           with complex entries.
-        - **weight_spectral_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance of the
+        - **weight_spectral_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution standard deviation of the
           weights of the spectral convolution of shape :math:`(\text{width}, \text{width}, \text{modes})`
           with complex entries.
-          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
+          The standard deviation is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
         - **weight_conv_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the
           weights of the convolution of shape :math:`(\text{width}, \text{width}, \text{kernel_size})`.
           The :math:`\text{kernel_size}=1`.
-        - **weight_conv_rho** (:py:class:`torch.nn.Parameter`) The learnable distribution variance of the
+        - **weight_conv_rho** (:py:class:`torch.nn.Parameter`) The learnable distribution standard deviation of the
           weights of the convolution of shape :math:`(\text{width}, \text{width}, \text{kernel_size})`.
           The :math:`\text{kernel_size}=1`.
-          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
+          The standard deviation is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
         - **bias_conv_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the
           bias of the convolution of shape :math:`(\text{width})`.
           If ``bias`` is ``True``, the values are initialized from
           :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
-        - **bias_conv_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance of the
+        - **bias_conv_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution standard deviation of the
           bias of the convolution of shape :math:`(\text{width})`.
-          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
+          The standard deviation is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
           If ``bias`` is ``True``, the values are initialized from
           :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
 
