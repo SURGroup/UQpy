@@ -1,11 +1,11 @@
 import torch
 import torch.nn.functional as F
 from typing import Union
-from UQpy.scientific_machine_learning.baseclass import BayesianLayer
+from UQpy.scientific_machine_learning.baseclass import NormalBayesianLayer
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
-class BayesianLinear(BayesianLayer):
+class BayesianLinear(NormalBayesianLayer):
 
     def __init__(
         self,
@@ -47,16 +47,16 @@ class BayesianLinear(BayesianLayer):
 
         - **weight_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the
           weights of shape :math:`(\text{out_features}, \text{in_features})`.
-        - **weight_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance of the
+        - **weight_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution standard deviation of the
           weights of shape :math:`(\text{out_features}, \text{in_features})`.
-          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
+          The standard deviation is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
         - **bias_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the
           bias of shape :math:`(\text{out_features})`.
           If ``bias`` is ``True``, the values are initialized from
           :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
-        - **bias_rho** (:py:class:`torch.nn.Parameter`): The learnable distributinon variance of the
+        - **bias_rho** (:py:class:`torch.nn.Parameter`): The learnable distributinon standard deviation of the
           bias of shape :math:`(\text{out_features})`.
-          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
+          The standard deviation is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
           If ``bias`` is ``True``, the values are initialized from
           :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
 

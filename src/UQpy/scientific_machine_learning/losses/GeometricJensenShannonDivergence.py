@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import UQpy.scientific_machine_learning.functional as func
-from UQpy.scientific_machine_learning.baseclass import BayesianLayer, Loss
+from UQpy.scientific_machine_learning.baseclass import NormalBayesianLayer, Loss
 
 from typing import Annotated
 from beartype import beartype
@@ -41,7 +41,7 @@ class GeometricJensenShannonDivergence(Loss):
         """
         divergence = torch.tensor(0.0, device=self.device)
         for layer in network.modules():
-            if isinstance(layer, BayesianLayer):
+            if isinstance(layer, NormalBayesianLayer):
                 for name in layer.parameter_shapes:
                     if layer.parameter_shapes[name] is not None:
                         mu = getattr(layer, f"{name}_mu")

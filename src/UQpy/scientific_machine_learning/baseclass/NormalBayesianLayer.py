@@ -7,14 +7,14 @@ from beartype import beartype
 
 
 @beartype
-class BayesianLayer(Layer, ABC):
+class NormalBayesianLayer(Layer, ABC):
     def __init__(
         self,
         parameter_shapes: dict,
-        priors: dict,
+        priors: Union[dict, None],
         sampling: bool = True,
-        device: Union[torch.device, str] = None,
-        dtype: Union[torch.dtype, tuple] = None,
+        device: Union[torch.device, str, None] = None,
+        dtype: Union[torch.dtype, tuple, None] = None,
     ):
         """Initialize the random variables governing the parameters of the layer.
 
@@ -71,7 +71,7 @@ class BayesianLayer(Layer, ABC):
             "posterior_rho_initial"
         ]
         r"""Initial posterior rho, :math:`\rho_\text{posterior}`, of the distribution.
-        The variance is computed as :math:`\sigma = \ln(1 + \exp(\rho))` to guarantee it is positive
+        The standard deviation is computed as :math:`\sigma = \ln(1 + \exp(\rho))` to guarantee it is positive
         """
 
         for i, name in enumerate(parameter_shapes):

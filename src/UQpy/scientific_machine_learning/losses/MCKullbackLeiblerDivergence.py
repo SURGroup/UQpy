@@ -6,7 +6,7 @@ from typing import Annotated
 from beartype import beartype
 from beartype.vale import Is
 from UQpy.distributions.baseclass import Distribution
-from UQpy.scientific_machine_learning.baseclass import BayesianLayer, Loss
+from UQpy.scientific_machine_learning.baseclass import NormalBayesianLayer, Loss
 
 
 @beartype
@@ -54,7 +54,7 @@ class MCKullbackLeiblerDivergence(Loss):
         """
         divergence = torch.tensor(0.0, device=self.device)
         for layer in network.modules():
-            if isinstance(layer, BayesianLayer):
+            if isinstance(layer, NormalBayesianLayer):
                 posterior_distributions_list = []
                 prior_distributions_list = []
                 for name in layer.parameter_shapes:

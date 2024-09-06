@@ -1,14 +1,14 @@
 import torch
 import torch.nn.functional as F
 from torch.nn.modules.utils import _single
-from UQpy.scientific_machine_learning.baseclass import BayesianLayer
+from UQpy.scientific_machine_learning.baseclass import NormalBayesianLayer
 from UQpy.utilities.ValidationTypes import PositiveInteger, NonNegativeInteger
 from typing import Union
 from beartype import beartype
 
 
 @beartype
-class BayesianConv1d(BayesianLayer):
+class BayesianConv1d(NormalBayesianLayer):
 
     def __init__(
         self,
@@ -63,14 +63,14 @@ class BayesianConv1d(BayesianLayer):
 
         - **weight_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the weights of the module
           of shape :math:`(\text{out_channels}, \frac{\text{in_channels}}{\text{groups}}, \text{kernel_size})`.
-        - **weight_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance of the weights of the module
+        - **weight_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution standard deviation of the weights of the module
           of shape :math:`(\text{out_channels}, \frac{\text{in_channels}}{\text{groups}}, \text{kernel_size})`.
-          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
+          The standard deviation is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
         - **bias_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the bias of the module
           of shape :math:`(\text{out_channels})`. If ``bias`` is ``True``, the values are initialized
           from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
-        - **bias_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance of the bias of the module
-          of shape :math:`(\text{out_channels})`.  The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to
+        - **bias_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution standard deviation of the bias of the module
+          of shape :math:`(\text{out_channels})`.  The standard deviation is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to
           guarantee it is positive. If ``bias`` is ``True``, the values are initialized
           from :math:`\mathcal{N}(\rho_\text{posterior}[0], \rho_\text{posterior}[1])`.
 

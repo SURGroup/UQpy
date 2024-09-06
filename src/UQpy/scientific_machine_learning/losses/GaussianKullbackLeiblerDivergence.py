@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import UQpy.scientific_machine_learning.functional as func
-from UQpy.scientific_machine_learning.baseclass import BayesianLayer, Loss
+from UQpy.scientific_machine_learning.baseclass import NormalBayesianLayer, Loss
 from beartype import beartype
 
 
@@ -33,7 +33,7 @@ class GaussianKullbackLeiblerDivergence(Loss):
         """
         divergence = torch.tensor(0.0, dtype=torch.float, device=self.device)
         for layer in network.modules():
-            if not isinstance(layer, BayesianLayer):
+            if not isinstance(layer, NormalBayesianLayer):
                 continue
             for name in layer.parameter_shapes:
                 if layer.parameter_shapes[name] is None:

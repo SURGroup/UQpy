@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import UQpy.scientific_machine_learning.functional as func
-from UQpy.scientific_machine_learning.baseclass import Loss, BayesianLayer
+from UQpy.scientific_machine_learning.baseclass import Loss, NormalBayesianLayer
 
 from typing import Annotated
 from beartype import beartype
@@ -68,7 +68,7 @@ class GeneralizedJensenShannonDivergence(Loss):
         """
         divergence = torch.tensor(0.0, device=self.device)
         for layer in network.modules():
-            if not isinstance(layer, BayesianLayer):
+            if not isinstance(layer, NormalBayesianLayer):
                 continue
             posterior_distribution_list = []
             prior_distribution_list = []
