@@ -19,7 +19,7 @@ class GaussianNormalizer(Layer):
             None,
         ] = None,
     ):
-        """Normalize a tensor to have mean of zero and standard deviation of one.
+        r"""Normalize a tensor to have mean of zero and standard deviation of one.
 
         .. note::
             Due to machine percision, mean and standard deviation may have errors on the order of :math:`10^{-8}`.
@@ -33,7 +33,8 @@ class GaussianNormalizer(Layer):
         :param dim: Dimensions to be reduced in :math:`\text{mean}(x), \text{std}(x)`.
          If :code:`None`, reduce all dimensions for scalar min and max. Default: None
 
-         :raises RuntimeError: If ``torch.mean(x)`` or ``torch.std(x)`` is infinite (:code:`inf`) or not-a-number (:code:`nan`)
+         :raises RuntimeError: If ``torch.mean(x)`` or ``torch.std(x)`` contains infinite (:code:`inf`)
+          or not-a-number (:code:`nan`) over a dimension to be reduced
 
         Shape:
 
@@ -87,7 +88,7 @@ class GaussianNormalizer(Layer):
             )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Scale ``x`` to have a new mean and standard deviation.
+        r"""Scale ``x`` to have a new mean and standard deviation.
 
         If :code:`self.encoding` is :code:`True`, return :math:`\frac{x - \text{mean}}{\text{std} + \epsilon}`.
         If :code:`self.encoding` is :code:`False`, return :math:`(x \times (\text{std} + \epsilon)) + \text{mean}`
