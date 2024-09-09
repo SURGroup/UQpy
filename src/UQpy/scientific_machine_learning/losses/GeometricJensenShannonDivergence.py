@@ -18,6 +18,7 @@ class GeometricJensenShannonDivergence(Loss):
         device=None,
     ):
         r"""Analytic form for Geometric JS divergence for all Bayesian layers in a module
+
         :param alpha: Weight of the mixture distribution, :math:`0 \leq \alpha \leq 1`.
          See formula for details. Default: 0.5
         :param reduction: Specifies the reduction to apply to the output: 'mean' or 'sum'.
