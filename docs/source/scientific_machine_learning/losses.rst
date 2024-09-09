@@ -22,8 +22,6 @@ List of Losses
 Evidence Lower Bound
 ~~~~~~~~~~~~~~~~~~~~
 
-This is a placeholder for the documentation on ELBO.
-
 .. autoclass:: UQpy.scientific_machine_learning.losses.EvidenceLowerBound
     :members: forward
 
@@ -32,8 +30,6 @@ This is a placeholder for the documentation on ELBO.
 Gaussian Kullback-Leibler
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This is a placeholder for KL Divergence.
-
 .. autoclass:: UQpy.scientific_machine_learning.losses.GaussianKullbackLeiblerDivergence
     :members: forward
 
@@ -41,8 +37,6 @@ This is a placeholder for KL Divergence.
 
 Monte Carlo Kullback-Leiber
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This is a placeholder for the MC KL divergence.
 
 .. autoclass:: UQpy.scientific_machine_learning.losses.MCKullbackLeiblerDivergence
     :members: forward
@@ -53,8 +47,6 @@ This is a placeholder for the MC KL divergence.
 Generalized Jenson Shannon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This is a placeholder.
-
 .. autoclass:: UQpy.scientific_machine_learning.losses.GeneralizedJensenShannonDivergence
     :members: forward
 
@@ -62,8 +54,6 @@ This is a placeholder.
 
 Geometric Jenson Shannon
 ~~~~~~~~~~~~~~~~~~~~~~~~
-
-This is a placeholder.
 
 .. autoclass:: UQpy.scientific_machine_learning.losses.GeometricJensenShannonDivergence
     :members: forward

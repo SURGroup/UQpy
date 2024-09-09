@@ -1,7 +1,7 @@
 Neural Networks
 ===============
-This file is a placeholder for the Neural Network documentation.
-
+This is a brief introduction to the mathematical theory behind neural networks to familiarize the reader with our
+choice of notation and highlight the difference between neural networks and neural operators.
 
 Neural Operators - Theory
 ^^^^^^^^^^^^^^^^^^^^^^^^^
