@@ -1,6 +1,7 @@
 import torch
-import UQpy.scientific_machine_learning.functional as func
 from beartype import beartype
+from beartype.vale import Is
+from typing import Annotated
 
 
 @beartype
@@ -9,7 +10,7 @@ def geometric_jensen_shannon_divergence(
     posterior_sigma: torch.Tensor,
     prior_mu: torch.Tensor,
     prior_sigma: torch.Tensor,
-    alpha: float,
+    alpha: Annotated[float, Is[lambda x: 0 <= x <= 1]] = 0.5,
     reduction: str = "sum",
 ) -> torch.Tensor:
     r"""Compute the Geometric Jensen-Shannon divergence for a Gaussian prior and Gaussian posterior distributions
@@ -18,7 +19,8 @@ def geometric_jensen_shannon_divergence(
     :param posterior_sigma: Standard deviation of the posterior distribution
     :param prior_mu: Mean of the prior distribution
     :param prior_sigma: Standard deviation of the prior distribution
-    :param alpha: Geometric mean weight
+    :param alpha: Weight of the mixture distribution, :math:`0 \leq \alpha \leq 1`.
+     See formula for details. Default: 0.5
     :param reduction: Specifies the reduction to apply to the output: 'none', 'mean', or 'sum'.
      'none': no reduction will be applied, 'mean': the output will be averaged, 'sum': the output will be summed.
      Default: 'sum'
