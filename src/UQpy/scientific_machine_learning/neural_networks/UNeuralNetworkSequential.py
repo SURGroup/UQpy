@@ -18,12 +18,12 @@ class UNeuralNetworkSequential(NeuralNetwork):
         out_channels: PositiveInteger,
         layer_type: nn.Module = nn.Conv2d,
     ):
-        """Initialize a U-Shaped Neural Network  # ToDo: finish documentation
+        r"""Initialize a U-Shaped Neural Network for a 2d signal
 
         :param filter_sizes: Size of filters in order.
         :param kernel_size: Size of the kernel used in ``layer_type``
         :param out_channels: Number of channels in the final convolution
-        :param layer_type: Type of layer to use on each filter. Default ``torch.nn.Conv2d``
+        :param layer_type: Type of layer to use on each filter. Default :py:class:`torch.nn.Conv2d`
 
         Shape:
 
@@ -32,10 +32,14 @@ class UNeuralNetworkSequential(NeuralNetwork):
 
         Attributes:
 
-        - **encoder_i** (:py:class:`torch.nn.Module`):
-        - **decoder_i** (:py:class:`torch.nn.Module`):
-        - **final_layer**  (:py:class:`torch.nn.Module`):
+        - **encoder_i** (:py:class:`torch.nn.Module`): The "i"-th learnable encoder block.
+          Note that :code:`encoder_i` is *not* an attribute of this class. There are encoder attributes with names
+          :code:`encoder_1`, :code:`encoder_2`, ..., up to :math:`i=n_\text{filters} - 1`
+        - **decoder_i** (:py:class:`torch.nn.Module`): The "i"-th learnable decoder block.
+          Note that :code:`decoder_i` is *not* an attribute of this class. There are encoder attributes with names
+          :code:`decoder_1`, :code:`decoder_2`, ..., up to :math:`i=n_\text{filters} - 1`
         - **decoder_upsample** (:py:class:`torch.nn.Module`):
+        - **final_layer**  (:py:class:`torch.nn.Module`): Learnable :py:class:`torch.nn.Conv2d` applied after the last decoder block.
         """
         super().__init__()
         self.filter_sizes = filter_sizes
@@ -52,10 +56,10 @@ class UNeuralNetworkSequential(NeuralNetwork):
             setattr(self, f"decoder_{i}", self.construct_decoder(i))
         self.final_layer = nn.Conv2d(
             self.filter_sizes[1], self.out_channels, kernel_size=1, padding=0
-        )
+        ) # ToDo: does this ever change? Does it need to be a class attribute?
         self.decoder_upsample = nn.Upsample(
             scale_factor=2, mode="bilinear", align_corners=True
-        )
+        )  # ToDo: does this ever change? Does it need to be a class attribute?
 
     def construct_encoder(self, i: PositiveInteger) -> nn.Module:
         """Construct the ``i``-th encoder
@@ -63,12 +67,11 @@ class UNeuralNetworkSequential(NeuralNetwork):
         :param i: Index of the ``i``-th encoder
         :return: Trainable module defining the encoder
         """
-        in_channels = self.filter_sizes[i - 1] if i > 0 else 1
+        in_channels = 1 if i == 0 else self.filter_sizes[i - 1]
         out_channels = self.filter_sizes[i]
-        if i == 1:
-            layers = []
-        else:  # i != 1
-            layers = [nn.MaxPool2d(kernel_size=2, stride=2)]
+        layers = []
+        if i != 1:
+            layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
         layers += [
             nn.MaxPool2d(kernel_size=2, stride=2),
             self.layer_type(
@@ -95,9 +98,10 @@ class UNeuralNetworkSequential(NeuralNetwork):
         :return: Trainable module defining the decoder
         """
         combined_channels = self.filter_sizes[i] + self.filter_sizes[i - 1]
-        out_channels = self.filter_sizes[i - 1] if i > 0 else 1
+        # out_channels = self.filter_sizes[i - 1] if i > 0 else 1
+        out_channels = 1 if i == 0 else self.filter_sizes[i - 1]
         layers = [
-            # nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True),
+            nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True),
             self.layer_type(
                 combined_channels,
                 out_channels,
@@ -105,7 +109,7 @@ class UNeuralNetworkSequential(NeuralNetwork):
                 padding=self.kernel_size // 2,
             ),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(),
+            nn.ReLU(),  # ???
             self.layer_type(
                 out_channels,
                 out_channels,
@@ -120,9 +124,9 @@ class UNeuralNetworkSequential(NeuralNetwork):
     def encode(self, x: torch.Tensor, i: PositiveInteger) -> torch.Tensor:
         """Pass the tensor ``x`` through the ``i``-th decoder
 
-        :param x: Tensor of shape compatible with ``encoder_i``
+        :param x: Tensor of shape compatible with :code:`encoder_i`
         :param i: Index of the encoder
-        :return: Tensor of shape output by ``encoder_i``
+        :return: Tensor of shape output by :code:`encoder_i`
         """
         if not hasattr(self, f"encoder_{i}"):
             raise AttributeError(
@@ -134,9 +138,9 @@ class UNeuralNetworkSequential(NeuralNetwork):
     def decode(self, x: torch.Tensor, i: PositiveInteger) -> torch.Tensor:
         """Pass the tensor ``x`` through the ``i``-th decoder
 
-        :param x: Tensor of shape compatible with ``decoder_i``
+        :param x: Tensor of shape compatible with :code:`decoder_i`
         :param i: Index of the decoder
-        :return: Tensor of shape output by ``decoder_i``
+        :return: Tensor of shape output by :code:`decoder_i`
         """
         if not hasattr(self, f"decoder_{i}"):
             raise AttributeError(
@@ -146,10 +150,10 @@ class UNeuralNetworkSequential(NeuralNetwork):
         return getattr(self, f"decoder_{i}")(x)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward computation call of UNeuralNetwork
+        """Pass ``x`` through encoders and save each output. Then pass through decoders with skip connections.
 
-        :param x: Input tensor
-        :return: Output tensor
+        :param x: Tensor of shape # ToDo what shape is this?
+        :return: Tensor of shape # ToDo what shape is this?
         """
         encoder_outputs = []
         for i in range(1, self.n_filters):  # Pass through encoders
