@@ -9,10 +9,16 @@ from beartype import beartype
 class GaussianKullbackLeiblerDivergence(Loss):
 
     def __init__(self, reduction: str = "sum", device=None):
-        """Analytic form for Gaussian KL divergence for all Bayesian layers in a module
+        r"""Analytic form for Gaussian KL divergence for all Bayesian layers in a module
 
         :param reduction: Specifies the reduction to apply to the output: 'mean' or 'sum'.
          'mean': the output will be averaged, 'sum': the output will be summed. Default: 'sum'
+
+        Formula
+        -------
+        The Gaussian Kullback-Leiber divergence :math:`D_{KL}` for two univariate normal distributions is computed as
+
+        .. math:: D_{KL}(p, q) = \frac{1}{2} \left( 2\log \frac{\sigma_1}{\sigma_0} + \frac{\sigma_0^2}{\sigma_1^2} + \frac{\sigma_0^2 + (\mu_0-\mu_1)^2}{\sigma_1^2} -1 \right)
         """
         super().__init__()
         if reduction is "none":
