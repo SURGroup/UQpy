@@ -123,8 +123,14 @@ class BayesianFourier1d(NormalBayesianLayer):
         s = "width={width}, modes={modes}"
         if self.bias is False:
             s += ", bias={bias}"
-        if self.priors:
-            s += ", priors={priors}"
         if self.sampling is False:
             s += ", sampling={sampling}"
+        if self.prior_mu != 0.0:
+            s += ", prior_mu={prior_mu}"
+        if self.prior_sigma != 0.1:
+            s += ", prior_sigma={prior_sigma}"
+        if self.posterior_mu_initial != (0.0, 0.1):
+            s += ", posterior_mu_initial={posterior_mu_initial}"
+        if self.posterior_rho_initial != (-3.0, 0.1):
+            s += ", posterior_rho_initial={posterior_rho_initial}"
         return s.format(**self.__dict__)
