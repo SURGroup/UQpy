@@ -1,7 +1,6 @@
 import torch
 from typing import Union
 from beartype import beartype
-from UQpy.utilities.ValidationTypes import PositiveInteger
 from UQpy.scientific_machine_learning.baseclass import Loss
 
 
@@ -66,7 +65,7 @@ class LpLoss(Loss):
         :return: Tensor of shape ``x`` or ``y`` (depending on broadcasting semantics).
         """
         norm = torch.linalg.vector_norm(x - y, ord=self.ord, dim=self.dim)
-        if self.reduction is None:
+        if self.reduction is "none":
             return norm
         elif self.reduction == "mean":
             return torch.mean(norm)

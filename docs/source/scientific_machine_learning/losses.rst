@@ -27,6 +27,14 @@ Evidence Lower Bound
 
 ------
 
+:math:`L_p` Loss
+~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: UQpy.scientific_machine_learning.losses.LpLoss
+    :members: forward
+
+------
+
 Gaussian Kullback-Leibler
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
