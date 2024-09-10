@@ -33,8 +33,8 @@ class GaussianNormalizer(Layer):
         :param dim: Dimensions to be reduced in :math:`\text{mean}(x), \text{std}(x)`.
          If :code:`None`, reduce all dimensions for scalar min and max. Default: None
 
-         :raises RuntimeError: If ``torch.mean(x)`` or ``torch.std(x)`` contains infinite (:code:`inf`)
-          or not-a-number (:code:`nan`) over a dimension to be reduced
+        :raises RuntimeError: If ``torch.mean(x)`` or ``torch.std(x)`` contains infinite (:code:`inf`)
+         or not-a-number (:code:`nan`) over a dimension to be reduced
 
         Shape:
 
