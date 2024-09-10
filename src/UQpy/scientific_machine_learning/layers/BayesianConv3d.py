@@ -3,7 +3,11 @@ import torch.nn.functional as F
 from torch.nn.modules.utils import _triple
 from typing import Union
 from UQpy.scientific_machine_learning.baseclass import NormalBayesianLayer
-from UQpy.utilities.ValidationTypes import PositiveInteger, NonNegativeInteger
+from UQpy.utilities.ValidationTypes import (
+    PositiveInteger,
+    NonNegativeInteger,
+    PositiveFloat,
+)
 
 
 class BayesianConv3d(NormalBayesianLayer):
@@ -28,8 +32,11 @@ class BayesianConv3d(NormalBayesianLayer):
         ] = 1,
         groups: PositiveInteger = 1,
         bias: bool = True,
-        priors: dict = None,
         sampling: bool = True,
+        prior_mu: float = 0.0,
+        prior_sigma: PositiveFloat = 0.1,
+        posterior_mu_initial: tuple[float, PositiveFloat] = (0.0, 0.1),
+        posterior_rho_initial: tuple[float, PositiveFloat] = (-3.0, 0.1),
         device: Union[torch.device, str] = None,
         dtype: torch.dtype = None,
     ):
@@ -45,15 +52,19 @@ class BayesianConv3d(NormalBayesianLayer):
         :param groups: Number of blocked connections from input channels to output channels.
          ``in_channels`` and ``out_channels`` must both be divisible by ``groups``. Default: 1.
         :param bias: If ``True``, adds a learnable bias to the output. Default: ``True``
-        :param priors: Prior and posterior distribution parameters.
-         The dictionary keys and their default values are:
-
-         - "prior_mu": 0
-         - "prior_sigma" : 0.1
-         - "posterior_mu_initial": (0.0, 0.1)
-         - "posterior_rho_initial": (-3.0, 0.1)
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
          If ``False``, use distribution mean as parameter values. Default: ``True``
+        :param prior_mu: Prior mean, :math:`\mu_\text{prior}` of the prior normal distribution.
+         Default: 0.0
+        :param prior_sigma: Prior standard deviation, :math:`\sigma_\text{prior}`, of the prior normal distribution.
+         Default: 0.1
+        :param posterior_mu_initial: Mean and standard deviation of the initial posterior distribution for :math:`\mu`.
+         The initial posterior is :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
+         Default: (0.0, 0.1)
+        :param posterior_rho_initial: Mean and standard deviation of the initial posterior distribution for :math:`\rho`.
+         The initial posterior is :math:`\mathcal{N}(\rho_\text{posterior}[0], \rho_\text{posterior}[1])`.
+         The standard deviation of the posterior is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to ensure it is positive.
+         Default: (-3.0, 0.1)
 
         .. note::
             This class calls :func:`torch.nn.functional.conv3d` with ``padding_mode='zeros'``.
@@ -104,9 +115,18 @@ class BayesianConv3d(NormalBayesianLayer):
         kernel_size = _triple(kernel_size)
         parameter_shapes = {
             "weight": (out_channels, in_channels // groups, *kernel_size),
-            "bias": out_channels if bias else None
+            "bias": out_channels if bias else None,
         }
-        super().__init__(parameter_shapes, priors, sampling, device, dtype)
+        super().__init__(
+            parameter_shapes,
+            sampling,
+            prior_mu,
+            prior_sigma,
+            posterior_mu_initial,
+            posterior_rho_initial,
+            device,
+            dtype,
+        )
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = _triple(kernel_size)

@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 from typing import Union
 from UQpy.scientific_machine_learning.baseclass import NormalBayesianLayer
-from UQpy.utilities.ValidationTypes import PositiveInteger
+from UQpy.utilities.ValidationTypes import PositiveInteger, PositiveFloat
 
 
 class BayesianLinear(NormalBayesianLayer):
@@ -12,8 +12,11 @@ class BayesianLinear(NormalBayesianLayer):
         in_features: PositiveInteger,
         out_features: PositiveInteger,
         bias: bool = True,
-        priors: dict = None,
         sampling: bool = True,
+        prior_mu: float = 0.0,
+        prior_sigma: PositiveFloat = 0.1,
+        posterior_mu_initial: tuple[float, PositiveFloat] = (0.0, 0.1),
+        posterior_rho_initial: tuple[float, PositiveFloat] = (-3.0, 0.1),
         device: Union[torch.device, str] = None,
         dtype: torch.dtype = None,
     ):
@@ -23,15 +26,19 @@ class BayesianLinear(NormalBayesianLayer):
         :param in_features: Size of each input sample
         :param out_features: Size of each output sample
         :param bias: If set to ``False``, the layer will not learn an additive bias. Default: ``True``
-        :param priors: Prior and posterior distribution parameters.
-         The dictionary keys and their default values are:
-
-         - "prior_mu": 0
-         - "prior_sigma" : 0.1
-         - "posterior_mu_initial": (0.0, 0.1)
-         - "posterior_rho_initial": (-3.0, 0.1)
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
-         If ``False``, use distribution mean as parameter values. Default: ``True``
+         If ``False``, use distribution mean as parameter values. Default: ``True`
+        :param prior_mu: Prior mean, :math:`\mu_\text{prior}` of the prior normal distribution.
+         Default: 0.0
+        :param prior_sigma: Prior standard deviation, :math:`\sigma_\text{prior}`, of the prior normal distribution.
+         Default: 0.1
+        :param posterior_mu_initial: Mean and standard deviation of the initial posterior distribution for :math:`\mu`.
+         The initial posterior is :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
+         Default: (0.0, 0.1)
+        :param posterior_rho_initial: Mean and standard deviation of the initial posterior distribution for :math:`\rho`.
+         The initial posterior is :math:`\mathcal{N}(\rho_\text{posterior}[0], \rho_\text{posterior}[1])`.
+         The standard deviation of the posterior is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to ensure it is positive.
+         Default: (-3.0, 0.1)
 
         Shape:
 
@@ -75,7 +82,16 @@ class BayesianLinear(NormalBayesianLayer):
             "weight": (out_features, in_features),
             "bias": out_features if bias else None,
         }
-        super().__init__(parameter_shapes, priors, sampling, device, dtype)
+        super().__init__(
+            parameter_shapes,
+            sampling,
+            prior_mu,
+            prior_sigma,
+            posterior_mu_initial,
+            posterior_rho_initial,
+            device,
+            dtype,
+        )
         self.in_features = in_features
         self.out_features = out_features
         self.bias = bias
