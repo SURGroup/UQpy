@@ -132,7 +132,7 @@ class RangeNormalizer(Layer):
             return (x - self.shift) / self.scale
 
     def encode(self, mode: bool = True):
-        """Set the normalizer to scale and shift a tensor to fall within range :math:[\text
+        """Set the normalizer to scale and shift a tensor to fall within range :math:`[\text{low}, \text{high}]`
 
         :param mode: If ``True``, set ``self.encoding`` to ``True``. Default: ``True``
         """
