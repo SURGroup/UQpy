@@ -12,6 +12,7 @@ GaussianNormalizer
 Attributes
 ----------
 
+.. autoattribute:: UQpy.scientific_machine_learning.GaussianNormalizer.encoding
 .. autoattribute:: UQpy.scientific_machine_learning.GaussianNormalizer.mean
 .. autoattribute:: UQpy.scientific_machine_learning.GaussianNormalizer.std
 
@@ -26,5 +27,6 @@ RangeNormalizer
 Attributes
 ----------
 
+.. autoattribute:: UQpy.scientific_machine_learning.RangeNormalizer.encoding
 .. autoattribute:: UQpy.scientific_machine_learning.RangeNormalizer.scale
 .. autoattribute:: UQpy.scientific_machine_learning.RangeNormalizer.shift
