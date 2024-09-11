@@ -36,14 +36,30 @@ class GeneralizedJensenShannonDivergence(Loss):
         :param reduction: Specifies the reduction to apply to the output: 'mean' or 'sum'.
          'mean': the output will be averaged, 'sum': the output will be summed. Default: 'sum'
 
-        Formula
-        -------
         The Jenson-Shannon divergence :math:`D_{JS}` is computed as
 
         .. math:: D_{JS}(Q, P) = (1-\alpha) D_{KL}(Q, M) + \alpha D_{KL}(P, M)
 
         where :math:`D_{KL}` is the Kullback-Leibler divergence and :math:`M=\alpha Q + (1-\alpha) P` is the mixture distribution.
 
+        Examples:
+
+        >>> # Divergence of a single Bayesian Layer
+        >>> layer = sml.BayesianLinear(4, 5)
+        >>> divergence_function = sml.GeneralizedJensenShannonDivergence(UQpy.Normal, UQpy.Normal)
+        >>> div = divergence_function(layer)
+
+        >>> # Divergence of a Bayesian neural network
+        >>> network = nn.Sequential(
+        >>>     sml.BayesianLinear(1, 4),
+        >>>     nn.ReLU(),
+        >>>     nn.Linear(4, 4),
+        >>>     nn.ReLU(),
+        >>>     sml.BayesianLinear(4, 1),
+        >>> )
+        >>> model = sml.FeedForwardNeuralNetwork(network)
+        >>> divergence_function = sml.GeneralizedJensenShannonDivergence(UQpy.Normal, UQpy.Normal)
+        >>> div = divergence_function(model)
         """
         super().__init__()
         self.posterior_distribution = posterior_distribution

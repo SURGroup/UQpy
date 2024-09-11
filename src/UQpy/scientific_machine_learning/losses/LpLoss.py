@@ -48,6 +48,15 @@ class LpLoss(Loss):
 
         where inf refers to :code:`float('inf')`, :py:class:`torch.inf`, or any equivalent object.
 
+
+        Example:
+
+        >>> loss = sml.LpLoss()
+        >>> input = torch.randn(3, 5, requires_grad=True)
+        >>> target = torch.randn(3, 5)
+        >>> output = loss(input, target)
+        >>> output.backward()
+
         """
         super().__init__()
         self.ord = ord

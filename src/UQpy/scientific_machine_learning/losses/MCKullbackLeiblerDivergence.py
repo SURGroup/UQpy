@@ -32,6 +32,25 @@ class MCKullbackLeiblerDivergence(Loss):
         :param prior_distribution: A class, *not an instance*, of a UQpy distribution defining the prior
         :param reduction: Specifies the reduction to apply to the output: 'mean', or 'sum'.
          'mean': the output will be averaged, 'sum': the output will be summed. Default: 'sum'
+
+        Examples:
+
+        >>> # Divergence of a single Bayesian Layer
+        >>> layer = sml.BayesianLinear(4, 5)
+        >>> divergence_function = sml.MCKullbackLeiblerDivergence(UQpy.Normal, UQpy.Normal)
+        >>> div = divergence_function(layer)
+
+        >>> # Divergence of a Bayesian neural network
+        >>> network = nn.Sequential(
+        >>>     sml.BayesianLinear(1, 4),
+        >>>     nn.ReLU(),
+        >>>     nn.Linear(4, 4),
+        >>>     nn.ReLU(),
+        >>>     sml.BayesianLinear(4, 1),
+        >>> )
+        >>> model = sml.FeedForwardNeuralNetwork(network)
+        >>> divergence_function = sml.MCKullbackLeiblerDivergence(UQpy.Normal, UQpy.Normal)
+        >>> div = divergence_function(model)
         """
         super().__init__()
         self.posterior_distribution = posterior_distribution
