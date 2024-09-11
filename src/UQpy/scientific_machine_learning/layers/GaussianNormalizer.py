@@ -15,7 +15,7 @@ class GaussianNormalizer(Layer):
         epsilon: PositiveFloat = 1e-8,
         dim: Union[
             NonNegativeInteger,
-            Annotated[tuple, Is[lambda x: all([isinstance(d, NonNegativeInteger) for d in x])]],
+            Annotated[tuple, Is[lambda x: all([isinstance(d, int) for d in x])]],
             None,
         ] = None,
     ):

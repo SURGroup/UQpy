@@ -87,7 +87,7 @@ class Fourier1d(Layer):
         :return: Tensor of shape :math:`(N, \text{width}, L)`
         """
         return func.spectral_conv1d(
-            x, self.weight_spectral_conv.to(torch.cfloat), self.width, self.modes
+            x, self.weight_spectral.to(torch.cfloat), self.width, self.modes
         ) + F.conv1d(x, self.weight_conv, self.bias_conv)
 
     def extra_repr(self) -> str:

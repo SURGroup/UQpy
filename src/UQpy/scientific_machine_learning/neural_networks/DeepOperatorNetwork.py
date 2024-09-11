@@ -33,7 +33,7 @@ class DeepOperatorNetwork(NeuralNetwork):
         """
         super().__init__()
         self.branch_network: nn.Module = branch_network
-        """Architecture of the branch neural network defined by a :py:class`torch.nn.Module`"""
+        """Architecture of the branch neural network defined by a :py:class:`torch.nn.Module`"""
         self.trunk_network: nn.Module = trunk_network
         """Architecture of the trunk neural network defined by a :py:class:`torch.nn.Module`"""
         self.out_channels = out_channels
