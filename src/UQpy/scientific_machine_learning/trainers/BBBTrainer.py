@@ -61,7 +61,7 @@ class BBBTrainer:
         epochs: PositiveInteger = 100,
         num_samples: PositiveInteger = 1,
         tolerance: float = 0.0,
-        beta: float = 1.0,
+        lamda: float = 1.0,
     ):
         """Run the ``optimizer`` algorithm to learn the parameters of the ``model`` that fit ``train_data``
 
@@ -71,7 +71,7 @@ class BBBTrainer:
         :param num_samples: Number of Monte Carlo samples to approximate the loss
         :param tolerance: Optimization terminates early if *average* training loss is below tolerance.
          Default: 0.0
-        :param beta: Weighting for the divergence term in ELBO loss. Default: 1.0
+        :param lamda: Weighting for the divergence term in ELBO loss. Default: 1.0
 
         :raises RuntimeError: If neither ``train_data`` nor ``test_data`` is provided, a RuntimeError occurs.
         """
@@ -118,7 +118,7 @@ class BBBTrainer:
                         nll_loss[sample] = self.loss_function(prediction, y)
                     divergence_loss = self.divergence(self.model)
                     mean_nll = torch.mean(nll_loss)
-                    train_loss = mean_nll + beta * divergence_loss
+                    train_loss = mean_nll + lamda * divergence_loss
                     train_loss.backward()
                     self.optimizer.step()
                     self.optimizer.zero_grad()
