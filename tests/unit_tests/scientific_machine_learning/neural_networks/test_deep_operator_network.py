@@ -17,7 +17,7 @@ def test_n_m_shape(n, m):
         nn.Linear(b_in, width),
         nn.Linear(t_in, width),
     )
-    f_x = torch.rand(n, 1, b_in)
+    f_x = torch.rand(n, b_in)
     x = torch.rand(n, m, t_in)
     g_x = deep_o_net(x, f_x)
     assert g_x.shape == torch.Size([n, m, 1])
@@ -37,9 +37,25 @@ def test_channels_shape(b_in, t_in, out_channels):
         nn.Linear(b_in, width), nn.Linear(t_in, width), out_channels=out_channels
     )
     x = torch.rand(n, m, t_in)
-    f_x = torch.rand(n, 1, b_in)
+    f_x = torch.rand(n, b_in)
     g_x = deep_o_net(x, f_x)
     assert g_x.shape == torch.Size([n, m, out_channels])
+
+
+def test_trunk_input2d():
+    """The trunk input can be (m_trunk, d) or (N, m_trunk, d)"""
+    m_trunk = 100
+    m_branch = 50
+    d = 1
+    batch_size = 16
+    width = 8
+    deep_o_net = sml.DeepOperatorNetwork(
+        nn.Linear(m_branch, width), nn.Linear(d, width)
+    )
+    x = torch.rand(m_trunk, d)
+    f_x = torch.rand(batch_size, m_branch)
+    g_x = deep_o_net(x, f_x)
+    assert g_x.shape == torch.Size([batch_size, m_trunk, 1])
 
 
 def test_no_bias():
@@ -53,7 +69,7 @@ def test_no_bias():
         nn.Linear(b_in, width, bias=False),
         nn.Linear(t_in, width, bias=False),
     )
-    f_x = torch.zeros(n, 1, b_in)
+    f_x = torch.zeros(n, b_in)
     x = torch.rand(n, m, t_in)
     g_x = deep_o_net(x, f_x)
     assert torch.all(g_x == torch.zeros([n, m, 1]))

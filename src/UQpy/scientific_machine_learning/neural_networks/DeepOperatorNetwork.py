@@ -20,16 +20,16 @@ class DeepOperatorNetwork(NeuralNetwork):
 
         .. note::
             The last layer of the branch and trunk network must have the same number of neurons so the last
-            dimension of their outputs match, i.e. both outputs have shape :math:`(*, *, \text{width})`.
+            dimension of their outputs match, i.e. both outputs have shape :math:`(*, \text{width})`.
             Additionally, :math:`\text{width}` must be divisible by :math:`C_\text{out}`.
 
         Shape:
 
         - Input:
 
-            - Branch Network (:math:`f(x)`): :math:`(N, 1, B_\text{in})`
-            - Trunk Network (:math:`x`): :math:`(N, m, T_\text{in})`
-        - Output: :math:`(N, m, C_\text{out})`
+            - Branch Network (:math:`f(x)`): :math:`(N, m_\text{branch})`
+            - Trunk Network (:math:`x`): :math:`(N, m_\text{trunk}, d)`
+        - Output: :math:`(N, m_\text{trunk}, C_\text{out})`
         """
         super().__init__()
         self.branch_network: nn.Module = branch_network
@@ -58,34 +58,46 @@ class DeepOperatorNetwork(NeuralNetwork):
         if branch_output.shape[-1] != trunk_output.shape[-1]:
             raise RuntimeError(
                 f"UQpy: Incompatible trunk {trunk_output.shape} and branch {branch_output.shape} output shapes."
-                f"\nTrunk output must have shape (N, m, width). "
-                f"Branch output must have shape (N, 1, width)."
+                f"\nTrunk output must have shape (N, m_trunk, width). "
+                f"Branch output must have shape (N, width)."
             )
-        n = x.shape[0]
-        m = x.shape[1]
-        width = branch_output.shape[-1]
+        batch_size = f_x.size(0)
+        width = branch_output.size(1)
+        # check dimensions of branch output
+        if branch_output.shape != torch.Size([batch_size, width]):
+            raise RuntimeError(
+                f"UQpy: Invalid branch output shape {branch_output.shape}. "
+                f"Branch output must have shape (N, width)={(batch_size, width)}."
+            )
+        # check dimensions of trunk output
+        if x.ndim == 2:
+            m_trunk = x.size(0)
+            expected_trunk_output_shape = torch.Size([m_trunk, width])
+        elif x.ndim == 3:
+            m_trunk = x.size(1)
+            expected_trunk_output_shape = torch.Size([batch_size, m_trunk, width])
+        else:
+            raise RuntimeError(
+                f"UQpy: Invalid trunk output shape {trunk_output.shape}. "
+                f"Trunk output must have shape (m_trunk, width) or (N, m_trunk, width)."
+            )
+        if trunk_output.shape != expected_trunk_output_shape:
+            raise RuntimeError(
+                f"UQpy: Invalid trunk output shape {trunk_output.shape}. "
+                f"Trunk output must have shape (m_trunk, width) or (N, m_trunk, width). "
+                f"Expected shape: {expected_trunk_output_shape}"
+            )
+        # check that the number of out channels divides the width
         if width % self.out_channels != 0:
             raise RuntimeError(
                 f"UQpy: Branch and trunk width {width} must be divisible by out_channels {self.out_channels}"
             )
-        if branch_output.shape != torch.Size([n, 1, width]):
-            raise RuntimeError(
-                f"UQpy: Invalid branch output shape {branch_output.shape}. "
-                f"Branch output must have shape (N, 1, width)."
-            )
-        if trunk_output.shape != torch.Size([n, m, width]):
-            raise RuntimeError(
-                f"UQpy: Invalid trunk output shape {trunk_output.shape}. "
-                f"Trunk output must have shape (N, m, width)."
-            )
 
         return torch.einsum(
             "...i,...i",
-            branch_output.view(
-                branch_output.shape[0], branch_output.shape[1], self.out_channels, -1
-            ),
+            branch_output.view(batch_size, 1, self.out_channels, -1),
             trunk_output.view(
-                trunk_output.shape[0], trunk_output.shape[1], self.out_channels, -1
+                1 if x.ndim == 2 else batch_size, m_trunk, self.out_channels, -1
             ),
         )
 
