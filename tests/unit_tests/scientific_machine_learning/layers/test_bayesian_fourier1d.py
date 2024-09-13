@@ -11,7 +11,7 @@ from hypothesis.strategies import integers
     modes=integers(min_value=1, max_value=33),
 )
 def test_output_shape(batch_size, width, length, modes):
-    x = torch.ones(batch_size, width, length)
+    x = torch.ones((batch_size, width, length))
     fourier = sml.BayesianFourier1d(width, modes)
     y = fourier(x)
     assert y.shape == torch.Size([batch_size, width, length])

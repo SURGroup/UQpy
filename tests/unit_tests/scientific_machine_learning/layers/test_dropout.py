@@ -3,8 +3,8 @@ import UQpy.scientific_machine_learning as sml
 from hypothesis import given
 from hypothesis.extra.numpy import array_shapes
 
-func = sml.Dropout1d
-shapes = array_shapes(min_dims=2, max_dims=3, min_side=1, max_side=32)
+func = sml.ProbabilisticDropout
+shapes = array_shapes(min_dims=1, max_dims=4, min_side=1, max_side=32)
 
 
 @given(shapes)

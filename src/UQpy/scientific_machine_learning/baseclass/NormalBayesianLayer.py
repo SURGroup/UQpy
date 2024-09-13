@@ -3,39 +3,42 @@ import torch.nn as nn
 from UQpy.scientific_machine_learning.baseclass.Layer import Layer
 from abc import ABC, abstractmethod
 from typing import Union
+from beartype import beartype
+from UQpy.utilities.ValidationTypes import PositiveFloat
 
 
-class BayesianLayer(Layer, ABC):
+@beartype
+class NormalBayesianLayer(Layer, ABC):
     def __init__(
         self,
         parameter_shapes: dict,
-        priors: dict,
         sampling: bool = True,
-        device: Union[torch.device, str] = None,
-        dtype: Union[torch.dtype, tuple] = None,
+        prior_mu: float = 0.0,
+        prior_sigma: PositiveFloat = 0.1,
+        posterior_mu_initial: tuple[float, PositiveFloat] = (0.0, 0.1),
+        posterior_rho_initial: tuple[float, PositiveFloat] = (-3.0, 0.1),
+        device: Union[torch.device, str, None] = None,
+        dtype: Union[torch.dtype, tuple, None] = None,
     ):
-        """Initialize the random variables governing the parameters of the layer.
+        r"""Initialize the random variables governing the parameters of the layer.
 
         :param parameter_shapes: Dictionary with ``"name"``: ``shape`` pairs for each parameter.
-        :param priors: Prior and posterior distribution parameters. See table for default values
+         For each key in the dictionary, assign learnable parameters ``name_mu`` and ``name_rho`` with the given shape.
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
          If ``False``, use distribution mean as parameter values. Default: ``True``
+        :param prior_mu: Prior mean, :math:`\mu_\text{prior}` of the prior normal distribution.
+         Default: 0.0
+        :param prior_sigma: Prior standard deviation, :math:`\sigma_\text{prior}`, of the prior normal distribution.
+         Default: 0.1
+        :param posterior_mu_initial: Mean and standard deviation of the initial posterior distribution for :math:`\mu`.
+         The initial posterior is :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
+         Default: (0.0, 0.1)
+        :param posterior_rho_initial: Mean and standard deviation of the initial posterior distribution for :math:`\rho`.
+         The initial posterior is :math:`\mathcal{N}(\rho_\text{posterior}[0], \rho_\text{posterior}[1])`.
+         The standard deviation of the posterior is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to ensure it is positive.
+         Default: (-3.0, 0.1)
         :param device: A ``torch.device`` representing the device on which tensors are allocated
         :param dtype: A ``torch.dtype`` (or tuple of them) representing the data type of the tensor
-
-        +-----------------------------+---------------------+-------------+
-        | Default values for the :code:`priors` dictionary                |
-        +-----------------------------+---------------------+-------------+
-        | Key                         | Type                |     Default |
-        +=============================+=====================+=============+
-        | ``"prior_mu"``              | float               |         0.0 |
-        +-----------------------------+---------------------+-------------+
-        | ``"prior_sigma"``           | float               |         0.1 |
-        +-----------------------------+---------------------+-------------+
-        | ``"posterior_mu_initial"``  | tuple[float, float] |  (0.0, 0.1) |
-        +-----------------------------+---------------------+-------------+
-        | ``"posterior_rho_initial"`` | tuple[float, float] | (-3.0, 0.1) |
-        +-----------------------------+---------------------+-------------+
 
         """
         super().__init__()
@@ -51,26 +54,10 @@ class BayesianLayer(Layer, ABC):
         """Prefix names and shapes of all learnable parameters"""
         self.sampling: bool = sampling
         """Boolean represents whether this module is in sampling mode or not."""
-        self.priors = priors
-        if self.priors is None:
-            priors = {
-                "prior_mu": 0.0,
-                "prior_sigma": 0.1,
-                "posterior_mu_initial": (0.0, 0.1),
-                "posterior_rho_initial": (-3.0, 0.1),
-            }
-        self.prior_mu: float = priors["prior_mu"]
-        r"""Prior mean, :math:`\mu_\text{prior}` of the normal distribution"""
-        self.prior_sigma: float = priors["prior_sigma"]
-        r"""Prior standard deviation, :math:`\sigma_\text{prior}`, of the normal distribution"""
-        self.posterior_mu_initial: tuple[float, float] = priors["posterior_mu_initial"]
-        r"""Initial posterior mean, :math:`\mu_\text{posterior}`, of the distribution"""
-        self.posterior_rho_initial: tuple[float, float] = priors[
-            "posterior_rho_initial"
-        ]
-        r"""Initial posterior rho, :math:`\rho_\text{posterior}`, of the distribution.
-        The variance is computed as :math:`\sigma = \ln(1 + \exp(\rho))` to guarantee it is positive
-        """
+        self.prior_mu: float = prior_mu
+        self.prior_sigma: float = prior_sigma
+        self.posterior_mu_initial: tuple[float, float] = posterior_mu_initial
+        self.posterior_rho_initial: tuple[float, float] = posterior_rho_initial
 
         for i, name in enumerate(parameter_shapes):
             shape = parameter_shapes[name]

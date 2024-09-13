@@ -6,7 +6,6 @@ import UQpy.scientific_machine_learning as sml
 from hypothesis import given, settings, strategies as st
 
 
-@settings(deadline=1_000)
 @given(width=st.integers(min_value=1, max_value=10))
 def test_divergence_shape(width):
     network = nn.Sequential(
@@ -18,15 +17,17 @@ def test_divergence_shape(width):
     )
     model = sml.FeedForwardNeuralNetwork(network)
     mc_divergence = sml.MCKullbackLeiblerDivergence(
-        posterior_distribution=Normal,
-        prior_distribution=Normal,
+        posterior_distribution=Normal, prior_distribution=Normal, n_samples=1
     )
     divergence = mc_divergence(model)
     assert divergence.shape == torch.Size()
 
 
-def test_reduction_none():
+def test_reduction_none_raises_error():
     with pytest.raises(ValueError):
         sml.MCKullbackLeiblerDivergence(
-            posterior_distribution=Normal, prior_distribution=Normal, reduction="none"
+            posterior_distribution=Normal,
+            prior_distribution=Normal,
+            reduction="none",
+            n_samples=1,
         )

@@ -1,14 +1,18 @@
 List of Bayesian Layers
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-All Bayesian layers use their counterparts in :py:mod:`torch.nn.functional` to define their computation.
-The difference is the Bayesian implementations define their weights and biases as random variables,
-rather than as deterministic parameters.
-The goal of these layers is not to recreate features in Pytorch, but to provide Bayesian implementations
-that match Pytorch's syntax as much as reasonable.
+All Bayesian layers use their counterparts in :py:mod:`torch.nn.functional` and/or
+:py:mod:`UQpy.scientific_machine_learning.functional` to define their computation.
+The difference between a PyTorch layer and it's Bayesian counterpart is in the defition and training of the learnable parameters.
+A PyTorch layer, like :py:class:`torch.nn.Conv1d` version defines weights and biases as deterministic tensors
+and learns a value for those parameters.
+In contrast, UQpy's Bayesian version, like :py:class:`UQpy.scientific_machine_learning.BayesianConv1d`,
+defines the weights and biases as random variables, and learns their distributions.
+The purpose of these layers is not to recreate features in Pytorch, but to provide Bayesian implementations
+that match Pytorch's syntax as much as possible.
 
 For example, :class:`BayesianLinear` computes :math:`y=x A^T + b` just as :class:`torch.nn.Linear` does,
-and uses :class:`torch.nn.functional.linear` for the computation. For convenience, the first three pararmeters
+and uses :class:`torch.nn.functional.linear` for the computation. For convenience, the first three parameters
 of :class:`BayesianLinear` are identical in name and purpose to :class:`Linear`,
 and are ``in_features``, ``out_features``, and ``bias``.
 

@@ -1,8 +1,8 @@
 import torch
-from UQpy.scientific_machine_learning.baseclass import Activation
+from UQpy.scientific_machine_learning.baseclass import Layer
 
 
-class Permutation(Activation):
+class Permutation(Layer):
     def __init__(self, dims: tuple[int], **kwargs):
         """Permute the dimensions of a tensor.
 

@@ -1,6 +1,7 @@
 import torch
-import UQpy.scientific_machine_learning.functional as func
 from beartype import beartype
+from beartype.vale import Is
+from typing import Annotated
 
 
 @beartype
@@ -9,7 +10,7 @@ def geometric_jensen_shannon_divergence(
     posterior_sigma: torch.Tensor,
     prior_mu: torch.Tensor,
     prior_sigma: torch.Tensor,
-    alpha: float,
+    alpha: Annotated[float, Is[lambda x: 0 <= x <= 1]] = 0.5,
     reduction: str = "sum",
 ) -> torch.Tensor:
     r"""Compute the Geometric Jensen-Shannon divergence for a Gaussian prior and Gaussian posterior distributions
@@ -18,7 +19,8 @@ def geometric_jensen_shannon_divergence(
     :param posterior_sigma: Standard deviation of the posterior distribution
     :param prior_mu: Mean of the prior distribution
     :param prior_sigma: Standard deviation of the prior distribution
-    :param alpha: Geometric mean weight
+    :param alpha: Weight of the mixture distribution, :math:`0 \leq \alpha \leq 1`.
+     See formula for details. Default: 0.5
     :param reduction: Specifies the reduction to apply to the output: 'none', 'mean', or 'sum'.
      'none': no reduction will be applied, 'mean': the output will be averaged, 'sum': the output will be summed.
      Default: 'sum'
@@ -35,9 +37,11 @@ def geometric_jensen_shannon_divergence(
     mean distribution. When the distributions :math:`P` and :math:`Q` are Gaussian, the closed form for Geometric
     Jensen-Shannon divergence is given as
 
-    .. math:: D_{JSG}(P, Q) &= 0.5 [ \frac{ (1-\alpha) \sigma_0^2 + \alpha \sigma_1^2}{\sigma_alpha^2} + \log \frac{\sigma_\alpha^2}{\sigma_0^{2(1-\alpha)} \sigma_1^{2\alpha}} + (1-\alpha) \frac{(\mu_\alpha - \mu_0)^2}{\sigma_\alpha^2} + \frac{\alpha(\mu_alpha - \mu_1)^2}{\sigma_\alpha^2} -1]
+    .. math:: D_{JSG}(P, Q) = \frac12 \left( \frac{(1-\alpha)\sigma_0^2 + \alpha\sigma_1^2}{\sigma_\alpha^2} + \log \frac{\sigma_\alpha^2}{\sigma_0^{2(1-\alpha)} \sigma_1^{2\alpha}} + (1-\alpha) \frac{(\mu_\alpha - \mu_0)^2}{\sigma_\alpha^2} + \frac{\alpha(\mu_\alpha - \mu_1)^2}{\sigma_\alpha^2} -1 \right)
 
-    where :math:`\sigma_alpha^2 = \frac{1}{\frac{\alpha}{\sigma_0^2}+\frac{1-\alpha}{\sigma_1^2}}` and :math:`\mu_alpha = \sigma_\alpha^2 [\frac{\alpha \mu_0}{\sigma_0^2} + \frac{(1-\alpha)\mu_1}{\sigma_1^2}]`
+    where :math:`\left( \frac{\alpha}{\sigma_0^2}+\frac{1-\alpha}{\sigma_1^2} \right)^{-1}`
+    and :math:`\mu_\alpha = \sigma_\alpha^2 \left[\frac{\alpha \mu_0}{\sigma_0^2} + \frac{(1-\alpha)\mu_1}{\sigma_1^2}\right]`
+
     """
     posterior_var = posterior_sigma.pow(2)
     prior_var = prior_sigma.pow(2)

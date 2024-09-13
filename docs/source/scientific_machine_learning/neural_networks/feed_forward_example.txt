@@ -1,0 +1,34 @@
+>>> import torch.nn as nn
+>>> import UQpy.scientific_machine_learning as sml
+>>> network = nn.Sequential(
+>>>     sml.BayesianLinear(1, 4),
+>>>     nn.ReLU(),
+>>>     sml.ProbabilisticDropout(),
+>>>     sml.BayesianLinear(4, 4),
+>>>     nn.ReLU(),
+>>>     sml.ProbabilisticDropout(),
+>>>     sml.BayesianLinear(4, 1),
+>>> )
+>>> model = sml.FeedForwardNeuralNetwork(network)
+>>> print("Initially sampling:", model.sampling)
+>>> print("Initially dropping:", model.dropping)
+>>> model.sample(False)
+>>> model.drop(False)
+>>> print("Currently sampling:", model.sampling)
+>>> print("Currently dropping:", model.dropping)
+>>> print(model)
+Initially sampling: True
+Initially dropping: True
+Currently sampling: False
+Currently dropping: False
+FeedForwardNeuralNetwork(
+  (network): Sequential(
+    (0): BayesianLinear(in_features=1, out_features=4, sampling=False)
+    (1): ReLU()
+    (2): ProbabilisticDropout(p=0.5, dropping=False)
+    (3): BayesianLinear(in_features=4, out_features=4, sampling=False)
+    (4): ReLU()
+    (5): ProbabilisticDropout(p=0.5, dropping=False)
+    (6): BayesianLinear(in_features=4, out_features=1, sampling=False)
+  )
+)

@@ -46,7 +46,7 @@ def test_invalid_weights_shape_raises_error(weights_shape):
     modes = 1
     x = torch.rand((batch_size, in_channels, length))
     weights = torch.rand(weights_shape, dtype=torch.cfloat)
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         func.spectral_conv1d(x, weights, out_channels, modes)
 
 

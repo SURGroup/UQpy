@@ -13,12 +13,14 @@ class Fourier1d(Layer):
         self,
         width: PositiveInteger,
         modes: PositiveInteger,
+        bias: bool = True,
         device: Union[torch.device, str] = None,
     ):
         r"""A 1d Fourier layer to compute :math:`\mathcal{F}^{-1} (R (\mathcal{F}x)) + W(x)`
 
         :param width: Number of neurons in the layer and channels in the spectral convolution
         :param modes: Number of Fourier modes to keep, at most :math:`\lfloor L / 2 \rfloor + 1`
+        :param bias: If ``True``, adds a learnable bias to the convolution. Default: ``True``
 
         .. note::
             This class does *not* accept the ``dtype`` argument
@@ -31,7 +33,7 @@ class Fourier1d(Layer):
 
         Attributes:
 
-        - **weight_spectral_conv** (:py:class:`torch.nn.Parameter`): The learnable weights of the spectral convolution of
+        - **weight_spectral** (:py:class:`torch.nn.Parameter`): The learnable weights of the spectral convolution of
           shape :math:`(\text{width}, \text{width}, \text{modes})` with complex entries.
           The initial values of these weights are sampled from
           :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})` where :math:`k = \frac{1}{\text{width}}`.
@@ -58,20 +60,23 @@ class Fourier1d(Layer):
         super().__init__()
         self.width = width
         self.modes = modes
+        self.bias = bias
 
         self.weight_spectral: nn.Parameter = nn.Parameter(
             torch.empty(
-                self.width, self.width, self.modes, dtype=torch.cfloat, device=device
+                self.width, self.width, self.modes, dtype=torch.float, device=device
             )
         )
         kernel_size = 1
         self.weight_conv: nn.Parameter = nn.Parameter(
             torch.empty(self.width, self.width, kernel_size, device=device)
         )
-        self.bias_conv: nn.Parameter = nn.Parameter(
-            torch.empty(self.width, device=device)
-        )
-
+        if self.bias:
+            self.bias_conv: nn.Parameter = nn.Parameter(
+                torch.empty(self.width, device=device)
+            )
+        else:
+            self.register_parameter("bias_conv", None)
         k = torch.sqrt(1 / torch.tensor(self.width, device=device))
         self.reset_parameters(-k, k)
 
@@ -82,8 +87,11 @@ class Fourier1d(Layer):
         :return: Tensor of shape :math:`(N, \text{width}, L)`
         """
         return func.spectral_conv1d(
-            x, self.weight_spectral_conv, self.width, self.modes
+            x, self.weight_spectral.to(torch.cfloat), self.width, self.modes
         ) + F.conv1d(x, self.weight_conv, self.bias_conv)
 
     def extra_repr(self) -> str:
-        return f"width={self.width}, modes={self.modes}"
+        s = "width={width}, modes={modes}"
+        if self.bias is False:
+            s += ", bias={bias}"
+        return s.format(**self.__dict__)

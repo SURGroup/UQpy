@@ -10,17 +10,17 @@ def model():
     network = nn.Sequential(
         nn.Linear(1, width),
         nn.ReLU(),
-        sml.Dropout1d(),
+        sml.ProbabilisticDropout3d(),
         nn.Linear(width, width),
         nn.ReLU(),
-        sml.Dropout1d(),
+        sml.ProbabilisticDropout3d(),
         nn.Linear(width, 1),
     )
     return sml.FeedForwardNeuralNetwork(network)
 
 
 def test_drop_false(model):
-    x = torch.rand(20, 30, 1)
+    x = torch.rand(40, 50, 60, 1)
     model.eval()
     model.drop(False)
     with torch.no_grad():
@@ -31,7 +31,7 @@ def test_drop_false(model):
 
 
 def test_drop_true(model):
-    x = torch.rand(20, 30, 1)
+    x = torch.rand(40, 50, 60, 1)
     model.eval()
     model.drop(True)
     with torch.no_grad():

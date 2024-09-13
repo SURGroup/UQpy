@@ -1,64 +1,86 @@
 import torch
-from typing import Annotated
+from typing import Union
 from beartype import beartype
-from beartype.vale import Is
-from UQpy.utilities.ValidationTypes import PositiveInteger
 from UQpy.scientific_machine_learning.baseclass import Loss
 
 
 @beartype
 class LpLoss(Loss):
+
     def __init__(
         self,
-        d: PositiveInteger = 2,
-        p: PositiveInteger = 2,
-        reduction: Annotated[str, Is[lambda s: s in ("mean", "sum", "none")]] = "mean",
+        ord: Union[int, float, str] = 2,
+        dim: Union[int, tuple, None] = None,
+        reduction: str = "mean",
     ):
-        """Compute the :math:`L_p(x, y)` loss on two tensors
+        r"""Construct a loss function :math:`L^p(x, y)` where :math:`p=\text{dim}`
 
-        :param d: ToDo:  is this  Dimensionality of the input plus one?
-        :param p: Exponent used in the loss function
-        :param reduction: Optional, defines method to simplify loss output
+        :param ord: Order of the norm. Default: 2
+        :param dim: Dimensions over which to compute the norm specified as an integer or tuple.
+         If ``dim=None``, the vector is flattened before the norm is computed. Default: None
+        :param reduction: Specifies the reduction to apply to the output: 'none', 'mean', or 'sum'.
+         'none': no reduction will be applied, 'mean': the output will be averaged, 'sum': the output will be summed.
+         Default: 'sum'
+
+        .. note::
+            This is an implementation of :py:class:`torch.linalg.vector_norm` as a :py:class:`torch.nn.Module`.
+            This class implements most, but not all, of the :code:`vector_norm` keywords.
+            See the
+            `PyTorch vector_norm documentation <https://pytorch.org/docs/stable/generated/torch.linalg.vector_norm.html#torch.linalg.vector_norm>`__.
+            for details.
+
+        Formula
+        -------
+
+        +-------------+----------------------------------------------+
+        | Ord         | Norm                                         |
+        +=============+==============================================+
+        | 2 (default) | :math:`\sqrt{(x-y)^2}`                       |
+        +-------------+----------------------------------------------+
+        | int, float  | :math:`((x-y)^n)^{1/n}`                      |
+        +-------------+----------------------------------------------+
+        | 0           | sum(x != 0), the number of non-zero elements |
+        +-------------+----------------------------------------------+
+        | -inf        | :math:`\min{|x-y|}`                          |
+        +-------------+----------------------------------------------+
+        | inf         | :math:`\max{|x-y|}`                          |
+        +-------------+----------------------------------------------+
+
+        where inf refers to :code:`float('inf')`, :py:class:`torch.inf`, or any equivalent object.
+
+
+        Example:
+
+        >>> loss = sml.LpLoss()
+        >>> input = torch.randn(3, 5, requires_grad=True)
+        >>> target = torch.randn(3, 5)
+        >>> output = loss(input, target)
+        >>> output.backward()
+
         """
-        self.d = d
-        self.p = p
+        super().__init__()
+        self.ord = ord
+        self.dim = dim
         self.reduction = reduction
 
-    def absolute(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        """Absolute L1 Loss (Mean Absolute Error)  ToDo: How should the user invoke this?
-
-        :param x:
-        :param y:
-        :return: all_norms
-        """
-        num_examples = x.size()[0]
-        h = 1.0 / (x.size()[1] - 1.0)  # Assume uniform mesh
-        all_norms = (h ** (self.d / self.p)) * torch.norm(
-            x.view(num_examples, -1) - y.view(num_examples, -1), self.p, 1
-        )
-
-        if self.reduction == "mean":
-            return torch.mean(all_norms)
-        elif self.reduction == "sum":
-            return torch.sum(all_norms)
-        else:
-            return all_norms
-
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        """Computation call of relative :math:`L_p` loss
+        """Compute the loss :math:`L_p(x, y)`.
 
-        :param x: first input tensor
-        :param y: second input tensor
-        :return: Loss between ``x`` and ``y`` defined by :math:`L_p(x, y)`
+        The valid shapes for ``x`` and ``y`` depend on
+        `PyTorch broadcast semantics <https://pytorch.org/docs/stable/notes/broadcasting.html>`__ .
+
+        :param x: Tensor of any shape. Must be broadcastable with ``y``
+        :param y: Tensor of any shape. Must be broadcastable with ``x``.
+        :return: Tensor of shape ``x`` or ``y`` (depending on broadcasting semantics).
         """
-        num_examples = x.size()[0]
-        diff_norms = torch.norm(
-            x.reshape(num_examples, -1) - y.reshape(num_examples, -1), self.p, 1
-        )
-        y_norms = torch.norm(y.reshape(num_examples, -1), self.p, 1)
-        if self.reduction == "mean":
-            return torch.mean(diff_norms / y_norms)
+        norm = torch.linalg.vector_norm(x - y, ord=self.ord, dim=self.dim)
+        if self.reduction is "none":
+            return norm
+        elif self.reduction == "mean":
+            return torch.mean(norm)
         elif self.reduction == "sum":
-            return torch.sum(diff_norms / y_norms)
+            return torch.sum(norm)
         else:
-            return diff_norms / y_norms
+            raise ValueError(
+                f"UQpy: Invalid reduction={self.reduction}. Must be one of 'none', 'mean', or 'sum'"
+            )

@@ -8,7 +8,7 @@ Methods
 ~~~~~~~
 
 .. autoclass:: UQpy.scientific_machine_learning.baseclass.NeuralNetwork
-    :members: summary, count_parameters, drop, sample, is_deterministic
+    :members: summary, count_parameters, drop, sample, is_deterministic, set_deterministic
 
 Attributes
 ~~~~~~~~~~

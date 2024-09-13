@@ -33,15 +33,15 @@ def test_shape(n):
     prior = [dist.Uniform(0, 1)] * n
     posterior = [dist.Uniform(0, 1)] * n
     kl = func.mc_kullback_leibler_divergence(
-        posterior, prior, num_samples=1, reduction="sum"
+        posterior, prior, n_samples=1, reduction="sum"
     )
     assert kl.shape == torch.Size()
     kl = func.mc_kullback_leibler_divergence(
-        posterior, prior, num_samples=1, reduction="mean"
+        posterior, prior, n_samples=1, reduction="mean"
     )
     assert kl.shape == torch.Size()
     kl = func.mc_kullback_leibler_divergence(
-        posterior, prior, num_samples=1, reduction="none"
+        posterior, prior, n_samples=1, reduction="none"
     )
     assert kl.shape == torch.Size([n])
 
@@ -58,7 +58,7 @@ def test_accuracy(prior_mu, prior_sigma, posterior_mu, posterior_sigma):
     posterior_distribution = [dist.Normal(posterior_mu, posterior_sigma)]
     prior_distribution = [dist.Normal(prior_mu, prior_sigma)]
     kl_mc = func.mc_kullback_leibler_divergence(
-        posterior_distribution, prior_distribution, num_samples=100
+        posterior_distribution, prior_distribution, n_samples=100
     )
     kl_cf = func.gaussian_kullback_leibler_divergence(
         torch.tensor(posterior_mu),

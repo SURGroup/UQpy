@@ -20,8 +20,8 @@ which uses similar inputs.
 
 The module contains the following parent classes for neural networks:
 
-- :class:`ActivationFunction`: Parent class to all activation functions. Subclass of :class:`torch.nn.Module`.
-- :class:`BayesianLayer`: Parent class to all Bayesian layers. Subclass of :class:`Layer`
+- :class:`.NormalBayesianLayer`: Parent class to all Bayesian layers. Subclass of :class:`Layer`
+- :class:`.ProbabilisticDropoutLayer`: Parent class to all Dropout layers. Subclass of :class:`Layer`
 - :class:`.Layer`: Parent class to all Neural Network Layers. Subclass of :class:`torch.nn.Module`.
 - :class:`.Loss`: Parent class to all Loss functions. Subclass of :class:`torch.nn.Module`.
 - :class:`.NeuralNetwork`: Parent class to all Neural Networks and Neural Operators.  Subclass of :class:`torch.nn.Module`.
@@ -39,24 +39,68 @@ To prevent naming conflicts with the common torch imports, we recommend importin
 >>> import UQpy.scientific_machine_learning.functional as func
 
 
-Getting Started
----------------
+Quickstart
+----------
 
 .. toctree::
+   :maxdepth: 1
 
     Bayesian Quickstart Training <../auto_examples/scientific_machine_learning/bayesian_quickstart/bayesian_quickstart_training>
     Bayesian Quickstart Testing <../auto_examples/scientific_machine_learning/bayesian_quickstart/bayesian_quickstart_testing>
 
-
-Documentation
--------------
+Functional
+----------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-    Activations <activations/index>
-    Functional <functional/index>
-    Layers <layers/index>
+    Overview <functional/index>
+    Losses <functional/losses>
+    Spectral Convolutions <functional/spectral_conv>
+
+Layers
+------
+
+.. toctree::
+   :maxdepth: 1
+
+    Overview <layers/index>
+    Bayesian Base Class <layers/bayesian_baseclass>
+    Bayesian Layers <layers/bayesian_layers>
+    Dropout Base Class <layers/dropout_baseclass>
+    Dropout Layers <layers/dropout_layers>
+    Fourier Layers <layers/fourier_layers>
+    Normalizer Layers <layers/normalizers>
+
+Losses
+------
+
+.. toctree::
+   :maxdepth: 1
+
     Loss Functions <losses>
-    Neural Networks <neural_networks/index>
-    Trainers <trainers/index>
+
+Neural Networks
+---------------
+
+.. toctree::
+   :maxdepth: 1
+
+    Overview <neural_networks/index>
+    Neural Network Base Class <neural_networks/neural_network_parent>
+    Deep Operator Network <neural_networks/deep_operator_network>
+    Feed Forward Neural Network <neural_networks/feed_forward_neural_network>
+    Fourier Neural Operator <neural_networks/fourier_neural_network>
+    U-Shaped Neural Network <neural_networks/u_neural_network>
+
+Trainers
+--------
+
+.. toctree::
+   :maxdepth: 1
+
+    Overview <trainers/index>
+    Trainer <trainers/trainer>
+    BBBTrainer <trainers/bbb_trainer>
+    HMCTrainer <trainers/hmc_trainer>
+

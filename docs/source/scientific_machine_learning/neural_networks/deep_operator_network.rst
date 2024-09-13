@@ -14,14 +14,14 @@ The deep operator network is defined by its branch and trunk networks, as shown 
 
 The :class:`.DeepOperatorNetwork` class is imported using the following command:
 
->>> from UQpy.scientific_machine_learning.neural_networks.DeepOperatorNetwork import DeepOperatorNetwork
+>>> from UQpy.scientific_machine_learning import DeepOperatorNetwork
 
 
 Methods
 -------
 
 .. autoclass:: UQpy.scientific_machine_learning.neural_networks.DeepOperatorNetwork
-    :members: forward
+    :members: forward, summary, count_parameters, drop, sample, is_deterministic, set_deterministic
 
 Note the branch network should map a tensor of shape :math:`(N, 1, B_\text{in})` to :math:`(N, 1, \text{width})`
 and the trunk network should map a tensor of shape :math:`(N, m, T_\text{in})` to :math:`(N, m, \text{width})`,

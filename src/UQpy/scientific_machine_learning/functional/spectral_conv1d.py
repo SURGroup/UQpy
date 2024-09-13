@@ -27,7 +27,7 @@ def spectral_conv1d(
             "UQpy: Invalid `modes`. `modes` must be less than or equal to (length // 2) + 1"
         )
     if weights.shape != torch.Size([in_channels, out_channels, modes]):
-        raise AssertionError(
+        raise RuntimeError(
             "UQpy: Invalid shape for `weights`. `weights` must have shape (in_channels, out_channels, modes)"
         )
     # Apply Fourier transform

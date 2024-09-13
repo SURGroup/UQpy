@@ -2,11 +2,15 @@ import torch
 import torch.nn.functional as F
 from torch.nn.modules.utils import _triple
 from typing import Union
-from UQpy.scientific_machine_learning.baseclass import BayesianLayer
-from UQpy.utilities.ValidationTypes import PositiveInteger, NonNegativeInteger
+from UQpy.scientific_machine_learning.baseclass import NormalBayesianLayer
+from UQpy.utilities.ValidationTypes import (
+    PositiveInteger,
+    NonNegativeInteger,
+    PositiveFloat,
+)
 
 
-class BayesianConv3d(BayesianLayer):
+class BayesianConv3d(NormalBayesianLayer):
 
     def __init__(
         self,
@@ -28,8 +32,11 @@ class BayesianConv3d(BayesianLayer):
         ] = 1,
         groups: PositiveInteger = 1,
         bias: bool = True,
-        priors: dict = None,
         sampling: bool = True,
+        prior_mu: float = 0.0,
+        prior_sigma: PositiveFloat = 0.1,
+        posterior_mu_initial: tuple[float, PositiveFloat] = (0.0, 0.1),
+        posterior_rho_initial: tuple[float, PositiveFloat] = (-3.0, 0.1),
         device: Union[torch.device, str] = None,
         dtype: torch.dtype = None,
     ):
@@ -39,21 +46,25 @@ class BayesianConv3d(BayesianLayer):
         :param out_channels: Number of channels produced by the convolution
         :param kernel_size: Size of the convolving kernel
         :param stride: Stride of the convolution. Default: 1
-        :param padding: Padding added to all six sides of the input. Default: 0
-         It can be either a string {‘valid’, ‘same’} or a tuple of ints giving the amount of implicit padding applied on both sides.
+        :param padding: Padding added to all six sides of the input.
+         It can be either a string {‘valid’, ‘same’} or a tuple of ints giving the amount of implicit padding applied on both sides. Default: 0
         :param dilation: Spacing between kernel elements. Default: 1
-        :param groups: Number of blocked connections from input channels to output channels. Default: 1.
-         ``in_channels`` and ``out_channels`` must both be divisible by ``groups``.
+        :param groups: Number of blocked connections from input channels to output channels.
+         ``in_channels`` and ``out_channels`` must both be divisible by ``groups``. Default: 1.
         :param bias: If ``True``, adds a learnable bias to the output. Default: ``True``
-        :param priors: Prior and posterior distribution parameters.
-         The dictionary keys and their default values are:
-
-         - "prior_mu": 0
-         - "prior_sigma" : 0.1
-         - "posterior_mu_initial": (0.0, 0.1)
-         - "posterior_rho_initial": (-3.0, 0.1)
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
          If ``False``, use distribution mean as parameter values. Default: ``True``
+        :param prior_mu: Prior mean, :math:`\mu_\text{prior}` of the prior normal distribution.
+         Default: 0.0
+        :param prior_sigma: Prior standard deviation, :math:`\sigma_\text{prior}`, of the prior normal distribution.
+         Default: 0.1
+        :param posterior_mu_initial: Mean and standard deviation of the initial posterior distribution for :math:`\mu`.
+         The initial posterior is :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
+         Default: (0.0, 0.1)
+        :param posterior_rho_initial: Mean and standard deviation of the initial posterior distribution for :math:`\rho`.
+         The initial posterior is :math:`\mathcal{N}(\rho_\text{posterior}[0], \rho_\text{posterior}[1])`.
+         The standard deviation of the posterior is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to ensure it is positive.
+         Default: (-3.0, 0.1)
 
         .. note::
             This class calls :func:`torch.nn.functional.conv3d` with ``padding_mode='zeros'``.
@@ -76,14 +87,14 @@ class BayesianConv3d(BayesianLayer):
 
         - **weight_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the weights of the module
           of shape :math:`(\text{out_channels}, \frac{\text{in_channels}}{\text{groups}}, \text{kernel_size[0]}, \text{kernel_size[1]}, \text{kernel_size[2]})`.
-        - **weight_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance of the weights of the module
+        - **weight_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution standard deviation of the weights of the module
           of shape :math:`(\text{out_channels}, \frac{\text{in_channels}}{\text{groups}}, \text{kernel_size[0]}, \text{kernel_size[1]}, \text{kernel_size[2]})`.
-          The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
+          The standard deviation is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to guarantee it is positive.
         - **bias_mu** (:py:class:`torch.nn.Parameter`): The learnable distribution mean of the bias of the module
           of shape :math:`(\text{out_channels})`. If ``bias`` is ``True``, the values are initialized
           from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
-        - **bias_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution variance of the bias of the module
-          of shape :math:`(\text{out_channels})`. The variance is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to
+        - **bias_rho** (:py:class:`torch.nn.Parameter`): The learnable distribution standard deviation of the bias of the module
+          of shape :math:`(\text{out_channels})`. The standard deviation is computed as :math:`\sigma = \ln( 1 + \exp(\rho))` to
           guarantee it is positive. If ``bias`` is ``True``, the values are initialized
           from :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
 
@@ -104,9 +115,18 @@ class BayesianConv3d(BayesianLayer):
         kernel_size = _triple(kernel_size)
         parameter_shapes = {
             "weight": (out_channels, in_channels // groups, *kernel_size),
-            "bias": out_channels if bias else None
+            "bias": out_channels if bias else None,
         }
-        super().__init__(parameter_shapes, priors, sampling, device, dtype)
+        super().__init__(
+            parameter_shapes,
+            sampling,
+            prior_mu,
+            prior_sigma,
+            posterior_mu_initial,
+            posterior_rho_initial,
+            device,
+            dtype,
+        )
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = _triple(kernel_size)
@@ -116,7 +136,7 @@ class BayesianConv3d(BayesianLayer):
         self.groups = groups
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Apply :func:`F.conv3d` to ``x`` where the weight and bias are drawn from random variables
+        r"""Apply :func:`F.conv3d` to ``x`` where the weight and bias are drawn from random variables
 
         :param x: Tensor of shape :math:`(N, C_\text{in}, D_\text{in}, H_\text{in}, W_\text{in})`
         :return: Tensor of shape :math:`(N, C_\text{out}, D_\text{out}, H_\text{out}, W_\text{out})`
@@ -144,8 +164,14 @@ class BayesianConv3d(BayesianLayer):
             s += ", groups={groups}"
         if self.bias is False:
             s += ", bias={bias}"
-        if self.priors:
-            s += ", priors={priors}"
-        if not self.sampling:
+        if self.sampling is False:
             s += ", sampling={sampling}"
+        if self.prior_mu != 0.0:
+            s += ", prior_mu={prior_mu}"
+        if self.prior_sigma != 0.1:
+            s += ", prior_sigma={prior_sigma}"
+        if self.posterior_mu_initial != (0.0, 0.1):
+            s += ", posterior_mu_initial={posterior_mu_initial}"
+        if self.posterior_rho_initial != (-3.0, 0.1):
+            s += ", posterior_rho_initial={posterior_rho_initial}"
         return s.format(**self.__dict__)

@@ -37,7 +37,8 @@ class NeuralNetwork(nn.Module, ABC):
     def sample(self, mode: bool = True):
         """Set sampling mode.
 
-        Note: This method and ``self.sampling`` only affects UQpy's Bayesian layers
+        .. note::
+            This method and ``self.sampling`` only affects UQpy's Bayesian layers
 
         :param mode: If ``True`` sample from distributions, otherwise use distribution means.
         :return: ``self``
@@ -54,7 +55,8 @@ class NeuralNetwork(nn.Module, ABC):
     def drop(self, mode: bool = True):
         """Set dropping mode.
 
-        Note: This method and ``self.dropping`` only affects UQpy's dropout layers
+        .. note::
+            This method and ``self.dropping`` only affects UQpy's dropout layers
 
         :param mode: If ``True`` perform dropout, otherwise act as the identity function.
         """
@@ -70,8 +72,9 @@ class NeuralNetwork(nn.Module, ABC):
     def is_deterministic(self) -> bool:
         """Check if neural network is behaving deterministically or probabilistically.
 
-        Note: This flag may be incorrect if the model has sources of randomness that do not depend on
-        ``training``, ``dropping``, or ``sampling``.
+        .. note::
+            This flag may be incorrect if the model has sources of randomness that do not depend on the attributes
+            ``training``, ``dropping``, or ``sampling``.
 
         :return: ``True`` if ``sampling``, ``dropping``, and ``training`` are all ``False``.
          Otherwise, returns ``False``.

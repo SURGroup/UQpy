@@ -37,3 +37,6 @@ Torch4DComplexTensor = Annotated[
 Torch5DComplexTensor = Annotated[
     torch.Tensor, Is[lambda tensor: tensor.ndim == 5 and tensor.is_complex()]
 ]
+Torch6DComplexTensor = Annotated[
+    torch.Tensor, Is[lambda tensor: tensor.ndim == 6 and tensor.is_complex()]
+]

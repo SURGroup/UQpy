@@ -12,7 +12,7 @@ class FeedForwardNeuralNetwork(NeuralNetwork):
         """
         super().__init__()
         self.network: nn.Module = network
-        """Neural network architecture defined as a ``torch.nn.Module``"""
+        """Neural network architecture defined as a :py:class:`torch.nn.Module`"""
 
         # set all layers to the same training, dropping, and sampling mode
         training = False
