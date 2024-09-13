@@ -15,7 +15,7 @@ def test_reduction_shape():
         sml.BayesianLinear(width, 1),
     )
     model = sml.FeedForwardNeuralNetwork(network)
-    divergence_function = sml.GeneralizedJensenShannonDivergence(uq.Normal, uq.Uniform)
+    divergence_function = sml.GeneralizedJensenShannonDivergence(uq.Normal, uq.Uniform, n_samples=1)
     divergence = divergence_function(model)
     assert divergence.shape == torch.Size()
 
@@ -32,7 +32,7 @@ def test_device():
         else torch.device("mps", 0) if torch.backends.mps.is_available() else "cpu"
     )
     divergence_function = sml.GeneralizedJensenShannonDivergence(
-        uq.Normal, uq.Normal, device=device
+        uq.Normal, uq.Normal, device=device, n_samples=1
     )
     model = sml.FeedForwardNeuralNetwork(sml.BayesianLinear(1, 1))
     model.to(device)
