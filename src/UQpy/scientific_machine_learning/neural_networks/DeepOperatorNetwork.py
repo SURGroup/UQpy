@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import logging
 from UQpy.scientific_machine_learning.baseclass.NeuralNetwork import NeuralNetwork
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
@@ -25,11 +24,17 @@ class DeepOperatorNetwork(NeuralNetwork):
 
         Shape:
 
-        - Input:
+        - Input: Two tensors representing :math:`x` and :math:`f(x)`
 
-            - Branch Network (:math:`f(x)`): :math:`(N, m_\text{branch})`
-            - Trunk Network (:math:`x`): :math:`(N, m_\text{trunk}, d)`
-        - Output: :math:`(N, m_\text{trunk}, C_\text{out})`
+            - Branch Network (:math:`f(x)`): Any shape (can be different from trunk)
+            - Trunk Network (:math:`x`): Any shape (can be different from branch)
+
+        - Intermediary: The output from the branch and trunk network must be of shapes :math:`(*, \text{width})` and :math:`(*, \text{width})`.
+          Where :math:`*` refers to any broadcastable dimensions.
+          Both the tensors are viewed reshaped as :math:`(*, C_\text{out}. \frac{\text{width}}{C_\text{out}} before the dot product is computed.
+
+        - Output: Tensor of shape :math:`(*, C_\text{out})`
+
         """
         super().__init__()
         self.branch_network: nn.Module = branch_network
@@ -37,8 +42,6 @@ class DeepOperatorNetwork(NeuralNetwork):
         self.trunk_network: nn.Module = trunk_network
         """Architecture of the trunk neural network defined by a :py:class:`torch.nn.Module`"""
         self.out_channels = out_channels
-
-        self.logger = logging.getLogger(__name__)
 
     def forward(
         self,
@@ -55,39 +58,12 @@ class DeepOperatorNetwork(NeuralNetwork):
         """
         branch_output = self.branch_network(f_x)
         trunk_output = self.trunk_network(x)
-        if branch_output.shape[-1] != trunk_output.shape[-1]:
+        if branch_output.size(-1) != trunk_output.size(-1):
             raise RuntimeError(
                 f"UQpy: Incompatible trunk {trunk_output.shape} and branch {branch_output.shape} output shapes."
-                f"\nTrunk output must have shape (N, m_trunk, width). "
-                f"Branch output must have shape (N, width)."
+                f"\nTrunk and branch output must have shape (*, width). "
             )
-        batch_size = f_x.size(0)
-        width = branch_output.size(1)
-        # check dimensions of branch output
-        if branch_output.shape != torch.Size([batch_size, width]):
-            raise RuntimeError(
-                f"UQpy: Invalid branch output shape {branch_output.shape}. "
-                f"Branch output must have shape (N, width)={(batch_size, width)}."
-            )
-        # check dimensions of trunk output
-        if x.ndim == 2:
-            m_trunk = x.size(0)
-            expected_trunk_output_shape = torch.Size([m_trunk, width])
-        elif x.ndim == 3:
-            m_trunk = x.size(1)
-            expected_trunk_output_shape = torch.Size([batch_size, m_trunk, width])
-        else:
-            raise RuntimeError(
-                f"UQpy: Invalid trunk output shape {trunk_output.shape}. "
-                f"Trunk output must have shape (m_trunk, width) or (N, m_trunk, width)."
-            )
-        if trunk_output.shape != expected_trunk_output_shape:
-            raise RuntimeError(
-                f"UQpy: Invalid trunk output shape {trunk_output.shape}. "
-                f"Trunk output must have shape (m_trunk, width) or (N, m_trunk, width). "
-                f"Expected shape: {expected_trunk_output_shape}"
-            )
-        # check that the number of out channels divides the width
+        width = branch_output.size(-1)
         if width % self.out_channels != 0:
             raise RuntimeError(
                 f"UQpy: Branch and trunk width {width} must be divisible by out_channels {self.out_channels}"
@@ -95,9 +71,11 @@ class DeepOperatorNetwork(NeuralNetwork):
 
         return torch.einsum(
             "...i,...i",
-            branch_output.view(batch_size, 1, self.out_channels, -1),
+            branch_output.view(
+                *branch_output.shape[:-1], self.out_channels, width // self.out_channels
+            ),
             trunk_output.view(
-                1 if x.ndim == 2 else batch_size, m_trunk, self.out_channels, -1
+                *trunk_output.shape[:-1], self.out_channels, width // self.out_channels
             ),
         )
 

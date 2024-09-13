@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import UQpy.scientific_machine_learning as sml
 from hypothesis import given, strategies as st
+from hypothesis.extra.numpy import array_shapes
 
 
 @given(
@@ -23,6 +24,20 @@ def test_n_m_shape(n, m):
     assert g_x.shape == torch.Size([n, m, 1])
 
 
+@given(array_shapes(min_side=1, min_dims=1), st.integers(min_value=1, max_value=8))
+def test_same_input_shape(shape, out_channels):
+    width = 2 * out_channels
+    deep_o_net = sml.DeepOperatorNetwork(
+        nn.Linear(shape[-1], width),
+        nn.Linear(shape[-1], width),
+        out_channels=out_channels,
+    )
+    x = torch.rand(shape)
+    f_x = torch.rand(shape)
+    output = deep_o_net(x, f_x)
+    assert output.shape == torch.Size((*shape[:-1], out_channels))
+
+
 @given(
     b_in=st.integers(min_value=1, max_value=8),
     t_in=st.integers(min_value=1, max_value=8),
@@ -40,22 +55,6 @@ def test_channels_shape(b_in, t_in, out_channels):
     f_x = torch.rand(n, b_in)
     g_x = deep_o_net(x, f_x)
     assert g_x.shape == torch.Size([n, m, out_channels])
-
-
-def test_trunk_input2d():
-    """The trunk input can be (m_trunk, d) or (N, m_trunk, d)"""
-    m_trunk = 100
-    m_branch = 50
-    d = 1
-    batch_size = 16
-    width = 8
-    deep_o_net = sml.DeepOperatorNetwork(
-        nn.Linear(m_branch, width), nn.Linear(d, width)
-    )
-    x = torch.rand(m_trunk, d)
-    f_x = torch.rand(batch_size, m_branch)
-    g_x = deep_o_net(x, f_x)
-    assert g_x.shape == torch.Size([batch_size, m_trunk, 1])
 
 
 def test_no_bias():
