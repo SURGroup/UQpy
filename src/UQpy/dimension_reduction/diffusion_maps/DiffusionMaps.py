@@ -133,7 +133,7 @@ class DiffusionMaps:
         transition_matrix = d_star_inv_d.dot(l_star)
 
         if self.is_sparse:
-            is_symmetric = sp.sparse.linalg.norm(transition_matrix - transition_matrix.T, sp.inf) < 1e-08
+            is_symmetric = sp.sparse.linalg.norm(transition_matrix - transition_matrix.T, np.inf) < 1e-08
         else:
             is_symmetric = np.allclose(transition_matrix, transition_matrix.T, rtol=1e-5, atol=1e-08)
 

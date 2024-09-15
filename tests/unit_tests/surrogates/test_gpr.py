@@ -1,5 +1,4 @@
 import pytest
-from beartype.roar import BeartypeCallHintPepParamException
 
 from UQpy.utilities.kernels.euclidean_kernels import RBF, Matern
 from UQpy.utilities.MinimizeOptimizer import MinimizeOptimizer

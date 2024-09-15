@@ -1,6 +1,6 @@
 import shutil
 
-from beartype.roar import BeartypeCallHintPepParamException
+from beartype.roar import BeartypeCallHintParamViolation
 
 from UQpy.run_model.model_execution.PythonModel import PythonModel
 from UQpy.run_model import ThirdPartyModel, RunModel
@@ -38,7 +38,7 @@ verbose_parameter = True
 
 
 def test_var_names():
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         model = PythonModel(model_script='python_model.py', model_object_name='SumRVs', var_names=[20],
                             delete_files=True)
         runmodel_object = RunModel(model=model)
@@ -52,7 +52,7 @@ def test_model_script():
 
 
 def test_samples():
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         model = PythonModel(model_script='python_model.py', model_object_name='SumRVs',
                          delete_files=True)
         runmodel_object = RunModel(model=model, samples="samples_string")
