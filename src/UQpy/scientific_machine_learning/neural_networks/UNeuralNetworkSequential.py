@@ -56,10 +56,10 @@ class UNeuralNetworkSequential(NeuralNetwork):
             setattr(self, f"decoder_{i}", self.construct_decoder(i))
         self.final_layer = nn.Conv2d(
             self.filter_sizes[1], self.out_channels, kernel_size=1, padding=0
-        ) # ToDo: does this ever change? Does it need to be a class attribute?
+        )
         self.decoder_upsample = nn.Upsample(
             scale_factor=2, mode="bilinear", align_corners=True
-        )  # ToDo: does this ever change? Does it need to be a class attribute?
+        )
 
     def construct_encoder(self, i: PositiveInteger) -> nn.Module:
         """Construct the ``i``-th encoder
@@ -99,7 +99,7 @@ class UNeuralNetworkSequential(NeuralNetwork):
         """
         combined_channels = self.filter_sizes[i] + self.filter_sizes[i - 1]
         # out_channels = self.filter_sizes[i - 1] if i > 0 else 1
-        out_channels = 1 if i == 0 else self.filter_sizes[i - 1]
+        out_channels = self.filter_sizes[i - 1]
         layers = [
             nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True),
             self.layer_type(
@@ -109,7 +109,7 @@ class UNeuralNetworkSequential(NeuralNetwork):
                 padding=self.kernel_size // 2,
             ),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(),  # ???
+            nn.ReLU(),
             self.layer_type(
                 out_channels,
                 out_channels,
@@ -170,3 +170,18 @@ class UNeuralNetworkSequential(NeuralNetwork):
 
         x = self.final_layer(x)
         return x
+
+
+if __name__ == "__main__":
+    n_filters = (1, 64, 128)
+    kernel_size = 3
+    out_channels = 3
+    unet = UNeuralNetworkSequential(n_filters, kernel_size, out_channels)
+    x = torch.rand(1, 1, 512, 512)
+    print(unet)
+    y = unet(x)
+    print()
+    print(x.shape)
+    print(y.shape)
+    # for m in unet.modules():
+    #     print(m)

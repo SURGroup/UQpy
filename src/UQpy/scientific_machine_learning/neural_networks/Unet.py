@@ -15,70 +15,57 @@ class Unet(NeuralNetwork):
         out_channels: PositiveInteger,
         layer_type: nn.Module = nn.Conv2d,
     ):
-        """
-        Construct U-net convolutional neural network for mean-field prediction
+        r"""Construct U-net convolutional neural network for mean-field prediction
 
-        :param n_filters : A list of positive integers specifying the number of filters at for each convolutional layer in the encoding and decoding paths
-        .. note:: The length of the list determines the depth of the U-Net. 
-        :param kernel_size : The size of the convolutional kernels. This value is used for all convolutional layers. Standard kernel size options are :math(3, 6) or :math(9).
-        out_channels : The number of output channels in the final convolutional layer. 
-        layer_type : The type of convolutional layer to use. The default is the ``nn.Conv2d``. It can be replaced with Bayesian layers for performing uncertainty quantification.
+        :param n_filters: A list of positive integers specifying the number of filters at for each convolutional layer in the encoding and decoding paths.
+         The length of the list determines the depth of the U-Net.
+        :param kernel_size: The size of the convolutional kernels. This value is used for all convolutional layers.
+         Standard kernel size options are 3, 6, or 9.
+        :param out_channels: The number of output channels in the final convolutional layer.
+        :param layer_type: The type of convolutional layer to use. The default is the ``nn.Conv2d``.
+         It can be replaced with Bayesian layers for performing uncertainty quantification.
 
-        Shape: 
-        - Input:Tensor of shape :math:(N, N_C, N_H, N_W) where:
-        :math:N is the batch size or number of samples.
-        :math:N_C is the number of input channels (e.g., RGB images, stress field maps etc).
-        :math:N_H number of pixels in the height of the input image.
-        :math:N_W number of pixels in the width of the input image.
-        
+        Shape:
+
+        - Input: Tensor of shape :math:`(N, C_\text{in}, H, W)`
+        - Output: Tensor of shape :math:`(N, C_\text{out}, H, W)`
+
         Attributes:
-        The following encoding and decoding blocks are dynamically created during initialization based on the `n_filters` list up to :math:`i=n_\text{filters} - 1.
 
-    **Encoder Layers**:
+        Encoder Layers:
 
-    - **encoder_maxpool_i** : nn.MaxPool2d
-        Max pooling layer for downsampling at encoder layer ``i`` (for ``i > 1``).
-    - **encoder_conv_1_i** : nn.Module
-        First convolutional layer at encoder layer ``i``.
-    - **encoder_bn_1_i** : nn.BatchNorm2d
-        Batch normalization layer after `encoder_conv_1_i`.
-    - **encoder_conv_2_i** : nn.Module
-        Second convolutional layer at encoder layer ``i``.
-    - **encoder_bn_2_i** : nn.BatchNorm2d
-        Batch normalization layer after `encoder_conv_2_i`.
+        The encoding blocks are created during initialization from the ``n_filters`` list
+        for indices :math:`i=1, \dots, \text{len}(\texttt{n_filters})- 1`.
 
-    **Decoder Layers**:
+        - **encoder_maxpool_i** (:py:class:`torch.nn.MaxPool2d`):
+            Max pooling layer for downsampling at encoder layer ``i`` (for ``i > 1``).
+        - **encoder_conv_1_i** : nn.Module
+            First convolutional layer at encoder layer ``i``.
+        - **encoder_bn_1_i** : nn.BatchNorm2d
+            Batch normalization layer after `encoder_conv_1_i`.
+        - **encoder_conv_2_i** : nn.Module
+            Second convolutional layer at encoder layer ``i``.
+        - **encoder_bn_2_i** : nn.BatchNorm2d
+            Batch normalization layer after `encoder_conv_2_i`.
 
-    - **decoder_upsample_i** : nn.Upsample
-        Upsampling layer at decoder layer ``i``.
-    - **decoder_conv_1_i** : nn.Module
-        First convolutional layer at decoder layer ``i``.
-    - **decoder_bn_1_i** : nn.BatchNorm2d
-        Batch normalization layer after `decoder_conv_1_i`.
-    - **decoder_conv_2_i** : nn.Module
-        Second convolutional layer at decoder layer ``i``.
-    - **decoder_bn_2_i** : nn.BatchNorm2d
-        Batch normalization layer after `decoder_conv_2_i`.
+        Decoder Layers:
 
-    **Final Convolution Layer**:
-    - **final_conv**: nn.Conv2d applied after the last decoder block. It maps the output to the desired number of channels.
-    
-    Methods
-    -------
-    - forward(x)
-        Performs the forward pass through the U-Net model.
+        - **decoder_upsample_i** : nn.Upsample
+            Upsampling layer at decoder layer ``i``.
+        - **decoder_conv_1_i** : nn.Module
+            First convolutional layer at decoder layer ``i``.
+        - **decoder_bn_1_i** : nn.BatchNorm2d
+            Batch normalization layer after `decoder_conv_1_i`.
+        - **decoder_conv_2_i** : nn.Module
+            Second convolutional layer at decoder layer ``i``.
+        - **decoder_bn_2_i** : nn.BatchNorm2d
+            Batch normalization layer after `decoder_conv_2_i`.
 
-    - optional_step_en(x, i)
+        **Final Convolution Layer**:
+        - **final_conv**: nn.Conv2d applied after the last decoder block. It maps the output to the desired number of channels.
 
-    - optional_step_dec(x, i)
-
-    Optional methods for additional operations at the encoding and decoding path, respecitvely.
-    These intended to be overridden by subclasses to apply operations like Monte Carlo Dropout(MCD) based on a boolean index i. The boolean index i has the same length as the number of filters. These should be specified in the sublass.
-
-    .. note::
-        By default, this method returns the input tensor unchanged.
-
-    """
+        These intended to be overridden by subclasses to apply operations like Monte Carlo Dropout(MCD) based on a boolean index i. The boolean index i has the same length as the number of filters. These should be specified in the sublass.
+        """
 
         super(Unet, self).__init__()
         self.n_filters = n_filters
@@ -88,10 +75,8 @@ class Unet(NeuralNetwork):
 
         self.logger = logging.getLogger(__name__)
 
-        """Encoding Block Initialization"""
-        
-        for i in range(1, len(self.n_filters)):
-            in_channels = self.n_filters[i - 1] if i > 0 else 1
+        for i in range(1, len(self.n_filters)):  # initialize encoding blocks
+            in_channels = self.n_filters[i - 1]
             out_channels = self.n_filters[i]
 
             if i != 1:
@@ -122,11 +107,9 @@ class Unet(NeuralNetwork):
             )
             setattr(self, f"encoder_bn_2_{i}", nn.BatchNorm2d(out_channels))
 
-        """Decoding Block Initialization"""
-
-        for i in range(len(self.n_filters) - 1, 1, -1):
+        for i in range(len(self.n_filters) - 1, 1, -1):  # initialize decoding blocks
             combined_channels = self.n_filters[i] + self.n_filters[i - 1]
-            out_channels = self.n_filters[i - 1] if i > 0 else 1
+            out_channels = self.n_filters[i - 1]
             setattr(
                 self,
                 f"decoder_upsample_{i}",
@@ -143,7 +126,6 @@ class Unet(NeuralNetwork):
                 ),
             )
             setattr(self, f"decoder_bn_1_{i}", nn.BatchNorm2d(out_channels))
-            # self.decoder_bn_2.append(nn.BatchNorm2d(out_channels))
             setattr(
                 self,
                 f"decoder_conv_2_{i}",
@@ -156,14 +138,14 @@ class Unet(NeuralNetwork):
             )
             setattr(self, f"decoder_bn_2_{i}", nn.BatchNorm2d(out_channels))
 
-        """Final Convolution Layer"""
-
         self.final_conv = nn.Conv2d(
             self.n_filters[1], self.out_channels, kernel_size=1, padding=0
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass through the U-Net model. The networks is assembled by passing the input tensor through the operations of each encoding and decoding block together with the skip connections.
+        """Forward pass through the U-Net model.
+
+        The networks is assembled by passing the input tensor through the operations of each encoding and decoding block together with the skip connections.
 
         :param x: Input tensor
         :return: Output tensor
@@ -171,15 +153,12 @@ class Unet(NeuralNetwork):
         encoder_outputs = []
         # Pass through encoder layers
         for i in range(1, len(self.n_filters)):
-            """"Optional dropout"""
             x = self.optional_step_en(x, i)
             if i != 1:
                 x = getattr(self, f"encoder_maxpool_{i}")(x)
             x = getattr(self, f"encoder_conv_1_{i}")(x)
             x = getattr(self, f"encoder_bn_1_{i}")(x)
-            x = F.relu(
-                x
-            )
+            x = F.relu(x)
             x = getattr(self, f"encoder_conv_2_{i}")(x)
             x = getattr(self, f"encoder_bn_2_{i}")(x)
             x = F.relu(x)
@@ -188,16 +167,11 @@ class Unet(NeuralNetwork):
         # Pass through decoder layers
         for idx, i in enumerate(range(len(self.n_filters) - 1, 1, -1)):
             x = getattr(self, f"decoder_upsample_{i}")(x)
-            # Get skip connection
+            # get skip connection and concatenate to output
             skip_input = encoder_outputs[-(idx + 2)]
-
-            before_cat_size = x.size()
-            # print(f"Before concatenation size: {before_cat_size}")
-
             x = torch.cat([x, skip_input], dim=1)
-            after_cat_size = x.size()
-            # print(f"After concatenation size: {after_cat_size}")
-            """"Optional dropout"""
+
+            # option dropout
             x = self.optional_step_dec(x, i)
             x = getattr(self, f"decoder_conv_1_{i}")(x)
             x = getattr(self, f"decoder_bn_1_{i}")(x)
@@ -208,23 +182,36 @@ class Unet(NeuralNetwork):
 
         x = self.final_conv(x)
         return x
-    
-    """Optional methods for droout during the encoder and decoder stages"""
-    
-    def optional_step_en(self, x, i):
 
-        """
-        :param x:
+    def optional_step_en(self, x, i):
+        """Optional method for additional operators during encoding
+
+        :param x: Tensor
         :param i:
         :return:
         """
         return x
 
     def optional_step_dec(self, x, i):
-        """ Optional method for additional operations during the decoding stage.
+        """Optional method for additional operations during decoding
 
         :param x:
         :param i:
         :return:
         """
         return x
+
+
+if __name__ == "__main__":
+    n_filters = [1, 64, 128]
+    kernel_size = 3
+    out_channels = 3
+    unet = Unet(n_filters, kernel_size, out_channels)
+    x = torch.rand(1, 1, 512, 512)
+    print(unet)
+    y = unet(x)
+    print()
+    print(x.shape)
+    print(y.shape)
+    # for m in unet.modules():
+    #     print(m)
