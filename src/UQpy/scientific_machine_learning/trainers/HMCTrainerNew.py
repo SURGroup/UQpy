@@ -10,7 +10,7 @@ class HMCTrainer:
     def __init__(
         self, model: nn.Module, filename: str, loss_function: nn.Module = nn.MSELoss()
     ):
-        """
+        """Prepare to train a model using Hamiltonian Monte Carlo (HMC)
 
         :param model:
         :param filename:

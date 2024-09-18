@@ -91,7 +91,7 @@ Neural Networks
     Deep Operator Network <neural_networks/deep_operator_network>
     Feed Forward Neural Network <neural_networks/feed_forward_neural_network>
     Fourier Neural Operator <neural_networks/fourier_neural_network>
-    U-Shaped Neural Network <neural_networks/u_neural_network>
+    U-net Neural Network <neural_networks/unet_neural_network>
 
 Trainers
 --------

@@ -62,4 +62,4 @@ List of Neural Networks
     Deep Operator Network <deep_operator_network>
     Feed Forward Neural Network <feed_forward_neural_network>
     Fourier Neural Operator <fourier_neural_network>
-    U-Shaped Neural Network <u_neural_network>
+    U-Net Neural Network <unet_neural_network>
