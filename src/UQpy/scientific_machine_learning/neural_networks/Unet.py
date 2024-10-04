@@ -5,7 +5,6 @@ import logging
 from UQpy.scientific_machine_learning.baseclass.NeuralNetwork import NeuralNetwork
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
-
 class Unet(NeuralNetwork):
 
     def __init__(
@@ -39,32 +38,36 @@ class Unet(NeuralNetwork):
 
         - **encoder_maxpool_i** (:py:class:`torch.nn.MaxPool2d`):
             Max pooling layer for downsampling at encoder layer ``i`` (for ``i > 1``).
-        - **encoder_conv_1_i** : nn.Module
+        - **encoder_conv_1_i** (:py:class: 'torch.nn.Conv2d'): 
             First convolutional layer at encoder layer ``i``.
-        - **encoder_bn_1_i** : nn.BatchNorm2d
+        - **encoder_bn_1_i** (:py:class: 'torch.nn.BatchNorm2d'):
             Batch normalization layer after `encoder_conv_1_i`.
-        - **encoder_conv_2_i** : nn.Module
+        - **encoder_conv_2_i** (:py:class: 'torch.nn.Conv2d'):
             Second convolutional layer at encoder layer ``i``.
-        - **encoder_bn_2_i** : nn.BatchNorm2d
+        - **encoder_bn_2_i** (:py:class: 'torch.nn.BatchNorm2d'): 
             Batch normalization layer after `encoder_conv_2_i`.
 
         Decoder Layers:
 
-        - **decoder_upsample_i** : nn.Upsample
+        - **decoder_upsample_i** (:py:class:`torch.nn.Upsample`)
             Upsampling layer at decoder layer ``i``.
-        - **decoder_conv_1_i** : nn.Module
-            First convolutional layer at decoder layer ``i``.
-        - **decoder_bn_1_i** : nn.BatchNorm2d
+        - **decoder_conv_1_i** (:py:class: 'torch.nn.Conv2d') 
+            First convolutional at decoder layer ``i``..
+        - **decoder_bn_1_i** (:py:class: 'torch.nn.BatchNorm2d')
             Batch normalization layer after `decoder_conv_1_i`.
-        - **decoder_conv_2_i** : nn.Module
+        - **decoder_conv_2_i** (:py:class: 'torch.nn.Conv2d'):
             Second convolutional layer at decoder layer ``i``.
-        - **decoder_bn_2_i** : nn.BatchNorm2d
+        - **decoder_bn_2_i** (:py:class: 'torch.nn.BatchNorm2d'):
             Batch normalization layer after `decoder_conv_2_i`.
 
         **Final Convolution Layer**:
-        - **final_conv**: nn.Conv2d applied after the last decoder block. It maps the output to the desired number of channels.
-
-        These intended to be overridden by subclasses to apply operations like Monte Carlo Dropout(MCD) based on a boolean index i. The boolean index i has the same length as the number of filters. These should be specified in the sublass.
+        - **final_conv** (:py:class: 'torch.nn.Conv2d'): Convolutional layer applied after the last decoder block. It maps the output to the desired number of channels.
+        
+        - **optional_step_en** and **optional_step_dec**
+        
+        These functions are intended to be overridden by subclasses to apply operations like Monte Carlo Dropout(MCD) based on a boolean index i. The boolean index i has the same length as the number of filters. These should be specified in the sublass.
+        
+        Note: A default value `stride=2` is used for the max pooling layers. Also, a default padding value of `kernel_size // 2` (nearest integer divided by 2) is used for all convolutional layers.
         """
 
         super(Unet, self).__init__()
@@ -201,17 +204,3 @@ class Unet(NeuralNetwork):
         """
         return x
 
-
-if __name__ == "__main__":
-    n_filters = [1, 64, 128]
-    kernel_size = 3
-    out_channels = 3
-    unet = Unet(n_filters, kernel_size, out_channels)
-    x = torch.rand(1, 1, 512, 512)
-    print(unet)
-    y = unet(x)
-    print()
-    print(x.shape)
-    print(y.shape)
-    # for m in unet.modules():
-    #     print(m)
