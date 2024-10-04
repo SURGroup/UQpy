@@ -2,12 +2,12 @@ Scientific Machine Learning
 ===========================
 
 This module contains functionality for Scientific Machine Learning methods supported in :py:mod:`UQpy`.
-This package focuses on supervised machine learning, specifically on the architecture and training of Neural Networks.
+This package focuses on supervised machine learning, specifically on the architecture and training of neural networks.
 
 This module is *not* intended as a standalone package for neural networks.
 It is designed as an extension of `PyTorch <https://pytorch.org/>`_ and, as much as practical,
 we borrow their syntax and notation to implement UQ methods in a compatible way.
-For example, the Bayesian counterpart of torch's ``Linear`` layer is UQpy's ``BayesianLinear``,
+For example, the Bayesian counterpart of torch's :class:`Linear` layer is UQpy's :class:`.BayesianLinear` layer,
 which uses similar inputs.
 
 .. figure:: ./figures/uq4ml.png
@@ -26,7 +26,7 @@ The module contains the following parent classes for neural networks:
 - :class:`.Loss`: Parent class to all Loss functions. Subclass of :class:`torch.nn.Module`.
 - :class:`.NeuralNetwork`: Parent class to all Neural Networks and Neural Operators.  Subclass of :class:`torch.nn.Module`.
 
-Consistent with Pytorch's architecture, those classes and their subclasses primarily organize and store tensors and parameters.
+Consistent with PyTorch's architecture, those classes and their subclasses primarily organize and store tensors and parameters.
 The bulk of the computation is done by the methods in the ``functional`` folder.
 For example, the ``GaussianKullbackLeiblerDivergence`` class is used to define the divergence for a Bayesian neural
 network, but hands off the actual divergence computation ``functional.gaussian_kullback_leibler_divergence``.
