@@ -25,7 +25,7 @@ def geometric_jensen_shannon_divergence(
      'none': no reduction will be applied, 'mean': the output will be averaged, 'sum': the output will be summed.
      Default: 'sum'
 
-    :return: Gaussian JS divergence between prior and posterior distributions
+    :return: Geometric JS divergence between prior and posterior distributions
 
     Formula
     -------
@@ -39,7 +39,7 @@ def geometric_jensen_shannon_divergence(
 
     .. math:: D_{JSG}(P, Q) = \frac12 \left( \frac{(1-\alpha)\sigma_0^2 + \alpha\sigma_1^2}{\sigma_\alpha^2} + \log \frac{\sigma_\alpha^2}{\sigma_0^{2(1-\alpha)} \sigma_1^{2\alpha}} + (1-\alpha) \frac{(\mu_\alpha - \mu_0)^2}{\sigma_\alpha^2} + \frac{\alpha(\mu_\alpha - \mu_1)^2}{\sigma_\alpha^2} -1 \right)
 
-    where :math:`\left( \frac{\alpha}{\sigma_0^2}+\frac{1-\alpha}{\sigma_1^2} \right)^{-1}`
+    where :math:`\sigma_\alpha^2 = \left( \frac{\alpha}{\sigma_0^2}+\frac{1-\alpha}{\sigma_1^2} \right)^{-1}`
     and :math:`\mu_\alpha = \sigma_\alpha^2 \left[\frac{\alpha \mu_0}{\sigma_0^2} + \frac{(1-\alpha)\mu_1}{\sigma_1^2}\right]`
 
     """
