@@ -74,7 +74,7 @@ Attributes
       import torch
       import torch.nn as nn
       import UQpy.scientific_machine_learning as sml
-      import sml.neural_networks.Unet as Unet
+      import UQpy.scientific_machine_learning.neural_networks.Unet as Unet
       n_filters = [1, 64, 128]
       kernel_size = 3
       out_channels = 3
@@ -90,7 +90,6 @@ Attributes
       print(f"Input shape: {x.shape}")         # (N, in_channels, H, W)
       print(f"Prediction shape: {y.shape}")  # (N, out_channels, H, W)
       print(unet)
-
 **References:**
 
 - Ronneberger, O., Fischer, P., & Brox, T. (2015). U-Net: Convolutional Networks for Biomedical Image Segmentation. *arXiv preprint arXiv:1505.04597*.

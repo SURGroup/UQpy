@@ -203,4 +203,3 @@ class Unet(NeuralNetwork):
         :return:
         """
         return x
-
