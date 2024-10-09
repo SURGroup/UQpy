@@ -5,6 +5,7 @@ import logging
 from UQpy.scientific_machine_learning.baseclass.NeuralNetwork import NeuralNetwork
 from UQpy.utilities.ValidationTypes import PositiveInteger
 
+
 class Unet(NeuralNetwork):
 
     def __init__(
@@ -24,6 +25,10 @@ class Unet(NeuralNetwork):
         :param layer_type: The type of convolutional layer to use. The default is the ``nn.Conv2d``.
          It can be replaced with Bayesian layers for performing uncertainty quantification.
 
+        .. note::
+            A default value ``stride=2`` is used for the max pooling layers.
+            A default padding value of ``kernel_size // 2`` is used for all convolutional layers.
+
         Shape:
 
         - Input: Tensor of shape :math:`(N, C_\text{in}, H, W)`
@@ -31,45 +36,27 @@ class Unet(NeuralNetwork):
 
         Attributes:
 
-        Encoder Layers:
-
-        The encoding blocks are created during initialization from the ``n_filters`` list
+        Encoder Layers: The encoding blocks are created during initialization from the ``n_filters`` list
         for indices :math:`i=1, \dots, \text{len}(\texttt{n_filters})- 1`.
 
-        - **encoder_maxpool_i** (:py:class:`torch.nn.MaxPool2d`):
-            Max pooling layer for downsampling at encoder layer ``i`` (for ``i > 1``).
-        - **encoder_conv_1_i** (:py:class: 'torch.nn.Conv2d'): 
-            First convolutional layer at encoder layer ``i``.
-        - **encoder_bn_1_i** (:py:class: 'torch.nn.BatchNorm2d'):
-            Batch normalization layer after `encoder_conv_1_i`.
-        - **encoder_conv_2_i** (:py:class: 'torch.nn.Conv2d'):
-            Second convolutional layer at encoder layer ``i``.
-        - **encoder_bn_2_i** (:py:class: 'torch.nn.BatchNorm2d'): 
-            Batch normalization layer after `encoder_conv_2_i`.
+        - **encoder_maxpool_i** (:py:class:`torch.nn.MaxPool2d`): Max pooling layer for downsampling at encoder layer ``i`` (for ``i > 1``).
+        - **encoder_conv_1_i** (:py:class:`torch.nn.Conv2d`): First convolutional layer at encoder layer ``i``.
+        - **encoder_bn_1_i** (:py:class:`torch.nn.BatchNorm2d`): Batch normalization layer after ``encoder_conv_1_i``.
+        - **encoder_conv_2_i** (:py:class:`torch.nn.Conv2d`): Second convolutional layer at encoder layer ``i``.
+        - **encoder_bn_2_i** (:py:class:`torch.nn.BatchNorm2d`): Batch normalization layer after ``encoder_conv_2_i``.
 
         Decoder Layers:
 
-        - **decoder_upsample_i** (:py:class:`torch.nn.Upsample`)
-            Upsampling layer at decoder layer ``i``.
-        - **decoder_conv_1_i** (:py:class: 'torch.nn.Conv2d') 
-            First convolutional at decoder layer ``i``..
-        - **decoder_bn_1_i** (:py:class: 'torch.nn.BatchNorm2d')
-            Batch normalization layer after `decoder_conv_1_i`.
-        - **decoder_conv_2_i** (:py:class: 'torch.nn.Conv2d'):
-            Second convolutional layer at decoder layer ``i``.
-        - **decoder_bn_2_i** (:py:class: 'torch.nn.BatchNorm2d'):
-            Batch normalization layer after `decoder_conv_2_i`.
+        - **decoder_upsample_i** (:py:class:`torch.nn.Upsample`): Upsampling layer at decoder layer ``i``.
+        - **decoder_conv_1_i** (:py:class:`torch.nn.Conv2d`): First convolutional at decoder layer ``i``.
+        - **decoder_bn_1_i** (:py:class:`torch.nn.BatchNorm2d`): Batch normalization layer after ``decoder_conv_1_i``.
+        - **decoder_conv_2_i** (:py:class:`torch.nn.Conv2d`): Second convolutional layer at decoder layer ``i``.
+        - **decoder_bn_2_i** (:py:class:`torch.nn.BatchNorm2d`): Batch normalization layer after ``decoder_conv_2_i``.
 
-        **Final Convolution Layer**:
-        - **final_conv** (:py:class: 'torch.nn.Conv2d'): Convolutional layer applied after the last decoder block. It maps the output to the desired number of channels.
-        
-        - **optional_step_en** and **optional_step_dec**
-        
-        These functions are intended to be overridden by subclasses to apply operations like Monte Carlo Dropout(MCD) based on a boolean index i. The boolean index i has the same length as the number of filters. These should be specified in the sublass.
-        
-        Note: A default value `stride=2` is used for the max pooling layers. Also, a default padding value of `kernel_size // 2` (nearest integer divided by 2) is used for all convolutional layers.
+        Final Convolution Layer:
+        - **final_conv** (:py:class:'torch.nn.Conv2d'): Convolutional layer applied after the last decoder block. It maps the output to the desired number of channels.
+
         """
-
         super(Unet, self).__init__()
         self.n_filters = n_filters
         self.kernel_size = kernel_size
@@ -148,10 +135,10 @@ class Unet(NeuralNetwork):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through the U-Net model.
 
-        The networks is assembled by passing the input tensor through the operations of each encoding and decoding block together with the skip connections.
+        The output is computed by passing the input through each encoding and decoding block together with the skip connections.
 
-        :param x: Input tensor
-        :return: Output tensor
+        :param x: Tensor of shape :math:`(N, C_\text{in}, H, W)`
+        :return: Tensor of shape :math:`(N, C_\text{out}, H, W)`
         """
         encoder_outputs = []
         # Pass through encoder layers
@@ -186,20 +173,24 @@ class Unet(NeuralNetwork):
         x = self.final_conv(x)
         return x
 
-    def optional_step_en(self, x, i):
+    def optional_step_en(self, x: torch.Tensor, i: int):
         """Optional method for additional operators during encoding
 
-        :param x: Tensor
-        :param i:
-        :return:
+        Intended to be overridden by subclasses to apply operations like Monte Carlo Dropout based on the layer index i.
+
+        :param x: Input tensor
+        :param i: Index of the encoding block
+        :return: Output tensor
         """
         return x
 
     def optional_step_dec(self, x, i):
         """Optional method for additional operations during decoding
 
-        :param x:
-        :param i:
-        :return:
+        Intended to be overridden by subclasses to apply operations like Monte Carlo Dropout based on the layer index i.
+
+        :param x: Input tensor
+        :param i: Index of the decoding block
+        :return: Output tensor
         """
         return x
