@@ -22,4 +22,6 @@ Attributes
 Examples
 --------
 
-BBBTrainer Examples <../../auto_examples/scientific_machine_learning/bbb_trainer/index>
+.. toctree::
+
+    BBBTrainer Examples <../../auto_examples/scientific_machine_learning/bbb_trainer/index>

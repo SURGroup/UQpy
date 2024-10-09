@@ -18,3 +18,10 @@ Attributes
 ----------
 
 .. autoattribute:: UQpy.scientific_machine_learning.trainers.Trainer.history
+
+Examples
+--------
+
+.. toctree::
+
+    Trainer Examples <../../auto_examples/scientific_machine_learning/trainer/index>
