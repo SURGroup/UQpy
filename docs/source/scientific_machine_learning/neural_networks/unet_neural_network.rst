@@ -38,16 +38,16 @@ Methods
 Each convolutional layer accepts an input volume with width :math:`W_1`, height :math:`H_1`, and depth :math:`D_1`.
 
 - **Input Dimensions**: :math:`W_1 \times H_1 \times D_1`
-- **Number of Filters (K)**: Determines the number of filters (or kernels) used, affecting the depth :math:`D_2` of the output volume.
-- **Spatial Extent (F)**: The size of each filter, typically a square (e.g., 3x3).
-- **Stride (S)**: The step size with which the filters are moved across the input volume.
-- **Zero Padding (P)**: Number of pixels added to the border of the input volume, enabling control over the spatial dimensions of the output volume.
+      - **Number of Filters (K)**: Determines the number of filters (or kernels) used, affecting the depth :math:`D_2` of the output volume.
+      - **Spatial Extent (F)**: The size of each filter, typically a square (e.g., 3x3).
+      - **Stride (S)**: The step size with which the filters are moved across the input volume.
+      - **Zero Padding (P)**: Number of pixels added to the border of the input volume, enabling control over the spatial dimensions of the output volume.
 
 - **Output Dimensions**: :math:`W_2 \times H_2 \times D_2`
+      - **Output Width**: :math:`W_2 = \left( \frac{W_1 - F + 2P}{S} \right) + 1`
+      - **Output Height**: :math:`H_2 = \left( \frac{H_1 - F + 2P}{S} \right) + 1`
+      - **Output Depth**: :math:`D_2 = K`, corresponding to the number of filters.
 
-  - **Output Width**: :math:`W_2 = \left( \frac{W_1 - F + 2P}{S} \right) + 1`
-  - **Output Height**: :math:`H_2 = \left( \frac{H_1 - F + 2P}{S} \right) + 1`
-  - **Output Depth**: :math:`D_2 = K`, corresponding to the number of filters.
 
 Examples
 --------
@@ -71,5 +71,4 @@ Examples
 
 **References:**
 
-- Ronneberger, O., Fischer, P., & Brox, T. (2015). U-Net: Convolutional Networks for Biomedical Image Segmentation. *arXiv preprint arXiv:1505.04597*.
-:
+Ronneberger, O., Fischer, P., & Brox, T. (2015). U-Net: Convolutional Networks for Biomedical Image Segmentation. *arXiv preprint arXiv:1505.04597*.

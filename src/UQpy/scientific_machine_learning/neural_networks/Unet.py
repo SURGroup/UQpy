@@ -54,6 +54,7 @@ class Unet(NeuralNetwork):
         - **decoder_bn_2_i** (:py:class:`torch.nn.BatchNorm2d`): Batch normalization layer after ``decoder_conv_2_i``.
 
         Final Convolution Layer:
+
         - **final_conv** (:py:class:'torch.nn.Conv2d'): Convolutional layer applied after the last decoder block. It maps the output to the desired number of channels.
 
         """
@@ -184,7 +185,7 @@ class Unet(NeuralNetwork):
         """
         return x
 
-    def optional_step_dec(self, x, i):
+    def optional_step_dec(self, x: torch.Tensor, i: int):
         """Optional method for additional operations during decoding
 
         Intended to be overridden by subclasses to apply operations like Monte Carlo Dropout based on the layer index i.

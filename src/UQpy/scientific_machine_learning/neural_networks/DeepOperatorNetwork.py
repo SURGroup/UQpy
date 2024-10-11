@@ -31,7 +31,7 @@ class DeepOperatorNetwork(NeuralNetwork):
 
         - Intermediary: The output from the branch and trunk network must be of shapes :math:`(*, \text{width})` and :math:`(*, \text{width})`.
           Where :math:`*` refers to any broadcastable dimensions.
-          Both the tensors are viewed reshaped as :math:`(*, C_\text{out}. \frac{\text{width}}{C_\text{out}} before the dot product is computed.
+          Both the tensors are viewed reshaped as :math:`(*, C_\text{out}. \frac{\text{width}}{C_\text{out}}` before the dot product is computed.
 
         - Output: Tensor of shape :math:`(*, C_\text{out})`
 

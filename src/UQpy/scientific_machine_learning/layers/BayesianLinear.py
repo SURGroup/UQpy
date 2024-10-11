@@ -27,7 +27,7 @@ class BayesianLinear(NormalBayesianLayer):
         :param out_features: Size of each output sample
         :param bias: If set to ``False``, the layer will not learn an additive bias. Default: ``True``
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
-         If ``False``, use distribution mean as parameter values. Default: ``True`
+         If ``False``, use distribution mean as parameter values. Default: ``True``
         :param prior_mu: Prior mean, :math:`\mu_\text{prior}` of the prior normal distribution.
          Default: 0.0
         :param prior_sigma: Prior standard deviation, :math:`\sigma_\text{prior}`, of the prior normal distribution.
