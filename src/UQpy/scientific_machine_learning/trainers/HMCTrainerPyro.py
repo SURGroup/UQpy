@@ -89,10 +89,13 @@ class HMCTrainer:
 
         self.history["samples"] = mcmc_sampler.get_samples()
         self.history["acceptance_rate"] = torch.tensor(
-            mcmc_sampler.diagnostics()['acceptance_rate'])
+            mcmc_sampler.diagnostics()["acceptance_rate"]
+        )
         self.history["step_size"] = torch.tensor(
-            mcmc_sampler.diagnostics()['step_size'])
+            mcmc_sampler.diagnostics()["step_size"]
+        )
         self.history["potential_energy"] = torch.tensor(
-            mcmc_sampler.diagnostics()['potential_energy'])
+            mcmc_sampler.diagnostics()["potential_energy"]
+        )
 
         self.logger.info("HMC sampling completed")
