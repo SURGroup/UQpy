@@ -12,12 +12,13 @@ This example shows how to train a simple neural network using UQpy's Trainer cla
 # %%
 
 import logging
-import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 import UQpy.scientific_machine_learning as sml
+
+torch.manual_seed(0)
 
 # logger = logging.getLogger("UQpy")  # Optional, display UQpy logs to console
 # logger.setLevel(logging.INFO)
@@ -37,12 +38,9 @@ class SinusoidalDataset(Dataset):
         self.n_samples = n_samples
         self.noise_std = noise_std
         self.x = torch.linspace(-1, 1, n_samples).reshape(-1, 1)
-        self.y = torch.tensor(
-            0.4 * np.sin(4 * self.x)
-            + 0.5 * np.cos(12 * self.x)
-            + np.random.normal(0, self.noise_std, self.x.shape),
-            dtype=torch.float,
-        )
+        self.y = 0.4 * torch.sin(4 * self.x) + 0.5 * torch.cos(12 * self.x)
+        epsilon = torch.normal(torch.zeros_like(self.x), self.noise_std)
+        self.y += epsilon
 
     def __len__(self):
         return self.n_samples
@@ -59,11 +57,9 @@ class SinusoidalDataset(Dataset):
 # %%
 
 
-width = 20
+width = 30
 network = nn.Sequential(
     nn.Linear(1, width),
-    nn.ReLU(),
-    nn.Linear(width, width),
     nn.ReLU(),
     nn.Linear(width, width),
     nn.ReLU(),
@@ -74,7 +70,7 @@ network = nn.Sequential(
 model = sml.FeedForwardNeuralNetwork(network)
 
 dataset = SinusoidalDataset()
-train_data = DataLoader(dataset, batch_size=20, shuffle=True)
+train_data = DataLoader(dataset, batch_size=20, shuffle=False)
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1_000)
 trainer = sml.Trainer(model, optimizer, scheduler=scheduler)

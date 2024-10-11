@@ -37,9 +37,7 @@ class SinusoidalDataset(Dataset):
         self.n_samples = n_samples
         self.noise_std = noise_std
         self.x = torch.linspace(-1, 1, n_samples).reshape(-1, 1)
-        self.y = torch.tensor(
-            0.4 * torch.sin(4 * self.x) + 0.5 * torch.cos(12 * self.x)
-        )
+        self.y =0.4 * torch.sin(4 * self.x) + 0.5 * torch.cos(12 * self.x)
         self.y += torch.normal(0, self.noise_std, self.x.shape)
 
     def __len__(self):
@@ -60,13 +58,10 @@ class SinusoidalDataset(Dataset):
 
 # %%
 
-width = 20
-p = 1e-3
+width = 30
+p = 2e-3
 network = nn.Sequential(
     nn.Linear(1, width),
-    nn.ReLU(),
-    nn.Linear(width, width),
-    sml.ProbabilisticDropout(p=p),
     nn.ReLU(),
     nn.Linear(width, width),
     sml.ProbabilisticDropout(p=p),
@@ -80,7 +75,7 @@ model = sml.FeedForwardNeuralNetwork(network)
 model.drop(False)  # turn off all ProbabilisticDropout layers
 
 dataset = SinusoidalDataset()
-train_data = DataLoader(dataset, batch_size=10, shuffle=True)
+train_data = DataLoader(dataset, batch_size=20, shuffle=False)
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1_000)
 trainer = sml.Trainer(model, optimizer, scheduler=scheduler)
