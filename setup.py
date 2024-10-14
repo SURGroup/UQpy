@@ -23,7 +23,7 @@ setup(
     package_data={"": ["*.pdf"]},
     python_requires='>3.9.0',
     install_requires=[
-        "numpy", "scipy>=1.6.0", "matplotlib", "scikit-learn", 'fire',
+        "numpy==1.26.4", "scipy>=1.6.0", "matplotlib==3.8.4", "scikit-learn==1.4.2", 'fire==0.6.0',
         "beartype==0.18.5",
     ],
     extras_require={
