@@ -5,9 +5,10 @@
 
 In the second example we have the limit state to be a linear function of two (:math:`d=2`) independent Gaussian random
 variables
+
 """
 
-#%% md
+# %% md
 #
 # :math:`g(U) = -\frac{1}{\sqrt{d}}\sum_{i=1}^{d} u_i + \beta`
 #
@@ -15,12 +16,13 @@ variables
 #
 # Initially we have to import the necessary modules.
 
-#%%
+# %%
 
 from UQpy.distributions import Normal
 from UQpy.reliability import FORM
 from UQpy.run_model.RunModel import RunModel
 from UQpy.run_model.model_execution.PythonModel import PythonModel
+
 
 dist1 = Normal(loc=0., scale=1.)
 dist2 = Normal(loc=0., scale=1.)
