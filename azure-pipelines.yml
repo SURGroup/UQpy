@@ -91,7 +91,7 @@ jobs:
         additionalCodeCoverageFiles: '$(System.DefaultWorkingDirectory)/ **'
 
     - task: SonarCloudAnalyze@1
-      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/pull/target/master'))
 
     - task: SonarCloudPublish@1
       condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/pull/target/master'))
