@@ -48,7 +48,7 @@ jobs:
       displayName: Shows currently compiling version
 
     - task: SonarCloudPrepare@1
-      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/pull/target/master']))
+      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/pull/target/master'))
       inputs:
         SonarCloud: 'SonarCloud.UQpy'
         organization: 'jhusurg'
@@ -94,7 +94,7 @@ jobs:
       condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
     - task: SonarCloudPublish@1
-      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/pull/target/master']))
+      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/pull/target/master'))
       inputs:
         pollingTimeoutSec: '300'
 
