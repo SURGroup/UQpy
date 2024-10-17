@@ -13,3 +13,4 @@ twine == 5.0.0
 pathlib~=1.0.1
 beartype == 0.18.5
 setuptools~=65.5.1
+hypothesis~=6.99.6
