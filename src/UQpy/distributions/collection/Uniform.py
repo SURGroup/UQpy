@@ -4,7 +4,6 @@ from beartype import beartype
 from typing import Union
 from UQpy.distributions.baseclass import DistributionContinuous1D
 from UQpy.utilities.ValidationTypes import NumericArrayLike
-from line_profiler_pycharm import profile
 
 
 @beartype
@@ -24,7 +23,6 @@ class Uniform(DistributionContinuous1D):
         self.cdf = self.__cumulative_distribution_function
         self.icdf = self.__inverse_cumulative_distribution_function
 
-    @profile
     def __probability_density_function(
         self, x: NumericArrayLike
     ) -> Union[int, float, np.ndarray]:
@@ -46,7 +44,6 @@ class Uniform(DistributionContinuous1D):
             return float(pdf[0])
         return pdf
 
-    @profile
     def __cumulative_distribution_function(
         self, x: NumericArrayLike
     ) -> Union[int, float, np.ndarray]:
@@ -69,7 +66,6 @@ class Uniform(DistributionContinuous1D):
             return float(cdf[0])
         return cdf
 
-    @profile
     def __inverse_cumulative_distribution_function(
         self, x: NumericArrayLike
     ) -> Union[int, float, np.ndarray]:
