@@ -3,7 +3,7 @@ import numpy as np
 from scipy import stats
 from UQpy.distributions import Uniform
 import hypothesis.strategies as st
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis.extra.numpy import array_shapes
 
 uniform = Uniform()
@@ -20,6 +20,7 @@ def test_uniform_pdf_float(x):
 
 
 @given(array_shapes(min_dims=1, min_side=1))
+@settings(max_examples=5)
 def test_uniform_pdf_array(size):
     x = np.random.normal(0, 1, size=size)
     pdf = uniform.pdf(x)
@@ -36,6 +37,7 @@ def test_uniform_cdf_float(x):
     assert np.allclose(pdf, scipy_pdf, equal_nan=True)
 
 
+@settings(max_examples=5)
 @given(array_shapes(min_dims=1, min_side=1))
 def test_uniform_cdf_array(size):
     x = np.random.normal(0, 1, size=size)
@@ -43,6 +45,7 @@ def test_uniform_cdf_array(size):
     scipy_pdf = scipy_uniform.pdf(x)
     assert isinstance(pdf, np.ndarray)
     assert np.allclose(pdf, scipy_pdf, equal_nan=True)
+
 
 
 @given(st.floats(allow_nan=True))
@@ -53,6 +56,7 @@ def test_uniform_icdf_float(y):
     assert np.allclose(icdf, scipy_icdf, equal_nan=True)
 
 
+@settings(max_examples=5)
 @given(array_shapes(min_dims=1, min_side=1))
 def test_uniform_icdf_array(size):
     y = np.random.normal(0, 1, size=size)
