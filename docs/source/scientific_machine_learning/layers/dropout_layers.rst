@@ -61,3 +61,12 @@ The :class:`.ProbabilisticDropout3d` class is imported using the following comma
 
 .. autoclass:: UQpy.scientific_machine_learning.layers.ProbabilisticDropout3d
     :members: forward
+
+______
+
+Examples
+^^^^^^^^
+
+.. toctree::
+
+    Probabilistic Dropout Examples <../../auto_examples/scientific_machine_learning/mcd_trainer/index>

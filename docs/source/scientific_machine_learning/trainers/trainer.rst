@@ -25,3 +25,4 @@ Examples
 .. toctree::
 
     Trainer Examples <../../auto_examples/scientific_machine_learning/trainer/index>
+    Monte Carlo Dropout Examples <../../auto_examples/scientific_machine_learning/mcd_trainer/index>
