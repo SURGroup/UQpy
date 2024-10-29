@@ -26,10 +26,11 @@ from torch.utils.data import Dataset, DataLoader
 # UQpy imports
 import logging
 import UQpy.scientific_machine_learning as sml
-from dataset import load_data
+from local_elastic_data import load_data
 
 logger = logging.getLogger("UQpy")
 logger.setLevel(logging.INFO)
+
 
 # %% md
 # **1. Construct a deep operator network**
@@ -45,6 +46,7 @@ logger.setLevel(logging.INFO)
 
 class BranchNetwork(nn.Module):
     """Construct the branch network for a deep operator network"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fnn = nn.Sequential(nn.Linear(101, 100), nn.Tanh())
@@ -72,11 +74,12 @@ class BranchNetwork(nn.Module):
         x = x.view(-1, 1, 10, 10)
         x = self.conv_layers(x)
         x = self.dnn(x)
-        return x
+        return x.unsqueeze(1)
 
 
 class TrunkNetwork(nn.Module):
     """Construct the trunk network for a deep operator network"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fnn = nn.Sequential(
@@ -102,6 +105,7 @@ class TrunkNetwork(nn.Module):
 branch_network = BranchNetwork()
 trunk_network = TrunkNetwork()
 model = sml.DeepOperatorNetwork(branch_network, trunk_network, 2)
+
 
 # %% md
 # **2. Load the training and testing data**
@@ -149,6 +153,7 @@ test_data = DataLoader(
     ElasticityDataSet(X, F_test, Ux_test, Uy_test), batch_size=100, shuffle=True
 )
 
+
 # %% md
 # **3. Fit the network parameters to the training data**
 #
@@ -165,13 +170,30 @@ class LossFunction(nn.Module):
         self.f = nn.MSELoss(reduction=reduction)
 
     def forward(self, prediction, label):
-        return self.f(prediction[0], label[0]) + self.f(
-            prediction[1],
+        return self.f(prediction[:, :, 0], label[0]) + self.f(
+            prediction[:, :, 1],
             label[1],
         )
 
 
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-trainer = sml.Trainer(model, optimizer, LossFunction())
-trainer.run(train_data=train_data, test_data=test_data, epochs=2, tolerance=1e-4)
-print(trainer.history)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
+trainer = sml.Trainer(model, optimizer, loss_function=LossFunction(), scheduler=scheduler)
+trainer.run(train_data=train_data, test_data=test_data, epochs=50)
+
+
+# %% md
+# Finally, we plot the training history.
+
+# %%
+
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots()
+ax.semilogy(trainer.history["train_loss"], label="Train Loss")
+ax.semilogy(trainer.history["test_loss"], label="Test Loss")
+ax.set_title("DeepONet Training History")
+ax.set(xlabel="Epoch", ylabel="MSE Loss")
+ax.legend()
+
+plt.show()

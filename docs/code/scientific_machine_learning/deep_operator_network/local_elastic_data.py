@@ -3,7 +3,7 @@ import numpy as np
 import scipy.io as io
 
 
-def load_data(filename: str ="Data/Dataset_1Circle.mat") -> tuple[torch.Tensor]:
+def load_data(filename: str = "linear_elastic_data.mat") -> tuple[torch.Tensor]:
     """Load and format the linear elastic data for a deep operator network
 
     :param filename: Relative path to .mat file
