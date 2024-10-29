@@ -1,13 +1,18 @@
-import numpy as np
+"""
+Learning a Linear Elastic system
+================================
+
+In this example, we train a Bayesian DeepOperatorNetwork to learn the behavior of a linear elastic system.
+"""
+import logging
+
+import scipy.io as io
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, random_split
 
 import UQpy.scientific_machine_learning as sml
-from local_elastic_data import load_data
-
-import logging
 
 logger = logging.getLogger("UQpy")
 logger.setLevel(logging.INFO)
@@ -64,10 +69,6 @@ class TrunkNet(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.fnn(x)
-        # x = (2.0 * (x - self.Xmin) / (self.Xmax - self.Xmin)) - 1.0
-        # x = x.float()
-        # x = self.fnn(x)
-        # return x
 
 
 branch_network = BranchNet()
@@ -91,31 +92,16 @@ class ElasticityDataSet(Dataset):
         return self.x, self.f_x[i, :], (self.u_x[i, :, 0], self.u_y[i, :, 0])
 
 
-(
-    F_train,
-    Ux_train,
-    Uy_train,
-    F_test,
-    Ux_test,
-    Uy_test,
-    X,
-    ux_train_mean,
-    ux_train_std,
-    uy_train_mean,
-    uy_train_std,
-) = load_data()
-train_data = DataLoader(
-    ElasticityDataSet(
-        np.float32(X), np.float32(F_train), np.float32(Ux_train), np.float32(Uy_train)
-    ),
-    batch_size=100,
-    shuffle=True,
-)
-test_data = DataLoader(
-    ElasticityDataSet(
-        np.float32(X), np.float32(F_test), np.float32(Ux_test), np.float32(Uy_test)
-    )
-)
+elastic_data = io.loadmat('linear_elastic_data.mat')
+train_dataset, test_dataset = random_split(ElasticityDataSet(
+    elastic_data['X'], elastic_data['F'], elastic_data['Ux'],
+    elastic_data['Uy']), [0.9, 0.1])
+
+train_data = DataLoader(train_dataset,
+                        batch_size=20,
+                        shuffle=True,
+                        )
+test_data = DataLoader(test_dataset)
 
 
 class LossFunction(nn.Module):
@@ -130,16 +116,15 @@ class LossFunction(nn.Module):
 
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
 trainer = sml.BBBTrainer(model, optimizer, loss_function=LossFunction(), scheduler=scheduler)
 trainer.run(
     train_data=train_data,
     test_data=test_data,
-    epochs=2,
-    beta=1e-8,
-    num_samples=1,
+    epochs=50,
+    beta=1e-6,
+    num_samples=5,
 )
-
 
 import matplotlib.pyplot as plt
 

@@ -21,12 +21,12 @@ In this example, we train a DeepOperatorNetwork to learn the behavior of a linea
 # torch imports
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, random_split
+import scipy.io as io
 
 # UQpy imports
 import logging
 import UQpy.scientific_machine_learning as sml
-from local_elastic_data import load_data
 
 logger = logging.getLogger("UQpy")
 logger.setLevel(logging.INFO)
@@ -132,27 +132,16 @@ class ElasticityDataSet(Dataset):
         return self.x, self.f_x[i, :], (self.u_x[i, :, 0], self.u_y[i, :, 0])
 
 
-(
-    F_train,
-    Ux_train,
-    Uy_train,
-    F_test,
-    Ux_test,
-    Uy_test,
-    X,
-    ux_train_mean,
-    ux_train_std,
-    uy_train_mean,
-    uy_train_std,
-) = load_data()
+elastic_data = io.loadmat('linear_elastic_data.mat')
+train_dataset, test_dataset = random_split(ElasticityDataSet(
+    elastic_data['X'], elastic_data['F'], elastic_data['Ux'],
+    elastic_data['Uy']), [0.9, 0.1])
 
-train_data = DataLoader(
-    ElasticityDataSet(X, F_train, Ux_train, Uy_train), batch_size=100, shuffle=True
-)
-test_data = DataLoader(
-    ElasticityDataSet(X, F_test, Ux_test, Uy_test), batch_size=100, shuffle=True
-)
-
+train_data = DataLoader(train_dataset,
+                        batch_size=20,
+                        shuffle=True,
+                        )
+test_data = DataLoader(test_dataset)
 
 # %% md
 # **3. Fit the network parameters to the training data**
@@ -180,7 +169,6 @@ optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
 trainer = sml.Trainer(model, optimizer, loss_function=LossFunction(), scheduler=scheduler)
 trainer.run(train_data=train_data, test_data=test_data, epochs=50)
-
 
 # %% md
 # Finally, we plot the training history.
