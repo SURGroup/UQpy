@@ -29,24 +29,24 @@ priors = {
 class BranchNet(nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fnn = nn.Sequential(sml.BayesianLinear(101, 100, priors=priors), nn.Tanh())
+        self.fnn = nn.Sequential(sml.BayesianLinear(101, 100), nn.Tanh())
         self.conv_layers = nn.Sequential(
-            sml.BayesianConv2d(1, 16, (5, 5), padding="same", priors=priors),
+            sml.BayesianConv2d(1, 16, (5, 5), padding="same"),  # priors=priors),
             nn.AvgPool2d(2, 1, padding=0),
-            sml.BayesianConvLayer(16, 16, (5, 5), padding="same", priors=priors),
+            sml.BayesianConv2d(16, 16, (5, 5), padding="same"),  # priors=priors),
             nn.AvgPool2d(2, 1, padding=0),
-            sml.BayesianConv2d(16, 16, (5, 5), padding="same", priors=priors),
+            sml.BayesianConv2d(16, 16, (5, 5), padding="same"),  # priors=priors),
             nn.AvgPool2d(2, 1, padding=0),
-            sml.BayesianConv2d(16, 64, (5, 5), padding="same", priors=priors),
+            sml.BayesianConv2d(16, 64, (5, 5), padding="same"),  # priors=priors),
             nn.AvgPool2d(2, 1, padding=0),
         )
         self.dnn = nn.Sequential(
             nn.Flatten(),
-            sml.BayesianLinear(64 * 6 * 6, 512, priors=priors),
+            sml.BayesianLinear(64 * 6 * 6, 512),  # priors=priors),
             nn.Tanh(),
-            sml.BayesianLinear(512, 512, priors=priors),
+            sml.BayesianLinear(512, 512),  # priors=priors),
             nn.Tanh(),
-            sml.BayesianLinear(512, 200, priors=priors),
+            sml.BayesianLinear(512, 200),  # priors=priors),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -54,20 +54,20 @@ class BranchNet(nn.Module):
         x = x.view(-1, 1, 10, 10)
         x = self.conv_layers(x)
         x = self.dnn(x)
-        return x
+        return x.unsqueeze(1)
 
 
 class TrunkNet(nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fnn = nn.Sequential(
-            sml.BayesianLinear(2, 128, priors=priors),
+            sml.BayesianLinear(2, 128),  #, priors=priors),
             nn.Tanh(),
-            sml.BayesianLinear(128, 128, priors=priors),
+            sml.BayesianLinear(128, 128),  #, priors=priors),
             nn.Tanh(),
-            sml.BayesianLinear(128, 128, priors=priors),
+            sml.BayesianLinear(128, 128),  #, priors=priors),
             nn.Tanh(),
-            sml.BayesianLinear(128, 200, priors=priors),
+            sml.BayesianLinear(128, 200),  # priors=priors),
             nn.Tanh(),
         )
         self.Xmin = np.array([0.0, 0.0]).reshape((-1, 2))
@@ -137,18 +137,18 @@ class LossFunction(nn.Module):
 
     def forward(self, prediction, label):
         return F.mse_loss(
-            prediction[0], label[0], reduction=self.reduction
-        ) + F.mse_loss(prediction[1], label[1], reduction=self.reduction)
+            prediction[:, :, 0], label[0], reduction=self.reduction
+        ) + F.mse_loss(prediction[:, :, 1], label[1], reduction=self.reduction)
 
 
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-trainer = sml.BBBTrainer(model, optimizer, LossFunction())
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+trainer = sml.BBBTrainer(model, optimizer, loss_function=LossFunction())
 trainer.run(
     train_data=train_data,
     test_data=test_data,
     epochs=1000,
     tolerance=1e-4,
-    beta=1e-5,
+    beta=1e-8,
     num_samples=1,
 )
 torch.save(model.state_dict(), "./Bayesian_DeepOnet_LE.pt")
