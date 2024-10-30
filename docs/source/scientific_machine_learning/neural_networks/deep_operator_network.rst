@@ -52,4 +52,5 @@ Examples
 
    All Examples <../../auto_examples/scientific_machine_learning/deep_operator_network/index>
    Integral 1D <../../auto_examples/scientific_machine_learning/deep_operator_network/integral_1d>
-   Laplacian 2D <../../auto_examples/scientific_machine_learning/deep_operator_network/laplacian_2d>
+   Linear Elastic <../../auto_examples/scientific_machine_learning/deep_operator_network/linear_elastic>
+   Bayesian Linear Elastic <../../auto_examples/scientific_machine_learning/deep_operator_network/bayesian_linear_elastic>

@@ -1,29 +1,21 @@
-import numpy as np
+"""
+Learning a Linear Elastic system
+================================
+
+In this example, we train a Bayesian DeepOperatorNetwork to learn the behavior of a linear elastic system.
+"""
+import logging
+
+import scipy.io as io
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader, random_split
 
 import UQpy.scientific_machine_learning as sml
-from dataset import load_data
-
-import logging
 
 logger = logging.getLogger("UQpy")
 logger.setLevel(logging.INFO)
-if logger.hasHandlers():
-    logger.removeHandler(
-        logger.handlers[0]
-    )  # remove existing handlers to eliminate print statements
-file_handler = logging.FileHandler("Bayesian_trainer.log")
-logger.addHandler(file_handler)
-
-priors = {
-    "prior_mu": 0,
-    "prior_sigma": 0.01,
-    "posterior_mu_initial": (0, 0.1),
-    "posterior_rho_initial": (-5, 0.1),
-}
 
 
 class BranchNet(nn.Module):
@@ -31,22 +23,22 @@ class BranchNet(nn.Module):
         super().__init__(*args, **kwargs)
         self.fnn = nn.Sequential(sml.BayesianLinear(101, 100), nn.Tanh())
         self.conv_layers = nn.Sequential(
-            sml.BayesianConv2d(1, 16, (5, 5), padding="same"),  # priors=priors),
+            sml.BayesianConv2d(1, 16, (5, 5), padding="same"),
             nn.AvgPool2d(2, 1, padding=0),
-            sml.BayesianConv2d(16, 16, (5, 5), padding="same"),  # priors=priors),
+            sml.BayesianConv2d(16, 16, (5, 5), padding="same"),
             nn.AvgPool2d(2, 1, padding=0),
-            sml.BayesianConv2d(16, 16, (5, 5), padding="same"),  # priors=priors),
+            sml.BayesianConv2d(16, 16, (5, 5), padding="same"),
             nn.AvgPool2d(2, 1, padding=0),
-            sml.BayesianConv2d(16, 64, (5, 5), padding="same"),  # priors=priors),
+            sml.BayesianConv2d(16, 64, (5, 5), padding="same"),
             nn.AvgPool2d(2, 1, padding=0),
         )
         self.dnn = nn.Sequential(
             nn.Flatten(),
-            sml.BayesianLinear(64 * 6 * 6, 512),  # priors=priors),
+            sml.BayesianLinear(64 * 6 * 6, 512),
             nn.Tanh(),
-            sml.BayesianLinear(512, 512),  # priors=priors),
+            sml.BayesianLinear(512, 512),
             nn.Tanh(),
-            sml.BayesianLinear(512, 200),  # priors=priors),
+            sml.BayesianLinear(512, 200),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -61,23 +53,22 @@ class TrunkNet(nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fnn = nn.Sequential(
-            sml.BayesianLinear(2, 128),  #, priors=priors),
+            sml.BayesianLinear(2, 128),
             nn.Tanh(),
-            sml.BayesianLinear(128, 128),  #, priors=priors),
+            sml.BayesianLinear(128, 128),
             nn.Tanh(),
-            sml.BayesianLinear(128, 128),  #, priors=priors),
+            sml.BayesianLinear(128, 128),
             nn.Tanh(),
-            sml.BayesianLinear(128, 200),  # priors=priors),
+            sml.BayesianLinear(128, 200),
             nn.Tanh(),
         )
-        self.Xmin = np.array([0.0, 0.0]).reshape((-1, 2))
-        self.Xmax = np.array([1.0, 1.0]).reshape((-1, 2))
+        # self.Xmin = np.array([0.0, 0.0]).reshape((-1, 2))
+        # self.Xmax = np.array([1.0, 1.0]).reshape((-1, 2))
+        # self.Xmin = torch.tensor([[0., 0.]])
+        # self.Xmax = torch.tensor([[1., 1.]])
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = 2.0 * (x - self.Xmin) / (self.Xmax - self.Xmin) - 1.0
-        x = x.float()
-        x = self.fnn(x)
-        return x
+        return self.fnn(x)
 
 
 branch_network = BranchNet()
@@ -101,33 +92,16 @@ class ElasticityDataSet(Dataset):
         return self.x, self.f_x[i, :], (self.u_x[i, :, 0], self.u_y[i, :, 0])
 
 
-(
-    F_train,
-    Ux_train,
-    Uy_train,
-    F_test,
-    Ux_test,
-    Uy_test,
-    X,
-    ux_train_mean,
-    ux_train_std,
-    uy_train_mean,
-    uy_train_std,
-) = load_data()
-train_data = DataLoader(
-    ElasticityDataSet(
-        np.float32(X), np.float32(F_train), np.float32(Ux_train), np.float32(Uy_train)
-    ),
-    batch_size=100,
-    shuffle=True,
-)
-test_data = DataLoader(
-    ElasticityDataSet(
-        np.float32(X), np.float32(F_test), np.float32(Ux_test), np.float32(Uy_test)
-    ),
-    batch_size=100,
-    shuffle=True,
-)
+elastic_data = io.loadmat('linear_elastic_data.mat')
+train_dataset, test_dataset = random_split(ElasticityDataSet(
+    elastic_data['X'], elastic_data['F'], elastic_data['Ux'],
+    elastic_data['Uy']), [0.9, 0.1])
+
+train_data = DataLoader(train_dataset,
+                        batch_size=20,
+                        shuffle=True,
+                        )
+test_data = DataLoader(test_dataset)
 
 
 class LossFunction(nn.Module):
@@ -142,13 +116,23 @@ class LossFunction(nn.Module):
 
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-trainer = sml.BBBTrainer(model, optimizer, loss_function=LossFunction())
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
+trainer = sml.BBBTrainer(model, optimizer, loss_function=LossFunction(), scheduler=scheduler)
 trainer.run(
     train_data=train_data,
     test_data=test_data,
-    epochs=1000,
-    tolerance=1e-4,
-    beta=1e-8,
-    num_samples=1,
+    epochs=50,
+    beta=1e-6,
+    num_samples=5,
 )
-torch.save(model.state_dict(), "./Bayesian_DeepOnet_LE.pt")
+
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots()
+ax.semilogy(trainer.history["train_loss"], label="Train Loss")
+ax.semilogy(trainer.history["test_nll"], label="Test NLL")
+ax.set_title("Bayesian DeepONet Training History")
+ax.set(xlabel="Epoch", ylabel="Loss")
+ax.legend()
+
+plt.show()
