@@ -38,6 +38,8 @@ List of Losses
 Gaussian Kullback-Leibler
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
+This is an implementation of Kullback and Liebler's work in a closed form :cite:`kullback1951kldivergence`.
+
 .. autoclass:: UQpy.scientific_machine_learning.losses.GaussianKullbackLeiblerDivergence
     :members: forward
 
@@ -45,6 +47,8 @@ Gaussian Kullback-Leibler
 
 Monte Carlo Kullback-Leiber
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is based on Kullback and Liebler's work :cite:`kullback1951kldivergence`.
 
 .. autoclass:: UQpy.scientific_machine_learning.losses.MCKullbackLeiblerDivergence
     :members: forward
@@ -55,6 +59,8 @@ Monte Carlo Kullback-Leiber
 Generalized Jenson Shannon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+This implements a Jensen-Shannon formula :cite:`thiagarajan2022jensen`.
+
 .. autoclass:: UQpy.scientific_machine_learning.losses.GeneralizedJensenShannonDivergence
     :members: forward
 
@@ -62,6 +68,8 @@ Generalized Jenson Shannon
 
 Geometric Jenson Shannon
 ~~~~~~~~~~~~~~~~~~~~~~~~
+
+This implements a Jensen-Shannon formula :cite:`thiagarajan2022jensen` :cite:`deasy2020jsdivergence`.
 
 .. autoclass:: UQpy.scientific_machine_learning.losses.GeometricJensenShannonDivergence
     :members: forward

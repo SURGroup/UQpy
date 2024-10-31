@@ -6,7 +6,7 @@ All spectral convolutions perform the same computation for a signal of different
 Formula
 ^^^^^^^
 
-Using the notation from Li 2021, the spectral convolution is defined by
+Using the notation from Li et al. :cite:`li2021fno`, the spectral convolution is defined by
 
 .. math:: SC(x) = \mathcal{F}^{-1}( R ( \mathcal{F}(x) ) )
 

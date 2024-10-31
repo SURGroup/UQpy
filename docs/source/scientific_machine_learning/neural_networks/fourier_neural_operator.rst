@@ -1,9 +1,9 @@
 Fourier Neural Operator (FNO)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Implementation of the Fourier Neural Operator as defined by Li 2021.
+Implementation of the Fourier Neural Operator as defined by Li et al. :cite:`li2021fno`
 There is no explict Fourier Neural Operator class, but rather an implementation of the Fourier layers defined by Li in
-Fig. 2. This module provides Fourier layers for 1d, 2d, and 3d signals that compute the Fast Fourier Transform
+Figure 2. This module provides Fourier layers for 1d, 2d, and 3d signals that compute the Fast Fourier Transform
 in their respective number of dimensions.
 
 Schematically, we represent the Fourier Neural Operator as having three parts shown below.
@@ -31,8 +31,8 @@ then step down again to the desired 6 out channels, :math:`C_\text{out}`.
 The permutation is necessary just to correctly align the dimensions of the tensors.
 It does not perform any computation.
 
-The Fourier network constructed in the example below takes an input of size :math:`(N, C_{\text{in}, L)` and outputs
-a tensor of size :math:`(N, C_{\text{out}, L)` where :math:`N` is the batch size, :math:`C` denotes a number of channels,
+The Fourier network constructed in the example below takes an input of size :math:`(N, C_{\text{in}}, L)` and outputs
+a tensor of size :math:`(N, C_{\text{out}}, L)` where :math:`N` is the batch size, :math:`C` denotes a number of channels,
 and :math:`L` is the length of the signal.
 
 .. code-block:: python

@@ -61,5 +61,5 @@ List of Neural Networks
     Neural Network Parent Class <neural_network_parent>
     Deep Operator Network <deep_operator_network>
     Feed Forward Neural Network <feed_forward_neural_network>
-    Fourier Neural Operator <fourier_neural_network>
+    Fourier Neural Operator <fourier_neural_operator>
     U-Net Neural Network <unet_neural_network>

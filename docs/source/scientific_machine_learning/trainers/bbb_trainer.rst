@@ -1,7 +1,7 @@
 Bayes By Backpropagation Trainer (BBBTrainer)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Class to train a neural network using the Bayes by Backpropagation method and a Pytorch optimization algorithm.
+Class to train a neural network using the Bayes by Backpropagation :cite:`blundell2015weight` method and a Pytorch optimization algorithm.
 
 The :class:`.BBBTrainer` class is imported using the following command:
 
