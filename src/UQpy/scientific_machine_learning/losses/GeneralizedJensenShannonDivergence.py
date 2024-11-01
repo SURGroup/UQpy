@@ -122,4 +122,4 @@ class GeneralizedJensenShannonDivergence(Loss):
             s += ", n_samples={n_samples}"
         if self.reduction is not "sum":
             s += ", reduction={reduction}"
-        return s.format(__dict__)
+        return s.format(**self.__dict__)

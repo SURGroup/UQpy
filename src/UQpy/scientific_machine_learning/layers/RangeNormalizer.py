@@ -153,4 +153,4 @@ class RangeNormalizer(Layer):
             s += ", high={high}"
         if self.dim is not None:
             s += ", dim={dim}"
-        return s.format(__dict__)
+        return s.format(**self.__dict__)
