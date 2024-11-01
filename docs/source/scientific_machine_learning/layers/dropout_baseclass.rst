@@ -1,5 +1,5 @@
-Dropout Layer Baseclass
------------------------
+Probabilistic Dropout Layer Baseclass
+-------------------------------------
 
 This is the parent class to all Probabilistic Dropout methods as laid out by Gal et al :cite:`gal2016dropout`.
 The :class:`ProbabilisticDropoutLayer` is an abstract baseclass and a subclass of :class:`torch.nn.Module`.

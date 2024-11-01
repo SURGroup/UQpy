@@ -45,8 +45,8 @@ This is an implementation of Kullback and Liebler's work in a closed form :cite:
 
 ------
 
-Monte Carlo Kullback-Leiber
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Monte Carlo Kullback-Leibler
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This is based on Kullback and Liebler's work :cite:`kullback1951kldivergence`.
 
@@ -56,7 +56,7 @@ This is based on Kullback and Liebler's work :cite:`kullback1951kldivergence`.
 
 ------
 
-Generalized Jenson Shannon
+Generalized Jensen-Shannon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This implements a Jensen-Shannon formula :cite:`thiagarajan2022jensen`.
@@ -66,7 +66,7 @@ This implements a Jensen-Shannon formula :cite:`thiagarajan2022jensen`.
 
 ------
 
-Geometric Jenson Shannon
+Geometric Jensen-Shannon
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 This implements a Jensen-Shannon formula :cite:`thiagarajan2022jensen` :cite:`deasy2020jsdivergence`.
