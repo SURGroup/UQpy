@@ -297,8 +297,9 @@ class GaussianProcessRegression(Surrogate):
             else:
                 mu1 = np.einsum("ij,jk->ik", fx, self.beta)
 
-        self.kernel.kernel_parameter = kernelparameters[:-1]
-        sigma = kernelparameters[-1]
+        if kernelparameters is not None:
+            self.kernel.kernel_parameter = kernelparameters[:-1]
+            sigma = kernelparameters[-1]
 
         k = sigma**2*self.kernel.calculate_kernel_matrix(x=x_, s=s_)
         y = mu1 + k @ alpha_

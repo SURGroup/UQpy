@@ -2,7 +2,7 @@ import numpy as np
 
 # Define a dataset to test DirectPOD, SnapshotPOD and HOSVD methods
 import pytest
-from beartype.roar import BeartypeCallHintPepParamException
+from beartype.roar import BeartypeCallHintParamViolation
 
 from UQpy.dimension_reduction.pod.DirectPOD import DirectPOD
 from UQpy.dimension_reduction.pod.SnapshotPOD import SnapshotPOD
@@ -65,17 +65,17 @@ def test_HOSVD():
 
 
 def test_DirectPOD_modes_less_than_zero():
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         pod_dir = DirectPOD(solution_snapshots=Data, n_modes=-1)
 
 
 def test_DirectPOD_mode_non_integer():
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         pod_dir = DirectPOD(solution_snapshots=Data, n_modes=1.5)
 
 
 def test_DirectPOD_reconstr_perc_less_than_zero():
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         pod_dir = DirectPOD(solution_snapshots=Data, reconstruction_percentage=-1)
 
 
@@ -85,17 +85,17 @@ def test_DirectPOD_both_modes_and_reconstr_error():
 
 
 def test_HOSVD_modes_less_than_zero():
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         hosvd = HigherOrderSVD(solution_snapshots=Data, modes=-1)
 
 
 def test_HOSVD_mode_non_integer():
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         hosvd = HigherOrderSVD(solution_snapshots=Data, modes=1.5)
 
 
 def test_HOSVD_reconstr_perc_less_than_zero():
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         hosvd = HigherOrderSVD(solution_snapshots=Data, reconstruction_percentage=-1)
 
 
@@ -105,17 +105,17 @@ def test_HOSVD_both_modes_and_reconstr_error():
 
 
 def test_SnapshotPOD_modes_less_than_zero():
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         snap = SnapshotPOD(solution_snapshots=Data, n_modes=-1)
 
 
 def test_SnapshotPOD_mode_non_integer():
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         snap = SnapshotPOD(solution_snapshots=Data, n_modes=1.5)
 
 
 def test_SnapshotPOD_reconstr_perc_less_than_zero():
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         snap = SnapshotPOD(solution_snapshots=Data, reconstruction_percentage=-1)
 
 
