@@ -32,7 +32,10 @@ class Trainer:
         else:
             self.scheduler = scheduler
 
-        self.history: dict = {"train_loss": None, "test_loss": None}
+        self.history: dict = {
+            "train_loss": torch.tensor(torch.nan),
+            "test_loss": torch.tensor(torch.nan),
+        }
         """Record of the loss during training and validation. 
         Note if training ends early there may be ``NaN`` values, as the histories are initialized with ``NaN``.
         
