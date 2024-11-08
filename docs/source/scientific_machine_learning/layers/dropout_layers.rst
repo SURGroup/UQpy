@@ -1,7 +1,7 @@
 List of Probabilistic Dropout Layers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-All dropout layers are nearly identical implementations to their counterparts in Pytorch.
+All dropout layers are nearly identical implementations to their counterparts in Pytorch, based on the work by Gal et al :cite:`gal2016dropout`.
 The difference is these class have a ``dropping`` attribute that controls whether or not they are
 active, rather than relying on the ``training`` attribute as Pytorch's implementations do.
 

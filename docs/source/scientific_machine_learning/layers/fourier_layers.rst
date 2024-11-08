@@ -6,7 +6,7 @@ All Fourier layers are types of convolutions, although they do not have a direct
 Formula
 ^^^^^^^
 
-Using the notation from Li 2021, the Fourier layer is defined as
+Using the notation from Li et al. :cite:`li2021fno`, the Fourier layer is defined as
 
 .. math:: FL(x) = \underbrace{\mathcal{F}^{-1}( R ( \mathcal{F}(x) ) )}_\text{Spectral Convolution} + \underbrace{W(x)}_\text{Convolution}
 

@@ -23,6 +23,7 @@ import statements to prevent naming conflicts with :py:class:`torch.nn.functiona
 Gaussian Kullback-Leibler Divergence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+This is an implementation of Kullback and Liebler's work in closed form :cite:`kullback1951kldivergence`.
 The function :func:`gaussian_kullback_leibler_divergence` is imported using the following command:
 
 >>> from UQpy.scientific_machine_learning.functional import gaussian_kullback_leibler_divergence
@@ -34,6 +35,7 @@ The function :func:`gaussian_kullback_leibler_divergence` is imported using the 
 Monte Carlo Kullback-Leibler Divergence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+This is based on Kullback and Liebler's work :cite:`kullback1951kldivergence`.
 The function :func:`mc_kullback_leibler_divergence` is imported using the following command:
 
 >>> from UQpy.scientific_machine_learning.functional import mc_kullback_leibler_divergence
@@ -45,6 +47,7 @@ The function :func:`mc_kullback_leibler_divergence` is imported using the follow
 Generalized Jensen-Shannon Divergence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+This implements a Jensen-Shannon formula :cite:`thiagarajan2022jensen`.
 The function :func:`generalized_jensen_shannon_divergence` is imported using the following command:
 
 >>> from UQpy.scientific_machine_learning.functional import generalized_jensen_shannon_divergence
@@ -56,6 +59,7 @@ The function :func:`generalized_jensen_shannon_divergence` is imported using the
 Geometric Jensen-Shannon Divergence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+This implements a Jensen-Shannon formula :cite:`thiagarajan2022jensen` :cite:`deasy2020jsdivergence`.
 The function :func:`geometric_jensen_shannon_divergence` is imported using the following command:
 
 >>> from UQpy.scientific_machine_learning.functional import geometric_jensen_shannon_divergence

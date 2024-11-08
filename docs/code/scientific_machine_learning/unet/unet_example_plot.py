@@ -1,3 +1,8 @@
+"""
+Plotting the U-net example
+==========================
+
+"""
 # %% Imports
 import torch
 import numpy as np

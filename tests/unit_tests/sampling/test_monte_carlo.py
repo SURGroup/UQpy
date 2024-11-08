@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from beartype.roar import BeartypeCallHintPepParamException
+from beartype.roar import BeartypeCallHintParamViolation
 
 from UQpy.distributions import Normal, MultivariateNormal
 from UQpy.sampling import MonteCarloSampling
@@ -33,20 +33,20 @@ z5 = MonteCarloSampling(distributions=[dist3], random_state=np.random.RandomStat
 
 def test_dist_object():
     """Validate dist_object, when dist_object is a distribution object."""
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         MonteCarloSampling(distributions='abc', random_state=np.random.RandomState(123))
 
 
 def test_dist_object2():
     """Validate dist_object, when dist_object is not a list of distribution object."""
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         MonteCarloSampling(distributions=['abc'], random_state=np.random.RandomState(123))
 
 
 def test_dist_object3():
     """Create a MCS object using DistributionND class object. Validate dist_object, when dist_object is not a
     list of distribution object."""
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         MonteCarloSampling(distributions=['abc'], random_state=np.random.RandomState(123))
 
 
@@ -107,20 +107,20 @@ def test_samples2_u03():
 
 def test_nsamples_none():
     """Validate error check, when nsamples is None, while calling 'run' method."""
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         MonteCarloSampling(distributions=dist1, random_state=np.random.RandomState(123)).run(nsamples=None)
 
 
 def test_nsamples_not_integer():
     """Validate error check, when nsamples is not an integer, while calling 'run' method."""
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         MonteCarloSampling(distributions=dist1, random_state=np.random.RandomState(123)).run(nsamples='abc')
 
 
 def test_random_state1():
     """Check if random_state attribute is an integer, np.random.RandomState object or None, when dist_object is a
     distribution class object."""
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         MonteCarloSampling(distributions=dist1, random_state='abc')
 
 
@@ -128,14 +128,14 @@ def test_random_state1():
 def test_random_state2():
     """Check if random_state attribute is not an integer, np.random.RandomState object or None, when dist_object is a
     list of multiple distribution class object."""
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         MonteCarloSampling(distributions=[dist1, dist2], random_state='abc')
 
 
 def test_run_random_state():
     """Check if random_state attribute is not an integer, np.random.RandomState object or None, when when 'run' method
     is called."""
-    with pytest.raises(BeartypeCallHintPepParamException):
+    with pytest.raises(BeartypeCallHintParamViolation):
         MonteCarloSampling(distributions=dist1).run(nsamples=5, random_state='abc')
 
 

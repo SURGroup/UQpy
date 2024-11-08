@@ -21,11 +21,11 @@ class Matern(EuclideanKernel):
     def calculate_kernel_matrix(self, x, s):
         l = self.kernel_parameter
         stack = cdist(x / l, s / l, metric='euclidean')
-        if self.nu == 0.5:
+        if np.isclose(self.nu, 0.5):
             self.kernel_matrix = np.exp(-np.abs(stack))
-        elif self.nu == 1.5:
+        elif np.isclose(self.nu,1.5):
             self.kernel_matrix = (1 + np.sqrt(3) * stack) * np.exp(-np.sqrt(3) * stack)
-        elif self.nu == 2.5:
+        elif np.isclose(self.nu, 2.5):
             self.kernel_matrix = (1 + np.sqrt(5) * stack + 5 * (stack ** 2) / 3) * np.exp(-np.sqrt(5) * stack)
         elif self.nu == np.inf:
             self.kernel_matrix = np.exp(-(stack ** 2) / 2)

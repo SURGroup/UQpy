@@ -7,7 +7,8 @@ In this example, we train a DeepOperatorNetwork to learn the behavior of a linea
 
 # %% md
 # In this example we use a deep operator network to approximate the solution to a linear elastic system.
-# Using a given data set, we will
+# The dataset is provided by Goswami et al. :cite:`goswami2022elasticity` and our architecture closely follows their design.
+# Using the dataset, we will
 #
 # 1. Construct a deep operator network
 # 2. Load the training and testing data

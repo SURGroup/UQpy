@@ -1,7 +1,7 @@
 U-net Convolutional Neural Network
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :class:`.Unet` class provides the implementation of the U-net neural network (U-Net) originally introduced by Ronneberger et al.
+The :class:`.Unet` class provides the implementation of the U-net neural network (U-Net) originally introduced by Ronneberger et al. :cite:`ronneberger2015u`
 The network is originally designed for image segmentation tasks but can also be generalized to perform image-to-image regression.
 The architecture comprises a series of encoding blocks and decoding blocks, as shown below.
 
@@ -68,7 +68,3 @@ Examples
 
       print(f"Input shape: {x.shape}")       # (N, in_channels, H, W)
       print(f"Prediction shape: {y.shape}")  # (N, out_channels, H, W)
-
-**References:**
-
-Ronneberger, O., Fischer, P., & Brox, T. (2015). U-Net: Convolutional Networks for Biomedical Image Segmentation. *arXiv preprint arXiv:1505.04597*.

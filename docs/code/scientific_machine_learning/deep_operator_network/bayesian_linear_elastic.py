@@ -4,19 +4,44 @@ Learning a Linear Elastic system
 
 In this example, we train a Bayesian DeepOperatorNetwork to learn the behavior of a linear elastic system.
 """
-import logging
 
+# %% md
+# In this example we use a deep operator network to approximate the solution to a linear elastic system.
+# The dataset is provided by Goswami et al. :cite:`goswami2022elasticity` and our architecture closely follows their design.
+# Using the dataset, we will
+#
+# 1. Construct a deep operator network
+# 2. Load the training and testing data
+# 3. Fit the network parameters to the training data
+# 4. Plot the loss history
+#
+# First, import the necessary modules and set the logging behavior of UQpy.
+
+# %%
+
+
+import logging
 import scipy.io as io
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader, random_split
-
 import UQpy.scientific_machine_learning as sml
 
 logger = logging.getLogger("UQpy")
 logger.setLevel(logging.INFO)
 
+# %% md
+# **1. Construct a Bayesian deep operator network**
+#
+# A Bayesian Deep Operator Network is defined using the branch network, that encodes information about the domain :math:`x`,
+# and the trunk network, that encodes information about the transformation.
+#
+# The branch and trunk networks can be defined using a ``torch.nn.Module`` or any subclass of it.
+# Here we use subclasses of ``torch.nn.Module`` to define the networks. Both classes use standard
+# torch activation functions and UQpy layers to define their operations.
+
+# %%
 
 class BranchNet(nn.Module):
     def __init__(self, *args, **kwargs):
@@ -62,10 +87,6 @@ class TrunkNet(nn.Module):
             sml.BayesianLinear(128, 200),
             nn.Tanh(),
         )
-        # self.Xmin = np.array([0.0, 0.0]).reshape((-1, 2))
-        # self.Xmax = np.array([1.0, 1.0]).reshape((-1, 2))
-        # self.Xmin = torch.tensor([[0., 0.]])
-        # self.Xmax = torch.tensor([[1., 1.]])
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.fnn(x)
@@ -75,6 +96,14 @@ branch_network = BranchNet()
 trunk_network = TrunkNet()
 model = sml.DeepOperatorNetwork(branch_network, trunk_network, 2)
 
+
+# %% md
+# **2. Load the training and testing data**
+#
+# With the model constructed, we turn our attention to the training data.
+# Here we define a subclass of ``torch.nn.Dataset`` as outlined by the [torch documentation](https://pytorch.org/tutorials/beginner/data_loading_tutorial.html#dataset-class).
+
+# %%
 
 class ElasticityDataSet(Dataset):
     """Load the Elasticity dataset"""
@@ -103,6 +132,15 @@ train_data = DataLoader(train_dataset,
                         )
 test_data = DataLoader(test_dataset)
 
+# %% md
+# **3. Fit the network parameters to the training data**
+#
+# All that's left is to define a loss function, an optimizer, and run the BBBTrainer.
+# We use the Mean Squared Error loss, KullbackLeibler divergence, and an Adam optimizer from torch.
+# We assemble the model, optimizer, loss function, and training data with UQpy's BBBTrainer to learn the model parameters.
+
+# %%
+
 
 class LossFunction(nn.Module):
     def __init__(self, reduction: str = "mean", *args, **kwargs):
@@ -125,6 +163,12 @@ trainer.run(
     beta=1e-6,
     num_samples=5,
 )
+
+
+# %% md
+# Finally, we plot the training history.
+
+# %%
 
 import matplotlib.pyplot as plt
 

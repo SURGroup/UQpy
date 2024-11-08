@@ -39,10 +39,10 @@ class BBBTrainer:
         self.divergence = divergence
 
         self.history: dict = {
-            "train_loss": None,
-            "train_divergence": None,
-            "train_nll": None,
-            "test_nll": None,
+            "train_loss": torch.tensor(torch.nan),
+            "train_divergence": torch.tensor(torch.nan),
+            "train_nll": torch.tensor(torch.nan),
+            "test_nll": torch.tensor(torch.nan),
         }
         """Record of the loss during training and validation. 
         Note if training ends early there may be ``NaN`` values, as the histories are initialized with ``NaN``.

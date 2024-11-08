@@ -90,7 +90,7 @@ Neural Networks
     Neural Network Base Class <neural_networks/neural_network_parent>
     Deep Operator Network <neural_networks/deep_operator_network>
     Feed Forward Neural Network <neural_networks/feed_forward_neural_network>
-    Fourier Neural Operator <neural_networks/fourier_neural_network>
+    Fourier Neural Operator <neural_networks/fourier_neural_operator>
     U-net Neural Network <neural_networks/unet_neural_network>
 
 Trainers
