@@ -75,7 +75,7 @@ for w in model.parameters():
 tau_list = torch.tensor(tau_list)
 
 step_size = 1e-4
-num_steps_per_sample = int(torch.pi / (2 * step_size * tau))
+num_steps_per_sample = 100
 
 params_init = hamiltorch.util.flatten(model).clone()
 params_hmc = hamiltorch.sample_model(
@@ -89,7 +89,7 @@ params_hmc = hamiltorch.sample_model(
     tau_list=tau_list,
     model_loss=nn.MSELoss(reduction="sum"),
 )
-torch.save(params_hmc, "params_hmc.pt")
+# torch.save(params_hmc, "params_hmc.pt")
 
 # Evaluate the HMC samples on testing data
 x_test = torch.load("initial_conditions_test.pt")
@@ -110,7 +110,7 @@ spacial_x = torch.linspace(0, 1, 256)
 fig, ax = plt.subplots()
 ax.plot(spacial_x, y_test[0].squeeze(), color="tab:blue")
 ax.plot(spacial_x, mean_prediction, color="black")
-ax.plot(spacial_x, predictions.T, color="gray", alpha=0.3)
+ax.plot(spacial_x, predictions.T, color="gray", alpha=0.1, zorder=1)
 ax.legend(["y", "Mean Prediction", "Ensemble Predictions"])
 ax.set_title("HMC Predictions")
 ax.set(xlabel="x", ylabel="y(x, 0.5)")
