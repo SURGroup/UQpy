@@ -1,11 +1,11 @@
-"""
+r"""
 Learning the Burgers' Operator
 ==============================
 
 In this example, we train a Fourier Neural Operator to learn the mapping :math:`y(x, 0) \mapsto y(x, 0.5)`
 where :math:`y(x,t)` is the solution to the Burgers' equation given by
 
-..math:: \frac{\partial}{\partial t}u(x, t) + u(x, t) \frac{\partial}{\partial x} u(x, t) = \nu \frac{\partial^2}{\partial x^2} u(x,t)
+.. math:: \frac{\partial}{\partial t}u(x, t) + u(x, t) \frac{\partial}{\partial x} u(x, t) = \nu \frac{\partial^2}{\partial x^2} u(x,t)
 
 """
 
