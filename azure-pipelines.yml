@@ -48,7 +48,7 @@ jobs:
       displayName: Shows currently compiling version
 
     - task: SonarCloudPrepare@1
-      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'))
+      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/pull/target/master'))
       inputs:
         SonarCloud: 'SonarCloud.UQpy'
         organization: 'jhusurg'
@@ -91,10 +91,10 @@ jobs:
         additionalCodeCoverageFiles: '$(System.DefaultWorkingDirectory)/ **'
 
     - task: SonarCloudAnalyze@1
-      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'))
+      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/pull/target/master'))
 
     - task: SonarCloudPublish@1
-      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/Development'),eq(variables['Build.Reason'], 'PullRequest'))
+      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/pull/target/master'))
       inputs:
         pollingTimeoutSec: '300'
 
@@ -133,37 +133,6 @@ jobs:
         tag: 'v$(GitVersion.SemVer)'
         changeLogCompareToRelease: 'lastFullRelease'
         changeLogType: 'commitBased'
-
-    - bash: echo "##vso[task.prependpath]$CONDA/bin"
-      displayName: Add conda to PATH
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-
-    - bash: sudo chown -R $USER $CONDA
-      displayName: Take ownership of conda installation
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-
-    - bash: conda create --yes --quiet --name myEnvironment
-      displayName: Create Anaconda environment
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-
-    - bash: |
-        source activate myEnvironment
-        conda install --yes --quiet --name myEnvironment python=$(pythonVersion) conda-build anaconda-client
-      displayName: Install Anaconda packages
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-
-#    - bash: |
-#        source activate myEnvironment
-#        conda build . recipe --variants "{'version': ['$(GitVersion.SemVer)']}"
-#      displayName: Build Noarch conda packages
-#      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-#
-#    - bash: |
-#        source activate myEnvironment
-#        anaconda login --username $(ANACONDAUSER) --password $(ANACONDAPW)
-#        anaconda upload /usr/local/miniconda/envs/myEnvironment/conda-bld/noarch/*.tar.bz2
-#      displayName: Upload conda packages
-#      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
 - job: "Create_Docker_images"
   dependsOn: Build_UQpy_and_run_tests
