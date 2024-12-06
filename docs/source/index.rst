@@ -39,7 +39,7 @@ Installation
 
 :py:mod:`UQpy` can be installed with the following commands.
 
-Using Python package index (PyPI)::
+Using Python package index (PyPI):
 
 MacOS or Linux::
 
@@ -53,7 +53,6 @@ Windows::
 
 Using Conda::
 
-    conda install --channel  ``SURG_JHU``  uqpy
     conda install -c conda-forge uqpy
 
 

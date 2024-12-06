@@ -23,17 +23,17 @@ setup(
     package_data={"": ["*.pdf"]},
     python_requires='>3.9.0',
     install_requires=[
-        "numpy", "scipy", "matplotlib", "scikit-learn", 'fire',
+        "numpy==1.26.4", "scipy>=1.6.0", "matplotlib==3.8.4", "scikit-learn==1.4.2", 'fire==0.6.0',
         "beartype==0.18.5",
     ],
     extras_require={
         'dev': [
-            'pytest == 8.2.0'
+            'pytest == 8.2.0',
             'pytest-cov == 5.0.0',
             'pylint == 3.1.0',
             'pytest-azurepipelines == 1.0.5',
             'pytest-cov == 5.0.0',
-            'wheel == 0.43.0'
+            'wheel == 0.43.0',
             'twine == 5.0.0',
             'sphinx_autodoc_typehints == 1.23.0',
             'sphinx_rtd_theme == 1.2.0',
