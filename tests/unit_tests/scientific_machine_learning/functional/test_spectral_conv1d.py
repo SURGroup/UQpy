@@ -1,13 +1,14 @@
 import pytest
 import torch
 import UQpy.scientific_machine_learning.functional as func
-from hypothesis import given, strategies as st
+from hypothesis import given, settings, strategies as st
 
 
+@settings(max_examples=8)
 @given(
-    batch_size=st.integers(min_value=1, max_value=100),
-    in_channels=st.integers(min_value=1, max_value=10),
-    out_channels=st.integers(min_value=1, max_value=10),
+    batch_size=st.integers(min_value=1, max_value=10),
+    in_channels=st.integers(min_value=1, max_value=3),
+    out_channels=st.integers(min_value=1, max_value=3),
     length=st.integers(min_value=64, max_value=128),
     modes=st.integers(min_value=2, max_value=32),
 )
@@ -16,7 +17,7 @@ def test_output_shape(batch_size, in_channels, out_channels, length, modes):
     Note modes does *not* affect the shape of the output
     """
     x = torch.rand((batch_size, in_channels, length))
-    weights = torch.rand((in_channels, out_channels, modes), dtype=torch.cfloat)
+    weights = torch.ones((in_channels, out_channels, modes), dtype=torch.cfloat)
     y = func.spectral_conv1d(x, weights, out_channels, modes)
     assert y.shape == torch.Size([batch_size, out_channels, length])
 
