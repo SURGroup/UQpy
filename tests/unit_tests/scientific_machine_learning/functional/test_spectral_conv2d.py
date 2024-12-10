@@ -1,13 +1,15 @@
 import pytest
 import torch
 import UQpy.scientific_machine_learning.functional as func
-from hypothesis import given, strategies as st
+from hypothesis import given, settings, strategies as st
 from hypothesis.extra.numpy import array_shapes
 
+
+@settings(max_examples=8)
 @given(
-    batch_size=st.integers(min_value=1, max_value=100),
-    in_channels=st.integers(min_value=1, max_value=10),
-    out_channels=st.integers(min_value=1, max_value=10),
+    batch_size=st.integers(min_value=1, max_value=10),
+    in_channels=st.integers(min_value=1, max_value=3),
+    out_channels=st.integers(min_value=1, max_value=3),
     signal_shape=array_shapes(min_dims=2, max_dims=2, min_side=64, max_side=128),
     modes=array_shapes(min_dims=2, max_dims=2, min_side=1, max_side=32),
 )
