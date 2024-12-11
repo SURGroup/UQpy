@@ -29,11 +29,12 @@ def test_reduction_none():
 
 def test_device():
     """Note if neither cuda nor mps is available, this test will always pass"""
-    device = (
-        torch.device("cuda", 0)
-        if torch.cuda.is_available()
-        else torch.device("mps", 0) if torch.backends.mps.is_available() else "cpu"
-    )
+    if torch.cuda.is_available():
+        device = torch.device("cuda", 0)
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps", 0)
+    else:
+        device = torch.device("cpu")
     model = sml.FeedForwardNeuralNetwork(sml.BayesianLinear(1, 1))
     model.to(device)
     divergence_function = sml.GaussianKullbackLeiblerDivergence(device=device)

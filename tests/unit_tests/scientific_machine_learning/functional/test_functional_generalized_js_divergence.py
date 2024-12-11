@@ -43,15 +43,13 @@ def test_device():
     """Note if neither cuda nor mps is available, this test will always pass"""
     posterior_distribution = [uq.Uniform(3, 1)]
     prior_distribution = [uq.Uniform(2, 5)]
-    device = (
-        torch.device("cuda", 0)
-        if torch.cuda.is_available()
-        else torch.device("mps", 0) if torch.backends.mps.is_available() else "cpu"
-    )
+    if torch.cuda.is_available():
+        device = torch.device("cuda", 0)
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps", 0)
+    else:
+        device = torch.device("cpu")
     divergence = func.generalized_jensen_shannon_divergence(
-        posterior_distribution,
-        prior_distribution,
-        alpha=0.0,
-        device=device
+        posterior_distribution, prior_distribution, alpha=0.0, device=device
     )
     assert divergence.device == device

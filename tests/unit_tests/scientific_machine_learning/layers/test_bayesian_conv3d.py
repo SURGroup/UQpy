@@ -38,7 +38,7 @@ def compute_hwl_out(
 )
 @settings(deadline=1_000)
 def test_default_output_shape(n, shape, in_channels, out_channels):
-    """Test the output """
+    """Test the output"""
     x = torch.rand((n, in_channels, *shape))
     layer = sml.BayesianConv3d(in_channels, out_channels, 1)
     y = layer(x)
@@ -95,6 +95,21 @@ def test_fancy_output_shape(kernel_size, stride, padding, dilation):
     x = torch.rand(size=(n, in_channels, h_in, w_in, l_in))
     y = layer(x)
     assert y.shape == torch.Size([n, out_channels, h_out, w_out, l_out])
+
+
+def test_device():
+    """Note if neither cuda nor mps is available this test will always pass"""
+    cpu = torch.device("cpu")
+    layer = sml.BayesianConv3d(1, 1, 1, device=cpu)
+    assert layer.weight_mu.device == cpu
+    if torch.cuda.is_available():
+        device = torch.device("cuda", 0)
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps", 0)
+    else:
+        device = torch.device("cpu")
+    layer.to(device)
+    assert layer.weight_mu.device == device
 
 
 def test_deterministic_output():

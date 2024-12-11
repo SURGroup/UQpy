@@ -22,11 +22,12 @@ def test_device():
     cpu = torch.device("cpu")
     layer = sml.BayesianLinear(1, 1, device=cpu)
     assert layer.weight_mu.device == cpu
-    device = (
-        torch.device("cuda", 0)
-        if torch.cuda.is_available()
-        else torch.device("mps", 0) if torch.backends.mps.is_available() else "cpu"
-    )
+    if torch.cuda.is_available():
+        device = torch.device("cuda", 0)
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps", 0)
+    else:
+        device = torch.device("cpu")
     layer.to(device)
     assert layer.weight_mu.device == device
 

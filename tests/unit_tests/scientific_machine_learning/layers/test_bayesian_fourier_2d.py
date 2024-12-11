@@ -23,6 +23,21 @@ def test_output_shape(batch_size, width, w, h, modes):
     assert x.shape == y.shape
 
 
+def test_device():
+    """Note if neither cuda nor mps is available this test will always pass"""
+    cpu = torch.device("cpu")
+    layer = sml.BayesianFourier2d(1, (1, 1), device=cpu)
+    assert layer.weight_spectral_mu.device == cpu
+    if torch.cuda.is_available():
+        device = torch.device("cuda", 0)
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps", 0)
+    else:
+        device = torch.device("cpu")
+    layer.to(device)
+    assert layer.weight_spectral_mu.device == device
+
+
 def test_deterministic_output():
     x = torch.rand((1, 1, 64, 128))
     layer = sml.BayesianFourier2d(1, (33, 65))
