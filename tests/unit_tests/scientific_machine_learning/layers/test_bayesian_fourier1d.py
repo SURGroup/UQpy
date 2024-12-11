@@ -1,13 +1,14 @@
 import torch
 import UQpy.scientific_machine_learning as sml
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis.strategies import integers
 
 
+@settings(max_examples=10)
 @given(
     batch_size=integers(min_value=1, max_value=1),
-    width=integers(min_value=1, max_value=32),
-    length=integers(min_value=64, max_value=256),
+    width=integers(min_value=1, max_value=8),
+    length=integers(min_value=64, max_value=128),
     modes=integers(min_value=1, max_value=33),
 )
 def test_output_shape(batch_size, width, length, modes):

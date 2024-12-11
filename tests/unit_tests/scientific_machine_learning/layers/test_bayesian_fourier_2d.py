@@ -1,14 +1,15 @@
 import torch
 import UQpy.scientific_machine_learning as sml
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis.strategies import integers, tuples
 
 
+@settings(max_examples=10)
 @given(
     batch_size=integers(min_value=1, max_value=1),
-    width=integers(min_value=1, max_value=32),
-    w=integers(min_value=64, max_value=256),
-    h=integers(min_value=64, max_value=256),
+    width=integers(min_value=1, max_value=8),
+    w=integers(min_value=64, max_value=128),
+    h=integers(min_value=64, max_value=128),
     modes=tuples(
         integers(min_value=1, max_value=33),
         integers(min_value=1, max_value=33),

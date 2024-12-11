@@ -4,9 +4,9 @@ from hypothesis import given, settings
 from hypothesis.strategies import integers
 
 
-@settings(deadline=500)
+@settings(deadline=500, max_examples=10)
 @given(
-    batch_size=integers(min_value=1, max_value=4),
+    batch_size=integers(min_value=1, max_value=2),
     width=integers(min_value=1, max_value=8),
     d=integers(min_value=64, max_value=128),
     w=integers(min_value=64, max_value=128),

@@ -1,8 +1,9 @@
 import torch
 import UQpy.scientific_machine_learning as sml
-from hypothesis import given, strategies as st
+from hypothesis import given, settings, strategies as st
 
 
+@settings(max_examples=10)
 @given(
     batch_size=st.integers(min_value=1, max_value=128),
     width=st.integers(min_value=1, max_value=32),

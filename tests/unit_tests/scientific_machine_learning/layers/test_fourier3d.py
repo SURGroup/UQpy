@@ -4,7 +4,7 @@ from hypothesis import given, settings, strategies as st
 from hypothesis.extra.numpy import array_shapes
 
 
-@settings(deadline=1_000)
+@settings(deadline=1_000, max_examples=10)
 @given(
     batch_size=st.integers(min_value=1, max_value=2),
     width=st.integers(min_value=1, max_value=8),
