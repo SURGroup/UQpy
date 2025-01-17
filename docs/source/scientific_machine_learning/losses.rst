@@ -6,7 +6,7 @@ The take in an input tensor :math:`x` and a target :math:`y` and return a tensor
 
 In contrast, the divergence functions presented here are not like the Torch loss functions.
 Divergences compute a distance between the prior and posterior distributions of a Bayesian neural network.
-They take a single :py:class:`torch.nn.Module` as an input to compute a distance between the prior and posterior.
+They take a single :py:class:`torch.nn.Module` as an input to compute a distance between the prior and posterior distribution.
 
 Loss Baseclass
 ^^^^^^^^^^^^^^
