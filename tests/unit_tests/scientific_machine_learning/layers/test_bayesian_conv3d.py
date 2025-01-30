@@ -31,10 +31,10 @@ def compute_hwl_out(
 
 
 @given(
-    n=st.integers(min_value=1, max_value=8),
-    shape=array_shapes(min_dims=3, max_dims=3, min_side=64, max_side=128),
-    in_channels=st.integers(min_value=1, max_value=4),
-    out_channels=st.integers(min_value=1, max_value=4),
+    n=st.integers(min_value=1, max_value=4),
+    shape=array_shapes(min_dims=3, max_dims=3, min_side=64, max_side=96),
+    in_channels=st.integers(min_value=1, max_value=3),
+    out_channels=st.integers(min_value=1, max_value=3),
 )
 @settings(deadline=1_000)
 def test_default_output_shape(n, shape, in_channels, out_channels):

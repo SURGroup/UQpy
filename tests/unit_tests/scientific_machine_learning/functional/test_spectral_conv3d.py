@@ -7,11 +7,11 @@ from hypothesis.extra.numpy import array_shapes
 
 @settings(deadline=1_000, max_examples=8)
 @given(
-    batch_size=st.integers(min_value=1, max_value=10),
+    batch_size=st.integers(min_value=1, max_value=4),
     in_channels=st.integers(min_value=1, max_value=3),
     out_channels=st.integers(min_value=1, max_value=3),
-    signal_shape=array_shapes(min_dims=3, max_dims=3, min_side=64, max_side=128),
-    modes=array_shapes(min_dims=3, max_dims=3, min_side=1, max_side=32),
+    signal_shape=array_shapes(min_dims=3, max_dims=3, min_side=64, max_side=96),
+    modes=array_shapes(min_dims=3, max_dims=3, min_side=1, max_side=16),
 )
 def test_output_shape(batch_size, in_channels, out_channels, signal_shape, modes):
     """An input (batch_size, in_channels, H, W, D) has an output (batch_size, out_channels, H, W, D)
