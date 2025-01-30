@@ -34,11 +34,12 @@ def test_device():
 
 def test_device_output():
     """Note if neither cuda nor mps is available, this test will always pass"""
-    device = (
-        torch.device("cuda", 0)
-        if torch.cuda.is_available()
-        else torch.device("mps", 0) if torch.backends.mps.is_available() else "cpu"
-    )
+    if torch.cuda.is_available():
+        device = torch.device("cuda", 0)
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps", 0)
+    else:
+        device = torch.device("cpu")
     layer = sml.BayesianLinear(1, 1, device=device)
     x = torch.tensor([1.0], device=device)
     y = layer(x)
