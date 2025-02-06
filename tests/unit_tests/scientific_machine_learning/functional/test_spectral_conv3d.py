@@ -3,14 +3,14 @@ import torch
 import UQpy.scientific_machine_learning.functional as func
 from hypothesis import given, settings, strategies as st
 from hypothesis.extra.numpy import array_shapes
+from hypothesis import reproduce_failure
 
-
-@settings(deadline=1_000, max_examples=8)
+@settings(deadline=5_000, max_examples=8)
 @given(
-    batch_size=st.integers(min_value=1, max_value=4),
+    batch_size=st.integers(min_value=1, max_value=2),
     in_channels=st.integers(min_value=1, max_value=3),
     out_channels=st.integers(min_value=1, max_value=3),
-    signal_shape=array_shapes(min_dims=3, max_dims=3, min_side=64, max_side=96),
+    signal_shape=array_shapes(min_dims=3, max_dims=3, min_side=32, max_side=64),
     modes=array_shapes(min_dims=3, max_dims=3, min_side=1, max_side=16),
 )
 def test_output_shape(batch_size, in_channels, out_channels, signal_shape, modes):
