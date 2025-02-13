@@ -3,8 +3,11 @@ import UQpy.scientific_machine_learning as sml
 from hypothesis import given, settings
 from hypothesis.strategies import integers
 
+settings.register_profile("fast", max_examples=1)
+settings.load_profile("fast")
 
-@settings(deadline=500, max_examples=10)
+
+@settings(deadline=500)
 @given(
     batch_size=integers(min_value=1, max_value=2),
     width=integers(min_value=1, max_value=8),

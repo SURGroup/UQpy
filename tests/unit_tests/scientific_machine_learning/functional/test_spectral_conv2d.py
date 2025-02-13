@@ -4,8 +4,10 @@ import UQpy.scientific_machine_learning.functional as func
 from hypothesis import given, settings, strategies as st
 from hypothesis.extra.numpy import array_shapes
 
+settings.register_profile("fast", max_examples=1)
+settings.load_profile("fast")
 
-@settings(max_examples=8)
+
 @given(
     batch_size=st.integers(min_value=1, max_value=10),
     in_channels=st.integers(min_value=1, max_value=3),

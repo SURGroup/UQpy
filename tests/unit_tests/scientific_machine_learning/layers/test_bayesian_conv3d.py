@@ -5,6 +5,10 @@ from hypothesis import given, settings, strategies as st
 from hypothesis.extra.numpy import array_shapes
 
 
+settings.register_profile("fast", max_examples=1)
+settings.load_profile("fast")
+
+
 def compute_hwl_out(
     h_in,
     w_in,

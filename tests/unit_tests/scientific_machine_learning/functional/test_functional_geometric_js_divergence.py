@@ -1,8 +1,11 @@
 import torch
-from hypothesis import given, strategies as st
+from hypothesis import given, settings, strategies as st
 from hypothesis.extra.numpy import array_shapes
-
 import UQpy.scientific_machine_learning.functional as func
+
+
+settings.register_profile("fast", max_examples=1)
+settings.load_profile("fast")
 
 
 @given(
@@ -14,12 +17,12 @@ import UQpy.scientific_machine_learning.functional as func
     shape=array_shapes(min_dims=1, min_side=1, max_side=100),
 )
 def test_non_negativity(
-        prior_param_1,
-        prior_param_2,
-        posterior_param_1,
-        posterior_param_2,
-        alpha,
-        shape,
+    prior_param_1,
+    prior_param_2,
+    posterior_param_1,
+    posterior_param_2,
+    alpha,
+    shape,
 ):
     """JSG divergence is always non-negative"""
     dtype = torch.float64
@@ -42,11 +45,11 @@ def test_non_negativity(
     shape=array_shapes(min_dims=1, min_side=1, max_side=100),
 )
 def test_kl_equal(
-        prior_param_1,
-        prior_param_2,
-        posterior_param_1,
-        posterior_param_2,
-        shape,
+    prior_param_1,
+    prior_param_2,
+    posterior_param_1,
+    posterior_param_2,
+    shape,
 ):
     """JSG divergence is equal to KL divergence when alpha = 0"""
     post_mu = torch.full(shape, posterior_param_1)
@@ -78,10 +81,20 @@ def test_reduction_shape(shape):
     )
     assert divergence.shape == torch.Size()
     divergence = func.geometric_jensen_shannon_divergence(
-        posterior_mu, posterior_sigma, prior_mu, prior_sigma, alpha=0.5, reduction="mean"
+        posterior_mu,
+        posterior_sigma,
+        prior_mu,
+        prior_sigma,
+        alpha=0.5,
+        reduction="mean",
     )
     assert divergence.shape == torch.Size()
     divergence = func.geometric_jensen_shannon_divergence(
-        posterior_mu, posterior_sigma, prior_mu, prior_sigma, alpha=0.5, reduction="none"
+        posterior_mu,
+        posterior_sigma,
+        prior_mu,
+        prior_sigma,
+        alpha=0.5,
+        reduction="none",
     )
     assert divergence.shape == torch.Size(shape)

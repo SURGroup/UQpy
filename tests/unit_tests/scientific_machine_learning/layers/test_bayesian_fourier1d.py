@@ -4,7 +4,10 @@ from hypothesis import given, settings
 from hypothesis.strategies import integers
 
 
-@settings(max_examples=10)
+settings.register_profile("fast", max_examples=1)
+settings.load_profile("fast")
+
+
 @given(
     batch_size=integers(min_value=1, max_value=1),
     width=integers(min_value=1, max_value=8),

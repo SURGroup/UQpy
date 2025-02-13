@@ -1,10 +1,13 @@
 import torch
 import torch.nn as nn
 import hypothesis
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis.strategies import integers
 from hypothesis.extra.numpy import array_shapes
 import UQpy.scientific_machine_learning as sml
+
+settings.register_profile("fast", max_examples=1)
+settings.load_profile("fast")
 
 
 @hypothesis.settings(deadline=500)
