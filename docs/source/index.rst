@@ -100,6 +100,7 @@ The default logging level is set to **ERROR**. The user can change the logging s
    /reliability/index
    runmodel_doc
    /sampling/index
+   /scientific_machine_learning/index
    /sensitivity/index
    /stochastic_process/index
    /surrogates/index
