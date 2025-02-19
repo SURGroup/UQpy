@@ -38,7 +38,7 @@ class GaussianKullbackLeiblerDivergence(Loss):
         >>> div = divergence_function(model)
         """
         super().__init__()
-        if reduction is "none":
+        if reduction == "none":
             raise ValueError(
                 "UQpy: GaussianKullbackLeiblerDivergence does not accept reduction='none'. "
                 "Must be 'sum' or 'mean'."
