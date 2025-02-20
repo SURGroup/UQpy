@@ -33,6 +33,7 @@ def test_encode(mean, std, size):
 def test_encode_decode(mean, std, size):
     x = torch.normal(mean, std, size=size, dtype=torch.float64)
     normalizer = sml.GaussianNormalizer(x)
+    normalizer.encode()
     y = normalizer(x)
     normalizer.decode()
     x_reconstruction = normalizer(y)
@@ -78,3 +79,10 @@ def test_inf_raises_error():
     x = torch.tensor([1.0, torch.inf, 3.0])
     with pytest.raises(RuntimeError):
         sml.GaussianNormalizer(x)
+
+
+def test_extra_repr():
+    """Customize all input options to test the extra_repr method correctly displays non-default inputs"""
+    x = torch.tensor(range(16), dtype=torch.float).reshape(2, 2, 4)
+    layer = sml.GaussianNormalizer(x, encoding=False, epsilon=1e-10, dim=(1, 2))
+    assert layer.extra_repr() == "encoding=False, epsilon=1e-10, dim=(1, 2)"

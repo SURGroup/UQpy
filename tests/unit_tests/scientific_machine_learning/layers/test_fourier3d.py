@@ -21,3 +21,9 @@ def test_output_shape(batch_size, width, signal_shape, modes):
     fourier = sml.Fourier3d(width, modes)
     y = fourier(x)
     assert x.shape == y.shape
+
+
+def test_extra_repr():
+    """Customize all inputs to confirm extra_repr correctly displays non-default configuration"""
+    fourier = sml.Fourier3d(width=1, modes=(2, 4, 8), bias=False)
+    assert fourier.extra_repr() == "width=1, modes=(2, 4, 8), bias=False"

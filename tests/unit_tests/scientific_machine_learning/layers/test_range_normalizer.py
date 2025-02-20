@@ -39,6 +39,7 @@ def test_encode_decode(shift, width, size):
     x = torch.rand(size=size, dtype=torch.float64)
     x = (width * x) + shift
     normalizer = sml.RangeNormalizer(x)
+    normalizer.encode()
     y = normalizer(x)
     normalizer.decode()
     x_reconstruction = normalizer(y)
@@ -91,3 +92,10 @@ def test_min_equals_max_raises_error():
     x = torch.ones(100)
     with pytest.raises(RuntimeError):
         sml.RangeNormalizer(x)
+
+
+def test_extra_repr():
+    """Customize all input options to test the extra_repr method correctly displays non-default inputs"""
+    x = torch.tensor([[1, 2, 3]])
+    normalizer = sml.RangeNormalizer(x, encoding=False, low=1, high=2, dim=1)
+    assert normalizer.extra_repr() == "encoding=False, low=1, high=2, dim=1"
