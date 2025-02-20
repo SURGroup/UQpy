@@ -89,4 +89,7 @@ class Fourier2d(Layer):
         )
 
     def extra_repr(self) -> str:
-        return f"width={self.width}, modes={self.modes}"
+        s = "width={width}, modes={modes}"
+        if self.bias is False:
+            s += ", bias={bias}"
+        return s.format(**self.__dict__)
