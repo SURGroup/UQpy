@@ -116,7 +116,7 @@ def test_extra_repr():
         "prior_mu": 1.0,
         "prior_sigma": 2.0,
         "posterior_mu_initial": (1.0, 2.0),
-        "posterior_rho_initial": (-4.0, 0.2)
+        "posterior_rho_initial": (-4.0, 0.2),
     }
     kwargs_str = ", ".join(f"{key}={value}" for key, value in kwargs.items())
     correct_extra_repr = f"2, 4, {kwargs_str}"
