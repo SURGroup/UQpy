@@ -72,8 +72,8 @@ jobs:
       displayName: "Running Pylint"
 
     - script: |
-        pip install pytest pytest-cov hypothesis
-        PYTHONPATH=src pytest --cov=src tests/ --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
+        pip install pytest pytest-cov hypothesis pytest-xdist
+        PYTHONPATH=src pytest --cov=src tests/ --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html -n auto
   #      PYTHONPATH=src pytest tests/unit_test/*.py --cov=src tests/ --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
       workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Test with pytest'
