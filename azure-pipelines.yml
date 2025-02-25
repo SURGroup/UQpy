@@ -23,6 +23,7 @@ pr:
 
 jobs:
 - job: "Build_UQpy_and_run_tests"
+  timeoutInMinutes: 0
   pool:
     vmImage: "macOS-latest"
 
