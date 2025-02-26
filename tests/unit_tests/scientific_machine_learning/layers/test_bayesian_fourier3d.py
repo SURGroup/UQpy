@@ -64,3 +64,19 @@ def test_bias_false():
     layer = sml.BayesianFourier3d(1, (32, 64, 128), bias=False)
     y = layer(x)
     assert torch.all(y == torch.zeros_like(y))
+
+def test_extra_repr():
+    """Customize all input options to test the extra_repr method correctly displays non-default inputs"""
+    kwargs = {
+        "width": 1,
+        "modes": (8, 16, 32),
+        "bias": False,
+        "sampling": False,
+        "prior_mu": 1.0,
+        "prior_sigma": 2.0,
+        "posterior_mu_initial": (1.5, 2.5),
+        "posterior_rho_initial": (-4.0, 0.3),
+    }
+    kwargs_str = ", ".join(f"{key}={value}" for key, value in kwargs.items())
+    layer = sml.BayesianFourier3d(**kwargs)
+    assert layer.extra_repr() == kwargs_str

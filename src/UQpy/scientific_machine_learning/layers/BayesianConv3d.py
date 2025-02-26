@@ -134,6 +134,7 @@ class BayesianConv3d(NormalBayesianLayer):
         self.padding = padding if isinstance(padding, str) else _triple(padding)
         self.dilation = _triple(dilation)
         self.groups = groups
+        self.bias = bias
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         r"""Apply :func:`F.conv3d` to ``x`` where the weight and bias are drawn from random variables

@@ -58,7 +58,7 @@ class GeometricJensenShannonDivergence(Loss):
         """
         super().__init__()
         self.alpha = alpha
-        if reduction is "none":
+        if reduction == "none":
             raise ValueError(
                 "UQpy: GeometricJensenShannonDivergence does not accept reduction='none'. "
                 "Must be 'sum' or 'mean'."

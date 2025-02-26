@@ -66,7 +66,7 @@ class GeneralizedJensenShannonDivergence(Loss):
         self.prior_distribution = prior_distribution
         self.alpha = alpha
         self.n_samples = n_samples
-        if reduction is "none":
+        if reduction == "none":
             raise ValueError(
                 "UQpy: GeneralizedJensenShannonDivergence does not accept reduction='none'. "
                 "Must be 'sum' or 'mean'."
@@ -120,6 +120,6 @@ class GeneralizedJensenShannonDivergence(Loss):
             s += ", alpha={alpha}"
         if self.n_samples != 1_000:
             s += ", n_samples={n_samples}"
-        if self.reduction is not "sum":
+        if self.reduction != "sum":
             s += ", reduction={reduction}"
         return s.format(**self.__dict__)

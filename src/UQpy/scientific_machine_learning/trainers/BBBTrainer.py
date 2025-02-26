@@ -136,7 +136,7 @@ class BBBTrainer:
                 average_divergence_loss = total_divergence_loss / len(train_data)
                 self.history["train_loss"][i] = average_train_loss
                 self.history["train_nll"][i] = average_train_nll
-                self.history["train_divergence"] = average_divergence_loss
+                self.history["train_divergence"][i] = average_divergence_loss
                 self.model.train(False)
             log_message = (
                 f"UQpy: Scientific Machine Learning: "

@@ -140,3 +140,24 @@ def test_bias_false():
     layer = sml.BayesianConv3d(1, 1, 1, bias=False)
     y = layer(x)
     assert torch.all(y == torch.zeros_like(y))
+
+
+def test_extra_repr():
+    """Test custom inputs to confirm extra_repr correctly displays non-default inputs"""
+    kwargs = {
+        "kernel_size": (1, 1, 1),
+        "stride": (2, 2, 2),
+        "padding": "same",
+        "dilation": (2, 2, 2),
+        "groups": 2,
+        "bias": False,
+        "sampling": False,
+        "prior_mu": 1.0,
+        "prior_sigma": 1.1,
+        "posterior_mu_initial": (1.0, 2.0),
+        "posterior_rho_initial": (-4.0, 2.0)
+    }
+    kwargs_str = ", ".join(f"{key}={value}" for key, value in kwargs.items())
+    correct_extra_repr = f"4, 6, {kwargs_str}"
+    layer = sml.BayesianConv3d(4, 6, **kwargs)
+    assert layer.extra_repr() == correct_extra_repr

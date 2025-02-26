@@ -1,3 +1,4 @@
+import pytest
 import torch
 import torch.nn as nn
 import UQpy.scientific_machine_learning as sml
@@ -75,3 +76,25 @@ def test_no_bias():
     x = torch.rand(n, m, t_in)
     g_x = deep_o_net(x, f_x)
     assert torch.all(g_x == torch.zeros([n, m, 1]))
+
+
+def test_incompatible_shapes():
+    """Raise RuntimeError if the last dim of the trunk output doesn't match last dim of branch output"""
+    deep_o_net = sml.DeepOperatorNetwork(nn.Linear(1, 2), nn.Linear(1, 3))
+    x = torch.tensor([0.0])
+    f_x = torch.tensor([0.0])
+    with pytest.raises(RuntimeError):
+        deep_o_net(x, f_x)
+
+
+def test_incompatible_out_channels():
+    """Raise RuntimeError if the last dim of trunk and branch outputs are not divisible by out_channels"""
+    deep_o_net = sml.DeepOperatorNetwork(
+        nn.Linear(1, 2),
+        nn.Linear(1, 2),
+        out_channels=3,
+    )
+    x = torch.tensor([0.0])
+    f_x = torch.tensor([0.0])
+    with pytest.raises(RuntimeError):
+        deep_o_net(x, f_x)

@@ -18,10 +18,10 @@ class BayesianConv1d(NormalBayesianLayer):
         self,
         in_channels: PositiveInteger,
         out_channels: PositiveInteger,
-        kernel_size: PositiveInteger,
-        stride: PositiveInteger = 1,
-        padding: Union[str, NonNegativeInteger] = 0,
-        dilation: PositiveInteger = 1,
+        kernel_size: Union[PositiveInteger, tuple],
+        stride: Union[PositiveInteger, tuple] = 1,
+        padding: Union[NonNegativeInteger, str, tuple] = 0,
+        dilation: Union[PositiveInteger, tuple] = 1,
         groups: PositiveInteger = 1,
         bias: bool = True,
         sampling: bool = True,
@@ -38,7 +38,11 @@ class BayesianConv1d(NormalBayesianLayer):
         :param out_channels: Number of channels produced by the convolution
         :param kernel_size: Size of the convolving kernel
         :param stride: Stride of the convolution. Default: 1
-        :param padding: Padding added to both sides of the input. Default: 0
+        :param padding: Padding added to both sides of the input.
+         Note padding='valid' is the same as no padding.
+         padding='same' pads the input so the output has the shape as the input.
+         However, this mode doesn’t support any stride values other than 1.
+         Default: 0
         :param dilation: Spacing between kernel elements. Default: 1
         :param groups: Number of blocked connections from input channels to output channels.
          ``in_channels`` and ``out_channels`` must both be divisible by ``groups``. Default: 1
@@ -96,8 +100,9 @@ class BayesianConv1d(NormalBayesianLayer):
         >>> print(torch.all(deterministic_output == probabilistic_output))
         tensor(False)
         """
+        kernel_size = _single(kernel_size)
         parameter_shapes = {
-            "weight": (out_channels, in_channels, kernel_size),
+            "weight": (out_channels, in_channels, *kernel_size),
             "bias": out_channels if bias else None,
         }
         super().__init__(
@@ -112,7 +117,7 @@ class BayesianConv1d(NormalBayesianLayer):
         )
         self.in_channels = in_channels
         self.out_channels = out_channels
-        self.kernel_size = kernel_size
+        self.kernel_size = _single(kernel_size)
         self.stride = _single(stride)
         self.padding = _single(padding)
         self.dilation = _single(dilation)

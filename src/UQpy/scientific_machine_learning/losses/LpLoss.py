@@ -74,7 +74,7 @@ class LpLoss(Loss):
         :return: Tensor of shape ``x`` or ``y`` (depending on broadcasting semantics).
         """
         norm = torch.linalg.vector_norm(x - y, ord=self.ord, dim=self.dim)
-        if self.reduction is "none":
+        if self.reduction == "none":
             return norm
         elif self.reduction == "mean":
             return torch.mean(norm)

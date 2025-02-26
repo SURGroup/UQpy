@@ -59,7 +59,7 @@ class MCKullbackLeiblerDivergence(Loss):
         self.prior_distribution = prior_distribution
         self.n_samples = n_samples
         self.reduction = reduction
-        if self.reduction is "none":
+        if self.reduction == "none":
             raise ValueError(
                 "UQpy: MCKullbackLeiblerDivergence does not accept reduction='none'. "
                 "Must be 'sum' or 'mean'."
@@ -112,6 +112,6 @@ class MCKullbackLeiblerDivergence(Loss):
         )
         if self.n_samples != 1_000:
             s += ", n_samples={n_samples}"
-        if self.reduction is not "sum":
+        if self.reduction != "sum":
             s += f", reduction={self.reduction}"
         return s
