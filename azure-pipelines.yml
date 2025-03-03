@@ -23,6 +23,7 @@ pr:
 
 jobs:
 - job: "Build_UQpy_and_run_tests"
+  timeoutInMinutes: 0
   pool:
     vmImage: "macOS-latest"
 
@@ -48,7 +49,7 @@ jobs:
       displayName: Shows currently compiling version
 
     - task: SonarCloudPrepare@1
-      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/pull/target/master'))
+      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['System.PullRequest.TargetBranch'], 'master'))
       inputs:
         SonarCloud: 'SonarCloud.UQpy'
         organization: 'jhusurg'
@@ -73,7 +74,6 @@ jobs:
     - script: |
         pip install pytest pytest-cov hypothesis
         PYTHONPATH=src pytest --cov=src tests/ --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
-  #      PYTHONPATH=src pytest tests/unit_test/*.py --cov=src tests/ --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
       workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Test with pytest'
 
@@ -91,10 +91,10 @@ jobs:
         additionalCodeCoverageFiles: '$(System.DefaultWorkingDirectory)/ **'
 
     - task: SonarCloudAnalyze@1
-      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/pull/target/master'))
+      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['System.PullRequest.TargetBranch'], 'master'))
 
     - task: SonarCloudPublish@1
-      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/pull/target/master'))
+      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['System.PullRequest.TargetBranch'], 'master'))
       inputs:
         pollingTimeoutSec: '300'
 
