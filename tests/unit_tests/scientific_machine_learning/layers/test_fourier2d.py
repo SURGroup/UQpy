@@ -1,6 +1,6 @@
 import torch
 import UQpy.scientific_machine_learning as sml
-from hypothesis import given, strategies as st
+from hypothesis import given, settings, strategies as st
 from hypothesis.extra.numpy import array_shapes
 
 
