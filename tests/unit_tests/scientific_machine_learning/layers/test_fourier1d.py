@@ -1,9 +1,6 @@
 import torch
 import UQpy.scientific_machine_learning as sml
-from hypothesis import given, settings, strategies as st
-
-settings.register_profile("fast", max_examples=1)
-settings.load_profile("fast")
+from hypothesis import given, strategies as st
 
 
 @given(
