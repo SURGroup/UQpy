@@ -4,7 +4,6 @@ from beartype import beartype
 from typing import Union
 from UQpy.distributions.baseclass import DistributionContinuous1D
 from UQpy.utilities.ValidationTypes import NumericArrayLike
-from line_profiler_pycharm import profile
 
 
 @beartype
@@ -24,7 +23,6 @@ class Uniform(DistributionContinuous1D):
         self.cdf = self.__cumulative_distribution_function
         self.icdf = self.__inverse_cumulative_distribution_function
 
-    @profile
     def __probability_density_function(
         self, x: NumericArrayLike
     ) -> Union[int, float, np.ndarray]:
@@ -41,12 +39,8 @@ class Uniform(DistributionContinuous1D):
         pdf = np.full_like(x_array, np.nan)
         pdf[mask_zero_density] = 0.0
         pdf[mask] = 1 / scale
-
-        if isinstance(x, int) or isinstance(x, float):
-            return float(pdf[0])
         return pdf
 
-    @profile
     def __cumulative_distribution_function(
         self, x: NumericArrayLike
     ) -> Union[int, float, np.ndarray]:
@@ -65,11 +59,8 @@ class Uniform(DistributionContinuous1D):
         cdf[lower_mask] = 0.0
         cdf[middle_mask] = (x_array[middle_mask] - loc) / scale
         cdf[upper_mask] = 1.0
-        if isinstance(x, int) or isinstance(x, float):
-            return float(cdf[0])
         return cdf
 
-    @profile
     def __inverse_cumulative_distribution_function(
         self, x: NumericArrayLike
     ) -> Union[int, float, np.ndarray]:
@@ -84,6 +75,12 @@ class Uniform(DistributionContinuous1D):
         icdf = np.full_like(x_array, np.nan)
         mask = (0 <= x_array) & (x_array <= 1)
         icdf[mask] = loc + (x_array[mask] * scale)
-        if isinstance(x, int) or isinstance(x, float):
-            return float(icdf[0])
         return icdf
+
+    def __repr__(self):
+        s = []
+        if self.parameters["loc"] != 0.0:
+            s.append(f"loc={self.parameters['loc']}")
+        if self.parameters["scale"] != 1.0:
+            s.append(f"scale={self.parameters['scale']}")
+        return "Uniform(" + ", ".join(s) + ")"

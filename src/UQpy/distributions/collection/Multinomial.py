@@ -58,3 +58,6 @@ class Multinomial(DistributionND):
             return mean, cov
         else:
             raise ValueError('UQpy: moments2return must be "m", "v" or "mv".')
+
+    def __repr__(self):
+        return "Multinomial({n}, {p})".format(**self.parameters)

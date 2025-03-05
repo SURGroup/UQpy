@@ -38,8 +38,6 @@ class Normal(DistributionContinuous1D):
         pdf = normalizing_constant * np.exp(
             -0.5 * ((x_array - mean) / standard_deviation) ** 2
         )
-        if isinstance(x, int) or isinstance(x, float):
-            return pdf[0]
         return pdf
 
     def __cumulative_distribution_function(
@@ -55,8 +53,6 @@ class Normal(DistributionContinuous1D):
         standard_deviation = self.parameters["scale"]
         erf_input = (x_array - mean) / (standard_deviation * np.sqrt(2.0))
         cdf = (1.0 + erf(erf_input)) / 2.0
-        if isinstance(x, int) or isinstance(x, float):
-            return cdf[0]
         return cdf
 
     def __inverse_cumulative_distribution_function(
@@ -72,6 +68,12 @@ class Normal(DistributionContinuous1D):
         standard_deviation = self.parameters["scale"]
         normalized_icdf = erfinv((2 * y_array) - 1)
         icdf = (normalized_icdf * standard_deviation * np.sqrt(2.0)) + mean
-        if isinstance(y, int) or isinstance(y, float):
-            return icdf[0]
         return icdf
+
+    def __repr__(self):
+        s = []
+        if self.parameters["loc"] != 0.0:
+            s.append(f"loc={self.parameters['loc']}")
+        if self.parameters["scale"] != 1.0:
+            s.append(f"scale={self.parameters['scale']}")
+        return "Normal(" + ", ".join(s) + ")"

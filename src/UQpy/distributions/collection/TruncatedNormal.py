@@ -31,3 +31,11 @@ class TruncatedNormal(DistributionContinuous1D):
             ordered_parameters=("a", "b", "loc", "scale"),
         )
         self._construct_from_scipy(scipy_name=stats.truncnorm)
+
+    def __repr__(self):
+        s = "{a}, {b}"
+        if self.parameters["loc"] != 0.0:
+            s += ", loc={loc}"
+        if self.parameters["scale"] != 1.0:
+            s += ", scale={scale}"
+        return "TruncatedNormal(" + s.format(**self.parameters) + ")"
