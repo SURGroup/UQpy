@@ -1,69 +1,80 @@
-# import pytest
+import pytest
 import numpy as np
 from scipy import stats
 from UQpy.distributions import Uniform
-import hypothesis.strategies as st
 from hypothesis import given
 from hypothesis.extra.numpy import array_shapes
 
-uniform = Uniform()
-scipy_uniform = stats.uniform()
 
+class TestUniform:
 
-@given(st.floats(allow_nan=True))
-def test_uniform_pdf_float(x):
-    """Test custom implementation of uniform pdf on float inputs"""
-    pdf = uniform.pdf(x)
-    scipy_pdf = scipy_uniform.pdf(x)
-    assert isinstance(pdf, float)
-    assert np.allclose(pdf, scipy_pdf, equal_nan=True)
+    uniform = Uniform()
+    scipy_uniform = stats.uniform()
 
+    def test_pdf_nan(self):
+        """Consistent with scipy, pdf(NaN)=NaN"""
+        assert np.isnan(self.uniform.pdf(np.nan))
 
-@given(array_shapes(min_dims=1, min_side=1))
-def test_uniform_pdf_array(size):
-    x = np.random.normal(0, 1, size=size)
-    pdf = uniform.pdf(x)
-    scipy_pdf = scipy_uniform.pdf(x)
-    assert isinstance(pdf, np.ndarray)
-    assert np.allclose(pdf, scipy_pdf, equal_nan=True)
+    def test_pdf_infinity(self):
+        """Consistent with scipy, pdf(inf)=0 and pdf(-inf)=0"""
+        assert np.isclose(self.uniform.pdf(np.inf), 0.0)
+        assert np.isclose(self.uniform.pdf(-np.inf), 0.0)
 
+    @given(array_shapes(min_dims=1, min_side=1))
+    def test_pdf_shape(self, shape):
+        """Test if the output array matches the shape of the input array"""
+        x = np.zeros(shape)
+        assert x.shape == self.uniform.pdf(x).shape
 
-@given(st.floats(allow_nan=True))
-def test_uniform_cdf_float(x):
-    pdf = uniform.pdf(x)
-    scipy_pdf = scipy_uniform.pdf(x)
-    assert isinstance(pdf, float)
-    assert np.allclose(pdf, scipy_pdf, equal_nan=True)
+    def test_pdf_values(self):
+        """Test if UQpy pdf matches scipy pdf for x in [-1, 2]"""
+        x = np.linspace(-1, 2, num=100)
+        assert np.allclose(self.uniform.pdf(x), self.scipy_uniform.pdf(x))
 
+    def test_cdf_nan(self):
+        """Consistent with scipy cdf(NaN)=NaN"""
+        assert np.isnan(self.uniform.cdf(np.nan))
 
-@given(array_shapes(min_dims=1, min_side=1))
-def test_uniform_cdf_array(size):
-    x = np.random.normal(0, 1, size=size)
-    pdf = uniform.pdf(x)
-    scipy_pdf = scipy_uniform.pdf(x)
-    assert isinstance(pdf, np.ndarray)
-    assert np.allclose(pdf, scipy_pdf, equal_nan=True)
+    @pytest.mark.parametrize("test_input,expected", [(np.inf, 1.0), (-np.inf, 0.0)])
+    def test_cdf_infinity(self, test_input, expected):
+        """Consistent with scipy cdf(inf)=1.0, cdf(-inf)=0.0"""
+        assert self.uniform.cdf(test_input) == expected
 
+    @given(array_shapes(min_dims=1, min_side=1))
+    def test_cdf_shape(self, shape):
+        """Test if the output array matches the shape of the input array"""
+        x = np.zeros(shape)
+        assert x.shape == self.uniform.cdf(x).shape
 
-@given(st.floats(allow_nan=True))
-def test_uniform_icdf_float(y):
-    icdf = uniform.icdf(y)
-    scipy_icdf = scipy_uniform.ppf(y)
-    assert isinstance(icdf, float)
-    assert np.allclose(icdf, scipy_icdf, equal_nan=True)
+    def test_cdf_values(self):
+        """Test if UQpy cdf matches scipy cdf on x in [-1, 2]"""
+        x = np.linspace(-1, 2, num=100)
+        assert np.allclose(self.uniform.cdf(x), self.scipy_uniform.cdf(x))
 
+    def test_icdf_nan(self):
+        """Consistent with scipy icdf(NaN)=NaN"""
+        assert np.isnan(self.uniform.icdf(np.nan))
 
-@given(array_shapes(min_dims=1, min_side=1))
-def test_uniform_icdf_array(size):
-    y = np.random.normal(0, 1, size=size)
-    icdf = uniform.icdf(y)
-    scipy_icdf = scipy_uniform.ppf(y)
-    assert isinstance(icdf, np.ndarray)
-    assert np.allclose(icdf, scipy_icdf, equal_nan=True)
+    def test_icdf_infinity(self):
+        """Consistent with scipy icdf(inf)=NaN and icdf(-inf)=NaN"""
+        assert np.isnan(self.uniform.icdf(np.inf))
+        assert np.isnan(self.uniform.icdf(-np.inf))
 
+    @given(array_shapes(min_dims=1, min_side=1))
+    def test_icdf_shape(self, shape):
+        """Test if the output array has the same shape as the input array"""
+        x = np.zeros(shape)
+        assert x.shape == self.uniform.icdf(x).shape
 
-@given(st.floats(0, 1))
-def test_uniform_icdf_cdf(x):
-    """Reconstruct x as x = icdf(cdf(x))"""
-    y = uniform.icdf(uniform.cdf(x))
-    assert np.allclose(x, y, equal_nan=True)
+    def test_icdf_values(self):
+        """Test if UQpy icdf matches scipy ppf for y in [-0.1, 1.1]. Note outside of [0, 1] both return NaN"""
+        y = np.linspace(-0.1, 1.1, num=100)
+        assert np.allclose(
+            self.uniform.icdf(y), self.scipy_uniform.ppf(y), equal_nan=True
+        )
+
+    def test_cdf_icdf_reconstruction(self):
+        x = np.linspace(0, 1, num=100)
+        y = self.uniform.cdf(x)
+        x_reconstruction = self.uniform.icdf(y)
+        assert np.allclose(x, x_reconstruction)
