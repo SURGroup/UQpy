@@ -74,6 +74,7 @@ class TestUniform:
         )
 
     def test_cdf_icdf_reconstruction(self):
+        """Reconstruct x as x = icdf(cdf(x)). Note that this only works where cdf(x) is invertible on [0,1]"""
         x = np.linspace(0, 1, num=100)
         y = self.uniform.cdf(x)
         x_reconstruction = self.uniform.icdf(y)

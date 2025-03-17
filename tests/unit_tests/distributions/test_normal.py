@@ -56,7 +56,7 @@ class TestNormal:
         assert np.isnan(self.normal.icdf(np.nan))
 
     def test_icdf_infinity(self):
-        """Consistent with scipy icdf(inf)=Nan and icdf(-inf)=NaN"""
+        """Consistent with scipy icdf(inf)=NaN and icdf(-inf)=NaN"""
         assert np.isnan(self.normal.icdf(np.inf))
         assert np.isnan(self.normal.icdf(-np.inf))
 
