@@ -17,3 +17,9 @@ class Poisson(DistributionDiscrete1D):
         """
         super().__init__(mu=mu, loc=loc, ordered_parameters=("mu", "loc"))
         self._construct_from_scipy(scipy_name=stats.poisson)
+
+    def __repr__(self):
+        s = "{mu}"
+        if self.parameters["loc"] != 0.0:
+            s += ", loc={loc}"
+        return "Poisson(" + s.format(**self.parameters) + ")"

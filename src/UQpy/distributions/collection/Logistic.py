@@ -19,3 +19,12 @@ class Logistic(DistributionContinuous1D):
         """
         super().__init__(loc=loc, scale=scale, ordered_parameters=("loc", "scale"))
         self._construct_from_scipy(scipy_name=stats.logistic)
+
+    def __repr__(self):
+        s = []
+        if self.parameters["loc"] != 0.0:
+            s.append("loc={loc}")
+        if self.parameters["scale"] != 1.0:
+            s.append("scale={scale}")
+        s = ", ".join(s)
+        return "Logistic(" + s.format(**self.parameters) + ")"
