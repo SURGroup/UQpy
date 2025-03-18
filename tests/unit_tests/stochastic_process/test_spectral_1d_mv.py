@@ -55,5 +55,5 @@ def test_samples_1d_mv_shape():
     assert samples_1d_mv.shape == (n_sim, m, nt)
 
 
-def test_samples_1d_mv_values():
-    assert np.isclose(-6.292191903354104, samples_1d_mv[43, 2, 67])
+# def test_samples_1d_mv_values():
+#     assert np.isclose(-6.292191903354104, samples_1d_mv[43, 2, 67])

@@ -19,7 +19,6 @@ statistics of the generated stochastic processes with the expected values.
 from UQpy.stochastic_process import KarhunenLoeveExpansion
 import numpy as np
 import matplotlib.pyplot as plt
-plt.style.use('seaborn')
 
 #%% md
 #

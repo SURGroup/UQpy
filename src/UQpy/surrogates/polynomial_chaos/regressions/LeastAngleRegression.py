@@ -45,7 +45,7 @@ class LeastAngleRegression(Regression):
         n_samples, inputs_number = x.shape
 
         reg = regresion.Lars(fit_intercept=self.fit_intercept, verbose=self.verbose,
-                             n_nonzero_coefs=self.n_nonzero_coefs, normalize=self.normalize)
+                             n_nonzero_coefs=self.n_nonzero_coefs)
         reg.fit(design_matrix, y)
 
         # LarsBeta = reg.coef_path_
@@ -65,7 +65,7 @@ class LeastAngleRegression(Regression):
         measured by Cross validation: Leave-one-out error (1 is perfect approximation). Option to check overfitting by 
         empirical rule: if three steps in a row have a decreasing accuracy, stop the algorithm.
 
-        :param PolynomialChaosExpansion: existing target PCE for model_selection
+        :param pce_object: existing target PCE for model_selection
         :param target_error: Target error of an approximation (stoping criterion).
         :param check_overfitting: Whether to check over-fitting by empirical rule.
         :return: copy of input PolynomialChaosExpansion containing the best possible model for given data identified by LARs  
