@@ -74,7 +74,7 @@ class MultivariateNormal(DistributionND):
 
     def __repr__(self):
         s = "{mean}"
-        is_float_or_int = isinstance(self.parameters["cov"], int | float)
+        is_float_or_int = isinstance(self.parameters["cov"], (int, float))
         if is_float_or_int:
             if self.parameters["cov"] == 1.0:
                 return "MultivariateNormal(" + s.format(**self.parameters) + ")"
