@@ -1,15 +1,17 @@
-numpy == 1.22.0
-scipy == 1.8.0
-matplotlib == 3.5.2
-scikit-learn == 1.0.2
-fire == 0.4.0
-pytest == 6.1.2
-coverage == 5.3
-pytest-cov == 2.10.1
-pylint == 2.6.0
-wheel == 0.38.1
-pytest-azurepipelines == 0.8.0
-twine == 3.4.1
+numpy == 1.26.4
+scipy == 1.6.0
+matplotlib == 3.8.4
+scikit-learn == 1.4.2
+fire == 0.6.0
+pytest == 8.2.0
+coverage == 7.5.0
+pytest-cov == 5.0.0
+pylint == 3.1.0
+wheel == 0.43.0
+pytest-azurepipelines == 1.0.5
+twine == 5.0.0
 pathlib~=1.0.1
-beartype ==0.9.1
+beartype == 0.18.5
 setuptools~=65.5.1
+torch ~= 2.2.2
+torchinfo ~= 1.8.0

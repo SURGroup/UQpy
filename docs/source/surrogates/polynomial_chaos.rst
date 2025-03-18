@@ -30,6 +30,7 @@ which are also orthonormal.
     Polynomials <pce/polynomials>
     Regressions <pce/regressions>
     Polynomial Chaos Expansion <pce/pce>
+    Physics-informed Polynomial Chaos Expansion <pce/physics_informed>
 
 
 

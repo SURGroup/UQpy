@@ -73,9 +73,9 @@ rmodel = RunModel(model=model)
 # :class:`.Kriging` class defines an object to generate a surrogate model for a given set of data.
 
 # %%
-
 from UQpy.surrogates.gaussian_process.regression_models import LinearRegression
-from UQpy.surrogates.gaussian_process.kernels import RBF
+# /Users/george/Documents/Main_Files/Scripts/UQpy/src/UQpy/utilities/kernels/euclidean_kernels/RBF.py
+from UQpy.utilities.kernels.euclidean_kernels import RBF
 
 bounds = [[10**(-3), 10**3], [10**(-3), 10**2], [10**(-3), 10**2]]
 optimizer = MinimizeOptimizer(method="L-BFGS-B", bounds=bounds)
@@ -132,3 +132,5 @@ plt.scatter(a.samples[nd:, 0], a.samples[nd:, 1], color='pink', label='New sampl
 plt.scatter(x.samples[:nd, 0], x.samples[:nd, 1], color='Red', label='Initial samples')
 plt.title('Branin-Hoo function');
 plt.legend()
+
+# %%

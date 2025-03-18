@@ -19,7 +19,6 @@ from matplotlib import pyplot as plt
 from UQpy.stochastic_process import KarhunenLoeveExpansion2D
 import numpy as np
 
-plt.style.use('seaborn')
 
 # %% md
 #
