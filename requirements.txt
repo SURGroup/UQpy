@@ -13,5 +13,5 @@ twine == 5.0.0
 pathlib~=1.0.1
 beartype == 0.18.5
 setuptools~=65.5.1
-torch == 2.2.2
+torch ~= 2.2.2
 torchinfo ~= 1.8.0
