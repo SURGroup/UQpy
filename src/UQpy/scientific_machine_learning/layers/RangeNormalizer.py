@@ -78,7 +78,8 @@ class RangeNormalizer(Layer):
         self.x = x
         self.low = low
         self.high = high
-        self.encoding = encoding
+        self.encoding: bool = encoding
+        """Boolean indicating if the layer is encoding or not."""
         self.dim = dim
 
         # handle cases if dim is None, an integer, or a tuple
@@ -99,7 +100,9 @@ class RangeNormalizer(Layer):
                 f"UQpy: Invalid dim={dim}. Must be one of None, int, or tuple of ints."
             )
 
-        if torch.any(x_min == x_max):  # if x_min equals x_max, a divide by zero error will occur when computing scale
+        if torch.any(
+            x_min == x_max
+        ):  # if x_min equals x_max, a divide by zero error will occur when computing scale
             raise RuntimeError(
                 "UQpy: RangeNormalizer is not defined if min(x) is equal to max(x) over any dimension to be reduced."
             )
