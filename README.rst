@@ -35,7 +35,7 @@ Uncertainty Quantification with python (UQpy)
      - Aakash Bangalore Satish, Mohit Singh Chauhan, Lohit Vandanapu, Ketson RM dos Santos, Katiana Kontolati, Dimitris Loukrezis, Promit Chakroborty, Lukáš Novák, Andrew Solanto, Connor Krill
 
    * - **Contributors:**
-     - Michael Gardner, Prateek Bhustali, Julius Schultz, Ulrich Römer
+     - Michael Gardner, Prateek Bhustali, Julius Schultz, Ulrich Römer, Nicholas Betters
      
 
 

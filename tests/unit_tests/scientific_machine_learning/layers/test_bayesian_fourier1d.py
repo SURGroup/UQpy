@@ -1,11 +1,7 @@
 import torch
 import UQpy.scientific_machine_learning as sml
-from hypothesis import given, settings
+from hypothesis import given
 from hypothesis.strategies import integers
-
-
-settings.register_profile("fast", max_examples=1)
-settings.load_profile("fast")
 
 
 @given(
@@ -82,7 +78,7 @@ def test_extra_repr():
         "prior_mu": 1.0,
         "prior_sigma": 2.0,
         "posterior_mu_initial": (1.5, 2.5),
-        "posterior_rho_initial": (-4.0, 0.3)
+        "posterior_rho_initial": (-4.0, 0.3),
     }
     kwargs_str = ", ".join(f"{key}={value}" for key, value in kwargs.items())
     layer = sml.BayesianFourier1d(**kwargs)

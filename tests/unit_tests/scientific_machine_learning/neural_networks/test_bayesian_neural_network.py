@@ -1,12 +1,9 @@
 import torch
 import torch.nn as nn
-from hypothesis import given, settings
+from hypothesis import given
 from hypothesis.strategies import integers
 from UQpy.scientific_machine_learning.neural_networks import FeedForwardNeuralNetwork
 from UQpy.scientific_machine_learning.layers import BayesianLinear
-
-settings.register_profile("fast", max_examples=1)
-settings.load_profile("fast")
 
 
 @given(integers(min_value=1, max_value=1_000), integers(min_value=1, max_value=1_000))

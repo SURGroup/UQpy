@@ -24,7 +24,7 @@ setup(
     python_requires='>3.9.0',
     install_requires=[
         "numpy==1.26.4", "scipy>=1.6.0", "matplotlib==3.8.4", "scikit-learn==1.4.2", 'fire==0.6.0',
-        "beartype==0.18.5",
+        "beartype==0.18.5", "torch ~= 2.2.2", "torchinfo ~= 1.8.0"
     ],
     extras_require={
         'dev': [

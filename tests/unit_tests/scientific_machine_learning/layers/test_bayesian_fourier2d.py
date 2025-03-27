@@ -1,10 +1,7 @@
 import torch
 import UQpy.scientific_machine_learning as sml
-from hypothesis import given, settings
+from hypothesis import given
 from hypothesis.strategies import integers, tuples
-
-settings.register_profile("fast", max_examples=1)
-settings.load_profile("fast")
 
 
 @given(

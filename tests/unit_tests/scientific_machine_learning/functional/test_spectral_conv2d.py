@@ -1,11 +1,8 @@
 import pytest
 import torch
 import UQpy.scientific_machine_learning.functional as func
-from hypothesis import given, settings, strategies as st
+from hypothesis import given, strategies as st
 from hypothesis.extra.numpy import array_shapes
-
-settings.register_profile("fast", max_examples=1)
-settings.load_profile("fast")
 
 
 @given(
