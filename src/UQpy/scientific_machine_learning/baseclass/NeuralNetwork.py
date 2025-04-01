@@ -31,7 +31,7 @@ class NeuralNetwork(nn.Module, ABC):
         return torchinfo.summary(self, **kwargs)
 
     def count_parameters(self):
-        """Get the total number of parameters that require a gradient computation in the model"""
+        """Get the total number of parameters that require a gradient computation in the model."""
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
     def sample(self, mode: bool = True):

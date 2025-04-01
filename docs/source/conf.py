@@ -25,7 +25,7 @@ author = (
 )
 
 # The full version, including alpha/beta/rc tags
-release = "v4.1.7"
+release = "v4.2.0"
 
 # -- General configuration ---------------------------------------------------
 

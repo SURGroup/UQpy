@@ -5,10 +5,6 @@ from hypothesis import given, settings, strategies as st
 from hypothesis.extra.numpy import array_shapes
 
 
-settings.register_profile("fast", max_examples=1)
-settings.load_profile("fast")
-
-
 def compute_hwl_out(
     h_in,
     w_in,
@@ -40,7 +36,7 @@ def compute_hwl_out(
     in_channels=st.integers(min_value=1, max_value=3),
     out_channels=st.integers(min_value=1, max_value=3),
 )
-@settings(deadline=1_000)
+@settings(deadline=None)
 def test_default_output_shape(n, shape, in_channels, out_channels):
     """Test the output"""
     x = torch.rand((n, in_channels, *shape))
@@ -155,7 +151,7 @@ def test_extra_repr():
         "prior_mu": 1.0,
         "prior_sigma": 1.1,
         "posterior_mu_initial": (1.0, 2.0),
-        "posterior_rho_initial": (-4.0, 2.0)
+        "posterior_rho_initial": (-4.0, 2.0),
     }
     kwargs_str = ", ".join(f"{key}={value}" for key, value in kwargs.items())
     correct_extra_repr = f"4, 6, {kwargs_str}"

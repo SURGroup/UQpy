@@ -37,10 +37,10 @@ def geometric_jensen_shannon_divergence(
     mean distribution. When the distributions :math:`P` and :math:`Q` are Gaussian, the closed form for Geometric
     Jensen-Shannon divergence is given as
 
-    .. math:: D_{JSG}(P, Q) = \frac12 \left( \frac{(1-\alpha)\sigma_0^2 + \alpha\sigma_1^2}{\sigma_\alpha^2} + \log \frac{\sigma_\alpha^2}{\sigma_0^{2(1-\alpha)} \sigma_1^{2\alpha}} + (1-\alpha) \frac{(\mu_\alpha - \mu_0)^2}{\sigma_\alpha^2} + \frac{\alpha(\mu_\alpha - \mu_1)^2}{\sigma_\alpha^2} -1 \right)
+    .. math:: D_{JSG}(P, Q) = \frac12 \left( \frac{(1-\alpha)\sigma_p^2 + \alpha\sigma_q^2}{\sigma_\alpha^2} + \log \frac{\sigma_\alpha^2}{\sigma_p^{2(1-\alpha)} \sigma_q^{2\alpha}} + (1-\alpha) \frac{(\mu_\alpha - \mu_p)^2}{\sigma_\alpha^2} + \frac{\alpha(\mu_\alpha - \mu_q)^2}{\sigma_\alpha^2} -1 \right)
 
-    where :math:`\sigma_\alpha^2 = \left( \frac{\alpha}{\sigma_0^2}+\frac{1-\alpha}{\sigma_1^2} \right)^{-1}`
-    and :math:`\mu_\alpha = \sigma_\alpha^2 \left[\frac{\alpha \mu_0}{\sigma_0^2} + \frac{(1-\alpha)\mu_1}{\sigma_1^2}\right]`
+    where :math:`\sigma_\alpha^2 = \left( \frac{\alpha}{\sigma_p^2}+\frac{1-\alpha}{\sigma_q^2} \right)^{-1}`
+    and :math:`\mu_\alpha = \sigma_\alpha^2 \left[\frac{\alpha \mu_p}{\sigma_p^2} + \frac{(1-\alpha)\mu_q}{\sigma_q^2}\right]`
 
     """
     posterior_var = posterior_sigma.pow(2)
