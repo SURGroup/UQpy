@@ -8,7 +8,7 @@ Bayesian Quickstart Testing
 # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
 #
 # This script assumes you have already run the Bayesian Quickstart Testing script and saved the optimized model
-# to a file named ``bayesian_model.pth``. This script
+# to a file named ``bayesian_model.pt``. This script
 #
 # - Loads a trained model from the file ``bayesian_model.pt``
 # - Makes deterministic predictions
@@ -16,7 +16,7 @@ Bayesian Quickstart Testing
 # - Plots probabilistic predictions
 #
 # First, we import the necessary modules and define the BayesianNeuralNetwork class, so we can load the model state
-# dictionary saved in ``bayesian_model.pth``.
+# dictionary saved in ``bayesian_model.pt``.
 
 # %%
 import torch

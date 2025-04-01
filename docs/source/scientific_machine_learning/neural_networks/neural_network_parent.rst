@@ -4,7 +4,7 @@ Neural Network Baseclass
 This is the parent class to all neural networks.
 The :class:`NeuralNetwork` is an abstract baseclass and a subclass of :class:`torch.nn.Module`.
 
-The documentation in the :py:meth:`forward` on this page may be inherited from PyTorch docstrings.
+The documentation in the :class:`NeuralNetwork` class may be inherited from PyTorch docstrings.
 
 Methods
 ~~~~~~~

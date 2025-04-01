@@ -14,9 +14,9 @@ class GaussianKullbackLeiblerDivergence(Loss):
         :param reduction: Specifies the reduction to apply to the output: 'mean' or 'sum'.
          'mean': the output will be averaged, 'sum': the output will be summed. Default: 'sum'
 
-        The Gaussian Kullback-Leiber divergence :math:`D_{KL}` for two univariate normal distributions is computed as
+        The Gaussian Kullback-Leibler divergence :math:`D_{KL}` for two univariate normal distributions is computed as
 
-        .. math:: D_{KL}(p, q) = \frac{1}{2} \left( 2\log \frac{\sigma_1}{\sigma_0} + \frac{\sigma_0^2}{\sigma_1^2} + \frac{\sigma_0^2 + (\mu_0-\mu_1)^2}{\sigma_1^2} -1 \right)
+        .. math:: D_{KL}(p, q) = \frac{1}{2} \left( 2\log \frac{\sigma_q}{\sigma_p} + \frac{\sigma_p^2 + (\mu_q-\mu_p)^2}{\sigma_q^2} - 1 \right)
 
         Examples:
 

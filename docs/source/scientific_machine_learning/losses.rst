@@ -15,7 +15,7 @@ The :py:class:`Loss` is an abstract baseclass and a subclass of :py:class:`torch
 This is an abstract baseclass and the parent class to all loss functions.
 Like all abstract baseclasses, this cannot be instantiated but can be subclassed to write custom losses.
 
-The documentation in the :py:meth:`forward` on this baseclass may be inherited from PyTorch docstrings.
+The documentation in the :class:`Loss` may be inherited from PyTorch docstrings.
 
 Methods
 ~~~~~~~

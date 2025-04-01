@@ -20,8 +20,8 @@ which uses similar inputs.
 
 The module contains the following parent classes for neural networks:
 
-- :class:`.NormalBayesianLayer`: Parent class to all Bayesian layers. Subclass of :class:`Layer`
-- :class:`.ProbabilisticDropoutLayer`: Parent class to all Dropout layers. Subclass of :class:`Layer`
+- :class:`.NormalBayesianLayer`: Parent class to all Bayesian layers. Subclass of :class:`Layer`.
+- :class:`.ProbabilisticDropoutLayer`: Parent class to all Dropout layers. Subclass of :class:`Layer`.
 - :class:`.Layer`: Parent class to all Neural Network Layers. Subclass of :class:`torch.nn.Module`.
 - :class:`.Loss`: Parent class to all Loss functions. Subclass of :class:`torch.nn.Module`.
 - :class:`.NeuralNetwork`: Parent class to all Neural Networks and Neural Operators.  Subclass of :class:`torch.nn.Module`.

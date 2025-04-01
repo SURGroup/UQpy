@@ -55,9 +55,14 @@ class NormalBayesianLayer(Layer, ABC):
         self.sampling: bool = sampling
         """Boolean represents whether this module is in sampling mode or not."""
         self.prior_mu: float = prior_mu
+        """Mean of the prior distribution"""
         self.prior_sigma: float = prior_sigma
+        """Standard deviation of the prior distribution"""
         self.posterior_mu_initial: tuple[float, float] = posterior_mu_initial
+        r"""Posterior means are initialized from a normal distribution :math:`\mathcal{N}(\text{posterior_mu_initial}[0], \text{posterior_mu_initial}[1])`"""
         self.posterior_rho_initial: tuple[float, float] = posterior_rho_initial
+        r"""Posterior rhos are initialized from a normal distribution :math:`\mathcal{N}(\text{posterior_rho_initial}[0], \text{posterior_rho_initial}[1])`"""
+
 
         for i, name in enumerate(parameter_shapes):
             shape = parameter_shapes[name]
