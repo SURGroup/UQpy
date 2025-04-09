@@ -1,18 +1,19 @@
-from UQpy.distributions import *
 import numpy as np
+from UQpy.distributions import *
+
 
 # Test all functions for one type of continuous distribution: uniform
-dist_continuous = Uniform(loc=1., scale=2.)
+dist_continuous = Uniform(loc=1.0, scale=2.0)
 
 
 def test_get_params():
-    assert dist_continuous.get_parameters()['loc'] == 1.
+    assert dist_continuous.get_parameters()["loc"] == 1.0
 
 
 def test_update_params():
-    dist = Uniform(loc=1., scale=2.)
-    dist.update_parameters(loc=2.)
-    assert dist.get_parameters()['loc'] == 2.
+    dist = Uniform(loc=1.0, scale=2.0)
+    dist.update_parameters(loc=2.0)
+    assert dist.get_parameters()["loc"] == 2.0
 
 
 def test_continuous_pdf():
@@ -38,11 +39,11 @@ def test_continuous_rvs():
 
 def test_continuous_fit():
     dict_fit = Uniform(loc=None, scale=None).fit(data=[1.5, 2.5, 3.5])
-    assert dict_fit == {'loc': 1.5, 'scale': 2.0}
+    assert dict_fit == {"loc": 1.5, "scale": 2.0}
 
 
 def test_continuous_moments():
-    assert dist_continuous.moments(moments2return='m') == 2.
+    assert dist_continuous.moments(moments2return="m") == 2.0
 
 
 # Test all functions for one type of discrete distribution: binomial
@@ -50,34 +51,32 @@ dist_discrete = Binomial(n=5, p=0.2)
 
 
 def test_discrete_pmf():
-    assert np.round(dist_discrete.pmf(x=2.), 3) == 0.205
+    assert np.round(dist_discrete.pmf(x=2.0), 3) == 0.205
 
 
 def test_discrete_cdf():
-    assert np.round(dist_discrete.cdf(x=2.), 3) == 0.942
+    assert np.round(dist_discrete.cdf(x=2.0), 3) == 0.942
 
 
 def test_discrete_log_pmf():
-    assert np.round(dist_discrete.log_pmf(x=2.), 3) == -1.586
+    assert np.round(dist_discrete.log_pmf(x=2.0), 3) == -1.586
 
 
 def test_discrete_icdf():
-    assert dist_discrete.icdf(0.9) == 2.
+    assert dist_discrete.icdf(0.9) == 2.0
 
 
 def test_discrete_rvs():
     samples = dist_discrete.rvs(nsamples=2, random_state=123)
-    assert np.all(np.round(samples, 3) == np.array([1., 0.]).reshape((2, 1)))
+    assert np.all(np.round(samples, 3) == np.array([1.0, 0.0]).reshape((2, 1)))
 
 
 def test_discrete_moments():
-    assert dist_discrete.moments(moments2return='m') == 1.
+    assert dist_discrete.moments(moments2return="m") == 1.0
 
 
 # Test functions for Copula
-
-
 def test_update_params_copula():
-    copula = Gumbel(theta=2.)
-    copula.update_parameters(theta=1.)
-    assert copula.get_parameters()['theta'] == 1.
+    copula = Gumbel(theta=2.0)
+    copula.update_parameters(theta=1.0)
+    assert copula.get_parameters()["theta"] == 1.0

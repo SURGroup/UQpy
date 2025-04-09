@@ -14,8 +14,8 @@ from UQpy.distributions.baseclass import (
 class JointIndependent(DistributionND):
     @beartype
     def __init__(
-            self,
-            marginals: Union[list[DistributionContinuous1D], list[DistributionDiscrete1D]],
+        self,
+        marginals: Union[list[DistributionContinuous1D], list[DistributionDiscrete1D]],
     ):
         """
         :param marginals: list of distribution objects that define the marginals.
@@ -24,12 +24,20 @@ class JointIndependent(DistributionND):
         self.ordered_parameters = []
         for i, m in enumerate(marginals):
             self.ordered_parameters.extend(
-                [key + "_" + str(i) for key in m.ordered_parameters])
+                [key + "_" + str(i) for key in m.ordered_parameters]
+            )
 
         # Check and save the marginals
-        if not (isinstance(marginals, list)
-                and all(isinstance(d, (DistributionContinuous1D, DistributionDiscrete1D)) for d in marginals)):
-            raise ValueError("Input marginals must be a list of Distribution1d objects.")
+        if not (
+            isinstance(marginals, list)
+            and all(
+                isinstance(d, (DistributionContinuous1D, DistributionDiscrete1D))
+                for d in marginals
+            )
+        ):
+            raise ValueError(
+                "Input marginals must be a list of Distribution1d objects."
+            )
         self.marginals = marginals
 
         # If all marginals have a method, the joint has it to
@@ -70,6 +78,7 @@ class JointIndependent(DistributionND):
                 self.log_pmf = MethodType(joint_log_pdf, self)
 
         if all(hasattr(m, "cdf") for m in self.marginals):
+
             def joint_cdf(dist, x):
                 x = dist.check_x_dimension(x)
                 # Compute cdf of independent marginals
@@ -107,8 +116,8 @@ class JointIndependent(DistributionND):
                 mle_all = {}
                 for ind_m, marg in enumerate(dist.marginals):
                     if any(
-                            param_value is None
-                            for param_value in marg.get_parameters().values()
+                        param_value is None
+                        for param_value in marg.get_parameters().values()
                     ):
                         mle_i = marg.fit(data[:, ind_m])
                     else:
@@ -125,8 +134,15 @@ class JointIndependent(DistributionND):
             def joint_moments(dist, moments2return="mvsk"):
                 # Go through all marginals
                 if len(moments2return) == 1:
-                    return np.array([marg.moments(moments2return=moments2return) for marg in dist.marginals])
-                moments_ = [np.empty((len(dist.marginals),)) for _ in range(len(moments2return))]
+                    return np.array(
+                        [
+                            marg.moments(moments2return=moments2return)
+                            for marg in dist.marginals
+                        ]
+                    )
+                moments_ = [
+                    np.empty((len(dist.marginals),)) for _ in range(len(moments2return))
+                ]
                 for ind_m, marg in enumerate(dist.marginals):
                     moments_i = marg.moments(moments2return=moments2return)
                     for j in range(len(moments2return)):
@@ -174,3 +190,6 @@ class JointIndependent(DistributionND):
             key_split = key_indexed.split("_")
             key, index = "_".join(key_split[:-1]), int(key_split[-1])
             self.marginals[index].parameters[key] = value
+
+    def __repr__(self):
+        return f"JointIndependent({self.marginals})"

@@ -25,3 +25,11 @@ class GeneralizedExtreme(DistributionContinuous1D):
             c=c, loc=loc, scale=scale, ordered_parameters=("c", "loc", "scale")
         )
         self._construct_from_scipy(scipy_name=stats.genextreme)
+
+    def __repr__(self):
+        s = "{c}"
+        if self.parameters["loc"] != 0.0:
+            s += ", loc={loc}"
+        if self.parameters["scale"] != 1.0:
+            s += ", scale={scale}"
+        return "GeneralizedExtreme(" + s.format(**self.parameters) + ")"

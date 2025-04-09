@@ -165,3 +165,6 @@ class JointCopula(DistributionND):
                 self.copula.parameters[key] = value
             else:
                 self.marginals[int(index)].parameters[key] = value
+
+    def __repr__(self):
+        return f"JointCopula({self.marginals}, {self.copula})"

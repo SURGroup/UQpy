@@ -1,5 +1,4 @@
 from typing import Union
-
 import scipy.stats as stats
 from UQpy.distributions.baseclass import DistributionContinuous1D
 from beartype import beartype
@@ -30,3 +29,11 @@ class Beta(DistributionContinuous1D):
             ordered_parameters=("a", "b", "loc", "scale"),
         )
         self._construct_from_scipy(scipy_name=stats.beta)
+
+    def __repr__(self):
+        s = "{a}, {b}"
+        if self.parameters["loc"] != 0.0:
+            s += ", loc={loc}"
+        if self.parameters["scale"] != 1.0:
+            s += ", scale={scale}"
+        return "Beta(" + s.format(**self.parameters) + ")"

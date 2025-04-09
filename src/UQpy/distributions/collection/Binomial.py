@@ -22,3 +22,9 @@ class Binomial(DistributionDiscrete1D):
         """
         super().__init__(n=n, p=p, loc=loc, ordered_parameters=("n", "p", "loc"))
         self._construct_from_scipy(scipy_name=stats.binom)
+
+    def __repr__(self):
+        s = "{n}, {p}"
+        if self.parameters["loc"] != 0.0:
+            s += ", loc={loc}"
+        return "Binomial(" + s.format(**self.parameters) + ")"
