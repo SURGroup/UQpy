@@ -42,7 +42,7 @@ This is the parent class to all layers.
 Like all abstract baseclasses, this cannot be instantiated but can be subclassed to write custom layers.
 All layers use the :py:meth:`forward` method to define the forward model call.
 
-The documentation in the :py:meth:`forward` and :py:meth:`extra_repr` on this page may be inherited from PyTorch docstrings.
+Some documentation within the :class:`Layer` class may be inherited from PyTorch docstrings.
 
 Methods
 ~~~~~~~

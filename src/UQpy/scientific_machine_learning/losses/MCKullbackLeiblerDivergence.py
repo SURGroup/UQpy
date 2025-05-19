@@ -28,7 +28,7 @@ class MCKullbackLeiblerDivergence(Loss):
         """KL divergence by sampling for all Bayesian layers in a module.
 
         .. note::
-            This is *not* identical to the Kullback-Leibler divergence computed in Bayes by Backprop
+            This is *not* identical to the Kullback-Leibler divergence computed in Bayes by Backprop.
 
         :param posterior_distribution: A class, *not an instance*, of a UQpy distribution defining the variational posterior
         :param prior_distribution: A class, *not an instance*, of a UQpy distribution defining the prior

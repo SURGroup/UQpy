@@ -22,8 +22,8 @@ class GaussianNormalizer(Layer):
         r"""Normalize a tensor to have mean of zero and standard deviation of one.
 
         .. note::
-            Due to machine percision, mean and standard deviation may have errors on the order of :math:`10^{-8}`.
-            Using different data types may affect percision of results.
+            Due to machine precision, mean and standard deviation may have errors on the order of :math:`10^{-8}`.
+            Using different data types may affect precision of results.
 
         :param x: Tensor of any shape
         :param encoding: If ``True``, scale and shift a tensor to have mean of zero and standard deviation of one.
@@ -70,7 +70,8 @@ class GaussianNormalizer(Layer):
         super().__init__()
         self.x = x
         self.epsilon = epsilon
-        self.encoding = encoding
+        self.encoding: bool = encoding
+        """Boolean indicating if the layer is encoding or not."""
         self.dim = dim
 
         self.mean: torch.Tensor = torch.mean(self.x, dim=self.dim, keepdim=True)
