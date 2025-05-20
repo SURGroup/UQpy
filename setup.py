@@ -30,7 +30,7 @@ setup(
         "matplotlib ~= 3.10.0",
         "scikit-learn ~= 1.6.1",
         "fire ~= 0.7.0",
-        "beartype == 0.20.2",
+        "beartype ~= 0.20.2",
         "torch ~= 2.7.0",
         "torchinfo ~= 1.8.0",
     ],
@@ -48,6 +48,7 @@ setup(
             "sphinx_gallery == 0.13.0",
             "sphinxcontrib_bibtex == 2.5.0",
             "Sphinx == 6.1.3",
+            "hypothesis ~= 6.131.19"
         ]
     },
     classifiers=[
