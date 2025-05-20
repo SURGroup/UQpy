@@ -76,8 +76,8 @@ def test_akmcs_expected_feasibility():
                         random_state=2)
     a.run(nsamples=25, samples=x.samples)
 
-    assert a.samples[23, 0] == 5.423754197908594
-    assert a.samples[20, 1] == 2.0355505295053384
+    assert np.isclose(a.samples[23, 0], 5.423754197908594)
+    assert np.isclose(a.samples[20, 1], 2.0355505295053384)
 
 
 def test_akmcs_expected_improvement():
@@ -99,8 +99,8 @@ def test_akmcs_expected_improvement():
                         random_state=2)
     a.run(nsamples=25, samples=x.samples)
 
-    assert a.samples[21, 0] == 6.878734574049913
-    assert a.samples[20, 1] == -6.3410533857909215
+    assert np.isclose(a.samples[21, 0], 6.878734574049913)
+    assert np.isclose(a.samples[20, 1], -6.3410533857909215)
 
 
 def test_akmcs_expected_improvement_global_fit():
