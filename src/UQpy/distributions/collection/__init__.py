@@ -18,6 +18,7 @@ from UQpy.distributions.collection.Normal import Normal
 from UQpy.distributions.collection.Pareto import Pareto
 from UQpy.distributions.collection.Poisson import Poisson
 from UQpy.distributions.collection.Rayleigh import Rayleigh
+from UQpy.distributions.collection.Triangular import Triangular
 from UQpy.distributions.collection.TruncatedNormal import TruncatedNormal
 from UQpy.distributions.collection.Uniform import Uniform
 from UQpy.distributions.collection.JointIndependent import JointIndependent
