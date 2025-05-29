@@ -15,11 +15,14 @@ from scipy.special import comb
 
 class PolynomialBasis(ABC):
 
-    def __init__(self, inputs_number: int,
-                 polynomials_number: int,
-                 multi_index_set: np.ndarray,
-                 polynomials: Polynomials,
-                 distributions: Union[Distribution, list[Distribution]]):
+    def __init__(
+        self,
+        inputs_number: int,
+        polynomials_number: int,
+        multi_index_set: np.ndarray,
+        polynomials: Polynomials,
+        distributions: Union[Distribution, list[Distribution]],
+    ):
         """
         Create polynomial basis for a given multi index set.
         """
@@ -34,7 +37,6 @@ class PolynomialBasis(ABC):
         eval_matrix = np.empty([samples_number, self.polynomials_number])
         for ii in range(self.polynomials_number):
             eval_matrix[:, ii] = self.polynomials[ii].evaluate(samples)
-
         return eval_matrix
 
     @staticmethod
@@ -57,8 +59,9 @@ class PolynomialBasis(ABC):
             row_end = rows + row_start - 1
 
             # recursive call
-            midx_set[row_start:row_end + 1, :] = PolynomialBasis. \
-                calculate_total_degree_recursive(inputs_number, i, rows)
+            midx_set[row_start : row_end + 1, :] = (
+                PolynomialBasis.calculate_total_degree_recursive(inputs_number, i, rows)
+            )
 
             # update starting row
             row_start = row_end + 1
@@ -94,57 +97,62 @@ class PolynomialBasis(ABC):
                     row_end = row_start + sub_rows - 1
 
                     # first column
-                    subset[row_start:row_end + 1, 0] = k * np.ones(sub_rows)
+                    subset[row_start : row_end + 1, 0] = k * np.ones(sub_rows)
 
                     # subset update --> recursive call
-                    subset[row_start:row_end + 1, 1:] = \
-                        PolynomialBasis.calculate_total_degree_recursive(N - 1, w - k, sub_rows)
+                    subset[row_start : row_end + 1, 1:] = (
+                        PolynomialBasis.calculate_total_degree_recursive(
+                            N - 1, w - k, sub_rows
+                        )
+                    )
 
                     # update row indices
                     row_start = row_end + 1
 
         return subset
-    
-    @staticmethod
-    def calculate_hyperbolic_set(inputs_number, degree,q):
 
-        xmono=np.zeros(inputs_number)
-        X=[]
+    @staticmethod
+    def calculate_hyperbolic_set(inputs_number, degree, q):
+        xmono = np.zeros(inputs_number)
+        X = []
         X.append(xmono)
-        
-        while np.sum(xmono)<=degree:
+        while np.sum(xmono) <= degree:
             # generate multi-indices one by one
-            x=np.array(xmono)
+            x = np.array(xmono)
             i = 0
-            for j in range ( inputs_number, 0, -1 ):
-                if ( 0 < x[j-1] ):
+            for j in range(inputs_number, 0, -1):
+                if 0 < x[j - 1]:
                     i = j
                     break
 
-            if ( i == 0 ):
-                x[inputs_number-1] = 1
-                xmono=x
+            if i == 0:
+                x[inputs_number - 1] = 1
+                xmono = x
             else:
-                if ( i == 1 ):
+                if i == 1:
                     t = x[0] + 1
                     im1 = inputs_number
-                if ( 1 < i ):
-                    t = x[i-1]
+                elif 1 < i:
+                    t = x[i - 1]
                     im1 = i - 1
+                else:
+                    raise ValueError(
+                        "UQpy: Unexpected indexing error in calculate_hyperbolic_set."
+                        " May be caused by improper indexing due to negative inputs_number."
+                    )
 
-                x[i-1] = 0
-                x[im1-1] = x[im1-1] + 1
-                x[inputs_number-1] = x[inputs_number-1] + t - 1
+                x[i - 1] = 0
+                x[im1 - 1] = x[im1 - 1] + 1
+                x[inputs_number - 1] = x[inputs_number - 1] + t - 1
 
-                xmono=x
-                
-            # check the hyperbolic criterion          
-            if (np.round(np.sum(xmono**q)**(1/q), 4) <= degree):
+                xmono = x
+
+            # check the hyperbolic criterion
+            if np.round(np.sum(xmono**q) ** (1 / q), 4) <= degree:
                 X.append(xmono)
 
+        return np.array(X).astype(int)
 
-        return(np.array(X).astype(int))
-    
     @staticmethod
     def calculate_tensor_product_set(inputs_number, degree):
         orders = np.arange(0, degree + 1, 1).tolist()
@@ -154,8 +162,7 @@ class PolynomialBasis(ABC):
             midx = list(itertools.product(orders, repeat=inputs_number))
             midx = [list(elem) for elem in midx]
             midx_sums = [int(math.fsum(midx[i])) for i in range(len(midx))]
-            midx_sorted = sorted(range(len(midx_sums)),
-                                 key=lambda k: midx_sums[k])
+            midx_sorted = sorted(range(len(midx_sums)), key=lambda k: midx_sums[k])
             midx_set = np.array([midx[midx_sorted[i]] for i in range(len(midx))])
         return midx_set.astype(int)
 
@@ -166,6 +173,9 @@ class PolynomialBasis(ABC):
         if inputs_number == 1:
             return [
                 Polynomials.distribution_to_polynomial[type(distributions)](
-                    distributions=distributions, degree=int(idx[0])) for idx in multi_index_set]
+                    distributions=distributions, degree=int(idx[0])
+                )
+                for idx in multi_index_set
+            ]
         else:
             return [PolynomialsND(distributions, idx) for idx in multi_index_set]
