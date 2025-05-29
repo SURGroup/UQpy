@@ -36,7 +36,7 @@ def generalized_jensen_shannon_divergence(
     -------
     The Jenson-Shannon divergence :math:`D_{JS}` is computed as
 
-    .. math:: D_{JS}(Q, P) = (1- \alpha) D_{KL}(Q, M) + \alpha D_{KL}(P, M)
+    .. math:: D_{JS}(P, Q) = (1- \alpha) D_{KL}(P, M) + \alpha D_{KL}(Q, M)
 
     where :math:`D_{KL}` is the Kullback-Leibler divergence and :math:`M=\alpha Q + (1-\alpha) P` is the mixture distribution.
     """

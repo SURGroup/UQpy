@@ -10,5 +10,4 @@ def test_output_shape():
 
     x = torch.rand(1, 1, 512, 512)
     y = unet(x)
-
     assert y.shape == torch.Size((1, out_channels, 512, 512))

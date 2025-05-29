@@ -6,10 +6,7 @@ Note this does not include tests for numerical accuracy as the convolution is pe
 import torch
 from torch.nn.modules.utils import _pair
 import UQpy.scientific_machine_learning as sml
-from hypothesis import given, settings, strategies as st
-
-settings.register_profile("fast", max_examples=1)
-settings.load_profile("fast")
+from hypothesis import given, strategies as st
 
 
 def compute_h_w_out(

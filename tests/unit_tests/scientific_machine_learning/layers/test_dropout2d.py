@@ -1,10 +1,7 @@
 import torch
 import UQpy.scientific_machine_learning as sml
-from hypothesis import given, settings
+from hypothesis import given
 from hypothesis.extra.numpy import array_shapes
-
-settings.register_profile("fast", max_examples=1)
-settings.load_profile("fast")
 
 func = sml.ProbabilisticDropout2d
 shapes = array_shapes(min_dims=3, max_dims=4, min_side=1, max_side=32)

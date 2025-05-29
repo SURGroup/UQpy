@@ -26,7 +26,7 @@ class LpLoss(Loss):
             This is an implementation of :py:class:`torch.linalg.vector_norm` as a :py:class:`torch.nn.Module`.
             This class implements most, but not all, of the :code:`vector_norm` keywords.
             See the
-            `PyTorch vector_norm documentation <https://pytorch.org/docs/stable/generated/torch.linalg.vector_norm.html#torch.linalg.vector_norm>`__.
+            `PyTorch vector_norm documentation <https://pytorch.org/docs/stable/generated/torch.linalg.vector_norm.html#torch.linalg.vector_norm>`__
             for details.
 
         Formula
