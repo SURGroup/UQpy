@@ -48,10 +48,11 @@ def test_kl_equal(
     shape,
 ):
     """JSG divergence is equal to KL divergence when alpha = 0"""
-    post_mu = torch.full(shape, posterior_param_1)
-    post_sigma = torch.full(shape, posterior_param_2)
-    prior_mu = torch.full(shape, prior_param_1)
-    prior_sigma = torch.full(shape, prior_param_2)
+    dtype = torch.float64
+    post_mu = torch.full(shape, posterior_param_1, dtype=dtype)
+    post_sigma = torch.full(shape, posterior_param_2, dtype=dtype)
+    prior_mu = torch.full(shape, prior_param_1, dtype=dtype)
+    prior_sigma = torch.full(shape, prior_param_2, dtype=dtype)
     jsg = func.geometric_jensen_shannon_divergence(
         post_mu, post_sigma, prior_mu, prior_sigma, alpha=0.0
     )
