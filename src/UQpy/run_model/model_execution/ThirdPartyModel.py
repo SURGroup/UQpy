@@ -227,6 +227,11 @@ class ThirdPartyModel:
     def postprocess_single_file(self, index, model_output):
         if self.output_script is not None:
             output = self._output_serial(index)
+        else:
+            raise RuntimeError(
+                "UQpy: To postprocess a run using postprocess_single_file within RunModel, output_script cannot be equal to None."
+                " See documentation for usage details."
+            )
 
         work_dir = os.path.join(self.model_dir, "run_" + str(index))
         # Remove the copied files and folders

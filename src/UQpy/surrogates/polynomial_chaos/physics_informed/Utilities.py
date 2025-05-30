@@ -20,7 +20,9 @@ def transformation_multiplier(data_object: PdeData, leading_variable, derivation
     :return: multiplier reflecting a different sizes of physical and standardized spaces
     """
 
-    size = np.abs(data_object.xmax[leading_variable] - data_object.xmin[leading_variable])
+    size = np.abs(
+        data_object.xmax[leading_variable] - data_object.xmin[leading_variable]
+    )
     multiplier = (2 / size) ** derivation_order
     return multiplier
 
@@ -72,7 +74,9 @@ def derivative_basis(
             leading_variable,
         )
     else:
-        raise Exception('derivative_basis function is defined only for positive derivative_order!')
+        raise Exception(
+            "derivative_basis function is defined only for positive derivative_order!"
+        )
 
     return multivariate_basis
 
@@ -109,13 +113,16 @@ def construct_basis(
         if mask_lege[leading_variable]:
             for n in ns:
                 polysd.append(legendre(n).deriv(derivative_order))
-
-            prep_l_deriv = np.sqrt((2 * multindex[:, leading_variable] + 1)).reshape(-1, 1)
-
+            prep_l_deriv = np.sqrt((2 * multindex[:, leading_variable] + 1)).reshape(
+                -1, 1
+            )
             prep_deriv = []
             for poly in polysd:
-                prep_deriv.append(np.polyval(poly, standardized_sample[:, leading_variable]).reshape(-1, 1))
-
+                prep_deriv.append(
+                    np.polyval(poly, standardized_sample[:, leading_variable]).reshape(
+                        -1, 1
+                    )
+                )
             prep_deriv = np.array(prep_deriv)
         else:
             raise ValueError(
@@ -124,9 +131,17 @@ def construct_basis(
             )
         mask_herm[leading_variable] = False
         mask_lege[leading_variable] = False
+    else:
+        raise ValueError(
+            f"UQpy: Expected derivative_order >= 0, got derivative_order={derivative_order}"
+        )
 
-    prep_hermite = sp.eval_hermitenorm(multindex[:, mask_herm][:, np.newaxis, :], standardized_sample[:, mask_herm])
-    prep_legendre = sp.eval_legendre(multindex[:, mask_lege][:, np.newaxis, :], standardized_sample[:, mask_lege])
+    prep_hermite = sp.eval_hermitenorm(
+        multindex[:, mask_herm][:, np.newaxis, :], standardized_sample[:, mask_herm]
+    )
+    prep_legendre = sp.eval_legendre(
+        multindex[:, mask_lege][:, np.newaxis, :], standardized_sample[:, mask_lege]
+    )
 
     prep_fact = np.sqrt(sp.factorial(multindex[:, mask_herm]))
     prep = np.sqrt((2 * multindex[:, mask_lege] + 1))
@@ -135,5 +150,7 @@ def construct_basis(
     multivariate_basis *= np.prod(prep_legendre * prep[:, np.newaxis, :], axis=2).T
 
     if leading_variable is not None:
-        multivariate_basis *= np.prod(prep_deriv * prep_l_deriv[:, np.newaxis, :], axis=2).T
+        multivariate_basis *= np.prod(
+            prep_deriv * prep_l_deriv[:, np.newaxis, :], axis=2
+        ).T
     return multivariate_basis
