@@ -65,7 +65,7 @@ test_data = datasets.FashionMNIST(
     transform=ToTensor(),
 )
 
-device = "cpu"
+device = torch.device("cpu")
 network = BayesianNeuralNetwork().to(device)
 model = sml.FeedForwardNeuralNetwork(network).to(device)
 model.load_state_dict(torch.load("bayesian_model.pt"))
