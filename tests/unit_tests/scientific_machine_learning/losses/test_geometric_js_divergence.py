@@ -35,7 +35,7 @@ def test_device():
     else:
         device = torch.device("cpu")
 
-    model = sml.FeedForwardNeuralNetwork(sml.BayesianLinear(1, 1))
+    model = sml.FeedForwardNeuralNetwork(sml.BayesianLinear(1, 1, dtype=torch.float32))
     model.to(device)
     divergence_function = sml.GeometricJensenShannonDivergence(device=device)
     divergence = divergence_function(model)
