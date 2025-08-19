@@ -65,7 +65,7 @@ test_data = datasets.FashionMNIST(
     transform=ToTensor(),
 )
 
-device = "cpu"
+device = torch.device("cpu")
 network = BayesianNeuralNetwork().to(device)
 model = sml.FeedForwardNeuralNetwork(network).to(device)
 model.load_state_dict(torch.load("bayesian_model.pt"))
@@ -181,14 +181,15 @@ fig.tight_layout()
 
 # %% md
 # We can also visualize these distributions and how they correlate with one another with a pair plot.
+# The packages seaborn and pandas combine to easily make a pair plot, but need to be installed separately.
 
 # %%
 
 # Use pandas and seaborn for easy pair plots
-import seaborn
-import pandas as pd
-
-df = pd.DataFrame({classes[i]: softmax_logits[:, i] for i in (5, 7, 8, 9)})
-seaborn.pairplot(df, corner=True, plot_kws={"alpha": 0.2, "edgecolor": None})
+# import seaborn
+# import pandas as pd
+#
+# df = pd.DataFrame({classes[i]: softmax_logits[:, i] for i in (5, 7, 8, 9)})
+# seaborn.pairplot(df, corner=True, plot_kws={"alpha": 0.2, "edgecolor": None})
 
 plt.show()

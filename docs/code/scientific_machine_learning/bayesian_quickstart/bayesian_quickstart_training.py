@@ -66,12 +66,13 @@ for X, y in test_dataloader:
 # %%
 
 # Get cpu, gpu or mps device for training.
-device = "cpu"
-# device = (
-#     "cuda"
-#     if torch.cuda.is_available()
-#     else "mps" if torch.backends.mps.is_available() else "cpu"
-# )
+device = torch.device("cpu")
+# if torch.cuda.is_available():
+#     device = torch.device("cuda", 0)
+# elif torch.backends.mps.is_available():
+#     device = torch.device("mps", 0)
+# else:
+#     device = torch.device("cpu")
 print(f"Using {device} device")
 
 
@@ -132,7 +133,7 @@ print("model is in sampling mode:", model.sampling)
 
 loss_fn = nn.CrossEntropyLoss()
 # UQpy: define divergence function used in loss
-divergence_fn = sml.GaussianKullbackLeiblerDivergence()
+divergence_fn = sml.GaussianKullbackLeiblerDivergence(device=device)
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
 
 
