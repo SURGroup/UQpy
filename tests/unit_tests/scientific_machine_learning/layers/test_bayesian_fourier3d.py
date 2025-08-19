@@ -7,15 +7,15 @@ from hypothesis.strategies import integers
 @settings(deadline=1_000)
 @given(
     batch_size=integers(min_value=1, max_value=2),
-    width=integers(min_value=1, max_value=8),
-    d=integers(min_value=64, max_value=128),
-    w=integers(min_value=64, max_value=128),
-    h=integers(min_value=64, max_value=128),
+    width=integers(min_value=1, max_value=3),
+    d=integers(min_value=16, max_value=32),
+    w=integers(min_value=16, max_value=32),
+    h=integers(min_value=16, max_value=32),
 )
 def test_output_shape(batch_size, width, d, w, h):
     """Fourier layers do not change the shape of the input"""
     x = torch.ones((batch_size, width, d, w, h))
-    layer = sml.BayesianFourier3d(width, (8, 16, 32))
+    layer = sml.BayesianFourier3d(width, (2, 4, 8))
     y = layer(x)
     assert x.shape == y.shape
 

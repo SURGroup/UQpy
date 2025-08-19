@@ -19,6 +19,8 @@ from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 import UQpy.scientific_machine_learning as sml
 
+torch.manual_seed(123)
+
 # %% md
 #
 # We define the network architecture using the ``nn.Sequential`` object
@@ -26,7 +28,7 @@ import UQpy.scientific_machine_learning as sml
 
 # %%
 
-width = 5
+width = 8
 network = nn.Sequential(
     sml.BayesianLinear(1, width),
     nn.ReLU(),
@@ -78,10 +80,10 @@ initial_prediction = model(QuadraticDataset().x)
 # %%
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-train_data = DataLoader(QuadraticDataset(), batch_size=20, shuffle=True)
+train_data = DataLoader(QuadraticDataset(), batch_size=40, shuffle=True)
 trainer = sml.BBBTrainer(model, optimizer)
 print("Starting Training...", end="")
-trainer.run(train_data=train_data, epochs=300, beta=1e-6, num_samples=10)
+trainer.run(train_data=train_data, epochs=500, beta=1e-5, num_samples=10)
 print("done")
 
 print("Initial loss:", trainer.history["train_loss"][0])
@@ -125,7 +127,7 @@ ax.legend()
 
 train_loss = trainer.history["train_loss"].detach().numpy()
 fig, ax = plt.subplots()
-ax.plot(train_loss)
+ax.semilogy(train_loss)
 ax.set_title("Bayes By Backpropagation Training Loss")
 ax.set(xlabel="Epoch", ylabel="Loss")
 

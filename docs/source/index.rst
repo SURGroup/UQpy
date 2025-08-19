@@ -57,7 +57,9 @@ Windows::
     pip3 install UQpy
 
 
-Using Conda::
+Using Conda (depreciated in v4.2.0):: Note that as of Version 4.2.0 released in 2025, the conda channel and accompanying
+installation is depreciated and no longer maintained. It will be removed entirely in a future release.
+Please use PyPI and pip to install.
 
     conda install -c conda-forge uqpy
 
