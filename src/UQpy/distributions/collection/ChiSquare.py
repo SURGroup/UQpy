@@ -24,3 +24,11 @@ class ChiSquare(DistributionContinuous1D):
             df=df, loc=loc, scale=scale, ordered_parameters=("df", "loc", "scale")
         )
         self._construct_from_scipy(scipy_name=stats.chi2)
+
+    def __repr__(self):
+        s = "{df}"
+        if self.parameters["loc"] != 0.0:
+            s += ", loc={loc}"
+        if self.parameters["scale"] != 1.0:
+            s += ", scale={scale}"
+        return "ChiSquare(" + s.format(**self.parameters) + ")"

@@ -41,3 +41,6 @@ class Clayton(Copula):
         v = unit_uniform_samples[:, 1]
         theta = self.parameters["theta"]
         return theta, u, v
+
+    def __repr__(self):
+        return f"Clayton({self.parameters['theta']})"

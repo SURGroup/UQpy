@@ -25,3 +25,11 @@ class Gamma(DistributionContinuous1D):
             a=a, loc=loc, scale=scale, ordered_parameters=("a", "loc", "scale")
         )
         self._construct_from_scipy(scipy_name=stats.gamma)
+
+    def __repr__(self):
+        s = "{a}"
+        if self.parameters["loc"] != 0.0:
+            s += ", loc={loc}"
+        if self.parameters["scale"] != 1.0:
+            s += ", scale={scale}"
+        return "Gamma(" + s.format(**self.parameters) + ")"

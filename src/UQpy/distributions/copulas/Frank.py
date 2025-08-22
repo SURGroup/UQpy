@@ -32,7 +32,11 @@ class Frank(Copula):
         :return: Values of the cdf.
         """
         theta, u, v = self.extract_data(unit_uniform_samples)
-        tmp_ratio = ((np.exp(-theta * u) - 1.0) * (np.exp(-theta * v) - 1.0) / (np.exp(-theta) - 1.0))
+        tmp_ratio = (
+            (np.exp(-theta * u) - 1.0)
+            * (np.exp(-theta * v) - 1.0)
+            / (np.exp(-theta) - 1.0)
+        )
         cdf_val = -1.0 / theta * np.log(1.0 + tmp_ratio)
         return cdf_val
 
@@ -41,3 +45,6 @@ class Frank(Copula):
         v = unit_uniform_samples[:, 1]
         theta = self.parameters["theta"]
         return theta, u, v
+
+    def __repr__(self):
+        return f"Frank({self.parameters['theta']})"

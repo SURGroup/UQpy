@@ -25,8 +25,13 @@ class MultivariateNormal(DistributionND):
             if isinstance(cov, (int, float)):
                 pass
             else:
-                if not (len(np.array(cov).shape) in [1, 2] and all(sh == len(mean) for sh in np.array(cov).shape)):
-                    raise ValueError("Input covariance must be a float or ndarray of appropriate dimensions.")
+                if not (
+                    len(np.array(cov).shape) in [1, 2]
+                    and all(sh == len(mean) for sh in np.array(cov).shape)
+                ):
+                    raise ValueError(
+                        "Input covariance must be a float or ndarray of appropriate dimensions."
+                    )
         super().__init__(mean=mean, cov=cov, ordered_parameters=["mean", "cov"])
 
     def cdf(self, x):
@@ -44,8 +49,9 @@ class MultivariateNormal(DistributionND):
     def rvs(self, nsamples=1, random_state=None):
         if not (isinstance(nsamples, int) and nsamples >= 1):
             raise ValueError("Input nsamples must be an integer > 0.")
-        return stats.multivariate_normal.rvs(size=nsamples, random_state=random_state, **self.parameters
-                                             ).reshape((nsamples, -1))
+        return stats.multivariate_normal.rvs(
+            size=nsamples, random_state=random_state, **self.parameters
+        ).reshape((nsamples, -1))
 
     def fit(self, data):
         data = self.check_x_dimension(data)
@@ -65,3 +71,12 @@ class MultivariateNormal(DistributionND):
             return self.get_parameters()["mean"], self.get_parameters()["cov"]
         else:
             raise ValueError('UQpy: moments2return must be "m", "v" or "mv".')
+
+    def __repr__(self):
+        s = "{mean}"
+        is_float_or_int = isinstance(self.parameters["cov"], (int, float))
+        if is_float_or_int:
+            if self.parameters["cov"] == 1.0:
+                return "MultivariateNormal(" + s.format(**self.parameters) + ")"
+        s += ", cov={cov}"
+        return "MultivariateNormal(" + s.format(**self.parameters) + ")"

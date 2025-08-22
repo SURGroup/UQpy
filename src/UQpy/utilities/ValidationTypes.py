@@ -4,10 +4,12 @@ from beartype.vale import Is
 from typing import Union, Annotated
 
 
+
 RandomStateType = Union[None, int, np.random.RandomState]
 PositiveInteger = Annotated[int, Is[lambda number: number > 0]]
 NonNegativeInteger = Annotated[int, Is[lambda number: number >= 0]]
 PositiveFloat = Annotated[float, Is[lambda number: number > 0]]
+NumericArrayLike = Union[int, float, list, tuple, np.ndarray]
 Numpy2DFloatArray = Annotated[
     np.ndarray,
     Is[lambda array: array.ndim == 2 and np.issubdtype(array.dtype, float)],

@@ -25,3 +25,11 @@ class InverseGauss(DistributionContinuous1D):
             mu=mu, loc=loc, scale=scale, ordered_parameters=("mu", "loc", "scale")
         )
         self._construct_from_scipy(scipy_name=stats.invgauss)
+
+    def __repr__(self):
+        s = "{mu}"
+        if self.parameters["loc"] != 0.0:
+            s += ", loc={loc}"
+        if self.parameters["scale"] != 1.0:
+            s += ", scale={scale}"
+        return "InverseGauss(" + s.format(**self.parameters) + ")"

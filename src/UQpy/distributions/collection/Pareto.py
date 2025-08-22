@@ -24,3 +24,11 @@ class Pareto(DistributionContinuous1D):
             b=b, loc=loc, scale=scale, ordered_parameters=("b", "loc", "scale")
         )
         self._construct_from_scipy(scipy_name=stats.pareto)
+
+    def __repr__(self):
+        s = "{b}"
+        if self.parameters["loc"] != 0.0:
+            s += ", loc={loc}"
+        if self.parameters["scale"] != 1.0:
+            s += ", scale={scale}"
+        return "Pareto(" + s.format(**self.parameters) + ")"
