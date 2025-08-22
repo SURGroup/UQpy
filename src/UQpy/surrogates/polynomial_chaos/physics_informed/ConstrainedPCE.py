@@ -106,6 +106,8 @@ class ConstrainedPCE:
             raise Exception('LAR identified constant function! Check your data.')
 
         best_error = np.inf
+        best_basis = None
+        best_index = None
         lar_basis = []
         lar_index = []
         lar_error = []

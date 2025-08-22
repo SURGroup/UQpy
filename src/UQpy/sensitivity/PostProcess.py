@@ -67,6 +67,7 @@ def plot_sensitivity_index(
         error = confidence_interval[:, 1] - indices
     else:
         conf_int_flag = False
+        error = None
 
     # x and y data
     _idx = np.arange(num_vars)
@@ -171,12 +172,14 @@ def plot_index_comparison(
         error_1 = confidence_interval_1[:, 1] - indices_1
     else:
         conf_int_flag_1 = False
+        error_1 = None
 
     if confidence_interval_2 is not None:
         conf_int_flag_2 = True
         error_2 = confidence_interval_2[:, 1] - indices_2
     else:
         conf_int_flag_2 = False
+        error_2 = None
 
     # x and y data
     _idx = np.arange(num_vars)
@@ -289,6 +292,7 @@ def plot_second_order_indices(
         error = confidence_interval[:, 1] - indices
     else:
         conf_int_flag = False
+        error = None
 
     # x and y data
     _idx = np.arange(num_second_order_terms)

@@ -8,10 +8,11 @@ def test_gaussian_js_equals_gaussian_kl():
     Because JS is estimated from Monte Carlo, this tests for within 5% accuracy.
     """
     # initialize distributions
-    posterior_mu = torch.tensor(1.0)
-    posterior_sigma = torch.tensor(1.0)
-    prior_mu = torch.tensor(0.0)
-    prior_sigma = torch.tensor(1.0)
+    dtype = torch.float32
+    posterior_mu = torch.tensor(1.0, dtype=dtype)
+    posterior_sigma = torch.tensor(1.0, dtype=dtype)
+    prior_mu = torch.tensor(0.0, dtype=dtype)
+    prior_sigma = torch.tensor(1.0, dtype=dtype)
     posterior_distribution = [uq.Normal(1, 1)]
     prior_distribution = [uq.Normal(0, 1)]
     # compute divergences

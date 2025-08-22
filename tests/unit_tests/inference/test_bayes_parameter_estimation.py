@@ -66,8 +66,8 @@ def test_probability_model_mcmc():
                                                nsamples=5)
     s = bayes_estimator.sampler.samples
 
-    assert s[0, 1] == 3.5196936384257835
-    assert s[1, 0] == 11.143811671048994
-    assert s[2, 0] == 10.162512455643435
-    assert s[3, 1] == 0.8541521389437781
-    assert s[4, 1] == 1.0095454025762525
+    assert np.isclose(s[0, 1], 3.5196936384257835)
+    assert np.isclose(s[1, 0], 11.143811671048994)
+    assert np.isclose(s[2, 0], 10.162512455643435)
+    assert np.isclose(s[3, 1], 0.8541521389437781)
+    assert np.isclose(s[4, 1], 1.0095454025762525)

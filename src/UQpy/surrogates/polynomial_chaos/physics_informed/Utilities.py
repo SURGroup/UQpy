@@ -20,9 +20,10 @@ def transformation_multiplier(data_object: PdeData, leading_variable, derivation
     :return: multiplier reflecting a different sizes of physical and standardized spaces
     """
 
-    size = np.abs(data_object.xmax[leading_variable] - data_object.xmin[leading_variable])
+    size = np.abs(
+        data_object.xmax[leading_variable] - data_object.xmin[leading_variable]
+    )
     multiplier = (2 / size) ** derivation_order
-
     return multiplier
 
 
@@ -36,9 +37,8 @@ def ortho_grid(n_samples: int, nvar: int, x_min: float = -1, x_max: float = 1):
     :param x_max: upper bound of hypercube
     :return: generated grid of samples
     """
-
     xrange = (x_max - x_min) / 2
-    nsim = n_samples ** nvar
+    nsim = n_samples**nvar
     x = np.linspace(x_min + xrange / n_samples, x_max - xrange / n_samples, n_samples)
     x_list = [x] * nvar
     X = np.meshgrid(*x_list)
@@ -47,8 +47,12 @@ def ortho_grid(n_samples: int, nvar: int, x_min: float = -1, x_max: float = 1):
 
 
 @beartype
-def derivative_basis(standardized_sample: np.ndarray, pce: PolynomialChaosExpansion, derivative_order: int,
-                     leading_variable: int):
+def derivative_basis(
+    standardized_sample: np.ndarray,
+    pce: PolynomialChaosExpansion,
+    derivative_order: int,
+    leading_variable: int,
+):
     """
     Evaluate derivative basis of given pce object.
     :param standardized_sample: samples in standardized space for an evaluation of derived basis
@@ -62,31 +66,40 @@ def derivative_basis(standardized_sample: np.ndarray, pce: PolynomialChaosExpans
         multindex = pce.multi_index_set
         joint_distribution = pce.polynomial_basis.distributions
 
-        multivariate_basis = construct_basis(standardized_sample, multindex, joint_distribution, derivative_order,
-                                             leading_variable)
+        multivariate_basis = construct_basis(
+            standardized_sample,
+            multindex,
+            joint_distribution,
+            derivative_order,
+            leading_variable,
+        )
     else:
-        raise Exception('derivative_basis function is defined only for positive derivative_order!')
+        raise Exception(
+            "derivative_basis function is defined only for positive derivative_order!"
+        )
 
     return multivariate_basis
 
 
 @beartype
-def construct_basis(standardized_sample: np.ndarray, multindex: np.ndarray,
-                    joint_distribution: Distribution,
-                    derivative_order: int = 0, leading_variable: int = 0):
+def construct_basis(
+    standardized_sample: np.ndarray,
+    multindex: np.ndarray,
+    joint_distribution: Distribution,
+    derivative_order: int = 0,
+    leading_variable: int = 0,
+):
     """
-        Construct and evaluate derivative basis.
-        :param standardized_sample: samples in standardized space for an evaluation of derived basis
-        :param multindex: set of multi-indices corresponding to polynomial orders in basis set
-        :param joint_distribution: joint probability distribution of input variables,
-        an object of the :py:meth:`UQpy` :class:`Distribution` class
-        :param derivative_order: order of derivative
-        :param leading_variable: leading variable of derivatives
-        :return: evaluated derived basis
-        """
-
+    Construct and evaluate derivative basis.
+    :param standardized_sample: samples in standardized space for an evaluation of derived basis
+    :param multindex: set of multi-indices corresponding to polynomial orders in basis set
+    :param joint_distribution: joint probability distribution of input variables,
+    an object of the :py:meth:`UQpy` :class:`Distribution` class
+    :param derivative_order: order of derivative
+    :param leading_variable: leading variable of derivatives
+    :return: evaluated derived basis
+    """
     card_basis, nvar = multindex.shape
-
     if nvar == 1:
         marginals = [joint_distribution]
     else:
@@ -95,28 +108,40 @@ def construct_basis(standardized_sample: np.ndarray, multindex: np.ndarray,
     mask_herm = [type(marg) == Normal for marg in marginals]
     mask_lege = [type(marg) == Uniform for marg in marginals]
     if derivative_order >= 0:
-
         ns = multindex[:, leading_variable]
         polysd = []
-
         if mask_lege[leading_variable]:
-
             for n in ns:
                 polysd.append(legendre(n).deriv(derivative_order))
-
-            prep_l_deriv = np.sqrt((2 * multindex[:, leading_variable] + 1)).reshape(-1, 1)
-
+            prep_l_deriv = np.sqrt((2 * multindex[:, leading_variable] + 1)).reshape(
+                -1, 1
+            )
             prep_deriv = []
             for poly in polysd:
-                prep_deriv.append(np.polyval(poly, standardized_sample[:, leading_variable]).reshape(-1, 1))
-
+                prep_deriv.append(
+                    np.polyval(poly, standardized_sample[:, leading_variable]).reshape(
+                        -1, 1
+                    )
+                )
             prep_deriv = np.array(prep_deriv)
-
+        else:
+            raise ValueError(
+                "UQpy: Currently only supports Uniform marginals and Legendre Polynomials for the leading variable."
+                " Check the marginals of the distribution used in your PolynomialBasis and the leading_variable index."
+            )
         mask_herm[leading_variable] = False
         mask_lege[leading_variable] = False
+    else:
+        raise ValueError(
+            f"UQpy: Expected derivative_order >= 0, got derivative_order={derivative_order}"
+        )
 
-    prep_hermite = sp.eval_hermitenorm(multindex[:, mask_herm][:, np.newaxis, :], standardized_sample[:, mask_herm])
-    prep_legendre = sp.eval_legendre(multindex[:, mask_lege][:, np.newaxis, :], standardized_sample[:, mask_lege])
+    prep_hermite = sp.eval_hermitenorm(
+        multindex[:, mask_herm][:, np.newaxis, :], standardized_sample[:, mask_herm]
+    )
+    prep_legendre = sp.eval_legendre(
+        multindex[:, mask_lege][:, np.newaxis, :], standardized_sample[:, mask_lege]
+    )
 
     prep_fact = np.sqrt(sp.factorial(multindex[:, mask_herm]))
     prep = np.sqrt((2 * multindex[:, mask_lege] + 1))
@@ -125,5 +150,7 @@ def construct_basis(standardized_sample: np.ndarray, multindex: np.ndarray,
     multivariate_basis *= np.prod(prep_legendre * prep[:, np.newaxis, :], axis=2).T
 
     if leading_variable is not None:
-        multivariate_basis *= np.prod(prep_deriv * prep_l_deriv[:, np.newaxis, :], axis=2).T
+        multivariate_basis *= np.prod(
+            prep_deriv * prep_l_deriv[:, np.newaxis, :], axis=2
+        ).T
     return multivariate_basis
