@@ -6,4 +6,4 @@
 FROM python:3.9
 
 # Use RUN to install Python packages (numpy and scipy) via pip, Python's package manager
-RUN pip3 install UQpy pyro-ppl
+RUN pip3 install UQpy
