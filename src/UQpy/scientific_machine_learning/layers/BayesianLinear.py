@@ -96,13 +96,13 @@ class BayesianLinear(NormalBayesianLayer):
         self.out_features = out_features
         self.bias = bias
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, return_log_prob: bool = False) -> torch.Tensor:
         r"""Forward model evaluation
 
         :param x: Tensor of shape :math:`(*, \text{in_features})`
         :return: Tensor of shape :math:`(*, \text{out_features})`
         """
-        weight, bias = self.get_bayesian_weights()
+        weight, bias = self.get_bayesian_weights(return_log_prob=return_log_prob)
         return F.linear(x, weight, bias)
 
     def extra_repr(self) -> str:

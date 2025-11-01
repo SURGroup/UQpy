@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from typing import Union
 from beartype import beartype
 from UQpy.utilities.ValidationTypes import PositiveFloat
+import math
 
 
 @beartype
@@ -92,7 +93,7 @@ class NormalBayesianLayer(Layer, ABC):
             rho = getattr(self, f"{name}_rho")
             rho.data.normal_(*self.posterior_rho_initial)
 
-    def get_bayesian_weights(self) -> tuple:
+    def get_bayesian_weights(self, return_log_prob: bool = False) -> tuple:
         """Get the weights for the Bayesian layer.
 
         If ``sampling`` is ``True``, then sample weights from their respective distributions.
@@ -102,6 +103,8 @@ class NormalBayesianLayer(Layer, ABC):
         """
         if self.sampling:
             weights = []
+            log_qs = [] if return_log_prob else None
+            log_ps = [] if return_log_prob else None
             for name in self.parameter_shapes:
                 if self.parameter_shapes[name] is None:
                     weights.append(None)
@@ -113,8 +116,16 @@ class NormalBayesianLayer(Layer, ABC):
                 sigma = torch.log1p(torch.exp(rho))
                 weight = mu + (epsilon * sigma)
                 weights.append(weight)
+                if return_log_prob:
+                    log_pdf_weights = -(0.5 * epsilon.pow(2) + sigma.log()).sum()  # Log PDF of weights (without constants)
+                    log_pdf_prior = -0.5 * ((mu + epsilon * sigma - self.prior_mu) / self.prior_sigma).pow(2).sum() - weight.numel() * math.log(self.prior_sigma)
+                    log_qs.append(log_pdf_weights)
+                    log_ps.append(log_pdf_prior)
         else:
             weights = (getattr(self, f"{name}_mu") for name in self.parameter_shapes)
+        if return_log_prob:
+            self.qs = torch.stack(log_qs).sum()
+            self.ps = torch.stack(log_ps).sum()
         return tuple(weights)
 
     def sample(self, mode: bool = True):
