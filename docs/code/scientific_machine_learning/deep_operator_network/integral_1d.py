@@ -67,7 +67,7 @@ def srm_samples(n_samples: int) -> tuple[torch.Tensor, torch.Tensor]:
     )
     return (
         torch.tensor(time, dtype=torch.float).reshape(-1, 1),
-        torch.tensor(srm.samples, dtype=torch.float).squeeze(),
+        torch.tensor(srm.samples, dtype=torch.float),
     )
 
 
@@ -168,7 +168,7 @@ for i in range(3):
     prediction = model(x, f_x[i, :])
     ax.plot(
         x_plot,
-        Lf_x[i, :].detach().numpy(),
+        Lf_x[i, :].detach().numpy().squeeze(),
         label=f"$g_{i}:=\mathcal{{L}}f_{i} (x)$",
         color=colors[i],
         linestyle="dashed",

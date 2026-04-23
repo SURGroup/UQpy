@@ -13,8 +13,8 @@ class NormalBayesianLayer(Layer, ABC):
         self,
         parameter_shapes: dict,
         sampling: bool = True,
-        prior_mu: float = 0.0,
-        prior_sigma: PositiveFloat = 0.1,
+        prior_mu: Union[float, list] = 0.0,
+        prior_sigma: Union[PositiveFloat, list] = 0.1,
         posterior_mu_initial: tuple[float, PositiveFloat] = (0.0, 0.1),
         posterior_rho_initial: tuple[float, PositiveFloat] = (-3.0, 0.1),
         device: Union[torch.device, str, None] = None,
@@ -27,8 +27,10 @@ class NormalBayesianLayer(Layer, ABC):
         :param sampling: If ``True``, sample layer parameters from their respective Gaussian distributions.
          If ``False``, use distribution mean as parameter values. Default: ``True``
         :param prior_mu: Prior mean, :math:`\mu_\text{prior}` of the prior normal distribution.
+        This parameter can be a float or a list of tensors with the length equal to the number of parameters.
          Default: 0.0
         :param prior_sigma: Prior standard deviation, :math:`\sigma_\text{prior}`, of the prior normal distribution.
+        This parameter can be a float or a list of tensors with the length equal to the number of parameters.
          Default: 0.1
         :param posterior_mu_initial: Mean and standard deviation of the initial posterior distribution for :math:`\mu`.
          The initial posterior is :math:`\mathcal{N}(\mu_\text{posterior}[0], \mu_\text{posterior}[1])`.
@@ -54,9 +56,13 @@ class NormalBayesianLayer(Layer, ABC):
         """Prefix names and shapes of all learnable parameters"""
         self.sampling: bool = sampling
         """Boolean represents whether this module is in sampling mode or not."""
-        self.prior_mu: float = prior_mu
+        self.prior_mu = prior_mu if isinstance(prior_mu, float) else None
+        if self.prior_mu is None:
+            assert len(prior_mu) == len(parameter_shapes), "Length of prior_mu should be equal to the number of parameters"
         """Mean of the prior distribution"""
-        self.prior_sigma: float = prior_sigma
+        self.prior_sigma = prior_sigma if isinstance(prior_sigma, float) else None
+        if self.prior_sigma is None:
+            assert len(prior_sigma) == len(parameter_shapes), "Length of prior_sigma should be equal to the number of parameters"
         """Standard deviation of the prior distribution"""
         self.posterior_mu_initial: tuple[float, float] = posterior_mu_initial
         r"""Posterior means are initialized from a normal distribution :math:`\mathcal{N}(\text{posterior_mu_initial}[0], \text{posterior_mu_initial}[1])`"""
@@ -80,6 +86,18 @@ class NormalBayesianLayer(Layer, ABC):
                     f"{name}_rho",
                     nn.Parameter(torch.empty(shape, device=device, dtype=dtype[i])),
                 )
+                if self.prior_mu is None:
+                    setattr(
+                        self,
+                        "prior_mu",
+                        prior_mu[i]
+                    )
+                if self.prior_sigma is None:
+                    setattr(
+                        self,
+                        "prior_sigma",
+                        prior_sigma[i]
+                    )
         self.reset_parameters()
 
     def reset_parameters(self):

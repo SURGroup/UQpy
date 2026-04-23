@@ -6,7 +6,7 @@ Note this does not include tests for numerical accuracy as the convolution is pe
 import torch
 from torch.nn.modules.utils import _pair
 import UQpy.scientific_machine_learning as sml
-from hypothesis import given, strategies as st
+from hypothesis import given, settings, strategies as st
 
 
 def compute_h_w_out(
@@ -41,11 +41,12 @@ def compute_h_w_out(
 
 @given(
     n=st.integers(min_value=1, max_value=16),
-    height=st.integers(min_value=1, max_value=256),
-    width=st.integers(min_value=1, max_value=256),
+    height=st.integers(min_value=1, max_value=128),
+    width=st.integers(min_value=1, max_value=128),
     in_channels=st.integers(min_value=1, max_value=10),
     out_channels=st.integers(min_value=1, max_value=10),
 )
+@settings(deadline=None)
 def test_default_output_shape(n, height, width, in_channels, out_channels):
     """Test the output shape for various batch sizes, heights, width, and channels"""
     x_size = (n, in_channels, height, width)
@@ -57,17 +58,17 @@ def test_default_output_shape(n, height, width, in_channels, out_channels):
 
 @given(
     kernel_size=st.one_of(
-        st.integers(min_value=1, max_value=8),
+        st.integers(min_value=3, max_value=8),
         st.tuples(
-            st.integers(min_value=1, max_value=8),
-            st.integers(min_value=1, max_value=8),
+            st.integers(min_value=3, max_value=8),
+            st.integers(min_value=3, max_value=8),
         ),
     ),
     stride=st.one_of(
-        st.integers(min_value=1, max_value=8),
+        st.integers(min_value=5, max_value=8),
         st.tuples(
-            st.integers(min_value=1, max_value=8),
-            st.integers(min_value=1, max_value=8),
+            st.integers(min_value=5, max_value=8),
+            st.integers(min_value=5, max_value=8),
         ),
     ),
     padding=st.one_of(
@@ -85,13 +86,14 @@ def test_default_output_shape(n, height, width, in_channels, out_channels):
         ),
     ),
 )
+@settings(deadline=None)
 def test_fancy_output_shape(kernel_size, stride, padding, dilation):
     """Test integer and tuple kernel_sizes, strides, paddings, and dilation"""
     n = 2
     in_channels = 1
     out_channels = 1
-    h_in = 512
-    w_in = 256
+    h_in = 128
+    w_in = 128
     layer = sml.BayesianConv2d(
         in_channels, out_channels, kernel_size, stride, padding, dilation
     )

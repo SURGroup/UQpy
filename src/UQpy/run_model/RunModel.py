@@ -41,7 +41,7 @@ class RunModel:
     def __init__(
             self,
             model,
-            samples: Union[list, NumpyFloatArray] = None,
+            samples: Union[list, NumpyFloatArray, None] = None,
             ntasks: int = 1,
             cores_per_task: int = 1,
             nodes: int = 1,

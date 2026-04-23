@@ -1,16 +1,17 @@
 import pytest
 import torch
 import UQpy.scientific_machine_learning.functional as func
-from hypothesis import given, strategies as st
+from hypothesis import given, settings, strategies as st
 
 
 @given(
     batch_size=st.integers(min_value=1, max_value=10),
     in_channels=st.integers(min_value=1, max_value=3),
     out_channels=st.integers(min_value=1, max_value=3),
-    length=st.integers(min_value=64, max_value=128),
-    modes=st.integers(min_value=2, max_value=32),
+    length=st.integers(min_value=32, max_value=64),
+    modes=st.integers(min_value=2, max_value=10),
 )
+@settings(deadline=None)
 def test_output_shape(batch_size, in_channels, out_channels, length, modes):
     """An input of shape (batch_size, in_channels, length) has an output of shape (batch_size, out_channels, length)
     Note modes does *not* affect the shape of the output

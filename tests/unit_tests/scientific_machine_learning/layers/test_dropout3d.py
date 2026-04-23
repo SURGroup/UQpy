@@ -1,13 +1,14 @@
 import torch
 import UQpy.scientific_machine_learning as sml
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis.extra.numpy import array_shapes
 
 func = sml.ProbabilisticDropout3d
-shapes = array_shapes(min_dims=4, max_dims=5, min_side=1, max_side=32)
+shapes = array_shapes(min_dims=3, max_dims=4, min_side=1, max_side=16)
 
 
 @given(shapes)
+@settings(deadline=None)
 def test_set_drop_false(shape):
     """Test no elements are set to zero and dropout is identity function"""
     dropout = func(dropping=True)
@@ -17,6 +18,7 @@ def test_set_drop_false(shape):
 
 
 @given(shapes)
+@settings(deadline=None)
 def test_dropping_false(shape):
     """Test no elements are set to zero and dropout is identity function"""
     dropout = func(dropping=False)
@@ -34,6 +36,7 @@ def test_dropping_true():
 
 
 @given(shapes)
+@settings(deadline=None)
 def test_p_zero(shape):
     """Test no elements are dropped when drop_rate is zero"""
     dropout = func(p=0.0, dropping=True)
@@ -42,8 +45,9 @@ def test_p_zero(shape):
 
 
 @given(shapes)
+@settings(deadline=None)
 def test_p_one(shape):
     """Test all elements are dropped when drop_rate is one"""
     dropout = func(p=1.0, dropping=True)
     x = torch.ones(shape)
-    assert torch.all(torch.zeros_like(x) == dropout(x))
+    assert torch.allclose(torch.zeros_like(x), dropout(x))

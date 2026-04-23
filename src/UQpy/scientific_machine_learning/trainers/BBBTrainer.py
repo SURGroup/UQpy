@@ -5,7 +5,7 @@ import logging
 from beartype import beartype
 from UQpy.utilities.ValidationTypes import PositiveInteger
 from typing import Union
-
+from copy import deepcopy
 
 @beartype
 class BBBTrainer:
@@ -52,6 +52,11 @@ class BBBTrainer:
         - ``history["train_nll"]`` contains the training negative log likelihood loss as a ``torch.Tensor``.
         - ``history["test_nll"]`` contains the testing negative log likelihood loss as a ``torch.Tensor``.
          """
+        self.best_checkpoint = deepcopy(model.state_dict())
+        """
+        Saved model checkpoint at the minimum test loss if test data is available else train loss.
+        """
+        self.best_loss = torch.tensor(torch.inf)
         self.logger = logging.getLogger(__name__)
 
     def run(
@@ -138,6 +143,10 @@ class BBBTrainer:
                 self.history["train_nll"][i] = average_train_nll
                 self.history["train_divergence"][i] = average_divergence_loss
                 self.model.train(False)
+                if not test_data:
+                    if average_train_loss < self.best_loss:
+                        self.best_checkpoint = deepcopy(self.model.state_dict())
+                        self.best_loss = average_train_loss
             log_message = (
                 f"UQpy: Scientific Machine Learning: "
                 f"Epoch {i + 1:,} / {epochs:,} "
@@ -155,6 +164,9 @@ class BBBTrainer:
                 average_test_nll = total_test_nll / len(test_data)
                 self.history["test_nll"][i] = average_test_nll
                 log_message += f" Test NLL {average_test_nll:.6e}"
+                if average_test_nll < self.best_loss:
+                    self.best_checkpoint = deepcopy(self.model.state_dict())
+                    self.best_loss = average_test_nll
             self.logger.info(log_message)
 
             i += 1

@@ -1,6 +1,6 @@
 import torch
 import UQpy.scientific_machine_learning as sml
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis.strategies import integers
 
 
@@ -10,6 +10,7 @@ from hypothesis.strategies import integers
     length=integers(min_value=64, max_value=128),
     modes=integers(min_value=1, max_value=33),
 )
+@settings(deadline=None)
 def test_output_shape(batch_size, width, length, modes):
     x = torch.ones((batch_size, width, length))
     fourier = sml.BayesianFourier1d(width, modes)

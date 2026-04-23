@@ -57,7 +57,7 @@ def spectral_conv3d(
         (height // 2) + 1,
         (width // 2) + 1,
     )
-    out_ft = torch.zeros(out_shape, dtype=torch.cfloat)
+    out_ft = torch.zeros(out_shape, dtype=torch.cfloat, device=weights.device)
     indices = [
         (
             slice(None),

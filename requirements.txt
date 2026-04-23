@@ -15,3 +15,4 @@ beartype == 0.18.5
 setuptools~=65.5.1
 torch ~= 2.2.2
 torchinfo ~= 1.8.0
+git+https://github.com/AdamCobb/hamiltorch.git@19b627b#egg=hamiltorch

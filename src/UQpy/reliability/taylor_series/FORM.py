@@ -213,7 +213,7 @@ class FORM(TaylorSeries):
                              + "Norm of State Function Gradient: {0}\n".format(norm_of_state_function_gradient))
             self.alpha = alpha.squeeze()
             self.alpha_record.append(self.alpha)
-            beta[k] = -np.inner(u[k, :].T, self.alpha)
+            beta[k] = -np.inner(u[k, :].T, self.alpha) # pylint: disable=invalid-unary-operand-type
             beta[k + 1] = beta[k] + qoi / norm_of_state_function_gradient
             self.logger.info("Beta: {0}\n".format(beta[k]) + "Pf: {0}".format(stats.norm.cdf(-beta[k])))
 

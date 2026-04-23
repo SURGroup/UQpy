@@ -34,7 +34,7 @@ def spectral_conv1d(
     x_ft = torch.fft.rfft(x, n=length)
     # Apply linear transform in Fourier space
     out_shape = (batch_size, out_channels, (length // 2 + 1))
-    out_ft = torch.zeros(out_shape, dtype=torch.cfloat)
+    out_ft = torch.zeros(out_shape, dtype=torch.cfloat, device=weights.device)
     equation = "bix,iox->box"
     indices = [slice(None), slice(None), slice(0, modes)]
     out_ft[indices] = torch.einsum(equation, x_ft[indices], weights)

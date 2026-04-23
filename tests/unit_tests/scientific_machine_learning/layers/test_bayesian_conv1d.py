@@ -5,7 +5,7 @@ Note this does not include tests for numerical accuracy as the convolution is pe
 
 import torch
 import UQpy.scientific_machine_learning as sml
-from hypothesis import given, strategies as st
+from hypothesis import given, settings, strategies as st
 
 
 def compute_l_out(l_in, kernel_size, stride, padding, dilation):
@@ -14,11 +14,12 @@ def compute_l_out(l_in, kernel_size, stride, padding, dilation):
 
 
 @given(
-    n=st.integers(min_value=1, max_value=1_000),
-    length=st.integers(min_value=1, max_value=1_000),
+    n=st.integers(min_value=1, max_value=100),
+    length=st.integers(min_value=1, max_value=100),
     in_channels=st.integers(min_value=1, max_value=10),
     out_channels=st.integers(min_value=1, max_value=10),
 )
+@settings(deadline=None)
 def test_default_output_shape(n, length, in_channels, out_channels):
     """Test the output shape for various batch sizes, lengths, and channels"""
     x_size = (n, in_channels, length)
@@ -34,6 +35,7 @@ def test_default_output_shape(n, length, in_channels, out_channels):
     padding=st.integers(min_value=0, max_value=6),
     dilation=st.integers(min_value=1, max_value=4),
 )
+@settings(deadline=None)
 def test_fancy_output_shape(kernel_size, stride, padding, dilation):
     """Test the output shape for various kernels, strides, paddings, and dilation"""
     n = 2

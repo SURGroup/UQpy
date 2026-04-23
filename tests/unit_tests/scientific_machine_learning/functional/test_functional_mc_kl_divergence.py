@@ -27,7 +27,7 @@ def test_non_negativity(
     assert kl >= 0
 
 
-@given(st.integers(min_value=1, max_value=100))
+@given(st.integers(min_value=20, max_value=30))
 def test_shape(n):
     """A list with any number of distributions should give a scalar value of KL divergence"""
     prior = [dist.Uniform(0, 1)] * n

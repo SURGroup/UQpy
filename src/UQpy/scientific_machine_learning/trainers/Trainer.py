@@ -4,7 +4,7 @@ import logging
 from beartype import beartype
 from typing import Union
 from UQpy.utilities.ValidationTypes import PositiveInteger
-
+from copy import deepcopy
 
 @beartype
 class Trainer:
@@ -43,6 +43,11 @@ class Trainer:
          - ``history["test_loss"]`` contains testing history as a ``torch.Tensor``.
 
          """
+        self.best_checkpoint = deepcopy(model.state_dict())
+        """
+        Saved model checkpoint at the minimum test loss if test data is available else train loss.
+        """
+        self.best_loss = torch.tensor(torch.inf)
         self.logger = logging.getLogger(__name__)
 
     def run(
@@ -106,6 +111,10 @@ class Trainer:
                 average_train_loss = total_train_loss / len(train_data)
                 self.history["train_loss"][i] = average_train_loss
                 self.model.train(False)
+                if not test_data:
+                    if average_train_loss < self.best_loss:
+                        self.best_checkpoint = deepcopy(self.model.state_dict())
+                        self.best_loss = average_train_loss
             if test_data:
                 total_test_loss = 0
                 with torch.no_grad():
@@ -119,6 +128,9 @@ class Trainer:
                         f"UQpy: Scientific Machine Learning: "
                         f"Epoch {i+1:,} / {epochs:,} Train Loss {average_train_loss:.6e} Test Loss {average_test_loss:.6e}"
                     )
+                if average_test_loss < self.best_loss:
+                    self.best_checkpoint = deepcopy(self.model.state_dict())
+                    self.best_loss = average_test_loss
             else:
                 self.logger.info(
                     f"UQpy: Scientific Machine Learning: "

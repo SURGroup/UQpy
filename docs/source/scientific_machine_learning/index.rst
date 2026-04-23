@@ -103,4 +103,5 @@ Trainers
     Trainer <trainers/trainer>
     BBBTrainer <trainers/bbb_trainer>
     HMCTrainer <trainers/hmc_trainer>
+    VIHMCTrainer <trainers/vihmc_trainer>
 

@@ -1,2 +1,3 @@
 from UQpy.scientific_machine_learning.trainers.Trainer import Trainer
 from UQpy.scientific_machine_learning.trainers.BBBTrainer import BBBTrainer
+from UQpy.scientific_machine_learning.trainers.VIHMCTrainer import VIHMCTrainer

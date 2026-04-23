@@ -12,8 +12,8 @@ controls over the training / testing behavior.
 
 These trainers are useful in small examples throughout this documentation and robust in practical application.
 The :code:`Trainer` is analogous to many of the training functions in the PyTorch documentation.
-The Bayes-by-backprop :cite:`blundell2015weight` :code:`BBBTrainer` and Hamiltonian Monte Carlo :cite:`neal2011hmc` :code:`HMCTrainer` trainers
-are specific to Bayesian neural networks.
+The Bayes-by-backprop :cite:`blundell2015weight` :code:`BBBTrainer`, Hamiltonian Monte Carlo :cite:`neal2011hmc` :code:`HMCTrainer`
+and VI-HMC :cite:`thiagarajan2025accelerating` :code:`VIHMCTrainer` trainers are specific to Bayesian neural networks.
 
 List of Trainers
 ^^^^^^^^^^^^^^^^
@@ -24,3 +24,4 @@ List of Trainers
     Trainer <trainer>
     BBBTrainer <bbb_trainer>
     HMCTrainer <hmc_trainer>
+    VIHMCTrainer <vihmc_trainer>

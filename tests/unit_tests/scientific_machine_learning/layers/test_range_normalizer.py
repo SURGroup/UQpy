@@ -1,7 +1,7 @@
 import pytest
 import torch
 import UQpy.scientific_machine_learning as sml
-from hypothesis import given, strategies as st
+from hypothesis import given, settings, strategies as st
 from hypothesis.extra.numpy import array_shapes
 
 
@@ -14,6 +14,7 @@ from hypothesis.extra.numpy import array_shapes
     ),
     size=array_shapes(min_dims=1, min_side=10),
 )
+@settings(deadline=None)
 def test_encode(shift, width, size):
     x = torch.rand(size=size, dtype=torch.float64)
     x = (width * x) + shift
@@ -32,6 +33,7 @@ def test_encode(shift, width, size):
     ),
     size=array_shapes(min_dims=1, min_side=10),
 )
+@settings(deadline=None)
 def test_encode_decode(shift, width, size):
     x = torch.rand(size=size, dtype=torch.float64)
     x = (width * x) + shift

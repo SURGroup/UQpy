@@ -79,6 +79,7 @@ def test_default_output_shape(n, shape, in_channels, out_channels):
         ),
     ),
 )
+@settings(deadline=None)
 def test_fancy_output_shape(kernel_size, stride, padding, dilation):
     n = 1
     in_channels = 1

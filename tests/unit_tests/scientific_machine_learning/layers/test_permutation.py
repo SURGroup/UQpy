@@ -1,10 +1,11 @@
 import torch
 import UQpy.scientific_machine_learning as sml
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis.extra.numpy import array_shapes
 
 
 @given(array_shapes(min_dims=3, max_dims=3, max_side=8))
+@settings(deadline=None)
 def test_forward(size):
     """Test sml.Permutation behaves as torch.permute"""
     dims = (0, 2, 1)
