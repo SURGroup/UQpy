@@ -6,15 +6,18 @@ from beartype import beartype
 from UQpy.utilities.ValidationTypes import NumpyFloatArray
 from UQpy.surrogates.baseclass.Surrogate import Surrogate
 from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
-from UQpy.surrogates.polynomial_chaos.polynomials.TotalDegreeBasis import PolynomialBasis
+from UQpy.surrogates.polynomial_chaos.polynomials.TotalDegreeBasis import (
+    PolynomialBasis,
+)
 from UQpy.distributions import Uniform, Normal
 from UQpy.surrogates.polynomial_chaos.polynomials import Legendre, Hermite
 
 
 class PolynomialChaosExpansion(Surrogate):
-
     @beartype
-    def __init__(self, polynomial_basis: PolynomialBasis, regression_method: Regression):
+    def __init__(
+        self, polynomial_basis: PolynomialBasis, regression_method: Regression
+    ):
         """
         Constructs a surrogate model based on the Polynomial Chaos Expansion (polynomial_chaos) method.
 
@@ -76,9 +79,11 @@ class PolynomialChaosExpansion(Surrogate):
         The :meth:`fit` method has no returns and it creates an :class:`numpy.ndarray` with the
         polynomial_chaos coefficients.
         """
-        self.set_data(x,y)
+        self.set_data(x, y)
         self.logger.info("UQpy: Running polynomial_chaos.fit")
-        self.coefficients, self.bias, self.outputs_number = self.regression_method.run(x, y, self.design_matrix)
+        self.coefficients, self.bias, self.outputs_number = self.regression_method.run(
+            x, y, self.design_matrix
+        )
         self.logger.info("UQpy: polynomial_chaos fit complete.")
 
     def predict(self, points: np.ndarray, **kwargs: dict):
@@ -101,9 +106,9 @@ class PolynomialChaosExpansion(Surrogate):
 
         The :meth:`.PolynomialChaosExpansion.leaveoneout_error` method can be used to estimate the accuracy of the PCE
         predictor without additional simulations. Leave-one-out error :math:`Q^2` is calculated from differences between the original mathematical model and approximation :math:`\Delta_i= \mathcal{M} (x^{(i)}) - \mathcal{M}^{PCE}(x^{(i)})` as follows:
-        
+
         .. math:: Q^2 = \mathbb{E}[(\Delta_i/(1-h_i))^2]/\sigma_Y^2
-        
+
 
         where :math:`\sigma_Y^2` is a variance of model response and :math:`h_i` represents the :math:`i` th diagonal term of matrix :math:`\mathbf{H}= \Psi ( \Psi^T \Psi )^{-1} \Psi^T` obtained from design matrix :math:`\Psi` without additional simulations  :cite:`BLATMANLARS`.
 
@@ -118,17 +123,24 @@ class PolynomialChaosExpansion(Surrogate):
 
         n_samples = x.shape[0]
         mu_yval = (1 / n_samples) * np.sum(y, axis=0)
-        y_val = self.predict(x, )
+        y_val = self.predict(
+            x,
+        )
         polynomialbasis = self.design_matrix
 
-        H = np.dot(polynomialbasis, np.linalg.pinv(np.dot(polynomialbasis.T, polynomialbasis)))
+        H = np.dot(
+            polynomialbasis, np.linalg.pinv(np.dot(polynomialbasis.T, polynomialbasis))
+        )
         H *= polynomialbasis
         Hdiag = np.sum(H, axis=1).reshape(-1, 1)
 
-        eps_val = ((n_samples - 1) / n_samples * np.sum(((y - y_val) / (1 - Hdiag)) ** 2, axis=0)) / (
-            np.sum((y - mu_yval) ** 2, axis=0))
+        eps_val = (
+            (n_samples - 1)
+            / n_samples
+            * np.sum(((y - y_val) / (1 - Hdiag)) ** 2, axis=0)
+        ) / (np.sum((y - mu_yval) ** 2, axis=0))
         if y.ndim == 1 or y.shape[1] == 1:
-            eps_val = float(eps_val)
+            eps_val = eps_val.item()
 
         return np.round(eps_val, 7)
 
@@ -155,13 +167,20 @@ class PolynomialChaosExpansion(Surrogate):
         if y.ndim == 1 or y.shape[1] == 1:
             y = y.reshape(-1, 1)
 
-        y_val = self.predict(x, )
+        y_val = self.predict(
+            x,
+        )
 
         n_samples = x.shape[0]
         mu_yval = (1 / n_samples) * np.sum(y, axis=0)
-        eps_val = ((n_samples - 1) / n_samples
-                   * ((np.sum((y - y_val) ** 2, axis=0))
-                      / (np.sum((y - mu_yval) ** 2, axis=0))))
+        eps_val = (
+            (n_samples - 1)
+            / n_samples
+            * (
+                (np.sum((y - y_val) ** 2, axis=0))
+                / (np.sum((y - mu_yval) ** 2, axis=0))
+            )
+        )
 
         if y.ndim == 1 or y.shape[1] == 1:
             eps_val = float(eps_val)
@@ -186,9 +205,9 @@ class PolynomialChaosExpansion(Surrogate):
         .. math:: \sigma^{2}_{PCE} = \mathbb{E} [( \mathcal{M}^{PCE}(x) - \mu_{PCE} )^{2} ] = \sum_{i=1}^{p} y_{i}
 
         where :math:`p` is the number of polynomials (first PCE coefficient is excluded).
-        
+
         The third moment (skewness) and the fourth moment (kurtosis) are generally obtained from third and fourth order products obtained by integration, which are extremely computationally demanding. Therefore here we use analytical solution of standard linearization problem for Hermite (based on normalized Feldheim's formula ) and Legendre polynomials (based on normalized Neumann-Adams formula), though it might be still computationally demanding for high number of input random variables.
-        
+
         :param higher: True corresponds to calculation of skewness and kurtosis (computationaly expensive for large basis set).
         :return: Returns the mean and variance.
         """
@@ -201,8 +220,8 @@ class PolynomialChaosExpansion(Surrogate):
         variance = np.sum(self.coefficients[1:] ** 2, axis=0)
 
         if self.coefficients.ndim == 1 or self.coefficients.shape[1] == 1:
-            variance = float(variance)
-            mean = float(mean)
+            variance = variance.item()
+            mean = mean.item()
 
         if not higher:
             return mean, variance
@@ -221,30 +240,33 @@ class PolynomialChaosExpansion(Surrogate):
             kurtosis = np.zeros(self.outputs_number)
 
             for ii in range(0, self.outputs_number):
-
                 Beta = self.coefficients[:, ii]
                 third_moment = 0
                 fourth_moment = 0
 
-                indices = np.array(np.meshgrid(range(1, P), range(1, P), range(1, P), range(1, P))).T.reshape(-1, 4)
+                indices = np.array(
+                    np.meshgrid(range(1, P), range(1, P), range(1, P), range(1, P))
+                ).T.reshape(-1, 4)
                 i = 0
                 for index in indices:
                     tripleproduct_ND = 1
                     quadproduct_ND = 1
 
                     for m in range(0, inputs_number):
-
                         if i < (P - 1) ** 3:
-
                             if type(marginals[m]) == Normal:
-                                tripleproduct_1D = Hermite.hermite_triple_product(multindex[index[0], m],
-                                                                                  multindex[index[1], m],
-                                                                                  multindex[index[2], m])
+                                tripleproduct_1D = Hermite.hermite_triple_product(
+                                    multindex[index[0], m],
+                                    multindex[index[1], m],
+                                    multindex[index[2], m],
+                                )
 
                             if type(marginals[m]) == Uniform:
-                                tripleproduct_1D = Legendre.legendre_triple_product(multindex[index[0], m],
-                                                                                    multindex[index[1], m],
-                                                                                    multindex[index[2], m])
+                                tripleproduct_1D = Legendre.legendre_triple_product(
+                                    multindex[index[0], m],
+                                    multindex[index[1], m],
+                                    multindex[index[2], m],
+                                )
 
                             tripleproduct_ND = tripleproduct_ND * tripleproduct_1D
 
@@ -253,31 +275,49 @@ class PolynomialChaosExpansion(Surrogate):
 
                         quadproduct_1D = 0
 
-                        for n in range(0, multindex[index[0], m] + multindex[index[1], m] + 1):
-
+                        for n in range(
+                            0, multindex[index[0], m] + multindex[index[1], m] + 1
+                        ):
                             if type(marginals[m]) == Normal:
-                                tripproduct1 = Hermite.hermite_triple_product(multindex[index[0], m],
-                                                                              multindex[index[1], m], n)
-                                tripproduct2 = Hermite.hermite_triple_product(multindex[index[2], m],
-                                                                              multindex[index[3], m], n)
+                                tripproduct1 = Hermite.hermite_triple_product(
+                                    multindex[index[0], m], multindex[index[1], m], n
+                                )
+                                tripproduct2 = Hermite.hermite_triple_product(
+                                    multindex[index[2], m], multindex[index[3], m], n
+                                )
 
                             if type(marginals[m]) == Uniform:
-                                tripproduct1 = Legendre.legendre_triple_product(multindex[index[0], m],
-                                                                                multindex[index[1], m], n)
-                                tripproduct2 = Legendre.legendre_triple_product(multindex[index[2], m],
-                                                                                multindex[index[3], m], n)
+                                tripproduct1 = Legendre.legendre_triple_product(
+                                    multindex[index[0], m], multindex[index[1], m], n
+                                )
+                                tripproduct2 = Legendre.legendre_triple_product(
+                                    multindex[index[2], m], multindex[index[3], m], n
+                                )
 
-                            quadproduct_1D = quadproduct_1D + tripproduct1 * tripproduct2
+                            quadproduct_1D = (
+                                quadproduct_1D + tripproduct1 * tripproduct2
+                            )
 
                         quadproduct_ND = quadproduct_ND * quadproduct_1D
 
-                    third_moment += tripleproduct_ND * Beta[index[0]] * Beta[index[1]] * Beta[index[2]]
-                    fourth_moment += quadproduct_ND * Beta[index[0]] * Beta[index[1]] * Beta[index[2]] * Beta[index[3]]
+                    third_moment += (
+                        tripleproduct_ND
+                        * Beta[index[0]]
+                        * Beta[index[1]]
+                        * Beta[index[2]]
+                    )
+                    fourth_moment += (
+                        quadproduct_ND
+                        * Beta[index[0]]
+                        * Beta[index[1]]
+                        * Beta[index[2]]
+                        * Beta[index[3]]
+                    )
 
                     i += 1
 
                 skewness[ii] = 1 / (np.sqrt(variance) ** 3) * third_moment
-                kurtosis[ii] = 1 / (variance ** 2) * fourth_moment
+                kurtosis[ii] = 1 / (variance**2) * fourth_moment
 
                 if self.coefficients.ndim == 1 or self.coefficients.shape[1] == 1:
                     skewness = float(skewness[0])

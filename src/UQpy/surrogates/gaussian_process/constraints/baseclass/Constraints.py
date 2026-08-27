@@ -15,7 +15,6 @@ class ConstraintsGPR(ABC):
         """
         pass
 
-
     @staticmethod
     def constraints(theta_, kwargs):
         """

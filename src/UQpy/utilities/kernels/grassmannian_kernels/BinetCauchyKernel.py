@@ -10,6 +10,7 @@ class BinetCauchyKernel(GrassmannianKernel):
     A class to calculate the Binet-Cauchy kernel.
 
     """
+
     def element_wise_operation(self, xi_j: Tuple) -> float:
         """
         Compute the Projection kernel entry for a tuple of points on the Grassmann manifold.

@@ -4,7 +4,9 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 
 from UQpy.run_model.RunModel import RunModel
 from UQpy.distributions.baseclass import Distribution
-from UQpy.sampling.stratified_sampling.LatinHypercubeSampling import LatinHypercubeSampling
+from UQpy.sampling.stratified_sampling.LatinHypercubeSampling import (
+    LatinHypercubeSampling,
+)
 from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import (
     LearningFunction,
 )
@@ -14,24 +16,27 @@ from UQpy.surrogates.baseclass import Surrogate
 from UQpy.utilities.ValidationTypes import *
 from UQpy.utilities.Utilities import process_random_state
 
-SurrogateType = Union[Surrogate, GaussianProcessRegressor,
-                      Annotated[object, Is[lambda x: hasattr(x, 'fit') and hasattr(x, 'predict')]]]
+SurrogateType = Union[
+    Surrogate,
+    GaussianProcessRegressor,
+    Annotated[object, Is[lambda x: hasattr(x, "fit") and hasattr(x, "predict")]],
+]
 
 
 class AdaptiveKriging:
     @beartype
     def __init__(
-            self,
-            distributions: Union[Distribution, list[Distribution]],
-            runmodel_object: RunModel,
-            surrogate: SurrogateType,
-            learning_function: LearningFunction,
-            samples: Numpy2DFloatArray = None,
-            nsamples: PositiveInteger = None,
-            learning_nsamples: PositiveInteger = None,
-            qoi_name: str = None,
-            n_add: int = 1,
-            random_state: RandomStateType = None,
+        self,
+        distributions: Union[Distribution, list[Distribution]],
+        runmodel_object: RunModel,
+        surrogate: SurrogateType,
+        learning_function: LearningFunction,
+        samples: Numpy2DFloatArray = None,
+        nsamples: PositiveInteger = None,
+        learning_nsamples: PositiveInteger = None,
+        qoi_name: str = None,
+        n_add: int = 1,
+        random_state: RandomStateType = None,
     ):
         """
         Adaptively sample for construction of a kriging surrogate for different objectives including reliability,
@@ -85,37 +90,52 @@ class AdaptiveKriging:
         self.dimension = len(distributions)
 
         if samples is not None and self.dimension != self.samples.shape[1]:
-            raise NotImplementedError("UQpy Error: Dimension of samples and distribution are inconsistent.")
+            raise NotImplementedError(
+                "UQpy Error: Dimension of samples and distribution are inconsistent."
+            )
 
         if isinstance(distributions, list):
             for i in range(len(distributions)):
                 if not isinstance(distributions[i], DistributionContinuous1D):
-                    raise TypeError("UQpy: A DistributionContinuous1D object must be provided.")
-        elif not isinstance(distributions, (DistributionContinuous1D, JointIndependent)):
-            raise TypeError("UQpy: A DistributionContinuous1D or JointInd object must be provided.")
+                    raise TypeError(
+                        "UQpy: A DistributionContinuous1D object must be provided."
+                    )
+        elif not isinstance(
+            distributions, (DistributionContinuous1D, JointIndependent)
+        ):
+            raise TypeError(
+                "UQpy: A DistributionContinuous1D or JointInd object must be provided."
+            )
 
         self.random_state = process_random_state(random_state)
 
         self.surrogate = surrogate
 
-        self.logger.info("UQpy: Adaptive Kriging - Running the initial sample set using RunModel.")
+        self.logger.info(
+            "UQpy: Adaptive Kriging - Running the initial sample set using RunModel."
+        )
 
         # Evaluate model at the training points
         if len(self.runmodel_object.qoi_list) == 0 and samples is not None:
             self.runmodel_object.run(samples=self.samples, append_samples=False)
-        if samples is not None and len(self.runmodel_object.qoi_list) != self.samples.shape[0]:
-            raise NotImplementedError("UQpy: There should be no model evaluation or Number of samples and model "
-                                      "evaluation in RunModel object should be same.")
+        if (
+            samples is not None
+            and len(self.runmodel_object.qoi_list) != self.samples.shape[0]
+        ):
+            raise NotImplementedError(
+                "UQpy: There should be no model evaluation or Number of samples and model "
+                "evaluation in RunModel object should be same."
+            )
 
         if self.nsamples is not None and samples is not None:
             self.run(nsamples=self.nsamples)
 
     def run(
-            self,
-            nsamples: int,
-            samples: np.ndarray = None,
-            append_samples: bool = True,
-            initial_nsamples: int = None,
+        self,
+        nsamples: int,
+        samples: np.ndarray = None,
+        append_samples: bool = True,
+        initial_nsamples: int = None,
     ):
         """
         Execute the :class:`.AdaptiveKriging` learning iterations.
@@ -153,21 +173,28 @@ class AdaptiveKriging:
                 self.samples = np.array(samples)
                 self.runmodel_object.qoi_list = []
 
-            self.logger.info("UQpy: Adaptive Kriging - Evaluating the model at the sample set using RunModel.")
+            self.logger.info(
+                "UQpy: Adaptive Kriging - Evaluating the model at the sample set using RunModel."
+            )
 
             self.runmodel_object.run(samples=samples, append_samples=append_samples)
         elif len(self.samples.shape) == 0:
             if self.initial_nsamples is None:
-                raise NotImplementedError("UQpy: User should provide either 'samples' or 'nstart' value.")
-            self.logger.info("UQpy: Adaptive Kriging - Generating the initial sample set using Latin hypercube "
-                             "sampling.")
+                raise NotImplementedError(
+                    "UQpy: User should provide either 'samples' or 'nstart' value."
+                )
+            self.logger.info(
+                "UQpy: Adaptive Kriging - Generating the initial sample set using Latin hypercube "
+                "sampling."
+            )
 
             random_criterion = Random()
             latin_hypercube_sampling = LatinHypercubeSampling(
                 distributions=self.dist_object,
                 nsamples=2,
                 criterion=random_criterion,
-                random_state=self.random_state)
+                random_state=self.random_state,
+            )
             self.samples = latin_hypercube_sampling._samples
             self.runmodel_object.run(samples=self.samples)
 
@@ -198,7 +225,13 @@ class AdaptiveKriging:
             self.learning_set = lhs._samples.copy()
 
             # Find all of the points in the population that have not already been integrated into the training set
-            rest_pop = np.array([x for x in self.learning_set.tolist() if x not in self.samples.tolist()])
+            rest_pop = np.array(
+                [
+                    x
+                    for x in self.learning_set.tolist()
+                    if x not in self.samples.tolist()
+                ]
+            )
 
             # Apply the learning function to identify the new point to run the model.
 
@@ -227,7 +260,10 @@ class AdaptiveKriging:
 
             # Exit the loop, if error criteria is satisfied
             if ind:
-                self.logger.info("UQpy: Learning stops at iteration: %(iteration)s" % {"iteration": i})
+                self.logger.info(
+                    "UQpy: Learning stops at iteration: %(iteration)s"
+                    % {"iteration": i}
+                )
                 break
 
             self.logger.info("Iteration: %(iteration)s" % {"iteration": i})

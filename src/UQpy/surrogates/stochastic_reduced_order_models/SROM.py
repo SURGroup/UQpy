@@ -12,7 +12,7 @@ class SROM:
         self,
         samples: Union[list, np.ndarray],
         target_distributions: list[Distribution],
-        moments:list = None,
+        moments: list = None,
         weights_errors: list = None,
         weights_distribution: Union[list, np.ndarray] = None,
         weights_moments: list = None,

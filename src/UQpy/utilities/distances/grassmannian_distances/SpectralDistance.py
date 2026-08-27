@@ -11,6 +11,7 @@ class SpectralDistance(GrassmannianDistance):
     A class to calculate the Spectral distance between two Grassmann points.
 
     """
+
     def compute_distance(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:
         """
         Compute the Spectral distance between two points on the Grassmann manifold.

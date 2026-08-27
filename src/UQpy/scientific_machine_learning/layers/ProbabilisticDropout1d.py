@@ -13,9 +13,9 @@ class ProbabilisticDropout1d(ProbabilisticDropoutLayer):
         p: Annotated[float, Is[lambda p: 0 <= p <= 1]] = 0.5,
         inplace: bool = False,
         dropping: bool = True,
-        **kwargs
+        **kwargs,
     ):
-        """Randomly zero out entire channels with probability :math:`p`
+        r"""Randomly zero out entire channels with probability :math:`p`
 
         A channel is a 1D feature map
 

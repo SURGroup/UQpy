@@ -11,6 +11,7 @@ class MartinDistance(GrassmannianDistance):
     A class to calculate the Martin distance between two Grassmann points.
 
     """
+
     def compute_distance(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:
         """
         Compute the Martin distance between two points on the Grassmann manifold.

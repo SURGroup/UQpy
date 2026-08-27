@@ -1,5 +1,5 @@
 """
-This module is used to post-process the sensitivity analysis results. Currently it 
+This module is used to post-process the sensitivity analysis results. Currently it
 supports plotting the sensitivity results and comparing the sensitivity results
 (such first order index v/s total order index) using the following two methods:
 
@@ -27,7 +27,6 @@ def plot_sensitivity_index(
     variable_names: list = None,
     **kwargs,
 ):
-
     """
 
     This function plots the sensitivity indices (with confidence intervals)
@@ -112,7 +111,6 @@ def plot_index_comparison(
     variable_names: list = None,
     **kwargs,
 ):
-
     """
 
     This function plots two sensitivity indices (with confidence intervals)
@@ -240,7 +238,6 @@ def plot_second_order_indices(
     variable_names: list = None,
     **kwargs,
 ):
-
     """
 
     This function plots second order indices (with confidence intervals)

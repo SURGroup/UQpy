@@ -6,7 +6,6 @@ from beartype import beartype
 
 
 class Beta(DistributionContinuous1D):
-
     @beartype
     def __init__(
         self,

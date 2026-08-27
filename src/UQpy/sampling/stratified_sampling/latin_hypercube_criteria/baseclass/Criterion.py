@@ -17,12 +17,14 @@ class Criterion(ABC):
         samples_number = samples.shape[0]
         cut = np.linspace(0, 1, samples_number + 1)
         self.a = cut[:samples_number]
-        self.b = cut[1: samples_number + 1]
+        self.b = cut[1 : samples_number + 1]
 
         u = np.zeros(shape=(samples.shape[0], samples.shape[1]))
         self.samples = np.zeros_like(u)
         for i in range(samples.shape[1]):
-            u[:, i] = stats.uniform.rvs(size=samples.shape[0], random_state=random_state)
+            u[:, i] = stats.uniform.rvs(
+                size=samples.shape[0], random_state=random_state
+            )
             self.samples[:, i] = u[:, i] * (self.b - self.a) + self.a
 
     @abstractmethod

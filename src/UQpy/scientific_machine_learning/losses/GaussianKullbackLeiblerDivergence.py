@@ -7,7 +7,6 @@ from beartype import beartype
 
 @beartype
 class GaussianKullbackLeiblerDivergence(Loss):
-
     def __init__(self, reduction: str = "sum", device=None):
         r"""Analytic form for Gaussian KL divergence for all Bayesian layers in a module
 

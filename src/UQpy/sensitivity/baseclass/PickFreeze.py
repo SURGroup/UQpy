@@ -16,7 +16,6 @@ def generate_pick_freeze_samples(
     n_samples: PositiveInteger,
     random_state: RandomStateType = None,
 ):
-
     """
     Generate samples to be used in the Pick-and-Freeze algorithm.
 

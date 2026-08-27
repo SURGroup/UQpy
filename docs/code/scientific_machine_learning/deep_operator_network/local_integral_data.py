@@ -1,3 +1,9 @@
+"""
+
+Auxiliary file
+==============================================
+
+"""
 import torch
 import numpy as np
 from UQpy.stochastic_process import SpectralRepresentation

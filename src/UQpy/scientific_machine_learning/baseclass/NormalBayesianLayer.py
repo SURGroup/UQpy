@@ -63,7 +63,6 @@ class NormalBayesianLayer(Layer, ABC):
         self.posterior_rho_initial: tuple[float, float] = posterior_rho_initial
         r"""Posterior rhos are initialized from a normal distribution :math:`\mathcal{N}(\text{posterior_rho_initial}[0], \text{posterior_rho_initial}[1])`"""
 
-
         for i, name in enumerate(parameter_shapes):
             shape = parameter_shapes[name]
             if shape is None:

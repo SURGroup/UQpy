@@ -22,8 +22,12 @@ from beartype import beartype
 
 from UQpy.sensitivity.baseclass.Sensitivity import Sensitivity
 from UQpy.sensitivity.baseclass.PickFreeze import generate_pick_freeze_samples
-from UQpy.sensitivity.SobolSensitivity import compute_first_order as compute_first_order_sobol
-from UQpy.sensitivity.SobolSensitivity import compute_total_order as compute_total_order_sobol
+from UQpy.sensitivity.SobolSensitivity import (
+    compute_first_order as compute_first_order_sobol,
+)
+from UQpy.sensitivity.SobolSensitivity import (
+    compute_total_order as compute_total_order_sobol,
+)
 from UQpy.utilities.UQpyLoggingFormatter import UQpyLoggingFormatter
 from UQpy.utilities.ValidationTypes import (
     PositiveInteger,
@@ -56,10 +60,7 @@ class CramerVonMisesSensitivity(Sensitivity):
     **Methods:**
     """
 
-    def __init__(
-        self, runmodel_object, dist_object, random_state=None
-    ) -> None:
-
+    def __init__(self, runmodel_object, dist_object, random_state=None) -> None:
         super().__init__(runmodel_object, dist_object, random_state=random_state)
 
         # Create logger with the same name as the class
@@ -69,16 +70,13 @@ class CramerVonMisesSensitivity(Sensitivity):
         "First order Cramér-von Mises indices, :class:`numpy.ndarray` of shape :code:`(n_variables, 1)`"
 
         self.confidence_interval_CramerVonMises = None
-        "Confidence intervals of the first order Cramér-von Mises indices, :class:`numpy.ndarray` " \
-        "of shape :code:`(n_variables, 2)`"
+        "Confidence intervals of the first order Cramér-von Mises indices, :class:`numpy.ndarray` of shape :code:`(n_variables, 2)`"
 
         self.first_order_sobol_indices = None
-        "First order Sobol indices computed using the pick-and-freeze samples, :class:`numpy.ndarray` " \
-        "of shape :code:`(n_variables, 1)`"
+        "First order Sobol indices computed using the pick-and-freeze samples, :class:`numpy.ndarray` of shape :code:`(n_variables, 1)`"
 
         self.total_order_sobol_indices = None
-        "Total order Sobol indices computed using the pick-and-freeze samples, :class:`numpy.ndarray` " \
-        "of shape :code:`(n_variables, 1)`"
+        "Total order Sobol indices computed using the pick-and-freeze samples, :class:`numpy.ndarray` of shape :code:`(n_variables, 1)`"
 
         self.n_samples = None
         "Number of samples used to compute the Cramér-von Mises indices, :class:`int`"
@@ -95,7 +93,6 @@ class CramerVonMisesSensitivity(Sensitivity):
         confidence_level: PositiveFloat = 0.95,
         disable_CVM_indices: bool = False,
     ):
-
         """
         Compute the Cramér-von Mises indices.
 
@@ -122,14 +119,17 @@ class CramerVonMisesSensitivity(Sensitivity):
 
         # Check num_bootstrap_samples data type
         if num_bootstrap_samples is None:
-            self.logger.info("UQpy: num_bootstrap_samples is set to None, confidence intervals will not be computed.\n")
+            self.logger.info(
+                "UQpy: num_bootstrap_samples is set to None, confidence intervals will not be computed.\n"
+            )
 
         elif not isinstance(num_bootstrap_samples, int):
             raise TypeError("UQpy: num_bootstrap_samples should be an integer.\n")
         ################## GENERATE SAMPLES ##################
 
         A_samples, W_samples, C_i_generator, _ = generate_pick_freeze_samples(
-            self.dist_object, self.n_samples, self.random_state)
+            self.dist_object, self.n_samples, self.random_state
+        )
 
         self.logger.info("UQpy: Generated samples using the pick-freeze scheme.\n")
 
@@ -161,15 +161,14 @@ class CramerVonMisesSensitivity(Sensitivity):
         if not disable_CVM_indices:
             # Compute the Cramér-von Mises indices
             self.first_order_CramerVonMises_indices = self.pick_and_freeze_estimator(
-                A_model_evals, W_model_evals, C_i_model_evals)
+                A_model_evals, W_model_evals, C_i_model_evals
+            )
 
             self.logger.info("UQpy: Cramér-von Mises indices computed successfully.\n")
-
 
         ################# COMPUTE CONFIDENCE INTERVALS ##################
 
         if num_bootstrap_samples is not None:
-
             self.logger.info("UQpy: Computing confidence intervals ...\n")
 
             estimator_inputs = [
@@ -186,13 +185,13 @@ class CramerVonMisesSensitivity(Sensitivity):
                 confidence_level,
             )
 
-            self.logger.info("UQpy: Confidence intervals for Cramér-von Mises indices computed successfully.\n")
-
+            self.logger.info(
+                "UQpy: Confidence intervals for Cramér-von Mises indices computed successfully.\n"
+            )
 
         ################## COMPUTE SOBOL INDICES ##################
 
         if estimate_sobol_indices:
-
             self.logger.info("UQpy: Computing First order Sobol indices ...\n")
 
             # extract shape
@@ -204,15 +203,16 @@ class CramerVonMisesSensitivity(Sensitivity):
             C_i_model_evals = C_i_model_evals.reshape((n_outputs, *_shape))
 
             self.first_order_sobol_indices = compute_first_order_sobol(
-                A_model_evals, W_model_evals, C_i_model_evals)
+                A_model_evals, W_model_evals, C_i_model_evals
+            )
 
             self.logger.info("UQpy: First order Sobol indices computed successfully.\n")
 
             self.total_order_sobol_indices = compute_total_order_sobol(
-                A_model_evals, W_model_evals, C_i_model_evals)
+                A_model_evals, W_model_evals, C_i_model_evals
+            )
 
             self.logger.info("UQpy: Total order Sobol indices computed successfully.\n")
-
 
     @staticmethod
     @beartype
@@ -248,7 +248,6 @@ class CramerVonMisesSensitivity(Sensitivity):
         W_model_evals: Union[NumpyFloatArray, NumpyIntArray],
         C_i_model_evals: Union[NumpyFloatArray, NumpyIntArray],
     ):
-
         """
         Compute the first order Cramér-von Mises indices
         using the Pick-and-Freeze estimator.
@@ -305,7 +304,6 @@ class CramerVonMisesSensitivity(Sensitivity):
             sum_denominator = 0
 
             for k in range(N):
-
                 term_1 = self.indicator_function(f_A, f_W[k])
                 term_2 = self.indicator_function(f_C_i[:, i], f_W[k])
 

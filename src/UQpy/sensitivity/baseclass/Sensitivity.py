@@ -1,7 +1,7 @@
 """
 
-This module contains the abstract Sensitivity class used by other 
-sensitivity classes: 
+This module contains the abstract Sensitivity class used by other
+sensitivity classes:
 1. Chatterjee indices
 2. Cramer-von Mises indices
 3. Generalised Sobol indices
@@ -34,9 +34,8 @@ class Sensitivity:
         self,
         runmodel_object: RunModel,
         dist_object: Union[JointIndependent, Union[list, tuple]],
-        random_state: RandomStateType = None
+        random_state: RandomStateType = None,
     ) -> None:
-
         self.runmodel_object = runmodel_object
         self.dist_object = dist_object
         self.random_state = random_state
@@ -188,7 +187,6 @@ class Sensitivity:
         confidence_level: PositiveFloat = 0.95,
         **kwargs,
     ):
-
         """An abstract method to implement bootstrapping.
 
         **Inputs:**
@@ -239,18 +237,30 @@ class Sensitivity:
 
         self._create_generators(estimator_inputs, input_generators)
 
-        self._evaluate_boostrap_sample_qoi(bootstrapped_qoi, estimator, input_generators, kwargs, num_bootstrap_samples)
+        self._evaluate_boostrap_sample_qoi(
+            bootstrapped_qoi, estimator, input_generators, kwargs, num_bootstrap_samples
+        )
 
-        confidence_interval_qoi = self._calculate_confidence_intervals(bootstrapped_qoi, confidence_interval_qoi,
-                                                                       confidence_level, n_outputs, qoi_mean)
+        confidence_interval_qoi = self._calculate_confidence_intervals(
+            bootstrapped_qoi,
+            confidence_interval_qoi,
+            confidence_level,
+            n_outputs,
+            qoi_mean,
+        )
 
         return confidence_interval_qoi
 
-    def _evaluate_boostrap_sample_qoi(self, bootstrapped_qoi, estimator, input_generators, kwargs,
-                                      num_bootstrap_samples):
+    def _evaluate_boostrap_sample_qoi(
+        self,
+        bootstrapped_qoi,
+        estimator,
+        input_generators,
+        kwargs,
+        num_bootstrap_samples,
+    ):
         # Compute the qoi for each bootstrap sample
         for j in range(num_bootstrap_samples):
-
             # inputs to the estimator
             args = []
 
@@ -263,8 +273,14 @@ class Sensitivity:
 
             bootstrapped_qoi[:, :, j] = estimator(*args, **kwargs).T
 
-    def _calculate_confidence_intervals(self, bootstrapped_qoi, confidence_interval_qoi, confidence_level, n_outputs,
-                                        qoi_mean):
+    def _calculate_confidence_intervals(
+        self,
+        bootstrapped_qoi,
+        confidence_interval_qoi,
+        confidence_level,
+        n_outputs,
+        qoi_mean,
+    ):
         # Calculate confidence intervals
         delta = -scipy.stats.norm.ppf((1 - confidence_level) / 2)
         for output_j in range(n_outputs):
@@ -283,9 +299,7 @@ class Sensitivity:
 
     def _create_generators(self, estimator_inputs, input_generators):
         for i, input in enumerate(estimator_inputs):
-
             if isinstance(input, np.ndarray):
-
                 # Example: f_A or f_B of models with single output.
                 # Shape: `(n_samples, 1)`.
                 if input.ndim == 2 and input.shape[1] == 1:
@@ -305,5 +319,7 @@ class Sensitivity:
                 input_generators.append(input)
 
             else:
-                raise ValueError(f"UQpy: estimator_inputs[{i}] should be either "
-                                 f"None or `ndarray` of dimension 1, 2 or 3")
+                raise ValueError(
+                    f"UQpy: estimator_inputs[{i}] should be either "
+                    f"None or `ndarray` of dimension 1, 2 or 3"
+                )

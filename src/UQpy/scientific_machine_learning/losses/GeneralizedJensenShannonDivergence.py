@@ -12,7 +12,6 @@ from UQpy.utilities.ValidationTypes import PositiveInteger
 
 @beartype
 class GeneralizedJensenShannonDivergence(Loss):
-
     def __init__(
         self,
         posterior_distribution: Annotated[

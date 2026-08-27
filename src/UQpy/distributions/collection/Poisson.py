@@ -7,7 +7,6 @@ from UQpy.distributions.baseclass import DistributionDiscrete1D
 
 
 class Poisson(DistributionDiscrete1D):
-
     @beartype
     def __init__(self, mu: Union[None, float, int], loc: Union[None, float, int] = 0.0):
         """

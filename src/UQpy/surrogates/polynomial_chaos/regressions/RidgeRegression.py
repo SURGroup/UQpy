@@ -6,9 +6,9 @@ from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Re
 
 
 class RidgeRegression(Regression):
-
-    def __init__(self, learning_rate: float = 0.01, iterations: int = 1000,
-                 penalty: float = 1):
+    def __init__(
+        self, learning_rate: float = 0.01, iterations: int = 1000, penalty: float = 1
+    ):
         """
         Class to calculate the polynomial_chaos coefficients with the Ridge regression method.
 
@@ -44,7 +44,9 @@ class RidgeRegression(Regression):
             for _ in range(self.iterations):
                 y_pred = (design_matrix.dot(w) + b).reshape(-1, 1)
 
-                dw = (-(2 * design_matrix.T.dot(y - y_pred)) + (2 * self.penalty * w)) / m
+                dw = (
+                    -(2 * design_matrix.T.dot(y - y_pred)) + (2 * self.penalty * w)
+                ) / m
                 db = -2 * np.sum(y - y_pred) / m
 
                 w = w - self.learning_rate * dw
@@ -58,7 +60,9 @@ class RidgeRegression(Regression):
             for _ in range(self.iterations):
                 y_pred = design_matrix.dot(w) + b
 
-                dw = (-(2 * design_matrix.T.dot(y - y_pred)) + (2 * self.penalty * w)) / m
+                dw = (
+                    -(2 * design_matrix.T.dot(y - y_pred)) + (2 * self.penalty * w)
+                ) / m
                 db = -2 * np.sum((y - y_pred), axis=0).reshape(1, -1) / m
 
                 w = w - self.learning_rate * dw

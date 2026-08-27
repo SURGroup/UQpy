@@ -1,12 +1,12 @@
 """
 
 The Sobol class computes the Sobol indices for single output and multi-output
-models. The Sobol indices can be computed using various pick-and-freeze 
+models. The Sobol indices can be computed using various pick-and-freeze
 schemes.
 
 The schemes implemented are listed below:
 
-# First order indices: 
+# First order indices:
 - Sobol1993 [1]: Requires n_samples*(num_vars + 1) model evaluations
 - Saltelli2002 [3]: Requires n_samples*(2*num_vars + 1) model evaluations
 - Janon2014 [4]: Requires n_samples*(num_vars + 1) model evaluations
@@ -19,30 +19,30 @@ The schemes implemented are listed below:
 - Saltelli2002 [3]: Requires n_samples*(2*num_vars + 1) model evaluations
 
 For more details on "Saltelli2002" refer to [3].
-    
-Note: Apart from second order indices, the Saltelli2002 scheme provides 
-      more accurate estimates of all indices, as opposed to Homma1996 or Sobol1993. 
+
+Note: Apart from second order indices, the Saltelli2002 scheme provides
+      more accurate estimates of all indices, as opposed to Homma1996 or Sobol1993.
       Because this method efficiently utilizes the higher number of model evaluations.
 
-Additionally, we can compute the confidence intervals for the Sobol indices 
+Additionally, we can compute the confidence intervals for the Sobol indices
 using bootstrapping [2].
 
 
 References
 ----------
 
-.. [1] Sobol, I.M. (1993) Sensitivity Estimates for Nonlinear Mathematical Models.  
+.. [1] Sobol, I.M. (1993) Sensitivity Estimates for Nonlinear Mathematical Models.
        Mathematical Modelling and Computational Experiments, 4, 407-414.
 
-.. [2] Jeremy Orloff and Jonathan Bloom (2014), Bootstrap confidence intervals, 
-       Introduction to Probability and Statistics, MIT OCW. 
+.. [2] Jeremy Orloff and Jonathan Bloom (2014), Bootstrap confidence intervals,
+       Introduction to Probability and Statistics, MIT OCW.
 
 .. [3] Saltelli, A. (2002). Making best use of model evaluations to
        compute sensitivity indices.
 
-.. [4] Janon, Alexander; Klein, Thierry; Lagnoux, Agnes; Nodet, Maëlle; 
-       Prior, Clementine. Asymptotic normality and efficiency of two Sobol index 
-       estimators. ESAIM: Probability and Statistics, Volume 18 (2014), pp. 342-364. 
+.. [4] Janon, Alexander; Klein, Thierry; Lagnoux, Agnes; Nodet, Maëlle;
+       Prior, Clementine. Asymptotic normality and efficiency of two Sobol index
+       estimators. ESAIM: Probability and Statistics, Volume 18 (2014), pp. 342-364.
        doi:10.1051/ps/2013040. http://www.numdam.org/articles/10.1051/ps/2013040/
 
 """
@@ -91,9 +91,7 @@ class SobolSensitivity(Sensitivity):
     **Methods:**
     """
 
-    def __init__(self, runmodel_object, dist_object, random_state=None
-    ) -> None:
-
+    def __init__(self, runmodel_object, dist_object, random_state=None) -> None:
         super().__init__(runmodel_object, dist_object, random_state)
 
         # Create logger with the same name as the class
@@ -115,8 +113,7 @@ class SobolSensitivity(Sensitivity):
         "Confidence intervals for the total order Sobol indices, :class:`numpy.ndarray` of shape `(n_variables, 2)`"
 
         self.second_order_confidence_interval = None
-        "Confidence intervals for the second order Sobol indices, :class:`numpy.ndarray` of shape" \
-        " `(num_second_order_terms, 2)`"
+        "Confidence intervals for the second order Sobol indices, :class:`numpy.ndarray` of shape `(num_second_order_terms, 2)`"
 
         self.n_samples = None
         "Number of samples used to compute the sensitivity indices, :class:`int`"
@@ -138,7 +135,6 @@ class SobolSensitivity(Sensitivity):
         total_order_scheme: str = "Homma1996",
         second_order_scheme: str = "Saltelli2002",
     ):
-
         """
         Compute the sensitivity indices and confidence intervals.
 
@@ -224,8 +220,9 @@ class SobolSensitivity(Sensitivity):
 
         # Compute D_i_model_evals only if needed
         if estimate_second_order or total_order_scheme == "Saltelli2002":
-
-            D_i_model_evals = np.zeros((self.n_outputs, self.n_samples, self.n_variables))
+            D_i_model_evals = np.zeros(
+                (self.n_outputs, self.n_samples, self.n_variables)
+            )
 
             for i, D_i in enumerate(D_i_generator):
                 D_i_model_evals[:, :, i] = self._run_model(D_i).T
@@ -236,7 +233,6 @@ class SobolSensitivity(Sensitivity):
             D_i_model_evals = None
 
         self.logger.info("UQpy: All model evaluations computed successfully.")
-
 
         ################## COMPUTE SOBOL INDICES ##################
 
@@ -263,7 +259,6 @@ class SobolSensitivity(Sensitivity):
         self.logger.info("UQpy: Total order Sobol indices computed successfully.")
 
         if estimate_second_order:
-
             # Second order Sobol indices
             self.second_order_indices = compute_second_order(
                 A_model_evals,
@@ -276,11 +271,9 @@ class SobolSensitivity(Sensitivity):
 
             self.logger.info("UQpy: Second order Sobol indices computed successfully.")
 
-
         ################## CONFIDENCE INTERVALS ####################
 
         if n_bootstrap_samples is not None:
-
             self.logger.info("UQpy: Computing confidence intervals ...")
 
             estimator_inputs = [
@@ -317,7 +310,6 @@ class SobolSensitivity(Sensitivity):
             self.logger.info(
                 "UQpy: Confidence intervals for Total order Sobol indices computed successfully."
             )
-
 
             # Second order Sobol indices
             if estimate_second_order:
@@ -480,7 +472,6 @@ def compute_first_order(
     D_i_model_evals: Union[NumpyFloatArray, NumpyIntArray, None] = None,
     scheme: str = "Janon2014",
 ):
-
     """
     Compute first order Sobol' indices using the Pick-and-Freeze scheme.
 
@@ -524,9 +515,7 @@ def compute_first_order(
     first_order_sobol = np.zeros((num_vars, n_outputs))
 
     if scheme == "Sobol1993":
-
         for output_j in range(n_outputs):
-
             f_A = A_model_evals[:, output_j]
             f_B = B_model_evals[:, output_j] if B_model_evals is not None else None
 
@@ -539,7 +528,6 @@ def compute_first_order(
             total_variance = np.var(_all_model_evals, ddof=1)
 
             for var_i in range(num_vars):
-
                 f_C_i = C_i_model_evals[output_j, :, var_i]
 
                 S_i = (np.dot(f_A, f_C_i) / n_samples - f_0_square) / total_variance
@@ -547,13 +535,10 @@ def compute_first_order(
                 first_order_sobol[var_i, output_j] = S_i
 
     elif scheme == "Janon2014":
-
         for output_j in range(n_outputs):
-
             f_A = A_model_evals[:, output_j]
 
             for var_i in range(num_vars):
-
                 f_C_i = C_i_model_evals[output_j, :, var_i]
 
                 # combine all model evaluations
@@ -569,7 +554,6 @@ def compute_first_order(
                 first_order_sobol[var_i, output_j] = S_i
 
     elif scheme == "Saltelli2002":
-
         """
         Number of estimates for first order indices is 4 if
         num_vars is 3, else 2.
@@ -577,14 +561,12 @@ def compute_first_order(
         """
 
         for output_j in range(n_outputs):
-
             f_A = A_model_evals[:, output_j]
             f_B = B_model_evals[:, output_j]
             f_0_square = np.dot(f_A, f_B) / n_samples
             total_variance = np.var(f_A, ddof=1)
 
             for var_i in range(num_vars):
-
                 f_C_i = C_i_model_evals[output_j, :, var_i]
                 f_D_i = D_i_model_evals[output_j, :, var_i]
 
@@ -595,7 +577,6 @@ def compute_first_order(
                 est_2 = (np.dot(f_B, f_D_i) / n_samples - f_0_square) / total_variance
 
                 if num_vars == 3:
-
                     # list of variable indices
                     list_vars = list(range(num_vars))
                     list_vars.remove(var_i)
@@ -636,7 +617,6 @@ def compute_total_order(
     D_i_model_evals: Union[NumpyFloatArray, NumpyIntArray, None] = None,
     scheme: str = "Homma1996",
 ):
-
     """
     Compute total order Sobol' indices using the Pick-and-Freeze scheme.
 
@@ -680,9 +660,7 @@ def compute_total_order(
     total_order_sobol = np.zeros((num_vars, n_outputs))
 
     if scheme == "Homma1996":
-
         for output_j in range(n_outputs):
-
             f_A = A_model_evals[:, output_j] if A_model_evals is not None else None
             f_B = B_model_evals[:, output_j]
 
@@ -695,7 +673,6 @@ def compute_total_order(
             total_variance = np.var(_all_model_evals, ddof=1)
 
             for var_i in range(num_vars):
-
                 f_C_i = C_i_model_evals[output_j, :, var_i]
 
                 S_T_i = (
@@ -705,16 +682,13 @@ def compute_total_order(
                 total_order_sobol[var_i, output_j] = S_T_i
 
     elif scheme == "Saltelli2002":
-
         for output_j in range(n_outputs):
-
             f_A = A_model_evals[:, output_j]
             f_B = B_model_evals[:, output_j]
             f_0_square = np.mean(f_B) ** 2
             total_variance = np.var(f_B, ddof=1)
 
             for var_i in range(num_vars):
-
                 f_C_i = C_i_model_evals[output_j, :, var_i]
                 f_D_i = D_i_model_evals[output_j, :, var_i]
 
@@ -793,11 +767,8 @@ def compute_second_order(
     second_order_sobol = np.zeros((num_second_order_terms, n_outputs))
 
     if scheme == "Saltelli2002":
-
         for output_j in range(n_outputs):
-
             for k in range(num_second_order_terms):
-
                 var_a, var_b = second_order_terms[k]
                 S_a = first_order_sobol[var_a, output_j]
                 S_b = first_order_sobol[var_b, output_j]
@@ -833,7 +804,6 @@ def compute_second_order(
                 est_2 = S_c_ab_2 - S_a - S_b
 
                 if num_vars == 4:
-
                     # (Estimate 3)
                     # TODO: How to compute this?
 

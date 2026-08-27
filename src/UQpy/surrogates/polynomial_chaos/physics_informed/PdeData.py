@@ -4,12 +4,15 @@ from beartype import beartype
 
 class PdeData:
     @beartype
-    def __init__(self, upper_bounds: list,
-                 lower_bounds: list,
-                 derivative_orders: list,
-                 boundary_normals: list,
-                 boundary_coordinates: list,
-                 boundary_values: list):
+    def __init__(
+        self,
+        upper_bounds: list,
+        lower_bounds: list,
+        derivative_orders: list,
+        boundary_normals: list,
+        boundary_coordinates: list,
+        boundary_values: list,
+    ):
         """
         Class containing information about PDE solved by Physics-informed PCE
 
@@ -43,7 +46,6 @@ class PdeData:
 
         nconst = 0
         for i in range(len(self.der_orders)):
-
             if self.der_orders[i] == 0:
                 coord.append(self.bc_x[i])
                 value.append(self.bc_y[i])

@@ -10,7 +10,6 @@ from beartype.vale import Is
 
 @beartype
 class GeometricJensenShannonDivergence(Loss):
-
     def __init__(
         self,
         alpha: Annotated[float, Is[lambda x: 0 <= x <= 1]] = 0.5,

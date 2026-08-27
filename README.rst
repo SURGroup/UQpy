@@ -99,10 +99,8 @@ Clone your fork of the UQpy repo from your GitHub account to your local disk (to
 
                         git clone https://github.com/SURGroup/UQpy.git
                         cd UQpy/
-                        python setup.py {version} install  (user installation)
-                        python setup.py {version} develop (developer installation)
-
-You will need to replace {version} with the latest version.
+                        pip install .        (user installation)
+                        pip install -e .     (developer installation)
 
 Referencing UQpy
 =================

@@ -13,9 +13,9 @@ class ProbabilisticDropout(ProbabilisticDropoutLayer):
         p: Annotated[float, Is[lambda p: 0 <= p <= 1]] = 0.5,
         inplace: bool = False,
         dropping: bool = True,
-        **kwargs
+        **kwargs,
     ):
-        """Randomly zero out some elements of the input tensor with probability :math:`p`
+        r"""Randomly zero out some elements of the input tensor with probability :math:`p`
 
         :param p: Probability of an element to be zeroed. Default: 0.5
         :param inplace: If ``True``, will do this operation in-place. Default: ``False``

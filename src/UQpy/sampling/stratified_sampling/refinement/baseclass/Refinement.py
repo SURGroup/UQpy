@@ -9,6 +9,7 @@ class Refinement(ABC):
     Baseclass of all available strata refinement methods. Provides the methods that each existing and new refinement
     algorithm must implement in order to be used in the :class:`.RefinedStratifiedSampling` class.
     """
+
     @abstractmethod
     def update_samples(
         self,
@@ -46,7 +47,9 @@ class Refinement(ABC):
     def identify_bins(strata_metrics, points_to_add, random_state):
         bins2break = np.array([])
         points_left = points_to_add
-        while np.where(strata_metrics == strata_metrics.max())[0].shape[0] < points_left:
+        while (
+            np.where(strata_metrics == strata_metrics.max())[0].shape[0] < points_left
+        ):
             bin = np.where(strata_metrics == strata_metrics.max())[0]
             bins2break = np.hstack([bins2break, bin])
             strata_metrics[bin] = 0
@@ -55,7 +58,8 @@ class Refinement(ABC):
         bin_for_remaining_points = random_state.choice(
             np.where(strata_metrics == strata_metrics.max())[0],
             points_left,
-            replace=False,)
+            replace=False,
+        )
         bins2break = np.hstack([bins2break, bin_for_remaining_points])
         bins2break = list(map(int, bins2break))
         return bins2break
@@ -63,4 +67,3 @@ class Refinement(ABC):
     @abstractmethod
     def update_strata(self, samplesU01):
         pass
-

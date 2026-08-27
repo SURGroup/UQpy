@@ -3,7 +3,9 @@ from typing import Union
 from beartype import beartype
 
 from UQpy.utilities.GrassmannPoint import GrassmannPoint
-from UQpy.dimension_reduction.grassmann_manifold.projections.baseclass.GrassmannProjection import GrassmannProjection
+from UQpy.dimension_reduction.grassmann_manifold.projections.baseclass.GrassmannProjection import (
+    GrassmannProjection,
+)
 from UQpy.utilities.ValidationTypes import Numpy2DFloatArray
 from UQpy.utilities.Utilities import *
 
@@ -11,10 +13,10 @@ from UQpy.utilities.Utilities import *
 class SVDProjection(GrassmannProjection):
     @beartype
     def __init__(
-            self,
-            data: list[Numpy2DFloatArray],
-            p: Union[int, str],
-            tol: float = None,
+        self,
+        data: list[Numpy2DFloatArray],
+        p: Union[int, str],
+        tol: float = None,
     ):
         """
 
@@ -49,18 +51,25 @@ class SVDProjection(GrassmannProjection):
         n_u = n_left[0]
         n_v = n_right[0]
 
-        ranks = [np.linalg.matrix_rank(data[i], tol=self.tolerance) for i in range(points_number)]
+        ranks = [
+            np.linalg.matrix_rank(data[i], tol=self.tolerance)
+            for i in range(points_number)
+        ]
 
         if isinstance(p, str) and p == "min":
             p = int(min(ranks))
         elif isinstance(p, str) and p == "max":
             p = int(max(ranks))
         elif isinstance(p, str):
-            raise ValueError("The input parameter p must me either 'min', 'max' or a integer.")
+            raise ValueError(
+                "The input parameter p must me either 'min', 'max' or a integer."
+            )
         else:
             for i in range(points_number):
                 if min(np.shape(data[i])) < p:
-                    raise ValueError("UQpy: The dimension of the input data is not consistent with `p` of G(n,p).")
+                    raise ValueError(
+                        "UQpy: The dimension of the input data is not consistent with `p` of G(n,p)."
+                    )
                     # write something that makes sense
 
         ranks = np.ones(points_number) * [int(p)]

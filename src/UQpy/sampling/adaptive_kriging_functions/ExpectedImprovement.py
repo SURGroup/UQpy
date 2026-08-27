@@ -8,7 +8,6 @@ import numpy as np
 
 
 class ExpectedImprovement(LearningFunction):
-
     @beartype
     def __init__(self, eif_stop: Union[float, int] = 0.01):
         """
@@ -19,7 +18,9 @@ class ExpectedImprovement(LearningFunction):
         """
         self.eif_stop = eif_stop
 
-    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
+    def evaluate_function(
+        self, distributions, n_add, surrogate, population, qoi=None, samples=None
+    ):
         g, sig = surrogate.predict(population, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array
@@ -27,7 +28,9 @@ class ExpectedImprovement(LearningFunction):
         sig = sig.reshape([population.shape[0], 1])
 
         fm = min(qoi)
-        eif = (fm - g) * stats.norm.cdf((fm - g) / sig) + sig * stats.norm.pdf((fm - g) / sig)
+        eif = (fm - g) * stats.norm.cdf((fm - g) / sig) + sig * stats.norm.pdf(
+            (fm - g) / sig
+        )
         rows = eif[:, 0].argsort()[(np.size(g) - n_add) :]
 
         stopping_criteria_indicator = max(eif[:, 0]) / abs(fm) <= self.eif_stop

@@ -8,7 +8,6 @@ from typing import Union
 
 
 class Fourier2d(Layer):
-
     def __init__(
         self,
         width: PositiveInteger,

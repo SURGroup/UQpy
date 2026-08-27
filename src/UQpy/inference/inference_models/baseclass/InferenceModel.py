@@ -7,12 +7,11 @@ from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
 class InferenceModel(ABC):
-
     # Last Modified: 05/13/2020 by Audrey Olivier
     def __init__(
-            self,
-            n_parameters: PositiveInteger,
-            name: str = "",
+        self,
+        n_parameters: PositiveInteger,
+        name: str = "",
     ):
         """
         Define a probabilistic model for inference.
@@ -63,7 +62,9 @@ class InferenceModel(ABC):
         """
 
         # Compute log likelihood
-        log_likelihood_eval = self.evaluate_log_likelihood(parameters=parameters, data=data)
+        log_likelihood_eval = self.evaluate_log_likelihood(
+            parameters=parameters, data=data
+        )
 
         # If the prior is not provided it is set to an non-informative prior p(theta)=1, log_posterior = log_likelihood
         if self.prior is None:

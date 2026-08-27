@@ -5,11 +5,11 @@
 
 
 variables:
-  pythonVersion: 3.9
+  pythonVersion: 3.12
   srcDirectory: src
   
 trigger:
-  - master
+  - main
   - Development
   - feature/*
   - bugfix/*
@@ -18,7 +18,7 @@ trigger:
 pr:
   branches:
     include:
-    - master
+    - main
     - Development
 
 jobs:
@@ -28,28 +28,31 @@ jobs:
     vmImage: "macOS-latest"
 
   steps:
+    - checkout: self
+      fetchDepth: 0
+
     - task: UsePythonVersion@0
       displayName: "Use Python $(pythonVersion)"
       inputs:
         versionSpec: "$(pythonVersion)"
 
-    - task: gitversion/setup@0
+    - task: gitversion-setup@4
       displayName: Setup GitVersion
       inputs:
-        versionSpec: '5.x'
+        versionSpec: '6.x'
 
-    - task: gitversion/execute@0
+    - task: gitversion-execute@4
       displayName: Calculate GitVersion
       inputs:
         useConfigFile: true
         configFilePath: 'GitVersion.yml'
 
     - powershell: |
-        echo "Current version: $(GitVersion.SemVer)"
+        echo "Current version: $env:GITVERSION_SEMVER"
       displayName: Shows currently compiling version
 
-    - task: SonarCloudPrepare@1
-      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['System.PullRequest.TargetBranch'], 'master'))
+    - task: SonarCloudPrepare@3
+      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['System.PullRequest.TargetBranch'], 'main'))
       inputs:
         SonarCloud: 'SonarCloud.UQpy'
         organization: 'jhusurg'
@@ -68,7 +71,7 @@ jobs:
 
     - script: |
         pip install pylint
-        pylint --ignored-modules=numpy,scipy,matplotlib,sklearn,torch --disable=E0202,E1136,E1120,E0401,E0213,E1102 --disable=R,C,W  src/UQpy
+        pylint --ignored-modules=numpy,scipy,scipy.*,matplotlib,sklearn,torch --disable=E0202,E1136,E1120,E0401,E0213,E1102,E0606 --disable=R,C,W  src/UQpy
       displayName: "Running Pylint"
 
     - script: |
@@ -83,47 +86,49 @@ jobs:
         testResultsFiles: '**/test-*.xml'
         testRunTitle: 'Publish test results for Python $(python.version)'
 
-    - task: PublishCodeCoverageResults@1
+    - task: PublishCodeCoverageResults@2
       inputs:
-        codeCoverageTool: Cobertura
         summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-        reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
-        additionalCodeCoverageFiles: '$(System.DefaultWorkingDirectory)/ **'
 
-    - task: SonarCloudAnalyze@1
-      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['System.PullRequest.TargetBranch'], 'master'))
+    - task: SonarCloudAnalyze@3
+      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['System.PullRequest.TargetBranch'], 'main'))
 
-    - task: SonarCloudPublish@1
-      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['System.PullRequest.TargetBranch'], 'master'))
+    - task: SonarCloudPublish@3
+      condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['System.PullRequest.TargetBranch'], 'main'))
       inputs:
         pollingTimeoutSec: '300'
 
     - script: |
-        python setup.py $(GitVersion.SemVer) sdist bdist_wheel
+        pip install build
+        echo "$(GitVersion.SemVer)" > VERSION
+        python -m build
       displayName: Artifact creation
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
 
     - task: CopyFiles@2
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
       inputs:
         SourceFolder: 'dist'
         Contents: '**'
         TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
-    - task: PublishBuildArtifacts@1
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    - task: PublishPipelineArtifact@1
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         ArtifactName: 'dist'
         publishLocation: 'Container'
 
     - script: |
-        twine upload --repository-url https://upload.pypi.org/legacy/ dist/* --username "$(TESTPYPIU)" --password "$(TESTPYPIP)"
+        twine upload --non-interactive dist/*
       displayName: Upload to PyPi
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+      env:
+        TWINE_USERNAME: $(TESTPYPIU)
+        TWINE_PASSWORD: $(TESTPYPIP)
 
     - task: GitHubRelease@1
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
       inputs:
         gitHubConnection: 'GitHub_OAuth'
         repositoryName: '$(Build.Repository.Name)'
@@ -139,22 +144,25 @@ jobs:
   pool:
      vmImage: "ubuntu-latest"
   steps:
-    - task: gitversion/setup@0
-      displayName: Setup GitVersion
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-      inputs:
-        versionSpec: '5.x'
+    - checkout: self
+      fetchDepth: 0 
 
-    - task: gitversion/execute@0
+    - task: gitversion-setup@4
+      displayName: Setup GitVersion
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+      inputs:
+        versionSpec: '6.x'
+
+    - task: gitversion-execute@4
       displayName: Calculate GitVersion
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
       inputs:
         useConfigFile: true
         configFilePath: 'GitVersion.yml'
 
     - task: Docker@2
       displayName: Login to Dockerhub
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
       inputs:
         containerRegistry: 'docker_registry_surg'
         command: 'login'
@@ -162,11 +170,11 @@ jobs:
     - powershell: |
           echo "Current version: $(GitVersion.SemVer)"
       displayName: Shows currently compiling version
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
 
     - task: Docker@2
       displayName: Build and push packages to Dockerhub
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
       inputs:
         containerRegistry: 'docker_registry_surg'
         command: 'buildAndPush'
@@ -176,7 +184,7 @@ jobs:
 
     - task: Docker@2
       displayName: Logout from Dockerhub
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
       inputs:
         containerRegistry: 'docker_registry_surg'
         command: 'logout'

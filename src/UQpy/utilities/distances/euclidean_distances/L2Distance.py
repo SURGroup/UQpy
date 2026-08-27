@@ -5,7 +5,6 @@ from UQpy.utilities.distances.baseclass.EuclideanDistance import EuclideanDistan
 
 
 class L2Distance(EuclideanDistance):
-
     def compute_distance(self, xi: NumpyFloatArray, xj: NumpyFloatArray) -> float:
         """
         Given two points, this method calculates the L2 distance.

@@ -8,10 +8,20 @@ from UQpy.scientific_machine_learning.layers.BayesianLinear import BayesianLinea
 from UQpy.scientific_machine_learning.layers.Fourier1d import Fourier1d
 from UQpy.scientific_machine_learning.layers.Fourier2d import Fourier2d
 from UQpy.scientific_machine_learning.layers.Fourier3d import Fourier3d
-from UQpy.scientific_machine_learning.layers.GaussianNormalizer import GaussianNormalizer
+from UQpy.scientific_machine_learning.layers.GaussianNormalizer import (
+    GaussianNormalizer,
+)
 from UQpy.scientific_machine_learning.layers.Permutation import Permutation
-from UQpy.scientific_machine_learning.layers.ProbabilisticDropout import ProbabilisticDropout
-from UQpy.scientific_machine_learning.layers.ProbabilisticDropout1d import ProbabilisticDropout1d
-from UQpy.scientific_machine_learning.layers.ProbabilisticDropout2d import ProbabilisticDropout2d
-from UQpy.scientific_machine_learning.layers.ProbabilisticDropout3d import ProbabilisticDropout3d
+from UQpy.scientific_machine_learning.layers.ProbabilisticDropout import (
+    ProbabilisticDropout,
+)
+from UQpy.scientific_machine_learning.layers.ProbabilisticDropout1d import (
+    ProbabilisticDropout1d,
+)
+from UQpy.scientific_machine_learning.layers.ProbabilisticDropout2d import (
+    ProbabilisticDropout2d,
+)
+from UQpy.scientific_machine_learning.layers.ProbabilisticDropout3d import (
+    ProbabilisticDropout3d,
+)
 from UQpy.scientific_machine_learning.layers.RangeNormalizer import RangeNormalizer

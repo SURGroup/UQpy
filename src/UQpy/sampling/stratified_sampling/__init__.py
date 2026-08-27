@@ -4,7 +4,12 @@ from UQpy.sampling.stratified_sampling.strata import *
 from UQpy.sampling.stratified_sampling.refinement import *
 
 
-from UQpy.sampling.stratified_sampling.LatinHypercubeSampling import LatinHypercubeSampling
-from UQpy.sampling.stratified_sampling.TrueStratifiedSampling import TrueStratifiedSampling
-from UQpy.sampling.stratified_sampling.RefinedStratifiedSampling import RefinedStratifiedSampling
-
+from UQpy.sampling.stratified_sampling.LatinHypercubeSampling import (
+    LatinHypercubeSampling,
+)
+from UQpy.sampling.stratified_sampling.TrueStratifiedSampling import (
+    TrueStratifiedSampling,
+)
+from UQpy.sampling.stratified_sampling.RefinedStratifiedSampling import (
+    RefinedStratifiedSampling,
+)

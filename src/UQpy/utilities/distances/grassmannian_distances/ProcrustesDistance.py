@@ -11,6 +11,7 @@ class ProcrustesDistance(GrassmannianDistance):
     A class to calculate the Procrustes distance between two Grassmann points.
 
     """
+
     def compute_distance(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:
         """
         Compute the Procrustes distance between two points on the Grassmann manifold.

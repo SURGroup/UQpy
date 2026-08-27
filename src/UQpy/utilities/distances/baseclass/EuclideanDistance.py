@@ -9,7 +9,6 @@ from UQpy.utilities.distances.baseclass.Distance import Distance
 
 
 class EuclideanDistance(Distance, ABC):
-
     @beartype
     def calculate_distance_matrix(self, points: list[NumpyFloatArray]):
         """

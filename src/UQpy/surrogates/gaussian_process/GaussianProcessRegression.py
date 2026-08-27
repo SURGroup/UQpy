@@ -8,23 +8,25 @@ from UQpy.utilities.Utilities import process_random_state
 from UQpy.surrogates.baseclass.Surrogate import Surrogate
 from UQpy.utilities.ValidationTypes import RandomStateType
 from UQpy.utilities.kernels.baseclass.Kernel import Kernel
-from UQpy.surrogates.gaussian_process.constraints.baseclass.Constraints import ConstraintsGPR
+from UQpy.surrogates.gaussian_process.constraints.baseclass.Constraints import (
+    ConstraintsGPR,
+)
 
 
 class GaussianProcessRegression(Surrogate):
     @beartype
     def __init__(
-            self,
-            kernel: Kernel,
-            hyperparameters: list,
-            regression_model=None,
-            optimizer=None,
-            bounds=None,
-            optimize_constraints: ConstraintsGPR = None,
-            optimizations_number: int = 1,
-            normalize: bool = False,
-            noise: bool = False,
-            random_state: RandomStateType = None,
+        self,
+        kernel: Kernel,
+        hyperparameters: list,
+        regression_model=None,
+        optimizer=None,
+        bounds=None,
+        optimize_constraints: ConstraintsGPR = None,
+        optimizations_number: int = 1,
+        normalize: bool = False,
+        noise: bool = False,
+        random_state: RandomStateType = None,
     ):
         """
         GaussianProcessRegressor an Gaussian process regression-based surrogate model to predict the model output at
@@ -89,7 +91,9 @@ class GaussianProcessRegression(Surrogate):
         self.mu = 0
 
         if bounds is None:
-            if isinstance(self.optimizer, type(None)) or isinstance(self.optimizer._bounds, type(None)):
+            if isinstance(self.optimizer, type(None)) or isinstance(
+                self.optimizer._bounds, type(None)
+            ):
                 self._define_bounds()
             else:
                 self.bounds = self.optimizer._bounds
@@ -98,17 +102,17 @@ class GaussianProcessRegression(Surrogate):
         self.random_state = process_random_state(random_state)
 
     def _define_bounds(self):
-        bounds_ = [[10 ** -3, 10 ** 3]] * self.hyperparameters.shape[0]
+        bounds_ = [[10**-3, 10**3]] * self.hyperparameters.shape[0]
         if self.noise:
-            bounds_[-1] = [10 ** -10, 10 ** -1]
+            bounds_[-1] = [10**-10, 10**-1]
         self.bounds = bounds_
 
     def fit(
-            self,
-            samples,
-            values,
-            optimizations_number=None,
-            hyperparameters=None,
+        self,
+        samples,
+        values,
+        optimizations_number=None,
+        hyperparameters=None,
     ):
         """
         Fit the surrogate model using the training samples and the corresponding model values.
@@ -142,18 +146,28 @@ class GaussianProcessRegression(Surrogate):
         # Verify the length of hyperparameters and input dimension
         if self.noise:
             if self.hyperparameters.shape[0] != input_dim + 2:
-                raise RuntimeError("UQpy: The length/shape of attribute 'hyperparameter' and input dimension are not "
-                                   "consistent.")
+                raise RuntimeError(
+                    "UQpy: The length/shape of attribute 'hyperparameter' and input dimension are not "
+                    "consistent."
+                )
         elif self.hyperparameters.shape[0] != input_dim + 1:
-            raise RuntimeError("UQpy: The length/shape of attribute 'hyperparameter' and input dimension are not "
-                               "consistent.")
+            raise RuntimeError(
+                "UQpy: The length/shape of attribute 'hyperparameter' and input dimension are not "
+                "consistent."
+            )
 
         self.values = np.array(values).reshape(nsamples, output_dim)
 
         # Normalizing the data
         if self.normalize:
-            self.sample_mean, self.sample_std = np.mean(self.samples, 0), np.std(self.samples, 0)
-            self.value_mean, self.value_std = np.mean(self.values, 0), np.std(self.values, 0)
+            self.sample_mean, self.sample_std = (
+                np.mean(self.samples, 0),
+                np.std(self.samples, 0),
+            )
+            self.value_mean, self.value_std = (
+                np.mean(self.values, 0),
+                np.std(self.values, 0),
+            )
             s_ = (self.samples - self.sample_mean) / self.sample_std
             y_ = (self.values - self.value_mean) / self.value_std
         else:
@@ -170,13 +184,19 @@ class GaussianProcessRegression(Surrogate):
             lb = [np.log10(xy[0]) for xy in self.bounds]
             ub = [np.log10(xy[1]) for xy in self.bounds]
 
-            starting_point = np.random.uniform(low=lb, high=ub, size=(self.optimizations_number, len(self.bounds)))
+            starting_point = np.random.uniform(
+                low=lb, high=ub, size=(self.optimizations_number, len(self.bounds))
+            )
             starting_point[0, :] = np.log10(self.hyperparameters)
 
             if self.optimize_constraints is not None:
-                cons = self.optimize_constraints.define_arguments(self.samples, self.values, self.predict)
+                cons = self.optimize_constraints.define_arguments(
+                    self.samples, self.values, self.predict
+                )
                 self.optimizer.apply_constraints(constraints=cons)
-                self.optimizer.apply_constraints_argument(self.optimize_constraints.constraint_args)
+                self.optimizer.apply_constraints_argument(
+                    self.optimize_constraints.constraint_args
+                )
             else:
                 log_bounds = [[np.log10(xy[0]), np.log10(xy[1])] for xy in self.bounds]
                 self.optimizer.update_bounds(bounds=log_bounds)
@@ -185,22 +205,27 @@ class GaussianProcessRegression(Surrogate):
             fun_value = np.zeros([self.optimizations_number, 1])
 
             for i__ in range(self.optimizations_number):
-                p_ = self.optimizer.optimize(function=GaussianProcessRegression.log_likelihood,
-                                             initial_guess=starting_point[i__, :],
-                                             args=(self.kernel, s_, y_, self.noise, self.F),
-                                             jac=self.jac)
+                p_ = self.optimizer.optimize(
+                    function=GaussianProcessRegression.log_likelihood,
+                    initial_guess=starting_point[i__, :],
+                    args=(self.kernel, s_, y_, self.noise, self.F),
+                    jac=self.jac,
+                )
 
                 if isinstance(p_, np.ndarray):
                     minimizer[i__, :] = p_
-                    fun_value[i__, 0] = GaussianProcessRegression.log_likelihood(p_, self.kernel, s_, y_,
-                                                                                 self.noise, self.F)
+                    fun_value[i__, 0] = GaussianProcessRegression.log_likelihood(
+                        p_, self.kernel, s_, y_, self.noise, self.F
+                    )
                 else:
                     minimizer[i__, :] = p_.x
                     fun_value[i__, 0] = p_.fun
 
             if min(fun_value) == np.inf:
-                raise NotImplementedError("Maximum likelihood estimator failed: Choose different starting point or "
-                                          "increase nopt")
+                raise NotImplementedError(
+                    "Maximum likelihood estimator failed: Choose different starting point or "
+                    "increase nopt"
+                )
             t = np.argmin(fun_value)
             self.hyperparameters = 10 ** minimizer[t, :]
 
@@ -208,12 +233,14 @@ class GaussianProcessRegression(Surrogate):
         if self.noise:
             self.kernel.kernel_parameter = self.hyperparameters[:-2]
             sigma = self.hyperparameters[-2]
-            self.K = sigma ** 2 * self.kernel.calculate_kernel_matrix(x=s_, s=s_) + \
-                     np.eye(nsamples) * (self.hyperparameters[-1]) ** 2
+            self.K = (
+                sigma**2 * self.kernel.calculate_kernel_matrix(x=s_, s=s_)
+                + np.eye(nsamples) * (self.hyperparameters[-1]) ** 2
+            )
         else:
             self.kernel.kernel_parameter = self.hyperparameters[:-1]
             sigma = self.hyperparameters[-1]
-            self.K = sigma ** 2 * self.kernel.calculate_kernel_matrix(x=s_, s=s_)
+            self.K = sigma**2 * self.kernel.calculate_kernel_matrix(x=s_, s=s_)
 
         self.cc = cholesky(self.K + 1e-10 * np.eye(nsamples), lower=True)
         self.alpha_ = cho_solve((self.cc, True), y_)
@@ -226,7 +253,9 @@ class GaussianProcessRegression(Surrogate):
             q_, g_ = np.linalg.qr(f_dash)  # Eq: 3.11, DACE
             # Check if F is a full rank matrix
             if np.linalg.matrix_rank(g_) != min(np.size(self.F, 0), np.size(self.F, 1)):
-                raise NotImplementedError("Chosen regression functions are not sufficiently linearly independent")
+                raise NotImplementedError(
+                    "Chosen regression functions are not sufficiently linearly independent"
+                )
             # Design parameters (beta: regression coefficient)
             self.beta = np.linalg.solve(g_, np.matmul(np.transpose(q_), y_dash))
             self.mu = np.einsum("ij,jk->ik", self.F, self.beta)
@@ -270,9 +299,10 @@ class GaussianProcessRegression(Surrogate):
             if kernelparameters is not None:
                 sigma = kernelparameters[-1]
             else:
-                raise ValueError('kernelparameters is None')
-            K = sigma ** 2 * self.kernel.calculate_kernel_matrix(x=s_, s=s_) + \
-                np.eye(self.samples.shape[0]) * (noise_std ** 2)
+                raise ValueError("kernelparameters is None")
+            K = sigma**2 * self.kernel.calculate_kernel_matrix(x=s_, s=s_) + np.eye(
+                self.samples.shape[0]
+            ) * (noise_std**2)
             cc = np.linalg.cholesky(K + 1e-10 * np.eye(self.samples.shape[0]))
             mu = 0
             if self.regression_model is not None:
@@ -280,8 +310,12 @@ class GaussianProcessRegression(Surrogate):
                 y_dash = np.linalg.solve(cc, y_)
                 q_, g_ = np.linalg.qr(f_dash)  # Eq: 3.11, DACE
                 # Check if F is a full rank matrix
-                if np.linalg.matrix_rank(g_) != min(np.size(self.F, 0), np.size(self.F, 1)):
-                    raise NotImplementedError("Chosen regression functions are not sufficiently linearly independent")
+                if np.linalg.matrix_rank(g_) != min(
+                    np.size(self.F, 0), np.size(self.F, 1)
+                ):
+                    raise NotImplementedError(
+                        "Chosen regression functions are not sufficiently linearly independent"
+                    )
                 # Design parameters (beta: regression coefficient)
                 beta = np.linalg.solve(g_, np.matmul(np.transpose(q_), y_dash))
                 mu = np.einsum("ij,jk->ik", self.F, beta)
@@ -301,7 +335,7 @@ class GaussianProcessRegression(Surrogate):
             self.kernel.kernel_parameter = kernelparameters[:-1]
             sigma = kernelparameters[-1]
 
-        k = sigma**2*self.kernel.calculate_kernel_matrix(x=x_, s=s_)
+        k = sigma**2 * self.kernel.calculate_kernel_matrix(x=x_, s=s_)
         y = mu1 + k @ alpha_
         if self.normalize:
             y = self.value_mean + y * self.value_std
@@ -311,7 +345,7 @@ class GaussianProcessRegression(Surrogate):
         if return_std:
             self.kernel.kernel_parameter = kernelparameters[:-1]
             sigma = kernelparameters[-1]
-            k1 = sigma**2*self.kernel.calculate_kernel_matrix(x=x_, s=x_)
+            k1 = sigma**2 * self.kernel.calculate_kernel_matrix(x=x_, s=x_)
             var = (k1 - k @ cho_solve((cc, True), k.T)).diagonal()
             mse = np.sqrt(var)
             if self.normalize:
@@ -341,11 +375,14 @@ class GaussianProcessRegression(Surrogate):
         if ind_noise:
             k_.kernel_parameter = 10 ** p0[:-2]
             sigma = 10 ** p0[-2]
-            k__ = sigma ** 2 * k_.calculate_kernel_matrix(x=s, s=s) + np.eye(m) * (10 ** p0[-1]) ** 2
+            k__ = (
+                sigma**2 * k_.calculate_kernel_matrix(x=s, s=s)
+                + np.eye(m) * (10 ** p0[-1]) ** 2
+            )
         else:
             k_.kernel_parameter = 10 ** p0[:-1]
             sigma = 10 ** p0[-1]
-            k__ = sigma ** 2 * k_.calculate_kernel_matrix(x=s, s=s)
+            k__ = sigma**2 * k_.calculate_kernel_matrix(x=s, s=s)
         cc = cholesky(k__ + 1e-10 * np.eye(m), lower=True)
 
         mu = 0
@@ -355,7 +392,9 @@ class GaussianProcessRegression(Surrogate):
             q_, g_ = np.linalg.qr(f_dash)  # Eq: 3.11, DACE
             # Check if F is a full rank matrix
             if np.linalg.matrix_rank(g_) != min(np.size(fx_, 0), np.size(fx_, 1)):
-                raise NotImplementedError("Chosen regression functions are not sufficiently linearly independent")
+                raise NotImplementedError(
+                    "Chosen regression functions are not sufficiently linearly independent"
+                )
             # Design parameters (beta: regression coefficient)
             beta = np.linalg.solve(g_, np.matmul(np.transpose(q_), y_dash))
             mu = np.einsum("ij,jk->ik", fx_, beta)

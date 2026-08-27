@@ -6,7 +6,6 @@ from UQpy.utilities.ValidationTypes import NumpyFloatArray
 
 
 class Correlate:
-
     @beartype
     def __init__(self, samples_u: np.ndarray, corr_z: np.ndarray):
         """

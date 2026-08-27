@@ -13,16 +13,15 @@ from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
 class BayesModelSelection:
-
     # Authors: Audrey Olivier, Yuchen Zhou
     # Last modified: 01/24/2020 by Audrey Olivier
     @beartype
     def __init__(
-            self,
-            parameter_estimators: list[BayesParameterEstimation],
-            prior_probabilities=None,
-            evidence_method: EvidenceMethod = HarmonicMean(),
-            nsamples: list[PositiveInteger] = None,
+        self,
+        parameter_estimators: list[BayesParameterEstimation],
+        prior_probabilities=None,
+        evidence_method: EvidenceMethod = HarmonicMean(),
+        nsamples: list[PositiveInteger] = None,
     ):
         """
         Perform model selection via Bayesian inference, i.e., compute model posterior probabilities given data.
@@ -39,14 +38,18 @@ class BayesModelSelection:
         """
         self.bayes_estimators: list[BayesParameterEstimation] = parameter_estimators
         """Results of the Bayesian parameter estimation."""
-        self.candidate_models: list[InferenceModel] = [x.inference_model for x in self.bayes_estimators]
+        self.candidate_models: list[InferenceModel] = [
+            x.inference_model for x in self.bayes_estimators
+        ]
         """Probabilistic models used during the model selection process."""
         self.models_number = len(self.candidate_models)
         self.evidence_method = evidence_method
         self.logger = logging.getLogger(__name__)
 
         if prior_probabilities is None:
-            self.prior_probabilities = [1.0 / len(self.candidate_models) for _ in self.candidate_models]
+            self.prior_probabilities = [
+                1.0 / len(self.candidate_models) for _ in self.candidate_models
+            ]
         else:
             self.prior_probabilities = prior_probabilities
 
@@ -86,20 +89,23 @@ class BayesModelSelection:
         """
         self.logger.info("UQpy: Running Bayesian Model Selection.")
         # Perform mcmc for all candidate models
-        for i, (inference_model, bayes_estimator) in enumerate(zip(self.candidate_models, self.bayes_estimators)):
+        for i, (inference_model, bayes_estimator) in enumerate(
+            zip(self.candidate_models, self.bayes_estimators)
+        ):
             self.logger.info("UQpy: Running mcmc for model " + inference_model.name)
             if nsamples[i] == 0:
                 continue
             bayes_estimator.run(nsamples=nsamples[i])
-            self.evidences[i] = \
-                self.evidence_method.estimate_evidence(inference_model=inference_model,
-                                                       posterior_samples=bayes_estimator.sampler.samples,
-                                                       log_posterior_values=bayes_estimator.sampler.log_pdf_values, )
+            self.evidences[i] = self.evidence_method.estimate_evidence(
+                inference_model=inference_model,
+                posterior_samples=bayes_estimator.sampler.samples,
+                log_posterior_values=bayes_estimator.sampler.log_pdf_values,
+            )
 
         # Compute posterior probabilities
         self.probabilities = self._compute_posterior_probabilities(
-            prior_probabilities=self.prior_probabilities,
-            evidence_values=self.evidences)
+            prior_probabilities=self.prior_probabilities, evidence_values=self.evidences
+        )
 
         self.logger.info("UQpy: Bayesian Model Selection analysis completed!")
 
@@ -143,6 +149,10 @@ class BayesModelSelection:
         :rtype probabilities: list (length nmodels) of floats
 
         """
-        scaled_evidences = [evidence * prior_probability for (evidence, prior_probability)
-                            in zip(evidence_values, prior_probabilities)]
+        scaled_evidences = [
+            evidence * prior_probability
+            for (evidence, prior_probability) in zip(
+                evidence_values, prior_probabilities
+            )
+        ]
         return scaled_evidences / np.sum(scaled_evidences)

@@ -6,7 +6,6 @@ from UQpy.scientific_machine_learning.baseclass import Loss
 
 @beartype
 class LpLoss(Loss):
-
     def __init__(
         self,
         ord: Union[int, float, str] = 2,
@@ -64,7 +63,7 @@ class LpLoss(Loss):
         self.reduction = reduction
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        """Compute the loss :math:`L_p(x, y)`.
+        r"""Compute the loss :math:`L_p(x, y)`.
 
         The valid shapes for ``x`` and ``y`` depend on
         `PyTorch broadcast semantics <https://pytorch.org/docs/stable/notes/broadcasting.html>`__ .

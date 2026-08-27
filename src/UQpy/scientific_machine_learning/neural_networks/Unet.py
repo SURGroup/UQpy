@@ -7,7 +7,6 @@ from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
 class Unet(NeuralNetwork):
-
     def __init__(
         self,
         n_filters: list[PositiveInteger],

@@ -3,7 +3,8 @@
 # A comma-separated list of package or module names from where C extensions may
 # be loaded. Extensions are loading into the active Python interpreter and may
 # run arbitrary code.
-extension-pkg-whitelist=numpy,scipy
+extension-pkg-whitelist=numpy
+ignored-modules=scipy,scipy.special
 
 [MESSAGES CONTROL]
 
@@ -26,4 +27,6 @@ disable=no-name-in-module
 # (useful for modules/projects where namespaces are manipulated during runtime
 # and thus existing member attributes cannot be deduced by static analysis. It
 # supports qualified module names, as well as Unix pattern matching.
-ignored-modules=scipy
+ignored-modules=scipy, scipy.special
+ignored-classes=scipy,scipy.special
+generated-members=scipy.*

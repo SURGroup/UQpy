@@ -20,7 +20,7 @@ def generalized_jensen_shannon_divergence(
     :param posterior_distributions: List of UQpy distributions defining the variational posterior
     :param prior_distributions: List of UQpy distributions defining the prior
     :param n_samples: Number of samples in the Monte Carlo estimation. Default: 1,000
-    :param alpha: Weight of the mixture distribution, :math:`0 \leq \alpha \leq 1`. 
+    :param alpha: Weight of the mixture distribution, :math:`0 \leq \alpha \leq 1`.
      See formula for details. Default: 0.5
     :param reduction: Specifies the reduction to apply to the output: 'none', 'mean', or 'sum'.
      'none': no reduction will be applied, 'mean': the output will be averaged, 'sum': the output will be summed.
@@ -47,9 +47,7 @@ def generalized_jensen_shannon_divergence(
     mc_posterior = MonteCarloSampling(
         distributions=posterior_distributions, nsamples=n_samples
     )
-    mc_prior = MonteCarloSampling(
-        distributions=prior_distributions, nsamples=n_samples
-    )
+    mc_prior = MonteCarloSampling(distributions=prior_distributions, nsamples=n_samples)
     n_distributions = len(posterior_distributions)
     js_divergence = np.zeros(n_distributions, dtype=np.float32)
     for i in range(n_samples):
@@ -74,11 +72,11 @@ def generalized_jensen_shannon_divergence(
                 mixture_pdf_prior_samples
             )
 
-            js_divergence[j] += ((1 - alpha) * kl_divergence_q_m) + (
-                alpha * kl_divergence_p_m
-            )
+            js_divergence[j] += (
+                ((1 - alpha) * kl_divergence_q_m) + (alpha * kl_divergence_p_m)
+            ).item()
     js_divergence /= n_samples
-    js_divergence = torch.tensor(js_divergence, device=device)
+    js_divergence = torch.tensor(js_divergence, dtype=torch.float32, device=device)
 
     if reduction == "none":
         return js_divergence

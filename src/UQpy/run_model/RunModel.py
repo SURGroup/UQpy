@@ -26,6 +26,7 @@ from enum import Enum, auto
 
 from UQpy.utilities.ValidationTypes import NumpyFloatArray
 
+
 class RunType(Enum):
     LOCAL = auto()
     CLUSTER = auto()
@@ -39,15 +40,15 @@ class RunModel:
     # modified: 8 / 31 / 2022 by Michael H. Gardner
     @beartype
     def __init__(
-            self,
-            model,
-            samples: Union[list, NumpyFloatArray] = None,
-            ntasks: int = 1,
-            cores_per_task: int = 1,
-            nodes: int = 1,
-            resume: bool = False,
-            run_type: str = 'LOCAL',
-            cluster_script: str = None
+        self,
+        model,
+        samples: Union[list, NumpyFloatArray] = None,
+        ntasks: int = 1,
+        cores_per_task: int = 1,
+        nodes: int = 1,
+        resume: bool = False,
+        run_type: str = "LOCAL",
+        cluster_script: str = None,
     ):
         """
         Run a computational model at specified sample points.
@@ -130,11 +131,15 @@ class RunModel:
 
         # Check if samples are provided.
         if samples is None:
-            self.logger.info("\nUQpy: No samples are provided. Creating the object and building the model directory.\n")
+            self.logger.info(
+                "\nUQpy: No samples are provided. Creating the object and building the model directory.\n"
+            )
         elif isinstance(samples, (list, np.ndarray)):
             self.run(samples)
         else:
-            raise ValueError("\nUQpy: samples must be passed as a list or numpy ndarray\n")
+            raise ValueError(
+                "\nUQpy: samples must be passed as a list or numpy ndarray\n"
+            )
 
     def run(self, samples=None, append_samples=True):
         """
@@ -189,31 +194,41 @@ class RunModel:
 
         self.model.initialize(samples)
 
-        self.qoi_list.extend(self.serial_execution() if self.is_serial else self.parallel_execution())
+        self.qoi_list.extend(
+            self.serial_execution() if self.is_serial else self.parallel_execution()
+        )
 
         self.model.finalize()
 
     def parallel_execution(self):
         # TODO: Check if files with the names used below already exist and raise error
-        with open('model.pkl', 'wb') as filehandle:
+        with open("model.pkl", "wb") as filehandle:
             pickle.dump(self.model, filehandle)
-        with open('samples.pkl', 'wb') as filehandle:
+        with open("samples.pkl", "wb") as filehandle:
             pickle.dump(self.samples, filehandle)
-            
-        if self.run_type is RunType.LOCAL:        
-            os.system(f"mpirun python -m "
-                      f"UQpy.run_model.model_execution.ParallelExecution {self.n_existing_simulations} "
-                      f"{self.n_new_simulations}")
+
+        if self.run_type is RunType.LOCAL:
+            os.system(
+                f"mpirun python -m "
+                f"UQpy.run_model.model_execution.ParallelExecution {self.n_existing_simulations} "
+                f"{self.n_new_simulations}"
+            )
 
         elif self.run_type is RunType.CLUSTER:
             if self.cluster_script is None:
-                raise ValueError("\nUQpy: User-provided slurm script not input, please provide this input\n")
-            os.system(f"python -m UQpy.run_model.model_execution.ClusterExecution {self.cores_per_task} "
-                      f"{self.n_new_simulations} {self.n_existing_simulations} {self.cluster_script}")
+                raise ValueError(
+                    "\nUQpy: User-provided slurm script not input, please provide this input\n"
+                )
+            os.system(
+                f"python -m UQpy.run_model.model_execution.ClusterExecution {self.cores_per_task} "
+                f"{self.n_new_simulations} {self.n_existing_simulations} {self.cluster_script}"
+            )
         else:
-            raise ValueError("\nUQpy: RunType is not in currently supported list of cluster types\n")            
-        
-        with open('qoi.pkl', 'rb') as filehandle:
+            raise ValueError(
+                "\nUQpy: RunType is not in currently supported list of cluster types\n"
+            )
+
+        with open("qoi.pkl", "rb") as filehandle:
             results = pickle.load(filehandle)
 
         os.remove("model.pkl")
@@ -225,7 +240,10 @@ class RunModel:
 
     def serial_execution(self):
         results = []
-        for i in range(self.n_existing_simulations, self.n_existing_simulations + self.n_new_simulations):
+        for i in range(
+            self.n_existing_simulations,
+            self.n_existing_simulations + self.n_new_simulations,
+        ):
             sample = self.model.preprocess_single_sample(i, self.samples[i])
 
             execution_output = self.model.execute_single_sample(i, sample)

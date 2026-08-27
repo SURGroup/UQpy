@@ -1,1 +1,3 @@
-from UQpy.surrogates.gaussian_process.constraints.baseclass.Constraints import ConstraintsGPR
+from UQpy.surrogates.gaussian_process.constraints.baseclass.Constraints import (
+    ConstraintsGPR,
+)

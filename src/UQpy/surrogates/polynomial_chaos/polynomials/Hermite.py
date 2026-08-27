@@ -16,7 +16,9 @@ import math
 
 class Hermite(Polynomials):
     @beartype
-    def __init__(self, degree: int, distributions:  Union[Distribution, list[Distribution]]):
+    def __init__(
+        self, degree: int, distributions: Union[Distribution, list[Distribution]]
+    ):
         """
         Class of univariate polynomials appropriate for data generated from a normal distribution.
 
@@ -53,8 +55,11 @@ class Hermite(Polynomials):
         x = np.array(x).flatten()
 
         # normalize data
-        x_normed = Polynomials.standardize_normal(x, mean=self.distributions.parameters['loc'],
-                                                  std=self.distributions.parameters['scale'])
+        x_normed = Polynomials.standardize_normal(
+            x,
+            mean=self.distributions.parameters["loc"],
+            std=self.distributions.parameters["scale"],
+        )
 
         # evaluate standard Hermite polynomial, orthogonal w.r.t. the PDF of N(0,1)
         h = eval_hermitenorm(self.degree, x_normed)
@@ -65,15 +70,18 @@ class Hermite(Polynomials):
         h = h / st_herm_norm
 
         return h
-    
+
     @staticmethod
-    def hermite_triple_product (k,l,m):
-        tripleproduct=0
-        g=(k+l+m)/ 2
-        if ((k+l+m)% 2) == 0 and m<=(k+l) and m>=abs(k-l):
-            tripleproduct=np.sqrt(special.comb(k,g-m)*special.comb(l,g-m)*special.comb(m,g-k))
+    def hermite_triple_product(k, l, m):
+        tripleproduct = 0
+        g = (k + l + m) / 2
+        if ((k + l + m) % 2) == 0 and m <= (k + l) and m >= abs(k - l):
+            tripleproduct = np.sqrt(
+                special.comb(k, g - m) * special.comb(l, g - m) * special.comb(m, g - k)
+            )
         else:
-            tripleproduct=0
+            tripleproduct = 0
         return tripleproduct
+
 
 Polynomials.distribution_to_polynomial[Normal] = Hermite

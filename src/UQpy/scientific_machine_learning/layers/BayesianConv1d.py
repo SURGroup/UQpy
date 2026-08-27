@@ -13,7 +13,6 @@ from beartype import beartype
 
 @beartype
 class BayesianConv1d(NormalBayesianLayer):
-
     def __init__(
         self,
         in_channels: PositiveInteger,

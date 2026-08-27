@@ -1,4 +1,5 @@
 """Collection of baseclass files."""
+
 from UQpy.distributions.baseclass.Copula import Copula
 from UQpy.distributions.baseclass.Distribution import Distribution
 from UQpy.distributions.baseclass.Distribution1D import Distribution1D

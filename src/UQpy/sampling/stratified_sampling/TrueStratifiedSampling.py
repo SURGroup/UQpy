@@ -2,7 +2,9 @@ import logging
 from beartype import beartype
 from numpy.random import RandomState
 
-from UQpy.sampling.stratified_sampling.baseclass.StratifiedSampling import StratifiedSampling
+from UQpy.sampling.stratified_sampling.baseclass.StratifiedSampling import (
+    StratifiedSampling,
+)
 from UQpy.distributions import DistributionContinuous1D, JointIndependent
 from UQpy.sampling.stratified_sampling.strata import RectangularStrata
 from UQpy.sampling.stratified_sampling.strata.baseclass.Strata import Strata
@@ -13,7 +15,9 @@ class TrueStratifiedSampling(StratifiedSampling):
     @beartype
     def __init__(
         self,
-        distributions: Union[DistributionContinuous1D, JointIndependent, list[DistributionContinuous1D]],
+        distributions: Union[
+            DistributionContinuous1D, JointIndependent, list[DistributionContinuous1D]
+        ],
         strata_object: Strata,
         nsamples_per_stratum: Union[int, list[int]] = None,
         nsamples: int = None,
@@ -49,9 +53,9 @@ class TrueStratifiedSampling(StratifiedSampling):
         self.nsamples_per_stratum = nsamples_per_stratum
         self.nsamples = nsamples
 
-        self.samples:NumpyFloatArray = None
+        self.samples: NumpyFloatArray = None
         """The generated samples following the prescribed distribution."""
-        self.samplesU01:NumpyFloatArray = None
+        self.samplesU01: NumpyFloatArray = None
         """The generated samples on the unit hypercube."""
 
         self.distributions = distributions
@@ -59,7 +63,9 @@ class TrueStratifiedSampling(StratifiedSampling):
         if isinstance(self.random_state, int):
             self.random_state = RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.RandomState object.')
+            raise TypeError(
+                "UQpy: random_state must be None, an int or an np.random.RandomState object."
+            )
         if self.random_state is None:
             self.random_state = self.strata_object.random_state
 
@@ -68,8 +74,9 @@ class TrueStratifiedSampling(StratifiedSampling):
         self.logger.info("UQpy: Stratified_sampling object is created")
 
         if self.nsamples_per_stratum is not None or self.nsamples is not None:
-            self.run(nsamples_per_stratum=self.nsamples_per_stratum,
-                     nsamples=self.nsamples)
+            self.run(
+                nsamples_per_stratum=self.nsamples_per_stratum, nsamples=self.nsamples
+            )
 
     def transform_samples(self, samples01):
         """
@@ -133,22 +140,30 @@ class TrueStratifiedSampling(StratifiedSampling):
 
     def _run_checks(self):
         if self.nsamples is not None:
-            self.nsamples_per_stratum = (self.strata_object.volume * self.nsamples).round()
+            self.nsamples_per_stratum = (
+                self.strata_object.volume * self.nsamples
+            ).round()
 
         if self.nsamples_per_stratum is not None:
             if isinstance(self.nsamples_per_stratum, int):
-                self.nsamples_per_stratum = [self.nsamples_per_stratum] * \
-                                                  self.strata_object.volume.shape[0]
+                self.nsamples_per_stratum = [
+                    self.nsamples_per_stratum
+                ] * self.strata_object.volume.shape[0]
             elif isinstance(self.nsamples_per_stratum, list):
                 if len(self.nsamples_per_stratum) != self.strata_object.volume.shape[0]:
-                    raise ValueError("UQpy: Length of 'nsamples_per_stratum' must match the number of strata.")
+                    raise ValueError(
+                        "UQpy: Length of 'nsamples_per_stratum' must match the number of strata."
+                    )
             elif self.nsamples is None:
-                raise ValueError("UQpy: 'nsamples_per_stratum' must be an integer or a list.")
+                raise ValueError(
+                    "UQpy: 'nsamples_per_stratum' must be an integer or a list."
+                )
         else:
             self.nsamples_per_stratum = [1] * self.strata_object.volume.shape[0]
 
     def create_unit_hypercube_samples(self):
         samples_in_strata, weights = self.strata_object.sample_strata(
-            self.nsamples_per_stratum, self.random_state)
+            self.nsamples_per_stratum, self.random_state
+        )
         self.weights = np.array(weights)
         self.samplesU01 = np.concatenate(samples_in_strata, axis=0)

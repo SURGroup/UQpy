@@ -25,12 +25,12 @@ class NonNegative(ConstraintsGPR):
         :params y_train: Output training data.
         :params prediction_function: The 'predict' method from the GaussianProcessRegressor
         """
-        self.kwargs['x_t'] = x_train
-        self.kwargs['y_t'] = y_train
-        self.kwargs['pred'] = predict_function
-        self.kwargs['const_points'] = self.constraint_points
-        self.kwargs['obs_err'] = self.observed_error
-        self.kwargs['z_'] = self.z_value
+        self.kwargs["x_t"] = x_train
+        self.kwargs["y_t"] = y_train
+        self.kwargs["pred"] = predict_function
+        self.kwargs["const_points"] = self.constraint_points
+        self.kwargs["obs_err"] = self.observed_error
+        self.kwargs["z_"] = self.z_value
         self.constraint_args = [self.kwargs]
         return self.constraints
 
@@ -40,8 +40,12 @@ class NonNegative(ConstraintsGPR):
         :param theta_: Log-transformed hyperparameters.
         :params kwargs: A dictionary with all arguments as defined in `define_arguments` method.
         """
-        x_t, y_t, pred = kwargs['x_t'], kwargs['y_t'], kwargs['pred']
-        const_points, obs_err, z_ = kwargs['const_points'], kwargs['obs_err'], kwargs['z_']
+        x_t, y_t, pred = kwargs["x_t"], kwargs["y_t"], kwargs["pred"]
+        const_points, obs_err, z_ = (
+            kwargs["const_points"],
+            kwargs["obs_err"],
+            kwargs["z_"],
+        )
         tmp_predict, tmp_error = pred(const_points, True, hyperparameters=10**theta_)
         constraint1 = tmp_predict - z_ * tmp_error
 
