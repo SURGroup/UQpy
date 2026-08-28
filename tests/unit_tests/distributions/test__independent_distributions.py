@@ -284,3 +284,8 @@ def test_joint_copula_4():
 def test_joint_copula_5():
     x = np.array([0.5, 0.5]).reshape((1, 2))
     np.testing.assert_allclose(dist_joint_copula.cdf(x=x), 0.032, atol=1e-3)
+
+def test_triangular():
+    np.testing.assert_allclose(
+        Triangular(c=0.5, loc=0.0, scale=1.0).cdf(x=0.8), 0.92, atol=1e-3
+    )

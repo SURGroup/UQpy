@@ -23,3 +23,4 @@ from UQpy.distributions.collection.TruncatedNormal import TruncatedNormal
 from UQpy.distributions.collection.Uniform import Uniform
 from UQpy.distributions.collection.JointIndependent import JointIndependent
 from UQpy.distributions.collection.JointCopula import JointCopula
+from UQpy.distributions.collection.Triangular import Triangular
