@@ -8,7 +8,6 @@ from UQpy.utilities.ValidationTypes import PositiveInteger
 
 @beartype
 class Trainer:
-
     def __init__(
         self,
         model: nn.Module,
@@ -117,12 +116,12 @@ class Trainer:
                     self.history["test_loss"][i] = average_test_loss
                     self.logger.info(
                         f"UQpy: Scientific Machine Learning: "
-                        f"Epoch {i+1:,} / {epochs:,} Train Loss {average_train_loss:.6e} Test Loss {average_test_loss:.6e}"
+                        f"Epoch {i + 1:,} / {epochs:,} Train Loss {average_train_loss:.6e} Test Loss {average_test_loss:.6e}"
                     )
             else:
                 self.logger.info(
                     f"UQpy: Scientific Machine Learning: "
-                    f"Epoch {i+1:,} / {epochs:,} Train Loss {average_train_loss:.6e}"
+                    f"Epoch {i + 1:,} / {epochs:,} Train Loss {average_train_loss:.6e}"
                 )
             i += 1
 

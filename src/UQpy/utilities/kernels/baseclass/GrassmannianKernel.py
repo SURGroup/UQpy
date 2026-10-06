@@ -21,8 +21,10 @@ class GrassmannianKernel(Kernel, ABC):
         p = self.kernel_parameter
         list1 = [point.data if not p else point.data[:, :p] for point in x]
         list2 = [point.data if not p else point.data[:, :p] for point in s]
-        product = [self.element_wise_operation(point_pair)
-                   for point_pair in list(itertools.product(list1, list2))]
+        product = [
+            self.element_wise_operation(point_pair)
+            for point_pair in list(itertools.product(list1, list2))
+        ]
         self.kernel_matrix = np.array(product).reshape(len(list1), len(list2))
         return self.kernel_matrix
 

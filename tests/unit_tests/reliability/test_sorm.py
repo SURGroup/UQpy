@@ -13,7 +13,9 @@ import os
 def setup():
     path = os.path.abspath(os.path.dirname(__file__))
     os.chdir(path)
-    model = PythonModel(model_script='pfn4.py', model_object_name='model_k', delete_files=True)
+    model = PythonModel(
+        model_script="pfn4.py", model_object_name="model_k", delete_files=True
+    )
     h_func = RunModel(model=model)
     yield h_func
 
@@ -29,12 +31,9 @@ def test_sorm(setup):
         shutil.rmtree(file_name)
     np.testing.assert_allclose(sorm_obj.failure_probability, 2.8803e-7, rtol=1e-02)
 
+
 def test_form_obj():
     for file_name in glob.glob("Model_Runs_*"):
         shutil.rmtree(file_name)
     with pytest.raises(Exception):
-        assert SORM(form_object='form')
-
-
-
-
+        assert SORM(form_object="form")

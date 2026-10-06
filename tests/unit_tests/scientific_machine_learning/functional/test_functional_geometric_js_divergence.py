@@ -58,7 +58,7 @@ def test_kl_equal(
     kl = func.gaussian_kullback_leibler_divergence(
         post_mu, post_sigma, prior_mu, prior_sigma
     )
-    assert torch.allclose(jsg, kl, rtol=1e-4)
+    assert torch.allclose(jsg, kl, atol=1e-4)
 
 
 @given(

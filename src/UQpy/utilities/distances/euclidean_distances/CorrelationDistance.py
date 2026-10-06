@@ -6,7 +6,6 @@ from scipy.spatial.distance import pdist
 
 
 class CorrelationDistance(EuclideanDistance):
-
     def compute_distance(self, xi: NumpyFloatArray, xj: NumpyFloatArray) -> float:
         """
         Given two points, this method calculates the Correlation distance.

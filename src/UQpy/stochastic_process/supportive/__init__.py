@@ -1,4 +1,5 @@
 """Collection of baseclasses"""
+
 from UQpy.stochastic_process.supportive.inverse_wiener_khinchin_transform import (
     inverse_wiener_khinchin_transform,
 )

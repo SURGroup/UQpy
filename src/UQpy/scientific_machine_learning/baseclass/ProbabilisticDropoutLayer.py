@@ -13,7 +13,7 @@ class ProbabilisticDropoutLayer(Layer, ABC):
         p: Annotated[float, Is[lambda p: 0 <= p <= 1]] = 0.5,
         inplace: bool = False,
         dropping: bool = True,
-        **kwargs
+        **kwargs,
     ):
         """Randomly zero out some elements of a tensor
 

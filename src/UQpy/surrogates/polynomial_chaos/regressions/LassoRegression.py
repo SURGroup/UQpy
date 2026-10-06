@@ -2,14 +2,17 @@ import logging
 import numpy as np
 from beartype import beartype
 
-from UQpy.surrogates.polynomial_chaos.polynomials.TotalDegreeBasis import PolynomialBasis
+from UQpy.surrogates.polynomial_chaos.polynomials.TotalDegreeBasis import (
+    PolynomialBasis,
+)
 from UQpy.surrogates.polynomial_chaos.regressions.baseclass.Regression import Regression
 
 
 class LassoRegression(Regression):
     @beartype
-    def __init__(self, learning_rate: float = 0.01, iterations: int = 1000,
-                 penalty: float = 1):
+    def __init__(
+        self, learning_rate: float = 0.01, iterations: int = 1000, penalty: float = 1
+    ):
         """
         Class to calculate the polynomial_chaos coefficients with the Least Absolute Shrinkage
         and Selection Operator (LASSO) method.
@@ -49,9 +52,15 @@ class LassoRegression(Regression):
 
                 for i in range(n):
                     if w[i] > 0:
-                        dw[i] = (-(2 * (design_matrix.T[i, :]).dot(y - y_pred)) + self.penalty) / m
+                        dw[i] = (
+                            -(2 * (design_matrix.T[i, :]).dot(y - y_pred))
+                            + self.penalty
+                        ) / m
                     else:
-                        dw[i] = (-(2 * (design_matrix.T[i, :]).dot(y - y_pred)) - self.penalty) / m
+                        dw[i] = (
+                            -(2 * (design_matrix.T[i, :]).dot(y - y_pred))
+                            - self.penalty
+                        ) / m
 
                 db = -2 * np.sum(y - y_pred) / m
 

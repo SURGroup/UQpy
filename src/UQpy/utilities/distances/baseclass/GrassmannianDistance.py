@@ -15,12 +15,16 @@ class GrassmannianDistance(Distance, ABC):
     @beartype
     def check_rows(xi, xj):
         if xi.data.shape[0] != xj.data.shape[0]:
-            raise ValueError("UQpy: Incompatible dimensions. The matrices must have the same number of rows.")
+            raise ValueError(
+                "UQpy: Incompatible dimensions. The matrices must have the same number of rows."
+            )
 
     @beartype
-    def calculate_distance_matrix(self,
-                                  points: Union[list[Numpy2DFloatArrayOrthonormal],  list[GrassmannPoint]],
-                                  p_dim: Union[list, np.ndarray]):
+    def calculate_distance_matrix(
+        self,
+        points: Union[list[Numpy2DFloatArrayOrthonormal], list[GrassmannPoint]],
+        p_dim: Union[list, np.ndarray],
+    ):
         """
         Given a list of points that belong on a Grassmann Manifold, assemble the distance matrix between all points.
 

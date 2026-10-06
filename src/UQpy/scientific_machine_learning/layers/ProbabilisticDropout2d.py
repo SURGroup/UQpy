@@ -8,15 +8,14 @@ from beartype.vale import Is
 
 @beartype
 class ProbabilisticDropout2d(ProbabilisticDropoutLayer):
-
     def __init__(
         self,
         p: Annotated[float, Is[lambda p: 0 <= p <= 1]] = 0.5,
         inplace: bool = False,
         dropping: bool = True,
-        **kwargs
+        **kwargs,
     ):
-        """Randomly zero out entire channels with probability :math:`p`
+        r"""Randomly zero out entire channels with probability :math:`p`
 
         A channel is a 2D feature map.
 

@@ -6,9 +6,12 @@ from UQpy.inference.inference_models.baseclass import InferenceModel
 
 class EvidenceMethod(ABC):
     @abstractmethod
-    def estimate_evidence(self, inference_model: InferenceModel,
-                          posterior_samples: NumpyFloatArray,
-                          log_posterior_values: NumpyFloatArray) -> float:
+    def estimate_evidence(
+        self,
+        inference_model: InferenceModel,
+        posterior_samples: NumpyFloatArray,
+        log_posterior_values: NumpyFloatArray,
+    ) -> float:
         """
 
         :param inference_model: Probabilistic model used for inference.

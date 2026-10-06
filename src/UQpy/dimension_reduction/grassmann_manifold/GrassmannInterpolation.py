@@ -12,12 +12,14 @@ from UQpy.utilities.distances import GrassmannianDistance
 
 
 class GrassmannInterpolation:
-
-    def __init__(self, interpolation_method: Union[Surrogate, callable, None],
-                 manifold_data: list[GrassmannPoint],
-                 coordinates: Union[np.ndarray, list[NumpyFloatArray]],
-                 distance: GrassmannianDistance,
-                 optimization_method: str = "GradientDescent"):
+    def __init__(
+        self,
+        interpolation_method: Union[Surrogate, callable, None],
+        manifold_data: list[GrassmannPoint],
+        coordinates: Union[np.ndarray, list[NumpyFloatArray]],
+        distance: GrassmannianDistance,
+        optimization_method: str = "GradientDescent",
+    ):
         """
         A class to perform interpolation of points on the Grassmann manifold.
 
@@ -31,12 +33,15 @@ class GrassmannInterpolation:
         """
         self.interpolation_method = interpolation_method
 
-        self.mean = GrassmannOperations.karcher_mean(grassmann_points=manifold_data,
-                                                     optimization_method=optimization_method,
-                                                     distance=distance)
+        self.mean = GrassmannOperations.karcher_mean(
+            grassmann_points=manifold_data,
+            optimization_method=optimization_method,
+            distance=distance,
+        )
 
-        self.tangent_points = GrassmannOperations.log_map(grassmann_points=manifold_data,
-                                                          reference_point=self.mean)
+        self.tangent_points = GrassmannOperations.log_map(
+            grassmann_points=manifold_data, reference_point=self.mean
+        )
 
         if self.interpolation_method is Surrogate:
             self.surrogates = [[]]
@@ -77,9 +82,13 @@ class GrassmannInterpolation:
                     y = self.surrogates[j][k].predict(point, return_std=False)
                     interp_point[j, k] = y
         elif self.interpolation_method is callable:
-            interp_point = self.interpolation_method(self.coordinates, self.tangent_points, point)
+            interp_point = self.interpolation_method(
+                self.coordinates, self.tangent_points, point
+            )
         else:
             interp = LinearNDInterpolator(self.coordinates, self.tangent_points)
             interp_point = interp(point)
 
-        return GrassmannOperations.exp_map(tangent_points=[interp_point.squeeze()], reference_point=self.mean)[0]
+        return GrassmannOperations.exp_map(
+            tangent_points=[interp_point.squeeze()], reference_point=self.mean
+        )[0]

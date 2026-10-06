@@ -8,7 +8,11 @@ from UQpy.sampling.stratified_sampling.strata.SamplingCriterion import SamplingC
 
 class Strata:
     @beartype
-    def __init__(self, seeds: Union[None, np.ndarray] = None, random_state: RandomStateType = None):
+    def __init__(
+        self,
+        seeds: Union[None, np.ndarray] = None,
+        random_state: RandomStateType = None,
+    ):
         """
         Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling strata.
 
@@ -26,7 +30,9 @@ class Strata:
         if isinstance(self.random_state, int):
             self.random_state = np.random.RandomState(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.Generator object.')
+            raise TypeError(
+                "UQpy: random_state must be None, an int or an np.random.Generator object."
+            )
 
     @abc.abstractmethod
     def stratify(self):
@@ -67,7 +73,9 @@ class Strata:
 
     def extend_weights(self, samples_per_stratum_number, index, weights):
         if int(samples_per_stratum_number[index]) != 0:
-            weights.extend([self.volume[index] / samples_per_stratum_number[index]]
-                           * int(samples_per_stratum_number[index]))
+            weights.extend(
+                [self.volume[index] / samples_per_stratum_number[index]]
+                * int(samples_per_stratum_number[index])
+            )
         else:
             weights.extend([0] * int(samples_per_stratum_number[index]))

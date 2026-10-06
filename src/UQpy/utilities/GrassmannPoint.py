@@ -3,7 +3,10 @@ from typing import Annotated
 from beartype import beartype
 from beartype.vale import Is
 
-from UQpy.utilities.ValidationTypes import Numpy2DFloatArrayOrthonormal, Numpy2DFloatArray
+from UQpy.utilities.ValidationTypes import (
+    Numpy2DFloatArrayOrthonormal,
+    Numpy2DFloatArray,
+)
 
 
 class GrassmannPoint:

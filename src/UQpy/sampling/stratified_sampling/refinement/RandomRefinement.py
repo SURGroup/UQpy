@@ -5,7 +5,6 @@ from UQpy.sampling.stratified_sampling.strata.VoronoiStrata import VoronoiStrata
 
 
 class RandomRefinement(Refinement):
-
     @beartype
     def __init__(self, strata):
         """
@@ -44,7 +43,8 @@ class RandomRefinement(Refinement):
             random_state=random_state,
         )
 
-        new_points = self.strata.update_strata_and_generate_samples(dimension, points_to_add, bins2break,
-                                                                    samples_u01, random_state)
+        new_points = self.strata.update_strata_and_generate_samples(
+            dimension, points_to_add, bins2break, samples_u01, random_state
+        )
 
         return new_points

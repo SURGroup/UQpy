@@ -15,13 +15,13 @@ class MLE:
     # Last Modified: 12/19 by Audrey Olivier
     @beartype
     def __init__(
-            self,
-            inference_model: InferenceModel,
-            data: Union[list, np.ndarray],
-            n_optimizations: Union[None, int] = 1,
-            initial_parameters: Union[list, np.ndarray, None] = None,
-            optimizer=MinimizeOptimizer(),
-            random_state: RandomStateType = None,
+        self,
+        inference_model: InferenceModel,
+        data: Union[list, np.ndarray],
+        n_optimizations: Union[None, int] = 1,
+        initial_parameters: Union[list, np.ndarray, None] = None,
+        optimizer=MinimizeOptimizer(),
+        random_state: RandomStateType = None,
     ):
         """
         Estimate the maximum likelihood parameters of a model given some data.
@@ -60,10 +60,16 @@ class MLE:
 
         # Run the optimization procedure
         if (n_optimizations is not None) or (initial_parameters is not None):
-            self.run(n_optimizations=n_optimizations, initial_parameters=initial_parameters)
+            self.run(
+                n_optimizations=n_optimizations, initial_parameters=initial_parameters
+            )
 
     @beartype
-    def run(self, n_optimizations: Union[None, int] = 1, initial_parameters: Union[list, np.ndarray, None] = None):
+    def run(
+        self,
+        n_optimizations: Union[None, int] = 1,
+        initial_parameters: Union[list, np.ndarray, None] = None,
+    ):
         """
         Run the maximum likelihood estimation procedure.
 
@@ -85,15 +91,17 @@ class MLE:
         # Run optimization (use x0 if provided, otherwise sample starting point from [0, 1] or bounds)
         self.logger.info(
             "UQpy: Evaluating maximum likelihood estimate for inference model "
-            + self.inference_model.name)
+            + self.inference_model.name
+        )
 
         self.n_optimizations = n_optimizations
         self.initial_parameters = initial_parameters
 
         use_distribution_fit = (
-                hasattr(self.inference_model, "distributions")
-                and self.inference_model.distributions is not None
-                and hasattr(self.inference_model.distributions, "fit"))
+            hasattr(self.inference_model, "distributions")
+            and self.inference_model.distributions is not None
+            and hasattr(self.inference_model.distributions, "fit")
+        )
 
         if use_distribution_fit:
             self._run_distribution_fit(self.n_optimizations)
@@ -103,11 +111,15 @@ class MLE:
     def _run_distribution_fit(self, n_optimizations):
         for _ in range(n_optimizations):
             self.inference_model.distributions.update_parameters(
-                **{key: None for key in self.inference_model.list_params})
+                **{key: None for key in self.inference_model.list_params}
+            )
             mle_dict = self.inference_model.distributions.fit(data=self.data)
-            mle_tmp = np.array([mle_dict[key] for key in self.inference_model.list_params])
+            mle_tmp = np.array(
+                [mle_dict[key] for key in self.inference_model.list_params]
+            )
             max_log_like_tmp = self.inference_model.evaluate_log_likelihood(
-                parameters=mle_tmp[np.newaxis, :], data=self.data)[0]
+                parameters=mle_tmp[np.newaxis, :], data=self.data
+            )[0]
             # Save result
             if self.mle is None or max_log_like_tmp > self.max_log_like:
                 self.mle = mle_tmp
@@ -116,14 +128,22 @@ class MLE:
     def _run_optimization(self, initial_parameters, n_optimizations):
         if initial_parameters is None:
             from UQpy.distributions import Uniform
+
             initial_parameters = (
                 Uniform()
-                    .rvs(nsamples=n_optimizations * self.inference_model.n_parameters, random_state=self.random_state, )
-                    .reshape((n_optimizations, self.inference_model.n_parameters)))
+                .rvs(
+                    nsamples=n_optimizations * self.inference_model.n_parameters,
+                    random_state=self.random_state,
+                )
+                .reshape((n_optimizations, self.inference_model.n_parameters))
+            )
             if self.optimizer._bounds is not None:
                 bounds = np.array(self.optimizer._bounds)
-                initial_parameters = (bounds[:, 0].reshape((1, -1))
-                                      + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1)) * initial_parameters)
+                initial_parameters = (
+                    bounds[:, 0].reshape((1, -1))
+                    + (bounds[:, 1] - bounds[:, 0]).reshape((1, -1))
+                    * initial_parameters
+                )
         else:
             initial_parameters = np.atleast_2d(initial_parameters)
             if initial_parameters.shape[1] != self.inference_model.n_parameters:
@@ -140,5 +160,9 @@ class MLE:
 
     @beartype
     def _evaluate_func_to_minimize(self, one_param: np.ndarray):
-        return (-1 * self.inference_model.evaluate_log_likelihood(
-            parameters=one_param.reshape((1, -1)), data=self.data)[0])
+        return (
+            -1
+            * self.inference_model.evaluate_log_likelihood(
+                parameters=one_param.reshape((1, -1)), data=self.data
+            )[0]
+        )

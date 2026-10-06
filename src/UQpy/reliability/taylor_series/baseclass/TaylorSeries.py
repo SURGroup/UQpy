@@ -7,7 +7,6 @@ from UQpy.transformations import *
 
 
 class TaylorSeries(ABC):
-
     @staticmethod
     def _derivatives(
         point_u,
@@ -23,7 +22,9 @@ class TaylorSeries(ABC):
 
         list_of_samples = list()
         if point_x is not None:
-            if order.lower() == "first" or (order.lower() == "second" and point_qoi is None):
+            if order.lower() == "first" or (
+                order.lower() == "second" and point_qoi is None
+            ):
                 list_of_samples.append(point_x.reshape(1, -1))
         else:
             z_0 = Correlate(point_u.reshape(1, -1), nataf_object.corr_z).samples_z
@@ -36,7 +37,9 @@ class TaylorSeries(ABC):
             y_i1_j = point_u.tolist()
             y_i1_j[ii] = y_i1_j[ii] + df_step
 
-            z_i1_j = Correlate(np.array(y_i1_j).reshape(1, -1), nataf_object.corr_z).samples_z
+            z_i1_j = Correlate(
+                np.array(y_i1_j).reshape(1, -1), nataf_object.corr_z
+            ).samples_z
             nataf_object.run(samples_z=z_i1_j.reshape(1, -1), jacobian=False)
             temp_x_i1_j = nataf_object.samples_x
             x_i1_j = temp_x_i1_j
@@ -44,7 +47,9 @@ class TaylorSeries(ABC):
 
             y_1i_j = point_u.tolist()
             y_1i_j[ii] = y_1i_j[ii] - df_step
-            z_1i_j = Correlate(np.array(y_1i_j).reshape(1, -1), nataf_object.corr_z).samples_z
+            z_1i_j = Correlate(
+                np.array(y_1i_j).reshape(1, -1), nataf_object.corr_z
+            ).samples_z
             nataf_object.run(samples_z=z_1i_j.reshape(1, -1), jacobian=False)
             temp_x_1i_j = nataf_object.samples_x
             x_1i_j = temp_x_1i_j
@@ -57,7 +62,8 @@ class TaylorSeries(ABC):
         y1 = runmodel_object.qoi_list
         logging.getLogger(__name__).info(
             "samples to evaluate the model: {0}".format(array_of_samples)
-            + "model evaluations: {0}".format(runmodel_object.qoi_list))
+            + "model evaluations: {0}".format(runmodel_object.qoi_list)
+        )
 
         if order.lower() == "first":
             gradient = np.zeros(point_u.shape[0])
@@ -65,12 +71,14 @@ class TaylorSeries(ABC):
             for jj in range(point_u.shape[0]):
                 qoi_plus = y1[2 * jj + 1]
                 qoi_minus = y1[2 * jj + 2]
-                gradient[jj] = (qoi_plus - qoi_minus) / (2 * df_step)
+                gradient[jj] = ((qoi_plus - qoi_minus) / (2 * df_step)).item()
 
             return gradient, y1[0], array_of_samples
 
         elif order.lower() == "second":
-            logging.getLogger(__name__).info("UQpy: Calculating second order derivatives..")
+            logging.getLogger(__name__).info(
+                "UQpy: Calculating second order derivatives.."
+            )
             d2y_dj = np.zeros([point_u.shape[0]])
 
             if point_qoi is None:
@@ -84,7 +92,7 @@ class TaylorSeries(ABC):
                 qoi_plus = output_list[2 * jj + 1]
                 qoi_minus = output_list[2 * jj + 2]
 
-                d2y_dj[jj] = (qoi_minus - 2 * qoi[0] + qoi_plus) / (df_step ** 2)
+                d2y_dj[jj] = (qoi_minus - 2 * qoi[0] + qoi_plus) / (df_step**2)
 
             list_of_mixed_points = list()
             import itertools
@@ -110,22 +118,30 @@ class TaylorSeries(ABC):
                 y_1i_1j[i[0]] -= df_step
                 y_1i_1j[i[1]] -= df_step
 
-                z_i1_j1 = Correlate(np.array(y_i1_j1).reshape(1, -1), nataf_object.corr_z).samples_z
+                z_i1_j1 = Correlate(
+                    np.array(y_i1_j1).reshape(1, -1), nataf_object.corr_z
+                ).samples_z
                 nataf_object.run(samples_z=z_i1_j1.reshape(1, -1), jacobian=False)
                 x_i1_j1 = nataf_object.samples_x
                 list_of_mixed_points.append(x_i1_j1)
 
-                z_i1_1j = Correlate(np.array(y_i1_1j).reshape(1, -1), nataf_object.corr_z).samples_z
+                z_i1_1j = Correlate(
+                    np.array(y_i1_1j).reshape(1, -1), nataf_object.corr_z
+                ).samples_z
                 nataf_object.run(samples_z=z_i1_1j.reshape(1, -1), jacobian=False)
                 x_i1_1j = nataf_object.samples_x
                 list_of_mixed_points.append(x_i1_1j)
 
-                z_1i_j1 = Correlate(np.array(y_1i_j1).reshape(1, -1), nataf_object.corr_z).samples_z
+                z_1i_j1 = Correlate(
+                    np.array(y_1i_j1).reshape(1, -1), nataf_object.corr_z
+                ).samples_z
                 nataf_object.run(samples_z=z_1i_j1.reshape(1, -1), jacobian=False)
                 x_1i_j1 = nataf_object.samples_x
                 list_of_mixed_points.append(x_1i_j1)
 
-                z_1i_1j = Correlate(np.array(y_1i_1j).reshape(1, -1), nataf_object.corr_z).samples_z
+                z_1i_1j = Correlate(
+                    np.array(y_1i_1j).reshape(1, -1), nataf_object.corr_z
+                ).samples_z
                 nataf_object.run(samples_z=z_1i_1j.reshape(1, -1), jacobian=False)
                 x_1i_1j = nataf_object.samples_x
                 list_of_mixed_points.append(x_1i_1j)
@@ -133,12 +149,17 @@ class TaylorSeries(ABC):
                 count = count + 1
 
             array_of_mixed_points = np.array(list_of_mixed_points)
-            array_of_mixed_points = array_of_mixed_points.reshape((len(array_of_mixed_points), -1))
+            array_of_mixed_points = array_of_mixed_points.reshape(
+                (len(array_of_mixed_points), -1)
+            )
             runmodel_object.run(samples=array_of_mixed_points, append_samples=False)
 
             logging.getLogger(__name__).info(
                 "samples for gradient: {0}".format(array_of_mixed_points[1:])
-                + "model evaluations for the gradient: {0}".format(runmodel_object.qoi_list[1:]))
+                + "model evaluations for the gradient: {0}".format(
+                    runmodel_object.qoi_list[1:]
+                )
+            )
 
             for j in range(count):
                 qoi_0 = runmodel_object.qoi_list[4 * j]

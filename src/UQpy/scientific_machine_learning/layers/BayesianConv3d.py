@@ -11,7 +11,6 @@ from UQpy.utilities.ValidationTypes import (
 
 
 class BayesianConv3d(NormalBayesianLayer):
-
     def __init__(
         self,
         in_channels: PositiveInteger,

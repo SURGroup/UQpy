@@ -11,6 +11,7 @@ class ProjectionDistance(GrassmannianDistance):
     A class to calculate the Projection distance between two Grassmann points.
 
     """
+
     def compute_distance(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:
         """
         Compute the Projection distance between two points on the Grassmann manifold.
@@ -31,4 +32,3 @@ class ProjectionDistance(GrassmannianDistance):
         distance = np.sqrt(abs(rank_i - rank_j) + np.sum(np.sin(theta) ** 2))
 
         return distance
-

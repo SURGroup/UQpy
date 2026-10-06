@@ -2,23 +2,24 @@ import logging
 from typing import Union
 
 from UQpy.inference.information_criteria import AIC
-from UQpy.inference.information_criteria.baseclass.InformationCriterion import InformationCriterion
+from UQpy.inference.information_criteria.baseclass.InformationCriterion import (
+    InformationCriterion,
+)
 from beartype import beartype
 from UQpy.inference.MLE import MLE
 import numpy as np
 
 
 class InformationModelSelection:
-
     # Authors: Audrey Olivier, Dimitris Giovanis
     # Last Modified: 12/19 by Audrey Olivier
     @beartype
     def __init__(
-            self,
-            parameter_estimators: list[MLE],
-            criterion: InformationCriterion = AIC(),
-            n_optimizations: list[int] = None,
-            initial_parameters: list[np.ndarray] = None
+        self,
+        parameter_estimators: list[MLE],
+        criterion: InformationCriterion = AIC(),
+        n_optimizations: list[int] = None,
+        initial_parameters: list[np.ndarray] = None,
     ):
         """
         Perform model selection using information theoretic criteria.
@@ -42,17 +43,23 @@ class InformationModelSelection:
         self.logger = logging.getLogger(__name__)
 
         self.n_optimizations = n_optimizations
-        self.initial_parameters= initial_parameters
+        self.initial_parameters = initial_parameters
 
         self.parameter_estimators: list = parameter_estimators
         """:class:`.MLE` results for each model (contains e.g. fitted parameters)"""
 
         # Initialize the outputs
-        self.criterion_values: list = [None, ] * self.models_number
+        self.criterion_values: list = [
+            None,
+        ] * self.models_number
         """Value of the criterion for all models."""
-        self.penalty_terms: list = [None, ] * self.models_number
+        self.penalty_terms: list = [
+            None,
+        ] * self.models_number
         """Value of the penalty term for all models. Data fit term is then criterion_value - penalty_term."""
-        self.probabilities: list = [None, ] * self.models_number
+        self.probabilities: list = [
+            None,
+        ] * self.models_number
         """Value of the model probabilities, computed as
         
         .. math:: P(M_i|d) = \dfrac{\exp(-\Delta_i/2)}{\sum_i \exp(-\Delta_i/2)}
@@ -63,7 +70,9 @@ class InformationModelSelection:
         if (self.n_optimizations is not None) or (self.initial_parameters is not None):
             self.run(self.n_optimizations, self.initial_parameters)
 
-    def run(self, n_optimizations: list[int], initial_parameters: list[np.ndarray]=None):
+    def run(
+        self, n_optimizations: list[int], initial_parameters: list[np.ndarray] = None
+    ):
         """
         Run the model selection procedure, i.e. compute criterion value for all models.
 
@@ -81,10 +90,17 @@ class InformationModelSelection:
          initial guess(es). The identified MLE is the one that yields the maximum log likelihood over all calls of the
          optimizer.
         """
-        if (n_optimizations is not None and (len(n_optimizations) != len(self.parameter_estimators))) or \
-           (initial_parameters is not None and len(initial_parameters) != len(self.parameter_estimators)):
-            raise ValueError("The length of n_optimizations and initial_parameters should be equal to the number of "
-                             "parameter estimators")
+        if (
+            n_optimizations is not None
+            and (len(n_optimizations) != len(self.parameter_estimators))
+        ) or (
+            initial_parameters is not None
+            and len(initial_parameters) != len(self.parameter_estimators)
+        ):
+            raise ValueError(
+                "The length of n_optimizations and initial_parameters should be equal to the number of "
+                "parameter estimators"
+            )
         # Loop over all the models
         for i, parameter_estimator in enumerate(self.parameter_estimators):
             # First evaluate ML estimate for all models, do several iterations if demanded
@@ -96,13 +112,18 @@ class InformationModelSelection:
             if n_optimizations is not None:
                 optimizations = n_optimizations[i]
 
-            parameter_estimator.run(n_optimizations=optimizations, initial_parameters=parameters)
+            parameter_estimator.run(
+                n_optimizations=optimizations, initial_parameters=parameters
+            )
 
             # Then minimize the criterion
-            self.criterion_values[i], self.penalty_terms[i] = \
-                self.criterion.minimize_criterion(data=parameter_estimator.data,
-                                                  parameter_estimator=parameter_estimator,
-                                                  return_penalty=True)
+            self.criterion_values[i], self.penalty_terms[i] = (
+                self.criterion.minimize_criterion(
+                    data=parameter_estimator.data,
+                    parameter_estimator=parameter_estimator,
+                    return_penalty=True,
+                )
+            )
         # Compute probabilities from criterion values
         self.probabilities = self._compute_probabilities(self.criterion_values)
 

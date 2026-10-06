@@ -6,7 +6,6 @@ from UQpy.sampling.adaptive_kriging_functions.baseclass.LearningFunction import 
 
 
 class UFunction(LearningFunction):
-
     @beartype
     def __init__(self, u_stop: int = 2):
         """
@@ -16,8 +15,9 @@ class UFunction(LearningFunction):
         """
         self.u_stop = u_stop
 
-    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
-
+    def evaluate_function(
+        self, distributions, n_add, surrogate, population, qoi=None, samples=None
+    ):
         g, sig = surrogate.predict(population, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array

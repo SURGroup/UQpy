@@ -45,13 +45,14 @@ class DelaunayStrata(Strata):
 
         if self.seeds is not None:
             if self.seeds_number is not None or self.dimension is not None:
-                print("UQpy: Ignoring 'seeds_number' and 'dimension' attributes because 'seeds' are provided")
+                print(
+                    "UQpy: Ignoring 'seeds_number' and 'dimension' attributes because 'seeds' are provided"
+                )
             self.seeds_number, self.dimension = self.seeds.shape[0], self.seeds.shape[1]
 
         self.stratify()
 
     def stratify(self):
-
         self.logger.info("UQpy: Creating Delaunay stratification ...")
 
         initial_seeds = self.seeds
@@ -70,12 +71,14 @@ class DelaunayStrata(Strata):
         self.delaunay = Delaunay(initial_seeds)
         self.centroids = np.zeros([0, self.dimension])
         self.volume = np.zeros([0])
-        for count, sim in enumerate(self.delaunay.simplices):  # extract simplices from Delaunay triangulation
+        for count, sim in enumerate(
+            self.delaunay.simplices
+        ):  # extract simplices from Delaunay triangulation
             # pylint: disable=E1136
             cent, vol = self.compute_delaunay_centroid_volume(self.delaunay.points[sim])
             self.centroids = np.vstack([self.centroids, cent])
             self.volume = np.hstack([self.volume, np.array([vol])])
-        self.stratified=True
+        self.stratified = True
         self.logger.info("UQpy: Delaunay stratification created.")
 
     @staticmethod
@@ -96,11 +99,14 @@ class DelaunayStrata(Strata):
 
     def sample_strata(self, nsamples_per_stratum, random_state):
         samples_in_strata, weights = [], []
-        for count, simplex in enumerate(self.delaunay.simplices):  # extract simplices from Delaunay triangulation
+        for count, simplex in enumerate(
+            self.delaunay.simplices
+        ):  # extract simplices from Delaunay triangulation
             samples_temp = SimplexSampling(
                 nodes=self.delaunay.points[simplex],
                 nsamples=int(nsamples_per_stratum[count]),
-                random_state=random_state)
+                random_state=random_state,
+            )
             samples_in_strata.append(samples_temp.samples)
             self.extend_weights(nsamples_per_stratum, count, weights)
         return samples_in_strata, weights

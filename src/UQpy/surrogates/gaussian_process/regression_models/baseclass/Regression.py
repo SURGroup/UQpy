@@ -6,6 +6,7 @@ class Regression(ABC):
     Abstract base class of all Regressions. Serves as a template for creating new Gaussian Process regression
     functions.
     """
+
     @abstractmethod
     def r(self, s):
         """

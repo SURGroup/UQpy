@@ -10,26 +10,25 @@ from UQpy.run_model.RunModel import RunModel
 from UQpy.utilities.ValidationTypes import PositiveInteger
 from UQpy.reliability.taylor_series.baseclass.TaylorSeries import TaylorSeries
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 
 class InverseFORM(TaylorSeries):
-
     @beartype
     def __init__(
-            self,
-            distributions: Union[None, Distribution, list[Distribution]],
-            runmodel_object: RunModel,
-            p_fail: Union[None, float] = 0.05,
-            beta: Union[None, float] = None,
-            seed_x: Union[list, np.ndarray] = None,
-            seed_u: Union[list, np.ndarray] = None,
-            df_step: Union[int, float] = 0.01,
-            corr_x: Union[list, np.ndarray] = None,
-            corr_z: Union[list, np.ndarray] = None,
-            max_iterations: PositiveInteger = 100,
-            tolerance_u: Union[float, int, None] = 1e-3,
-            tolerance_gradient: Union[float, int, None] = 1e-3,
+        self,
+        distributions: Union[None, Distribution, list[Distribution]],
+        runmodel_object: RunModel,
+        p_fail: Union[None, float] = 0.05,
+        beta: Union[None, float] = None,
+        seed_x: Union[list, np.ndarray] = None,
+        seed_u: Union[list, np.ndarray] = None,
+        df_step: Union[int, float] = 0.01,
+        corr_x: Union[list, np.ndarray] = None,
+        corr_z: Union[list, np.ndarray] = None,
+        max_iterations: PositiveInteger = 100,
+        tolerance_u: Union[float, int, None] = 1e-3,
+        tolerance_gradient: Union[float, int, None] = 1e-3,
     ):
         """Class to perform the Inverse First Order Reliability Method.
 
@@ -69,14 +68,18 @@ class InverseFORM(TaylorSeries):
         self.distributions = distributions
         self.runmodel_object = runmodel_object
         if (p_fail is not None) and (beta is not None):
-            raise ValueError('UQpy: Exactly one input (p_fail or beta) must be provided')
+            raise ValueError(
+                "UQpy: Exactly one input (p_fail or beta) must be provided"
+            )
         elif (p_fail is None) and (beta is None):
-            raise ValueError('UQpy: Exactly one input (p_fail or beta) must be provided')
+            raise ValueError(
+                "UQpy: Exactly one input (p_fail or beta) must be provided"
+            )
         elif p_fail is not None:
             self.p_fail = p_fail
             self.beta = -stats.norm.ppf(self.p_fail)
         elif beta is not None:
-            self.p_fail = stats.norm.cdf(-1*beta)
+            self.p_fail = stats.norm.cdf(-1 * beta)
             self.beta = beta
         self.seed_x = seed_x
         self.seed_u = seed_u
@@ -87,10 +90,14 @@ class InverseFORM(TaylorSeries):
         self.tolerance_u = tolerance_u
         self.tolerance_gradient = tolerance_gradient
         if (self.tolerance_u is None) and (self.tolerance_gradient is None):
-            raise ValueError('UQpy: At least one tolerance (tolerance_u or tolerance_gradient) must be provided')
+            raise ValueError(
+                "UQpy: At least one tolerance (tolerance_u or tolerance_gradient) must be provided"
+            )
 
         self.logger = logging.getLogger(__name__)
-        self.nataf_object = Nataf(distributions=distributions, corr_z=corr_z, corr_x=corr_x)
+        self.nataf_object = Nataf(
+            distributions=distributions, corr_z=corr_z, corr_x=corr_x
+        )
 
         # Determine the number of dimensions as the number of random variables
         if isinstance(distributions, DistributionContinuous1D):
@@ -128,13 +135,17 @@ class InverseFORM(TaylorSeries):
         """State function :math:`G(u)` evaluated at each step in the optimization"""
 
         if (seed_x is not None) and (seed_u is not None):
-            raise ValueError('UQpy: Only one input (seed_x or seed_u) may be provided')
+            raise ValueError("UQpy: Only one input (seed_x or seed_u) may be provided")
         if self.seed_u is not None:
             self.run(seed_u=self.seed_u)
         elif self.seed_x is not None:
             self.run(seed_x=self.seed_x)
 
-    def run(self, seed_x: Union[list, np.ndarray] = None, seed_u: Union[list, np.ndarray] = None):
+    def run(
+        self,
+        seed_x: Union[list, np.ndarray] = None,
+        seed_u: Union[list, np.ndarray] = None,
+    ):
         """Runs the inverse FORM algorithm.
 
         :param seed_x: Point in the parameter space :math:`\mathbf{X}` to start from.
@@ -144,9 +155,9 @@ class InverseFORM(TaylorSeries):
          Only one of :code:`seed_x` or :code:`seed_u` may be provided.
          If neither is provided, the zero vector in :math:`\mathbf{U}` space is the seed.
         """
-        self.logger.info('UQpy: Running InverseFORM...')
+        self.logger.info("UQpy: Running InverseFORM...")
         if (seed_x is not None) and (seed_u is not None):
-            raise ValueError('UQpy: Only one input (seed_x or seed_u) may be provided')
+            raise ValueError("UQpy: Only one input (seed_x or seed_u) may be provided")
 
         # Allocate u and the gradient of G(u) as arrays
         u = np.zeros([self.max_iterations + 1, self.dimension])
@@ -164,47 +175,66 @@ class InverseFORM(TaylorSeries):
         converged = False
         iteration = 0
         while (not converged) and (iteration < self.max_iterations):
-            self.logger.info(f'Number of iteration: {iteration}')
+            self.logger.info(f"Number of iteration: {iteration}")
             if iteration == 0:
                 if seed_x is not None:
                     x = seed_x
                 else:
-                    seed_z = Correlate(samples_u=u[0, :].reshape(1, -1), corr_z=self.nataf_object.corr_z).samples_z
-                    self.nataf_object.run(samples_z=seed_z.reshape(1, -1), jacobian=True)
+                    seed_z = Correlate(
+                        samples_u=u[0, :].reshape(1, -1),
+                        corr_z=self.nataf_object.corr_z,
+                    ).samples_z
+                    self.nataf_object.run(
+                        samples_z=seed_z.reshape(1, -1), jacobian=True
+                    )
                     x = self.nataf_object.samples_x
             else:
-                z = Correlate(u[iteration, :].reshape(1, -1), self.nataf_object.corr_z).samples_z
+                z = Correlate(
+                    u[iteration, :].reshape(1, -1), self.nataf_object.corr_z
+                ).samples_z
                 self.nataf_object.run(samples_z=z, jacobian=True)
                 x = self.nataf_object.samples_x
-            self.logger.info(f'Design Point U: {u[iteration, :]}\nDesign Point X: {x}\n')
-            state_function_gradient[iteration + 1, :], qoi, _ = self._derivatives(point_u=u[iteration, :],
-                                                                                  point_x=x,
-                                                                                  runmodel_object=self.runmodel_object,
-                                                                                  nataf_object=self.nataf_object,
-                                                                                  df_step=self.df_step,
-                                                                                  order='first')
-            self.logger.info(f'State Function: {qoi}')
-            state_function[iteration + 1] = qoi
+            self.logger.info(
+                f"Design Point U: {u[iteration, :]}\nDesign Point X: {x}\n"
+            )
+            state_function_gradient[iteration + 1, :], qoi, _ = self._derivatives(
+                point_u=u[iteration, :],
+                point_x=x,
+                runmodel_object=self.runmodel_object,
+                nataf_object=self.nataf_object,
+                df_step=self.df_step,
+                order="first",
+            )
+            self.logger.info(f"State Function: {qoi}")
+            state_function[iteration + 1] = qoi.item()
 
             alpha = state_function_gradient[iteration + 1]
             alpha /= np.linalg.norm(state_function_gradient[iteration + 1])
             u[iteration + 1, :] = -alpha * self.beta
 
             error_u = np.linalg.norm(u[iteration + 1, :] - u[iteration, :])
-            error_gradient = np.linalg.norm(state_function_gradient[iteration + 1, :]
-                                            - state_function_gradient[iteration, :])
+            error_gradient = np.linalg.norm(
+                state_function_gradient[iteration + 1, :]
+                - state_function_gradient[iteration, :]
+            )
 
-            converged_u = True if (self.tolerance_u is None) \
-                else (error_u <= self.tolerance_u)
-            converged_gradient = True if (self.tolerance_gradient is None) \
+            converged_u = (
+                True if (self.tolerance_u is None) else (error_u <= self.tolerance_u)
+            )
+            converged_gradient = (
+                True
+                if (self.tolerance_gradient is None)
                 else (error_gradient <= self.tolerance_gradient)
+            )
             converged = converged_u and converged_gradient
 
             if not converged:
                 iteration += 1
 
         if iteration >= self.max_iterations:
-            self.logger.info(f'UQpy: Maximum number of iterations {self.max_iterations} reached before convergence')
+            self.logger.info(
+                f"UQpy: Maximum number of iterations {self.max_iterations} reached before convergence"
+            )
         self.alpha_record.append(alpha)
         self.beta_record.append(self.beta)
         self.design_point_u.append(u[iteration, :])

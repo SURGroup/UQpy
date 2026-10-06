@@ -6,29 +6,28 @@ from UQpy.distributions import *
 from UQpy.utilities.ValidationTypes import *
 import warnings
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 
 class MetropolisHastings(MCMC):
-
     @beartype
     def __init__(
-            self,
-            pdf_target: Union[Callable, list[Callable]] = None,
-            log_pdf_target: Union[Callable, list[Callable]] = None,
-            args_target: tuple = None,
-            burn_length: Annotated[int, Is[lambda x: x >= 0]] = 0,
-            jump: int = 1,
-            dimension: int = None,
-            seed: list = None,
-            save_log_pdf: bool = False,
-            concatenate_chains: bool = True,
-            n_chains: int = None,
-            proposal: Distribution = None,
-            proposal_is_symmetric: bool = False,
-            random_state: RandomStateType = None,
-            nsamples: PositiveInteger = None,
-            nsamples_per_chain: PositiveInteger = None,
+        self,
+        pdf_target: Union[Callable, list[Callable]] = None,
+        log_pdf_target: Union[Callable, list[Callable]] = None,
+        args_target: tuple = None,
+        burn_length: Annotated[int, Is[lambda x: x >= 0]] = 0,
+        jump: int = 1,
+        dimension: int = None,
+        seed: list = None,
+        save_log_pdf: bool = False,
+        concatenate_chains: bool = True,
+        n_chains: int = None,
+        proposal: Distribution = None,
+        proposal_is_symmetric: bool = False,
+        random_state: RandomStateType = None,
+        nsamples: PositiveInteger = None,
+        nsamples_per_chain: PositiveInteger = None,
     ):
         """
         Metropolis-Hastings algorithm :cite:`MCMC1` :cite:`MCMC2`
@@ -104,7 +103,9 @@ class MetropolisHastings(MCMC):
         self.proposal_is_symmetric = proposal_is_symmetric
         if self.proposal is None:
             if self.dimension is None:
-                raise ValueError("UQpy: Either input proposal or dimension must be provided.")
+                raise ValueError(
+                    "UQpy: Either input proposal or dimension must be provided."
+                )
             from UQpy.distributions import JointIndependent, Normal
 
             self.proposal = JointIndependent([Normal()] * self.dimension)
@@ -112,10 +113,17 @@ class MetropolisHastings(MCMC):
         else:
             self._check_methods_proposal(self.proposal)
 
-        self.logger.info("\nUQpy: Initialization of " + self.__class__.__name__ + " algorithm complete.")
+        self.logger.info(
+            "\nUQpy: Initialization of "
+            + self.__class__.__name__
+            + " algorithm complete."
+        )
 
         if (nsamples is not None) or (nsamples_per_chain is not None):
-            self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain, )
+            self.run(
+                nsamples=nsamples,
+                nsamples_per_chain=nsamples_per_chain,
+            )
 
     def run_one_iteration(self, current_state: np.ndarray, current_log_pdf: np.ndarray):
         """
@@ -124,7 +132,8 @@ class MetropolisHastings(MCMC):
         """
         # Sample candidate
         candidate = current_state + self.proposal.rvs(
-            nsamples=self.n_chains, random_state=self.random_state)
+            nsamples=self.n_chains, random_state=self.random_state
+        )
 
         # Compute log_pdf_target of candidate sample
         log_p_candidate = self.evaluate_log_target(candidate)
@@ -144,11 +153,11 @@ class MetropolisHastings(MCMC):
         )  # this vector will be used to compute accept_ratio of each chain
         unif_rvs = (
             Uniform()
-                .rvs(nsamples=self.n_chains, random_state=self.random_state)
-                .reshape((-1,))
+            .rvs(nsamples=self.n_chains, random_state=self.random_state)
+            .reshape((-1,))
         )
         for nc, (cand, log_p_cand, r_) in enumerate(
-                zip(candidate, log_p_candidate, log_ratios)
+            zip(candidate, log_p_candidate, log_ratios)
         ):
             accept = np.log(unif_rvs[nc]) < r_
             if accept:

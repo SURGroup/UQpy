@@ -1,16 +1,22 @@
 import numpy as np
 from UQpy.surrogates.polynomial_chaos.physics_informed.PdeData import PdeData
 from typing import Callable
-from UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion import PolynomialChaosExpansion
+from UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion import (
+    PolynomialChaosExpansion,
+)
+
 
 class PdePCE:
-    def __init__(self, pde_data: PdeData,
-                 pde_basis: Callable,
-                 pde_source: Callable = None,
-                 boundary_conditions_evaluate: Callable = None,
-                 boundary_conditions_sampling: Callable = None,
-                 virtual_points_sampling: Callable = None,
-                 nonlinear: bool = False):
+    def __init__(
+        self,
+        pde_data: PdeData,
+        pde_basis: Callable,
+        pde_source: Callable = None,
+        boundary_conditions_evaluate: Callable = None,
+        boundary_conditions_sampling: Callable = None,
+        virtual_points_sampling: Callable = None,
+        nonlinear: bool = False,
+    ):
         """
         Class containing information about PDE needed for physics-informed PCE
 
@@ -31,10 +37,12 @@ class PdePCE:
         self.virtual_points_sampling = virtual_points_sampling
         self.nonlinear = nonlinear
 
-    def evaluate_pde(self, standardized_sample: np.ndarray,
-                     pce: PolynomialChaosExpansion,
-                     coefficients: np.ndarray = None):
-
+    def evaluate_pde(
+        self,
+        standardized_sample: np.ndarray,
+        pce: PolynomialChaosExpansion,
+        coefficients: np.ndarray = None,
+    ):
         pde_basis = self.pde_basis(standardized_sample, pce)
 
         if coefficients is not None:
@@ -42,13 +50,17 @@ class PdePCE:
         else:
             return pde_basis
 
-    def evaluate_boundary_conditions(self,
-                                     nsim: np.ndarray,
-                                     pce: PolynomialChaosExpansion):
+    def evaluate_boundary_conditions(
+        self, nsim: np.ndarray, pce: PolynomialChaosExpansion
+    ):
         return self.boundary_conditions_evaluate(nsim, pce)
 
-    def evaluate_pde_source(self, standardized_sample: np.ndarray, multindex: np.ndarray = None,
-                            coefficients: np.ndarray = None):
+    def evaluate_pde_source(
+        self,
+        standardized_sample: np.ndarray,
+        multindex: np.ndarray = None,
+        coefficients: np.ndarray = None,
+    ):
         if self.pde_source is not None:
             if self.nonlinear:
                 return self.pde_source(standardized_sample, multindex, coefficients)
@@ -56,4 +68,3 @@ class PdePCE:
                 return self.pde_source(standardized_sample)
         else:
             return 0
-

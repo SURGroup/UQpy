@@ -4,14 +4,15 @@ from UQpy.utilities.ValidationTypes import PositiveInteger
 
 
 class SubsetSimulation:
-
     @beartype
     def __init__(
         self,
         runmodel_object: RunModel,
         sampling: MCMC,
         samples_init: np.ndarray = None,
-        conditional_probability: Annotated[Union[float, int], Is[lambda x: 0 <= x <= 1]] = 0.1,
+        conditional_probability: Annotated[
+            Union[float, int], Is[lambda x: 0 <= x <= 1]
+        ] = 0.1,
         nsamples_per_subset: PositiveInteger = 1000,
         max_level: PositiveInteger = 10,
     ):
@@ -59,8 +60,14 @@ class SubsetSimulation:
         """A list of arrays containing the samples in each conditional level. The size of the list is equal to the 
         number of levels."""
 
-        self.logger.info("UQpy: Running Subset Simulation with mcmc of type: " + str(type(sampling)))
-        [self.failure_probability, self.independent_chains_CoV, self.dependent_chains_CoV] = self._run()
+        self.logger.info(
+            "UQpy: Running Subset Simulation with mcmc of type: " + str(type(sampling))
+        )
+        [
+            self.failure_probability,
+            self.independent_chains_CoV,
+            self.dependent_chains_CoV,
+        ] = self._run()
         self.logger.info("UQpy: Subset Simulation Complete!")
 
     def _run(self):
@@ -92,54 +99,90 @@ class SubsetSimulation:
 
         # Run the model with initial samples, sort by their performance function, and identify the conditional level
         self.runmodel_object.run(samples=np.atleast_2d(self.samples[conditional_level]))
-        self.performance_function_per_level.append(np.squeeze(self.runmodel_object.qoi_list))
+        self.performance_function_per_level.append(
+            np.squeeze(self.runmodel_object.qoi_list)
+        )
         g_ind = np.argsort(self.performance_function_per_level[conditional_level])
-        self.performance_threshold_per_level.append(self.performance_function_per_level[conditional_level][g_ind[n_keep - 1]])
+        self.performance_threshold_per_level.append(
+            self.performance_function_per_level[conditional_level][g_ind[n_keep - 1]]
+        )
 
         # Estimate coefficient of variation of conditional probability of first level
-        independent_intermediate_cov, dependent_intermediate_cov = self._compute_intermediate_cov(conditional_level)
-        independent_chain_cov_squared.append(independent_intermediate_cov ** 2)
-        dependent_chain_cov_squared.append(dependent_intermediate_cov ** 2)
+        independent_intermediate_cov, dependent_intermediate_cov = (
+            self._compute_intermediate_cov(conditional_level)
+        )
+        independent_chain_cov_squared.append(independent_intermediate_cov**2)
+        dependent_chain_cov_squared.append(dependent_intermediate_cov**2)
 
         self.logger.info("UQpy: Subset Simulation, conditional level 0 complete.")
 
-        while self.performance_threshold_per_level[conditional_level] > 0 and conditional_level < self.max_level:
+        while (
+            self.performance_threshold_per_level[conditional_level] > 0
+            and conditional_level < self.max_level
+        ):
             conditional_level += 1  # Increment the conditional level
 
             # Initialize the samples and the performance function at the next conditional level
             self.samples.append(np.zeros_like(self.samples[conditional_level - 1]))
-            self.samples[conditional_level][:n_keep] = self.samples[conditional_level - 1][g_ind[0:n_keep], :]
-            self.performance_function_per_level.append(np.zeros_like(self.performance_function_per_level[conditional_level - 1]))
-            self.performance_function_per_level[conditional_level][:n_keep] = self.performance_function_per_level[conditional_level - 1][g_ind[:n_keep]]
+            self.samples[conditional_level][:n_keep] = self.samples[
+                conditional_level - 1
+            ][g_ind[0:n_keep], :]
+            self.performance_function_per_level.append(
+                np.zeros_like(
+                    self.performance_function_per_level[conditional_level - 1]
+                )
+            )
+            self.performance_function_per_level[conditional_level][:n_keep] = (
+                self.performance_function_per_level[conditional_level - 1][
+                    g_ind[:n_keep]
+                ]
+            )
 
             # Unpack the attributes
             new_sampler = copy.deepcopy(self._sampling_class)
-            new_sampler.seed = np.atleast_2d(self.samples[conditional_level][:n_keep, :])
-            new_sampler.n_chains = len(np.atleast_2d(self.samples[conditional_level][:n_keep, :]))
+            new_sampler.seed = np.atleast_2d(
+                self.samples[conditional_level][:n_keep, :]
+            )
+            new_sampler.n_chains = len(
+                np.atleast_2d(self.samples[conditional_level][:n_keep, :])
+            )
             new_sampler.random_state = process_random_state(self._random_state)
             self.mcmc_objects.append(new_sampler)
 
             # Set the number of samples to propagate each chain (n_prop) in the conditional level
-            n_prop_test = self.nsamples_per_subset / self.mcmc_objects[conditional_level].n_chains
+            n_prop_test = (
+                self.nsamples_per_subset / self.mcmc_objects[conditional_level].n_chains
+            )
             if n_prop_test.is_integer():
-                n_prop = self.nsamples_per_subset // self.mcmc_objects[conditional_level].n_chains
+                n_prop = (
+                    self.nsamples_per_subset
+                    // self.mcmc_objects[conditional_level].n_chains
+                )
             else:
                 raise AttributeError(
                     "UQpy: The number of samples per subset (nsamples_per_subset) must be an integer multiple of "
-                    "the number of MCMC chains.")
+                    "the number of MCMC chains."
+                )
 
             # Propagate each chain n_prop times and evaluate the model to accept or reject.
             for i in range(n_prop - 1):
-
                 # Propagate each chain
                 if i == 0:
-                    self.mcmc_objects[conditional_level].run(nsamples=2 * self.mcmc_objects[conditional_level].n_chains)
+                    self.mcmc_objects[conditional_level].run(
+                        nsamples=2 * self.mcmc_objects[conditional_level].n_chains
+                    )
                 else:
-                    self.mcmc_objects[conditional_level].run(nsamples=self.mcmc_objects[conditional_level].n_chains)
+                    self.mcmc_objects[conditional_level].run(
+                        nsamples=self.mcmc_objects[conditional_level].n_chains
+                    )
 
                 # Decide whether a new simulation is needed for each proposed state
-                a = self.mcmc_objects[conditional_level].samples[i * n_keep : (i + 1) * n_keep, :]
-                b = self.mcmc_objects[conditional_level].samples[(i + 1) * n_keep : (i + 2) * n_keep, :]
+                a = self.mcmc_objects[conditional_level].samples[
+                    i * n_keep : (i + 1) * n_keep, :
+                ]
+                b = self.mcmc_objects[conditional_level].samples[
+                    (i + 1) * n_keep : (i + 2) * n_keep, :
+                ]
                 test1 = np.equal(a, b)
                 test = np.logical_and(test1[:, 0], test1[:, 1])
 
@@ -149,50 +192,92 @@ class SubsetSimulation:
                 ind_true = [i for i, val in enumerate(test) if val]
 
                 # Do not run the model for those samples where the mcmc state remains unchanged.
-                self.samples[conditional_level][[x + (i + 1) * n_keep for x in ind_true], :] = \
-                    self.mcmc_objects[conditional_level].samples[ind_true, :]
-                self.performance_function_per_level[conditional_level][[x + (i + 1) * n_keep for x in ind_true]] = \
-                    self.performance_function_per_level[conditional_level][ind_true]
+                self.samples[conditional_level][
+                    [x + (i + 1) * n_keep for x in ind_true], :
+                ] = self.mcmc_objects[conditional_level].samples[ind_true, :]
+                self.performance_function_per_level[conditional_level][
+                    [x + (i + 1) * n_keep for x in ind_true]
+                ] = self.performance_function_per_level[conditional_level][ind_true]
 
                 # Run the model at each of the new sample points
-                x_run = self.mcmc_objects[conditional_level].samples[[x + (i + 1) * n_keep for x in ind_false], :]
+                x_run = self.mcmc_objects[conditional_level].samples[
+                    [x + (i + 1) * n_keep for x in ind_false], :
+                ]
                 if x_run.size != 0:
                     self.runmodel_object.run(samples=x_run)
 
                     # Temporarily save the latest model runs
-                    response_function_values = np.asarray(self.runmodel_object.qoi_list[-len(x_run) :])
+                    response_function_values = np.asarray(
+                        self.runmodel_object.qoi_list[-len(x_run) :]
+                    )
 
                     # Accept the states with g <= g_level
-                    ind_accept = np.where(response_function_values <= self.performance_threshold_per_level[conditional_level - 1])[0]
+                    ind_accept = np.where(
+                        response_function_values
+                        <= self.performance_threshold_per_level[conditional_level - 1]
+                    )[0]
                     for j in ind_accept:
-                        self.samples[conditional_level][(i + 1) * n_keep + ind_false[j]] = x_run[j]
-                        self.performance_function_per_level[conditional_level][(i + 1) * n_keep + ind_false[j]] = response_function_values[j]
+                        self.samples[conditional_level][
+                            (i + 1) * n_keep + ind_false[j]
+                        ] = x_run[j]
+                        self.performance_function_per_level[conditional_level][
+                            (i + 1) * n_keep + ind_false[j]
+                        ] = response_function_values[j].item()
 
                     # Reject the states with g > g_level
-                    ind_reject = np.where(response_function_values > self.performance_threshold_per_level[conditional_level - 1])[0]
+                    ind_reject = np.where(
+                        response_function_values
+                        > self.performance_threshold_per_level[conditional_level - 1]
+                    )[0]
                     for k in ind_reject:
-                        self.samples[conditional_level][(i + 1) * n_keep + ind_false[k]] =\
-                            self.samples[conditional_level][i * n_keep + ind_false[k]]
-                        self.performance_function_per_level[conditional_level][(i + 1) * n_keep + ind_false[k]] = \
-                            self.performance_function_per_level[conditional_level][i * n_keep + ind_false[k]]
+                        self.samples[conditional_level][
+                            (i + 1) * n_keep + ind_false[k]
+                        ] = self.samples[conditional_level][i * n_keep + ind_false[k]]
+                        self.performance_function_per_level[conditional_level][
+                            (i + 1) * n_keep + ind_false[k]
+                        ] = self.performance_function_per_level[conditional_level][
+                            i * n_keep + ind_false[k]
+                        ]
 
             g_ind = np.argsort(self.performance_function_per_level[conditional_level])
-            self.performance_threshold_per_level.append(self.performance_function_per_level[conditional_level][g_ind[n_keep]])
+            self.performance_threshold_per_level.append(
+                self.performance_function_per_level[conditional_level][g_ind[n_keep]]
+            )
 
             # Estimate coefficient of variation of conditional probability of first level
-            independent_intermediate_cov, dependent_intermediate_cov = self._compute_intermediate_cov(conditional_level)
-            independent_chain_cov_squared.append(independent_intermediate_cov ** 2)
-            dependent_chain_cov_squared.append(dependent_intermediate_cov ** 2)
+            independent_intermediate_cov, dependent_intermediate_cov = (
+                self._compute_intermediate_cov(conditional_level)
+            )
+            independent_chain_cov_squared.append(independent_intermediate_cov**2)
+            dependent_chain_cov_squared.append(dependent_intermediate_cov**2)
 
-            self.logger.info("UQpy: Subset Simulation, conditional level " + str(conditional_level) + " complete.")
+            self.logger.info(
+                "UQpy: Subset Simulation, conditional level "
+                + str(conditional_level)
+                + " complete."
+            )
 
-        n_fail = len([value for value in self.performance_function_per_level[conditional_level] if value < 0])
+        n_fail = len(
+            [
+                value
+                for value in self.performance_function_per_level[conditional_level]
+                if value < 0
+            ]
+        )
 
-        failure_probability = (self.conditional_probability ** conditional_level * n_fail / self.nsamples_per_subset)
+        failure_probability = (
+            self.conditional_probability**conditional_level
+            * n_fail
+            / self.nsamples_per_subset
+        )
         probability_cov_independent = np.sqrt(np.sum(independent_chain_cov_squared))
         probability_cov_dependent = np.sqrt(np.sum(dependent_chain_cov_squared))
 
-        return failure_probability, probability_cov_independent, probability_cov_dependent
+        return (
+            failure_probability,
+            probability_cov_independent,
+            probability_cov_dependent,
+        )
 
     def _compute_intermediate_cov(self, conditional_level: int):
         """Computes the coefficient of variation of the intermediate failure probability
@@ -203,29 +288,53 @@ class SubsetSimulation:
         :return: independent_chains_cov, dependent_chains_cov
         """
         if conditional_level == 0:
-            independent_chains_cov = np.sqrt((1 - self.conditional_probability)
-                                             / (self.conditional_probability * self.nsamples_per_subset))
-            dependent_chains_cov = np.sqrt((1 - self.conditional_probability)
-                                           / (self.conditional_probability * self.nsamples_per_subset))
+            independent_chains_cov = np.sqrt(
+                (1 - self.conditional_probability)
+                / (self.conditional_probability * self.nsamples_per_subset)
+            )
+            dependent_chains_cov = np.sqrt(
+                (1 - self.conditional_probability)
+                / (self.conditional_probability * self.nsamples_per_subset)
+            )
         else:
             n_chains = int(self.conditional_probability * self.nsamples_per_subset)
             n_samples_per_chain = int(1 / self.conditional_probability)
-            indicator = np.reshape(self.performance_function_per_level[conditional_level] < self.performance_threshold_per_level[conditional_level],
-                                   (n_samples_per_chain, n_chains))
-            gamma = self._correlation_factor_gamma(indicator, n_samples_per_chain, n_chains)
-            response_function_values = np.reshape(self.performance_function_per_level[conditional_level], (n_samples_per_chain, n_chains))
-            beta_hat = self._correlation_factor_beta(response_function_values, conditional_level)
+            indicator = np.reshape(
+                self.performance_function_per_level[conditional_level]
+                < self.performance_threshold_per_level[conditional_level],
+                (n_samples_per_chain, n_chains),
+            )
+            gamma = self._correlation_factor_gamma(
+                indicator, n_samples_per_chain, n_chains
+            )
+            response_function_values = np.reshape(
+                self.performance_function_per_level[conditional_level],
+                (n_samples_per_chain, n_chains),
+            )
+            beta_hat = self._correlation_factor_beta(
+                response_function_values, conditional_level
+            )
 
-            independent_chains_cov = np.sqrt(((1 - self.conditional_probability)
-                                              / (self.conditional_probability * self.nsamples_per_subset))
-                                             * (1 + gamma))
-            dependent_chains_cov = np.sqrt(((1 - self.conditional_probability)
-                                            / (self.conditional_probability * self.nsamples_per_subset))
-                                           * (1 + gamma + beta_hat))
+            independent_chains_cov = np.sqrt(
+                (
+                    (1 - self.conditional_probability)
+                    / (self.conditional_probability * self.nsamples_per_subset)
+                )
+                * (1 + gamma)
+            )
+            dependent_chains_cov = np.sqrt(
+                (
+                    (1 - self.conditional_probability)
+                    / (self.conditional_probability * self.nsamples_per_subset)
+                )
+                * (1 + gamma + beta_hat)
+            )
 
         return independent_chains_cov, dependent_chains_cov
 
-    def _correlation_factor_gamma(self, indicator: np.ndarray, n_samples_per_chain: int, n_chains: int):
+    def _correlation_factor_gamma(
+        self, indicator: np.ndarray, n_samples_per_chain: int, n_chains: int
+    ):
         """Computes the conventional correlation factor :math:`\gamma` as defined by Au and Beck 2001
 
         :param indicator: Intermediate indicator function :math:`I_{Conditional Level}(\cdot)`
@@ -237,7 +346,7 @@ class SubsetSimulation:
         r = np.zeros(n_samples_per_chain)
 
         ii = indicator * 1
-        r_ = ii @ ii.T / n_chains - self.conditional_probability ** 2
+        r_ = ii @ ii.T / n_chains - self.conditional_probability**2
         for i in range(r_.shape[0]):
             r[i] = np.sum(np.diag(r_, i)) / (r_.shape[0] - i)
 
@@ -250,7 +359,9 @@ class SubsetSimulation:
 
         return gamma
 
-    def _correlation_factor_beta(self, response_function_values, conditional_level: int):
+    def _correlation_factor_beta(
+        self, response_function_values, conditional_level: int
+    ):
         """Computes the updated correlation factor :math:`beta` from Shields, Giovanis, Sundar 2021
 
         :param response_function_values: The response function :math:`G` evaluated at the conditional level :math:`i`
@@ -264,11 +375,21 @@ class SubsetSimulation:
                     beta += 1
         beta *= 2
 
-        acceptance_rate = np.asarray(self.mcmc_objects[conditional_level].acceptance_rate)
+        acceptance_rate = np.asarray(
+            self.mcmc_objects[conditional_level].acceptance_rate
+        )
         mean_acceptance_rate = np.mean(acceptance_rate)
 
-        factor = sum((1 - (i + 1) * np.shape(response_function_values)[0] / np.shape(response_function_values)[1]) * (1 - mean_acceptance_rate)
-                     for i in range(np.shape(response_function_values)[0] - 1))
+        factor = sum(
+            (
+                1
+                - (i + 1)
+                * np.shape(response_function_values)[0]
+                / np.shape(response_function_values)[1]
+            )
+            * (1 - mean_acceptance_rate)
+            for i in range(np.shape(response_function_values)[0] - 1)
+        )
         factor = factor * 2 + 1
 
         beta = beta / np.shape(response_function_values)[1] * factor

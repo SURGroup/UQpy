@@ -12,10 +12,19 @@ import numpy as np
 
 
 class ThirdPartyModel:
-
-    def __init__(self, var_names: list[str], input_template: str, model_script: str, output_script: str = None,
-                 model_object_name: str = None, output_object_name: str = None, fmt: str = None, separator: str = ', ',
-                 delete_files: bool = False, model_dir: str = "Model_Runs"):
+    def __init__(
+        self,
+        var_names: list[str],
+        input_template: str,
+        model_script: str,
+        output_script: str = None,
+        model_object_name: str = None,
+        output_object_name: str = None,
+        fmt: str = None,
+        separator: str = ", ",
+        delete_files: bool = False,
+        model_dir: str = "Model_Runs",
+    ):
         """
 
         :param var_names: A list containing the names of the variables present in `input_template`.
@@ -96,8 +105,12 @@ class ThirdPartyModel:
         self.var_names = var_names
         self.n_variables: int = 0
 
-        if self.var_names is not None and not ThirdPartyModel._is_list_of_strings(self.var_names):
-            raise ValueError("\nUQpy: Variable names should be passed as a list of strings.\n")
+        if self.var_names is not None and not ThirdPartyModel._is_list_of_strings(
+            self.var_names
+        ):
+            raise ValueError(
+                "\nUQpy: Variable names should be passed as a list of strings.\n"
+            )
 
         # Establish parent directory for simulations
         self.parent_dir = os.getcwd()
@@ -111,10 +124,12 @@ class ThirdPartyModel:
 
         # Check if the model script is a python script
         model_extension = pathlib.Path(model_script).suffix
-        if model_extension == '.py':
+        if model_extension == ".py":
             self.model_script = model_script
         else:
-            raise ValueError("\nUQpy: The model script must be the name of a python script, with extension '.py'.")
+            raise ValueError(
+                "\nUQpy: The model script must be the name of a python script, with extension '.py'."
+            )
 
         self.model_object_name = model_object_name
         self.output_script = output_script
@@ -135,17 +150,24 @@ class ThirdPartyModel:
 
         os.chdir(self.model_dir)
 
-        self.logger.info("\nUQpy: The following directory has been created for model evaluations: \n" + self.model_dir)
+        self.logger.info(
+            "\nUQpy: The following directory has been created for model evaluations: \n"
+            + self.model_dir
+        )
         # Copy files from the model list to model run directory
         for file_name in model_files:
             full_file_name = os.path.join(self.parent_dir, file_name)
             if not os.path.isdir(full_file_name):
                 shutil.copy(full_file_name, self.model_dir)
             else:
-                new_dir_name = os.path.join(self.model_dir, os.path.basename(full_file_name))
+                new_dir_name = os.path.join(
+                    self.model_dir, os.path.basename(full_file_name)
+                )
                 shutil.copytree(full_file_name, new_dir_name)
-        self.logger.info("\nUQpy: The model files have been copied to the following directory for evaluation: \n"
-                         + self.model_dir)
+        self.logger.info(
+            "\nUQpy: The model files have been copied to the following directory for evaluation: \n"
+            + self.model_dir
+        )
         parent_dir = os.path.dirname(self.model_dir)
         os.chdir(parent_dir)
 
@@ -163,7 +185,9 @@ class ThirdPartyModel:
             pass
         elif isinstance(self.fmt, str):
             if (self.fmt[0] != "{") or (self.fmt[-1] != "}") or (":" not in self.fmt):
-                raise ValueError("\nUQpy: fmt should be a string in brackets indicating a standard Python format.\n")
+                raise ValueError(
+                    "\nUQpy: fmt should be a string in brackets indicating a standard Python format.\n"
+                )
         else:
             raise TypeError("\nUQpy: fmt should be a str.\n")
 
@@ -177,13 +201,18 @@ class ThirdPartyModel:
         :param list_of_strings: A list whose entries should be checked to see if they are strings
         :type list_of_strings: list
         """
-        return (bool(list_of_strings) and isinstance(list_of_strings, list)
-                and all(isinstance(element, str) for element in list_of_strings))
+        return (
+            bool(list_of_strings)
+            and isinstance(list_of_strings, list)
+            and all(isinstance(element, str) for element in list_of_strings)
+        )
 
     def initialize(self, samples):
         os.chdir(self.model_dir)
-        self.logger.info("\nUQpy: All model evaluations will be executed from the following directory: \n"
-                         + self.model_dir)
+        self.logger.info(
+            "\nUQpy: All model evaluations will be executed from the following directory: \n"
+            + self.model_dir
+        )
 
         self.n_variables = len(samples[0])
 
@@ -192,13 +221,16 @@ class ThirdPartyModel:
                 # If var_names is not passed and there is an input template, create default variable names
                 self.var_names = []
                 for i in range(self.n_variables):
-                    self.var_names.append('x%d' % i)
+                    self.var_names.append("x%d" % i)
 
             elif len(self.var_names) != self.n_variables:
-                raise ValueError("\nUQpy: var_names must have the same length as the number of variables (i.e. "
-                                 "len(var_names) = len(samples[0]).\n")
-        assert os.path.isfile(self.input_template) and os.access(self.input_template, os.R_OK), \
-            "\nUQpy: File {} doesn't exist or isn't readable".format(self.input_template)
+                raise ValueError(
+                    "\nUQpy: var_names must have the same length as the number of variables (i.e. "
+                    "len(var_names) = len(samples[0]).\n"
+                )
+        assert os.path.isfile(self.input_template) and os.access(
+            self.input_template, os.R_OK
+        ), "\nUQpy: File {} doesn't exist or isn't readable".format(self.input_template)
         # Read in the text from the template files
         with open(self.input_template, "r") as f:
             self.template_text = str(f.read())
@@ -213,7 +245,12 @@ class ThirdPartyModel:
 
         # Change current working directory to model run directory
         os.chdir(work_dir)
-        self.logger.info("\nUQpy: Running model number " + str(i) + " in the following directory: \n" + work_dir)
+        self.logger.info(
+            "\nUQpy: Running model number "
+            + str(i)
+            + " in the following directory: \n"
+            + work_dir
+        )
 
         # Call the input function
         self._input_serial(i, sample)
@@ -249,8 +286,12 @@ class ThirdPartyModel:
         """
         self.new_text = self._find_and_replace_var_names_with_values(sample=sample)
         # Write the new text to the input file
-        self._create_input_files(file_name=self.input_template, num=index, text=self.new_text,
-                                 new_folder="InputFiles", )
+        self._create_input_files(
+            file_name=self.input_template,
+            num=index,
+            text=self.new_text,
+            new_folder="InputFiles",
+        )
 
     def _create_input_files(self, file_name, num, text, new_folder="InputFiles"):
         """
@@ -328,8 +369,11 @@ class ThirdPartyModel:
                             to_add = str(temp)
                         else:
                             to_add = self.fmt.format(temp)
-                    new_text = (new_text[0: new_text.index(string)] + to_add
-                                + new_text[(new_text.index(string) + len(string)):])
+                    new_text = (
+                        new_text[0 : new_text.index(string)]
+                        + to_add
+                        + new_text[(new_text.index(string) + len(string)) :]
+                    )
                     count += 1
         return new_text
 
@@ -389,6 +433,7 @@ class ThirdPartyModel:
         """
         # Get the names of the classes and functions in the imported module
         import inspect
+
         output_module = __import__(self.output_script[:-3])
 
         class_list = []
@@ -401,12 +446,17 @@ class ThirdPartyModel:
 
         # There should be at least one class or function in the module - if not there, exit with error.
         if len(class_list) == 0 and len(function_list) == 0:
-            raise ValueError("\nUQpy: The output object should be defined as a function or class in the script.\n")
+            raise ValueError(
+                "\nUQpy: The output object should be defined as a function or class in the script.\n"
+            )
 
         else:  # If there is at least one class or function in the module
             # If the model object name is not given as input and there is only one class or function,
             # take that class name or function name to run the model.
-            if self.output_object_name is None and len(class_list) + len(function_list) == 1:
+            if (
+                self.output_object_name is None
+                and len(class_list) + len(function_list) == 1
+            ):
                 if len(class_list) == 1:
                     self.output_object_name = class_list[0]
                 elif len(function_list) == 1:
@@ -421,12 +471,19 @@ class ThirdPartyModel:
                 self.output_is_class = False
             else:
                 if self.output_object_name is None:
-                    raise ValueError("\nUQpy: There are more than one objects in the module. Specify the name of the "
-                                     "function or class which has to be executed.\n")
+                    raise ValueError(
+                        "\nUQpy: There are more than one objects in the module. Specify the name of the "
+                        "function or class which has to be executed.\n"
+                    )
                 else:
-                    print("\nUQpy: You specified the output object name as: " + str(self.output_object_name))
-                    raise ValueError("\nUQpy: The file does not contain an object which was specified as the output "
-                                     "processor.\n")
+                    print(
+                        "\nUQpy: You specified the output object name as: "
+                        + str(self.output_object_name)
+                    )
+                    raise ValueError(
+                        "\nUQpy: The file does not contain an object which was specified as the output "
+                        "processor.\n"
+                    )
 
     def _check_python_model(self):
         """
@@ -453,12 +510,17 @@ class ThirdPartyModel:
 
         # There should be at least one class or function in the module - if not there, exit with error.
         if len(class_list) == 0 and len(function_list) == 0:
-            raise ValueError("\nUQpy: A python model should be defined as a function or class in the script.\n")
+            raise ValueError(
+                "\nUQpy: A python model should be defined as a function or class in the script.\n"
+            )
 
         else:  # If there is at least one class or function in the module
             # If the model object name is not given as input and there is only one class or function,
             # take that class name or function name to run the model.
-            if self.model_object_name is None and len(class_list) + len(function_list) == 1:
+            if (
+                self.model_object_name is None
+                and len(class_list) + len(function_list) == 1
+            ):
                 if len(class_list) == 1:
                     self.model_object_name = class_list[0]
                 elif len(function_list) == 1:
@@ -473,8 +535,15 @@ class ThirdPartyModel:
                 self.model_is_class = False
             else:
                 if self.model_object_name is None:
-                    raise ValueError("\nUQpy: There are more than one objects in the module. Specify the name of the "
-                                     "function or class which has to be executed.\n")
+                    raise ValueError(
+                        "\nUQpy: There are more than one objects in the module. Specify the name of the "
+                        "function or class which has to be executed.\n"
+                    )
                 else:
-                    print("\nUQpy: You specified the model_object_name as: " + str(self.model_object_name))
-                    raise ValueError("\nUQpy: The file does not contain an object which was specified as the model.\n")
+                    print(
+                        "\nUQpy: You specified the model_object_name as: "
+                        + str(self.model_object_name)
+                    )
+                    raise ValueError(
+                        "\nUQpy: The file does not contain an object which was specified as the model.\n"
+                    )

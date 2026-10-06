@@ -11,8 +11,8 @@ from UQpy.reliability.SubsetSimulation import SubsetSimulation
 
 def test_subset():  # Define the structural problem
     n_variables = 2
-    model = 'pfn5.py'
-    Example = 'Example1'
+    model = "pfn5.py"
+    Example = "Example1"
 
     omega = 6
     epsilon = 0.01
@@ -31,9 +31,9 @@ def test_subset():  # Define the structural problem
     p_cond = 0.1
     n_chains = int(n_samples_set * p_cond)
 
-    mc = MonteCarloSampling(distributions=dist_nominal,
-                            nsamples=n_samples_set,
-                            random_state=1)
+    mc = MonteCarloSampling(
+        distributions=dist_nominal, nsamples=n_samples_set, random_state=1
+    )
 
     init_sus_samples = mc.samples
     from UQpy.run_model.RunModel import RunModel
@@ -42,17 +42,17 @@ def test_subset():  # Define the structural problem
     model = PythonModel(model_script=model, model_object_name=Example)
     RunModelObject_SuS = RunModel(model=model)
 
+    sampling = Stretch(
+        pdf_target=dist_nominal.pdf, dimension=2, n_chains=1000, random_state=0
+    )
 
-    sampling = Stretch(pdf_target=dist_nominal.pdf, dimension=2, n_chains=1000, random_state=0)
-
-    SuS_object = SubsetSimulation(sampling=sampling, runmodel_object=RunModelObject_SuS, conditional_probability=p_cond,
-                                nsamples_per_subset=n_samples_set, samples_init=init_sus_samples)
+    SuS_object = SubsetSimulation(
+        sampling=sampling,
+        runmodel_object=RunModelObject_SuS,
+        conditional_probability=p_cond,
+        nsamples_per_subset=n_samples_set,
+        samples_init=init_sus_samples,
+    )
 
     print(SuS_object.failure_probability)
-    assert SuS_object.failure_probability == 3.1200000000000006e-05
-
-
-
-
-
-
+    np.testing.assert_allclose(SuS_object.failure_probability, 3.1200000000000006e-05)

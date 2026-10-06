@@ -5,11 +5,12 @@ from beartype.vale import Is
 
 from UQpy.surrogates.polynomial_chaos import PolynomialChaosExpansion
 
-FittedPce = Annotated[PolynomialChaosExpansion, Is[lambda pce: pce.coefficients is not None]]
+FittedPce = Annotated[
+    PolynomialChaosExpansion, Is[lambda pce: pce.coefficients is not None]
+]
 
 
 class PceSensitivity:
-
     def __init__(self, pce_object: FittedPce):
         """
         Compute Sobol sensitivity indices based on a PCE surrogate approximation of the QoI.
@@ -59,7 +60,9 @@ class PceSensitivity:
             # we want the rows with all indices (except nn) equal to zero
             sum_idx_rows = np.sum(idx_no_0_nn, axis=1)
             zero_rows = np.asarray(np.where(sum_idx_rows == 0)).flatten() + 1
-            variance_contribution = np.sum(self.pce_object.coefficients[zero_rows, :] ** 2, axis=0)
+            variance_contribution = np.sum(
+                self.pce_object.coefficients[zero_rows, :] ** 2, axis=0
+            )
             first_order_indices[nn, :] = variance_contribution / variance
         self.first_order_indices = first_order_indices
         return first_order_indices
@@ -80,7 +83,9 @@ class PceSensitivity:
             # we want all multi-indices where the nn-th index is NOT zero
             idx_column_nn = np.array(multi_index_set)[:, nn]
             nn_rows = np.asarray(np.where(idx_column_nn != 0)).flatten()
-            variance_contribution = np.sum(self.pce_object.coefficients[nn_rows, :] ** 2, axis=0)
+            variance_contribution = np.sum(
+                self.pce_object.coefficients[nn_rows, :] ** 2, axis=0
+            )
             total_order_indices[nn, :] = variance_contribution / variance
         self.total_order_indices = total_order_indices
         return total_order_indices
@@ -95,14 +100,16 @@ class PceSensitivity:
         """
         inputs_number = self.pce_object.inputs_number
         if inputs_number == 1:
-            raise ValueError('Not applicable for scalar model outputs.')
+            raise ValueError("Not applicable for scalar model outputs.")
 
         variance = self.pce_object.get_moments()[1]
         first_order_indices = self.calculate_first_order_indices()
         variance_contributions = first_order_indices * variance
         total_variance = np.sum(variance)
         total_variance_contribution_per_input = np.sum(variance_contributions, axis=1)
-        generalized_first_order_indices = total_variance_contribution_per_input / total_variance
+        generalized_first_order_indices = (
+            total_variance_contribution_per_input / total_variance
+        )
         self.generalized_first_order_indices = generalized_first_order_indices
         return generalized_first_order_indices
 
@@ -117,13 +124,15 @@ class PceSensitivity:
         inputs_number = self.pce_object.inputs_number
 
         if inputs_number == 1:
-            raise ValueError('Not applicable for scalar model outputs.')
+            raise ValueError("Not applicable for scalar model outputs.")
 
         variance = self.pce_object.get_moments()[1]
         total_order_indices = self.calculate_total_order_indices()
         variance_contributions = total_order_indices * variance
         total_variance = np.sum(variance)
         total_variance_contribution_per_input = np.sum(variance_contributions, axis=1)
-        generalized_total_order_indices = total_variance_contribution_per_input / total_variance
+        generalized_total_order_indices = (
+            total_variance_contribution_per_input / total_variance
+        )
         self.generalized_total_order_indices = generalized_total_order_indices
         return generalized_total_order_indices

@@ -1,15 +1,18 @@
-from UQpy.inference.information_criteria.baseclass.InformationCriterion import InformationCriterion
+from UQpy.inference.information_criteria.baseclass.InformationCriterion import (
+    InformationCriterion,
+)
 import numpy as np
 from UQpy.inference import MLE
 from UQpy.utilities.ValidationTypes import NumpyFloatArray
 
 
 class BIC(InformationCriterion):
-
-    def minimize_criterion(self,
-                           data: NumpyFloatArray,
-                           parameter_estimator: MLE,
-                           return_penalty: bool = False):
+    def minimize_criterion(
+        self,
+        data: NumpyFloatArray,
+        parameter_estimator: MLE,
+        return_penalty: bool = False,
+    ):
         inference_model = parameter_estimator.inference_model
         max_log_like = parameter_estimator.max_log_like
         n_parameters = inference_model.n_parameters

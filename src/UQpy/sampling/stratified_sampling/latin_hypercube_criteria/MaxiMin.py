@@ -51,6 +51,9 @@ class MaxiMin(Criterion):
                 lhs_samples = copy.deepcopy(samples_try)
             i += 1
 
-        self.logger.info("UQpy: Achieved maximum distance of %(distance)s" % {"distance": maximized_minimum_distance})
+        self.logger.info(
+            "UQpy: Achieved maximum distance of %(distance)s"
+            % {"distance": maximized_minimum_distance}
+        )
 
         return lhs_samples

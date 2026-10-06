@@ -12,6 +12,7 @@ class AsimovDistance(GrassmannianDistance):
     A class to calculate the Asimov distance between two Grassmann points.
 
     """
+
     @beartype
     def compute_distance(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:
         """

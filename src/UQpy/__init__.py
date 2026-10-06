@@ -3,7 +3,7 @@ Uncertainty Quantification with Python
 ========================================
 """
 
-import pkg_resources
+import importlib.metadata
 
 import UQpy.distributions
 import UQpy.sampling
@@ -34,6 +34,7 @@ from UQpy.utilities.UQpyLoggingFormatter import *
 import logging
 from beartype.roar import BeartypeDecorHintPep585DeprecationWarning
 from warnings import filterwarnings
+
 filterwarnings("ignore", category=BeartypeDecorHintPep585DeprecationWarning)
 
 logger = logging.getLogger(__name__)
@@ -50,11 +51,8 @@ logging.logThreads = 0
 logging.logProcesses = 0
 
 try:
-    __version__ = pkg_resources.get_distribution("UQpy").version
-except pkg_resources.DistributionNotFound:
-    __version__ = None
+    from importlib.metadata import version, PackageNotFoundError
 
-try:
-    __version__ = pkg_resources.get_distribution("UQpy").version
-except pkg_resources.DistributionNotFound:
+    __version__ = version("UQpy")
+except PackageNotFoundError:
     __version__ = None

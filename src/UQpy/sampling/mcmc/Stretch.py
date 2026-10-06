@@ -2,7 +2,7 @@ import logging
 from typing import Callable
 import warnings
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 from beartype import beartype
 from UQpy.sampling.mcmc.baseclass.MCMC import MCMC
@@ -11,24 +11,23 @@ from UQpy.utilities.ValidationTypes import *
 
 
 class Stretch(MCMC):
-
     @beartype
     def __init__(
-            self,
-            pdf_target: Union[Callable, list[Callable]] = None,
-            log_pdf_target: Union[Callable, list[Callable]] = None,
-            args_target: tuple = None,
-            burn_length: Annotated[int, Is[lambda x: x >= 0]] = 0,
-            jump: PositiveInteger = 1,
-            dimension: int = None,
-            seed: list = None,
-            save_log_pdf: bool = False,
-            concatenate_chains: bool = True,
-            scale: float = 2.0,
-            random_state: RandomStateType = None,
-            n_chains: int = None,
-            nsamples: PositiveInteger = None,
-            nsamples_per_chain: PositiveInteger = None,
+        self,
+        pdf_target: Union[Callable, list[Callable]] = None,
+        log_pdf_target: Union[Callable, list[Callable]] = None,
+        args_target: tuple = None,
+        burn_length: Annotated[int, Is[lambda x: x >= 0]] = 0,
+        jump: PositiveInteger = 1,
+        dimension: int = None,
+        seed: list = None,
+        save_log_pdf: bool = False,
+        concatenate_chains: bool = True,
+        scale: float = 2.0,
+        random_state: RandomStateType = None,
+        n_chains: int = None,
+        nsamples: PositiveInteger = None,
+        nsamples_per_chain: PositiveInteger = None,
     ):
         """
         Affine-invariant sampler with Stretch moves, parallel implementation. :cite:`Stretch1` :cite:`Stretch2`
@@ -79,7 +78,9 @@ class Stretch(MCMC):
         flag_seed = False
         if seed is None:
             if dimension is None or n_chains is None:
-                raise ValueError("UQpy: Either `seed` or `dimension` and `n_chains` must be provided.")
+                raise ValueError(
+                    "UQpy: Either `seed` or `dimension` and `n_chains` must be provided."
+                )
             flag_seed = True
 
         self.nsamples = nsamples
@@ -96,26 +97,41 @@ class Stretch(MCMC):
             save_log_pdf=save_log_pdf,
             concatenate_chains=concatenate_chains,
             random_state=random_state,
-            n_chains=n_chains, )
+            n_chains=n_chains,
+        )
 
         self.logger = logging.getLogger(__name__)
         # Check nchains = ensemble size for the Stretch algorithm
         if flag_seed:
-            self.seed = (Uniform().rvs(nsamples=self.dimension * self.n_chains,
-                                       random_state=self.random_state, )
-                         .reshape((self.n_chains, self.dimension)))
+            self.seed = (
+                Uniform()
+                .rvs(
+                    nsamples=self.dimension * self.n_chains,
+                    random_state=self.random_state,
+                )
+                .reshape((self.n_chains, self.dimension))
+            )
         if self.n_chains < 2:
-            raise ValueError("UQpy: For the Stretch algorithm, a seed must be provided with at least two samples.")
+            raise ValueError(
+                "UQpy: For the Stretch algorithm, a seed must be provided with at least two samples."
+            )
 
         # Check Stretch algorithm inputs: proposal_type and proposal_scale
         self.scale = scale
         if not isinstance(self.scale, float):
             raise TypeError("UQpy: Input scale must be of type float.")
 
-        self.logger.info("\nUQpy: Initialization of " + self.__class__.__name__ + " algorithm complete.")
+        self.logger.info(
+            "\nUQpy: Initialization of "
+            + self.__class__.__name__
+            + " algorithm complete."
+        )
 
         if (nsamples is not None) or (nsamples_per_chain is not None):
-            self.run(nsamples=nsamples, nsamples_per_chain=nsamples_per_chain, )
+            self.run(
+                nsamples=nsamples,
+                nsamples_per_chain=nsamples_per_chain,
+            )
 
     def run_one_iteration(self, current_state, current_log_pdf):
         """
@@ -132,25 +148,40 @@ class Stretch(MCMC):
 
             # Get current and complementary sets
             sets = [current_state[inds == j01, :] for j01 in range(2)]
-            curr_set, comp_set = (sets[split], sets[1 - split],)  # current and complementary sets respectively
+            curr_set, comp_set = (
+                sets[split],
+                sets[1 - split],
+            )  # current and complementary sets respectively
             ns, nc = len(curr_set), len(comp_set)
 
             # Sample new state for S1 based on S0
             unif_rvs = Uniform().rvs(nsamples=ns, random_state=self.random_state)
             zz = ((self.scale - 1.0) * unif_rvs + 1.0) ** 2.0 / self.scale  # sample Z
             factors = (self.dimension - 1.0) * np.log(zz)  # compute log(Z ** (d - 1))
-            multi_rvs = Multinomial(n=1, p=[1.0 / nc, ] * nc).rvs(
-                nsamples=ns, random_state=self.random_state)
+            multi_rvs = Multinomial(
+                n=1,
+                p=[
+                    1.0 / nc,
+                ]
+                * nc,
+            ).rvs(nsamples=ns, random_state=self.random_state)
             rint = np.nonzero(multi_rvs)[1]  # sample X_{j} from complementary set
             candidates = comp_set[rint, :] - (comp_set[rint, :] - curr_set) * np.tile(
-                zz, [1, self.dimension])  # new candidates
+                zz, [1, self.dimension]
+            )  # new candidates
 
             # Compute new likelihood, can be done in parallel :)
             logp_candidates = self.evaluate_log_target(candidates)
 
             # Compute acceptance rate
-            unif_rvs = (Uniform().rvs(nsamples=len(all_inds[set1]), random_state=self.random_state).reshape((-1,)))
-            for j, f, lpc, candidate, u_rv in zip(all_inds[set1], factors, logp_candidates, candidates, unif_rvs):
+            unif_rvs = (
+                Uniform()
+                .rvs(nsamples=len(all_inds[set1]), random_state=self.random_state)
+                .reshape((-1,))
+            )
+            for j, f, lpc, candidate, u_rv in zip(
+                all_inds[set1], factors, logp_candidates, candidates, unif_rvs
+            ):
                 accept = np.log(u_rv) < f + lpc - current_log_pdf[j]
                 if accept:
                     current_state[j] = candidate

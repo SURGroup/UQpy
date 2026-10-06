@@ -9,7 +9,6 @@ import scipy.stats as stats
 
 
 class ExpectedFeasibility(LearningFunction):
-
     @beartype
     def __init__(
         self,
@@ -28,8 +27,9 @@ class ExpectedFeasibility(LearningFunction):
         self.eff_epsilon = eff_epsilon
         self.eff_stop = eff_stop
 
-    def evaluate_function(self, distributions, n_add, surrogate, population, qoi=None, samples=None):
-
+    def evaluate_function(
+        self, distributions, n_add, surrogate, population, qoi=None, samples=None
+    ):
         g, sig = surrogate.predict(population, True)
 
         # Remove the inconsistency in the shape of 'g' and 'sig' array

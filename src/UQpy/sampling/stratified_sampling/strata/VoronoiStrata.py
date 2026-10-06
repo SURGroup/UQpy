@@ -12,12 +12,12 @@ from scipy.spatial import Voronoi
 class VoronoiStrata(Strata):
     @beartype
     def __init__(
-            self,
-            seeds: np.ndarray = None,
-            seeds_number: PositiveInteger = None,
-            dimension: PositiveInteger = None,
-            decomposition_iterations: PositiveInteger = 1,
-            random_state: RandomStateType = None
+        self,
+        seeds: np.ndarray = None,
+        seeds_number: PositiveInteger = None,
+        dimension: PositiveInteger = None,
+        decomposition_iterations: PositiveInteger = 1,
+        random_state: RandomStateType = None,
     ):
         """
         Define a geometric decomposition of the n-dimensional unit hypercube into disjoint and space-filling
@@ -72,7 +72,9 @@ class VoronoiStrata(Strata):
 
         initial_seeds = self.seeds
         if self.seeds is None:
-            initial_seeds = stats.uniform.rvs(size=[self.seeds_number, self.dimension], random_state=self.random_state)
+            initial_seeds = stats.uniform.rvs(
+                size=[self.seeds_number, self.dimension], random_state=self.random_state
+            )
 
         if self.decomposition_iterations == 0:
             cent, vol = self.create_volume(initial_seeds)
@@ -107,18 +109,34 @@ class VoronoiStrata(Strata):
         for i in range(dimension):
             seeds_del = np.delete(bounded_points, i, 1)
             if i == 0:
-                points_temp1 = np.hstack([np.atleast_2d(-bounded_points[:, i]).T, seeds_del])
-                points_temp2 = np.hstack([np.atleast_2d(2 - bounded_points[:, i]).T, seeds_del])
+                points_temp1 = np.hstack(
+                    [np.atleast_2d(-bounded_points[:, i]).T, seeds_del]
+                )
+                points_temp2 = np.hstack(
+                    [np.atleast_2d(2 - bounded_points[:, i]).T, seeds_del]
+                )
             elif i == dimension - 1:
-                points_temp1 = np.hstack([seeds_del, np.atleast_2d(-bounded_points[:, i]).T])
-                points_temp2 = np.hstack([seeds_del, np.atleast_2d(2 - bounded_points[:, i]).T])
+                points_temp1 = np.hstack(
+                    [seeds_del, np.atleast_2d(-bounded_points[:, i]).T]
+                )
+                points_temp2 = np.hstack(
+                    [seeds_del, np.atleast_2d(2 - bounded_points[:, i]).T]
+                )
             else:
-                points_temp1 = np.hstack([seeds_del[:, :i],
-                                          np.atleast_2d(-bounded_points[:, i]).T,
-                                          seeds_del[:, i:], ])
-                points_temp2 = np.hstack([seeds_del[:, :i],
-                                          np.atleast_2d(2 - bounded_points[:, i]).T,
-                                          seeds_del[:, i:],])
+                points_temp1 = np.hstack(
+                    [
+                        seeds_del[:, :i],
+                        np.atleast_2d(-bounded_points[:, i]).T,
+                        seeds_del[:, i:],
+                    ]
+                )
+                points_temp2 = np.hstack(
+                    [
+                        seeds_del[:, :i],
+                        np.atleast_2d(2 - bounded_points[:, i]).T,
+                        seeds_del[:, i:],
+                    ]
+                )
             seeds = np.append(seeds, points_temp1, axis=0)
             seeds = np.append(seeds, points_temp2, axis=0)
 
@@ -164,7 +182,7 @@ class VoronoiStrata(Strata):
 
         samples_in_strata, weights = list(), list()
         for j in range(
-                len(self.vertices)
+            len(self.vertices)
         ):  # For each bounded region (Voronoi stratification)
             vertices = self.vertices[j][:-1, :]
             seed = self.seeds[j, :].reshape(1, -1)
@@ -195,7 +213,6 @@ class VoronoiStrata(Strata):
             self.extend_weights(nsamples_per_stratum, j, weights)
         return samples_in_strata, weights
 
-
     def compute_centroids(self):
         # if self.mesh is None:
         #     self.add_boundary_points_and_construct_delaunay()
@@ -206,17 +223,23 @@ class VoronoiStrata(Strata):
         for j in range(self.mesh.nsimplex):
             try:
                 ConvexHull(self.points[self.mesh.simplices[j]])
-                self.mesh.centroids[j, :], self.mesh.volumes[j] = \
-                    DelaunayStrata.compute_delaunay_centroid_volume(self.points[self.mesh.simplices[j]])
+                self.mesh.centroids[j, :], self.mesh.volumes[j] = (
+                    DelaunayStrata.compute_delaunay_centroid_volume(
+                        self.points[self.mesh.simplices[j]]
+                    )
+                )
             except qhull.QhullError:
-                self.mesh.centroids[j, :], self.mesh.volumes[j] = (np.mean(self.points[self.mesh.vertices[j]]), 0,)
+                self.mesh.centroids[j, :], self.mesh.volumes[j] = (
+                    np.mean(self.points[self.mesh.vertices[j]]),
+                    0,
+                )
 
     def initialize(self, samples_number, training_points):
         self.add_boundary_points_and_construct_delaunay(samples_number, training_points)
         self.mesh.old_vertices = self.mesh.simplices.copy()
 
     def add_boundary_points_and_construct_delaunay(
-            self, samples_number, training_points
+        self, samples_number, training_points
     ):
         """
         This method add the corners of :math:`[0, 1]^n` hypercube to the existing samples, which are used to construct a
@@ -225,29 +248,46 @@ class VoronoiStrata(Strata):
         self.mesh_vertices = training_points.copy()
         self.points_to_samplesU01 = np.arange(0, training_points.shape[0])
         for i in range(np.shape(self.voronoi.vertices)[0]):
-            if any(np.logical_and(self.voronoi.vertices[i, :] >= -1e-10, self.voronoi.vertices[i, :] <= 1e-10,)) or \
-               any(np.logical_and(self.voronoi.vertices[i, :] >= 1 - 1e-10, self.voronoi.vertices[i, :] <= 1 + 1e-10,)):
-                self.mesh_vertices = np.vstack([self.mesh_vertices, self.voronoi.vertices[i, :]])
-                self.points_to_samplesU01 = np.hstack([np.array([-1]), self.points_to_samplesU01, ])
-        from scipy.spatial.qhull import Delaunay
+            if any(
+                np.logical_and(
+                    self.voronoi.vertices[i, :] >= -1e-10,
+                    self.voronoi.vertices[i, :] <= 1e-10,
+                )
+            ) or any(
+                np.logical_and(
+                    self.voronoi.vertices[i, :] >= 1 - 1e-10,
+                    self.voronoi.vertices[i, :] <= 1 + 1e-10,
+                )
+            ):
+                self.mesh_vertices = np.vstack(
+                    [self.mesh_vertices, self.voronoi.vertices[i, :]]
+                )
+                self.points_to_samplesU01 = np.hstack(
+                    [
+                        np.array([-1]),
+                        self.points_to_samplesU01,
+                    ]
+                )
+        from scipy.spatial import Delaunay
 
         # Define the simplex mesh to be used for gradient estimation and sampling
         self.mesh = Delaunay(
             self.mesh_vertices,
             furthest_site=False,
             incremental=True,
-            qhull_options=None,)
+            qhull_options=None,
+        )
         self.points = getattr(self.mesh, "points")
 
     def calculate_strata_metrics(self, index):
         self.compute_centroids()
         s = np.zeros(self.mesh.nsimplex)
         for j in range(self.mesh.nsimplex):
-            s[j] = self.mesh.volumes[j] ** 2
+            s[j] = self.mesh.volumes[j].item() ** 2
         return s
 
     def update_strata_and_generate_samples(
-            self, dimension, points_to_add, bins2break, samples_u01, random_state
+        self, dimension, points_to_add, bins2break, samples_u01, random_state
     ):
         new_points = np.zeros([points_to_add, dimension])
         for j in range(points_to_add):
@@ -268,26 +308,26 @@ class VoronoiStrata(Strata):
             for k in range(self.dimension):
                 std = np.std(self.points[self.mesh.vertices[j]][:, k])
                 var[j, k] = (
-                                    self.mesh.volumes[j]
-                                    * math.factorial(self.dimension)
-                                    / math.factorial(self.dimension + 2)
-                            ) * (self.dimension * std ** 2)
+                    self.mesh.volumes[j]
+                    * math.factorial(self.dimension)
+                    / math.factorial(self.dimension + 2)
+                ) * (self.dimension * std**2)
             s[j] = np.sum(self.dy_dx[j, :] * var[j, :] * self.dy_dx[j, :]) * (
-                    self.mesh.volumes[j] ** 2
+                self.mesh.volumes[j] ** 2
             )
         self.dy_dx_old = self.dy_dx
         return s
 
     def estimate_gradient(
-            self,
-            surrogate,
-            step_size,
-            samples_number,
-            index,
-            samples_u01,
-            training_points,
-            qoi,
-            max_train_size=None,
+        self,
+        surrogate,
+        step_size,
+        samples_number,
+        index,
+        samples_u01,
+        training_points,
+        qoi,
+        max_train_size=None,
     ):
         self.mesh.centroids = np.zeros([self.mesh.nsimplex, self.dimension])
         self.mesh.volumes = np.zeros([self.mesh.nsimplex, 1])
@@ -296,30 +336,50 @@ class VoronoiStrata(Strata):
         for j in range(self.mesh.nsimplex):
             try:
                 ConvexHull(self.points[self.mesh.vertices[j]])
-                self.mesh.centroids[j, :], self.mesh.volumes[j] = DelaunayStrata.compute_delaunay_centroid_volume(
-                    self.points[self.mesh.vertices[j]])
+                self.mesh.centroids[j, :], self.mesh.volumes[j] = (
+                    DelaunayStrata.compute_delaunay_centroid_volume(
+                        self.points[self.mesh.vertices[j]]
+                    )
+                )
             except qhull.QhullError:
-                self.mesh.centroids[j, :], self.mesh.volumes[j] = (np.mean(self.points[self.mesh.vertices[j]]), 0,)
+                self.mesh.centroids[j, :], self.mesh.volumes[j] = (
+                    np.mean(self.points[self.mesh.vertices[j]]),
+                    0,
+                )
 
-        if max_train_size is None or len(training_points) <= max_train_size or index == training_points.shape[0]:
+        if (
+            max_train_size is None
+            or len(training_points) <= max_train_size
+            or index == training_points.shape[0]
+        ):
             from UQpy.utilities.Utilities import calculate_gradient
+
             # Use the entire sample set to train the surrogate model (more expensive option)
             self.dy_dx = calculate_gradient(
                 surrogate,
                 step_size,
                 np.atleast_2d(training_points),
                 np.atleast_2d(np.array(qoi)).T,
-                self.mesh.centroids,)
+                self.mesh.centroids,
+            )
             # dy_dx = self.calculate_gradient(
             #     np.atleast_2d(training_points), qoi, self.mesh.centroids, surrogate)
         else:
             # Use only max_train_size points to train the surrogate model (more economical option)
             # Build a mapping from the new vertex indices to the old vertex indices.
             self.mesh.new_vertices, self.mesh.new_indices = [], []
-            self.mesh.new_to_old = np.zeros([self.mesh.vertices.shape[0], ]) * np.nan
+            self.mesh.new_to_old = (
+                np.zeros(
+                    [
+                        self.mesh.vertices.shape[0],
+                    ]
+                )
+                * np.nan
+            )
             j, k = 0, 0
-            while (j < self.mesh.vertices.shape[0] and k < self.mesh.old_vertices.shape[0]):
-
+            while (
+                j < self.mesh.vertices.shape[0] and k < self.mesh.old_vertices.shape[0]
+            ):
                 if np.all(self.mesh.vertices[j, :] == self.mesh.old_vertices[k, :]):
                     self.mesh.new_to_old[j] = int(k)
                     j += 1
@@ -337,20 +397,27 @@ class VoronoiStrata(Strata):
 
             knn = NearestNeighbors(n_neighbors=max_train_size)
             knn.fit(np.atleast_2d(samples_u01))
-            neighbors = knn.kneighbors(np.atleast_2d(samples_u01[-1]), return_distance=False)
+            neighbors = knn.kneighbors(
+                np.atleast_2d(samples_u01[-1]), return_distance=False
+            )
 
             # For every simplex, check if at least dimension-1 vertices are in the neighbor set.
             # Only update the gradient in simplices that meet this criterion.
             update_list = []
             for j in range(self.mesh.vertices.shape[0]):
                 self.vertices_in_U01 = self.points_to_samplesU01[self.mesh.vertices[j]]
-                self.vertices_in_U01[np.isnan(self.vertices_in_U01)] = 10 ** 18
+                self.vertices_in_U01[np.isnan(self.vertices_in_U01)] = 10**18
                 v_set = set(self.vertices_in_U01)
                 v_list = list(self.vertices_in_U01)
                 if len(v_set) != len(v_list):
                     continue
                 else:
-                    if all(np.isin(self.vertices_in_U01, np.hstack([neighbors, np.atleast_2d(10 ** 18)]),)):
+                    if all(
+                        np.isin(
+                            self.vertices_in_U01,
+                            np.hstack([neighbors, np.atleast_2d(10**18)]),
+                        )
+                    ):
                         update_list.append(j)
 
             update_array = np.asarray(update_list)
@@ -367,16 +434,22 @@ class VoronoiStrata(Strata):
 
             # For those simplices that will be updated, compute the new gradient
             from UQpy.utilities.Utilities import calculate_gradient
-            self.dy_dx[update_array, :] = calculate_gradient(surrogate, step_size,
-                                                             np.atleast_2d(training_points)[neighbors],
-                                                             np.atleast_2d(np.array(qoi)[neighbors]).T,
-                                                             self.mesh.centroids[update_array])
+
+            self.dy_dx[update_array, :] = calculate_gradient(
+                surrogate,
+                step_size,
+                np.atleast_2d(training_points)[neighbors],
+                np.atleast_2d(np.array(qoi)[neighbors]).T,
+                self.mesh.centroids[update_array],
+            )
 
     def _update_strata(self, new_point, samples_u01):
         i_ = samples_u01.shape[0]
         p_ = new_point.shape[0]
         # Update the matrices to have recognize the new point
-        self.points_to_samplesU01 = np.hstack([self.points_to_samplesU01, np.arange(i_, i_ + p_)])
+        self.points_to_samplesU01 = np.hstack(
+            [self.points_to_samplesU01, np.arange(i_, i_ + p_)]
+        )
         self.mesh.old_vertices = self.mesh.simplices
 
         # Update the Delaunay triangulation mesh to include the new point.
@@ -385,7 +458,9 @@ class VoronoiStrata(Strata):
         self.mesh_vertices = np.vstack([self.mesh_vertices, new_point])
 
         # Compute the strata weights.
-        self.voronoi, bounded_regions = VoronoiStrata.voronoi_unit_hypercube(samples_u01)
+        self.voronoi, bounded_regions = VoronoiStrata.voronoi_unit_hypercube(
+            samples_u01
+        )
 
         self.centroids = []
         self.volume = []
@@ -399,12 +474,19 @@ class VoronoiStrata(Strata):
         import itertools
 
         tmp_vertices = self.points[self.mesh.simplices[int(bin_), :]]
-        col_one = np.array(list(itertools.combinations(np.arange(self.dimension + 1), self.dimension)))
-        self.mesh.sub_simplex = np.zeros_like(tmp_vertices)  # node: an array containing mid-point of edges
+        col_one = np.array(
+            list(itertools.combinations(np.arange(self.dimension + 1), self.dimension))
+        )
+        self.mesh.sub_simplex = np.zeros_like(
+            tmp_vertices
+        )  # node: an array containing mid-point of edges
         for m in range(self.dimension + 1):
             self.mesh.sub_simplex[m, :] = (
-                    np.sum(tmp_vertices[col_one[m] - 1, :], 0) / self.dimension)
+                np.sum(tmp_vertices[col_one[m] - 1, :], 0) / self.dimension
+            )
 
         # Using the Simplex class to generate a new sample in the sub-simplex
-        new = SimplexSampling(nodes=self.mesh.sub_simplex, nsamples=1, random_state=random_state).samples
+        new = SimplexSampling(
+            nodes=self.mesh.sub_simplex, nsamples=1, random_state=random_state
+        ).samples
         return new

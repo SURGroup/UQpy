@@ -3,11 +3,19 @@ from typing import Union
 
 from beartype import beartype
 
-from UQpy.sampling.stratified_sampling.baseclass.StratifiedSampling import StratifiedSampling
-from UQpy.sampling.stratified_sampling.latin_hypercube_criteria.baseclass import Criterion
+from UQpy.sampling.stratified_sampling.baseclass.StratifiedSampling import (
+    StratifiedSampling,
+)
+from UQpy.sampling.stratified_sampling.latin_hypercube_criteria.baseclass import (
+    Criterion,
+)
 from UQpy.utilities.Utilities import process_random_state
 from UQpy.sampling.stratified_sampling.latin_hypercube_criteria import Random
-from UQpy.utilities.ValidationTypes import PositiveInteger, NumpyFloatArray, RandomStateType
+from UQpy.utilities.ValidationTypes import (
+    PositiveInteger,
+    NumpyFloatArray,
+    RandomStateType,
+)
 from UQpy.distributions import *
 import numpy as np
 from UQpy.distributions import DistributionContinuous1D, JointIndependent
@@ -20,7 +28,7 @@ class LatinHypercubeSampling(StratifiedSampling):
         distributions: Union[Distribution, list[Distribution]],
         nsamples: PositiveInteger,
         criterion: Criterion = Random(),
-        random_state: RandomStateType = None
+        random_state: RandomStateType = None,
     ):
         """
         Perform Latin hypercube sampling (LHS) of random variables.
@@ -68,7 +76,7 @@ class LatinHypercubeSampling(StratifiedSampling):
 
     @property
     def samples(self):
-        """ The generated LHS samples."""
+        """The generated LHS samples."""
         return np.atleast_2d(self._samples)
 
     @beartype
@@ -103,7 +111,9 @@ class LatinHypercubeSampling(StratifiedSampling):
         elif isinstance(self.distributions, JointIndependent):
             if all(hasattr(m, "icdf") for m in self.distributions.marginals):
                 for j in range(len(self.distributions.marginals)):
-                    self._samples[:, j] = self.distributions.marginals[j].icdf(u_lhs[:, j])
+                    self._samples[:, j] = self.distributions.marginals[j].icdf(
+                        u_lhs[:, j]
+                    )
 
         elif isinstance(self.distributions, DistributionContinuous1D):
             if hasattr(self.distributions, "icdf"):

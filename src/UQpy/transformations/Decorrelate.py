@@ -19,5 +19,7 @@ class Decorrelate:
         self.H: NumpyFloatArray = cholesky(self.corr_z, lower=True)
         """The lower diagonal matrix resulting from the Cholesky decomposition of the correlation  matrix
         (:math:`\mathbf{C_Z}`)."""
-        self.samples_u: NumpyFloatArray = np.linalg.solve(self.H, samples_z.T.squeeze()).T
+        self.samples_u: NumpyFloatArray = np.linalg.solve(
+            self.H, samples_z.T.squeeze()
+        ).T
         """Uncorrelated standard normal vector of shape ``(n_samples, n_dimensions)``."""

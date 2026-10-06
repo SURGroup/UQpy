@@ -68,7 +68,8 @@ class RectangularStrata(Strata):
                 if self.widths is None or self.seeds is None:
                     raise RuntimeError(
                         "UQpy: The strata are not fully defined. Must provide `strata_number`, `input_file`, "
-                        "or `seeds` and `widths`.")
+                        "or `seeds` and `widths`."
+                    )
 
             else:
                 # Read the strata from the specified input file
@@ -86,7 +87,9 @@ class RectangularStrata(Strata):
 
         # Define a rectilinear stratification by specifying the number of strata in each dimension via nstrata
         else:
-            self.seeds = np.divide(self.fullfact(self.strata_number), self.strata_number)
+            self.seeds = np.divide(
+                self.fullfact(self.strata_number), self.strata_number
+            )
             self.widths = np.divide(np.ones(self.seeds.shape), self.strata_number)
 
         self.volume = np.prod(self.widths, axis=1)
@@ -163,9 +166,7 @@ class RectangularStrata(Strata):
     def sample_strata(self, nsamples_per_stratum, random_state):
         samples_in_strata, weights = [], []
         for i in range(self.seeds.shape[0]):
-            samples_temp = np.zeros(
-                [int(nsamples_per_stratum[i]), self.seeds.shape[1]]
-            )
+            samples_temp = np.zeros([int(nsamples_per_stratum[i]), self.seeds.shape[1]])
             for j in range(self.seeds.shape[1]):
                 if self.sampling_criterion == SamplingCriterion.RANDOM:
                     samples_temp[:, j] = stats.uniform.rvs(
@@ -189,7 +190,7 @@ class RectangularStrata(Strata):
 
     def calculate_gradient_strata_metrics(self, index):
         dy_dx1 = self._gradients[:index]
-        stratum_variance = (1 / 12) * self.widths ** 2
+        stratum_variance = (1 / 12) * self.widths**2
         s = np.zeros(index)
         for i in range(index):
             s[i] = (
@@ -290,7 +291,10 @@ class RectangularStrata(Strata):
     def check_centered(self, samples_number):
         if samples_number is None:
             return
-        if (self.sampling_criterion == SamplingCriterion.CENTERED) and \
-                samples_number != len(self.seeds):
-            raise ValueError("In case of centered stratification, the number of samples must be equal to the number "
-                             "of strata")
+        if (
+            self.sampling_criterion == SamplingCriterion.CENTERED
+        ) and samples_number != len(self.seeds):
+            raise ValueError(
+                "In case of centered stratification, the number of samples must be equal to the number "
+                "of strata"
+            )

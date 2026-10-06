@@ -7,7 +7,6 @@ from UQpy.distributions.baseclass import DistributionContinuous1D
 
 
 class Gamma(DistributionContinuous1D):
-
     @beartype
     def __init__(
         self,

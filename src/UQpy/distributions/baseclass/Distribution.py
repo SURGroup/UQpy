@@ -2,7 +2,6 @@ from abc import ABC
 
 
 class Distribution(ABC):
-
     def __init__(self, ordered_parameters: list = None, **kwargs: dict):
         """
         A parent class to all :class:`.Distribution` classes.

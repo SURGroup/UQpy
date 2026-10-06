@@ -9,10 +9,8 @@ from beartype import beartype
 from beartype.vale import Is
 
 
-
 @beartype
 class MCKullbackLeiblerDivergence(Loss):
-
     def __init__(
         self,
         posterior_distribution: Annotated[

@@ -9,7 +9,6 @@ from typing import Union
 
 @beartype
 class BBBTrainer:
-
     def __init__(
         self,
         model: nn.Module,

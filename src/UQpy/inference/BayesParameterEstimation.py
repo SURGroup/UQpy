@@ -51,27 +51,36 @@ class BayesParameterEstimation:
                 if inference_model.prior is None:
                     raise NotImplementedError(
                         "UQpy: A proposal density of the ImportanceSampling"
-                        " or a prior to the Inference model  must be provided.")
+                        " or a prior to the Inference model  must be provided."
+                    )
                 self.sampler.proposal = inference_model.prior
             self.sampler._args_target = (data,)
             self.sampler.log_pdf_target = inference_model.evaluate_log_posterior
         elif isinstance(self.sampler, MCMC):
             if self.sampler._initialization_seed is None:
-                if inference_model.prior is None or not hasattr(inference_model.prior, "rvs"):
+                if inference_model.prior is None or not hasattr(
+                    inference_model.prior, "rvs"
+                ):
                     raise ValueError(
                         "UQpy: A prior with a rvs method must be provided for the InferenceModel"
-                        " or a seed must be provided for MCMC.")
+                        " or a seed must be provided for MCMC."
+                    )
                 else:
-                    self.sampler.seed = inference_model.prior.rvs(nsamples=self.sampler.n_chains,
-                                                                  random_state=self.sampler.random_state, ).tolist()
+                    self.sampler.seed = inference_model.prior.rvs(
+                        nsamples=self.sampler.n_chains,
+                        random_state=self.sampler.random_state,
+                    ).tolist()
             self.sampler.log_pdf_target = inference_model.evaluate_log_posterior
             self.sampler.pdf_target = None
             self.sampler.args_target = (data,)
-            (self.sampler.evaluate_log_target,
-             self.sampler.evaluate_log_target_marginals,) = \
-                self.sampler._preprocess_target(pdf_=None,
-                                                log_pdf_=self.sampler.log_pdf_target,
-                                                args=self.sampler.args_target)
+            (
+                self.sampler.evaluate_log_target,
+                self.sampler.evaluate_log_target_marginals,
+            ) = self.sampler._preprocess_target(
+                pdf_=None,
+                log_pdf_=self.sampler.log_pdf_target,
+                args=self.sampler.args_target,
+            )
 
         if nsamples is not None:
             self.run(nsamples=nsamples)
@@ -91,5 +100,8 @@ class BayesParameterEstimation:
         """
         self.sampler.run(nsamples=nsamples)
 
-        self.logger.info("UQpy: Parameter estimation with " + self.sampler.__class__.__name__
-                         + " completed successfully!")
+        self.logger.info(
+            "UQpy: Parameter estimation with "
+            + self.sampler.__class__.__name__
+            + " completed successfully!"
+        )

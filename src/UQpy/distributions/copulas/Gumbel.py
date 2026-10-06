@@ -62,10 +62,20 @@ class Gumbel(Copula):
         theta, u, v = self.extract_data(unit_uniform_samples)
         c = exp(-(((-log(u)) ** theta + (-log(v)) ** theta) ** (1 / theta)))
 
-        pdf_val = (c * 1 / u * 1 / v
-                   * ((-log(u)) ** theta + (-log(v)) ** theta) ** (-2 + 2 / theta)
-                   * (log(u) * log(v)) ** (theta - 1)
-                   * (1 + (theta - 1) * ((-log(u)) ** theta + (-log(v)) ** theta) ** (-1 / theta)))
+        pdf_val = (
+            c
+            * 1
+            / u
+            * 1
+            / v
+            * ((-log(u)) ** theta + (-log(v)) ** theta) ** (-2 + 2 / theta)
+            * (log(u) * log(v)) ** (theta - 1)
+            * (
+                1
+                + (theta - 1)
+                * ((-log(u)) ** theta + (-log(v)) ** theta) ** (-1 / theta)
+            )
+        )
         return pdf_val
 
     def extract_data(self, unit_uniform_samples):

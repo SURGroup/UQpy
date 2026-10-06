@@ -68,7 +68,7 @@ From GitHub: Clone your fork of the :py:mod:`UQpy` repo from your GitHub account
 
     git clone https://github.com/SURGroup/UQpy.git
     cd UQpy
-    python setup.py {version} install
+    pip install .
 
 ------------
 
@@ -77,7 +77,7 @@ Development
 
 :py:mod:`UQpy` is designed to serve as a platform for developing new UQ methodologies and algorithms. To install :py:mod:`UQpy` as a developer, run::
 
-    python setup.py {version} develop
+    pip install -e .
 
 
 ------------

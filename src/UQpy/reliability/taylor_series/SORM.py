@@ -13,12 +13,11 @@ from UQpy.reliability.taylor_series.baseclass.TaylorSeries import TaylorSeries
 
 
 class SORM(TaylorSeries):
-
     @beartype
     def __init__(
-            self,
-            form_object: FORM,
-            df_step: Union[float, int] = 0.01,
+        self,
+        form_object: FORM,
+        df_step: Union[float, int] = 0.01,
     ):
         """
         :class:`.SORM` is a child class of the :class:`.TaylorSeries` class. Input: The :class:`.SORM` class requires an
@@ -44,18 +43,18 @@ class SORM(TaylorSeries):
     @classmethod
     @beartype
     def build_from_first_order(
-            cls,
-            distributions: Union[None, Distribution, list[Distribution]],
-            runmodel_object: RunModel,
-            seed_x: Union[list, np.ndarray] = None,
-            seed_u: Union[list, np.ndarray] = None,
-            df_step: Union[int, float] = 0.01,
-            corr_x: Union[list, np.ndarray] = None,
-            corr_z: Union[list, np.ndarray] = None,
-            n_iterations: PositiveInteger = 100,
-            tolerance_u: Union[float, int] = None,
-            tolerance_beta: Union[float, int] = None,
-            tolerance_gradient: Union[float, int] = None,
+        cls,
+        distributions: Union[None, Distribution, list[Distribution]],
+        runmodel_object: RunModel,
+        seed_x: Union[list, np.ndarray] = None,
+        seed_u: Union[list, np.ndarray] = None,
+        df_step: Union[int, float] = 0.01,
+        corr_x: Union[list, np.ndarray] = None,
+        corr_z: Union[list, np.ndarray] = None,
+        n_iterations: PositiveInteger = 100,
+        tolerance_u: Union[float, int] = None,
+        tolerance_beta: Union[float, int] = None,
+        tolerance_gradient: Union[float, int] = None,
     ):
         """
         :param distributions: Marginal probability distributions of each random variable. Must be an object of
@@ -88,8 +87,19 @@ class SORM(TaylorSeries):
         of the algorithm. In case none of the tolerances are provided then they are considered equal to :math:`1e-3` and
         all are checked for the convergence.
         """
-        f = FORM(distributions, runmodel_object, seed_x, seed_u, df_step,
-                 corr_x, corr_z, n_iterations, tolerance_u, tolerance_beta, tolerance_gradient)
+        f = FORM(
+            distributions,
+            runmodel_object,
+            seed_x,
+            seed_u,
+            df_step,
+            corr_x,
+            corr_z,
+            n_iterations,
+            tolerance_u,
+            tolerance_beta,
+            tolerance_gradient,
+        )
 
         return cls(f, df_step)
 
@@ -121,21 +131,29 @@ class SORM(TaylorSeries):
         r1 = np.fliplr(q).T
         self.logger.info("UQpy: Calculating the hessian for SORM..")
 
-        hessian_g = self._derivatives(point_u=self.form_object.design_point_u[-1],
-                                      point_x=self.form_object.design_point_x[-1],
-                                      runmodel_object=model,
-                                      nataf_object=self.form_object.nataf_object,
-                                      order="second",
-                                      df_step=self.df_step,
-                                      point_qoi=self.form_object.state_function_record[-1])
+        hessian_g = self._derivatives(
+            point_u=self.form_object.design_point_u[-1],
+            point_x=self.form_object.design_point_x[-1],
+            runmodel_object=model,
+            nataf_object=self.form_object.nataf_object,
+            order="second",
+            df_step=self.df_step,
+            point_qoi=self.form_object.state_function_record[-1],
+        )
 
-        matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(state_function_gradient_record[-1])
-        kappa = np.linalg.eig(matrix_b[: self.dimension - 1, : self.dimension - 1])
+        matrix_b = np.dot(np.dot(r1, hessian_g), r1.T) / np.linalg.norm(
+            state_function_gradient_record[-1]
+        )
+        kappa = np.linalg.eigh(matrix_b[: self.dimension - 1, : self.dimension - 1]) # eigh is used to avoid imaginary eigen values since matrix B is symmetric
         if self.call is None:
-            self.failure_probability = [stats.norm.cdf(-1 * beta) * np.prod(1 / (1 + beta * kappa[0]) ** 0.5)]
+            self.failure_probability = [
+                stats.norm.cdf(-1 * beta) * np.prod(1 / (1 + beta * kappa[0]) ** 0.5)
+            ]
             self.beta_second_order = [-stats.norm.ppf(self.failure_probability)]
         else:
-            self.failure_probability += [stats.norm.cdf(-1 * beta) * np.prod(1 / (1 + beta * kappa[0]) ** 0.5)]
+            self.failure_probability += [
+                stats.norm.cdf(-1 * beta) * np.prod(1 / (1 + beta * kappa[0]) ** 0.5)
+            ]
             self.beta_second_order += [-stats.norm.ppf(self.failure_probability)]
 
         self.call = True

@@ -7,7 +7,6 @@ from UQpy.distributions.baseclass import DistributionND
 
 
 class Multinomial(DistributionND):
-
     @beartype
     def __init__(self, n: Union[None, int], p: Union[list[float], np.ndarray]):
         """

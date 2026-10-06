@@ -6,7 +6,6 @@ from UQpy.utilities.ValidationTypes import PositiveInteger, PositiveFloat
 
 
 class BayesianLinear(NormalBayesianLayer):
-
     def __init__(
         self,
         in_features: PositiveInteger,

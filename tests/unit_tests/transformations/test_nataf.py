@@ -18,27 +18,27 @@ def test_wrong_distribution_in_list():
     dist1 = Normal(loc=0.0, scale=1.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     with pytest.raises(Exception):
-        assert Nataf(distributions=[dist1, 'Beta'], corr_x=rx)
+        assert Nataf(distributions=[dist1, "Beta"], corr_x=rx)
 
 
 def test_wrong_distribution():
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     with pytest.raises(Exception):
-        assert Nataf(distributions='Normal', corr_x=rx)
+        assert Nataf(distributions="Normal", corr_x=rx)
 
 
 def test_identity_correlation_x_normal():
     dist1 = Normal(loc=0.0, scale=1.0)
     dist2 = Normal(loc=0.0, scale=1.0)
     ntf_obj = Nataf(distributions=[dist1, dist2])
-    assert np.all(np.equal(ntf_obj.corr_x, np.eye(2)))
+    np.testing.assert_allclose(ntf_obj.corr_x, np.eye(2))
 
 
 def test_identity_correlation_z_normal():
     dist1 = Normal(loc=0.0, scale=1.0)
     dist2 = Normal(loc=0.0, scale=1.0)
     ntf_obj = Nataf(distributions=[dist1, dist2])
-    assert np.all(np.equal(ntf_obj.corr_z, np.eye(2)))
+    np.testing.assert_allclose(ntf_obj.corr_z, np.eye(2))
 
 
 def test_identity_correlation_uniform_z():
@@ -46,7 +46,7 @@ def test_identity_correlation_uniform_z():
     dist2 = Uniform(loc=0.0, scale=1.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = Nataf(distributions=[dist1, dist2], corr_x=rx)
-    assert np.all(np.equal(ntf_obj.corr_z, rx))
+    np.testing.assert_allclose(ntf_obj.corr_z, rx)
 
 
 def test_identity_correlation_normal_z():
@@ -54,7 +54,7 @@ def test_identity_correlation_normal_z():
     dist2 = Normal(loc=0.0, scale=1.0)
     rx = np.array([[1.0, 0.0], [0.0, 1.0]])
     ntf_obj = Nataf(distributions=[dist1, dist2], corr_x=rx)
-    assert np.all(np.equal(ntf_obj.corr_z, rx))
+    np.testing.assert_allclose(ntf_obj.corr_z, rx)
 
 
 def test_non_identity_correlation_normal():
@@ -62,7 +62,7 @@ def test_non_identity_correlation_normal():
     dist2 = Normal(loc=0.0, scale=1.0)
     rx = np.array([[1.0, 0.8], [0.8, 1.0]])
     ntf_obj = Nataf(distributions=[dist1, dist2], corr_x=rx)
-    assert np.all(np.equal(ntf_obj.corr_z, rx))
+    np.testing.assert_allclose(ntf_obj.corr_z, rx)
 
 
 def test_non_identity_correlation_uniform_z():
@@ -70,7 +70,11 @@ def test_non_identity_correlation_uniform_z():
     dist2 = Uniform(loc=0.0, scale=1.0)
     rx = np.array([[1.0, 0.8], [0.8, 1.0]])
     ntf_obj = Nataf(distributions=[dist1, dist2], corr_x=rx)
-    np.testing.assert_allclose(ntf_obj.corr_z, [[1., 0.8134732861515996], [0.8134732861515996, 1.]], rtol=1e-09)
+    np.testing.assert_allclose(
+        ntf_obj.corr_z,
+        [[1.0, 0.8134732861515996], [0.8134732861515996, 1.0]],
+        rtol=1e-09,
+    )
 
 
 def test_non_identity_correlation_uniform_x():
@@ -78,7 +82,9 @@ def test_non_identity_correlation_uniform_x():
     dist2 = Uniform(loc=0.0, scale=1.0)
     rz = np.array([[1.0, 0.8], [0.8, 1.0]])
     ntf_obj = Nataf(distributions=[dist1, dist2], corr_z=rz)
-    assert (ntf_obj.corr_x == [[1., 0.7859392826067285], [0.7859392826067285, 1.]]).all()
+    np.testing.assert_allclose(
+        ntf_obj.corr_x, [[1.0, 0.7859392826067285], [0.7859392826067285, 1.0]]
+    )
 
 
 def test_attribute_h():
@@ -86,7 +92,7 @@ def test_attribute_h():
     dist2 = Normal(loc=0.0, scale=1.0)
     rz = np.array([[1.0, 0.8], [0.8, 1.0]])
     ntf_obj = Nataf(distributions=[dist1, dist2], corr_z=rz)
-    np.testing.assert_allclose(ntf_obj.H, [[1., 0.], [0.8, 0.6]], rtol=1e-09)
+    np.testing.assert_allclose(ntf_obj.H, [[1.0, 0.0], [0.8, 0.6]], rtol=1e-09)
 
 
 def test_samples_x():
@@ -131,15 +137,22 @@ def test_samples_x_jxz2():
     ntf_obj = Nataf(distributions=[dist1, dist2])
     samples_x = np.array([[0.3, 1.2, 3.5], [0.2, 2.4, 0.9]]).T
     ntf_obj.run(samples_x=samples_x, jacobian=True)
-    g = []
     for i in range(3):
         if i == 0:
-            g.append((ntf_obj.jxz[i] == np.array([[1.6789373877365803, 0.0], [0.0, 2.577850090371836]])).all())
+            np.testing.assert_allclose(
+                ntf_obj.jxz[i],
+                np.array([[1.6789373877365803, 0.0], [0.0, 2.577850090371836]]),
+            )
         elif i == 1:
-            g.append((ntf_obj.jxz[i] == np.array([[0.6433491348614259, 0.0], [0.0, 1.1906381155257868]])).all())
+            np.testing.assert_allclose(
+                ntf_obj.jxz[i],
+                np.array([[0.6433491348614259, 0.0], [0.0, 1.1906381155257868]]),
+            )
         else:
-            g.append((ntf_obj.jxz[i] == np.array([[0.5752207318528584, 0.0], [0.0, 0.958701219754764]])).all())
-    assert np.all(g)
+            np.testing.assert_allclose(
+                ntf_obj.jxz[i],
+                np.array([[0.5752207318528584, 0.0], [0.0, 0.958701219754764]]),
+            )
 
 
 def test_samples_x1():
@@ -148,15 +161,22 @@ def test_samples_x1():
     ntf_obj = Nataf(distributions=[dist1, dist2])
     samples_x = np.array([[0.3, 1.2, 3.5], [0.2, 2.4, 0.9]]).T
     ntf_obj.run(samples_x=samples_x, jacobian=True)
-    g = []
     for i in range(3):
         if i == 0:
-            g.append((ntf_obj.samples_z[i] == np.array([-1.5547735945968535, -1.501085946044025])).all())
+            np.testing.assert_allclose(
+                ntf_obj.samples_z[i],
+                np.array([-1.5547735945968535, -1.501085946044025]),
+            )
         elif i == 1:
-            g.append((ntf_obj.samples_z[i] == np.array([-0.7063025628400874, 0.841621233572914])).all())
+            np.testing.assert_allclose(
+                ntf_obj.samples_z[i],
+                np.array([-0.7063025628400874, 0.841621233572914]),
+            )
         else:
-            g.append((ntf_obj.samples_z[i] == np.array([0.5244005127080407, -0.5244005127080409])).all())
-    assert np.all(g)
+            np.testing.assert_allclose(
+                ntf_obj.samples_z[i],
+                np.array([0.5244005127080407, -0.5244005127080409]),
+            )
 
 
 def test_samples_z_jzx1():
@@ -173,13 +193,17 @@ def test_samples_z_jzx2():
     ntf_obj = Nataf(distributions=[dist1, dist2])
     samples_z = np.array([[0.3, 1.2], [0.2, 2.4]]).T
     ntf_obj.run(samples_z=samples_z, jacobian=True)
-    g = []
     for i in range(2):
         if i == 0:
-            g.append((ntf_obj.jzx[i] == np.array([[0.524400601939789, 0.0], [0.0, 0.8524218415758338]])).all())
+            np.testing.assert_allclose(
+                ntf_obj.jzx[i],
+                np.array([[0.524400601939789, 0.0], [0.0, 0.8524218415758338]]),
+            )
         else:
-            g.append((ntf_obj.jzx[i] == np.array([[1.0299400748281828, 0.0], [0.0, 14.884586948005541]])).all())
-    assert np.all(g)
+            np.testing.assert_allclose(
+                ntf_obj.jzx[i],
+                np.array([[1.0299400748281828, 0.0], [0.0, 14.884586948005541]]),
+            )
 
 
 def test_samples_z2():
@@ -188,13 +212,17 @@ def test_samples_z2():
     ntf_obj = Nataf(distributions=[dist1, dist2])
     samples_z = np.array([[0.3, 1.2], [0.2, 2.4]]).T
     ntf_obj.run(samples_z=samples_z, jacobian=True)
-    g = []
     for i in range(2):
         if i == 0:
-            g.append((ntf_obj.samples_x[i] == np.array([3.089557110944763, 1.737779128317309])).all())
+            np.testing.assert_allclose(
+                ntf_obj.samples_x[i],
+                np.array([3.089557110944763, 1.737779128317309]),
+            )
         elif i == 1:
-            g.append((ntf_obj.samples_x[i] == np.array([4.424651648891459, 2.9754073922262116])).all())
-    assert np.all(g)
+            np.testing.assert_allclose(
+                ntf_obj.samples_x[i],
+                np.array([4.424651648891459, 2.9754073922262116]),
+            )
 
 
 def test_itam_beta():
@@ -272,4 +300,4 @@ def distortion_z2x_dist_object():
     dist1 = Lognormal(s=0.0, loc=0.0, scale=1.0)
     rz = np.array([[1.0, 0.8], [0.8, 1.0]])
     with pytest.raises(Exception):
-        assert Nataf.distortion_z2x(distributions=[dist1, 'Beta'], corr_z=rz)
+        assert Nataf.distortion_z2x(distributions=[dist1, "Beta"], corr_z=rz)

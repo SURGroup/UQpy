@@ -7,7 +7,6 @@ import numpy as np
 
 
 class Clayton(Copula):
-
     @beartype
     def __init__(self, theta: float):
         """
@@ -33,7 +32,9 @@ class Clayton(Copula):
         :return: Values of the cdf.
         """
         theta, u, v = self.extract_data(unit_uniform_samples)
-        cdf_val = (np.maximum(u ** (-theta) + v ** (-theta) - 1.0, 0.0)) ** (-1.0 / theta)
+        cdf_val = (np.maximum(u ** (-theta) + v ** (-theta) - 1.0, 0.0)) ** (
+            -1.0 / theta
+        )
         return cdf_val
 
     def extract_data(self, unit_uniform_samples: Numpy2DFloatArray):

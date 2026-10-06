@@ -1,4 +1,5 @@
 """distributions module."""
+
 from UQpy.distributions.collection.Beta import Beta
 from UQpy.distributions.collection.Binomial import Binomial
 from UQpy.distributions.collection.Cauchy import Cauchy

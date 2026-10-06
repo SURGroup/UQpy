@@ -3,9 +3,15 @@ from abc import ABC
 
 
 class TemperingMCMC(ABC):
-
-    def __init__(self, pdf_intermediate=None, log_pdf_intermediate=None, args_pdf_intermediate=(),
-                 distribution_reference=None, save_log_pdf=True, random_state=None):
+    def __init__(
+        self,
+        pdf_intermediate=None,
+        log_pdf_intermediate=None,
+        args_pdf_intermediate=(),
+        distribution_reference=None,
+        save_log_pdf=True,
+        random_state=None,
+    ):
         """
         Parent class to parallel and sequential tempering MCMC algorithms.
 
@@ -28,9 +34,17 @@ class TemperingMCMC(ABC):
 
         # Initialize the prior and likelihood
         self.evaluate_log_intermediate = self._preprocess_intermediate(
-            log_pdf_=log_pdf_intermediate, pdf_=pdf_intermediate, args=args_pdf_intermediate)
-        if not (isinstance(distribution_reference, Distribution) or (distribution_reference is None)):
-            raise TypeError('UQpy: if provided, input distribution_reference should be a UQpy.Distribution object.')
+            log_pdf_=log_pdf_intermediate,
+            pdf_=pdf_intermediate,
+            args=args_pdf_intermediate,
+        )
+        if not (
+            isinstance(distribution_reference, Distribution)
+            or (distribution_reference is None)
+        ):
+            raise TypeError(
+                "UQpy: if provided, input distribution_reference should be a UQpy.Distribution object."
+            )
         # self.evaluate_log_reference = self._preprocess_reference(dist_=distribution_reference, args=())
 
         # Initialize the outputs
@@ -41,12 +55,12 @@ class TemperingMCMC(ABC):
 
     @abstractmethod
     def run(self, nsamples):
-        """ Run the tempering MCMC algorithms to generate nsamples from the target posterior """
+        """Run the tempering MCMC algorithms to generate nsamples from the target posterior"""
         pass
 
     @abstractmethod
     def evaluate_normalization_constant(self, **kwargs):
-        """ Computes the normalization constant :math:`Z_{1}=\int{q_{1}(x) p_{0}(x)dx}` where :math:`p_0` is the
+        """Computes the normalization constant :math:`Z_{1}=\int{q_{1}(x) p_{0}(x)dx}` where :math:`p_0` is the
         reference pdf and :math:`q_1` is the target factor."""
         pass
 
@@ -71,9 +85,9 @@ class TemperingMCMC(ABC):
         if dist_ is None:
             evaluate_log_pdf = None
         elif isinstance(dist_, Distribution):
-            evaluate_log_pdf = (lambda x: dist_.log_pdf(x))
+            evaluate_log_pdf = lambda x: dist_.log_pdf(x)
         else:
-            raise TypeError('UQpy: A UQpy.Distribution object must be provided.')
+            raise TypeError("UQpy: A UQpy.Distribution object must be provided.")
         return evaluate_log_pdf
 
     @staticmethod
@@ -101,19 +115,24 @@ class TemperingMCMC(ABC):
         # log_pdf is provided
         if log_pdf_ is not None:
             if not callable(log_pdf_):
-                raise TypeError('UQpy: log_pdf_intermediate must be a callable')
+                raise TypeError("UQpy: log_pdf_intermediate must be a callable")
             if args is None:
                 args = ()
-            evaluate_log_pdf = (lambda x, temper_param: log_pdf_(x, temper_param, *args))
+            evaluate_log_pdf = lambda x, temper_param: log_pdf_(x, temper_param, *args)
         elif pdf_ is not None:
             if not callable(pdf_):
-                raise TypeError('UQpy: pdf_intermediate must be a callable')
+                raise TypeError("UQpy: pdf_intermediate must be a callable")
             if args is None:
                 args = ()
-            evaluate_log_pdf = (lambda x, temper_param: np.log(
-                np.maximum(pdf_(x, temper_param, *args), 10 ** (-320) * np.ones((x.shape[0],)))))
+            evaluate_log_pdf = lambda x, temper_param: np.log(
+                np.maximum(
+                    pdf_(x, temper_param, *args), 10 ** (-320) * np.ones((x.shape[0],))
+                )
+            )
         else:
-            raise ValueError('UQpy: log_pdf_intermediate or pdf_intermediate must be provided')
+            raise ValueError(
+                "UQpy: log_pdf_intermediate or pdf_intermediate must be provided"
+            )
         return evaluate_log_pdf
 
     @staticmethod

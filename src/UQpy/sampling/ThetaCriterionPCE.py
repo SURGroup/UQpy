@@ -7,19 +7,29 @@ from beartype import beartype
 
 class ThetaCriterionPCE:
     @beartype
-    def __init__(self, surrogates: list[UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion]):
+    def __init__(
+        self,
+        surrogates: list[UQpy.surrogates.polynomial_chaos.PolynomialChaosExpansion],
+    ):
         """
         Active learning for polynomial chaos expansion using Theta criterion balancing between exploration and
         exploitation.
-        
-        :param surrogates: list of objects of the :py:meth:`UQpy` :class:`PolynomialChaosExpansion` class 
+
+        :param surrogates: list of objects of the :py:meth:`UQpy` :class:`PolynomialChaosExpansion` class
         """
 
         self.surrogates = surrogates
 
-    def run(self, existing_samples: np.ndarray, candidate_samples: np.ndarray, nsamples=1, samples_weights=None,
-            candidate_weights=None, pce_weights=None, enable_criterium: bool=False):
-
+    def run(
+        self,
+        existing_samples: np.ndarray,
+        candidate_samples: np.ndarray,
+        nsamples=1,
+        samples_weights=None,
+        candidate_weights=None,
+        pce_weights=None,
+        enable_criterium: bool = False,
+    ):
         """
         Execute the :class:`.ThetaCriterionPCE` active learning.
 
@@ -57,9 +67,12 @@ class ThetaCriterionPCE:
         pos = []
 
         for _ in range(nsamples):
-            S = polynomial_chaos.Polynomials.standardize_sample(existing_samples, pces[0].polynomial_basis.distributions)
-            s_candidate = polynomial_chaos.Polynomials.standardize_sample(candidate_samples,
-                                                                         pces[0].polynomial_basis.distributions)
+            S = polynomial_chaos.Polynomials.standardize_sample(
+                existing_samples, pces[0].polynomial_basis.distributions
+            )
+            s_candidate = polynomial_chaos.Polynomials.standardize_sample(
+                candidate_samples, pces[0].polynomial_basis.distributions
+            )
 
             lengths = cdist(s_candidate, S)
             closest_s_position = np.argmin(lengths, axis=1)
@@ -70,17 +83,25 @@ class ThetaCriterionPCE:
 
             for i in range(npce):
                 pce = pces[i]
-                variance_candidatei = self._local_variance(candidate_samples, pce, candidate_weights)
-                variance_closesti = self._local_variance(closest_value_x, pce, samples_weights[closest_s_position])
+                variance_candidatei = self._local_variance(
+                    candidate_samples, pce, candidate_weights
+                )
+                variance_closesti = self._local_variance(
+                    closest_value_x, pce, samples_weights[closest_s_position]
+                )
 
-                variance_candidate = variance_candidate + variance_candidatei * pce_weights[i]
+                variance_candidate = (
+                    variance_candidate + variance_candidatei * pce_weights[i]
+                )
                 variance_closest = variance_closest + variance_closesti * pce_weights[i]
 
             criterium_v = np.sqrt(variance_candidate * variance_closest)
-            criterium_l = l ** nvar
+            criterium_l = l**nvar
             criterium = criterium_v * criterium_l
             pos.append(np.argmax(criterium))
-            existing_samples = np.append(existing_samples, candidate_samples[pos, :], axis=0)
+            existing_samples = np.append(
+                existing_samples, candidate_samples[pos, :], axis=0
+            )
             samples_weights = np.append(samples_weights, candidate_weights[pos])
 
         if not enable_criterium:
@@ -103,8 +124,9 @@ class ThetaCriterionPCE:
 
         product = np.sum(product, axis=1)
 
-        product = product ** 2
-        product = product * polynomial_chaos.Polynomials.standardize_pdf(coordinates,
-                                                                         pce.polynomial_basis.distributions)
+        product = product**2
+        product = product * polynomial_chaos.Polynomials.standardize_pdf(
+            coordinates, pce.polynomial_basis.distributions
+        )
 
         return product

@@ -10,10 +10,12 @@ from UQpy.utilities.ValidationTypes import PositiveInteger, PositiveFloat
 
 class POD(ABC):
     @beartype
-    def __init__(self,
-                 solution_snapshots: Union[np.ndarray, list] = None,
-                 n_modes: PositiveInteger = None,
-                 reconstruction_percentage: Union[PositiveInteger, PositiveFloat] = None):
+    def __init__(
+        self,
+        solution_snapshots: Union[np.ndarray, list] = None,
+        n_modes: PositiveInteger = None,
+        reconstruction_percentage: Union[PositiveInteger, PositiveFloat] = None,
+    ):
         """
 
         :param solution_snapshots: Array or list containing the solution snapshots. If provided as an
@@ -42,12 +44,14 @@ class POD(ABC):
         self.logger = logging.getLogger(__name__)
 
         if n_modes is not None and reconstruction_percentage is not None:
-            raise ValueError("Either a number of modes or a reconstruction percentage must be chosen, not both.")
+            raise ValueError(
+                "Either a number of modes or a reconstruction percentage must be chosen, not both."
+            )
 
         if reconstruction_percentage is not None and reconstruction_percentage <= 0:
-            raise ValueError("Invalid input, the reconstruction percentage is defined in the range (0,100].")
-
-
+            raise ValueError(
+                "Invalid input, the reconstruction percentage is defined in the range (0,100]."
+            )
 
         self.solution_snapshots = solution_snapshots
         self.logger = logging.getLogger(__name__)
@@ -85,7 +89,9 @@ class POD(ABC):
         pass
 
     @abstractmethod
-    def _calculate_reduced_and_reconstructed_solutions(self, u, phi, rows, columns, snapshot_number):
+    def _calculate_reduced_and_reconstructed_solutions(
+        self, u, phi, rows, columns, snapshot_number
+    ):
         pass
 
     def run(self, solution_snapshots: Union[np.ndarray, list]):
@@ -103,30 +109,44 @@ class POD(ABC):
 
         columns, rows, snapshot_number, self.U = self.check_input()
 
-        c, n_iterations = self._calculate_c_and_iterations(self.U, snapshot_number, rows, columns)
+        c, n_iterations = self._calculate_c_and_iterations(
+            self.U, snapshot_number, rows, columns
+        )
 
         complex_eigenvalues, phi = np.linalg.eig(c)
         self.phi = phi.real
 
         self.eigenvalues = complex_eigenvalues.real
 
-        percentages = [(self.eigenvalues[: i + 1].sum() / self.eigenvalues.sum()) * 100 for i in range(n_iterations)]
+        percentages = [
+            (self.eigenvalues[: i + 1].sum() / self.eigenvalues.sum()) * 100
+            for i in range(n_iterations)
+        ]
 
-        minimum_percentage = min(percentages, key=lambda x: abs(x - self.reconstruction_percentage))
+        minimum_percentage = min(
+            percentages, key=lambda x: abs(x - self.reconstruction_percentage)
+        )
 
         if self.modes is None:
             self.modes = percentages.index(minimum_percentage) + 1
         elif self.modes > n_iterations:
             self.logger.warning(
                 "A number of modes greater than the number of dimensions was given."
-                "Number of dimensions is %i", n_iterations)
+                "Number of dimensions is %i",
+                n_iterations,
+            )
 
-        reconstructed_solutions, reduced_solutions = \
-            self._calculate_reduced_and_reconstructed_solutions(self.U, phi, rows, columns, snapshot_number)
+        reconstructed_solutions, reduced_solutions = (
+            self._calculate_reduced_and_reconstructed_solutions(
+                self.U, phi, rows, columns, snapshot_number
+            )
+        )
 
         self.logger.info(f"UQpy: Successful execution of {type(self).__name__}!")
 
-        self.logger.info("Dataset reconstruction: {:.3%}".format(percentages[self.modes - 1] / 100))
+        self.logger.info(
+            "Dataset reconstruction: {:.3%}".format(percentages[self.modes - 1] / 100)
+        )
 
         self.reconstructed_solution = reconstructed_solutions
         self.reduced_solution = reduced_solutions

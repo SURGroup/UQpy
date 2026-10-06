@@ -4,7 +4,6 @@ from UQpy.scientific_machine_learning.baseclass import NeuralNetwork
 
 
 class FeedForwardNeuralNetwork(NeuralNetwork):
-
     def __init__(self, network: nn.Module):
         """Initialize a typical feed-forward neural network using the architecture provided by ``network``
 

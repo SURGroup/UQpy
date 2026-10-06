@@ -11,6 +11,7 @@ class FubiniStudyDistance(GrassmannianDistance):
     A class to calculate the Fubini-Study distance between two Grassmann points.
 
     """
+
     def compute_distance(self, xi: GrassmannPoint, xj: GrassmannPoint) -> float:
         """
         Compute the Fubini-Study distance between two points on the Grassmann manifold.

@@ -17,6 +17,8 @@ class RBF(EuclideanKernel):
         :params x: An array containing training points.
         :params s: An array containing input points.
         """
-        stack = Kernel.check_samples_and_return_stack(x / self.kernel_parameter, s / self.kernel_parameter)
-        self.kernel_matrix = np.exp(np.sum(-0.5 * (stack ** 2), axis=2))
+        stack = Kernel.check_samples_and_return_stack(
+            x / self.kernel_parameter, s / self.kernel_parameter
+        )
+        self.kernel_matrix = np.exp(np.sum(-0.5 * (stack**2), axis=2))
         return self.kernel_matrix

@@ -1,4 +1,3 @@
-
 from UQpy.sampling.stratified_sampling.TrueStratifiedSampling import *
 from UQpy.sampling.stratified_sampling.refinement.baseclass import Refinement
 from UQpy.utilities.ValidationTypes import RandomStateType, PositiveInteger
@@ -47,7 +46,9 @@ class RefinedStratifiedSampling(StratifiedSampling):
         if isinstance(self.random_state, int):
             self.random_state = np.random.default_rng(self.random_state)
         elif not isinstance(self.random_state, (type(None), np.random.RandomState)):
-            raise TypeError('UQpy: random_state must be None, an int or an np.random.Generator object.')
+            raise TypeError(
+                "UQpy: random_state must be None, an int or an np.random.Generator object."
+            )
         if self.random_state is None:
             self.random_state = self.stratified_sampling.random_state
 
@@ -67,18 +68,27 @@ class RefinedStratifiedSampling(StratifiedSampling):
         self.nsamples = nsamples
 
         if self.nsamples <= self.samples.shape[0]:
-            raise ValueError("UQpy Error: The number of requested samples must be larger than the existing "
-                             "sample set.")
+            raise ValueError(
+                "UQpy Error: The number of requested samples must be larger than the existing "
+                "sample set."
+            )
 
         initial_number = self.samples.shape[0]
 
-        self.refinement_algorithm.initialize(self.nsamples, self.training_points, self.samples)
+        self.refinement_algorithm.initialize(
+            self.nsamples, self.training_points, self.samples
+        )
 
         for i in range(initial_number, nsamples, self.samples_per_iteration):
             new_points = self.refinement_algorithm.update_samples(
-                self.nsamples, self.samples_per_iteration,
-                self.random_state, i, self.dimension,
-                self.samplesU01, self.training_points)
+                self.nsamples,
+                self.samples_per_iteration,
+                self.random_state,
+                i,
+                self.dimension,
+                self.samplesU01,
+                self.training_points,
+            )
             self.append_samples(new_points)
 
             self.refinement_algorithm.finalize(self.samples, self.samples_per_iteration)
@@ -89,5 +99,7 @@ class RefinedStratifiedSampling(StratifiedSampling):
         self.samplesU01 = np.vstack([self.samplesU01, new_points])
         new_point_ = np.zeros_like(new_points)
         for k in range(self.dimension):
-            new_point_[:, k] = self.stratified_sampling.distributions[k].icdf(new_points[:, k])
+            new_point_[:, k] = self.stratified_sampling.distributions[k].icdf(
+                new_points[:, k]
+            )
         self.samples = np.vstack([self.samples, new_point_])

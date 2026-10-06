@@ -1,14 +1,17 @@
-from UQpy.inference.information_criteria.baseclass.InformationCriterion import InformationCriterion
+from UQpy.inference.information_criteria.baseclass.InformationCriterion import (
+    InformationCriterion,
+)
 from UQpy.inference import MLE
 from UQpy.utilities.ValidationTypes import NumpyFloatArray
 
 
 class AICc(InformationCriterion):
-
-    def minimize_criterion(self,
-                           data: NumpyFloatArray,
-                           parameter_estimator: MLE,
-                           return_penalty: bool = False):
+    def minimize_criterion(
+        self,
+        data: NumpyFloatArray,
+        parameter_estimator: MLE,
+        return_penalty: bool = False,
+    ):
         inference_model = parameter_estimator.inference_model
         max_log_like = parameter_estimator.max_log_like
         n_parameters = inference_model.n_parameters
@@ -20,5 +23,6 @@ class AICc(InformationCriterion):
         return -2 * max_log_like + penalty_term
 
     def _calculate_penalty_term(self, n_data, n_parameters):
-        return 2 * n_parameters + (2 * n_parameters ** 2 + 2 * n_parameters) / (n_data - n_parameters - 1)
-
+        return 2 * n_parameters + (2 * n_parameters**2 + 2 * n_parameters) / (
+            n_data - n_parameters - 1
+        )

@@ -9,7 +9,9 @@ class SerialExecution:
 
     def run(self, model, n_existing_simulations, n_new_simulations, samples):
         results = []
-        for i in range(n_existing_simulations, n_existing_simulations + n_new_simulations):
+        for i in range(
+            n_existing_simulations, n_existing_simulations + n_new_simulations
+        ):
             sample = model.preprocess_single_sample(i, samples)
 
             execution_output = model.execute_single_sample(i, sample)

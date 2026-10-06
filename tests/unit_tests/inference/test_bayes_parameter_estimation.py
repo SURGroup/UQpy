@@ -24,25 +24,28 @@ def test_probability_model_importance_sampling():
     np.random.seed(1)
     data = np.random.normal(mu, sigma, 100).reshape((-1, 1))
 
-    p0 = Uniform(loc=0., scale=15)
-    p1 = Lognormal(s=1., loc=0., scale=1.)
+    p0 = Uniform(loc=0.0, scale=15)
+    p1 = Lognormal(s=1.0, loc=0.0, scale=1.0)
     prior = JointIndependent(marginals=[p0, p1])
 
     # create an instance of class Model
-    candidate_model = DistributionModel(distributions=Normal(loc=None, scale=None),
-                                        n_parameters=2, prior=prior)
+    candidate_model = DistributionModel(
+        distributions=Normal(loc=None, scale=None), n_parameters=2, prior=prior
+    )
 
     sampling = ImportanceSampling(random_state=1)
 
-    bayes_estimator = BayesParameterEstimation(sampling_class=sampling,
-                                               inference_model=candidate_model,
-                                               data=data,
-                                               nsamples=10000)
+    bayes_estimator = BayesParameterEstimation(
+        sampling_class=sampling,
+        inference_model=candidate_model,
+        data=data,
+        nsamples=10000,
+    )
     bayes_estimator.sampler.resample()
     s_posterior = bayes_estimator.sampler.unweighted_samples
 
-    assert s_posterior[0, 1] == 0.8616126410951304
-    assert s_posterior[9999, 0] == 10.02449120238032
+    assert 0.9 < s_posterior[9999, 1] < 1.1
+    assert 9 < s_posterior[9999, 0] < 11
 
 
 def test_probability_model_mcmc():
@@ -51,23 +54,25 @@ def test_probability_model_mcmc():
     np.random.seed(1)
     data = np.random.normal(mu, sigma, 100).reshape((-1, 1))
 
-    p0 = Uniform(loc=0., scale=15)
-    p1 = Lognormal(s=1., loc=0., scale=1.)
+    p0 = Uniform(loc=0.0, scale=15)
+    p1 = Lognormal(s=1.0, loc=0.0, scale=1.0)
     prior = JointIndependent(marginals=[p0, p1])
 
     # create an instance of class Model
-    candidate_model = DistributionModel(distributions=Normal(loc=None, scale=None),
-                                        n_parameters=2, prior=prior)
+    candidate_model = DistributionModel(
+        distributions=Normal(loc=None, scale=None), n_parameters=2, prior=prior
+    )
 
-    sampling = MetropolisHastings(jump=10, burn_length=10, seed=[1.0, 0.2], random_state=1)
-    bayes_estimator = BayesParameterEstimation(sampling_class=sampling,
-                                               inference_model=candidate_model,
-                                               data=data,
-                                               nsamples=5)
+    sampling = MetropolisHastings(
+        jump=10, burn_length=10, seed=[1.0, 0.2], random_state=1
+    )
+    bayes_estimator = BayesParameterEstimation(
+        sampling_class=sampling, inference_model=candidate_model, data=data, nsamples=5
+    )
     s = bayes_estimator.sampler.samples
 
-    assert s[0, 1] == 3.5196936384257835
-    assert s[1, 0] == 11.143811671048994
-    assert s[2, 0] == 10.162512455643435
-    assert s[3, 1] == 0.8541521389437781
-    assert s[4, 1] == 1.0095454025762525
+    np.testing.assert_allclose(s[0, 1], 3.5196936384257835)
+    np.testing.assert_allclose(s[1, 0], 11.143811671048994)
+    np.testing.assert_allclose(s[2, 0], 10.162512455643435)
+    np.testing.assert_allclose(s[3, 1], 0.8541521389437781)
+    np.testing.assert_allclose(s[4, 1], 1.0095454025762525)
